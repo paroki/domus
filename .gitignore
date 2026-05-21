@@ -1,0 +1,4 @@
+# Root ignore (handled by subdirectories mostly)
+.DS_Store
+.env
+*.local
