@@ -1,0 +1,41 @@
+version: '3'
+
+vars:
+  BINARY_NAME: domus
+
+tasks:
+  build:
+    desc: Build the API binary
+    cmds:
+      - go build -o {{.BINARY_NAME}} ./cmd/domus
+
+  run:
+    desc: Run the API server
+    cmds:
+      - go run ./cmd/domus serve
+
+  test:
+    desc: Run tests
+    cmds:
+      - go test -v ./...
+
+  tidy:
+    desc: Tidy go modules
+    cmds:
+      - go mod tidy
+
+  lint:
+    desc: Run linters (fmt, tidy, golangci-lint)
+    cmds:
+      - go fmt ./...
+      - task: tidy
+      - golangci-lint run
+
+  clean:
+    desc: Clean build artifacts
+    cmds:
+      - rm -f {{.BINARY_NAME}}
+
+  default:
+    cmds:
+      - task --list

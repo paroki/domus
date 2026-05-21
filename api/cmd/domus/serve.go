@@ -1,14 +1,14 @@
 /*
 Copyright © 2026 NAME HERE <EMAIL ADDRESS>
-
 */
-package cmd
+package main
 
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
+	"github.com/gofiber/fiber/v3"
 	"github.com/paroki/domus/api/internal/config"
+	"github.com/spf13/cobra"
 )
 
 // serveCmd represents the serve command
@@ -22,12 +22,14 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cfg, err := config.Load()
+		cfg, err := config.GetConfig()
 		if err != nil {
 			return err
 		}
-		fmt.Printf("Starting server on port %d\n", cfg.Port)
-		return nil
+		app := config.GetFiber(cfg)
+		return app.Listen(fmt.Sprintf(":%d", cfg.Port), fiber.ListenConfig{
+			EnablePrefork: cfg.Api.Prefork,
+		})
 	},
 }
 
