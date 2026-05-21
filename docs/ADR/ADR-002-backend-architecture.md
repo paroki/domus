@@ -54,7 +54,7 @@ flowchart TD
     
     D_CORE["internal/[domain]/<br/>Service interface · Repository interface · Entity"]
     
-    D_ENT["internal/[domain]/entgo/<br/>ent-backed Repository implementation"]
+    D_ENT["internal/[domain]/[domain]ent/<br/>ent-backed Repository implementation"]
     
     ENT["ent/<br/>Generated ent ORM code"]
 
@@ -132,7 +132,7 @@ github.com/paroki/domus/api/
 │       │   ├── handler.go       # Handler struct + action methods
 │       │   └── routes.go        # RegisterRoutes(r fiber.Router, h *Handler)
 │       │
-│       ├── entgo/               # ent-backed repository implementation
+│       ├── [domain]ent/         # ent-backed repository implementation
 │       │   └── repository.go    # Implements [domain].Repository using *ent.Client
 │       │
 │       └── mocks/               # uber/mock generated mocks (DO NOT edit manually)
@@ -202,13 +202,13 @@ func SetupRouter(app *fiber.App, cfg *config.Config, log logger.Logger, db *ent.
     api.Get("/health", healthH.Check)
 
     // auth domain
-    authRepo := autentgo.NewRepository(db)
+    authRepo := authent.NewRepository(db)
     authSvc  := auth.NewService(authRepo, log)
     authH    := authhttp.NewHandler(authSvc, log)
     authhttp.RegisterRoutes(api, authH)
 
     // parish domain
-    parishRepo := parishentgo.NewRepository(db)
+    parishRepo := parishent.NewRepository(db)
     parishSvc  := parish.NewService(parishRepo, log)
     parishH    := parishhttp.NewHandler(parishSvc, log)
     parishhttp.RegisterRoutes(api, parishH)
@@ -266,18 +266,18 @@ func RegisterRoutes(r fiber.Router, h *Handler) {
 }
 ```
 
-### 5.6 `internal/[domain]/entgo/`
+### 5.6 `internal/[domain]/[domain]ent/`
 
 **Responsibility:** ent-backed implementation of the domain `Repository` interface.
 
-- Package name: `[domain]entgo` (e.g., `package authentgo`, `package parishentgo`).
+- Package name: `[domain]ent` (e.g., `package authent`, `package parishent`).
 - Depends on `*ent.Client` and the generated `ent/` package.
 - Maps between ent-generated models and domain entities.
 - No business logic. Translation only.
 
 ```go
-// internal/auth/entgo/repository.go
-package authentgo
+// internal/auth/authent/repository.go
+package authent
 
 type repository struct {
     client *ent.Client
@@ -326,7 +326,7 @@ func (r *repository) FindByID(ctx context.Context, id uuid.UUID) (*auth.User, er
 - Default location: `github.com/paroki/domus/api/ent/`.
 - `ent/schema/` contains hand-authored schema files — the only files edited manually.
 - All other files under `ent/` are generated via `go generate` and MUST NOT be edited manually.
-- `*ent.Client` is constructed in `internal/config/db.go` and injected into `entgo` repositories.
+- `*ent.Client` is constructed in `internal/config/db.go` and injected into `[domain]ent` repositories.
 
 ### 5.10 `testutil/`
 
@@ -347,7 +347,7 @@ The following import rules are strictly enforced. Violations MUST be blocked at 
 | `internal/delivery/gofiber/` | All domain packages, `internal/config`, `internal/shared` | — |
 | `internal/[domain]/` | `internal/shared` | `fiber`, `ent`, any other domain |
 | `internal/[domain]/[domain]http/` | `internal/[domain]`, `internal/shared`, `internal/delivery/gofiber/response` | `ent`, other domain packages |
-| `internal/[domain]/entgo/` | `internal/[domain]`, `ent/` | `fiber`, other domain packages |
+| `internal/[domain]/[domain]ent/` | `internal/[domain]`, `ent/` | `fiber`, other domain packages |
 | `internal/shared/` | Standard library, third-party only | Any `internal/` package |
 | `ent/` | Standard library, `entgo.io/ent` | Any `internal/` package |
 
@@ -649,13 +649,13 @@ All responses conform to **ADR-001** envelope contract.
 
 - **Framework agnosticism** — Domain logic has zero Fiber dependency. Replacing GoFiber with Gin requires changes only in `[domain]http/` and `internal/delivery/gofiber/`. Domain services and repositories are untouched.
 - **Testability** — Interface-driven design and generated mocks make unit tests fast, isolated, and deterministic.
-- **Onboarding clarity** — New engineers follow the same pattern for every domain: entity → repository interface → service → entgo → [domain]http.
+- **Onboarding clarity** — New engineers follow the same pattern for every domain: entity → repository interface → service → `[domain]ent` → `[domain]http`.
 - **Explicit wiring** — Manual DI in `router.go` makes the full dependency graph visible and traceable without magic.
 - **Independent domain development** — Teams can work on separate domains without merge conflicts in infrastructure files.
 
 ### 11.2 Negative / Trade-offs
 
-- **Boilerplate per domain** — Each new domain requires at minimum five files (`entity.go`, `repository.go`, `service.go`, `[domain]http/handler.go`, `[domain]http/routes.go`, `entgo/repository.go`). A `task new-domain` scaffolding command is recommended to mitigate this.
+- **Boilerplate per domain** — Each new domain requires at minimum five files (`entity.go`, `repository.go`, `service.go`, `[domain]http/handler.go`, `[domain]http/routes.go`, `[domain]ent/repository.go`). A `task new-domain` scaffolding command is recommended to mitigate this.
 - **Manual wiring grows with domains** — `router.go` will accumulate wiring lines as domains grow. This is intentional and traceable, but should be reviewed if it exceeds approximately 150 lines.
 - **No runtime DI validation** — Unlike `uber/fx`, misconfigured wiring causes compile-time errors at best and panics at worst. This is acceptable at the current scale.
 - **`testutil` is a shared dependency** — Changes to `testutil` interfaces affect all domain tests. Changes must be backward-compatible or coordinated across teams.
@@ -670,7 +670,7 @@ The following violations MUST be blocked at code review:
 
 - Domain package importing `fiber` or `ent` directly.
 - Handler method containing inline business logic (must be delegated to service).
-- `entgo/` repository implementing logic beyond persistence translation.
+- `[domain]ent/` repository implementing logic beyond persistence translation.
 - Manually edited files under `ent/` (except `ent/schema/`).
 - Manually edited files under `[domain]/mocks/`.
 - Missing `//go:generate` directives on interface files.
