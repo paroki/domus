@@ -1,7 +1,6 @@
 package middleware_test
 
 import (
-	"net/http"
 	"testing"
 
 	"github.com/paroki/domus/api/internal/config"
@@ -27,7 +26,7 @@ func TestCORS_Integration(t *testing.T) {
 			corsConfig:     "",
 			requestMethod:  "GET",
 			requestOrigin:  "http://any-frontend.local",
-			expectedStatus: http.StatusOK,
+			expectedStatus: 200,
 			expectedOrigin: "*",
 			expectCreds:    "", // browser limits creds with wildcard
 		},
@@ -37,7 +36,7 @@ func TestCORS_Integration(t *testing.T) {
 			corsConfig:     "",
 			requestMethod:  "GET",
 			requestOrigin:  "http://any-frontend.local",
-			expectedStatus: http.StatusOK,
+			expectedStatus: 200,
 			expectNoCORS:   true,
 		},
 		{
@@ -46,7 +45,7 @@ func TestCORS_Integration(t *testing.T) {
 			corsConfig:     "http://localhost:3000, https://domus.paroki.com",
 			requestMethod:  "GET",
 			requestOrigin:  "http://localhost:3000",
-			expectedStatus: http.StatusOK,
+			expectedStatus: 200,
 			expectedOrigin: "http://localhost:3000",
 			expectCreds:    "true",
 		},
@@ -56,7 +55,7 @@ func TestCORS_Integration(t *testing.T) {
 			corsConfig:     "http://localhost:3000, https://domus.paroki.com",
 			requestMethod:  "GET",
 			requestOrigin:  "https://domus.paroki.com",
-			expectedStatus: http.StatusOK,
+			expectedStatus: 200,
 			expectedOrigin: "https://domus.paroki.com",
 			expectCreds:    "true",
 		},
@@ -66,7 +65,7 @@ func TestCORS_Integration(t *testing.T) {
 			corsConfig:     "http://localhost:3000, https://domus.paroki.com",
 			requestMethod:  "GET",
 			requestOrigin:  "https://malicious.com",
-			expectedStatus: http.StatusOK,
+			expectedStatus: 200,
 			expectNoCORS:   true,
 		},
 		{
@@ -75,7 +74,7 @@ func TestCORS_Integration(t *testing.T) {
 			corsConfig:     "http://localhost:3000",
 			requestMethod:  "OPTIONS",
 			requestOrigin:  "http://localhost:3000",
-			expectedStatus: http.StatusNoContent,
+			expectedStatus: 204,
 			expectedOrigin: "http://localhost:3000",
 			expectCreds:    "true",
 		},
@@ -99,42 +98,22 @@ func TestCORS_Integration(t *testing.T) {
 
 			gofiber.SetupRouter(app, cfg, log, db)
 
-			req, err := http.NewRequest(tt.requestMethod, "/api/health", nil)
-			if err != nil {
-				t.Fatalf("failed to create request: %v", err)
-			}
+			reqBuilder := testutil.New(app).Method(tt.requestMethod, "/api/health")
 
 			if tt.requestOrigin != "" {
-				req.Header.Set("Origin", tt.requestOrigin)
+				reqBuilder = reqBuilder.WithHeader("Origin", tt.requestOrigin)
 			}
 			if tt.requestMethod == "OPTIONS" {
-				req.Header.Set("Access-Control-Request-Method", "GET")
+				reqBuilder = reqBuilder.WithHeader("Access-Control-Request-Method", "GET")
 			}
 
-			resp, err := app.Test(req)
-			if err != nil {
-				t.Fatalf("failed to run app test: %v", err)
-			}
-			defer resp.Body.Close()
-
-			if resp.StatusCode != tt.expectedStatus {
-				t.Errorf("expected status %d, got %d", tt.expectedStatus, resp.StatusCode)
-			}
-
-			originHeader := resp.Header.Get("Access-Control-Allow-Origin")
-			credsHeader := resp.Header.Get("Access-Control-Allow-Credentials")
+			assertions := reqBuilder.Expect(t).Status(tt.expectedStatus)
 
 			if tt.expectNoCORS {
-				if originHeader != "" {
-					t.Errorf("expected no CORS headers, but got Access-Control-Allow-Origin: %s", originHeader)
-				}
+				assertions.Header("Access-Control-Allow-Origin").DoesNotExist()
 			} else {
-				if originHeader != tt.expectedOrigin {
-					t.Errorf("expected Access-Control-Allow-Origin %q, got %q", tt.expectedOrigin, originHeader)
-				}
-				if credsHeader != tt.expectCreds {
-					t.Errorf("expected Access-Control-Allow-Credentials %q, got %q", tt.expectCreds, credsHeader)
-				}
+				assertions.Header("Access-Control-Allow-Origin").Eq(tt.expectedOrigin)
+				assertions.Header("Access-Control-Allow-Credentials").Eq(tt.expectCreds)
 			}
 		})
 	}
