@@ -25,7 +25,7 @@ var serveCmd = &cobra.Command{
 			return err
 		}
 		app := config.GetFiber(cfg)
-		gofiber.SetupRouter(app)
+		gofiber.SetupRouter(app, cfg)
 
 		// Graceful shutdown
 		idleConnsClosed := make(chan struct{})

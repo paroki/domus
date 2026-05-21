@@ -9,12 +9,14 @@ import (
 
 type Config struct {
 	Port int       `mapstructure:"port"`
+	Env  string    `mapstructure:"env"`
 	Api  ApiConfig `mapstructure:"api"`
 }
 
 func GetConfig() (*Config, error) {
 	// Root defaults
 	viper.SetDefault("port", 8080)
+	viper.SetDefault("env", "development")
 
 	// Api defaults
 	viper.SetDefault("api.app_name", "Domus API")
