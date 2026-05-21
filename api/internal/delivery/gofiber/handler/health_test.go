@@ -1,4 +1,4 @@
-package handler
+package handler_test
 
 import (
 	"encoding/json"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/paroki/domus/api/internal/config"
+	"github.com/paroki/domus/api/internal/delivery/gofiber/handler"
 	"github.com/paroki/domus/api/internal/delivery/gofiber/response"
 )
 
@@ -20,7 +21,7 @@ func TestHealthHandler_Check(t *testing.T) {
 	// Create fiber app for testing
 	app := fiber.New()
 	log := config.GetLogger(cfg)
-	h := NewHealthHandler(cfg, log)
+	h := handler.NewHealthHandler(cfg, log)
 	app.Get("/health", h.Check)
 
 	// Create test request
@@ -47,7 +48,7 @@ func TestHealthHandler_Check(t *testing.T) {
 		t.Fatalf("failed to read response body: %v", err)
 	}
 
-	var envelope response.Envelope[HealthResponse]
+	var envelope response.Envelope[handler.HealthResponse]
 	if err := json.Unmarshal(body, &envelope); err != nil {
 		t.Fatalf("failed to unmarshal JSON: %v. Body was: %s", err, string(body))
 	}
@@ -65,8 +66,8 @@ func TestHealthHandler_Check(t *testing.T) {
 		t.Errorf("expected status 'pass', got: %s", envelope.Data.Status)
 	}
 
-	if envelope.Data.Version != Version {
-		t.Errorf("expected version '%s', got: %s", Version, envelope.Data.Version)
+	if envelope.Data.Version != handler.Version {
+		t.Errorf("expected version '%s', got: %s", handler.Version, envelope.Data.Version)
 	}
 
 	if envelope.Data.Env != "test" {
@@ -77,3 +78,4 @@ func TestHealthHandler_Check(t *testing.T) {
 		t.Errorf("expected uptime >= 0, got: %f", envelope.Data.Uptime)
 	}
 }
+
