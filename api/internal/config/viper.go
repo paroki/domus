@@ -26,6 +26,7 @@ func GetConfig() (*Config, error) {
 	viper.SetDefault("api.idle_timeout", 60*time.Second)
 	viper.SetDefault("api.body_limit", 4*1024*1024) // 4MB
 	viper.SetDefault("api.prefork", false)
+	viper.SetDefault("api.cors", "")
 
 	// Log defaults
 	viper.SetDefault("log.level", "info")

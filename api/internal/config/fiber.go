@@ -13,6 +13,7 @@ type ApiConfig struct {
 	IdleTimeout  time.Duration `mapstructure:"idle_timeout"`
 	BodyLimit    int           `mapstructure:"body_limit"`
 	Prefork      bool          `mapstructure:"prefork"`
+	Cors         string        `mapstructure:"cors"`
 }
 
 func GetFiber(cfg *Config) *fiber.App {

@@ -10,7 +10,7 @@ import (
 
 func SetupRouter(app *fiber.App, cfg *config.Config, log logger.Logger) {
 	// Global middleware
-	middleware.Setup(app)
+	middleware.Setup(app, cfg)
 
 	// API Group
 	api := app.Group("/api")
