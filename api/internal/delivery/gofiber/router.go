@@ -2,8 +2,8 @@ package gofiber
 
 import (
 	"github.com/gofiber/fiber/v3"
-	"github.com/paroki/domus/api/internal/delivery/gofiber/handler"
 	"github.com/paroki/domus/api/internal/delivery/gofiber/middleware"
+	"github.com/paroki/domus/api/internal/delivery/gofiber/response"
 )
 
 func SetupRouter(app *fiber.App) {
@@ -15,6 +15,6 @@ func SetupRouter(app *fiber.App) {
 
 	// Health check example
 	api.Get("/health", func(c fiber.Ctx) error {
-		return handler.SendSuccess(c, nil, "OK")
+		return response.OK(c, "OK")
 	})
 }
