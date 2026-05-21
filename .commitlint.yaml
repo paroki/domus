@@ -1,0 +1,42 @@
+min-version: v0.12.0
+formatter: default
+rules:
+  - header-min-length
+  - header-max-length
+  - body-max-line-length
+  - footer-max-line-length
+  - type-enum
+  - scope-enum
+  - scope-empty
+severity:
+  default: error
+  rules: {}
+settings:
+  body-max-line-length:
+    argument: 100
+  footer-max-line-length:
+    argument: 100
+  header-max-length:
+    argument: 72
+  header-min-length:
+    argument: 5
+  type-enum:
+    argument:
+      - feat
+      - fix
+      - docs
+      - refactor
+      - perf
+      - test
+      - chore
+  scope-enum:
+    argument:
+      - api
+      - dash
+      - root
+      - infra
+      - ci
+  scope-empty:
+    argument: never
+disable-default-ignores: false
+ignores: []

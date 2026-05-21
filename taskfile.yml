@@ -1,0 +1,19 @@
+version: '3'
+
+includes:
+  api:
+    taskfile: ./api/taskfile.yml
+    dir: ./api
+
+tasks:
+  setup:
+    desc: Install required tools and setup git hooks
+    cmds:
+      - go install github.com/evilmartians/lefthook@latest
+      - go install github.com/conventionalcommit/commitlint@latest
+      - lefthook install
+      - echo "Setup complete. Tools installed and git hooks synchronized."
+
+  default:
+    cmds:
+      - task --list
