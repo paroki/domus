@@ -1,18 +1,20 @@
 version: '3'
 
 vars:
-  BINARY_NAME: domus
+  BINARY_NAME: bin/domus
 
 tasks:
   build:
     desc: Build the API binary
     cmds:
+      - mkdir -p bin
       - go build -o {{.BINARY_NAME}} ./cmd/domus
 
   run:
     desc: Run the API server
     cmds:
-      - go run ./cmd/domus serve
+      - task: build
+      - ./{{.BINARY_NAME}} serve
 
   test:
     desc: Run tests
