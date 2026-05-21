@@ -194,7 +194,7 @@ Domain error codes follow the pattern: `DOMUS-{DOMAIN}-{SEQ}`
 
 | Prefix | Domain                          |
 |--------|---------------------------------|
-| `AUTH` | Authentication & Authorisation  |
+| `AUTH` | Authentication & Authorization  |
 | `VAL`  | Input Validation                |
 | `PAR`  | Parish Management               |
 | `MBR`  | Member / Parishioner            |
