@@ -23,7 +23,8 @@ func TestHealth_Integration(t *testing.T) {
 
 	// Create and bootstrap fiber app
 	app := config.GetFiber(cfg)
-	gofiber.SetupRouter(app, cfg)
+	log := config.GetLogger(cfg)
+	gofiber.SetupRouter(app, cfg, log)
 
 	// Create request
 	req, err := http.NewRequest("GET", "/api/health", nil)

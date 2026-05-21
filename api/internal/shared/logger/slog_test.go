@@ -2,6 +2,7 @@ package logger_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"log/slog"
 	"testing"
@@ -55,5 +56,33 @@ func TestSlogLogger(t *testing.T) {
 	}
 	if data["localKey"] != "localVal" {
 		t.Errorf("expected localKey to be 'localVal', got %v", data["localKey"])
+	}
+}
+
+func TestSlogLogger_Context(t *testing.T) {
+	var buf bytes.Buffer
+	h := logger.NewContextHandler(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	sl := logger.NewSlogLogger(slog.New(h))
+
+	ctx := logger.ContextWithRequestID(context.Background(), "test-request-id-123")
+
+	sl.InfoContext(ctx, "test context message", "key2", "val2")
+
+	var data map[string]any
+	if err := json.Unmarshal(buf.Bytes(), &data); err != nil {
+		t.Fatalf("failed to unmarshal JSON log: %v", err)
+	}
+
+	if data["msg"] != "test context message" {
+		t.Errorf("expected msg to be 'test context message', got %v", data["msg"])
+	}
+	if data["level"] != "INFO" {
+		t.Errorf("expected level to be 'INFO', got %v", data["level"])
+	}
+	if data["request_id"] != "test-request-id-123" {
+		t.Errorf("expected request_id to be 'test-request-id-123', got %v", data["request_id"])
+	}
+	if data["key2"] != "val2" {
+		t.Errorf("expected key2 to be 'val2', got %v", data["key2"])
 	}
 }

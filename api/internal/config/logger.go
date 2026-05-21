@@ -46,6 +46,9 @@ func GetLogger(cfg *Config) logger.Logger {
 		})
 	}
 
+	// Wrap handler with ContextHandler to support trace_id injection from context.
+	handler = logger.NewContextHandler(handler)
+
 	// Default adapter is slog. If multiple adapters are supported in the future,
 	// we can add a factory switch here based on cfg.Log.Adapter.
 	l := slog.New(handler)

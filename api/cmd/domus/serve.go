@@ -29,7 +29,7 @@ var serveCmd = &cobra.Command{
 		log.Info("Starting Fiber API server...", "port", cfg.Port, "env", cfg.Env)
 
 		app := config.GetFiber(cfg)
-		gofiber.SetupRouter(app, cfg)
+		gofiber.SetupRouter(app, cfg, log)
 
 		// Graceful shutdown
 		idleConnsClosed := make(chan struct{})

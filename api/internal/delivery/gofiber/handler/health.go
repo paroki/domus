@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/paroki/domus/api/internal/config"
 	"github.com/paroki/domus/api/internal/delivery/gofiber/response"
+	"github.com/paroki/domus/api/internal/shared/logger"
 )
 
 var Version = "dev"
@@ -13,10 +14,11 @@ var startTime = time.Now()
 
 type HealthHandler struct {
 	cfg *config.Config
+	log logger.Logger
 }
 
-func NewHealthHandler(cfg *config.Config) *HealthHandler {
-	return &HealthHandler{cfg: cfg}
+func NewHealthHandler(cfg *config.Config, log logger.Logger) *HealthHandler {
+	return &HealthHandler{cfg: cfg, log: log}
 }
 
 type HealthResponse struct {
@@ -27,6 +29,8 @@ type HealthResponse struct {
 }
 
 func (h *HealthHandler) Check(c fiber.Ctx) error {
+	h.log.DebugContext(c.Context(), "Checking health status")
+
 	uptimeSeconds := time.Since(startTime).Seconds()
 
 	data := HealthResponse{

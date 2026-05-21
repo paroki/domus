@@ -19,7 +19,8 @@ func TestHealthHandler_Check(t *testing.T) {
 
 	// Create fiber app for testing
 	app := fiber.New()
-	h := NewHealthHandler(cfg)
+	log := config.GetLogger(cfg)
+	h := NewHealthHandler(cfg, log)
 	app.Get("/health", h.Check)
 
 	// Create test request
