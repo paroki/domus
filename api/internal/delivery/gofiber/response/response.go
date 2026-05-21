@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/requestid"
+	"github.com/paroki/domus/api/internal/shared/validator"
 )
 
 // Envelope is the top-level wrapper for all API responses.
@@ -99,4 +100,15 @@ func Fail(c fiber.Ctx, status int, code, message string, details []FieldError) e
 			Details: details,
 		},
 	})
+}
+
+// ValidationFail writes a 400 validation error response conforming to ADR-001.
+// It automatically sets the error code to "DOMUS-VAL-001" and converts
+// []validator.FieldError to the response FieldError shape.
+func ValidationFail(c fiber.Ctx, errs []validator.FieldError) error {
+	details := make([]FieldError, len(errs))
+	for i, e := range errs {
+		details[i] = FieldError{Field: e.Field, Issue: e.Issue}
+	}
+	return Fail(c, fiber.StatusBadRequest, "DOMUS-VAL-001", "Validasi permintaan gagal.", details)
 }
