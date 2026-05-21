@@ -26,10 +26,15 @@ var serveCmd = &cobra.Command{
 		}
 		log := config.GetLogger(cfg)
 
+		dbClient, err := config.GetDB(cfg)
+		if err != nil {
+			return fmt.Errorf("failed to initialize database: %w", err)
+		}
+
 		log.Info("Starting Fiber API server...", "port", cfg.Port, "env", cfg.Env)
 
 		app := config.GetFiber(cfg)
-		gofiber.SetupRouter(app, cfg, log)
+		gofiber.SetupRouter(app, cfg, log, dbClient)
 
 		// Graceful shutdown
 		idleConnsClosed := make(chan struct{})
@@ -42,12 +47,16 @@ var serveCmd = &cobra.Command{
 			if err := app.Shutdown(); err != nil {
 				log.Error("Fiber shutdown error", "error", err)
 			}
+			if err := dbClient.Close(); err != nil {
+				log.Error("Database close error", "error", err)
+			}
 			close(idleConnsClosed)
 		}()
 
 		if err := app.Listen(fmt.Sprintf(":%d", cfg.Port), fiber.ListenConfig{
 			EnablePrefork: cfg.Api.Prefork,
 		}); err != nil {
+			_ = dbClient.Close()
 			return err
 		}
 

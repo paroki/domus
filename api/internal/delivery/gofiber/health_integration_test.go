@@ -10,6 +10,7 @@ import (
 	"github.com/paroki/domus/api/internal/delivery/gofiber"
 	"github.com/paroki/domus/api/internal/delivery/gofiber/handler"
 	"github.com/paroki/domus/api/internal/delivery/gofiber/response"
+	"github.com/paroki/domus/api/testutil"
 )
 
 func TestHealth_Integration(t *testing.T) {
@@ -24,7 +25,11 @@ func TestHealth_Integration(t *testing.T) {
 	// Create and bootstrap fiber app
 	app := config.GetFiber(cfg)
 	log := config.GetLogger(cfg)
-	gofiber.SetupRouter(app, cfg, log)
+
+	db, closeDB := testutil.NewTestDB(t)
+	t.Cleanup(closeDB)
+
+	gofiber.SetupRouter(app, cfg, log, db)
 
 	// Create request
 	req, err := http.NewRequest("GET", "/api/health", nil)

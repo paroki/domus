@@ -8,10 +8,11 @@ import (
 )
 
 type Config struct {
-	Port int          `mapstructure:"port"`
-	Env  string       `mapstructure:"env"`
-	Api  ApiConfig    `mapstructure:"api"`
-	Log  LoggerConfig `mapstructure:"log"`
+	Port int            `mapstructure:"port"`
+	Env  string         `mapstructure:"env"`
+	Api  ApiConfig      `mapstructure:"api"`
+	Log  LoggerConfig   `mapstructure:"log"`
+	DB   DatabaseConfig `mapstructure:"db"`
 }
 
 func GetConfig() (*Config, error) {
@@ -31,6 +32,10 @@ func GetConfig() (*Config, error) {
 	// Log defaults
 	viper.SetDefault("log.level", "info")
 	viper.SetDefault("log.adapter", "slog")
+
+	// Db defaults
+	viper.SetDefault("db.driver", "postgres")
+	viper.SetDefault("db.dsn", "")
 
 	viper.SetConfigName("config")
 	viper.SetConfigType("json")

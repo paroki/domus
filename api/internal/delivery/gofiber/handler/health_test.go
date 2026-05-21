@@ -78,4 +78,3 @@ func TestHealthHandler_Check(t *testing.T) {
 		t.Errorf("expected uptime >= 0, got: %f", envelope.Data.Uptime)
 	}
 }
-

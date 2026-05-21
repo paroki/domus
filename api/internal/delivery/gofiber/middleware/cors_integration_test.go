@@ -6,6 +6,7 @@ import (
 
 	"github.com/paroki/domus/api/internal/config"
 	"github.com/paroki/domus/api/internal/delivery/gofiber"
+	"github.com/paroki/domus/api/testutil"
 )
 
 func TestCORS_Integration(t *testing.T) {
@@ -92,7 +93,11 @@ func TestCORS_Integration(t *testing.T) {
 
 			app := config.GetFiber(cfg)
 			log := config.GetLogger(cfg)
-			gofiber.SetupRouter(app, cfg, log)
+
+			db, closeDB := testutil.NewTestDB(t)
+			t.Cleanup(closeDB)
+
+			gofiber.SetupRouter(app, cfg, log, db)
 
 			req, err := http.NewRequest(tt.requestMethod, "/api/health", nil)
 			if err != nil {
