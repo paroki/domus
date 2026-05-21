@@ -24,6 +24,10 @@ var serveCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		log := config.GetLogger(cfg)
+
+		log.Info("Starting Fiber API server...", "port", cfg.Port, "env", cfg.Env)
+
 		app := config.GetFiber(cfg)
 		gofiber.SetupRouter(app, cfg)
 
@@ -34,9 +38,9 @@ var serveCmd = &cobra.Command{
 			signal.Notify(sigint, os.Interrupt, syscall.SIGTERM)
 			<-sigint
 
-			fmt.Println("\nShutting down server...")
+			log.Info("Shutting down server...")
 			if err := app.Shutdown(); err != nil {
-				fmt.Printf("Fiber shutdown error: %v\n", err)
+				log.Error("Fiber shutdown error", "error", err)
 			}
 			close(idleConnsClosed)
 		}()
@@ -48,7 +52,7 @@ var serveCmd = &cobra.Command{
 		}
 
 		<-idleConnsClosed
-		fmt.Println("Server stopped.")
+		log.Info("Server stopped.")
 		return nil
 	},
 }

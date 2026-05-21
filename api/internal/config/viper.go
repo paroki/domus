@@ -8,9 +8,10 @@ import (
 )
 
 type Config struct {
-	Port int       `mapstructure:"port"`
-	Env  string    `mapstructure:"env"`
-	Api  ApiConfig `mapstructure:"api"`
+	Port int          `mapstructure:"port"`
+	Env  string       `mapstructure:"env"`
+	Api  ApiConfig    `mapstructure:"api"`
+	Log  LoggerConfig `mapstructure:"log"`
 }
 
 func GetConfig() (*Config, error) {
@@ -25,6 +26,10 @@ func GetConfig() (*Config, error) {
 	viper.SetDefault("api.idle_timeout", 60*time.Second)
 	viper.SetDefault("api.body_limit", 4*1024*1024) // 4MB
 	viper.SetDefault("api.prefork", false)
+
+	// Log defaults
+	viper.SetDefault("log.level", "info")
+	viper.SetDefault("log.adapter", "slog")
 
 	viper.SetConfigName("config")
 	viper.SetConfigType("json")
