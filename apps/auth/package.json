@@ -4,7 +4,10 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "bun run --watch src/index.ts"
+    "dev": "bun run --watch src/main.ts",
+    "build:bun": "bun build src/main.ts --target=bun --outdir=dist",
+    "typecheck": "tsc --noEmit",
+    "start": "bun run src/main.ts"
   },
   "dependencies": {
     "@domus/better-auth": "workspace:*",

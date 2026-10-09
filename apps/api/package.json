@@ -1,0 +1,6 @@
+{
+  "name": "@domus/api",
+  "scripts": {
+    "dev": "air"
+  }
+}
