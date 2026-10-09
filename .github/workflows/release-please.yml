@@ -21,7 +21,6 @@ jobs:
           private-key: ${{ secrets.ASPRI_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
           repositories: domus
-          permission-contents: write
 
       - uses: googleapis/release-please-action@v5
         with:
