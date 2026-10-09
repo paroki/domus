@@ -39,7 +39,8 @@
         "editorconfig.editorconfig",
         "CucumberOpen.cucumber-official",
         "google.google-antigravity",
-        "vitest.explorer"
+        "vitest.explorer",
+        "github.vscode-github-actions"
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",
