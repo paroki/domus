@@ -1,0 +1,13 @@
+**/node_modules
+**/.turbo
+**/.wrangler
+**/.react-router
+**/build
+**/dist
+**/tmp
+**/.env
+**/.env.*
+.git
+.github
+.devcontainer
+.husky
