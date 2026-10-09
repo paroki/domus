@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [auth, dash, finance]
+        app: [auth, dash, api]
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
