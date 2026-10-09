@@ -13,7 +13,7 @@
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
-  "forwardPorts": [3001, 8001, 8002, 8003, 9001, 8080, 5432, 4983],
+  "forwardPorts": [3001, 8001, 8002, 9001, 8080, 5432, 4983],
   "portsAttributes": {
     "3001": { "label": "@domus/dash" },
     "8001": { "label": "@domus/auth" },
@@ -37,7 +37,9 @@
         "cloudflare.vscode-wrangler",
         "ms-azuretools.vscode-docker",
         "editorconfig.editorconfig",
-        "CucumberOpen.cucumber-official"
+        "CucumberOpen.cucumber-official",
+        "google.google-antigravity",
+        "vitest.explorer"
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",

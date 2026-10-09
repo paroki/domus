@@ -1,0 +1,30 @@
+{
+  "$schema": "./node_modules/turbo/schema.json",
+  "ui": "tui",
+  "globalPassThroughEnv": ["AUTH_*", "KAFKA_*", "API_*"],
+  "tasks": {
+    "@domus/better-auth#auth:schema": {
+      "inputs": ["src/auth.ts"],
+      "outputs": ["src/drizzle/schema/better-auth.ts"]
+    },
+    "@domus/better-auth#db:push": {
+      "dependsOn": ["@domus/better-auth#auth:schema"],
+      "cache": false,
+      "persistent": true
+    },
+    "@domus/better-auth#db:studio": {},
+    "db:push": {
+      "cache": false,
+      "persistent": true
+    },
+    "db:studio": {
+      "cache": false,
+      "persistent": true
+    },
+    "dev": {
+      "dependsOn": ["db:studio"],
+      "cache": false,
+      "persistent": true
+    }
+  }
+}

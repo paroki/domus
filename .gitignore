@@ -1,3 +1,7 @@
+# domus specific
+devcontainer-lock.json
+notes
+
 # Dependencies
 node_modules/
 

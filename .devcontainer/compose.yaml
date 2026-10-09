@@ -4,11 +4,13 @@ services:
     command: sleep infinity
     volumes:
       # Mount the parent dir so the repo folder name does not matter (Codespaces)
-      - ..:/workspaces:cached
+      - ../..:/workspaces:cached
       - bash-history:/commandhistory
       - gemini:/home/vscode/.gemini
     environment:
       AUTH_URL: http://localhost:8001
+      AUTH_HOST: 0.0.0.0
+      AUTH_PATH: ""
       AUTH_DB_URL: postgres://domus:domus@postgres:5432/domus
       # Dev-only default. Override with a Codespaces secret or a local env var.
       AUTH_SECRET: 6171ce314c622f9a4cdb542c810d40b91edde2f659bcd5224c6aeee7d7ea4925

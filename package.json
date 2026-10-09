@@ -17,8 +17,9 @@
     "test": "turbo run test",
     "prepare": "husky",
     "oa:gen": "turbo run generate --filter=@omed/api --filter=@omed/openapi",
-    "db:generate": "turbo run db:generate --filter=@omed/better-auth",
-    "db:migrate": "turbo run db:migrate --filter=@omed/better-auth",
+    "db:push": "turbo run db:push",
+    "db:generate": "turbo run db:generate",
+    "db:migrate": "turbo run db:migrate",
     "clean": "turbo run clean && rm -rf node_modules"
   },
   "devDependencies": {
