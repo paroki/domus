@@ -1,0 +1,36 @@
+{
+  "name": "domus",
+  "private": true,
+  "packageManager": "bun@1.4.2",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "e2e"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "prepare": "husky",
+    "oa:gen": "turbo run generate --filter=@omed/api --filter=@omed/openapi",
+    "db:generate": "turbo run db:generate --filter=@omed/better-auth",
+    "db:migrate": "turbo run db:migrate --filter=@omed/better-auth",
+    "clean": "turbo run clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.15",
+    "@commitlint/cli": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.3",
+    "husky": "^9.1.7",
+    "openapi-typescript": "^7.13.0",
+    "turbo": "^2.5.0",
+    "typescript": "^6"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
