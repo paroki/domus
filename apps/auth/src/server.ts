@@ -5,7 +5,7 @@ import { Elysia } from "elysia";
 import { OpenAPI } from "./openapi";
 
 const betterAuth = new Elysia({ name: "better-auth" })
-  .all("/*", ({ request }) => auth.handler(request))
+  //.all("/*", ({ request }) => auth.handler(request))
   .macro({
     auth: {
       async resolve({ status, request: { headers } }) {
@@ -42,9 +42,9 @@ export const server = new Elysia({})
       },
     }),
   )
-  .use(betterAuth)
   .get("/", ({ redirect }) => redirect("/openapi"))
   .get("/health", () => ({
     status: "ok",
     timestamp: new Date().toISOString(),
-  }));
+  }))
+  .use(betterAuth);

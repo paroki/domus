@@ -1,0 +1,11 @@
+# One-shot job: sync Better Auth schema to Postgres (db:push for now).
+# Build context: repo root.
+#   docker build -f apps/auth/Dockerfile.migrate -t domus-auth-migrate .
+FROM oven/bun:1.4.2-alpine
+WORKDIR /app
+COPY . .
+# devDependencies are required here (drizzle-kit)
+RUN bun install --frozen-lockfile --ignore-scripts
+WORKDIR /app/packages/better-auth
+# Later: switch to `bun run db:migrate` once migration files exist
+CMD ["bun", "run", "db:push"]
