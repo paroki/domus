@@ -61,7 +61,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
-          file: apps/${{ matrix.app }}/${{ matrix.file && matrix.file || 'Dockerfile' }}
+          file: ${{ matrix.file && matrix.file || format('apps/{0}/Dockerfile', matrix.app) }}
           platforms: linux/amd64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
