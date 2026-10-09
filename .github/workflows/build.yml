@@ -28,7 +28,7 @@ jobs:
           - app: dash
           - app: api
           - app: migrator
-            file: Dockerfile.migrate
+            file: Dockerfile.migrator
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
