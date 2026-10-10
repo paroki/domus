@@ -1,34 +1,20 @@
 import { GithubOutlined, GoogleOutlined } from "@ant-design/icons";
 import { signIn } from "@domus/better-auth/client";
-import { Alert, Button, ConfigProvider, Typography } from "antd";
-import { useEffect, useMemo, useState } from "react";
+import { Alert, Button, Typography } from "antd";
+import { useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router";
-import { getAntdTheme, type ThemeMode } from "~/shared/layout/theme";
+import i18n from "~/i18n";
+import { LanguageSwitcher } from "~/shared/layout/LanguageSwitcher";
 import type { Route } from "../../routes/+types/login";
 
 type Provider = "google" | "github";
+const linkStyle = { color: "var(--domus-primary)", fontWeight: 500 } as const;
+
+type ErrorCode = "access_denied" | "account_not_linked" | "oauth";
 
 export function meta(_: Route.MetaArgs) {
-  return [{ title: "Masuk | Domus" }];
-}
-
-// Ikuti tema OS. Pindahkan ke root.tsx kalau nanti dipakai di semua halaman.
-function useThemeMode(): ThemeMode {
-  const [mode, setMode] = useState<ThemeMode>("light");
-
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const apply = () => setMode(mq.matches ? "dark" : "light");
-    apply();
-    mq.addEventListener("change", apply);
-    return () => mq.removeEventListener("change", apply);
-  }, []);
-
-  useEffect(() => {
-    document.documentElement.dataset.theme = mode;
-  }, [mode]);
-
-  return mode;
+  return [{ title: `${i18n.t("login.pageTitle")} | Domus` }];
 }
 
 // Cegah open redirect: hanya terima path internal.
@@ -37,22 +23,26 @@ function safeRedirect(value: string | null): string {
   return value;
 }
 
-const ERROR_MESSAGES: Record<string, string> = {
-  access_denied: "Izin login dibatalkan. Coba lagi kalau mau lanjut.",
-  account_not_linked:
-    "Email ini sudah terdaftar lewat penyedia lain. Masuk dengan penyedia yang dulu dipakai.",
-  oauth: "Login gagal. Coba lagi sebentar lagi.",
-};
+const ERROR_CODES: readonly ErrorCode[] = [
+  "access_denied",
+  "account_not_linked",
+  "oauth",
+];
+
+/** Kode error dari query string; kode yang tidak dikenal jatuh ke `oauth`. */
+function toErrorCode(value: string | null): ErrorCode | null {
+  if (!value) return null;
+  return ERROR_CODES.find((code) => code === value) ?? "oauth";
+}
 
 export default function Login() {
-  const mode = useThemeMode();
-  const theme = useMemo(() => getAntdTheme(mode), [mode]);
+  const { t } = useTranslation();
   const [params] = useSearchParams();
   const [pending, setPending] = useState<Provider | null>(null);
-  const [error, setError] = useState<string | null>(() => {
-    const code = params.get("error");
-    return code ? (ERROR_MESSAGES[code] ?? ERROR_MESSAGES.oauth) : null;
-  });
+  // Simpan kode (bukan teks) supaya pesan ikut berganti saat bahasa diubah.
+  const [error, setError] = useState<ErrorCode | null>(() =>
+    toErrorCode(params.get("error")),
+  );
 
   const redirectTo = safeRedirect(params.get("redirect"));
 
@@ -66,126 +56,120 @@ export default function Login() {
         errorCallbackURL: `${window.location.origin}/login`,
       });
       if (error) {
-        setError(ERROR_MESSAGES.oauth);
+        setError("oauth");
         setPending(null);
       }
       // Sukses: browser diarahkan ke penyedia, loading dibiarkan jalan.
     } catch {
-      setError(ERROR_MESSAGES.oauth);
+      setError("oauth");
       setPending(null);
     }
   }
 
   return (
-    <ConfigProvider theme={theme}>
-      <main className="min-h-screen grid place-items-center px-4 py-10">
-        <section
-          aria-labelledby="login-title"
-          className="glass glass-strong w-full max-w-[400px] p-8"
-          style={{ borderRadius: "var(--domus-radius-lg)" }}
-        >
-          <div className="flex flex-col items-center text-center">
-            <div
-              aria-hidden="true"
-              className="grid place-items-center size-11 mb-4 text-xl font-medium"
-              style={{
-                background: "var(--domus-brand)",
-                color: "#fff",
-                borderRadius: "var(--domus-radius)",
-              }}
-            >
-              D
-            </div>
-            <Typography.Title
-              id="login-title"
-              level={2}
-              style={{ margin: 0, fontWeight: 500 }}
-            >
-              Masuk ke Domus
-            </Typography.Title>
-            <Typography.Paragraph
-              style={{
-                margin: "6px 0 0",
-                color: "var(--domus-text-secondary)",
-              }}
-            >
-              Kelola keuskupan, paroki, dan lingkungan di satu tempat.
-            </Typography.Paragraph>
+    <main className="min-h-screen grid place-items-center px-4 py-10">
+      <div className="fixed top-3 right-3">
+        <LanguageSwitcher />
+      </div>
+      <section
+        aria-labelledby="login-title"
+        className="glass glass-strong w-full max-w-100 p-8"
+        style={{ borderRadius: "var(--domus-radius-lg)" }}
+      >
+        <div className="flex flex-col items-center text-center">
+          <div
+            aria-hidden="true"
+            className="grid place-items-center size-11 mb-4 text-xl font-medium"
+            style={{
+              background: "var(--domus-brand)",
+              color: "#fff",
+              borderRadius: "var(--domus-radius)",
+            }}
+          >
+            D
           </div>
-
-          {error && (
-            <Alert
-              className="mt-5"
-              type="error"
-              showIcon
-              message={error}
-              closable
-              onClose={() => setError(null)}
-            />
-          )}
-
-          <div className="mt-6 flex flex-col gap-3">
-            <Button
-              size="large"
-              block
-              type="primary"
-              icon={<GoogleOutlined />}
-              loading={pending === "google"}
-              disabled={pending !== null && pending !== "google"}
-              onClick={() => doSignIn("google")}
-            >
-              Lanjutkan dengan Google
-            </Button>
-            <Button
-              size="large"
-              block
-              icon={<GithubOutlined />}
-              loading={pending === "github"}
-              disabled={pending !== null && pending !== "github"}
-              onClick={() => doSignIn("github")}
-            >
-              Lanjutkan dengan GitHub
-            </Button>
-          </div>
-
+          <Typography.Title
+            id="login-title"
+            level={2}
+            style={{ margin: 0, fontWeight: 500 }}
+          >
+            {t("login.title")}
+          </Typography.Title>
           <Typography.Paragraph
             style={{
-              margin: "20px 0 0",
-              textAlign: "center",
-              fontSize: 12,
-              color: "var(--domus-text-muted)",
-            }}
-          >
-            Belum punya akses? Hubungi admin keuskupan atau paroki kamu.
-          </Typography.Paragraph>
-
-          <p
-            className="mt-5 pt-4 text-center"
-            style={{
-              fontSize: 12,
-              lineHeight: 1.6,
+              margin: "6px 0 0",
               color: "var(--domus-text-secondary)",
-              borderTop: "1px solid var(--domus-border-soft)",
             }}
           >
-            Dengan masuk, kamu menyetujui{" "}
-            <Link
-              to="/terms"
-              style={{ color: "var(--domus-primary)", fontWeight: 500 }}
-            >
-              Ketentuan Layanan
-            </Link>{" "}
-            dan{" "}
-            <Link
-              to="/privacy"
-              style={{ color: "var(--domus-primary)", fontWeight: 500 }}
-            >
-              Kebijakan Privasi
-            </Link>
-            .
-          </p>
-        </section>
-      </main>
-    </ConfigProvider>
+            {t("login.subtitle")}
+          </Typography.Paragraph>
+        </div>
+
+        {error && (
+          <Alert
+            className="mt-5"
+            type="error"
+            showIcon
+            title={t(`login.errors.${error}`)}
+            closable={{
+              onClose: () => setError(null),
+            }}
+          />
+        )}
+
+        <div className="mt-6 flex flex-col gap-3">
+          <Button
+            size="large"
+            block
+            type="primary"
+            icon={<GoogleOutlined />}
+            loading={pending === "google"}
+            disabled={pending !== null && pending !== "google"}
+            onClick={() => doSignIn("google")}
+          >
+            {t("login.continueWithGoogle")}
+          </Button>
+          <Button
+            size="large"
+            block
+            icon={<GithubOutlined />}
+            loading={pending === "github"}
+            disabled={pending !== null && pending !== "github"}
+            onClick={() => doSignIn("github")}
+          >
+            {t("login.continueWithGithub")}
+          </Button>
+        </div>
+
+        <Typography.Paragraph
+          style={{
+            margin: "20px 0 0",
+            textAlign: "center",
+            fontSize: 13,
+            color: "var(--domus-text-muted)",
+          }}
+        >
+          {t("login.noAccess")}
+        </Typography.Paragraph>
+
+        <p
+          className="mt-5 pt-4 text-center"
+          style={{
+            fontSize: 13,
+            lineHeight: 1.6,
+            color: "var(--domus-text-secondary)",
+            borderTop: "1px solid var(--domus-border-soft)",
+          }}
+        >
+          <Trans
+            i18nKey="login.agreement"
+            components={{
+              terms: <Link to="/terms" style={linkStyle} />,
+              privacy: <Link to="/privacy" style={linkStyle} />,
+            }}
+          />
+        </p>
+      </section>
+    </main>
   );
 }

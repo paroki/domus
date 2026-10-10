@@ -73,22 +73,22 @@ Rules:
 ## 4. Typography
 
 - Font: **Inter** (already loaded in `root.tsx`), system sans fallback.
-- Base 13px. Two weights only: 400 and 500.
+- Base 15px. Two weights only: 400 and 500.
 
 | Role | Size |
 | --- | --- |
-| Heading 1 | 24 |
-| Heading 2 | 20 |
-| Heading 3 | 17 |
-| Heading 4 | 15 |
-| Body, labels, tables | 13 |
-| Caption, metadata | 12 |
+| Heading 1 | 28 |
+| Heading 2 | 22 |
+| Heading 3 | 18 |
+| Heading 4 | 16 |
+| Body, labels, tables | 15 |
+| Caption, metadata | 13 |
 
 Sentence case for all labels, buttons, and titles. No ALL CAPS.
 
 ## 5. Density and shape
 
-- Ant Design uses `compactAlgorithm` + 13px font. Use `size="small"` on tables and forms when the data is dense.
+- Ant Design uses `compactAlgorithm` + 15px font. Use `size="small"` on tables and forms when the data is dense.
 - Spacing scale: **4, 8, 12, 16, 24**. Card padding 16, gap between cards 12.
 - Radius: small 6 (tags, checkboxes), default 10 (buttons, inputs, small cards), large 14 (cards, modals, drawers).
 - Header height 52px.

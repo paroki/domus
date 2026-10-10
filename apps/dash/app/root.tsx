@@ -1,3 +1,8 @@
+import { ConfigProvider } from "antd";
+import enUS from "antd/locale/en_US";
+import idID from "antd/locale/id_ID";
+import { useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   isRouteErrorResponse,
   Links,
@@ -6,9 +11,18 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
+import { getCurrentLanguage, type Language } from "~/i18n";
+import { getAntdTheme } from "~/shared/layout/theme";
+import { useThemeMode } from "~/shared/layout/useThemeMode";
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import "~/i18n"; // inisialisasi i18next (side effect)
+
+const ANTD_LOCALES = { id: idID, en: enUS } as const satisfies Record<
+  Language,
+  unknown
+>;
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -25,7 +39,7 @@ export const links: Route.LinksFunction = () => [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="id">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -42,20 +56,35 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  const mode = useThemeMode();
+  const theme = useMemo(() => getAntdTheme(mode), [mode]);
+  // Ikut berganti saat bahasa diubah (useTranslation subscribe ke i18n).
+  const { i18n } = useTranslation();
+  const language = getCurrentLanguage();
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `i18n.language` memicu sinkronisasi ke <html lang>
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language, i18n.language]);
+
+  return (
+    <ConfigProvider theme={theme} locale={ANTD_LOCALES[language]}>
+      <Outlet />
+    </ConfigProvider>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
-  let details = "An unexpected error occurred.";
+  const { t } = useTranslation();
+  let message = t("error.title");
+  let details = t("error.unexpected");
   let stack: string | undefined;
 
   if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
+    message =
+      error.status === 404 ? t("error.notFoundTitle") : t("error.generic");
     details =
-      error.status === 404
-        ? "The requested page could not be found."
-        : error.statusText || details;
+      error.status === 404 ? t("error.notFound") : error.statusText || details;
   } else if (import.meta.env.DEV && error && error instanceof Error) {
     details = error.message;
     stack = error.stack;
