@@ -81,7 +81,7 @@ export default function Login() {
       <main className="min-h-screen grid place-items-center px-4 py-10">
         <section
           aria-labelledby="login-title"
-          className="glass glass-strong w-full max-w-[400px] p-8"
+          className="glass glass-strong w-full max-w-100 p-8"
           style={{ borderRadius: "var(--domus-radius-lg)" }}
         >
           <div className="flex flex-col items-center text-center">
@@ -118,9 +118,10 @@ export default function Login() {
               className="mt-5"
               type="error"
               showIcon
-              message={error}
-              closable
-              onClose={() => setError(null)}
+              title={error}
+              closable={{
+                onClose: () => setError(null),
+              }}
             />
           )}
 
