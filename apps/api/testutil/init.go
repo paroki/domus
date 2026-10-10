@@ -47,7 +47,7 @@ func init() {
 	logPath := filepath.Join(filepath.Dir(b), "../tmp/test.log")
 	_ = os.MkdirAll(filepath.Dir(logPath), 0755)
 
-	logFile, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	logFile, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 	var logWriter io.Writer = logFile
 	if err != nil {
 		logWriter = os.Stdout
