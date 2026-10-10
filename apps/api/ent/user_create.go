@@ -29,9 +29,23 @@ func (_c *UserCreate) SetName(v string) *UserCreate {
 	return _c
 }
 
+// SetEmail sets the "email" field.
+func (_c *UserCreate) SetEmail(v string) *UserCreate {
+	_c.mutation.SetEmail(v)
+	return _c
+}
+
 // SetAvatar sets the "avatar" field.
 func (_c *UserCreate) SetAvatar(v string) *UserCreate {
 	_c.mutation.SetAvatar(v)
+	return _c
+}
+
+// SetNillableAvatar sets the "avatar" field if the given value is not nil.
+func (_c *UserCreate) SetNillableAvatar(v *string) *UserCreate {
+	if v != nil {
+		_c.SetAvatar(*v)
+	}
 	return _c
 }
 
@@ -100,12 +114,12 @@ func (_c *UserCreate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "User.name": %w`, err)}
 		}
 	}
-	if _, ok := _c.mutation.Avatar(); !ok {
-		return &ValidationError{Name: "avatar", err: errors.New(`ent: missing required field "User.avatar"`)}
+	if _, ok := _c.mutation.Email(); !ok {
+		return &ValidationError{Name: "email", err: errors.New(`ent: missing required field "User.email"`)}
 	}
-	if v, ok := _c.mutation.Avatar(); ok {
-		if err := user.AvatarValidator(v); err != nil {
-			return &ValidationError{Name: "avatar", err: fmt.Errorf(`ent: validator failed for field "User.avatar": %w`, err)}
+	if v, ok := _c.mutation.Email(); ok {
+		if err := user.EmailValidator(v); err != nil {
+			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
 		}
 	}
 	return nil
@@ -148,6 +162,10 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(user.FieldName, field.TypeString, value)
 		_node.Name = value
+	}
+	if value, ok := _c.mutation.Email(); ok {
+		_spec.SetField(user.FieldEmail, field.TypeString, value)
+		_node.Email = value
 	}
 	if value, ok := _c.mutation.Avatar(); ok {
 		_spec.SetField(user.FieldAvatar, field.TypeString, value)
@@ -217,6 +235,18 @@ func (u *UserUpsert) UpdateName() *UserUpsert {
 	return u
 }
 
+// SetEmail sets the "email" field.
+func (u *UserUpsert) SetEmail(v string) *UserUpsert {
+	u.Set(user.FieldEmail, v)
+	return u
+}
+
+// UpdateEmail sets the "email" field to the value that was provided on create.
+func (u *UserUpsert) UpdateEmail() *UserUpsert {
+	u.SetExcluded(user.FieldEmail)
+	return u
+}
+
 // SetAvatar sets the "avatar" field.
 func (u *UserUpsert) SetAvatar(v string) *UserUpsert {
 	u.Set(user.FieldAvatar, v)
@@ -226,6 +256,12 @@ func (u *UserUpsert) SetAvatar(v string) *UserUpsert {
 // UpdateAvatar sets the "avatar" field to the value that was provided on create.
 func (u *UserUpsert) UpdateAvatar() *UserUpsert {
 	u.SetExcluded(user.FieldAvatar)
+	return u
+}
+
+// ClearAvatar clears the value of the "avatar" field.
+func (u *UserUpsert) ClearAvatar() *UserUpsert {
+	u.SetNull(user.FieldAvatar)
 	return u
 }
 
@@ -291,6 +327,20 @@ func (u *UserUpsertOne) UpdateName() *UserUpsertOne {
 	})
 }
 
+// SetEmail sets the "email" field.
+func (u *UserUpsertOne) SetEmail(v string) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetEmail(v)
+	})
+}
+
+// UpdateEmail sets the "email" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdateEmail() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateEmail()
+	})
+}
+
 // SetAvatar sets the "avatar" field.
 func (u *UserUpsertOne) SetAvatar(v string) *UserUpsertOne {
 	return u.Update(func(s *UserUpsert) {
@@ -302,6 +352,13 @@ func (u *UserUpsertOne) SetAvatar(v string) *UserUpsertOne {
 func (u *UserUpsertOne) UpdateAvatar() *UserUpsertOne {
 	return u.Update(func(s *UserUpsert) {
 		s.UpdateAvatar()
+	})
+}
+
+// ClearAvatar clears the value of the "avatar" field.
+func (u *UserUpsertOne) ClearAvatar() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.ClearAvatar()
 	})
 }
 
@@ -534,6 +591,20 @@ func (u *UserUpsertBulk) UpdateName() *UserUpsertBulk {
 	})
 }
 
+// SetEmail sets the "email" field.
+func (u *UserUpsertBulk) SetEmail(v string) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetEmail(v)
+	})
+}
+
+// UpdateEmail sets the "email" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdateEmail() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateEmail()
+	})
+}
+
 // SetAvatar sets the "avatar" field.
 func (u *UserUpsertBulk) SetAvatar(v string) *UserUpsertBulk {
 	return u.Update(func(s *UserUpsert) {
@@ -545,6 +616,13 @@ func (u *UserUpsertBulk) SetAvatar(v string) *UserUpsertBulk {
 func (u *UserUpsertBulk) UpdateAvatar() *UserUpsertBulk {
 	return u.Update(func(s *UserUpsert) {
 		s.UpdateAvatar()
+	})
+}
+
+// ClearAvatar clears the value of the "avatar" field.
+func (u *UserUpsertBulk) ClearAvatar() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.ClearAvatar()
 	})
 }
 

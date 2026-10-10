@@ -27,6 +27,7 @@ const (
 type AuthenticatedUser struct {
 	ID             uuid.UUID       `json:"id"`
 	Name           string          `json:"name"`
+	Email          string          `json:"email"`
 	Avatar         string          `json:"avatar,omitempty"`
 	WorkspaceID    uuid.UUID       `json:"activeWorkspaceId"`
 	WorkspaceName  string          `json:"activeWorkspaceName"`
@@ -44,7 +45,16 @@ func (u AuthenticatedUser) HasScope(requiredScope string) bool {
 
 const AUTH_USER_CONTEXT_KEY = "user"
 
+type localGetter interface {
+	Locals(key any, value ...any) any
+}
+
 func UserFromContext(ctx context.Context) AuthenticatedUser {
+	if g, ok := ctx.(localGetter); ok {
+		if u, ok := g.Locals(AUTH_USER_CONTEXT_KEY).(AuthenticatedUser); ok {
+			return u
+		}
+	}
 	u, _ := ctx.Value(AUTH_USER_CONTEXT_KEY).(AuthenticatedUser)
 	return u
 }

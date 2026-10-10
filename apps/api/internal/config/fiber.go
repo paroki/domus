@@ -21,7 +21,6 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/gofiber/fiber/v3/middleware/healthcheck"
 	"github.com/gofiber/fiber/v3/middleware/recover"
-	"github.com/paroki/domus/api/internal/core/middleware"
 	"github.com/paroki/domus/api/internal/http"
 	"github.com/paroki/domus/api/internal/model"
 	slogfiber "github.com/samber/slog-fiber"
@@ -56,9 +55,6 @@ func initMiddlewares(cfg Config, app *fiber.App, logger *slog.Logger) error {
 			return fiber.NewError(fiber.StatusUnauthorized, err.Error())
 		},
 	}))
-
-	// user injector
-	app.Use(middleware.UserInjector(cfg.AuthUrl, cfg.AuthUrl, cfg.AuthUrl))
 
 	return nil
 }

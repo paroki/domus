@@ -3,7 +3,6 @@ package middleware
 import (
 	"encoding/json"
 	"slices"
-	"strings"
 
 	jwtware "github.com/gofiber/contrib/v3/jwt"
 	"github.com/gofiber/fiber/v3"
@@ -11,7 +10,7 @@ import (
 	"github.com/paroki/domus/api/internal/core"
 )
 
-func UserInjector(issuer string, restAudience string, mcpResource string) fiber.Handler {
+func UserInjector(issuer string, restAudience string) fiber.Handler {
 	return func(c fiber.Ctx) error {
 		if c.Method() == fiber.MethodOptions {
 			return c.Next()
@@ -30,9 +29,6 @@ func UserInjector(issuer string, restAudience string, mcpResource string) fiber.
 		}
 
 		expectedAudience := restAudience
-		if strings.HasPrefix(c.Path(), "/mcp") {
-			expectedAudience = mcpResource
-		}
 
 		if aud, err := claims.GetAudience(); err != nil || !slices.Contains(aud, expectedAudience) {
 			return fiber.ErrUnauthorized

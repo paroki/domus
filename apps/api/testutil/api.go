@@ -25,6 +25,7 @@ type ApiTestSuite[T any] struct {
 func (s *ApiTestSuite[T]) SetupTest() {
 	s.User = &core.AuthenticatedUser{
 		Name:           "Test User",
+		Email:          "test@example.com",
 		ID:             util.GenerateID(),
 		WorkspaceID:    util.GenerateID(),
 		WorkspaceRoles: []core.WorkspaceRole{core.WorkspaceRoleOwner},
@@ -67,6 +68,7 @@ func (s *ApiTestSuite[T]) RequestWithClaims(path string, method string, requestB
 	claims := jwt.MapClaims{
 		"id":                   s.User.ID,
 		"name":                 s.User.Name,
+		"email":                s.User.Email,
 		"activeWorkspaceId":    s.User.WorkspaceID,
 		"activeWorkspaceName":  s.User.WorkspaceName,
 		"activeWorkspaceRoles": s.User.WorkspaceRoles,

@@ -10,11 +10,8 @@ import (
 type HealthController struct {
 }
 
-func (hc HealthController) InitRoutes(r fiber.Router) {
-	r.Get("/ping", hc.Ping)
-}
-
 // Ping godoc
+//
 //	@Summary		Health check ping
 //	@Description	Returns current authenticated user information from context
 //	@Tags			Health
@@ -28,5 +25,3 @@ func (hc HealthController) Ping(c fiber.Ctx) error {
 	user := core.UserFromContext(c)
 	return http.OK(c, user)
 }
-
-

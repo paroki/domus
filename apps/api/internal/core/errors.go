@@ -7,3 +7,7 @@ var (
 	ErrInvalidID    = errors.New("INVALID_ID")
 	ErrGenerateID   = errors.New("GENERATE_ID")
 )
+
+func IsNotFound(err error) bool {
+	return errors.Is(err, ErrItemNotFound)
+}
