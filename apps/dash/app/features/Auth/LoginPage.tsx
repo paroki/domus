@@ -1,34 +1,14 @@
 import { GithubOutlined, GoogleOutlined } from "@ant-design/icons";
 import { signIn } from "@domus/better-auth/client";
-import { Alert, Button, ConfigProvider, Typography } from "antd";
-import { useEffect, useMemo, useState } from "react";
+import { Alert, Button, Typography } from "antd";
+import { useState } from "react";
 import { Link, useSearchParams } from "react-router";
-import { getAntdTheme, type ThemeMode } from "~/shared/layout/theme";
 import type { Route } from "../../routes/+types/login";
 
 type Provider = "google" | "github";
 
 export function meta(_: Route.MetaArgs) {
   return [{ title: "Masuk | Domus" }];
-}
-
-// Ikuti tema OS. Pindahkan ke root.tsx kalau nanti dipakai di semua halaman.
-function useThemeMode(): ThemeMode {
-  const [mode, setMode] = useState<ThemeMode>("light");
-
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const apply = () => setMode(mq.matches ? "dark" : "light");
-    apply();
-    mq.addEventListener("change", apply);
-    return () => mq.removeEventListener("change", apply);
-  }, []);
-
-  useEffect(() => {
-    document.documentElement.dataset.theme = mode;
-  }, [mode]);
-
-  return mode;
 }
 
 // Cegah open redirect: hanya terima path internal.
@@ -45,8 +25,6 @@ const ERROR_MESSAGES: Record<string, string> = {
 };
 
 export default function Login() {
-  const mode = useThemeMode();
-  const theme = useMemo(() => getAntdTheme(mode), [mode]);
   const [params] = useSearchParams();
   const [pending, setPending] = useState<Provider | null>(null);
   const [error, setError] = useState<string | null>(() => {
@@ -77,116 +55,114 @@ export default function Login() {
   }
 
   return (
-    <ConfigProvider theme={theme}>
-      <main className="min-h-screen grid place-items-center px-4 py-10">
-        <section
-          aria-labelledby="login-title"
-          className="glass glass-strong w-full max-w-100 p-8"
-          style={{ borderRadius: "var(--domus-radius-lg)" }}
-        >
-          <div className="flex flex-col items-center text-center">
-            <div
-              aria-hidden="true"
-              className="grid place-items-center size-11 mb-4 text-xl font-medium"
-              style={{
-                background: "var(--domus-brand)",
-                color: "#fff",
-                borderRadius: "var(--domus-radius)",
-              }}
-            >
-              D
-            </div>
-            <Typography.Title
-              id="login-title"
-              level={2}
-              style={{ margin: 0, fontWeight: 500 }}
-            >
-              Masuk ke Domus
-            </Typography.Title>
-            <Typography.Paragraph
-              style={{
-                margin: "6px 0 0",
-                color: "var(--domus-text-secondary)",
-              }}
-            >
-              Kelola keuskupan, paroki, dan lingkungan di satu tempat.
-            </Typography.Paragraph>
+    <main className="min-h-screen grid place-items-center px-4 py-10">
+      <section
+        aria-labelledby="login-title"
+        className="glass glass-strong w-full max-w-100 p-8"
+        style={{ borderRadius: "var(--domus-radius-lg)" }}
+      >
+        <div className="flex flex-col items-center text-center">
+          <div
+            aria-hidden="true"
+            className="grid place-items-center size-11 mb-4 text-xl font-medium"
+            style={{
+              background: "var(--domus-brand)",
+              color: "#fff",
+              borderRadius: "var(--domus-radius)",
+            }}
+          >
+            D
           </div>
-
-          {error && (
-            <Alert
-              className="mt-5"
-              type="error"
-              showIcon
-              title={error}
-              closable={{
-                onClose: () => setError(null),
-              }}
-            />
-          )}
-
-          <div className="mt-6 flex flex-col gap-3">
-            <Button
-              size="large"
-              block
-              type="primary"
-              icon={<GoogleOutlined />}
-              loading={pending === "google"}
-              disabled={pending !== null && pending !== "google"}
-              onClick={() => doSignIn("google")}
-            >
-              Lanjutkan dengan Google
-            </Button>
-            <Button
-              size="large"
-              block
-              icon={<GithubOutlined />}
-              loading={pending === "github"}
-              disabled={pending !== null && pending !== "github"}
-              onClick={() => doSignIn("github")}
-            >
-              Lanjutkan dengan GitHub
-            </Button>
-          </div>
-
+          <Typography.Title
+            id="login-title"
+            level={2}
+            style={{ margin: 0, fontWeight: 500 }}
+          >
+            Masuk ke Domus
+          </Typography.Title>
           <Typography.Paragraph
             style={{
-              margin: "20px 0 0",
-              textAlign: "center",
-              fontSize: 12,
-              color: "var(--domus-text-muted)",
-            }}
-          >
-            Belum punya akses? Hubungi admin keuskupan atau paroki kamu.
-          </Typography.Paragraph>
-
-          <p
-            className="mt-5 pt-4 text-center"
-            style={{
-              fontSize: 12,
-              lineHeight: 1.6,
+              margin: "6px 0 0",
               color: "var(--domus-text-secondary)",
-              borderTop: "1px solid var(--domus-border-soft)",
             }}
           >
-            Dengan masuk, kamu menyetujui{" "}
-            <Link
-              to="/terms"
-              style={{ color: "var(--domus-primary)", fontWeight: 500 }}
-            >
-              Ketentuan Layanan
-            </Link>{" "}
-            dan{" "}
-            <Link
-              to="/privacy"
-              style={{ color: "var(--domus-primary)", fontWeight: 500 }}
-            >
-              Kebijakan Privasi
-            </Link>
-            .
-          </p>
-        </section>
-      </main>
-    </ConfigProvider>
+            Kelola keuskupan, paroki, dan lingkungan di satu tempat.
+          </Typography.Paragraph>
+        </div>
+
+        {error && (
+          <Alert
+            className="mt-5"
+            type="error"
+            showIcon
+            title={error}
+            closable={{
+              onClose: () => setError(null),
+            }}
+          />
+        )}
+
+        <div className="mt-6 flex flex-col gap-3">
+          <Button
+            size="large"
+            block
+            type="primary"
+            icon={<GoogleOutlined />}
+            loading={pending === "google"}
+            disabled={pending !== null && pending !== "google"}
+            onClick={() => doSignIn("google")}
+          >
+            Lanjutkan dengan Google
+          </Button>
+          <Button
+            size="large"
+            block
+            icon={<GithubOutlined />}
+            loading={pending === "github"}
+            disabled={pending !== null && pending !== "github"}
+            onClick={() => doSignIn("github")}
+          >
+            Lanjutkan dengan GitHub
+          </Button>
+        </div>
+
+        <Typography.Paragraph
+          style={{
+            margin: "20px 0 0",
+            textAlign: "center",
+            fontSize: 12,
+            color: "var(--domus-text-muted)",
+          }}
+        >
+          Belum punya akses? Hubungi admin keuskupan atau paroki kamu.
+        </Typography.Paragraph>
+
+        <p
+          className="mt-5 pt-4 text-center"
+          style={{
+            fontSize: 12,
+            lineHeight: 1.6,
+            color: "var(--domus-text-secondary)",
+            borderTop: "1px solid var(--domus-border-soft)",
+          }}
+        >
+          Dengan masuk, kamu menyetujui{" "}
+          <Link
+            to="/terms"
+            style={{ color: "var(--domus-primary)", fontWeight: 500 }}
+          >
+            Ketentuan Layanan
+          </Link>{" "}
+          dan{" "}
+          <Link
+            to="/privacy"
+            style={{ color: "var(--domus-primary)", fontWeight: 500 }}
+          >
+            Kebijakan Privasi
+          </Link>
+          .
+        </p>
+      </section>
+    </main>
   );
 }

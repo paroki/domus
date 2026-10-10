@@ -203,3 +203,41 @@ body {
     backdrop-filter: none;
   }
 }
+
+/* ---- app shell: launcher + module tiles ---- */
+
+.launcher-tile {
+  border-radius: var(--domus-radius-lg);
+  color: var(--domus-text);
+  text-decoration: none;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.launcher-tile:hover {
+  background: var(--domus-tint);
+  color: var(--domus-text);
+}
+
+.launcher-tile:focus-visible {
+  outline: 2px solid var(--domus-primary);
+  outline-offset: 2px;
+}
+
+.icon-tile {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  font-size: 22px;
+  color: var(--domus-tint-text);
+  background: var(--domus-tint);
+  border-radius: var(--domus-radius);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .launcher-tile {
+    transition: none;
+  }
+}

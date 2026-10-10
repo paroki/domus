@@ -1,3 +1,5 @@
+import { ConfigProvider } from "antd";
+import { useMemo } from "react";
 import {
   isRouteErrorResponse,
   Links,
@@ -6,6 +8,8 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
+import { getAntdTheme } from "~/shared/layout/theme";
+import { useThemeMode } from "~/shared/layout/useThemeMode";
 
 import type { Route } from "./+types/root";
 import "./app.css";
@@ -42,7 +46,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  const mode = useThemeMode();
+  const theme = useMemo(() => getAntdTheme(mode), [mode]);
+
+  return (
+    <ConfigProvider theme={theme}>
+      <Outlet />
+    </ConfigProvider>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
