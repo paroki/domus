@@ -21,8 +21,7 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/gofiber/fiber/v3/middleware/healthcheck"
 	"github.com/gofiber/fiber/v3/middleware/recover"
-	"github.com/paroki/domus/api/internal/http"
-	"github.com/paroki/domus/api/internal/model"
+	"github.com/paroki/domus/api/internal/platform/httpx"
 	slogfiber "github.com/samber/slog-fiber"
 )
 
@@ -112,13 +111,13 @@ func GetFiber(cfg Config, logger *slog.Logger) *fiber.App {
 
 func ErrorHandler(log *slog.Logger) fiber.ErrorHandler {
 	return func(c fiber.Ctx, err error) error {
-		status, body := http.MapError(err)
+		status, body := httpx.MapError(err)
 		if status >= 500 {
 			log.ErrorContext(c, "unhandled error", "error", err.Error())
 		}
-		return c.Status(status).JSON(model.ErrorResponse{
+		return c.Status(status).JSON(httpx.ErrorResponse{
 			Error: body,
-			Meta:  http.NewMeta(c, ""),
+			Meta:  httpx.NewMeta(c, ""),
 		})
 	}
 }

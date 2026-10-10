@@ -10,7 +10,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/paroki/domus/api/internal/core"
-	"github.com/paroki/domus/api/internal/model"
+	"github.com/paroki/domus/api/internal/platform/httpx"
 	"github.com/paroki/domus/api/internal/shared/util"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -86,24 +86,24 @@ func (s *ApiTestSuite[T]) Request(path string, method string, requestBody any) {
 	s.RequestWithClaims(path, method, requestBody, nil)
 }
 
-func (s *ApiTestSuite[T]) GetResponse() model.WebResponse[T] {
-	var env model.WebResponse[T]
+func (s *ApiTestSuite[T]) GetResponse() httpx.WebResponse[T] {
+	var env httpx.WebResponse[T]
 	s.T().Helper()
 	defer s.HttpResponse.Body.Close()
 	require.NoError(s.T(), json.NewDecoder(s.HttpResponse.Body).Decode(&env))
 	return env
 }
 
-func (s *ApiTestSuite[T]) PagedResponse() model.WebResponse[[]T] {
-	var env model.WebResponse[[]T]
+func (s *ApiTestSuite[T]) PagedResponse() httpx.WebResponse[[]T] {
+	var env httpx.WebResponse[[]T]
 	s.T().Helper()
 	defer s.HttpResponse.Body.Close()
 	require.NoError(s.T(), json.NewDecoder(s.HttpResponse.Body).Decode(&env))
 	return env
 }
 
-func DecodeOther[R any](s interface{ GetHttpResponse() *http.Response }) model.WebResponse[R] {
-	var env model.WebResponse[R]
+func DecodeOther[R any](s interface{ GetHttpResponse() *http.Response }) httpx.WebResponse[R] {
+	var env httpx.WebResponse[R]
 	resp := s.GetHttpResponse()
 	defer resp.Body.Close()
 	json.NewDecoder(resp.Body).Decode(&env)

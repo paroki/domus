@@ -51,14 +51,14 @@ const docTemplate = `{
                     "WorkspaceRoleMember"
                 ]
             },
-            "model.ErrorBody": {
+            "httpx.ErrorBody": {
                 "properties": {
                     "code": {
                         "type": "string"
                     },
                     "fields": {
                         "items": {
-                            "$ref": "#/components/schemas/model.FieldError"
+                            "$ref": "#/components/schemas/httpx.FieldError"
                         },
                         "type": "array",
                         "uniqueItems": false
@@ -69,18 +69,18 @@ const docTemplate = `{
                 },
                 "type": "object"
             },
-            "model.ErrorResponse": {
+            "httpx.ErrorResponse": {
                 "properties": {
                     "error": {
-                        "$ref": "#/components/schemas/model.ErrorBody"
+                        "$ref": "#/components/schemas/httpx.ErrorBody"
                     },
                     "meta": {
-                        "$ref": "#/components/schemas/model.Meta"
+                        "$ref": "#/components/schemas/httpx.Meta"
                     }
                 },
                 "type": "object"
             },
-            "model.FieldError": {
+            "httpx.FieldError": {
                 "properties": {
                     "field": {
                         "type": "string"
@@ -91,7 +91,7 @@ const docTemplate = `{
                 },
                 "type": "object"
             },
-            "model.Meta": {
+            "httpx.Meta": {
                 "properties": {
                     "cursor": {
                         "type": "string"
@@ -105,13 +105,13 @@ const docTemplate = `{
                 },
                 "type": "object"
             },
-            "model.WebResponse-core_AuthenticatedUser": {
+            "httpx.WebResponse-core_AuthenticatedUser": {
                 "properties": {
                     "data": {
                         "$ref": "#/components/schemas/core.AuthenticatedUser"
                     },
                     "meta": {
-                        "$ref": "#/components/schemas/model.Meta"
+                        "$ref": "#/components/schemas/httpx.Meta"
                     }
                 },
                 "type": "object"
@@ -153,7 +153,7 @@ const docTemplate = `{
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/model.WebResponse-core_AuthenticatedUser"
+                                    "$ref": "#/components/schemas/httpx.WebResponse-core_AuthenticatedUser"
                                 }
                             }
                         },
@@ -163,7 +163,7 @@ const docTemplate = `{
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/model.ErrorResponse"
+                                    "$ref": "#/components/schemas/httpx.ErrorResponse"
                                 }
                             }
                         },

@@ -8,6 +8,7 @@ import (
 	"github.com/paroki/domus/api/ent"
 	"github.com/paroki/domus/api/internal/core"
 	"github.com/paroki/domus/api/internal/modules/auth/model"
+	"github.com/paroki/domus/api/internal/platform/database"
 	"github.com/paroki/domus/api/internal/shared"
 )
 
@@ -39,7 +40,7 @@ func (r UserSnapshotRepository) GetByID(c context.Context, id uuid.UUID) (*model
 func (r UserSnapshotRepository) Create(c context.Context, req model.CreateUserSnapshotRequest) (*model.UserSnapshotResponse, error) {
 	var res model.UserSnapshotResponse
 	var user *ent.User
-	err := shared.WithTx(c, r.entcli, func(tx *ent.Tx) error {
+	err := database.WithTx(c, r.entcli, func(tx *ent.Tx) error {
 		var err error
 		user, err = tx.User.Create().
 			SetID(req.ID).
@@ -63,7 +64,7 @@ func (r UserSnapshotRepository) Create(c context.Context, req model.CreateUserSn
 func (r UserSnapshotRepository) Update(c context.Context, id uuid.UUID, req model.UpdateUserSnapshotRequest) (*model.UserSnapshotResponse, error) {
 	var res model.UserSnapshotResponse
 	var user *ent.User
-	err := shared.WithTx(c, r.entcli, func(tx *ent.Tx) error {
+	err := database.WithTx(c, r.entcli, func(tx *ent.Tx) error {
 		var err error
 		user, err = tx.User.UpdateOneID(id).
 			SetName(req.Name).
@@ -92,7 +93,7 @@ func nilIfEmpty(s string) *string {
 }
 
 func (r UserSnapshotRepository) Delete(c context.Context, id uuid.UUID) error {
-	return shared.WithTx(c, r.entcli, func(tx *ent.Tx) error {
+	return database.WithTx(c, r.entcli, func(tx *ent.Tx) error {
 		return tx.User.DeleteOneID(id).Exec(c)
 	})
 }

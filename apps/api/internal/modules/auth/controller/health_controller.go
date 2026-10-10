@@ -3,8 +3,7 @@ package controller
 import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/paroki/domus/api/internal/core"
-	"github.com/paroki/domus/api/internal/http"
-	_ "github.com/paroki/domus/api/internal/model"
+	"github.com/paroki/domus/api/internal/platform/httpx"
 )
 
 type HealthController struct {
@@ -18,10 +17,10 @@ type HealthController struct {
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Success		200	{object}	model.WebResponse[core.AuthenticatedUser]
-//	@Failure		401	{object}	model.ErrorResponse
+//	@Success		200	{object}	httpx.WebResponse[core.AuthenticatedUser]
+//	@Failure		401	{object}	httpx.ErrorResponse
 //	@Router			/ping [get]
 func (hc HealthController) Ping(c fiber.Ctx) error {
 	user := core.UserFromContext(c)
-	return http.OK(c, user)
+	return httpx.OK(c, user)
 }

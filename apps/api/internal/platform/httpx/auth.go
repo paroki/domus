@@ -1,9 +1,9 @@
-package http
+package httpx
 
 import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/paroki/domus/api/internal/core"
-	"github.com/paroki/domus/api/internal/shared/authz"
+	"github.com/paroki/domus/api/internal/platform/authz"
 )
 
 func RequirePermission(obj authz.Resource, act authz.Action) fiber.Handler {
