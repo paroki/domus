@@ -1,15 +1,10 @@
-import {
-  AppstoreOutlined,
-  LogoutOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
-import { getSession, signOut } from "@domus/better-auth/client";
-import { Avatar, Button, Dropdown, Layout, Menu, type MenuProps } from "antd";
-import { useEffect, useState } from "react";
+import { AppstoreOutlined } from "@ant-design/icons";
+import { Button, Layout, Menu, type MenuProps } from "antd";
 import { Link, useNavigate } from "react-router";
 import { modulePath } from "~/shared/modules/registry";
 import type { ModuleMenuItem } from "~/shared/modules/types";
 import { useActiveModule } from "~/shared/modules/useActiveModule";
+import { UserMenu } from "./UserMenu";
 
 type AntMenuItems = NonNullable<MenuProps["items"]>;
 
@@ -28,97 +23,6 @@ function toAntMenuItems(
           key: item.slug ?? item.label,
           label: <Link to={modulePath(moduleId, item.slug)}>{item.label}</Link>,
         },
-  );
-}
-
-interface SessionUser {
-  name: string;
-  email: string;
-}
-
-/** `undefined` = masih memuat, `null` = belum login. */
-function useSessionUser(): SessionUser | null | undefined {
-  const [user, setUser] = useState<SessionUser | null | undefined>(undefined);
-
-  useEffect(() => {
-    let active = true;
-    getSession()
-      .then(({ data }) => {
-        if (active) setUser(data?.user ?? null);
-      })
-      .catch(() => {
-        if (active) setUser(null);
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  return user;
-}
-
-function UserMenu() {
-  const navigate = useNavigate();
-  const user = useSessionUser();
-
-  if (user === undefined) return null;
-
-  if (user === null) {
-    return (
-      <Button type="text" onClick={() => navigate("/login")}>
-        Masuk
-      </Button>
-    );
-  }
-
-  async function handleSignOut() {
-    try {
-      await signOut();
-    } finally {
-      navigate("/login");
-    }
-  }
-
-  return (
-    <Dropdown
-      trigger={["click"]}
-      placement="bottomRight"
-      menu={{
-        items: [
-          {
-            key: "who",
-            disabled: true,
-            label: (
-              <span className="flex flex-col leading-tight">
-                <strong>{user.name}</strong>
-                <span style={{ fontSize: 13 }}>{user.email}</span>
-              </span>
-            ),
-          },
-          { type: "divider" },
-          {
-            key: "logout",
-            danger: true,
-            icon: <LogoutOutlined />,
-            label: "Keluar",
-          },
-        ],
-        onClick: ({ key }) => {
-          if (key === "logout") void handleSignOut();
-        },
-      }}
-    >
-      <Button type="text" aria-label="Menu akun" className="!px-1">
-        <Avatar
-          size={26}
-          icon={<UserOutlined />}
-          style={{
-            background: "var(--domus-tint)",
-            color: "var(--domus-tint-text)",
-          }}
-        />
-      </Button>
-    </Dropdown>
   );
 }
 
