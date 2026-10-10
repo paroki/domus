@@ -1,0 +1,662 @@
+components:
+  schemas:
+    core.AuthenticatedUser:
+      properties:
+        avatar:
+          type: string
+        email:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        roles:
+          items:
+            $ref: '#/components/schemas/core.UserRole'
+          type: array
+          uniqueItems: false
+        scope:
+          type: string
+      type: object
+    core.User:
+      properties:
+        avatar:
+          type: string
+        createdAt:
+          type: string
+        email:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        updatedAt:
+          type: string
+      type: object
+    core.UserRole:
+      enum:
+      - admin
+      - superadmin
+      - user
+      type: string
+      x-enum-varnames:
+      - UserRoleAdmin
+      - UserRoleSuperadmin
+      - UserRoleUser
+    httpx.ErrorBody:
+      properties:
+        code:
+          type: string
+        fields:
+          items:
+            $ref: '#/components/schemas/httpx.FieldError'
+          type: array
+          uniqueItems: false
+        message:
+          type: string
+      type: object
+    httpx.ErrorResponse:
+      properties:
+        error:
+          $ref: '#/components/schemas/httpx.ErrorBody'
+        meta:
+          $ref: '#/components/schemas/httpx.Meta'
+      type: object
+    httpx.FieldError:
+      properties:
+        field:
+          type: string
+        rule:
+          type: string
+      type: object
+    httpx.Meta:
+      properties:
+        cursor:
+          type: string
+        requestId:
+          type: string
+        timestamp:
+          type: string
+      type: object
+    httpx.WebResponse-array_model_DioceseResponse:
+      properties:
+        data:
+          items:
+            $ref: '#/components/schemas/model.DioceseResponse'
+          type: array
+          uniqueItems: false
+        meta:
+          $ref: '#/components/schemas/httpx.Meta'
+      type: object
+    httpx.WebResponse-array_model_ParishResponse:
+      properties:
+        data:
+          items:
+            $ref: '#/components/schemas/model.ParishResponse'
+          type: array
+          uniqueItems: false
+        meta:
+          $ref: '#/components/schemas/httpx.Meta'
+      type: object
+    httpx.WebResponse-core_AuthenticatedUser:
+      properties:
+        data:
+          $ref: '#/components/schemas/core.AuthenticatedUser'
+        meta:
+          $ref: '#/components/schemas/httpx.Meta'
+      type: object
+    httpx.WebResponse-model_DioceseResponse:
+      properties:
+        data:
+          $ref: '#/components/schemas/model.DioceseResponse'
+        meta:
+          $ref: '#/components/schemas/httpx.Meta'
+      type: object
+    httpx.WebResponse-model_ParishResponse:
+      properties:
+        data:
+          $ref: '#/components/schemas/model.ParishResponse'
+        meta:
+          $ref: '#/components/schemas/httpx.Meta'
+      type: object
+    model.CreateDioceseRequest:
+      properties:
+        name:
+          type: string
+      required:
+      - name
+      type: object
+    model.CreateParishRequest:
+      properties:
+        dioceseId:
+          type: integer
+        name:
+          type: string
+      required:
+      - name
+      type: object
+    model.DioceseResponse:
+      properties:
+        createdAt:
+          type: string
+        createdBy:
+          $ref: '#/components/schemas/core.User'
+        id:
+          type: integer
+        name:
+          type: string
+        updatedAt:
+          type: string
+        updatedBy:
+          $ref: '#/components/schemas/core.User'
+      type: object
+    model.ParishResponse:
+      properties:
+        diocese:
+          $ref: '#/components/schemas/model.DioceseResponse'
+        id:
+          type: integer
+        name:
+          type: string
+      type: object
+    model.UpdateDioceseRequest:
+      properties:
+        name:
+          type: string
+      required:
+      - name
+      type: object
+    model.UpdateParishRequest:
+      properties:
+        dioceseId:
+          type: integer
+        name:
+          type: string
+      required:
+      - name
+      type: object
+  securitySchemes:
+    BearerAuth:
+      description: Type "Bearer" followed by a space and JWT token.
+      in: header
+      name: Authorization
+      type: apiKey
+externalDocs:
+  description: ""
+  url: ""
+info:
+  description: Domus API Server
+  title: Domus API
+  version: "1.0"
+openapi: 3.1.0
+paths:
+  /dioceses:
+    get:
+      description: Get all dioceses list
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.WebResponse-array_model_DioceseResponse'
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Forbidden
+      security:
+      - BearerAuth: []
+      summary: Get all dioceses
+      tags:
+      - Diocese
+    post:
+      description: Create a new diocese
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/model.CreateDioceseRequest'
+              description: Create diocese request
+              summary: request
+        description: Create diocese request
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.WebResponse-model_DioceseResponse'
+          description: Created
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Forbidden
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unprocessable Entity
+      security:
+      - BearerAuth: []
+      summary: Create diocese
+      tags:
+      - Diocese
+  /dioceses/{id}:
+    delete:
+      description: Delete diocese by ID
+      parameters:
+      - description: Diocese ID
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Delete diocese
+      tags:
+      - Diocese
+    get:
+      description: Get diocese details by ID
+      parameters:
+      - description: Diocese ID
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.WebResponse-model_DioceseResponse'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Get diocese by ID
+      tags:
+      - Diocese
+    put:
+      description: Update diocese by ID
+      parameters:
+      - description: Diocese ID
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/model.UpdateDioceseRequest'
+              description: Update diocese request
+              summary: request
+        description: Update diocese request
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.WebResponse-model_DioceseResponse'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Not Found
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unprocessable Entity
+      security:
+      - BearerAuth: []
+      summary: Update diocese
+      tags:
+      - Diocese
+  /parishes:
+    get:
+      description: Get all parishes list
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.WebResponse-array_model_ParishResponse'
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Forbidden
+      security:
+      - BearerAuth: []
+      summary: Get all parishes
+      tags:
+      - Parish
+    post:
+      description: Create a new parish
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/model.CreateParishRequest'
+              description: Create parish request
+              summary: request
+        description: Create parish request
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.WebResponse-model_ParishResponse'
+          description: Created
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Forbidden
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unprocessable Entity
+      security:
+      - BearerAuth: []
+      summary: Create parish
+      tags:
+      - Parish
+  /parishes/{id}:
+    delete:
+      description: Delete parish by ID
+      parameters:
+      - description: Parish ID
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Delete parish
+      tags:
+      - Parish
+    get:
+      description: Get parish details by ID
+      parameters:
+      - description: Parish ID
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.WebResponse-model_ParishResponse'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Get parish by ID
+      tags:
+      - Parish
+    put:
+      description: Update parish by ID
+      parameters:
+      - description: Parish ID
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/model.UpdateParishRequest'
+              description: Update parish request
+              summary: request
+        description: Update parish request
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.WebResponse-model_ParishResponse'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Not Found
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unprocessable Entity
+      security:
+      - BearerAuth: []
+      summary: Update parish
+      tags:
+      - Parish
+  /ping:
+    get:
+      description: Returns current authenticated user information from context
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.WebResponse-core_AuthenticatedUser'
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unauthorized
+      security:
+      - BearerAuth: []
+      summary: Health check ping
+      tags:
+      - Health
+servers:
+- url: https://api.pkrbt.id/

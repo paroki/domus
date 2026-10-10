@@ -21,6 +21,10 @@
       "cache": false,
       "persistent": true
     },
+    "oa:gen": {
+      "cache": false,
+      "persistent": true
+    },
     "dev": {
       "dependsOn": ["db:studio"],
       "cache": false,
