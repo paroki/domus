@@ -53,11 +53,27 @@ function getInitials(user: SessionUser): string {
 }
 
 function UserAvatar({ user, size }: { user: SessionUser; size: number }) {
+  const [broken, setBroken] = useState(false);
+
+  // Reset kalau URL foto berganti (mis. setelah login ulang).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset hanya saat URL berubah
+  useEffect(() => setBroken(false), [user.image]);
+
+  const photo =
+    user.image && !broken ? (
+      // Foto Google sering ditolak (403/429) kalau browser mengirim referrer.
+      <img
+        src={user.image}
+        alt={user.name}
+        referrerPolicy="no-referrer"
+        onError={() => setBroken(true)}
+      />
+    ) : undefined;
+
   return (
     <Avatar
       size={size}
-      src={user.image || undefined}
-      alt={user.name}
+      src={photo}
       style={{
         background: "var(--domus-tint)",
         color: "var(--domus-tint-text)",
@@ -85,7 +101,9 @@ export function UserMenu() {
   if (user === null) {
     const target = `${location.pathname}${location.search}`;
     const to =
-      target === "/" ? "/login" : `/login?redirect=${encodeURIComponent(target)}`;
+      target === "/"
+        ? "/login"
+        : `/login?redirect=${encodeURIComponent(target)}`;
     return (
       <Button type="text" icon={<LoginOutlined />} onClick={() => navigate(to)}>
         Masuk
