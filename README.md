@@ -9,18 +9,18 @@ Monorepo dikelola dengan [Turborepo](https://turbo.build/repo).
 ```
 domus/
 ├── apps/
-│   ├── auth/          # @omed/auth       - Auth utama (ElysiaJS + @omed/better-auth)
-│   ├── api/           # @omed/api        - Backend (Go, Fiber v3, Ent, Casbin, Swaggo)
-│   └── dash/          # @omed/dash       - Frontend (React Router v8 SPA, Ant Design)
+│   ├── auth/          # @domus/auth       - Auth utama (ElysiaJS + @domus/better-auth)
+│   ├── api/           # @domus/api        - Backend (Go, Fiber v3, Ent, Casbin, Swaggo)
+│   └── dash/          # @domus/dash       - Frontend (React Router v8 SPA, Ant Design)
 ├── packages/
-│   ├── better-auth/   # @omed/better-auth - Better Auth reusable (server & client)
-│   └── openapi/       # @omed/openapi     - Tipe TypeScript hasil generate dari OpenAPI v3
+│   ├── better-auth/   # @domus/better-auth - Better Auth reusable (server & client)
+│   └── openapi/       # @domus/openapi     - Tipe TypeScript hasil generate dari OpenAPI v3
 └── turbo.json
 ```
 
 | Package | Deskripsi | Port |
 | --- | --- | --- |
-| `apps/auth` | Service autentikasi utama. Memakai `@omed/better-auth` dengan plugin organization & teams. | - |
+| `apps/auth` | Service autentikasi utama. Memakai `@domus/better-auth` dengan plugin organization & teams. | - |
 | `apps/api` | Backend REST. ORM dengan Ent, otorisasi dengan Casbin, dokumentasi OpenAPI v3 via Swaggo. | 8001 |
 | `apps/dash` | Dashboard web (SPA, `ssr: false`) dengan Ant Design. | 3001 |
 | `packages/better-auth` | Konfigurasi Better Auth + Drizzle, dipakai bersama sisi server dan client. | - |
@@ -74,9 +74,9 @@ bun run dev
 Jalankan satu app saja:
 
 ```bash
-bunx turbo run dev --filter=@omed/dash
-bunx turbo run dev --filter=@omed/api
-bunx turbo run dev --filter=@omed/auth
+bunx turbo run dev --filter=@domus/dash
+bunx turbo run dev --filter=@domus/api
+bunx turbo run dev --filter=@domus/auth
 ```
 
 ## Generate OpenAPI & Tipe
@@ -88,7 +88,7 @@ Spec OpenAPI v3 digenerate dari anotasi Swaggo di `apps/api`, lalu dikonversi ke
 cd apps/api && swag init
 
 # generate tipe TypeScript
-bunx turbo run generate --filter=@omed/openapi
+bunx turbo run generate --filter=@domus/openapi
 ```
 
 ## Perintah Umum
