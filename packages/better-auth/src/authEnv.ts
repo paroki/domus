@@ -10,9 +10,18 @@ export const authEnvConfig = () => {
       AUTH_PATH: z.string(),
       AUTH_DB_URL: z.string(),
       AUTH_TRUSTED_ORIGINS: z.string().transform((value) => value.split(",")),
+      AUTH_GOOGLE_ID: z.string().optional(),
+      AUTH_GOOGLE_SECRET: z.string().optional(),
+      AUTH_GITHUB_ID: z.string().optional(),
+      AUTH_GITHUB_SECRET: z.string().optional(),
     },
     runtimeEnv: process.env,
     isServer: typeof window === "undefined",
+    clientPrefix: "VITE_",
+    client: {
+      VITE_AUTH_URL: z.string().optional(),
+      VITE_AUTH_PATH: z.string().optional(),
+    },
   });
 
   const parsedUrl = new URL(env.AUTH_URL);
