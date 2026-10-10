@@ -2,10 +2,10 @@ package http
 
 import (
 	"time"
-	"uuid"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/requestid"
+	"github.com/google/uuid"
 	"github.com/paroki/domus/api/internal/core"
 	"github.com/paroki/domus/api/internal/model"
 )

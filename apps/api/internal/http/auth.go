@@ -12,6 +12,6 @@ func RequirePermission(obj authz.Resource, act authz.Action) fiber.Handler {
 		if authz.Can(user, obj, act) {
 			return c.Next()
 		}
-		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "forbidden"})
+		return core.ErrForbidden
 	}
 }

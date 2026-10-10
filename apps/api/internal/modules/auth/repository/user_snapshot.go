@@ -45,7 +45,7 @@ func (r UserSnapshotRepository) Create(c context.Context, req model.CreateUserSn
 			SetID(req.ID).
 			SetName(req.Name).
 			SetEmail(req.Email).
-			SetNillableAvatar(&req.Avatar).
+			SetNillableAvatar(nilIfEmpty(req.Avatar)).
 			Save(c)
 
 		return err
@@ -68,7 +68,7 @@ func (r UserSnapshotRepository) Update(c context.Context, id uuid.UUID, req mode
 		user, err = tx.User.UpdateOneID(id).
 			SetName(req.Name).
 			SetEmail(req.Email).
-			SetNillableAvatar(&req.Avatar).
+			SetNillableAvatar(nilIfEmpty(req.Avatar)).
 			Save(c)
 
 		return err
@@ -81,6 +81,14 @@ func (r UserSnapshotRepository) Update(c context.Context, id uuid.UUID, req mode
 	shared.ToValue(user, &res)
 
 	return &res, nil
+}
+
+// nilIfEmpty maps "" to nil so empty optional fields are stored as NULL.
+func nilIfEmpty(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
 }
 
 func (r UserSnapshotRepository) Delete(c context.Context, id uuid.UUID) error {

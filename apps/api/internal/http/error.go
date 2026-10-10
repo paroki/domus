@@ -17,6 +17,8 @@ func MapError(err error) (int, model.ErrorBody) {
 	switch {
 	case errors.Is(err, core.ErrItemNotFound):
 		return fiber.StatusNotFound, model.ErrorBody{Code: "NOT_FOUND", Message: "resource not found"}
+	case errors.Is(err, core.ErrForbidden):
+		return fiber.StatusForbidden, model.ErrorBody{Code: "FORBIDDEN", Message: "forbidden"}
 	case errors.As(err, &ve):
 		fields := make([]model.FieldError, 0, len(ve))
 		for _, f := range ve {
