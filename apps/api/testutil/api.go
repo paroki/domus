@@ -11,7 +11,6 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/paroki/domus/api/internal/core"
 	"github.com/paroki/domus/api/internal/platform/httpx"
-	"github.com/paroki/domus/api/internal/shared/util"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
@@ -26,8 +25,8 @@ func (s *ApiTestSuite[T]) SetupTest() {
 	s.User = &core.AuthenticatedUser{
 		Name:           "Test User",
 		Email:          "test@example.com",
-		ID:             util.GenerateID(),
-		WorkspaceID:    util.GenerateID(),
+		ID:             core.GenerateID(),
+		WorkspaceID:    core.GenerateID(),
 		WorkspaceRoles: []core.WorkspaceRole{core.WorkspaceRoleOwner},
 		WorkspaceName:  "Test Workspace",
 	}

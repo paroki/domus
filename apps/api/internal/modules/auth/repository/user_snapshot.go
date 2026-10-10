@@ -9,7 +9,6 @@ import (
 	"github.com/paroki/domus/api/internal/core"
 	"github.com/paroki/domus/api/internal/modules/auth/model"
 	"github.com/paroki/domus/api/internal/platform/database"
-	"github.com/paroki/domus/api/internal/shared"
 )
 
 type UserSnapshotRepository struct {
@@ -32,7 +31,7 @@ func (r UserSnapshotRepository) GetByID(c context.Context, id uuid.UUID) (*model
 		return nil, err
 	}
 
-	shared.ToValue(user, &response)
+	core.ToValue(user, &response)
 
 	return &response, nil
 }
@@ -56,7 +55,7 @@ func (r UserSnapshotRepository) Create(c context.Context, req model.CreateUserSn
 		return nil, err
 	}
 
-	shared.ToValue(user, &res)
+	core.ToValue(user, &res)
 
 	return &res, nil
 }
@@ -79,7 +78,7 @@ func (r UserSnapshotRepository) Update(c context.Context, id uuid.UUID, req mode
 		return nil, err
 	}
 
-	shared.ToValue(user, &res)
+	core.ToValue(user, &res)
 
 	return &res, nil
 }
