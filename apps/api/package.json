@@ -1,6 +1,10 @@
 {
   "name": "@domus/api",
   "scripts": {
-    "dev": "air"
+    "dev": "air",
+    "generate": "swag init --v3.1 --parseDependency --parseInternal --parseDepth 3",
+    "oa:generate": "swag init --v3.1 --parseDependency --parseInternal --parseDepth 3",
+    "swag": "swag init --v3.1 --parseDependency --parseInternal --parseDepth 3",
+    "swag:fmt": "swag fmt"
   }
 }

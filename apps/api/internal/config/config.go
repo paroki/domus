@@ -9,6 +9,7 @@ import (
 )
 
 type Config struct {
+	AuthUrl        string   `env:"AUTH_URL"`
 	Port           int      `env:"API_PORT, default=8002"`
 	JWKSUrl        string   `env:"AUTH_JWKS_URL"`
 	DatabaseUrl    string   `env:"API_DB_URL"`

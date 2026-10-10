@@ -20,6 +20,15 @@ func main() {
 	defer stop()
 
 	fiber := config.GetFiber(cfg, logger)
+	entcli := config.GetEntClient(cfg)
+	state := config.State{
+		Ent:      entcli,
+		Config:   cfg,
+		FiberApp: fiber,
+		Log:      logger,
+	}
+	config.Bootstrap(state)
+
 	go func() { <-ctx.Done(); _ = fiber.Shutdown() }()
 	log.Fatal(fiber.Listen(fmt.Sprintf(":%d", cfg.Port)))
 }

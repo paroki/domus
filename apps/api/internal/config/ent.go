@@ -1,0 +1,28 @@
+package config
+
+import (
+	"context"
+	"database/sql"
+	"log"
+
+	"entgo.io/ent/dialect"
+	entsql "entgo.io/ent/dialect/sql"
+	_ "github.com/jackc/pgx/v5/stdlib" // Registers the "pgx" driver
+	"github.com/paroki/domus/api/ent"
+)
+
+func GetEntClient(cfg Config) *ent.Client {
+	db, err := sql.Open("pgx", cfg.DatabaseUrl)
+	if err != nil {
+		log.Fatalf("Error while connecting to database %v", err)
+	}
+
+	drv := entsql.OpenDB(dialect.Postgres, db)
+	client := ent.NewClient(ent.Driver(drv))
+
+	if err := client.Schema.Create(context.Background()); err != nil {
+		log.Fatalf("failed to creating schema resources: %v", err)
+	}
+
+	return client
+}

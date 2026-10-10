@@ -1,0 +1,117 @@
+components:
+  schemas:
+    core.AuthenticatedUser:
+      properties:
+        activeWorkspaceId:
+          type: string
+        activeWorkspaceName:
+          type: string
+        activeWorkspaceRoles:
+          items:
+            $ref: '#/components/schemas/core.WorkspaceRole'
+          type: array
+          uniqueItems: false
+        avatar:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        scope:
+          type: string
+      type: object
+    core.WorkspaceRole:
+      enum:
+      - owner
+      - admin
+      - member
+      type: string
+      x-enum-varnames:
+      - WorkspaceRoleOwner
+      - WorkspaceRoleAdmin
+      - WorkspaceRoleMember
+    model.ErrorBody:
+      properties:
+        code:
+          type: string
+        fields:
+          items:
+            $ref: '#/components/schemas/model.FieldError'
+          type: array
+          uniqueItems: false
+        message:
+          type: string
+      type: object
+    model.ErrorResponse:
+      properties:
+        error:
+          $ref: '#/components/schemas/model.ErrorBody'
+        meta:
+          $ref: '#/components/schemas/model.Meta'
+      type: object
+    model.FieldError:
+      properties:
+        field:
+          type: string
+        rule:
+          type: string
+      type: object
+    model.Meta:
+      properties:
+        cursor:
+          type: string
+        requestId:
+          type: string
+        timestamp:
+          type: string
+      type: object
+    model.WebResponse-core_AuthenticatedUser:
+      properties:
+        data:
+          $ref: '#/components/schemas/core.AuthenticatedUser'
+        meta:
+          $ref: '#/components/schemas/model.Meta'
+      type: object
+  securitySchemes:
+    BearerAuth:
+      description: Type "Bearer" followed by a space and JWT token.
+      in: header
+      name: Authorization
+      type: apiKey
+externalDocs:
+  description: ""
+  url: ""
+info:
+  description: Domus API Server
+  title: Domus API
+  version: "1.0"
+openapi: 3.1.0
+paths:
+  /ping:
+    get:
+      description: Returns current authenticated user information from context
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/model.WebResponse-core_AuthenticatedUser'
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/model.ErrorResponse'
+          description: Unauthorized
+      security:
+      - BearerAuth: []
+      summary: Health check ping
+      tags:
+      - Health
+servers:
+- url: https://api.pkrbt.id/
