@@ -6,8 +6,14 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
-// Unit is the predicate function for unit builders.
-type Unit func(*sql.Selector)
+// Diocese is the predicate function for diocese builders.
+type Diocese func(*sql.Selector)
+
+// Parish is the predicate function for parish builders.
+type Parish func(*sql.Selector)
+
+// Parishioner is the predicate function for parishioner builders.
+type Parishioner func(*sql.Selector)
 
 // User is the predicate function for user builders.
 type User func(*sql.Selector)

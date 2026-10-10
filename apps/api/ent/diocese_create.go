@@ -8,37 +8,37 @@ import (
 	"fmt"
 	"time"
 
-	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/paroki/domus/api/ent/unit"
+	"github.com/paroki/domus/api/ent/diocese"
+	"github.com/paroki/domus/api/ent/parish"
 	"github.com/paroki/domus/api/ent/user"
 )
 
-// UnitCreate is the builder for creating a Unit entity.
-type UnitCreate struct {
+// DioceseCreate is the builder for creating a Diocese entity.
+type DioceseCreate struct {
 	config
-	mutation *UnitMutation
+	mutation *DioceseMutation
 	hooks    []Hook
 	conflict []sql.ConflictOption
 }
 
 // SetCreatedBy sets the "createdBy" field.
-func (_c *UnitCreate) SetCreatedBy(v uuid.UUID) *UnitCreate {
+func (_c *DioceseCreate) SetCreatedBy(v uuid.UUID) *DioceseCreate {
 	_c.mutation.SetCreatedBy(v)
 	return _c
 }
 
 // SetCreatedAt sets the "createdAt" field.
-func (_c *UnitCreate) SetCreatedAt(v time.Time) *UnitCreate {
+func (_c *DioceseCreate) SetCreatedAt(v time.Time) *DioceseCreate {
 	_c.mutation.SetCreatedAt(v)
 	return _c
 }
 
 // SetNillableCreatedAt sets the "createdAt" field if the given value is not nil.
-func (_c *UnitCreate) SetNillableCreatedAt(v *time.Time) *UnitCreate {
+func (_c *DioceseCreate) SetNillableCreatedAt(v *time.Time) *DioceseCreate {
 	if v != nil {
 		_c.SetCreatedAt(*v)
 	}
@@ -46,19 +46,19 @@ func (_c *UnitCreate) SetNillableCreatedAt(v *time.Time) *UnitCreate {
 }
 
 // SetUpdatedBy sets the "updatedBy" field.
-func (_c *UnitCreate) SetUpdatedBy(v uuid.UUID) *UnitCreate {
+func (_c *DioceseCreate) SetUpdatedBy(v uuid.UUID) *DioceseCreate {
 	_c.mutation.SetUpdatedBy(v)
 	return _c
 }
 
 // SetUpdatedAt sets the "updatedAt" field.
-func (_c *UnitCreate) SetUpdatedAt(v time.Time) *UnitCreate {
+func (_c *DioceseCreate) SetUpdatedAt(v time.Time) *DioceseCreate {
 	_c.mutation.SetUpdatedAt(v)
 	return _c
 }
 
 // SetNillableUpdatedAt sets the "updatedAt" field if the given value is not nil.
-func (_c *UnitCreate) SetNillableUpdatedAt(v *time.Time) *UnitCreate {
+func (_c *DioceseCreate) SetNillableUpdatedAt(v *time.Time) *DioceseCreate {
 	if v != nil {
 		_c.SetUpdatedAt(*v)
 	}
@@ -66,60 +66,67 @@ func (_c *UnitCreate) SetNillableUpdatedAt(v *time.Time) *UnitCreate {
 }
 
 // SetName sets the "name" field.
-func (_c *UnitCreate) SetName(v string) *UnitCreate {
+func (_c *DioceseCreate) SetName(v string) *DioceseCreate {
 	_c.mutation.SetName(v)
 	return _c
 }
 
 // SetID sets the "id" field.
-func (_c *UnitCreate) SetID(v uuid.UUID) *UnitCreate {
+func (_c *DioceseCreate) SetID(v int) *DioceseCreate {
 	_c.mutation.SetID(v)
 	return _c
 }
 
-// SetNillableID sets the "id" field if the given value is not nil.
-func (_c *UnitCreate) SetNillableID(v *uuid.UUID) *UnitCreate {
-	if v != nil {
-		_c.SetID(*v)
-	}
-	return _c
-}
-
 // SetCreatorID sets the "creator" edge to the User entity by ID.
-func (_c *UnitCreate) SetCreatorID(id uuid.UUID) *UnitCreate {
+func (_c *DioceseCreate) SetCreatorID(id uuid.UUID) *DioceseCreate {
 	_c.mutation.SetCreatorID(id)
 	return _c
 }
 
 // SetCreator sets the "creator" edge to the User entity.
-func (_c *UnitCreate) SetCreator(v *User) *UnitCreate {
+func (_c *DioceseCreate) SetCreator(v *User) *DioceseCreate {
 	return _c.SetCreatorID(v.ID)
 }
 
 // SetUpdaterID sets the "updater" edge to the User entity by ID.
-func (_c *UnitCreate) SetUpdaterID(id uuid.UUID) *UnitCreate {
+func (_c *DioceseCreate) SetUpdaterID(id uuid.UUID) *DioceseCreate {
 	_c.mutation.SetUpdaterID(id)
 	return _c
 }
 
 // SetUpdater sets the "updater" edge to the User entity.
-func (_c *UnitCreate) SetUpdater(v *User) *UnitCreate {
+func (_c *DioceseCreate) SetUpdater(v *User) *DioceseCreate {
 	return _c.SetUpdaterID(v.ID)
 }
 
-// Mutation returns the UnitMutation object of the builder.
-func (_c *UnitCreate) Mutation() *UnitMutation {
+// AddParishIDs adds the "parishes" edge to the Parish entity by IDs.
+func (_c *DioceseCreate) AddParishIDs(ids ...int) *DioceseCreate {
+	_c.mutation.AddParishIDs(ids...)
+	return _c
+}
+
+// AddParishes adds the "parishes" edges to the Parish entity.
+func (_c *DioceseCreate) AddParishes(v ...*Parish) *DioceseCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddParishIDs(ids...)
+}
+
+// Mutation returns the DioceseMutation object of the builder.
+func (_c *DioceseCreate) Mutation() *DioceseMutation {
 	return _c.mutation
 }
 
-// Save creates the Unit in the database.
-func (_c *UnitCreate) Save(ctx context.Context) (*Unit, error) {
+// Save creates the Diocese in the database.
+func (_c *DioceseCreate) Save(ctx context.Context) (*Diocese, error) {
 	_c.defaults()
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (_c *UnitCreate) SaveX(ctx context.Context) *Unit {
+func (_c *DioceseCreate) SaveX(ctx context.Context) *Diocese {
 	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
@@ -128,66 +135,62 @@ func (_c *UnitCreate) SaveX(ctx context.Context) *Unit {
 }
 
 // Exec executes the query.
-func (_c *UnitCreate) Exec(ctx context.Context) error {
+func (_c *DioceseCreate) Exec(ctx context.Context) error {
 	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_c *UnitCreate) ExecX(ctx context.Context) {
+func (_c *DioceseCreate) ExecX(ctx context.Context) {
 	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (_c *UnitCreate) defaults() {
+func (_c *DioceseCreate) defaults() {
 	if _, ok := _c.mutation.CreatedAt(); !ok {
-		v := unit.DefaultCreatedAt()
+		v := diocese.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
 	}
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
-		v := unit.DefaultUpdatedAt()
+		v := diocese.DefaultUpdatedAt()
 		_c.mutation.SetUpdatedAt(v)
-	}
-	if _, ok := _c.mutation.ID(); !ok {
-		v := unit.DefaultID()
-		_c.mutation.SetID(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (_c *UnitCreate) check() error {
+func (_c *DioceseCreate) check() error {
 	if _, ok := _c.mutation.CreatedBy(); !ok {
-		return &ValidationError{Name: "createdBy", err: errors.New(`ent: missing required field "Unit.createdBy"`)}
+		return &ValidationError{Name: "createdBy", err: errors.New(`ent: missing required field "Diocese.createdBy"`)}
 	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "createdAt", err: errors.New(`ent: missing required field "Unit.createdAt"`)}
+		return &ValidationError{Name: "createdAt", err: errors.New(`ent: missing required field "Diocese.createdAt"`)}
 	}
 	if _, ok := _c.mutation.UpdatedBy(); !ok {
-		return &ValidationError{Name: "updatedBy", err: errors.New(`ent: missing required field "Unit.updatedBy"`)}
+		return &ValidationError{Name: "updatedBy", err: errors.New(`ent: missing required field "Diocese.updatedBy"`)}
 	}
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
-		return &ValidationError{Name: "updatedAt", err: errors.New(`ent: missing required field "Unit.updatedAt"`)}
+		return &ValidationError{Name: "updatedAt", err: errors.New(`ent: missing required field "Diocese.updatedAt"`)}
 	}
 	if _, ok := _c.mutation.Name(); !ok {
-		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Unit.name"`)}
+		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Diocese.name"`)}
 	}
 	if v, ok := _c.mutation.Name(); ok {
-		if err := unit.NameValidator(v); err != nil {
-			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Unit.name": %w`, err)}
+		if err := diocese.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Diocese.name": %w`, err)}
 		}
 	}
 	if len(_c.mutation.CreatorIDs()) == 0 {
-		return &ValidationError{Name: "creator", err: errors.New(`ent: missing required edge "Unit.creator"`)}
+		return &ValidationError{Name: "creator", err: errors.New(`ent: missing required edge "Diocese.creator"`)}
 	}
 	if len(_c.mutation.UpdaterIDs()) == 0 {
-		return &ValidationError{Name: "updater", err: errors.New(`ent: missing required edge "Unit.updater"`)}
+		return &ValidationError{Name: "updater", err: errors.New(`ent: missing required edge "Diocese.updater"`)}
 	}
 	return nil
 }
 
-func (_c *UnitCreate) sqlSave(ctx context.Context) (*Unit, error) {
+func (_c *DioceseCreate) sqlSave(ctx context.Context) (*Diocese, error) {
 	if err := _c.check(); err != nil {
 		return nil, err
 	}
@@ -198,53 +201,50 @@ func (_c *UnitCreate) sqlSave(ctx context.Context) (*Unit, error) {
 		}
 		return nil, err
 	}
-	if _spec.ID.Value != nil {
-		if id, ok := _spec.ID.Value.(*uuid.UUID); ok {
-			_node.ID = *id
-		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
-			return nil, err
-		}
+	if _spec.ID.Value != _node.ID {
+		id := _spec.ID.Value.(int64)
+		_node.ID = int(id)
 	}
 	_c.mutation.id = &_node.ID
 	_c.mutation.done = true
 	return _node, nil
 }
 
-func (_c *UnitCreate) createSpec() (*Unit, *sqlgraph.CreateSpec) {
+func (_c *DioceseCreate) createSpec() (*Diocese, *sqlgraph.CreateSpec) {
 	var (
-		_node = &Unit{config: _c.config}
-		_spec = sqlgraph.NewCreateSpec(unit.Table, sqlgraph.NewFieldSpec(unit.FieldID, field.TypeUUID))
+		_node = &Diocese{config: _c.config}
+		_spec = sqlgraph.NewCreateSpec(diocese.Table, sqlgraph.NewFieldSpec(diocese.FieldID, field.TypeInt))
 	)
-	_spec.Schema = _c.schemaConfig.Unit
+	_spec.Schema = _c.schemaConfig.Diocese
 	_spec.OnConflict = _c.conflict
 	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
-		_spec.ID.Value = &id
+		_spec.ID.Value = id
 	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
-		_spec.SetField(unit.FieldCreatedAt, field.TypeTime, value)
+		_spec.SetField(diocese.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
 	if value, ok := _c.mutation.UpdatedAt(); ok {
-		_spec.SetField(unit.FieldUpdatedAt, field.TypeTime, value)
+		_spec.SetField(diocese.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
 	if value, ok := _c.mutation.Name(); ok {
-		_spec.SetField(unit.FieldName, field.TypeString, value)
+		_spec.SetField(diocese.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
 	if nodes := _c.mutation.CreatorIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   unit.CreatorTable,
-			Columns: []string{unit.CreatorColumn},
+			Table:   diocese.CreatorTable,
+			Columns: []string{diocese.CreatorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
 			},
 		}
-		edge.Schema = _c.schemaConfig.Unit
+		edge.Schema = _c.schemaConfig.Diocese
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
@@ -255,18 +255,35 @@ func (_c *UnitCreate) createSpec() (*Unit, *sqlgraph.CreateSpec) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   unit.UpdaterTable,
-			Columns: []string{unit.UpdaterColumn},
+			Table:   diocese.UpdaterTable,
+			Columns: []string{diocese.UpdaterColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
 			},
 		}
-		edge.Schema = _c.schemaConfig.Unit
+		edge.Schema = _c.schemaConfig.Diocese
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.UpdatedBy = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.ParishesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   diocese.ParishesTable,
+			Columns: []string{diocese.ParishesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(parish.FieldID, field.TypeInt),
+			},
+		}
+		edge.Schema = _c.schemaConfig.Parish
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
@@ -275,7 +292,7 @@ func (_c *UnitCreate) createSpec() (*Unit, *sqlgraph.CreateSpec) {
 // OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
 // of the `INSERT` statement. For example:
 //
-//	client.Unit.Create().
+//	client.Diocese.Create().
 //		SetCreatedBy(v).
 //		OnConflict(
 //			// Update the row with the new values
@@ -284,13 +301,13 @@ func (_c *UnitCreate) createSpec() (*Unit, *sqlgraph.CreateSpec) {
 //		).
 //		// Override some of the fields with custom
 //		// update values.
-//		Update(func(u *ent.UnitUpsert) {
+//		Update(func(u *ent.DioceseUpsert) {
 //			SetCreatedBy(v+v).
 //		}).
 //		Exec(ctx)
-func (_c *UnitCreate) OnConflict(opts ...sql.ConflictOption) *UnitUpsertOne {
+func (_c *DioceseCreate) OnConflict(opts ...sql.ConflictOption) *DioceseUpsertOne {
 	_c.conflict = opts
-	return &UnitUpsertOne{
+	return &DioceseUpsertOne{
 		create: _c,
 	}
 }
@@ -298,96 +315,96 @@ func (_c *UnitCreate) OnConflict(opts ...sql.ConflictOption) *UnitUpsertOne {
 // OnConflictColumns calls `OnConflict` and configures the columns
 // as conflict target. Using this option is equivalent to using:
 //
-//	client.Unit.Create().
+//	client.Diocese.Create().
 //		OnConflict(sql.ConflictColumns(columns...)).
 //		Exec(ctx)
-func (_c *UnitCreate) OnConflictColumns(columns ...string) *UnitUpsertOne {
+func (_c *DioceseCreate) OnConflictColumns(columns ...string) *DioceseUpsertOne {
 	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
-	return &UnitUpsertOne{
+	return &DioceseUpsertOne{
 		create: _c,
 	}
 }
 
 type (
-	// UnitUpsertOne is the builder for "upsert"-ing
-	//  one Unit node.
-	UnitUpsertOne struct {
-		create *UnitCreate
+	// DioceseUpsertOne is the builder for "upsert"-ing
+	//  one Diocese node.
+	DioceseUpsertOne struct {
+		create *DioceseCreate
 	}
 
-	// UnitUpsert is the "OnConflict" setter.
-	UnitUpsert struct {
+	// DioceseUpsert is the "OnConflict" setter.
+	DioceseUpsert struct {
 		*sql.UpdateSet
 	}
 )
 
 // SetCreatedBy sets the "createdBy" field.
-func (u *UnitUpsert) SetCreatedBy(v uuid.UUID) *UnitUpsert {
-	u.Set(unit.FieldCreatedBy, v)
+func (u *DioceseUpsert) SetCreatedBy(v uuid.UUID) *DioceseUpsert {
+	u.Set(diocese.FieldCreatedBy, v)
 	return u
 }
 
 // UpdateCreatedBy sets the "createdBy" field to the value that was provided on create.
-func (u *UnitUpsert) UpdateCreatedBy() *UnitUpsert {
-	u.SetExcluded(unit.FieldCreatedBy)
+func (u *DioceseUpsert) UpdateCreatedBy() *DioceseUpsert {
+	u.SetExcluded(diocese.FieldCreatedBy)
 	return u
 }
 
 // SetUpdatedBy sets the "updatedBy" field.
-func (u *UnitUpsert) SetUpdatedBy(v uuid.UUID) *UnitUpsert {
-	u.Set(unit.FieldUpdatedBy, v)
+func (u *DioceseUpsert) SetUpdatedBy(v uuid.UUID) *DioceseUpsert {
+	u.Set(diocese.FieldUpdatedBy, v)
 	return u
 }
 
 // UpdateUpdatedBy sets the "updatedBy" field to the value that was provided on create.
-func (u *UnitUpsert) UpdateUpdatedBy() *UnitUpsert {
-	u.SetExcluded(unit.FieldUpdatedBy)
+func (u *DioceseUpsert) UpdateUpdatedBy() *DioceseUpsert {
+	u.SetExcluded(diocese.FieldUpdatedBy)
 	return u
 }
 
 // SetUpdatedAt sets the "updatedAt" field.
-func (u *UnitUpsert) SetUpdatedAt(v time.Time) *UnitUpsert {
-	u.Set(unit.FieldUpdatedAt, v)
+func (u *DioceseUpsert) SetUpdatedAt(v time.Time) *DioceseUpsert {
+	u.Set(diocese.FieldUpdatedAt, v)
 	return u
 }
 
 // UpdateUpdatedAt sets the "updatedAt" field to the value that was provided on create.
-func (u *UnitUpsert) UpdateUpdatedAt() *UnitUpsert {
-	u.SetExcluded(unit.FieldUpdatedAt)
+func (u *DioceseUpsert) UpdateUpdatedAt() *DioceseUpsert {
+	u.SetExcluded(diocese.FieldUpdatedAt)
 	return u
 }
 
 // SetName sets the "name" field.
-func (u *UnitUpsert) SetName(v string) *UnitUpsert {
-	u.Set(unit.FieldName, v)
+func (u *DioceseUpsert) SetName(v string) *DioceseUpsert {
+	u.Set(diocese.FieldName, v)
 	return u
 }
 
 // UpdateName sets the "name" field to the value that was provided on create.
-func (u *UnitUpsert) UpdateName() *UnitUpsert {
-	u.SetExcluded(unit.FieldName)
+func (u *DioceseUpsert) UpdateName() *DioceseUpsert {
+	u.SetExcluded(diocese.FieldName)
 	return u
 }
 
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
-//	client.Unit.Create().
+//	client.Diocese.Create().
 //		OnConflict(
 //			sql.ResolveWithNewValues(),
 //			sql.ResolveWith(func(u *sql.UpdateSet) {
-//				u.SetIgnore(unit.FieldID)
+//				u.SetIgnore(diocese.FieldID)
 //			}),
 //		).
 //		Exec(ctx)
-func (u *UnitUpsertOne) UpdateNewValues() *UnitUpsertOne {
+func (u *DioceseUpsertOne) UpdateNewValues() *DioceseUpsertOne {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
 	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
 		if _, exists := u.create.mutation.ID(); exists {
-			s.SetIgnore(unit.FieldID)
+			s.SetIgnore(diocese.FieldID)
 		}
 		if _, exists := u.create.mutation.CreatedAt(); exists {
-			s.SetIgnore(unit.FieldCreatedAt)
+			s.SetIgnore(diocese.FieldCreatedAt)
 		}
 	}))
 	return u
@@ -396,108 +413,103 @@ func (u *UnitUpsertOne) UpdateNewValues() *UnitUpsertOne {
 // Ignore sets each column to itself in case of conflict.
 // Using this option is equivalent to using:
 //
-//	client.Unit.Create().
+//	client.Diocese.Create().
 //	    OnConflict(sql.ResolveWithIgnore()).
 //	    Exec(ctx)
-func (u *UnitUpsertOne) Ignore() *UnitUpsertOne {
+func (u *DioceseUpsertOne) Ignore() *DioceseUpsertOne {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
 	return u
 }
 
 // DoNothing configures the conflict_action to `DO NOTHING`.
 // Supported only by SQLite and PostgreSQL.
-func (u *UnitUpsertOne) DoNothing() *UnitUpsertOne {
+func (u *DioceseUpsertOne) DoNothing() *DioceseUpsertOne {
 	u.create.conflict = append(u.create.conflict, sql.DoNothing())
 	return u
 }
 
-// Update allows overriding fields `UPDATE` values. See the UnitCreate.OnConflict
+// Update allows overriding fields `UPDATE` values. See the DioceseCreate.OnConflict
 // documentation for more info.
-func (u *UnitUpsertOne) Update(set func(*UnitUpsert)) *UnitUpsertOne {
+func (u *DioceseUpsertOne) Update(set func(*DioceseUpsert)) *DioceseUpsertOne {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
-		set(&UnitUpsert{UpdateSet: update})
+		set(&DioceseUpsert{UpdateSet: update})
 	}))
 	return u
 }
 
 // SetCreatedBy sets the "createdBy" field.
-func (u *UnitUpsertOne) SetCreatedBy(v uuid.UUID) *UnitUpsertOne {
-	return u.Update(func(s *UnitUpsert) {
+func (u *DioceseUpsertOne) SetCreatedBy(v uuid.UUID) *DioceseUpsertOne {
+	return u.Update(func(s *DioceseUpsert) {
 		s.SetCreatedBy(v)
 	})
 }
 
 // UpdateCreatedBy sets the "createdBy" field to the value that was provided on create.
-func (u *UnitUpsertOne) UpdateCreatedBy() *UnitUpsertOne {
-	return u.Update(func(s *UnitUpsert) {
+func (u *DioceseUpsertOne) UpdateCreatedBy() *DioceseUpsertOne {
+	return u.Update(func(s *DioceseUpsert) {
 		s.UpdateCreatedBy()
 	})
 }
 
 // SetUpdatedBy sets the "updatedBy" field.
-func (u *UnitUpsertOne) SetUpdatedBy(v uuid.UUID) *UnitUpsertOne {
-	return u.Update(func(s *UnitUpsert) {
+func (u *DioceseUpsertOne) SetUpdatedBy(v uuid.UUID) *DioceseUpsertOne {
+	return u.Update(func(s *DioceseUpsert) {
 		s.SetUpdatedBy(v)
 	})
 }
 
 // UpdateUpdatedBy sets the "updatedBy" field to the value that was provided on create.
-func (u *UnitUpsertOne) UpdateUpdatedBy() *UnitUpsertOne {
-	return u.Update(func(s *UnitUpsert) {
+func (u *DioceseUpsertOne) UpdateUpdatedBy() *DioceseUpsertOne {
+	return u.Update(func(s *DioceseUpsert) {
 		s.UpdateUpdatedBy()
 	})
 }
 
 // SetUpdatedAt sets the "updatedAt" field.
-func (u *UnitUpsertOne) SetUpdatedAt(v time.Time) *UnitUpsertOne {
-	return u.Update(func(s *UnitUpsert) {
+func (u *DioceseUpsertOne) SetUpdatedAt(v time.Time) *DioceseUpsertOne {
+	return u.Update(func(s *DioceseUpsert) {
 		s.SetUpdatedAt(v)
 	})
 }
 
 // UpdateUpdatedAt sets the "updatedAt" field to the value that was provided on create.
-func (u *UnitUpsertOne) UpdateUpdatedAt() *UnitUpsertOne {
-	return u.Update(func(s *UnitUpsert) {
+func (u *DioceseUpsertOne) UpdateUpdatedAt() *DioceseUpsertOne {
+	return u.Update(func(s *DioceseUpsert) {
 		s.UpdateUpdatedAt()
 	})
 }
 
 // SetName sets the "name" field.
-func (u *UnitUpsertOne) SetName(v string) *UnitUpsertOne {
-	return u.Update(func(s *UnitUpsert) {
+func (u *DioceseUpsertOne) SetName(v string) *DioceseUpsertOne {
+	return u.Update(func(s *DioceseUpsert) {
 		s.SetName(v)
 	})
 }
 
 // UpdateName sets the "name" field to the value that was provided on create.
-func (u *UnitUpsertOne) UpdateName() *UnitUpsertOne {
-	return u.Update(func(s *UnitUpsert) {
+func (u *DioceseUpsertOne) UpdateName() *DioceseUpsertOne {
+	return u.Update(func(s *DioceseUpsert) {
 		s.UpdateName()
 	})
 }
 
 // Exec executes the query.
-func (u *UnitUpsertOne) Exec(ctx context.Context) error {
+func (u *DioceseUpsertOne) Exec(ctx context.Context) error {
 	if len(u.create.conflict) == 0 {
-		return errors.New("ent: missing options for UnitCreate.OnConflict")
+		return errors.New("ent: missing options for DioceseCreate.OnConflict")
 	}
 	return u.create.Exec(ctx)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (u *UnitUpsertOne) ExecX(ctx context.Context) {
+func (u *DioceseUpsertOne) ExecX(ctx context.Context) {
 	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // Exec executes the UPSERT query and returns the inserted/updated ID.
-func (u *UnitUpsertOne) ID(ctx context.Context) (id uuid.UUID, err error) {
-	if u.create.driver.Dialect() == dialect.MySQL {
-		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
-		// fields from the database since MySQL does not support the RETURNING clause.
-		return id, errors.New("ent: UnitUpsertOne.ID is not supported by MySQL driver. Use UnitUpsertOne.Exec instead")
-	}
+func (u *DioceseUpsertOne) ID(ctx context.Context) (id int, err error) {
 	node, err := u.create.Save(ctx)
 	if err != nil {
 		return id, err
@@ -506,7 +518,7 @@ func (u *UnitUpsertOne) ID(ctx context.Context) (id uuid.UUID, err error) {
 }
 
 // IDX is like ID, but panics if an error occurs.
-func (u *UnitUpsertOne) IDX(ctx context.Context) uuid.UUID {
+func (u *DioceseUpsertOne) IDX(ctx context.Context) int {
 	id, err := u.ID(ctx)
 	if err != nil {
 		panic(err)
@@ -514,28 +526,28 @@ func (u *UnitUpsertOne) IDX(ctx context.Context) uuid.UUID {
 	return id
 }
 
-// UnitCreateBulk is the builder for creating many Unit entities in bulk.
-type UnitCreateBulk struct {
+// DioceseCreateBulk is the builder for creating many Diocese entities in bulk.
+type DioceseCreateBulk struct {
 	config
 	err      error
-	builders []*UnitCreate
+	builders []*DioceseCreate
 	conflict []sql.ConflictOption
 }
 
-// Save creates the Unit entities in the database.
-func (_c *UnitCreateBulk) Save(ctx context.Context) ([]*Unit, error) {
+// Save creates the Diocese entities in the database.
+func (_c *DioceseCreateBulk) Save(ctx context.Context) ([]*Diocese, error) {
 	if _c.err != nil {
 		return nil, _c.err
 	}
 	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
-	nodes := make([]*Unit, len(_c.builders))
+	nodes := make([]*Diocese, len(_c.builders))
 	mutators := make([]Mutator, len(_c.builders))
 	for i := range _c.builders {
 		func(i int, root context.Context) {
 			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
-				mutation, ok := m.(*UnitMutation)
+				mutation, ok := m.(*DioceseMutation)
 				if !ok {
 					return nil, fmt.Errorf("unexpected mutation type %T", m)
 				}
@@ -561,6 +573,10 @@ func (_c *UnitCreateBulk) Save(ctx context.Context) ([]*Unit, error) {
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
+				if specs[i].ID.Value != nil && nodes[i].ID == 0 {
+					id := specs[i].ID.Value.(int64)
+					nodes[i].ID = int(id)
+				}
 				mutation.done = true
 				return nodes[i], nil
 			})
@@ -579,7 +595,7 @@ func (_c *UnitCreateBulk) Save(ctx context.Context) ([]*Unit, error) {
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (_c *UnitCreateBulk) SaveX(ctx context.Context) []*Unit {
+func (_c *DioceseCreateBulk) SaveX(ctx context.Context) []*Diocese {
 	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
@@ -588,13 +604,13 @@ func (_c *UnitCreateBulk) SaveX(ctx context.Context) []*Unit {
 }
 
 // Exec executes the query.
-func (_c *UnitCreateBulk) Exec(ctx context.Context) error {
+func (_c *DioceseCreateBulk) Exec(ctx context.Context) error {
 	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_c *UnitCreateBulk) ExecX(ctx context.Context) {
+func (_c *DioceseCreateBulk) ExecX(ctx context.Context) {
 	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
@@ -603,7 +619,7 @@ func (_c *UnitCreateBulk) ExecX(ctx context.Context) {
 // OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
 // of the `INSERT` statement. For example:
 //
-//	client.Unit.CreateBulk(builders...).
+//	client.Diocese.CreateBulk(builders...).
 //		OnConflict(
 //			// Update the row with the new values
 //			// the was proposed for insertion.
@@ -611,13 +627,13 @@ func (_c *UnitCreateBulk) ExecX(ctx context.Context) {
 //		).
 //		// Override some of the fields with custom
 //		// update values.
-//		Update(func(u *ent.UnitUpsert) {
+//		Update(func(u *ent.DioceseUpsert) {
 //			SetCreatedBy(v+v).
 //		}).
 //		Exec(ctx)
-func (_c *UnitCreateBulk) OnConflict(opts ...sql.ConflictOption) *UnitUpsertBulk {
+func (_c *DioceseCreateBulk) OnConflict(opts ...sql.ConflictOption) *DioceseUpsertBulk {
 	_c.conflict = opts
-	return &UnitUpsertBulk{
+	return &DioceseUpsertBulk{
 		create: _c,
 	}
 }
@@ -625,42 +641,42 @@ func (_c *UnitCreateBulk) OnConflict(opts ...sql.ConflictOption) *UnitUpsertBulk
 // OnConflictColumns calls `OnConflict` and configures the columns
 // as conflict target. Using this option is equivalent to using:
 //
-//	client.Unit.Create().
+//	client.Diocese.Create().
 //		OnConflict(sql.ConflictColumns(columns...)).
 //		Exec(ctx)
-func (_c *UnitCreateBulk) OnConflictColumns(columns ...string) *UnitUpsertBulk {
+func (_c *DioceseCreateBulk) OnConflictColumns(columns ...string) *DioceseUpsertBulk {
 	_c.conflict = append(_c.conflict, sql.ConflictColumns(columns...))
-	return &UnitUpsertBulk{
+	return &DioceseUpsertBulk{
 		create: _c,
 	}
 }
 
-// UnitUpsertBulk is the builder for "upsert"-ing
-// a bulk of Unit nodes.
-type UnitUpsertBulk struct {
-	create *UnitCreateBulk
+// DioceseUpsertBulk is the builder for "upsert"-ing
+// a bulk of Diocese nodes.
+type DioceseUpsertBulk struct {
+	create *DioceseCreateBulk
 }
 
 // UpdateNewValues updates the mutable fields using the new values that
 // were set on create. Using this option is equivalent to using:
 //
-//	client.Unit.Create().
+//	client.Diocese.Create().
 //		OnConflict(
 //			sql.ResolveWithNewValues(),
 //			sql.ResolveWith(func(u *sql.UpdateSet) {
-//				u.SetIgnore(unit.FieldID)
+//				u.SetIgnore(diocese.FieldID)
 //			}),
 //		).
 //		Exec(ctx)
-func (u *UnitUpsertBulk) UpdateNewValues() *UnitUpsertBulk {
+func (u *DioceseUpsertBulk) UpdateNewValues() *DioceseUpsertBulk {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
 	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
 		for _, b := range u.create.builders {
 			if _, exists := b.mutation.ID(); exists {
-				s.SetIgnore(unit.FieldID)
+				s.SetIgnore(diocese.FieldID)
 			}
 			if _, exists := b.mutation.CreatedAt(); exists {
-				s.SetIgnore(unit.FieldCreatedAt)
+				s.SetIgnore(diocese.FieldCreatedAt)
 			}
 		}
 	}))
@@ -670,104 +686,104 @@ func (u *UnitUpsertBulk) UpdateNewValues() *UnitUpsertBulk {
 // Ignore sets each column to itself in case of conflict.
 // Using this option is equivalent to using:
 //
-//	client.Unit.Create().
+//	client.Diocese.Create().
 //		OnConflict(sql.ResolveWithIgnore()).
 //		Exec(ctx)
-func (u *UnitUpsertBulk) Ignore() *UnitUpsertBulk {
+func (u *DioceseUpsertBulk) Ignore() *DioceseUpsertBulk {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
 	return u
 }
 
 // DoNothing configures the conflict_action to `DO NOTHING`.
 // Supported only by SQLite and PostgreSQL.
-func (u *UnitUpsertBulk) DoNothing() *UnitUpsertBulk {
+func (u *DioceseUpsertBulk) DoNothing() *DioceseUpsertBulk {
 	u.create.conflict = append(u.create.conflict, sql.DoNothing())
 	return u
 }
 
-// Update allows overriding fields `UPDATE` values. See the UnitCreateBulk.OnConflict
+// Update allows overriding fields `UPDATE` values. See the DioceseCreateBulk.OnConflict
 // documentation for more info.
-func (u *UnitUpsertBulk) Update(set func(*UnitUpsert)) *UnitUpsertBulk {
+func (u *DioceseUpsertBulk) Update(set func(*DioceseUpsert)) *DioceseUpsertBulk {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
-		set(&UnitUpsert{UpdateSet: update})
+		set(&DioceseUpsert{UpdateSet: update})
 	}))
 	return u
 }
 
 // SetCreatedBy sets the "createdBy" field.
-func (u *UnitUpsertBulk) SetCreatedBy(v uuid.UUID) *UnitUpsertBulk {
-	return u.Update(func(s *UnitUpsert) {
+func (u *DioceseUpsertBulk) SetCreatedBy(v uuid.UUID) *DioceseUpsertBulk {
+	return u.Update(func(s *DioceseUpsert) {
 		s.SetCreatedBy(v)
 	})
 }
 
 // UpdateCreatedBy sets the "createdBy" field to the value that was provided on create.
-func (u *UnitUpsertBulk) UpdateCreatedBy() *UnitUpsertBulk {
-	return u.Update(func(s *UnitUpsert) {
+func (u *DioceseUpsertBulk) UpdateCreatedBy() *DioceseUpsertBulk {
+	return u.Update(func(s *DioceseUpsert) {
 		s.UpdateCreatedBy()
 	})
 }
 
 // SetUpdatedBy sets the "updatedBy" field.
-func (u *UnitUpsertBulk) SetUpdatedBy(v uuid.UUID) *UnitUpsertBulk {
-	return u.Update(func(s *UnitUpsert) {
+func (u *DioceseUpsertBulk) SetUpdatedBy(v uuid.UUID) *DioceseUpsertBulk {
+	return u.Update(func(s *DioceseUpsert) {
 		s.SetUpdatedBy(v)
 	})
 }
 
 // UpdateUpdatedBy sets the "updatedBy" field to the value that was provided on create.
-func (u *UnitUpsertBulk) UpdateUpdatedBy() *UnitUpsertBulk {
-	return u.Update(func(s *UnitUpsert) {
+func (u *DioceseUpsertBulk) UpdateUpdatedBy() *DioceseUpsertBulk {
+	return u.Update(func(s *DioceseUpsert) {
 		s.UpdateUpdatedBy()
 	})
 }
 
 // SetUpdatedAt sets the "updatedAt" field.
-func (u *UnitUpsertBulk) SetUpdatedAt(v time.Time) *UnitUpsertBulk {
-	return u.Update(func(s *UnitUpsert) {
+func (u *DioceseUpsertBulk) SetUpdatedAt(v time.Time) *DioceseUpsertBulk {
+	return u.Update(func(s *DioceseUpsert) {
 		s.SetUpdatedAt(v)
 	})
 }
 
 // UpdateUpdatedAt sets the "updatedAt" field to the value that was provided on create.
-func (u *UnitUpsertBulk) UpdateUpdatedAt() *UnitUpsertBulk {
-	return u.Update(func(s *UnitUpsert) {
+func (u *DioceseUpsertBulk) UpdateUpdatedAt() *DioceseUpsertBulk {
+	return u.Update(func(s *DioceseUpsert) {
 		s.UpdateUpdatedAt()
 	})
 }
 
 // SetName sets the "name" field.
-func (u *UnitUpsertBulk) SetName(v string) *UnitUpsertBulk {
-	return u.Update(func(s *UnitUpsert) {
+func (u *DioceseUpsertBulk) SetName(v string) *DioceseUpsertBulk {
+	return u.Update(func(s *DioceseUpsert) {
 		s.SetName(v)
 	})
 }
 
 // UpdateName sets the "name" field to the value that was provided on create.
-func (u *UnitUpsertBulk) UpdateName() *UnitUpsertBulk {
-	return u.Update(func(s *UnitUpsert) {
+func (u *DioceseUpsertBulk) UpdateName() *DioceseUpsertBulk {
+	return u.Update(func(s *DioceseUpsert) {
 		s.UpdateName()
 	})
 }
 
 // Exec executes the query.
-func (u *UnitUpsertBulk) Exec(ctx context.Context) error {
+func (u *DioceseUpsertBulk) Exec(ctx context.Context) error {
 	if u.create.err != nil {
 		return u.create.err
 	}
 	for i, b := range u.create.builders {
 		if len(b.conflict) != 0 {
-			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the UnitCreateBulk instead", i)
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the DioceseCreateBulk instead", i)
 		}
 	}
 	if len(u.create.conflict) == 0 {
-		return errors.New("ent: missing options for UnitCreateBulk.OnConflict")
+		return errors.New("ent: missing options for DioceseCreateBulk.OnConflict")
 	}
 	return u.create.Exec(ctx)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (u *UnitUpsertBulk) ExecX(ctx context.Context) {
+func (u *DioceseUpsertBulk) ExecX(ctx context.Context) {
 	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}

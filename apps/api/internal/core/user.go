@@ -4,6 +4,7 @@ import (
 	"context"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -16,23 +17,22 @@ const (
 	UserRoleUser       UserRole = "user"
 )
 
-type WorkspaceRole string
-
-const (
-	WorkspaceRoleOwner  WorkspaceRole = "owner"
-	WorkspaceRoleAdmin  WorkspaceRole = "admin"
-	WorkspaceRoleMember WorkspaceRole = "member"
-)
+type User struct {
+	ID        uuid.UUID `json:"id"`
+	Name      string    `json:"name"`
+	Email     string    `json:"email"`
+	Avatar    string    `json:"avatar,omitempty"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
 
 type AuthenticatedUser struct {
-	ID             uuid.UUID       `json:"id"`
-	Name           string          `json:"name"`
-	Email          string          `json:"email"`
-	Avatar         string          `json:"avatar,omitempty"`
-	WorkspaceID    uuid.UUID       `json:"activeWorkspaceId"`
-	WorkspaceName  string          `json:"activeWorkspaceName"`
-	WorkspaceRoles []WorkspaceRole `json:"activeWorkspaceRoles"`
-	Scope          string          `json:"scope,omitempty"`
+	ID     uuid.UUID  `json:"id"`
+	Name   string     `json:"name"`
+	Email  string     `json:"email"`
+	Avatar string     `json:"avatar,omitempty"`
+	Roles  []UserRole `json:"roles"`
+	Scope  string     `json:"scope,omitempty"`
 }
 
 func (u AuthenticatedUser) HasScope(requiredScope string) bool {

@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/paroki/domus/api/ent/diocese"
 	"github.com/paroki/domus/api/ent/schema"
-	"github.com/paroki/domus/api/ent/unit"
 	"github.com/paroki/domus/api/ent/user"
 )
 
@@ -15,31 +15,25 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
-	unitMixin := schema.Unit{}.Mixin()
-	unitMixinFields0 := unitMixin[0].Fields()
-	_ = unitMixinFields0
-	unitMixinFields1 := unitMixin[1].Fields()
-	_ = unitMixinFields1
-	unitFields := schema.Unit{}.Fields()
-	_ = unitFields
-	// unitDescCreatedAt is the schema descriptor for createdAt field.
-	unitDescCreatedAt := unitMixinFields1[1].Descriptor()
-	// unit.DefaultCreatedAt holds the default value on creation for the createdAt field.
-	unit.DefaultCreatedAt = unitDescCreatedAt.Default.(func() time.Time)
-	// unitDescUpdatedAt is the schema descriptor for updatedAt field.
-	unitDescUpdatedAt := unitMixinFields1[3].Descriptor()
-	// unit.DefaultUpdatedAt holds the default value on creation for the updatedAt field.
-	unit.DefaultUpdatedAt = unitDescUpdatedAt.Default.(func() time.Time)
-	// unit.UpdateDefaultUpdatedAt holds the default value on update for the updatedAt field.
-	unit.UpdateDefaultUpdatedAt = unitDescUpdatedAt.UpdateDefault.(func() time.Time)
-	// unitDescName is the schema descriptor for name field.
-	unitDescName := unitFields[0].Descriptor()
-	// unit.NameValidator is a validator for the "name" field. It is called by the builders before save.
-	unit.NameValidator = unitDescName.Validators[0].(func(string) error)
-	// unitDescID is the schema descriptor for id field.
-	unitDescID := unitMixinFields0[0].Descriptor()
-	// unit.DefaultID holds the default value on creation for the id field.
-	unit.DefaultID = unitDescID.Default.(func() uuid.UUID)
+	dioceseMixin := schema.Diocese{}.Mixin()
+	dioceseMixinFields0 := dioceseMixin[0].Fields()
+	_ = dioceseMixinFields0
+	dioceseFields := schema.Diocese{}.Fields()
+	_ = dioceseFields
+	// dioceseDescCreatedAt is the schema descriptor for createdAt field.
+	dioceseDescCreatedAt := dioceseMixinFields0[1].Descriptor()
+	// diocese.DefaultCreatedAt holds the default value on creation for the createdAt field.
+	diocese.DefaultCreatedAt = dioceseDescCreatedAt.Default.(func() time.Time)
+	// dioceseDescUpdatedAt is the schema descriptor for updatedAt field.
+	dioceseDescUpdatedAt := dioceseMixinFields0[3].Descriptor()
+	// diocese.DefaultUpdatedAt holds the default value on creation for the updatedAt field.
+	diocese.DefaultUpdatedAt = dioceseDescUpdatedAt.Default.(func() time.Time)
+	// diocese.UpdateDefaultUpdatedAt holds the default value on update for the updatedAt field.
+	diocese.UpdateDefaultUpdatedAt = dioceseDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// dioceseDescName is the schema descriptor for name field.
+	dioceseDescName := dioceseFields[1].Descriptor()
+	// diocese.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	diocese.NameValidator = dioceseDescName.Validators[0].(func(string) error)
 	userMixin := schema.User{}.Mixin()
 	userMixinFields0 := userMixin[0].Fields()
 	_ = userMixinFields0

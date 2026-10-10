@@ -21,9 +21,6 @@ func (s *HealthTestSuite) TestPing_Success() {
 	s.Equal(s.User.ID, res.Data.ID)
 	s.Equal(s.User.Name, res.Data.Name)
 	s.Equal(s.User.Email, res.Data.Email)
-	s.Equal(s.User.WorkspaceID, res.Data.WorkspaceID)
-	s.Equal(s.User.WorkspaceName, res.Data.WorkspaceName)
-	s.Equal(s.User.WorkspaceRoles, res.Data.WorkspaceRoles)
 }
 
 func (s *HealthTestSuite) TestPing_Unauthorized() {

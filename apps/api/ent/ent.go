@@ -12,7 +12,9 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/paroki/domus/api/ent/unit"
+	"github.com/paroki/domus/api/ent/diocese"
+	"github.com/paroki/domus/api/ent/parish"
+	"github.com/paroki/domus/api/ent/parishioner"
 	"github.com/paroki/domus/api/ent/user"
 )
 
@@ -74,8 +76,10 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			unit.Table: unit.ValidColumn,
-			user.Table: user.ValidColumn,
+			diocese.Table:     diocese.ValidColumn,
+			parish.Table:      parish.ValidColumn,
+			parishioner.Table: parishioner.ValidColumn,
+			user.Table:        user.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

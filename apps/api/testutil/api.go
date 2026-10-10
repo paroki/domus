@@ -23,14 +23,13 @@ type ApiTestSuite[T any] struct {
 
 func (s *ApiTestSuite[T]) SetupTest() {
 	s.User = &core.AuthenticatedUser{
-		Name:           "Test User",
-		Email:          "test@example.com",
-		ID:             core.GenerateID(),
-		WorkspaceID:    core.GenerateID(),
-		WorkspaceRoles: []core.WorkspaceRole{core.WorkspaceRoleOwner},
-		WorkspaceName:  "Test Workspace",
+		Name:  "Test User",
+		Email: "test@example.com",
+		ID:    core.GenerateID(),
+		Roles: []core.UserRole{core.UserRoleAdmin},
 	}
 }
+
 func (s *ApiTestSuite[T]) jsonBody(v any) io.Reader {
 	s.T().Helper()
 	b, err := json.Marshal(v)
@@ -65,12 +64,10 @@ func (s *ApiTestSuite[T]) RequestWithClaims(path string, method string, requestB
 	s.T().Helper()
 
 	claims := jwt.MapClaims{
-		"id":                   s.User.ID,
-		"name":                 s.User.Name,
-		"email":                s.User.Email,
-		"activeWorkspaceId":    s.User.WorkspaceID,
-		"activeWorkspaceName":  s.User.WorkspaceName,
-		"activeWorkspaceRoles": s.User.WorkspaceRoles,
+		"id":    s.User.ID,
+		"name":  s.User.Name,
+		"email": s.User.Email,
+		"roles": s.User.Roles,
 	}
 	for k, v := range extraClaims {
 		claims[k] = v

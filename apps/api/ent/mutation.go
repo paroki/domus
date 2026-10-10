@@ -12,8 +12,9 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
+	"github.com/paroki/domus/api/ent/diocese"
+	"github.com/paroki/domus/api/ent/parish"
 	"github.com/paroki/domus/api/ent/predicate"
-	"github.com/paroki/domus/api/ent/unit"
 	"github.com/paroki/domus/api/ent/user"
 )
 
@@ -26,40 +27,45 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeUnit = "Unit"
-	TypeUser = "User"
+	TypeDiocese     = "Diocese"
+	TypeParish      = "Parish"
+	TypeParishioner = "Parishioner"
+	TypeUser        = "User"
 )
 
-// UnitMutation represents an operation that mutates the Unit nodes in the graph.
-type UnitMutation struct {
+// DioceseMutation represents an operation that mutates the Diocese nodes in the graph.
+type DioceseMutation struct {
 	config
-	op             Op
-	typ            string
-	id             *uuid.UUID
-	createdAt      *time.Time
-	updatedAt      *time.Time
-	name           *string
-	clearedFields  map[string]struct{}
-	creator        *uuid.UUID
-	clearedcreator bool
-	updater        *uuid.UUID
-	clearedupdater bool
-	done           bool
-	oldValue       func(context.Context) (*Unit, error)
-	predicates     []predicate.Unit
+	op              Op
+	typ             string
+	id              *int
+	createdAt       *time.Time
+	updatedAt       *time.Time
+	name            *string
+	clearedFields   map[string]struct{}
+	creator         *uuid.UUID
+	clearedcreator  bool
+	updater         *uuid.UUID
+	clearedupdater  bool
+	parishes        map[int]struct{}
+	removedparishes map[int]struct{}
+	clearedparishes bool
+	done            bool
+	oldValue        func(context.Context) (*Diocese, error)
+	predicates      []predicate.Diocese
 }
 
-var _ ent.Mutation = (*UnitMutation)(nil)
+var _ ent.Mutation = (*DioceseMutation)(nil)
 
-// unitOption allows management of the mutation configuration using functional options.
-type unitOption func(*UnitMutation)
+// dioceseOption allows management of the mutation configuration using functional options.
+type dioceseOption func(*DioceseMutation)
 
-// newUnitMutation creates new mutation for the Unit entity.
-func newUnitMutation(c config, op Op, opts ...unitOption) *UnitMutation {
-	m := &UnitMutation{
+// newDioceseMutation creates new mutation for the Diocese entity.
+func newDioceseMutation(c config, op Op, opts ...dioceseOption) *DioceseMutation {
+	m := &DioceseMutation{
 		config:        c,
 		op:            op,
-		typ:           TypeUnit,
+		typ:           TypeDiocese,
 		clearedFields: make(map[string]struct{}),
 	}
 	for _, opt := range opts {
@@ -68,20 +74,20 @@ func newUnitMutation(c config, op Op, opts ...unitOption) *UnitMutation {
 	return m
 }
 
-// withUnitID sets the ID field of the mutation.
-func withUnitID(id uuid.UUID) unitOption {
-	return func(m *UnitMutation) {
+// withDioceseID sets the ID field of the mutation.
+func withDioceseID(id int) dioceseOption {
+	return func(m *DioceseMutation) {
 		var (
 			err   error
 			once  sync.Once
-			value *Unit
+			value *Diocese
 		)
-		m.oldValue = func(ctx context.Context) (*Unit, error) {
+		m.oldValue = func(ctx context.Context) (*Diocese, error) {
 			once.Do(func() {
 				if m.done {
 					err = errors.New("querying old values post mutation is not allowed")
 				} else {
-					value, err = m.Client().Unit.Get(ctx, id)
+					value, err = m.Client().Diocese.Get(ctx, id)
 				}
 			})
 			return value, err
@@ -90,10 +96,10 @@ func withUnitID(id uuid.UUID) unitOption {
 	}
 }
 
-// withUnit sets the old Unit of the mutation.
-func withUnit(node *Unit) unitOption {
-	return func(m *UnitMutation) {
-		m.oldValue = func(context.Context) (*Unit, error) {
+// withDiocese sets the old Diocese of the mutation.
+func withDiocese(node *Diocese) dioceseOption {
+	return func(m *DioceseMutation) {
+		m.oldValue = func(context.Context) (*Diocese, error) {
 			return node, nil
 		}
 		m.id = &node.ID
@@ -102,7 +108,7 @@ func withUnit(node *Unit) unitOption {
 
 // Client returns a new `ent.Client` from the mutation. If the mutation was
 // executed in a transaction (ent.Tx), a transactional client is returned.
-func (m UnitMutation) Client() *Client {
+func (m DioceseMutation) Client() *Client {
 	client := &Client{config: m.config}
 	client.init()
 	return client
@@ -110,7 +116,7 @@ func (m UnitMutation) Client() *Client {
 
 // Tx returns an `ent.Tx` for mutations that were executed in transactions;
 // it returns an error otherwise.
-func (m UnitMutation) Tx() (*Tx, error) {
+func (m DioceseMutation) Tx() (*Tx, error) {
 	if _, ok := m.driver.(*txDriver); !ok {
 		return nil, errors.New("ent: mutation is not running in a transaction")
 	}
@@ -120,14 +126,14 @@ func (m UnitMutation) Tx() (*Tx, error) {
 }
 
 // SetID sets the value of the id field. Note that this
-// operation is only accepted on creation of Unit entities.
-func (m *UnitMutation) SetID(id uuid.UUID) {
+// operation is only accepted on creation of Diocese entities.
+func (m *DioceseMutation) SetID(id int) {
 	m.id = &id
 }
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *UnitMutation) ID() (id uuid.UUID, exists bool) {
+func (m *DioceseMutation) ID() (id int, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -138,28 +144,28 @@ func (m *UnitMutation) ID() (id uuid.UUID, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *UnitMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+func (m *DioceseMutation) IDs(ctx context.Context) ([]int, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []uuid.UUID{id}, nil
+			return []int{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
-		return m.Client().Unit.Query().Where(m.predicates...).IDs(ctx)
+		return m.Client().Diocese.Query().Where(m.predicates...).IDs(ctx)
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
 }
 
 // SetCreatedBy sets the "createdBy" field.
-func (m *UnitMutation) SetCreatedBy(u uuid.UUID) {
+func (m *DioceseMutation) SetCreatedBy(u uuid.UUID) {
 	m.creator = &u
 }
 
 // CreatedBy returns the value of the "createdBy" field in the mutation.
-func (m *UnitMutation) CreatedBy() (r uuid.UUID, exists bool) {
+func (m *DioceseMutation) CreatedBy() (r uuid.UUID, exists bool) {
 	v := m.creator
 	if v == nil {
 		return
@@ -167,10 +173,10 @@ func (m *UnitMutation) CreatedBy() (r uuid.UUID, exists bool) {
 	return *v, true
 }
 
-// OldCreatedBy returns the old "createdBy" field's value of the Unit entity.
-// If the Unit object wasn't provided to the builder, the object is fetched from the database.
+// OldCreatedBy returns the old "createdBy" field's value of the Diocese entity.
+// If the Diocese object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *UnitMutation) OldCreatedBy(ctx context.Context) (v uuid.UUID, err error) {
+func (m *DioceseMutation) OldCreatedBy(ctx context.Context) (v uuid.UUID, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
 	}
@@ -185,17 +191,17 @@ func (m *UnitMutation) OldCreatedBy(ctx context.Context) (v uuid.UUID, err error
 }
 
 // ResetCreatedBy resets all changes to the "createdBy" field.
-func (m *UnitMutation) ResetCreatedBy() {
+func (m *DioceseMutation) ResetCreatedBy() {
 	m.creator = nil
 }
 
 // SetCreatedAt sets the "createdAt" field.
-func (m *UnitMutation) SetCreatedAt(t time.Time) {
+func (m *DioceseMutation) SetCreatedAt(t time.Time) {
 	m.createdAt = &t
 }
 
 // CreatedAt returns the value of the "createdAt" field in the mutation.
-func (m *UnitMutation) CreatedAt() (r time.Time, exists bool) {
+func (m *DioceseMutation) CreatedAt() (r time.Time, exists bool) {
 	v := m.createdAt
 	if v == nil {
 		return
@@ -203,10 +209,10 @@ func (m *UnitMutation) CreatedAt() (r time.Time, exists bool) {
 	return *v, true
 }
 
-// OldCreatedAt returns the old "createdAt" field's value of the Unit entity.
-// If the Unit object wasn't provided to the builder, the object is fetched from the database.
+// OldCreatedAt returns the old "createdAt" field's value of the Diocese entity.
+// If the Diocese object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *UnitMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+func (m *DioceseMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
 	}
@@ -221,17 +227,17 @@ func (m *UnitMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error
 }
 
 // ResetCreatedAt resets all changes to the "createdAt" field.
-func (m *UnitMutation) ResetCreatedAt() {
+func (m *DioceseMutation) ResetCreatedAt() {
 	m.createdAt = nil
 }
 
 // SetUpdatedBy sets the "updatedBy" field.
-func (m *UnitMutation) SetUpdatedBy(u uuid.UUID) {
+func (m *DioceseMutation) SetUpdatedBy(u uuid.UUID) {
 	m.updater = &u
 }
 
 // UpdatedBy returns the value of the "updatedBy" field in the mutation.
-func (m *UnitMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+func (m *DioceseMutation) UpdatedBy() (r uuid.UUID, exists bool) {
 	v := m.updater
 	if v == nil {
 		return
@@ -239,10 +245,10 @@ func (m *UnitMutation) UpdatedBy() (r uuid.UUID, exists bool) {
 	return *v, true
 }
 
-// OldUpdatedBy returns the old "updatedBy" field's value of the Unit entity.
-// If the Unit object wasn't provided to the builder, the object is fetched from the database.
+// OldUpdatedBy returns the old "updatedBy" field's value of the Diocese entity.
+// If the Diocese object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *UnitMutation) OldUpdatedBy(ctx context.Context) (v uuid.UUID, err error) {
+func (m *DioceseMutation) OldUpdatedBy(ctx context.Context) (v uuid.UUID, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
 	}
@@ -257,17 +263,17 @@ func (m *UnitMutation) OldUpdatedBy(ctx context.Context) (v uuid.UUID, err error
 }
 
 // ResetUpdatedBy resets all changes to the "updatedBy" field.
-func (m *UnitMutation) ResetUpdatedBy() {
+func (m *DioceseMutation) ResetUpdatedBy() {
 	m.updater = nil
 }
 
 // SetUpdatedAt sets the "updatedAt" field.
-func (m *UnitMutation) SetUpdatedAt(t time.Time) {
+func (m *DioceseMutation) SetUpdatedAt(t time.Time) {
 	m.updatedAt = &t
 }
 
 // UpdatedAt returns the value of the "updatedAt" field in the mutation.
-func (m *UnitMutation) UpdatedAt() (r time.Time, exists bool) {
+func (m *DioceseMutation) UpdatedAt() (r time.Time, exists bool) {
 	v := m.updatedAt
 	if v == nil {
 		return
@@ -275,10 +281,10 @@ func (m *UnitMutation) UpdatedAt() (r time.Time, exists bool) {
 	return *v, true
 }
 
-// OldUpdatedAt returns the old "updatedAt" field's value of the Unit entity.
-// If the Unit object wasn't provided to the builder, the object is fetched from the database.
+// OldUpdatedAt returns the old "updatedAt" field's value of the Diocese entity.
+// If the Diocese object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *UnitMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+func (m *DioceseMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
 	}
@@ -293,17 +299,17 @@ func (m *UnitMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error
 }
 
 // ResetUpdatedAt resets all changes to the "updatedAt" field.
-func (m *UnitMutation) ResetUpdatedAt() {
+func (m *DioceseMutation) ResetUpdatedAt() {
 	m.updatedAt = nil
 }
 
 // SetName sets the "name" field.
-func (m *UnitMutation) SetName(s string) {
+func (m *DioceseMutation) SetName(s string) {
 	m.name = &s
 }
 
 // Name returns the value of the "name" field in the mutation.
-func (m *UnitMutation) Name() (r string, exists bool) {
+func (m *DioceseMutation) Name() (r string, exists bool) {
 	v := m.name
 	if v == nil {
 		return
@@ -311,10 +317,10 @@ func (m *UnitMutation) Name() (r string, exists bool) {
 	return *v, true
 }
 
-// OldName returns the old "name" field's value of the Unit entity.
-// If the Unit object wasn't provided to the builder, the object is fetched from the database.
+// OldName returns the old "name" field's value of the Diocese entity.
+// If the Diocese object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *UnitMutation) OldName(ctx context.Context) (v string, err error) {
+func (m *DioceseMutation) OldName(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldName is only allowed on UpdateOne operations")
 	}
@@ -329,28 +335,28 @@ func (m *UnitMutation) OldName(ctx context.Context) (v string, err error) {
 }
 
 // ResetName resets all changes to the "name" field.
-func (m *UnitMutation) ResetName() {
+func (m *DioceseMutation) ResetName() {
 	m.name = nil
 }
 
 // SetCreatorID sets the "creator" edge to the User entity by id.
-func (m *UnitMutation) SetCreatorID(id uuid.UUID) {
+func (m *DioceseMutation) SetCreatorID(id uuid.UUID) {
 	m.creator = &id
 }
 
 // ClearCreator clears the "creator" edge to the User entity.
-func (m *UnitMutation) ClearCreator() {
+func (m *DioceseMutation) ClearCreator() {
 	m.clearedcreator = true
-	m.clearedFields[unit.FieldCreatedBy] = struct{}{}
+	m.clearedFields[diocese.FieldCreatedBy] = struct{}{}
 }
 
 // CreatorCleared reports if the "creator" edge to the User entity was cleared.
-func (m *UnitMutation) CreatorCleared() bool {
+func (m *DioceseMutation) CreatorCleared() bool {
 	return m.clearedcreator
 }
 
 // CreatorID returns the "creator" edge ID in the mutation.
-func (m *UnitMutation) CreatorID() (id uuid.UUID, exists bool) {
+func (m *DioceseMutation) CreatorID() (id uuid.UUID, exists bool) {
 	if m.creator != nil {
 		return *m.creator, true
 	}
@@ -360,7 +366,7 @@ func (m *UnitMutation) CreatorID() (id uuid.UUID, exists bool) {
 // CreatorIDs returns the "creator" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
 // CreatorID instead. It exists only for internal usage by the builders.
-func (m *UnitMutation) CreatorIDs() (ids []uuid.UUID) {
+func (m *DioceseMutation) CreatorIDs() (ids []uuid.UUID) {
 	if id := m.creator; id != nil {
 		ids = append(ids, *id)
 	}
@@ -368,29 +374,29 @@ func (m *UnitMutation) CreatorIDs() (ids []uuid.UUID) {
 }
 
 // ResetCreator resets all changes to the "creator" edge.
-func (m *UnitMutation) ResetCreator() {
+func (m *DioceseMutation) ResetCreator() {
 	m.creator = nil
 	m.clearedcreator = false
 }
 
 // SetUpdaterID sets the "updater" edge to the User entity by id.
-func (m *UnitMutation) SetUpdaterID(id uuid.UUID) {
+func (m *DioceseMutation) SetUpdaterID(id uuid.UUID) {
 	m.updater = &id
 }
 
 // ClearUpdater clears the "updater" edge to the User entity.
-func (m *UnitMutation) ClearUpdater() {
+func (m *DioceseMutation) ClearUpdater() {
 	m.clearedupdater = true
-	m.clearedFields[unit.FieldUpdatedBy] = struct{}{}
+	m.clearedFields[diocese.FieldUpdatedBy] = struct{}{}
 }
 
 // UpdaterCleared reports if the "updater" edge to the User entity was cleared.
-func (m *UnitMutation) UpdaterCleared() bool {
+func (m *DioceseMutation) UpdaterCleared() bool {
 	return m.clearedupdater
 }
 
 // UpdaterID returns the "updater" edge ID in the mutation.
-func (m *UnitMutation) UpdaterID() (id uuid.UUID, exists bool) {
+func (m *DioceseMutation) UpdaterID() (id uuid.UUID, exists bool) {
 	if m.updater != nil {
 		return *m.updater, true
 	}
@@ -400,7 +406,7 @@ func (m *UnitMutation) UpdaterID() (id uuid.UUID, exists bool) {
 // UpdaterIDs returns the "updater" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
 // UpdaterID instead. It exists only for internal usage by the builders.
-func (m *UnitMutation) UpdaterIDs() (ids []uuid.UUID) {
+func (m *DioceseMutation) UpdaterIDs() (ids []uuid.UUID) {
 	if id := m.updater; id != nil {
 		ids = append(ids, *id)
 	}
@@ -408,20 +414,74 @@ func (m *UnitMutation) UpdaterIDs() (ids []uuid.UUID) {
 }
 
 // ResetUpdater resets all changes to the "updater" edge.
-func (m *UnitMutation) ResetUpdater() {
+func (m *DioceseMutation) ResetUpdater() {
 	m.updater = nil
 	m.clearedupdater = false
 }
 
-// Where appends a list predicates to the UnitMutation builder.
-func (m *UnitMutation) Where(ps ...predicate.Unit) {
+// AddParishIDs adds the "parishes" edge to the Parish entity by ids.
+func (m *DioceseMutation) AddParishIDs(ids ...int) {
+	if m.parishes == nil {
+		m.parishes = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.parishes[ids[i]] = struct{}{}
+	}
+}
+
+// ClearParishes clears the "parishes" edge to the Parish entity.
+func (m *DioceseMutation) ClearParishes() {
+	m.clearedparishes = true
+}
+
+// ParishesCleared reports if the "parishes" edge to the Parish entity was cleared.
+func (m *DioceseMutation) ParishesCleared() bool {
+	return m.clearedparishes
+}
+
+// RemoveParishIDs removes the "parishes" edge to the Parish entity by IDs.
+func (m *DioceseMutation) RemoveParishIDs(ids ...int) {
+	if m.removedparishes == nil {
+		m.removedparishes = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.parishes, ids[i])
+		m.removedparishes[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedParishes returns the removed IDs of the "parishes" edge to the Parish entity.
+func (m *DioceseMutation) RemovedParishesIDs() (ids []int) {
+	for id := range m.removedparishes {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ParishesIDs returns the "parishes" edge IDs in the mutation.
+func (m *DioceseMutation) ParishesIDs() (ids []int) {
+	for id := range m.parishes {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetParishes resets all changes to the "parishes" edge.
+func (m *DioceseMutation) ResetParishes() {
+	m.parishes = nil
+	m.clearedparishes = false
+	m.removedparishes = nil
+}
+
+// Where appends a list predicates to the DioceseMutation builder.
+func (m *DioceseMutation) Where(ps ...predicate.Diocese) {
 	m.predicates = append(m.predicates, ps...)
 }
 
-// WhereP appends storage-level predicates to the UnitMutation builder. Using this method,
+// WhereP appends storage-level predicates to the DioceseMutation builder. Using this method,
 // users can use type-assertion to append predicates that do not depend on any generated package.
-func (m *UnitMutation) WhereP(ps ...func(*sql.Selector)) {
-	p := make([]predicate.Unit, len(ps))
+func (m *DioceseMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Diocese, len(ps))
 	for i := range ps {
 		p[i] = ps[i]
 	}
@@ -429,39 +489,39 @@ func (m *UnitMutation) WhereP(ps ...func(*sql.Selector)) {
 }
 
 // Op returns the operation name.
-func (m *UnitMutation) Op() Op {
+func (m *DioceseMutation) Op() Op {
 	return m.op
 }
 
 // SetOp allows setting the mutation operation.
-func (m *UnitMutation) SetOp(op Op) {
+func (m *DioceseMutation) SetOp(op Op) {
 	m.op = op
 }
 
-// Type returns the node type of this mutation (Unit).
-func (m *UnitMutation) Type() string {
+// Type returns the node type of this mutation (Diocese).
+func (m *DioceseMutation) Type() string {
 	return m.typ
 }
 
 // Fields returns all fields that were changed during this mutation. Note that in
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
-func (m *UnitMutation) Fields() []string {
+func (m *DioceseMutation) Fields() []string {
 	fields := make([]string, 0, 5)
 	if m.creator != nil {
-		fields = append(fields, unit.FieldCreatedBy)
+		fields = append(fields, diocese.FieldCreatedBy)
 	}
 	if m.createdAt != nil {
-		fields = append(fields, unit.FieldCreatedAt)
+		fields = append(fields, diocese.FieldCreatedAt)
 	}
 	if m.updater != nil {
-		fields = append(fields, unit.FieldUpdatedBy)
+		fields = append(fields, diocese.FieldUpdatedBy)
 	}
 	if m.updatedAt != nil {
-		fields = append(fields, unit.FieldUpdatedAt)
+		fields = append(fields, diocese.FieldUpdatedAt)
 	}
 	if m.name != nil {
-		fields = append(fields, unit.FieldName)
+		fields = append(fields, diocese.FieldName)
 	}
 	return fields
 }
@@ -469,17 +529,17 @@ func (m *UnitMutation) Fields() []string {
 // Field returns the value of a field with the given name. The second boolean
 // return value indicates that this field was not set, or was not defined in the
 // schema.
-func (m *UnitMutation) Field(name string) (ent.Value, bool) {
+func (m *DioceseMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case unit.FieldCreatedBy:
+	case diocese.FieldCreatedBy:
 		return m.CreatedBy()
-	case unit.FieldCreatedAt:
+	case diocese.FieldCreatedAt:
 		return m.CreatedAt()
-	case unit.FieldUpdatedBy:
+	case diocese.FieldUpdatedBy:
 		return m.UpdatedBy()
-	case unit.FieldUpdatedAt:
+	case diocese.FieldUpdatedAt:
 		return m.UpdatedAt()
-	case unit.FieldName:
+	case diocese.FieldName:
 		return m.Name()
 	}
 	return nil, false
@@ -488,56 +548,56 @@ func (m *UnitMutation) Field(name string) (ent.Value, bool) {
 // OldField returns the old value of the field from the database. An error is
 // returned if the mutation operation is not UpdateOne, or the query to the
 // database failed.
-func (m *UnitMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+func (m *DioceseMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case unit.FieldCreatedBy:
+	case diocese.FieldCreatedBy:
 		return m.OldCreatedBy(ctx)
-	case unit.FieldCreatedAt:
+	case diocese.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
-	case unit.FieldUpdatedBy:
+	case diocese.FieldUpdatedBy:
 		return m.OldUpdatedBy(ctx)
-	case unit.FieldUpdatedAt:
+	case diocese.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
-	case unit.FieldName:
+	case diocese.FieldName:
 		return m.OldName(ctx)
 	}
-	return nil, fmt.Errorf("unknown Unit field %s", name)
+	return nil, fmt.Errorf("unknown Diocese field %s", name)
 }
 
 // SetField sets the value of a field with the given name. It returns an error if
 // the field is not defined in the schema, or if the type mismatched the field
 // type.
-func (m *UnitMutation) SetField(name string, value ent.Value) error {
+func (m *DioceseMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case unit.FieldCreatedBy:
+	case diocese.FieldCreatedBy:
 		v, ok := value.(uuid.UUID)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetCreatedBy(v)
 		return nil
-	case unit.FieldCreatedAt:
+	case diocese.FieldCreatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetCreatedAt(v)
 		return nil
-	case unit.FieldUpdatedBy:
+	case diocese.FieldUpdatedBy:
 		v, ok := value.(uuid.UUID)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetUpdatedBy(v)
 		return nil
-	case unit.FieldUpdatedAt:
+	case diocese.FieldUpdatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetUpdatedAt(v)
 		return nil
-	case unit.FieldName:
+	case diocese.FieldName:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
@@ -545,95 +605,533 @@ func (m *UnitMutation) SetField(name string, value ent.Value) error {
 		m.SetName(v)
 		return nil
 	}
-	return fmt.Errorf("unknown Unit field %s", name)
+	return fmt.Errorf("unknown Diocese field %s", name)
 }
 
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
-func (m *UnitMutation) AddedFields() []string {
+func (m *DioceseMutation) AddedFields() []string {
 	return nil
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
-func (m *UnitMutation) AddedField(name string) (ent.Value, bool) {
+func (m *DioceseMutation) AddedField(name string) (ent.Value, bool) {
 	return nil, false
 }
 
 // AddField adds the value to the field with the given name. It returns an error if
 // the field is not defined in the schema, or if the type mismatched the field
 // type.
-func (m *UnitMutation) AddField(name string, value ent.Value) error {
+func (m *DioceseMutation) AddField(name string, value ent.Value) error {
 	switch name {
 	}
-	return fmt.Errorf("unknown Unit numeric field %s", name)
+	return fmt.Errorf("unknown Diocese numeric field %s", name)
 }
 
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
-func (m *UnitMutation) ClearedFields() []string {
+func (m *DioceseMutation) ClearedFields() []string {
 	return nil
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
 // cleared in this mutation.
-func (m *UnitMutation) FieldCleared(name string) bool {
+func (m *DioceseMutation) FieldCleared(name string) bool {
 	_, ok := m.clearedFields[name]
 	return ok
 }
 
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
-func (m *UnitMutation) ClearField(name string) error {
-	return fmt.Errorf("unknown Unit nullable field %s", name)
+func (m *DioceseMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown Diocese nullable field %s", name)
 }
 
 // ResetField resets all changes in the mutation for the field with the given name.
 // It returns an error if the field is not defined in the schema.
-func (m *UnitMutation) ResetField(name string) error {
+func (m *DioceseMutation) ResetField(name string) error {
 	switch name {
-	case unit.FieldCreatedBy:
+	case diocese.FieldCreatedBy:
 		m.ResetCreatedBy()
 		return nil
-	case unit.FieldCreatedAt:
+	case diocese.FieldCreatedAt:
 		m.ResetCreatedAt()
 		return nil
-	case unit.FieldUpdatedBy:
+	case diocese.FieldUpdatedBy:
 		m.ResetUpdatedBy()
 		return nil
-	case unit.FieldUpdatedAt:
+	case diocese.FieldUpdatedAt:
 		m.ResetUpdatedAt()
 		return nil
-	case unit.FieldName:
+	case diocese.FieldName:
 		m.ResetName()
 		return nil
 	}
-	return fmt.Errorf("unknown Unit field %s", name)
+	return fmt.Errorf("unknown Diocese field %s", name)
 }
 
 // AddedEdges returns all edge names that were set/added in this mutation.
-func (m *UnitMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+func (m *DioceseMutation) AddedEdges() []string {
+	edges := make([]string, 0, 3)
 	if m.creator != nil {
-		edges = append(edges, unit.EdgeCreator)
+		edges = append(edges, diocese.EdgeCreator)
 	}
 	if m.updater != nil {
-		edges = append(edges, unit.EdgeUpdater)
+		edges = append(edges, diocese.EdgeUpdater)
+	}
+	if m.parishes != nil {
+		edges = append(edges, diocese.EdgeParishes)
 	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
-func (m *UnitMutation) AddedIDs(name string) []ent.Value {
+func (m *DioceseMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case unit.EdgeCreator:
+	case diocese.EdgeCreator:
 		if id := m.creator; id != nil {
 			return []ent.Value{*id}
 		}
-	case unit.EdgeUpdater:
+	case diocese.EdgeUpdater:
 		if id := m.updater; id != nil {
+			return []ent.Value{*id}
+		}
+	case diocese.EdgeParishes:
+		ids := make([]ent.Value, 0, len(m.parishes))
+		for id := range m.parishes {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *DioceseMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 3)
+	if m.removedparishes != nil {
+		edges = append(edges, diocese.EdgeParishes)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *DioceseMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case diocese.EdgeParishes:
+		ids := make([]ent.Value, 0, len(m.removedparishes))
+		for id := range m.removedparishes {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *DioceseMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 3)
+	if m.clearedcreator {
+		edges = append(edges, diocese.EdgeCreator)
+	}
+	if m.clearedupdater {
+		edges = append(edges, diocese.EdgeUpdater)
+	}
+	if m.clearedparishes {
+		edges = append(edges, diocese.EdgeParishes)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *DioceseMutation) EdgeCleared(name string) bool {
+	switch name {
+	case diocese.EdgeCreator:
+		return m.clearedcreator
+	case diocese.EdgeUpdater:
+		return m.clearedupdater
+	case diocese.EdgeParishes:
+		return m.clearedparishes
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *DioceseMutation) ClearEdge(name string) error {
+	switch name {
+	case diocese.EdgeCreator:
+		m.ClearCreator()
+		return nil
+	case diocese.EdgeUpdater:
+		m.ClearUpdater()
+		return nil
+	}
+	return fmt.Errorf("unknown Diocese unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *DioceseMutation) ResetEdge(name string) error {
+	switch name {
+	case diocese.EdgeCreator:
+		m.ResetCreator()
+		return nil
+	case diocese.EdgeUpdater:
+		m.ResetUpdater()
+		return nil
+	case diocese.EdgeParishes:
+		m.ResetParishes()
+		return nil
+	}
+	return fmt.Errorf("unknown Diocese edge %s", name)
+}
+
+// ParishMutation represents an operation that mutates the Parish nodes in the graph.
+type ParishMutation struct {
+	config
+	op             Op
+	typ            string
+	id             *int
+	name           *string
+	clearedFields  map[string]struct{}
+	diocese        *int
+	cleareddiocese bool
+	done           bool
+	oldValue       func(context.Context) (*Parish, error)
+	predicates     []predicate.Parish
+}
+
+var _ ent.Mutation = (*ParishMutation)(nil)
+
+// parishOption allows management of the mutation configuration using functional options.
+type parishOption func(*ParishMutation)
+
+// newParishMutation creates new mutation for the Parish entity.
+func newParishMutation(c config, op Op, opts ...parishOption) *ParishMutation {
+	m := &ParishMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeParish,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withParishID sets the ID field of the mutation.
+func withParishID(id int) parishOption {
+	return func(m *ParishMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Parish
+		)
+		m.oldValue = func(ctx context.Context) (*Parish, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Parish.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withParish sets the old Parish of the mutation.
+func withParish(node *Parish) parishOption {
+	return func(m *ParishMutation) {
+		m.oldValue = func(context.Context) (*Parish, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ParishMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ParishMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Parish entities.
+func (m *ParishMutation) SetID(id int) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ParishMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ParishMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Parish.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetName sets the "name" field.
+func (m *ParishMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *ParishMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Parish entity.
+// If the Parish object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParishMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *ParishMutation) ResetName() {
+	m.name = nil
+}
+
+// SetDioceseID sets the "diocese" edge to the Diocese entity by id.
+func (m *ParishMutation) SetDioceseID(id int) {
+	m.diocese = &id
+}
+
+// ClearDiocese clears the "diocese" edge to the Diocese entity.
+func (m *ParishMutation) ClearDiocese() {
+	m.cleareddiocese = true
+}
+
+// DioceseCleared reports if the "diocese" edge to the Diocese entity was cleared.
+func (m *ParishMutation) DioceseCleared() bool {
+	return m.cleareddiocese
+}
+
+// DioceseID returns the "diocese" edge ID in the mutation.
+func (m *ParishMutation) DioceseID() (id int, exists bool) {
+	if m.diocese != nil {
+		return *m.diocese, true
+	}
+	return
+}
+
+// DioceseIDs returns the "diocese" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// DioceseID instead. It exists only for internal usage by the builders.
+func (m *ParishMutation) DioceseIDs() (ids []int) {
+	if id := m.diocese; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetDiocese resets all changes to the "diocese" edge.
+func (m *ParishMutation) ResetDiocese() {
+	m.diocese = nil
+	m.cleareddiocese = false
+}
+
+// Where appends a list predicates to the ParishMutation builder.
+func (m *ParishMutation) Where(ps ...predicate.Parish) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ParishMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ParishMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Parish, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ParishMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ParishMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Parish).
+func (m *ParishMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ParishMutation) Fields() []string {
+	fields := make([]string, 0, 1)
+	if m.name != nil {
+		fields = append(fields, parish.FieldName)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ParishMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case parish.FieldName:
+		return m.Name()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ParishMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case parish.FieldName:
+		return m.OldName(ctx)
+	}
+	return nil, fmt.Errorf("unknown Parish field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ParishMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case parish.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Parish field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ParishMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ParishMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ParishMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Parish numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ParishMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ParishMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ParishMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown Parish nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ParishMutation) ResetField(name string) error {
+	switch name {
+	case parish.FieldName:
+		m.ResetName()
+		return nil
+	}
+	return fmt.Errorf("unknown Parish field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ParishMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.diocese != nil {
+		edges = append(edges, parish.EdgeDiocese)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ParishMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case parish.EdgeDiocese:
+		if id := m.diocese; id != nil {
 			return []ent.Value{*id}
 		}
 	}
@@ -641,67 +1139,320 @@ func (m *UnitMutation) AddedIDs(name string) []ent.Value {
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
-func (m *UnitMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+func (m *ParishMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
-func (m *UnitMutation) RemovedIDs(name string) []ent.Value {
+func (m *ParishMutation) RemovedIDs(name string) []ent.Value {
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
-func (m *UnitMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
-	if m.clearedcreator {
-		edges = append(edges, unit.EdgeCreator)
-	}
-	if m.clearedupdater {
-		edges = append(edges, unit.EdgeUpdater)
+func (m *ParishMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.cleareddiocese {
+		edges = append(edges, parish.EdgeDiocese)
 	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
-func (m *UnitMutation) EdgeCleared(name string) bool {
+func (m *ParishMutation) EdgeCleared(name string) bool {
 	switch name {
-	case unit.EdgeCreator:
-		return m.clearedcreator
-	case unit.EdgeUpdater:
-		return m.clearedupdater
+	case parish.EdgeDiocese:
+		return m.cleareddiocese
 	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
-func (m *UnitMutation) ClearEdge(name string) error {
+func (m *ParishMutation) ClearEdge(name string) error {
 	switch name {
-	case unit.EdgeCreator:
-		m.ClearCreator()
-		return nil
-	case unit.EdgeUpdater:
-		m.ClearUpdater()
+	case parish.EdgeDiocese:
+		m.ClearDiocese()
 		return nil
 	}
-	return fmt.Errorf("unknown Unit unique edge %s", name)
+	return fmt.Errorf("unknown Parish unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
-func (m *UnitMutation) ResetEdge(name string) error {
+func (m *ParishMutation) ResetEdge(name string) error {
 	switch name {
-	case unit.EdgeCreator:
-		m.ResetCreator()
-		return nil
-	case unit.EdgeUpdater:
-		m.ResetUpdater()
+	case parish.EdgeDiocese:
+		m.ResetDiocese()
 		return nil
 	}
-	return fmt.Errorf("unknown Unit edge %s", name)
+	return fmt.Errorf("unknown Parish edge %s", name)
+}
+
+// ParishionerMutation represents an operation that mutates the Parishioner nodes in the graph.
+type ParishionerMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int
+	clearedFields map[string]struct{}
+	done          bool
+	oldValue      func(context.Context) (*Parishioner, error)
+	predicates    []predicate.Parishioner
+}
+
+var _ ent.Mutation = (*ParishionerMutation)(nil)
+
+// parishionerOption allows management of the mutation configuration using functional options.
+type parishionerOption func(*ParishionerMutation)
+
+// newParishionerMutation creates new mutation for the Parishioner entity.
+func newParishionerMutation(c config, op Op, opts ...parishionerOption) *ParishionerMutation {
+	m := &ParishionerMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeParishioner,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withParishionerID sets the ID field of the mutation.
+func withParishionerID(id int) parishionerOption {
+	return func(m *ParishionerMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Parishioner
+		)
+		m.oldValue = func(ctx context.Context) (*Parishioner, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Parishioner.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withParishioner sets the old Parishioner of the mutation.
+func withParishioner(node *Parishioner) parishionerOption {
+	return func(m *ParishionerMutation) {
+		m.oldValue = func(context.Context) (*Parishioner, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ParishionerMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ParishionerMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ParishionerMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ParishionerMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Parishioner.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// Where appends a list predicates to the ParishionerMutation builder.
+func (m *ParishionerMutation) Where(ps ...predicate.Parishioner) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ParishionerMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ParishionerMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Parishioner, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ParishionerMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ParishionerMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Parishioner).
+func (m *ParishionerMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ParishionerMutation) Fields() []string {
+	fields := make([]string, 0, 0)
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ParishionerMutation) Field(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ParishionerMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	return nil, fmt.Errorf("unknown Parishioner field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ParishionerMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Parishioner field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ParishionerMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ParishionerMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ParishionerMutation) AddField(name string, value ent.Value) error {
+	return fmt.Errorf("unknown Parishioner numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ParishionerMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ParishionerMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ParishionerMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown Parishioner nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ParishionerMutation) ResetField(name string) error {
+	return fmt.Errorf("unknown Parishioner field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ParishionerMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ParishionerMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ParishionerMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ParishionerMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ParishionerMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ParishionerMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ParishionerMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown Parishioner unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ParishionerMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown Parishioner edge %s", name)
 }
 
 // UserMutation represents an operation that mutates the User nodes in the graph.

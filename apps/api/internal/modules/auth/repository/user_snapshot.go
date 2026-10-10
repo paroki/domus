@@ -20,8 +20,8 @@ func NewUserSnapshotRepository(entcli *ent.Client, log *slog.Logger) UserSnapsho
 	return UserSnapshotRepository{entcli, log}
 }
 
-func (r UserSnapshotRepository) GetByID(c context.Context, id uuid.UUID) (*model.UserSnapshotResponse, error) {
-	var response model.UserSnapshotResponse
+func (r UserSnapshotRepository) GetByID(c context.Context, id uuid.UUID) (*model.UserResponse, error) {
+	var response model.UserResponse
 
 	user, err := r.entcli.User.Get(c, id)
 	if err != nil {
@@ -36,8 +36,8 @@ func (r UserSnapshotRepository) GetByID(c context.Context, id uuid.UUID) (*model
 	return &response, nil
 }
 
-func (r UserSnapshotRepository) Create(c context.Context, req model.CreateUserSnapshotRequest) (*model.UserSnapshotResponse, error) {
-	var res model.UserSnapshotResponse
+func (r UserSnapshotRepository) Create(c context.Context, req model.CreateUserSnapshotRequest) (*model.UserResponse, error) {
+	var res model.UserResponse
 	var user *ent.User
 	err := database.WithTx(c, r.entcli, func(tx *ent.Tx) error {
 		var err error
@@ -60,8 +60,8 @@ func (r UserSnapshotRepository) Create(c context.Context, req model.CreateUserSn
 	return &res, nil
 }
 
-func (r UserSnapshotRepository) Update(c context.Context, id uuid.UUID, req model.UpdateUserSnapshotRequest) (*model.UserSnapshotResponse, error) {
-	var res model.UserSnapshotResponse
+func (r UserSnapshotRepository) Update(c context.Context, id uuid.UUID, req model.UpdateUserSnapshotRequest) (*model.UserResponse, error) {
+	var res model.UserResponse
 	var user *ent.User
 	err := database.WithTx(c, r.entcli, func(tx *ent.Tx) error {
 		var err error

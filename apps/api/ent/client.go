@@ -16,7 +16,9 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/paroki/domus/api/ent/unit"
+	"github.com/paroki/domus/api/ent/diocese"
+	"github.com/paroki/domus/api/ent/parish"
+	"github.com/paroki/domus/api/ent/parishioner"
 	"github.com/paroki/domus/api/ent/user"
 
 	"github.com/paroki/domus/api/ent/internal"
@@ -27,8 +29,12 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
-	// Unit is the client for interacting with the Unit builders.
-	Unit *UnitClient
+	// Diocese is the client for interacting with the Diocese builders.
+	Diocese *DioceseClient
+	// Parish is the client for interacting with the Parish builders.
+	Parish *ParishClient
+	// Parishioner is the client for interacting with the Parishioner builders.
+	Parishioner *ParishionerClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 }
@@ -42,7 +48,9 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
-	c.Unit = NewUnitClient(c.config)
+	c.Diocese = NewDioceseClient(c.config)
+	c.Parish = NewParishClient(c.config)
+	c.Parishioner = NewParishionerClient(c.config)
 	c.User = NewUserClient(c.config)
 }
 
@@ -136,10 +144,12 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:    ctx,
-		config: cfg,
-		Unit:   NewUnitClient(cfg),
-		User:   NewUserClient(cfg),
+		ctx:         ctx,
+		config:      cfg,
+		Diocese:     NewDioceseClient(cfg),
+		Parish:      NewParishClient(cfg),
+		Parishioner: NewParishionerClient(cfg),
+		User:        NewUserClient(cfg),
 	}, nil
 }
 
@@ -157,17 +167,19 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:    ctx,
-		config: cfg,
-		Unit:   NewUnitClient(cfg),
-		User:   NewUserClient(cfg),
+		ctx:         ctx,
+		config:      cfg,
+		Diocese:     NewDioceseClient(cfg),
+		Parish:      NewParishClient(cfg),
+		Parishioner: NewParishionerClient(cfg),
+		User:        NewUserClient(cfg),
 	}, nil
 }
 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		Unit.
+//		Diocese.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -189,22 +201,30 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
-	c.Unit.Use(hooks...)
+	c.Diocese.Use(hooks...)
+	c.Parish.Use(hooks...)
+	c.Parishioner.Use(hooks...)
 	c.User.Use(hooks...)
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
-	c.Unit.Intercept(interceptors...)
+	c.Diocese.Intercept(interceptors...)
+	c.Parish.Intercept(interceptors...)
+	c.Parishioner.Intercept(interceptors...)
 	c.User.Intercept(interceptors...)
 }
 
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
-	case *UnitMutation:
-		return c.Unit.mutate(ctx, m)
+	case *DioceseMutation:
+		return c.Diocese.mutate(ctx, m)
+	case *ParishMutation:
+		return c.Parish.mutate(ctx, m)
+	case *ParishionerMutation:
+		return c.Parishioner.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
 	default:
@@ -212,107 +232,107 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	}
 }
 
-// UnitClient is a client for the Unit schema.
-type UnitClient struct {
+// DioceseClient is a client for the Diocese schema.
+type DioceseClient struct {
 	config
 }
 
-// NewUnitClient returns a client for the Unit from the given config.
-func NewUnitClient(c config) *UnitClient {
-	return &UnitClient{config: c}
+// NewDioceseClient returns a client for the Diocese from the given config.
+func NewDioceseClient(c config) *DioceseClient {
+	return &DioceseClient{config: c}
 }
 
 // Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `unit.Hooks(f(g(h())))`.
-func (c *UnitClient) Use(hooks ...Hook) {
-	c.hooks.Unit = append(c.hooks.Unit, hooks...)
+// A call to `Use(f, g, h)` equals to `diocese.Hooks(f(g(h())))`.
+func (c *DioceseClient) Use(hooks ...Hook) {
+	c.hooks.Diocese = append(c.hooks.Diocese, hooks...)
 }
 
 // Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `unit.Intercept(f(g(h())))`.
-func (c *UnitClient) Intercept(interceptors ...Interceptor) {
-	c.inters.Unit = append(c.inters.Unit, interceptors...)
+// A call to `Intercept(f, g, h)` equals to `diocese.Intercept(f(g(h())))`.
+func (c *DioceseClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Diocese = append(c.inters.Diocese, interceptors...)
 }
 
-// Create returns a builder for creating a Unit entity.
-func (c *UnitClient) Create() *UnitCreate {
-	mutation := newUnitMutation(c.config, OpCreate)
-	return &UnitCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Create returns a builder for creating a Diocese entity.
+func (c *DioceseClient) Create() *DioceseCreate {
+	mutation := newDioceseMutation(c.config, OpCreate)
+	return &DioceseCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// CreateBulk returns a builder for creating a bulk of Unit entities.
-func (c *UnitClient) CreateBulk(builders ...*UnitCreate) *UnitCreateBulk {
-	return &UnitCreateBulk{config: c.config, builders: builders}
+// CreateBulk returns a builder for creating a bulk of Diocese entities.
+func (c *DioceseClient) CreateBulk(builders ...*DioceseCreate) *DioceseCreateBulk {
+	return &DioceseCreateBulk{config: c.config, builders: builders}
 }
 
 // MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
 // a builder and applies setFunc on it.
-func (c *UnitClient) MapCreateBulk(slice any, setFunc func(*UnitCreate, int)) *UnitCreateBulk {
+func (c *DioceseClient) MapCreateBulk(slice any, setFunc func(*DioceseCreate, int)) *DioceseCreateBulk {
 	rv := reflect.ValueOf(slice)
 	if rv.Kind() != reflect.Slice {
-		return &UnitCreateBulk{err: fmt.Errorf("calling to UnitClient.MapCreateBulk with wrong type %T, need slice", slice)}
+		return &DioceseCreateBulk{err: fmt.Errorf("calling to DioceseClient.MapCreateBulk with wrong type %T, need slice", slice)}
 	}
-	builders := make([]*UnitCreate, rv.Len())
+	builders := make([]*DioceseCreate, rv.Len())
 	for i := 0; i < rv.Len(); i++ {
 		builders[i] = c.Create()
 		setFunc(builders[i], i)
 	}
-	return &UnitCreateBulk{config: c.config, builders: builders}
+	return &DioceseCreateBulk{config: c.config, builders: builders}
 }
 
-// Update returns an update builder for Unit.
-func (c *UnitClient) Update() *UnitUpdate {
-	mutation := newUnitMutation(c.config, OpUpdate)
-	return &UnitUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Update returns an update builder for Diocese.
+func (c *DioceseClient) Update() *DioceseUpdate {
+	mutation := newDioceseMutation(c.config, OpUpdate)
+	return &DioceseUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *UnitClient) UpdateOne(_m *Unit) *UnitUpdateOne {
-	mutation := newUnitMutation(c.config, OpUpdateOne, withUnit(_m))
-	return &UnitUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *DioceseClient) UpdateOne(_m *Diocese) *DioceseUpdateOne {
+	mutation := newDioceseMutation(c.config, OpUpdateOne, withDiocese(_m))
+	return &DioceseUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *UnitClient) UpdateOneID(id uuid.UUID) *UnitUpdateOne {
-	mutation := newUnitMutation(c.config, OpUpdateOne, withUnitID(id))
-	return &UnitUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *DioceseClient) UpdateOneID(id int) *DioceseUpdateOne {
+	mutation := newDioceseMutation(c.config, OpUpdateOne, withDioceseID(id))
+	return &DioceseUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// Delete returns a delete builder for Unit.
-func (c *UnitClient) Delete() *UnitDelete {
-	mutation := newUnitMutation(c.config, OpDelete)
-	return &UnitDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Delete returns a delete builder for Diocese.
+func (c *DioceseClient) Delete() *DioceseDelete {
+	mutation := newDioceseMutation(c.config, OpDelete)
+	return &DioceseDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *UnitClient) DeleteOne(_m *Unit) *UnitDeleteOne {
+func (c *DioceseClient) DeleteOne(_m *Diocese) *DioceseDeleteOne {
 	return c.DeleteOneID(_m.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *UnitClient) DeleteOneID(id uuid.UUID) *UnitDeleteOne {
-	builder := c.Delete().Where(unit.ID(id))
+func (c *DioceseClient) DeleteOneID(id int) *DioceseDeleteOne {
+	builder := c.Delete().Where(diocese.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
-	return &UnitDeleteOne{builder}
+	return &DioceseDeleteOne{builder}
 }
 
-// Query returns a query builder for Unit.
-func (c *UnitClient) Query() *UnitQuery {
-	return &UnitQuery{
+// Query returns a query builder for Diocese.
+func (c *DioceseClient) Query() *DioceseQuery {
+	return &DioceseQuery{
 		config: c.config,
-		ctx:    &QueryContext{Type: TypeUnit},
+		ctx:    &QueryContext{Type: TypeDiocese},
 		inters: c.Interceptors(),
 	}
 }
 
-// Get returns a Unit entity by its id.
-func (c *UnitClient) Get(ctx context.Context, id uuid.UUID) (*Unit, error) {
-	return c.Query().Where(unit.ID(id)).Only(ctx)
+// Get returns a Diocese entity by its id.
+func (c *DioceseClient) Get(ctx context.Context, id int) (*Diocese, error) {
+	return c.Query().Where(diocese.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *UnitClient) GetX(ctx context.Context, id uuid.UUID) *Unit {
+func (c *DioceseClient) GetX(ctx context.Context, id int) *Diocese {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -320,38 +340,57 @@ func (c *UnitClient) GetX(ctx context.Context, id uuid.UUID) *Unit {
 	return obj
 }
 
-// QueryCreator queries the creator edge of a Unit.
-func (c *UnitClient) QueryCreator(_m *Unit) *UserQuery {
+// QueryCreator queries the creator edge of a Diocese.
+func (c *DioceseClient) QueryCreator(_m *Diocese) *UserQuery {
 	query := (&UserClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := _m.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(unit.Table, unit.FieldID, id),
+			sqlgraph.From(diocese.Table, diocese.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, unit.CreatorTable, unit.CreatorColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, diocese.CreatorTable, diocese.CreatorColumn),
 		)
 		schemaConfig := _m.schemaConfig
 		step.To.Schema = schemaConfig.User
-		step.Edge.Schema = schemaConfig.Unit
+		step.Edge.Schema = schemaConfig.Diocese
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
 }
 
-// QueryUpdater queries the updater edge of a Unit.
-func (c *UnitClient) QueryUpdater(_m *Unit) *UserQuery {
+// QueryUpdater queries the updater edge of a Diocese.
+func (c *DioceseClient) QueryUpdater(_m *Diocese) *UserQuery {
 	query := (&UserClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := _m.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(unit.Table, unit.FieldID, id),
+			sqlgraph.From(diocese.Table, diocese.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, unit.UpdaterTable, unit.UpdaterColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, diocese.UpdaterTable, diocese.UpdaterColumn),
 		)
 		schemaConfig := _m.schemaConfig
 		step.To.Schema = schemaConfig.User
-		step.Edge.Schema = schemaConfig.Unit
+		step.Edge.Schema = schemaConfig.Diocese
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryParishes queries the parishes edge of a Diocese.
+func (c *DioceseClient) QueryParishes(_m *Diocese) *ParishQuery {
+	query := (&ParishClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(diocese.Table, diocese.FieldID, id),
+			sqlgraph.To(parish.Table, parish.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, diocese.ParishesTable, diocese.ParishesColumn),
+		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.Parish
+		step.Edge.Schema = schemaConfig.Parish
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
@@ -359,27 +398,312 @@ func (c *UnitClient) QueryUpdater(_m *Unit) *UserQuery {
 }
 
 // Hooks returns the client hooks.
-func (c *UnitClient) Hooks() []Hook {
-	return c.hooks.Unit
+func (c *DioceseClient) Hooks() []Hook {
+	return c.hooks.Diocese
 }
 
 // Interceptors returns the client interceptors.
-func (c *UnitClient) Interceptors() []Interceptor {
-	return c.inters.Unit
+func (c *DioceseClient) Interceptors() []Interceptor {
+	return c.inters.Diocese
 }
 
-func (c *UnitClient) mutate(ctx context.Context, m *UnitMutation) (Value, error) {
+func (c *DioceseClient) mutate(ctx context.Context, m *DioceseMutation) (Value, error) {
 	switch m.Op() {
 	case OpCreate:
-		return (&UnitCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&DioceseCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdate:
-		return (&UnitUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&DioceseUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdateOne:
-		return (&UnitUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&DioceseUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpDelete, OpDeleteOne:
-		return (&UnitDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+		return (&DioceseDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
-		return nil, fmt.Errorf("ent: unknown Unit mutation op: %q", m.Op())
+		return nil, fmt.Errorf("ent: unknown Diocese mutation op: %q", m.Op())
+	}
+}
+
+// ParishClient is a client for the Parish schema.
+type ParishClient struct {
+	config
+}
+
+// NewParishClient returns a client for the Parish from the given config.
+func NewParishClient(c config) *ParishClient {
+	return &ParishClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `parish.Hooks(f(g(h())))`.
+func (c *ParishClient) Use(hooks ...Hook) {
+	c.hooks.Parish = append(c.hooks.Parish, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `parish.Intercept(f(g(h())))`.
+func (c *ParishClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Parish = append(c.inters.Parish, interceptors...)
+}
+
+// Create returns a builder for creating a Parish entity.
+func (c *ParishClient) Create() *ParishCreate {
+	mutation := newParishMutation(c.config, OpCreate)
+	return &ParishCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Parish entities.
+func (c *ParishClient) CreateBulk(builders ...*ParishCreate) *ParishCreateBulk {
+	return &ParishCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ParishClient) MapCreateBulk(slice any, setFunc func(*ParishCreate, int)) *ParishCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ParishCreateBulk{err: fmt.Errorf("calling to ParishClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ParishCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ParishCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Parish.
+func (c *ParishClient) Update() *ParishUpdate {
+	mutation := newParishMutation(c.config, OpUpdate)
+	return &ParishUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ParishClient) UpdateOne(_m *Parish) *ParishUpdateOne {
+	mutation := newParishMutation(c.config, OpUpdateOne, withParish(_m))
+	return &ParishUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ParishClient) UpdateOneID(id int) *ParishUpdateOne {
+	mutation := newParishMutation(c.config, OpUpdateOne, withParishID(id))
+	return &ParishUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Parish.
+func (c *ParishClient) Delete() *ParishDelete {
+	mutation := newParishMutation(c.config, OpDelete)
+	return &ParishDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ParishClient) DeleteOne(_m *Parish) *ParishDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ParishClient) DeleteOneID(id int) *ParishDeleteOne {
+	builder := c.Delete().Where(parish.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ParishDeleteOne{builder}
+}
+
+// Query returns a query builder for Parish.
+func (c *ParishClient) Query() *ParishQuery {
+	return &ParishQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeParish},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Parish entity by its id.
+func (c *ParishClient) Get(ctx context.Context, id int) (*Parish, error) {
+	return c.Query().Where(parish.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ParishClient) GetX(ctx context.Context, id int) *Parish {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryDiocese queries the diocese edge of a Parish.
+func (c *ParishClient) QueryDiocese(_m *Parish) *DioceseQuery {
+	query := (&DioceseClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(parish.Table, parish.FieldID, id),
+			sqlgraph.To(diocese.Table, diocese.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, parish.DioceseTable, parish.DioceseColumn),
+		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.Diocese
+		step.Edge.Schema = schemaConfig.Parish
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ParishClient) Hooks() []Hook {
+	return c.hooks.Parish
+}
+
+// Interceptors returns the client interceptors.
+func (c *ParishClient) Interceptors() []Interceptor {
+	return c.inters.Parish
+}
+
+func (c *ParishClient) mutate(ctx context.Context, m *ParishMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ParishCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ParishUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ParishUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ParishDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Parish mutation op: %q", m.Op())
+	}
+}
+
+// ParishionerClient is a client for the Parishioner schema.
+type ParishionerClient struct {
+	config
+}
+
+// NewParishionerClient returns a client for the Parishioner from the given config.
+func NewParishionerClient(c config) *ParishionerClient {
+	return &ParishionerClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `parishioner.Hooks(f(g(h())))`.
+func (c *ParishionerClient) Use(hooks ...Hook) {
+	c.hooks.Parishioner = append(c.hooks.Parishioner, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `parishioner.Intercept(f(g(h())))`.
+func (c *ParishionerClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Parishioner = append(c.inters.Parishioner, interceptors...)
+}
+
+// Create returns a builder for creating a Parishioner entity.
+func (c *ParishionerClient) Create() *ParishionerCreate {
+	mutation := newParishionerMutation(c.config, OpCreate)
+	return &ParishionerCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Parishioner entities.
+func (c *ParishionerClient) CreateBulk(builders ...*ParishionerCreate) *ParishionerCreateBulk {
+	return &ParishionerCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ParishionerClient) MapCreateBulk(slice any, setFunc func(*ParishionerCreate, int)) *ParishionerCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ParishionerCreateBulk{err: fmt.Errorf("calling to ParishionerClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ParishionerCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ParishionerCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Parishioner.
+func (c *ParishionerClient) Update() *ParishionerUpdate {
+	mutation := newParishionerMutation(c.config, OpUpdate)
+	return &ParishionerUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ParishionerClient) UpdateOne(_m *Parishioner) *ParishionerUpdateOne {
+	mutation := newParishionerMutation(c.config, OpUpdateOne, withParishioner(_m))
+	return &ParishionerUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ParishionerClient) UpdateOneID(id int) *ParishionerUpdateOne {
+	mutation := newParishionerMutation(c.config, OpUpdateOne, withParishionerID(id))
+	return &ParishionerUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Parishioner.
+func (c *ParishionerClient) Delete() *ParishionerDelete {
+	mutation := newParishionerMutation(c.config, OpDelete)
+	return &ParishionerDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ParishionerClient) DeleteOne(_m *Parishioner) *ParishionerDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ParishionerClient) DeleteOneID(id int) *ParishionerDeleteOne {
+	builder := c.Delete().Where(parishioner.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ParishionerDeleteOne{builder}
+}
+
+// Query returns a query builder for Parishioner.
+func (c *ParishionerClient) Query() *ParishionerQuery {
+	return &ParishionerQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeParishioner},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Parishioner entity by its id.
+func (c *ParishionerClient) Get(ctx context.Context, id int) (*Parishioner, error) {
+	return c.Query().Where(parishioner.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ParishionerClient) GetX(ctx context.Context, id int) *Parishioner {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ParishionerClient) Hooks() []Hook {
+	return c.hooks.Parishioner
+}
+
+// Interceptors returns the client interceptors.
+func (c *ParishionerClient) Interceptors() []Interceptor {
+	return c.inters.Parishioner
+}
+
+func (c *ParishionerClient) mutate(ctx context.Context, m *ParishionerMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ParishionerCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ParishionerUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ParishionerUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ParishionerDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Parishioner mutation op: %q", m.Op())
 	}
 }
 
@@ -519,10 +843,10 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Unit, User []ent.Hook
+		Diocese, Parish, Parishioner, User []ent.Hook
 	}
 	inters struct {
-		Unit, User []ent.Interceptor
+		Diocese, Parish, Parishioner, User []ent.Interceptor
 	}
 )
 

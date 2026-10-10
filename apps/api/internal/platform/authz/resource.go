@@ -5,6 +5,8 @@ type Action string
 
 const (
 	ResourceAccounts Resource = "units"
+	ResourceDiocese  Resource = "dioceses"
+	ResourceParish   Resource = "parishes"
 )
 
 const (

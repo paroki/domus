@@ -8,34 +8,64 @@ import (
 )
 
 var (
-	// UnitsColumns holds the columns for the "units" table.
-	UnitsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeUUID},
+	// DiocesesColumns holds the columns for the "dioceses" table.
+	DiocesesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString},
 		{Name: "created_by", Type: field.TypeUUID},
 		{Name: "updated_by", Type: field.TypeUUID},
 	}
-	// UnitsTable holds the schema information for the "units" table.
-	UnitsTable = &schema.Table{
-		Name:       "units",
-		Columns:    UnitsColumns,
-		PrimaryKey: []*schema.Column{UnitsColumns[0]},
+	// DiocesesTable holds the schema information for the "dioceses" table.
+	DiocesesTable = &schema.Table{
+		Name:       "dioceses",
+		Columns:    DiocesesColumns,
+		PrimaryKey: []*schema.Column{DiocesesColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "units_users_creator",
-				Columns:    []*schema.Column{UnitsColumns[4]},
+				Symbol:     "dioceses_users_creator",
+				Columns:    []*schema.Column{DiocesesColumns[4]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
-				Symbol:     "units_users_updater",
-				Columns:    []*schema.Column{UnitsColumns[5]},
+				Symbol:     "dioceses_users_updater",
+				Columns:    []*schema.Column{DiocesesColumns[5]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 		},
+	}
+	// ParishesColumns holds the columns for the "parishes" table.
+	ParishesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "diocese_parishes", Type: field.TypeInt, Nullable: true},
+	}
+	// ParishesTable holds the schema information for the "parishes" table.
+	ParishesTable = &schema.Table{
+		Name:       "parishes",
+		Columns:    ParishesColumns,
+		PrimaryKey: []*schema.Column{ParishesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "parishes_dioceses_parishes",
+				Columns:    []*schema.Column{ParishesColumns[2]},
+				RefColumns: []*schema.Column{DiocesesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
+	// ParishionersColumns holds the columns for the "parishioners" table.
+	ParishionersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+	}
+	// ParishionersTable holds the schema information for the "parishioners" table.
+	ParishionersTable = &schema.Table{
+		Name:       "parishioners",
+		Columns:    ParishionersColumns,
+		PrimaryKey: []*schema.Column{ParishionersColumns[0]},
 	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
@@ -52,12 +82,15 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
-		UnitsTable,
+		DiocesesTable,
+		ParishesTable,
+		ParishionersTable,
 		UsersTable,
 	}
 )
 
 func init() {
-	UnitsTable.ForeignKeys[0].RefTable = UsersTable
-	UnitsTable.ForeignKeys[1].RefTable = UsersTable
+	DiocesesTable.ForeignKeys[0].RefTable = UsersTable
+	DiocesesTable.ForeignKeys[1].RefTable = UsersTable
+	ParishesTable.ForeignKeys[0].RefTable = DiocesesTable
 }

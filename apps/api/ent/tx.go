@@ -12,8 +12,12 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
-	// Unit is the client for interacting with the Unit builders.
-	Unit *UnitClient
+	// Diocese is the client for interacting with the Diocese builders.
+	Diocese *DioceseClient
+	// Parish is the client for interacting with the Parish builders.
+	Parish *ParishClient
+	// Parishioner is the client for interacting with the Parishioner builders.
+	Parishioner *ParishionerClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 
@@ -147,7 +151,9 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
-	tx.Unit = NewUnitClient(tx.config)
+	tx.Diocese = NewDioceseClient(tx.config)
+	tx.Parish = NewParishClient(tx.config)
+	tx.Parishioner = NewParishionerClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 }
 
@@ -158,7 +164,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: Unit.QueryXXX(), the query will be executed
+// applies a query, for example: Diocese.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

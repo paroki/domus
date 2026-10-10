@@ -1,6 +1,7 @@
 package testutil
 
 import (
+	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -41,12 +42,24 @@ func init() {
 	cfg.JWKSUrl = "http://localhost:4321/jwks"
 
 	jwksMock = *NewJWKSMock()
-	logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+
+	_, b, _, _ := runtime.Caller(0)
+	logPath := filepath.Join(filepath.Dir(b), "../tmp/test.log")
+	_ = os.MkdirAll(filepath.Dir(logPath), 0755)
+
+	logFile, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	var logWriter io.Writer = logFile
+	if err != nil {
+		logWriter = os.Stdout
+	}
+
+	logger = slog.New(slog.NewJSONHandler(logWriter, &slog.HandlerOptions{
 		Level: slog.LevelDebug,
 	}))
 	api = config.GetFiber(cfg, logger)
 	entClient = createTestDB()
 
+	config.ConfigureEntCli(entClient)
 	//mockStorage := service.NewMockStorageService()
 	state = config.State{
 		FiberApp: api,

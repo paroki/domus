@@ -10,9 +10,9 @@ import (
 )
 
 type UserSnapshotRepository interface {
-	GetByID(c context.Context, id uuid.UUID) (*model.UserSnapshotResponse, error)
-	Create(c context.Context, req model.CreateUserSnapshotRequest) (*model.UserSnapshotResponse, error)
-	Update(c context.Context, id uuid.UUID, req model.UpdateUserSnapshotRequest) (*model.UserSnapshotResponse, error)
+	GetByID(c context.Context, id uuid.UUID) (*model.UserResponse, error)
+	Create(c context.Context, req model.CreateUserSnapshotRequest) (*model.UserResponse, error)
+	Update(c context.Context, id uuid.UUID, req model.UpdateUserSnapshotRequest) (*model.UserResponse, error)
 	Delete(c context.Context, id uuid.UUID) error
 }
 

@@ -16,7 +16,7 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "prepare": "husky",
-    "oa:gen": "turbo run generate --filter=@omed/api --filter=@omed/openapi",
+    "oa:gen": "turbo run oa:gen",
     "db:push": "turbo run db:push",
     "db:generate": "turbo run db:generate",
     "db:migrate": "turbo run db:migrate",

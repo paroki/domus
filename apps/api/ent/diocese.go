@@ -10,15 +10,15 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
-	"github.com/paroki/domus/api/ent/unit"
+	"github.com/paroki/domus/api/ent/diocese"
 	"github.com/paroki/domus/api/ent/user"
 )
 
-// Unit is the model entity for the Unit schema.
-type Unit struct {
+// Diocese is the model entity for the Diocese schema.
+type Diocese struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID uuid.UUID `json:"id,omitempty"`
+	ID int `json:"id,omitempty"`
 	// CreatedBy holds the value of the "createdBy" field.
 	CreatedBy uuid.UUID `json:"createdBy,omitempty"`
 	// CreatedAt holds the value of the "createdAt" field.
@@ -30,25 +30,27 @@ type Unit struct {
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
-	// The values are being populated by the UnitQuery when eager-loading is set.
-	Edges        UnitEdges `json:"edges"`
+	// The values are being populated by the DioceseQuery when eager-loading is set.
+	Edges        DioceseEdges `json:"edges"`
 	selectValues sql.SelectValues
 }
 
-// UnitEdges holds the relations/edges for other nodes in the graph.
-type UnitEdges struct {
+// DioceseEdges holds the relations/edges for other nodes in the graph.
+type DioceseEdges struct {
 	// Creator holds the value of the creator edge.
 	Creator *User `json:"creator,omitempty"`
 	// Updater holds the value of the updater edge.
 	Updater *User `json:"updater,omitempty"`
+	// Parishes holds the value of the parishes edge.
+	Parishes []*Parish `json:"parishes,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // CreatorOrErr returns the Creator value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e UnitEdges) CreatorOrErr() (*User, error) {
+func (e DioceseEdges) CreatorOrErr() (*User, error) {
 	if e.Creator != nil {
 		return e.Creator, nil
 	} else if e.loadedTypes[0] {
@@ -59,7 +61,7 @@ func (e UnitEdges) CreatorOrErr() (*User, error) {
 
 // UpdaterOrErr returns the Updater value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e UnitEdges) UpdaterOrErr() (*User, error) {
+func (e DioceseEdges) UpdaterOrErr() (*User, error) {
 	if e.Updater != nil {
 		return e.Updater, nil
 	} else if e.loadedTypes[1] {
@@ -68,16 +70,27 @@ func (e UnitEdges) UpdaterOrErr() (*User, error) {
 	return nil, &NotLoadedError{edge: "updater"}
 }
 
+// ParishesOrErr returns the Parishes value or an error if the edge
+// was not loaded in eager-loading.
+func (e DioceseEdges) ParishesOrErr() ([]*Parish, error) {
+	if e.loadedTypes[2] {
+		return e.Parishes, nil
+	}
+	return nil, &NotLoadedError{edge: "parishes"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
-func (*Unit) scanValues(columns []string) ([]any, error) {
+func (*Diocese) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case unit.FieldName:
+		case diocese.FieldID:
+			values[i] = new(sql.NullInt64)
+		case diocese.FieldName:
 			values[i] = new(sql.NullString)
-		case unit.FieldCreatedAt, unit.FieldUpdatedAt:
+		case diocese.FieldCreatedAt, diocese.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case unit.FieldID, unit.FieldCreatedBy, unit.FieldUpdatedBy:
+		case diocese.FieldCreatedBy, diocese.FieldUpdatedBy:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -87,44 +100,44 @@ func (*Unit) scanValues(columns []string) ([]any, error) {
 }
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
-// to the Unit fields.
-func (_m *Unit) assignValues(columns []string, values []any) error {
+// to the Diocese fields.
+func (_m *Diocese) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
 	for i := range columns {
 		switch columns[i] {
-		case unit.FieldID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field id", values[i])
-			} else if value != nil {
-				_m.ID = *value
+		case diocese.FieldID:
+			value, ok := values[i].(*sql.NullInt64)
+			if !ok {
+				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-		case unit.FieldCreatedBy:
+			_m.ID = int(value.Int64)
+		case diocese.FieldCreatedBy:
 			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field createdBy", values[i])
 			} else if value != nil {
 				_m.CreatedBy = *value
 			}
-		case unit.FieldCreatedAt:
+		case diocese.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field createdAt", values[i])
 			} else if value.Valid {
 				_m.CreatedAt = value.Time
 			}
-		case unit.FieldUpdatedBy:
+		case diocese.FieldUpdatedBy:
 			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field updatedBy", values[i])
 			} else if value != nil {
 				_m.UpdatedBy = *value
 			}
-		case unit.FieldUpdatedAt:
+		case diocese.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updatedAt", values[i])
 			} else if value.Valid {
 				_m.UpdatedAt = value.Time
 			}
-		case unit.FieldName:
+		case diocese.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
@@ -137,44 +150,49 @@ func (_m *Unit) assignValues(columns []string, values []any) error {
 	return nil
 }
 
-// Value returns the ent.Value that was dynamically selected and assigned to the Unit.
+// Value returns the ent.Value that was dynamically selected and assigned to the Diocese.
 // This includes values selected through modifiers, order, etc.
-func (_m *Unit) Value(name string) (ent.Value, error) {
+func (_m *Diocese) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
 }
 
-// QueryCreator queries the "creator" edge of the Unit entity.
-func (_m *Unit) QueryCreator() *UserQuery {
-	return NewUnitClient(_m.config).QueryCreator(_m)
+// QueryCreator queries the "creator" edge of the Diocese entity.
+func (_m *Diocese) QueryCreator() *UserQuery {
+	return NewDioceseClient(_m.config).QueryCreator(_m)
 }
 
-// QueryUpdater queries the "updater" edge of the Unit entity.
-func (_m *Unit) QueryUpdater() *UserQuery {
-	return NewUnitClient(_m.config).QueryUpdater(_m)
+// QueryUpdater queries the "updater" edge of the Diocese entity.
+func (_m *Diocese) QueryUpdater() *UserQuery {
+	return NewDioceseClient(_m.config).QueryUpdater(_m)
 }
 
-// Update returns a builder for updating this Unit.
-// Note that you need to call Unit.Unwrap() before calling this method if this Unit
+// QueryParishes queries the "parishes" edge of the Diocese entity.
+func (_m *Diocese) QueryParishes() *ParishQuery {
+	return NewDioceseClient(_m.config).QueryParishes(_m)
+}
+
+// Update returns a builder for updating this Diocese.
+// Note that you need to call Diocese.Unwrap() before calling this method if this Diocese
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (_m *Unit) Update() *UnitUpdateOne {
-	return NewUnitClient(_m.config).UpdateOne(_m)
+func (_m *Diocese) Update() *DioceseUpdateOne {
+	return NewDioceseClient(_m.config).UpdateOne(_m)
 }
 
-// Unwrap unwraps the Unit entity that was returned from a transaction after it was closed,
+// Unwrap unwraps the Diocese entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (_m *Unit) Unwrap() *Unit {
+func (_m *Diocese) Unwrap() *Diocese {
 	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
-		panic("ent: Unit is not a transactional entity")
+		panic("ent: Diocese is not a transactional entity")
 	}
 	_m.config.driver = _tx.drv
 	return _m
 }
 
 // String implements the fmt.Stringer.
-func (_m *Unit) String() string {
+func (_m *Diocese) String() string {
 	var builder strings.Builder
-	builder.WriteString("Unit(")
+	builder.WriteString("Diocese(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("createdBy=")
 	builder.WriteString(fmt.Sprintf("%v", _m.CreatedBy))
@@ -194,5 +212,5 @@ func (_m *Unit) String() string {
 	return builder.String()
 }
 
-// Units is a parsable slice of Unit.
-type Units []*Unit
+// Dioceses is a parsable slice of Diocese.
+type Dioceses []*Diocese

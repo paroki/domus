@@ -9,16 +9,40 @@ import (
 	"github.com/paroki/domus/api/ent"
 )
 
-// The UnitFunc type is an adapter to allow the use of ordinary
-// function as Unit mutator.
-type UnitFunc func(context.Context, *ent.UnitMutation) (ent.Value, error)
+// The DioceseFunc type is an adapter to allow the use of ordinary
+// function as Diocese mutator.
+type DioceseFunc func(context.Context, *ent.DioceseMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
-func (f UnitFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.UnitMutation); ok {
+func (f DioceseFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.DioceseMutation); ok {
 		return f(ctx, mv)
 	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UnitMutation", m)
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.DioceseMutation", m)
+}
+
+// The ParishFunc type is an adapter to allow the use of ordinary
+// function as Parish mutator.
+type ParishFunc func(context.Context, *ent.ParishMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ParishFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ParishMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ParishMutation", m)
+}
+
+// The ParishionerFunc type is an adapter to allow the use of ordinary
+// function as Parishioner mutator.
+type ParishionerFunc func(context.Context, *ent.ParishionerMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ParishionerFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ParishionerMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ParishionerMutation", m)
 }
 
 // The UserFunc type is an adapter to allow the use of ordinary

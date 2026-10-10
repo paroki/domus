@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -12,59 +13,61 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/paroki/domus/api/ent/diocese"
 	"github.com/paroki/domus/api/ent/internal"
+	"github.com/paroki/domus/api/ent/parish"
 	"github.com/paroki/domus/api/ent/predicate"
-	"github.com/paroki/domus/api/ent/unit"
 	"github.com/paroki/domus/api/ent/user"
 )
 
-// UnitQuery is the builder for querying Unit entities.
-type UnitQuery struct {
+// DioceseQuery is the builder for querying Diocese entities.
+type DioceseQuery struct {
 	config
-	ctx         *QueryContext
-	order       []unit.OrderOption
-	inters      []Interceptor
-	predicates  []predicate.Unit
-	withCreator *UserQuery
-	withUpdater *UserQuery
+	ctx          *QueryContext
+	order        []diocese.OrderOption
+	inters       []Interceptor
+	predicates   []predicate.Diocese
+	withCreator  *UserQuery
+	withUpdater  *UserQuery
+	withParishes *ParishQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
 }
 
-// Where adds a new predicate for the UnitQuery builder.
-func (_q *UnitQuery) Where(ps ...predicate.Unit) *UnitQuery {
+// Where adds a new predicate for the DioceseQuery builder.
+func (_q *DioceseQuery) Where(ps ...predicate.Diocese) *DioceseQuery {
 	_q.predicates = append(_q.predicates, ps...)
 	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (_q *UnitQuery) Limit(limit int) *UnitQuery {
+func (_q *DioceseQuery) Limit(limit int) *DioceseQuery {
 	_q.ctx.Limit = &limit
 	return _q
 }
 
 // Offset to start from.
-func (_q *UnitQuery) Offset(offset int) *UnitQuery {
+func (_q *DioceseQuery) Offset(offset int) *DioceseQuery {
 	_q.ctx.Offset = &offset
 	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (_q *UnitQuery) Unique(unique bool) *UnitQuery {
+func (_q *DioceseQuery) Unique(unique bool) *DioceseQuery {
 	_q.ctx.Unique = &unique
 	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (_q *UnitQuery) Order(o ...unit.OrderOption) *UnitQuery {
+func (_q *DioceseQuery) Order(o ...diocese.OrderOption) *DioceseQuery {
 	_q.order = append(_q.order, o...)
 	return _q
 }
 
 // QueryCreator chains the current query on the "creator" edge.
-func (_q *UnitQuery) QueryCreator() *UserQuery {
+func (_q *DioceseQuery) QueryCreator() *UserQuery {
 	query := (&UserClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
@@ -75,13 +78,13 @@ func (_q *UnitQuery) QueryCreator() *UserQuery {
 			return nil, err
 		}
 		step := sqlgraph.NewStep(
-			sqlgraph.From(unit.Table, unit.FieldID, selector),
+			sqlgraph.From(diocese.Table, diocese.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, unit.CreatorTable, unit.CreatorColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, diocese.CreatorTable, diocese.CreatorColumn),
 		)
 		schemaConfig := _q.schemaConfig
 		step.To.Schema = schemaConfig.User
-		step.Edge.Schema = schemaConfig.Unit
+		step.Edge.Schema = schemaConfig.Diocese
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
@@ -89,7 +92,7 @@ func (_q *UnitQuery) QueryCreator() *UserQuery {
 }
 
 // QueryUpdater chains the current query on the "updater" edge.
-func (_q *UnitQuery) QueryUpdater() *UserQuery {
+func (_q *DioceseQuery) QueryUpdater() *UserQuery {
 	query := (&UserClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
@@ -100,34 +103,59 @@ func (_q *UnitQuery) QueryUpdater() *UserQuery {
 			return nil, err
 		}
 		step := sqlgraph.NewStep(
-			sqlgraph.From(unit.Table, unit.FieldID, selector),
+			sqlgraph.From(diocese.Table, diocese.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, unit.UpdaterTable, unit.UpdaterColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, diocese.UpdaterTable, diocese.UpdaterColumn),
 		)
 		schemaConfig := _q.schemaConfig
 		step.To.Schema = schemaConfig.User
-		step.Edge.Schema = schemaConfig.Unit
+		step.Edge.Schema = schemaConfig.Diocese
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
-// First returns the first Unit entity from the query.
-// Returns a *NotFoundError when no Unit was found.
-func (_q *UnitQuery) First(ctx context.Context) (*Unit, error) {
+// QueryParishes chains the current query on the "parishes" edge.
+func (_q *DioceseQuery) QueryParishes() *ParishQuery {
+	query := (&ParishClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(diocese.Table, diocese.FieldID, selector),
+			sqlgraph.To(parish.Table, parish.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, diocese.ParishesTable, diocese.ParishesColumn),
+		)
+		schemaConfig := _q.schemaConfig
+		step.To.Schema = schemaConfig.Parish
+		step.Edge.Schema = schemaConfig.Parish
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// First returns the first Diocese entity from the query.
+// Returns a *NotFoundError when no Diocese was found.
+func (_q *DioceseQuery) First(ctx context.Context) (*Diocese, error) {
 	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
-		return nil, &NotFoundError{unit.Label}
+		return nil, &NotFoundError{diocese.Label}
 	}
 	return nodes[0], nil
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (_q *UnitQuery) FirstX(ctx context.Context) *Unit {
+func (_q *DioceseQuery) FirstX(ctx context.Context) *Diocese {
 	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -135,22 +163,22 @@ func (_q *UnitQuery) FirstX(ctx context.Context) *Unit {
 	return node
 }
 
-// FirstID returns the first Unit ID from the query.
-// Returns a *NotFoundError when no Unit ID was found.
-func (_q *UnitQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
-	var ids []uuid.UUID
+// FirstID returns the first Diocese ID from the query.
+// Returns a *NotFoundError when no Diocese ID was found.
+func (_q *DioceseQuery) FirstID(ctx context.Context) (id int, err error) {
+	var ids []int
 	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
-		err = &NotFoundError{unit.Label}
+		err = &NotFoundError{diocese.Label}
 		return
 	}
 	return ids[0], nil
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (_q *UnitQuery) FirstIDX(ctx context.Context) uuid.UUID {
+func (_q *DioceseQuery) FirstIDX(ctx context.Context) int {
 	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -158,10 +186,10 @@ func (_q *UnitQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	return id
 }
 
-// Only returns a single Unit entity found by the query, ensuring it only returns one.
-// Returns a *NotSingularError when more than one Unit entity is found.
-// Returns a *NotFoundError when no Unit entities are found.
-func (_q *UnitQuery) Only(ctx context.Context) (*Unit, error) {
+// Only returns a single Diocese entity found by the query, ensuring it only returns one.
+// Returns a *NotSingularError when more than one Diocese entity is found.
+// Returns a *NotFoundError when no Diocese entities are found.
+func (_q *DioceseQuery) Only(ctx context.Context) (*Diocese, error) {
 	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
@@ -170,14 +198,14 @@ func (_q *UnitQuery) Only(ctx context.Context) (*Unit, error) {
 	case 1:
 		return nodes[0], nil
 	case 0:
-		return nil, &NotFoundError{unit.Label}
+		return nil, &NotFoundError{diocese.Label}
 	default:
-		return nil, &NotSingularError{unit.Label}
+		return nil, &NotSingularError{diocese.Label}
 	}
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (_q *UnitQuery) OnlyX(ctx context.Context) *Unit {
+func (_q *DioceseQuery) OnlyX(ctx context.Context) *Diocese {
 	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
@@ -185,11 +213,11 @@ func (_q *UnitQuery) OnlyX(ctx context.Context) *Unit {
 	return node
 }
 
-// OnlyID is like Only, but returns the only Unit ID in the query.
-// Returns a *NotSingularError when more than one Unit ID is found.
+// OnlyID is like Only, but returns the only Diocese ID in the query.
+// Returns a *NotSingularError when more than one Diocese ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (_q *UnitQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
-	var ids []uuid.UUID
+func (_q *DioceseQuery) OnlyID(ctx context.Context) (id int, err error) {
+	var ids []int
 	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
@@ -197,15 +225,15 @@ func (_q *UnitQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	case 1:
 		id = ids[0]
 	case 0:
-		err = &NotFoundError{unit.Label}
+		err = &NotFoundError{diocese.Label}
 	default:
-		err = &NotSingularError{unit.Label}
+		err = &NotSingularError{diocese.Label}
 	}
 	return
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (_q *UnitQuery) OnlyIDX(ctx context.Context) uuid.UUID {
+func (_q *DioceseQuery) OnlyIDX(ctx context.Context) int {
 	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -213,18 +241,18 @@ func (_q *UnitQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	return id
 }
 
-// All executes the query and returns a list of Units.
-func (_q *UnitQuery) All(ctx context.Context) ([]*Unit, error) {
+// All executes the query and returns a list of Dioceses.
+func (_q *DioceseQuery) All(ctx context.Context) ([]*Diocese, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
-	qr := querierAll[[]*Unit, *UnitQuery]()
-	return withInterceptors[[]*Unit](ctx, _q, qr, _q.inters)
+	qr := querierAll[[]*Diocese, *DioceseQuery]()
+	return withInterceptors[[]*Diocese](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (_q *UnitQuery) AllX(ctx context.Context) []*Unit {
+func (_q *DioceseQuery) AllX(ctx context.Context) []*Diocese {
 	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
@@ -232,20 +260,20 @@ func (_q *UnitQuery) AllX(ctx context.Context) []*Unit {
 	return nodes
 }
 
-// IDs executes the query and returns a list of Unit IDs.
-func (_q *UnitQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
+// IDs executes the query and returns a list of Diocese IDs.
+func (_q *DioceseQuery) IDs(ctx context.Context) (ids []int, err error) {
 	if _q.ctx.Unique == nil && _q.path != nil {
 		_q.Unique(true)
 	}
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
-	if err = _q.Select(unit.FieldID).Scan(ctx, &ids); err != nil {
+	if err = _q.Select(diocese.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (_q *UnitQuery) IDsX(ctx context.Context) []uuid.UUID {
+func (_q *DioceseQuery) IDsX(ctx context.Context) []int {
 	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -254,16 +282,16 @@ func (_q *UnitQuery) IDsX(ctx context.Context) []uuid.UUID {
 }
 
 // Count returns the count of the given query.
-func (_q *UnitQuery) Count(ctx context.Context) (int, error) {
+func (_q *DioceseQuery) Count(ctx context.Context) (int, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, _q, querierCount[*UnitQuery](), _q.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*DioceseQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (_q *UnitQuery) CountX(ctx context.Context) int {
+func (_q *DioceseQuery) CountX(ctx context.Context) int {
 	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
@@ -272,7 +300,7 @@ func (_q *UnitQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (_q *UnitQuery) Exist(ctx context.Context) (bool, error) {
+func (_q *DioceseQuery) Exist(ctx context.Context) (bool, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
 	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
@@ -285,7 +313,7 @@ func (_q *UnitQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (_q *UnitQuery) ExistX(ctx context.Context) bool {
+func (_q *DioceseQuery) ExistX(ctx context.Context) bool {
 	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
@@ -293,20 +321,21 @@ func (_q *UnitQuery) ExistX(ctx context.Context) bool {
 	return exist
 }
 
-// Clone returns a duplicate of the UnitQuery builder, including all associated steps. It can be
+// Clone returns a duplicate of the DioceseQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (_q *UnitQuery) Clone() *UnitQuery {
+func (_q *DioceseQuery) Clone() *DioceseQuery {
 	if _q == nil {
 		return nil
 	}
-	return &UnitQuery{
-		config:      _q.config,
-		ctx:         _q.ctx.Clone(),
-		order:       append([]unit.OrderOption{}, _q.order...),
-		inters:      append([]Interceptor{}, _q.inters...),
-		predicates:  append([]predicate.Unit{}, _q.predicates...),
-		withCreator: _q.withCreator.Clone(),
-		withUpdater: _q.withUpdater.Clone(),
+	return &DioceseQuery{
+		config:       _q.config,
+		ctx:          _q.ctx.Clone(),
+		order:        append([]diocese.OrderOption{}, _q.order...),
+		inters:       append([]Interceptor{}, _q.inters...),
+		predicates:   append([]predicate.Diocese{}, _q.predicates...),
+		withCreator:  _q.withCreator.Clone(),
+		withUpdater:  _q.withUpdater.Clone(),
+		withParishes: _q.withParishes.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -315,7 +344,7 @@ func (_q *UnitQuery) Clone() *UnitQuery {
 
 // WithCreator tells the query-builder to eager-load the nodes that are connected to
 // the "creator" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *UnitQuery) WithCreator(opts ...func(*UserQuery)) *UnitQuery {
+func (_q *DioceseQuery) WithCreator(opts ...func(*UserQuery)) *DioceseQuery {
 	query := (&UserClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
@@ -326,12 +355,23 @@ func (_q *UnitQuery) WithCreator(opts ...func(*UserQuery)) *UnitQuery {
 
 // WithUpdater tells the query-builder to eager-load the nodes that are connected to
 // the "updater" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *UnitQuery) WithUpdater(opts ...func(*UserQuery)) *UnitQuery {
+func (_q *DioceseQuery) WithUpdater(opts ...func(*UserQuery)) *DioceseQuery {
 	query := (&UserClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
 	_q.withUpdater = query
+	return _q
+}
+
+// WithParishes tells the query-builder to eager-load the nodes that are connected to
+// the "parishes" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *DioceseQuery) WithParishes(opts ...func(*ParishQuery)) *DioceseQuery {
+	query := (&ParishClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withParishes = query
 	return _q
 }
 
@@ -345,15 +385,15 @@ func (_q *UnitQuery) WithUpdater(opts ...func(*UserQuery)) *UnitQuery {
 //		Count int `json:"count,omitempty"`
 //	}
 //
-//	client.Unit.Query().
-//		GroupBy(unit.FieldCreatedBy).
+//	client.Diocese.Query().
+//		GroupBy(diocese.FieldCreatedBy).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (_q *UnitQuery) GroupBy(field string, fields ...string) *UnitGroupBy {
+func (_q *DioceseQuery) GroupBy(field string, fields ...string) *DioceseGroupBy {
 	_q.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &UnitGroupBy{build: _q}
+	grbuild := &DioceseGroupBy{build: _q}
 	grbuild.flds = &_q.ctx.Fields
-	grbuild.label = unit.Label
+	grbuild.label = diocese.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
 }
@@ -367,23 +407,23 @@ func (_q *UnitQuery) GroupBy(field string, fields ...string) *UnitGroupBy {
 //		CreatedBy uuid.UUID `json:"createdBy,omitempty"`
 //	}
 //
-//	client.Unit.Query().
-//		Select(unit.FieldCreatedBy).
+//	client.Diocese.Query().
+//		Select(diocese.FieldCreatedBy).
 //		Scan(ctx, &v)
-func (_q *UnitQuery) Select(fields ...string) *UnitSelect {
+func (_q *DioceseQuery) Select(fields ...string) *DioceseSelect {
 	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
-	sbuild := &UnitSelect{UnitQuery: _q}
-	sbuild.label = unit.Label
+	sbuild := &DioceseSelect{DioceseQuery: _q}
+	sbuild.label = diocese.Label
 	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
-// Aggregate returns a UnitSelect configured with the given aggregations.
-func (_q *UnitQuery) Aggregate(fns ...AggregateFunc) *UnitSelect {
+// Aggregate returns a DioceseSelect configured with the given aggregations.
+func (_q *DioceseQuery) Aggregate(fns ...AggregateFunc) *DioceseSelect {
 	return _q.Select().Aggregate(fns...)
 }
 
-func (_q *UnitQuery) prepareQuery(ctx context.Context) error {
+func (_q *DioceseQuery) prepareQuery(ctx context.Context) error {
 	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
@@ -395,7 +435,7 @@ func (_q *UnitQuery) prepareQuery(ctx context.Context) error {
 		}
 	}
 	for _, f := range _q.ctx.Fields {
-		if !unit.ValidColumn(f) {
+		if !diocese.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
@@ -409,25 +449,26 @@ func (_q *UnitQuery) prepareQuery(ctx context.Context) error {
 	return nil
 }
 
-func (_q *UnitQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Unit, error) {
+func (_q *DioceseQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Diocese, error) {
 	var (
-		nodes       = []*Unit{}
+		nodes       = []*Diocese{}
 		_spec       = _q.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			_q.withCreator != nil,
 			_q.withUpdater != nil,
+			_q.withParishes != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
-		return (*Unit).scanValues(nil, columns)
+		return (*Diocese).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &Unit{config: _q.config}
+		node := &Diocese{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
-	_spec.Node.Schema = _q.schemaConfig.Unit
+	_spec.Node.Schema = _q.schemaConfig.Diocese
 	ctx = internal.NewSchemaConfigContext(ctx, _q.schemaConfig)
 	for i := range hooks {
 		hooks[i](ctx, _spec)
@@ -440,22 +481,29 @@ func (_q *UnitQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Unit, e
 	}
 	if query := _q.withCreator; query != nil {
 		if err := _q.loadCreator(ctx, query, nodes, nil,
-			func(n *Unit, e *User) { n.Edges.Creator = e }); err != nil {
+			func(n *Diocese, e *User) { n.Edges.Creator = e }); err != nil {
 			return nil, err
 		}
 	}
 	if query := _q.withUpdater; query != nil {
 		if err := _q.loadUpdater(ctx, query, nodes, nil,
-			func(n *Unit, e *User) { n.Edges.Updater = e }); err != nil {
+			func(n *Diocese, e *User) { n.Edges.Updater = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withParishes; query != nil {
+		if err := _q.loadParishes(ctx, query, nodes,
+			func(n *Diocese) { n.Edges.Parishes = []*Parish{} },
+			func(n *Diocese, e *Parish) { n.Edges.Parishes = append(n.Edges.Parishes, e) }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (_q *UnitQuery) loadCreator(ctx context.Context, query *UserQuery, nodes []*Unit, init func(*Unit), assign func(*Unit, *User)) error {
+func (_q *DioceseQuery) loadCreator(ctx context.Context, query *UserQuery, nodes []*Diocese, init func(*Diocese), assign func(*Diocese, *User)) error {
 	ids := make([]uuid.UUID, 0, len(nodes))
-	nodeids := make(map[uuid.UUID][]*Unit)
+	nodeids := make(map[uuid.UUID][]*Diocese)
 	for i := range nodes {
 		fk := nodes[i].CreatedBy
 		if _, ok := nodeids[fk]; !ok {
@@ -482,9 +530,9 @@ func (_q *UnitQuery) loadCreator(ctx context.Context, query *UserQuery, nodes []
 	}
 	return nil
 }
-func (_q *UnitQuery) loadUpdater(ctx context.Context, query *UserQuery, nodes []*Unit, init func(*Unit), assign func(*Unit, *User)) error {
+func (_q *DioceseQuery) loadUpdater(ctx context.Context, query *UserQuery, nodes []*Diocese, init func(*Diocese), assign func(*Diocese, *User)) error {
 	ids := make([]uuid.UUID, 0, len(nodes))
-	nodeids := make(map[uuid.UUID][]*Unit)
+	nodeids := make(map[uuid.UUID][]*Diocese)
 	for i := range nodes {
 		fk := nodes[i].UpdatedBy
 		if _, ok := nodeids[fk]; !ok {
@@ -511,10 +559,41 @@ func (_q *UnitQuery) loadUpdater(ctx context.Context, query *UserQuery, nodes []
 	}
 	return nil
 }
+func (_q *DioceseQuery) loadParishes(ctx context.Context, query *ParishQuery, nodes []*Diocese, init func(*Diocese), assign func(*Diocese, *Parish)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Diocese)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Parish(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(diocese.ParishesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.diocese_parishes
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "diocese_parishes" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "diocese_parishes" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 
-func (_q *UnitQuery) sqlCount(ctx context.Context) (int, error) {
+func (_q *DioceseQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
-	_spec.Node.Schema = _q.schemaConfig.Unit
+	_spec.Node.Schema = _q.schemaConfig.Diocese
 	ctx = internal.NewSchemaConfigContext(ctx, _q.schemaConfig)
 	_spec.Node.Columns = _q.ctx.Fields
 	if len(_q.ctx.Fields) > 0 {
@@ -523,8 +602,8 @@ func (_q *UnitQuery) sqlCount(ctx context.Context) (int, error) {
 	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (_q *UnitQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(unit.Table, unit.Columns, sqlgraph.NewFieldSpec(unit.FieldID, field.TypeUUID))
+func (_q *DioceseQuery) querySpec() *sqlgraph.QuerySpec {
+	_spec := sqlgraph.NewQuerySpec(diocese.Table, diocese.Columns, sqlgraph.NewFieldSpec(diocese.FieldID, field.TypeInt))
 	_spec.From = _q.sql
 	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
@@ -533,17 +612,17 @@ func (_q *UnitQuery) querySpec() *sqlgraph.QuerySpec {
 	}
 	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
-		_spec.Node.Columns = append(_spec.Node.Columns, unit.FieldID)
+		_spec.Node.Columns = append(_spec.Node.Columns, diocese.FieldID)
 		for i := range fields {
-			if fields[i] != unit.FieldID {
+			if fields[i] != diocese.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
 		if _q.withCreator != nil {
-			_spec.Node.AddColumnOnce(unit.FieldCreatedBy)
+			_spec.Node.AddColumnOnce(diocese.FieldCreatedBy)
 		}
 		if _q.withUpdater != nil {
-			_spec.Node.AddColumnOnce(unit.FieldUpdatedBy)
+			_spec.Node.AddColumnOnce(diocese.FieldUpdatedBy)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {
@@ -569,12 +648,12 @@ func (_q *UnitQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (_q *UnitQuery) sqlQuery(ctx context.Context) *sql.Selector {
+func (_q *DioceseQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(_q.driver.Dialect())
-	t1 := builder.Table(unit.Table)
+	t1 := builder.Table(diocese.Table)
 	columns := _q.ctx.Fields
 	if len(columns) == 0 {
-		columns = unit.Columns
+		columns = diocese.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
 	if _q.sql != nil {
@@ -584,7 +663,7 @@ func (_q *UnitQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	t1.Schema(_q.schemaConfig.Unit)
+	t1.Schema(_q.schemaConfig.Diocese)
 	ctx = internal.NewSchemaConfigContext(ctx, _q.schemaConfig)
 	selector.WithContext(ctx)
 	for _, p := range _q.predicates {
@@ -604,28 +683,28 @@ func (_q *UnitQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	return selector
 }
 
-// UnitGroupBy is the group-by builder for Unit entities.
-type UnitGroupBy struct {
+// DioceseGroupBy is the group-by builder for Diocese entities.
+type DioceseGroupBy struct {
 	selector
-	build *UnitQuery
+	build *DioceseQuery
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (_g *UnitGroupBy) Aggregate(fns ...AggregateFunc) *UnitGroupBy {
+func (_g *DioceseGroupBy) Aggregate(fns ...AggregateFunc) *DioceseGroupBy {
 	_g.fns = append(_g.fns, fns...)
 	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_g *UnitGroupBy) Scan(ctx context.Context, v any) error {
+func (_g *DioceseGroupBy) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
 	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*UnitQuery, *UnitGroupBy](ctx, _g.build, _g, _g.build.inters, v)
+	return scanWithInterceptors[*DioceseQuery, *DioceseGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (_g *UnitGroupBy) sqlScan(ctx context.Context, root *UnitQuery, v any) error {
+func (_g *DioceseGroupBy) sqlScan(ctx context.Context, root *DioceseQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
 	aggregation := make([]string, 0, len(_g.fns))
 	for _, fn := range _g.fns {
@@ -652,28 +731,28 @@ func (_g *UnitGroupBy) sqlScan(ctx context.Context, root *UnitQuery, v any) erro
 	return sql.ScanSlice(rows, v)
 }
 
-// UnitSelect is the builder for selecting fields of Unit entities.
-type UnitSelect struct {
-	*UnitQuery
+// DioceseSelect is the builder for selecting fields of Diocese entities.
+type DioceseSelect struct {
+	*DioceseQuery
 	selector
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (_s *UnitSelect) Aggregate(fns ...AggregateFunc) *UnitSelect {
+func (_s *DioceseSelect) Aggregate(fns ...AggregateFunc) *DioceseSelect {
 	_s.fns = append(_s.fns, fns...)
 	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_s *UnitSelect) Scan(ctx context.Context, v any) error {
+func (_s *DioceseSelect) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
 	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*UnitQuery, *UnitSelect](ctx, _s.UnitQuery, _s, _s.inters, v)
+	return scanWithInterceptors[*DioceseQuery, *DioceseSelect](ctx, _s.DioceseQuery, _s, _s.inters, v)
 }
 
-func (_s *UnitSelect) sqlScan(ctx context.Context, root *UnitQuery, v any) error {
+func (_s *DioceseSelect) sqlScan(ctx context.Context, root *DioceseQuery, v any) error {
 	selector := root.sqlQuery(ctx)
 	aggregation := make([]string, 0, len(_s.fns))
 	for _, fn := range _s.fns {

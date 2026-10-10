@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/paroki/domus/api/ent"
 	"github.com/paroki/domus/api/internal/modules/auth"
+	"github.com/paroki/domus/api/internal/modules/unit"
 )
 
 type State struct {
@@ -26,6 +27,15 @@ func initAuth(state State) {
 	auth.InitRoutes(state.FiberApp)
 }
 
+func initUnit(state State) {
+	unitModule := unit.New(unit.Config{
+		EntCli: state.Ent,
+		Log:    state.Log,
+	})
+	unitModule.InitRoutes(state.FiberApp)
+}
+
 func Bootstrap(state State) {
 	initAuth(state)
+	initUnit(state)
 }

@@ -16,6 +16,8 @@ func MapError(err error) (int, ErrorBody) {
 	switch {
 	case errors.Is(err, core.ErrItemNotFound):
 		return fiber.StatusNotFound, ErrorBody{Code: "NOT_FOUND", Message: "resource not found"}
+	case errors.Is(err, core.ErrInvalidID):
+		return fiber.StatusBadRequest, ErrorBody{Code: "INVALID_ID", Message: "invalid id parameter"}
 	case errors.Is(err, core.ErrForbidden):
 		return fiber.StatusForbidden, ErrorBody{Code: "FORBIDDEN", Message: "forbidden"}
 	case errors.As(err, &ve):

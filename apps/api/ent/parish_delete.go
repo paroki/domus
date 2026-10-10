@@ -9,30 +9,30 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/paroki/domus/api/ent/internal"
+	"github.com/paroki/domus/api/ent/parish"
 	"github.com/paroki/domus/api/ent/predicate"
-	"github.com/paroki/domus/api/ent/unit"
 )
 
-// UnitDelete is the builder for deleting a Unit entity.
-type UnitDelete struct {
+// ParishDelete is the builder for deleting a Parish entity.
+type ParishDelete struct {
 	config
 	hooks    []Hook
-	mutation *UnitMutation
+	mutation *ParishMutation
 }
 
-// Where appends a list predicates to the UnitDelete builder.
-func (_d *UnitDelete) Where(ps ...predicate.Unit) *UnitDelete {
+// Where appends a list predicates to the ParishDelete builder.
+func (_d *ParishDelete) Where(ps ...predicate.Parish) *ParishDelete {
 	_d.mutation.Where(ps...)
 	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (_d *UnitDelete) Exec(ctx context.Context) (int, error) {
+func (_d *ParishDelete) Exec(ctx context.Context) (int, error) {
 	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_d *UnitDelete) ExecX(ctx context.Context) int {
+func (_d *ParishDelete) ExecX(ctx context.Context) int {
 	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
@@ -40,9 +40,9 @@ func (_d *UnitDelete) ExecX(ctx context.Context) int {
 	return n
 }
 
-func (_d *UnitDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := sqlgraph.NewDeleteSpec(unit.Table, sqlgraph.NewFieldSpec(unit.FieldID, field.TypeUUID))
-	_spec.Node.Schema = _d.schemaConfig.Unit
+func (_d *ParishDelete) sqlExec(ctx context.Context) (int, error) {
+	_spec := sqlgraph.NewDeleteSpec(parish.Table, sqlgraph.NewFieldSpec(parish.FieldID, field.TypeInt))
+	_spec.Node.Schema = _d.schemaConfig.Parish
 	ctx = internal.NewSchemaConfigContext(ctx, _d.schemaConfig)
 	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
@@ -59,32 +59,32 @@ func (_d *UnitDelete) sqlExec(ctx context.Context) (int, error) {
 	return affected, err
 }
 
-// UnitDeleteOne is the builder for deleting a single Unit entity.
-type UnitDeleteOne struct {
-	_d *UnitDelete
+// ParishDeleteOne is the builder for deleting a single Parish entity.
+type ParishDeleteOne struct {
+	_d *ParishDelete
 }
 
-// Where appends a list predicates to the UnitDelete builder.
-func (_d *UnitDeleteOne) Where(ps ...predicate.Unit) *UnitDeleteOne {
+// Where appends a list predicates to the ParishDelete builder.
+func (_d *ParishDeleteOne) Where(ps ...predicate.Parish) *ParishDeleteOne {
 	_d._d.mutation.Where(ps...)
 	return _d
 }
 
 // Exec executes the deletion query.
-func (_d *UnitDeleteOne) Exec(ctx context.Context) error {
+func (_d *ParishDeleteOne) Exec(ctx context.Context) error {
 	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
 	case n == 0:
-		return &NotFoundError{unit.Label}
+		return &NotFoundError{parish.Label}
 	default:
 		return nil
 	}
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_d *UnitDeleteOne) ExecX(ctx context.Context) {
+func (_d *ParishDeleteOne) ExecX(ctx context.Context) {
 	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}

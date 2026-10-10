@@ -7,8 +7,10 @@ import "context"
 // SchemaConfig represents alternative schema names for all tables
 // that can be passed at runtime.
 type SchemaConfig struct {
-	Unit string // Unit table.
-	User string // User table.
+	Diocese     string // Diocese table.
+	Parish      string // Parish table.
+	Parishioner string // Parishioner table.
+	User        string // User table.
 }
 
 type schemaCtxKey struct{}
