@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/turbo/schema.json",
   "ui": "tui",
-  "globalPassThroughEnv": ["AUTH_*", "KAFKA_*", "API_*"],
+  "globalEnv": ["AUTH_*", "KAFKA_*", "API_*"],
   "tasks": {
     "@domus/better-auth#auth:schema": {
       "inputs": ["src/auth.ts"],

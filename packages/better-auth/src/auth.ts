@@ -3,10 +3,12 @@ import { betterAuth } from "better-auth";
 import { admin, jwt, openAPI, organization } from "better-auth/plugins";
 import { authEnv } from "./authEnv";
 import { authDB, schema } from "./drizzle";
+import { socialProviders } from "./options/socialProviders";
 
 export const auth = betterAuth({
   baseURL: authEnv.AUTH_URL,
   basePath: authEnv.AUTH_PATH,
+  trustedOrigins: authEnv.AUTH_TRUSTED_ORIGINS,
   database: drizzleAdapter(authDB, {
     provider: "pg",
     schemaName: "auth",
@@ -25,6 +27,7 @@ export const auth = betterAuth({
     jwt(),
     openAPI(),
   ],
+  socialProviders,
 });
 
 export { authEnv };
