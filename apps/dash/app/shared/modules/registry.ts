@@ -23,6 +23,7 @@ export const modules: readonly DomusModule[] = [
     name: "Website",
     description: "Situs publik paroki: halaman, berita, dan pengumuman.",
     icon: GlobalOutlined,
+    color: "var(--domus-app-website)",
     menu: [
       { label: "Halaman", slug: "halaman" },
       { label: "Berita", slug: "berita" },
@@ -36,6 +37,7 @@ export const modules: readonly DomusModule[] = [
     name: "Sakramen",
     description: "Pencatatan dan arsip sakramen umat.",
     icon: BookOutlined,
+    color: "var(--domus-app-sakramen)",
     menu: [
       { label: "Baptis", slug: "baptis" },
       { label: "Komuni pertama", slug: "komuni-pertama" },
@@ -49,6 +51,7 @@ export const modules: readonly DomusModule[] = [
     name: "Keuangan",
     description: "Kas, kolekte, dan anggaran paroki.",
     icon: WalletOutlined,
+    color: "var(--domus-app-keuangan)",
     menu: [
       {
         label: "Transaksi",
@@ -67,6 +70,7 @@ export const modules: readonly DomusModule[] = [
     name: "Umat",
     description: "Data umat, keluarga, dan lingkungan.",
     icon: TeamOutlined,
+    color: "var(--domus-app-umat)",
     menu: [
       { label: "Daftar umat", slug: "daftar" },
       { label: "Keluarga", slug: "keluarga" },
@@ -79,6 +83,7 @@ export const modules: readonly DomusModule[] = [
     name: "Kegiatan",
     description: "Kalender, jadwal misa, dan acara paroki.",
     icon: CalendarOutlined,
+    color: "var(--domus-app-kegiatan)",
     menu: [
       { label: "Kalender", slug: "kalender" },
       { label: "Jadwal misa", slug: "jadwal-misa" },

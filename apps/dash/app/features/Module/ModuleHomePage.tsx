@@ -34,7 +34,7 @@ export default function ModuleHomePage() {
                 <span style={{ fontWeight: 500 }}>{label}</span>
                 {group && (
                   <span
-                    style={{ fontSize: 12, color: "var(--domus-text-muted)" }}
+                    style={{ fontSize: 13, color: "var(--domus-text-muted)" }}
                   >
                     {group}
                   </span>

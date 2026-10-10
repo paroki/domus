@@ -22,6 +22,8 @@ export interface DomusModule {
   name: string;
   description: string;
   icon: ModuleIcon;
+  /** Warna ikon di launcher. Isi dengan CSS variable `--domus-app-*` dari app.css. */
+  color: string;
   menu: ModuleMenuItem[];
 }
 

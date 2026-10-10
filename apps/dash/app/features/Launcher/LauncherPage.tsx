@@ -1,4 +1,5 @@
 import { Typography } from "antd";
+import type { CSSProperties } from "react";
 import { Link } from "react-router";
 import { modulePath, modules } from "~/shared/modules/registry";
 import type { Route } from "../../routes/+types/_app._index";
@@ -27,14 +28,18 @@ export default function LauncherPage() {
         Pilih modul untuk mulai bekerja.
       </Typography.Paragraph>
 
-      <ul className="mt-6 grid list-none grid-cols-2 gap-3 p-0 sm:grid-cols-3 md:grid-cols-5">
-        {modules.map(({ id, name, icon: Icon }) => (
+      <ul className="mt-6 grid list-none grid-cols-2 gap-4 p-0 sm:grid-cols-3 md:grid-cols-5">
+        {modules.map(({ id, name, color, icon: Icon }) => (
           <li key={id}>
             <Link
               to={modulePath(id)}
-              className="glass launcher-tile flex h-full flex-col items-center gap-3 p-5 text-center"
+              className="glass launcher-tile flex h-full flex-col items-center gap-3 p-6 text-center"
             >
-              <span aria-hidden="true" className="icon-tile">
+              <span
+                aria-hidden="true"
+                className="icon-tile"
+                style={{ "--tile-color": color } as CSSProperties}
+              >
                 <Icon />
               </span>
               <span style={{ fontWeight: 500 }}>{name}</span>

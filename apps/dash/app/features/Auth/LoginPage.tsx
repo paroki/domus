@@ -130,7 +130,7 @@ export default function Login() {
           style={{
             margin: "20px 0 0",
             textAlign: "center",
-            fontSize: 12,
+            fontSize: 13,
             color: "var(--domus-text-muted)",
           }}
         >
@@ -140,7 +140,7 @@ export default function Login() {
         <p
           className="mt-5 pt-4 text-center"
           style={{
-            fontSize: 12,
+            fontSize: 13,
             lineHeight: 1.6,
             color: "var(--domus-text-secondary)",
             borderTop: "1px solid var(--domus-border-soft)",

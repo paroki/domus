@@ -91,7 +91,7 @@ function UserMenu() {
             label: (
               <span className="flex flex-col leading-tight">
                 <strong>{user.name}</strong>
-                <span style={{ fontSize: 12 }}>{user.email}</span>
+                <span style={{ fontSize: 13 }}>{user.email}</span>
               </span>
             ),
           },

@@ -78,12 +78,12 @@ export function getAntdTheme(mode: ThemeMode): ThemeConfig {
 
       fontFamily:
         '"Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif',
-      fontSize: 13,
-      fontSizeHeading1: 24,
-      fontSizeHeading2: 20,
-      fontSizeHeading3: 17,
-      fontSizeHeading4: 15,
-      fontSizeHeading5: 13,
+      fontSize: 15,
+      fontSizeHeading1: 28,
+      fontSizeHeading2: 22,
+      fontSizeHeading3: 18,
+      fontSizeHeading4: 16,
+      fontSizeHeading5: 15,
 
       wireframe: false,
       boxShadow: "none",
