@@ -5,10 +5,13 @@ import {
   TeamOutlined,
   WalletOutlined,
 } from "@ant-design/icons";
-import type { DomusModule, FlatMenuItem, ModuleMenuItem } from "./types";
+import type { DomusModule, FlatMenuItem, ModuleMenuItem, TKey } from "./types";
 
 /**
  * Registry modul Domus (gaya Odoo).
+ *
+ * `name`, `description`, dan `label` adalah key terjemahan (lihat `~/i18n/locales`).
+ * Tambah modul baru = tambah entri di sini + key-nya di `id.ts` dan `en.ts`.
  *
  * Tambah modul baru cukup dengan menambah satu entri di sini: launcher,
  * navbar, dan halaman placeholder-nya otomatis ikut. Kalau modul sudah
@@ -20,75 +23,75 @@ import type { DomusModule, FlatMenuItem, ModuleMenuItem } from "./types";
 export const modules: readonly DomusModule[] = [
   {
     id: "website",
-    name: "Website",
-    description: "Situs publik paroki: halaman, berita, dan pengumuman.",
+    name: "modules.website.name",
+    description: "modules.website.description",
     icon: GlobalOutlined,
     color: "var(--domus-app-website)",
     menu: [
-      { label: "Halaman", slug: "halaman" },
-      { label: "Berita", slug: "berita" },
-      { label: "Pengumuman", slug: "pengumuman" },
-      { label: "Galeri", slug: "galeri" },
-      { label: "Pengaturan situs", slug: "pengaturan" },
+      { label: "modules.website.menu.halaman", slug: "halaman" },
+      { label: "modules.website.menu.berita", slug: "berita" },
+      { label: "modules.website.menu.pengumuman", slug: "pengumuman" },
+      { label: "modules.website.menu.galeri", slug: "galeri" },
+      { label: "modules.website.menu.pengaturan", slug: "pengaturan" },
     ],
   },
   {
     id: "sakramen",
-    name: "Sakramen",
-    description: "Pencatatan dan arsip sakramen umat.",
+    name: "modules.sakramen.name",
+    description: "modules.sakramen.description",
     icon: BookOutlined,
     color: "var(--domus-app-sakramen)",
     menu: [
-      { label: "Baptis", slug: "baptis" },
-      { label: "Komuni pertama", slug: "komuni-pertama" },
-      { label: "Krisma", slug: "krisma" },
-      { label: "Perkawinan", slug: "perkawinan" },
-      { label: "Laporan", slug: "laporan" },
+      { label: "modules.sakramen.menu.baptis", slug: "baptis" },
+      { label: "modules.sakramen.menu.komuni-pertama", slug: "komuni-pertama" },
+      { label: "modules.sakramen.menu.krisma", slug: "krisma" },
+      { label: "modules.sakramen.menu.perkawinan", slug: "perkawinan" },
+      { label: "modules.sakramen.menu.laporan", slug: "laporan" },
     ],
   },
   {
     id: "keuangan",
-    name: "Keuangan",
-    description: "Kas, kolekte, dan anggaran paroki.",
+    name: "modules.keuangan.name",
+    description: "modules.keuangan.description",
     icon: WalletOutlined,
     color: "var(--domus-app-keuangan)",
     menu: [
       {
-        label: "Transaksi",
+        label: "modules.keuangan.groups.transaksi",
         children: [
-          { label: "Penerimaan", slug: "penerimaan" },
-          { label: "Pengeluaran", slug: "pengeluaran" },
+          { label: "modules.keuangan.menu.penerimaan", slug: "penerimaan" },
+          { label: "modules.keuangan.menu.pengeluaran", slug: "pengeluaran" },
         ],
       },
-      { label: "Kolekte", slug: "kolekte" },
-      { label: "Anggaran", slug: "anggaran" },
-      { label: "Laporan", slug: "laporan" },
+      { label: "modules.keuangan.menu.kolekte", slug: "kolekte" },
+      { label: "modules.keuangan.menu.anggaran", slug: "anggaran" },
+      { label: "modules.keuangan.menu.laporan", slug: "laporan" },
     ],
   },
   {
     id: "umat",
-    name: "Umat",
-    description: "Data umat, keluarga, dan lingkungan.",
+    name: "modules.umat.name",
+    description: "modules.umat.description",
     icon: TeamOutlined,
     color: "var(--domus-app-umat)",
     menu: [
-      { label: "Daftar umat", slug: "daftar" },
-      { label: "Keluarga", slug: "keluarga" },
-      { label: "Lingkungan", slug: "lingkungan" },
-      { label: "Pengurus", slug: "pengurus" },
+      { label: "modules.umat.menu.daftar", slug: "daftar" },
+      { label: "modules.umat.menu.keluarga", slug: "keluarga" },
+      { label: "modules.umat.menu.lingkungan", slug: "lingkungan" },
+      { label: "modules.umat.menu.pengurus", slug: "pengurus" },
     ],
   },
   {
     id: "kegiatan",
-    name: "Kegiatan",
-    description: "Kalender, jadwal misa, dan acara paroki.",
+    name: "modules.kegiatan.name",
+    description: "modules.kegiatan.description",
     icon: CalendarOutlined,
     color: "var(--domus-app-kegiatan)",
     menu: [
-      { label: "Kalender", slug: "kalender" },
-      { label: "Jadwal misa", slug: "jadwal-misa" },
-      { label: "Acara", slug: "acara" },
-      { label: "Kepanitiaan", slug: "kepanitiaan" },
+      { label: "modules.kegiatan.menu.kalender", slug: "kalender" },
+      { label: "modules.kegiatan.menu.jadwal-misa", slug: "jadwal-misa" },
+      { label: "modules.kegiatan.menu.acara", slug: "acara" },
+      { label: "modules.kegiatan.menu.kepanitiaan", slug: "kepanitiaan" },
     ],
   },
 ];
@@ -105,7 +108,7 @@ export function modulePath(moduleId: string, slug?: string): string {
 
 export function flattenMenu(
   items: ModuleMenuItem[],
-  group?: string,
+  group?: TKey,
 ): FlatMenuItem[] {
   return items.flatMap((item) => {
     if (item.children) return flattenMenu(item.children, item.label);

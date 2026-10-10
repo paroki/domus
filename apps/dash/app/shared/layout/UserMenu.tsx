@@ -7,6 +7,7 @@ import {
 import { getSession, signOut } from "@domus/better-auth/client";
 import { Avatar, Button, Dropdown, Skeleton, Tag } from "antd";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router";
 
 interface SessionUser {
@@ -15,10 +16,6 @@ interface SessionUser {
   image?: string | null;
   role?: string | null;
 }
-
-const ROLE_LABELS: Record<string, string> = {
-  admin: "Admin",
-};
 
 /** `undefined` = masih memuat, `null` = belum login. */
 function useSessionUser(): SessionUser | null | undefined {
@@ -88,6 +85,7 @@ function UserAvatar({ user, size }: { user: SessionUser; size: number }) {
 
 /** Menu akun di navbar: avatar, info akun, dan keluar. */
 export function UserMenu() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const user = useSessionUser();
@@ -95,7 +93,13 @@ export function UserMenu() {
   const [signingOut, setSigningOut] = useState(false);
 
   if (user === undefined) {
-    return <Skeleton.Avatar active size={26} aria-label="Memuat akun" />;
+    return (
+      <Skeleton.Avatar
+        active
+        size={26}
+        aria-label={t("common.loadingAccount")}
+      />
+    );
   }
 
   if (user === null) {
@@ -106,7 +110,7 @@ export function UserMenu() {
         : `/login?redirect=${encodeURIComponent(target)}`;
     return (
       <Button type="text" icon={<LoginOutlined />} onClick={() => navigate(to)}>
-        Masuk
+        {t("common.login")}
       </Button>
     );
   }
@@ -123,7 +127,11 @@ export function UserMenu() {
     }
   }
 
-  const roleLabel = user.role ? (ROLE_LABELS[user.role] ?? user.role) : null;
+  const roleLabel = user.role
+    ? i18n.exists(`roles.${user.role}`)
+      ? t(`roles.${user.role}` as "roles.admin")
+      : user.role
+    : null;
 
   return (
     <Dropdown
@@ -183,7 +191,7 @@ export function UserMenu() {
             danger: true,
             disabled: signingOut,
             icon: signingOut ? <LoadingOutlined /> : <LogoutOutlined />,
-            label: signingOut ? "Sedang keluar" : "Keluar",
+            label: signingOut ? t("common.loggingOut") : t("common.logout"),
           },
         ],
         onClick: ({ key }) => {
@@ -193,7 +201,9 @@ export function UserMenu() {
     >
       <Button
         type="text"
-        aria-label={`Menu akun ${user.name || user.email}`}
+        aria-label={t("userMenu.accountMenu", {
+          name: user.name || user.email,
+        })}
         aria-haspopup="menu"
         aria-expanded={open}
         className="!px-1"

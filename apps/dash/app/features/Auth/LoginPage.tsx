@@ -2,13 +2,19 @@ import { GithubOutlined, GoogleOutlined } from "@ant-design/icons";
 import { signIn } from "@domus/better-auth/client";
 import { Alert, Button, Typography } from "antd";
 import { useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router";
+import i18n from "~/i18n";
+import { LanguageSwitcher } from "~/shared/layout/LanguageSwitcher";
 import type { Route } from "../../routes/+types/login";
 
 type Provider = "google" | "github";
+const linkStyle = { color: "var(--domus-primary)", fontWeight: 500 } as const;
+
+type ErrorCode = "access_denied" | "account_not_linked" | "oauth";
 
 export function meta(_: Route.MetaArgs) {
-  return [{ title: "Masuk | Domus" }];
+  return [{ title: `${i18n.t("login.pageTitle")} | Domus` }];
 }
 
 // Cegah open redirect: hanya terima path internal.
@@ -17,20 +23,26 @@ function safeRedirect(value: string | null): string {
   return value;
 }
 
-const ERROR_MESSAGES: Record<string, string> = {
-  access_denied: "Izin login dibatalkan. Coba lagi kalau mau lanjut.",
-  account_not_linked:
-    "Email ini sudah terdaftar lewat penyedia lain. Masuk dengan penyedia yang dulu dipakai.",
-  oauth: "Login gagal. Coba lagi sebentar lagi.",
-};
+const ERROR_CODES: readonly ErrorCode[] = [
+  "access_denied",
+  "account_not_linked",
+  "oauth",
+];
+
+/** Kode error dari query string; kode yang tidak dikenal jatuh ke `oauth`. */
+function toErrorCode(value: string | null): ErrorCode | null {
+  if (!value) return null;
+  return ERROR_CODES.find((code) => code === value) ?? "oauth";
+}
 
 export default function Login() {
+  const { t } = useTranslation();
   const [params] = useSearchParams();
   const [pending, setPending] = useState<Provider | null>(null);
-  const [error, setError] = useState<string | null>(() => {
-    const code = params.get("error");
-    return code ? (ERROR_MESSAGES[code] ?? ERROR_MESSAGES.oauth) : null;
-  });
+  // Simpan kode (bukan teks) supaya pesan ikut berganti saat bahasa diubah.
+  const [error, setError] = useState<ErrorCode | null>(() =>
+    toErrorCode(params.get("error")),
+  );
 
   const redirectTo = safeRedirect(params.get("redirect"));
 
@@ -44,18 +56,21 @@ export default function Login() {
         errorCallbackURL: `${window.location.origin}/login`,
       });
       if (error) {
-        setError(ERROR_MESSAGES.oauth);
+        setError("oauth");
         setPending(null);
       }
       // Sukses: browser diarahkan ke penyedia, loading dibiarkan jalan.
     } catch {
-      setError(ERROR_MESSAGES.oauth);
+      setError("oauth");
       setPending(null);
     }
   }
 
   return (
     <main className="min-h-screen grid place-items-center px-4 py-10">
+      <div className="fixed top-3 right-3">
+        <LanguageSwitcher />
+      </div>
       <section
         aria-labelledby="login-title"
         className="glass glass-strong w-full max-w-100 p-8"
@@ -78,7 +93,7 @@ export default function Login() {
             level={2}
             style={{ margin: 0, fontWeight: 500 }}
           >
-            Masuk ke Domus
+            {t("login.title")}
           </Typography.Title>
           <Typography.Paragraph
             style={{
@@ -86,7 +101,7 @@ export default function Login() {
               color: "var(--domus-text-secondary)",
             }}
           >
-            Kelola keuskupan, paroki, dan lingkungan di satu tempat.
+            {t("login.subtitle")}
           </Typography.Paragraph>
         </div>
 
@@ -95,7 +110,7 @@ export default function Login() {
             className="mt-5"
             type="error"
             showIcon
-            title={error}
+            title={t(`login.errors.${error}`)}
             closable={{
               onClose: () => setError(null),
             }}
@@ -112,7 +127,7 @@ export default function Login() {
             disabled={pending !== null && pending !== "google"}
             onClick={() => doSignIn("google")}
           >
-            Lanjutkan dengan Google
+            {t("login.continueWithGoogle")}
           </Button>
           <Button
             size="large"
@@ -122,7 +137,7 @@ export default function Login() {
             disabled={pending !== null && pending !== "github"}
             onClick={() => doSignIn("github")}
           >
-            Lanjutkan dengan GitHub
+            {t("login.continueWithGithub")}
           </Button>
         </div>
 
@@ -134,7 +149,7 @@ export default function Login() {
             color: "var(--domus-text-muted)",
           }}
         >
-          Belum punya akses? Hubungi admin keuskupan atau paroki kamu.
+          {t("login.noAccess")}
         </Typography.Paragraph>
 
         <p
@@ -146,21 +161,13 @@ export default function Login() {
             borderTop: "1px solid var(--domus-border-soft)",
           }}
         >
-          Dengan masuk, kamu menyetujui{" "}
-          <Link
-            to="/terms"
-            style={{ color: "var(--domus-primary)", fontWeight: 500 }}
-          >
-            Ketentuan Layanan
-          </Link>{" "}
-          dan{" "}
-          <Link
-            to="/privacy"
-            style={{ color: "var(--domus-primary)", fontWeight: 500 }}
-          >
-            Kebijakan Privasi
-          </Link>
-          .
+          <Trans
+            i18nKey="login.agreement"
+            components={{
+              terms: <Link to="/terms" style={linkStyle} />,
+              privacy: <Link to="/privacy" style={linkStyle} />,
+            }}
+          />
         </p>
       </section>
     </main>

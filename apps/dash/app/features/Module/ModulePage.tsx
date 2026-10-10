@@ -1,4 +1,6 @@
+import { useTranslation } from "react-i18next";
 import { data } from "react-router";
+import i18n from "~/i18n";
 import { ControlPanel } from "~/shared/layout/ControlPanel";
 import { UnderConstruction } from "~/shared/layout/UnderConstruction";
 import { findMenuItem, getModule, modulePath } from "~/shared/modules/registry";
@@ -9,7 +11,12 @@ export function meta({ params }: Route.MetaArgs) {
   const mod = getModule(params.moduleId);
   const item = mod && findMenuItem(mod, params.page);
   return [
-    { title: mod && item ? `${item.label} | ${mod.name} | Domus` : "Domus" },
+    {
+      title:
+        mod && item
+          ? `${i18n.t(item.label)} | ${i18n.t(mod.name)} | Domus`
+          : "Domus",
+    },
   ];
 }
 
@@ -27,6 +34,7 @@ export function clientLoader({ params }: Route.ClientLoaderArgs) {
  * Ganti dengan route statis `_app.<module>.<slug>.tsx` saat halamannya siap.
  */
 export default function ModulePage() {
+  const { t } = useTranslation();
   const { activeModule, activeItem } = useActiveModule();
   if (!activeModule || !activeItem) return null;
 
@@ -34,14 +42,14 @@ export default function ModulePage() {
     <>
       <ControlPanel
         breadcrumbs={[
-          { title: activeModule.name, to: modulePath(activeModule.id) },
-          ...(activeItem.group ? [{ title: activeItem.group }] : []),
-          { title: activeItem.label },
+          { title: t(activeModule.name), to: modulePath(activeModule.id) },
+          ...(activeItem.group ? [{ title: t(activeItem.group) }] : []),
+          { title: t(activeItem.label) },
         ]}
       />
       <section className="mx-auto w-full max-w-5xl px-4 py-5">
         <UnderConstruction
-          title={activeItem.label}
+          title={t(activeItem.label)}
           backTo={modulePath(activeModule.id)}
         />
       </section>
