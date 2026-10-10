@@ -7,6 +7,7 @@ import {
   setDefaultTimeout,
 } from "@cucumber/cucumber";
 import { type Browser, chromium } from "@playwright/test";
+import { startApps, stopApps } from "./apps";
 import { removeUser } from "./auth";
 import { env } from "./env";
 import type { DomusWorld } from "./world";
@@ -15,12 +16,17 @@ setDefaultTimeout(30_000);
 
 let browser: Browser;
 
-BeforeAll(async () => {
+BeforeAll({ timeout: 60_000 }, async () => {
+  await startApps();
   browser = await chromium.launch({ headless: !env.headed });
 });
 
-AfterAll(async () => {
-  await browser.close();
+AfterAll({ timeout: 15_000 }, async () => {
+  try {
+    await browser?.close();
+  } finally {
+    await stopApps();
+  }
 });
 
 Before(async function (this: DomusWorld) {

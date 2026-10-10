@@ -21,11 +21,13 @@ export class DomusWorld extends World {
   }
 
   get loginPage() {
-    return (this._loginPage ??= new LoginPage(this.page));
+    this._loginPage ??= new LoginPage(this.page);
+    return this._loginPage;
   }
 
   get launcherPage() {
-    return (this._launcherPage ??= new LauncherPage(this.page));
+    this._launcherPage ??= new LauncherPage(this.page);
+    return this._launcherPage;
   }
 
   /** Login tanpa OAuth: bikin user via testUtils lalu pasang cookie sesi. */

@@ -3,6 +3,7 @@
   "type": "module",
   "exports": {
     "./auth": "./src/auth.ts",
+    "./server": "./src/auth.ts",
     "./client": "./src/client.ts"
   },
   "scripts": {

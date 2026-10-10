@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 // NOTE: sesuaikan import ini dengan export instance auth di @domus/better-auth
-import { auth } from "@domus/better-auth/server";
+import { auth } from "@domus/better-auth/auth";
 import { env } from "./env";
 
 async function testHelpers() {

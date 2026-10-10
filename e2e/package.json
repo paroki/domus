@@ -4,8 +4,9 @@
   "type": "module",
   "scripts": {
     "install:browsers": "playwright install chromium",
-    "test": "NODE_OPTIONS=\"--import tsx\" cucumber-js",
-    "test:headed": "HEADED=true NODE_OPTIONS=\"--import tsx\" cucumber-js",
+    "test": "E2E=true NODE_OPTIONS=\"--import tsx\" cucumber-js",
+    "e2e": "E2E=true NODE_OPTIONS=\"--import tsx\" cucumber-js",
+    "test:headed": "E2E=true HEADED=true NODE_OPTIONS=\"--import tsx\" cucumber-js",
     "typecheck": "tsc"
   },
   "dependencies": {
