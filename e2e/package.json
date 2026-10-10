@@ -1,3 +1,21 @@
 {
-  "name": "@domus/e2e"
+  "name": "@domus/e2e",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "install:browsers": "playwright install chromium",
+    "test": "NODE_OPTIONS=\"--import tsx\" cucumber-js",
+    "test:headed": "HEADED=true NODE_OPTIONS=\"--import tsx\" cucumber-js",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@domus/better-auth": "workspace:*"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "^12.0.0",
+    "@playwright/test": "^1.55.0",
+    "@types/node": "^22",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.3"
+  }
 }
