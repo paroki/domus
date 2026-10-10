@@ -1,1 +1,205 @@
+/* Domus design tokens: terracotta, warm, glass, compact.
+   Mode via attribute: <html data-theme="light|dark"> */
 @import "tailwindcss";
+
+:root,
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  /* brand */
+  --domus-brand: #c2603a; /* identity: logo, illustrations, large accents (not small text) */
+  --domus-primary: #b85630; /* action: buttons, links, focus (white on top passes AA at 4.76:1) */
+  --domus-primary-hover: #a94d29;
+  --domus-primary-active: #94421f;
+  --domus-on-primary: #ffffff;
+  --domus-tint: rgba(194, 96, 58, 0.1);
+  --domus-tint-hover: rgba(194, 96, 58, 0.16);
+  --domus-tint-text: #7a3519;
+
+  /* warm neutrals */
+  --domus-bg: #faf6f0;
+  --domus-text: #2b211b;
+  --domus-text-secondary: rgba(43, 33, 27, 0.68);
+  --domus-text-muted: rgba(43, 33, 27, 0.45);
+  --domus-border: rgba(43, 33, 27, 0.12);
+  --domus-border-soft: rgba(43, 33, 27, 0.07);
+
+  /* semantic */
+  --domus-success: #4f7f52;
+  --domus-warning: #b7791f;
+  --domus-danger: #b83a4b;
+  --domus-info: #4a6fa5;
+
+  /* glass */
+  --domus-glass: rgba(255, 255, 255, 0.55);
+  --domus-glass-strong: rgba(255, 255, 255, 0.72);
+  --domus-glass-edge: rgba(255, 255, 255, 0.65);
+  --domus-glass-blur: 16px;
+  --domus-glass-shadow: 0 4px 24px rgba(120, 60, 30, 0.08);
+
+  /* backdrop: warm blobs so the blur is visible */
+  --domus-page-bg:
+    radial-gradient(
+      900px 520px at 8% -8%,
+      rgba(217, 130, 91, 0.28),
+      transparent 60%
+    ),
+    radial-gradient(
+      760px 520px at 100% 0%,
+      rgba(240, 190, 120, 0.24),
+      transparent 60%
+    ),
+    radial-gradient(
+      800px 600px at 50% 110%,
+      rgba(194, 96, 58, 0.12),
+      transparent 60%
+    ),
+    var(--domus-bg);
+
+  /* shape + density */
+  --domus-radius-sm: 6px;
+  --domus-radius: 10px;
+  --domus-radius-lg: 14px;
+  --domus-space-1: 4px;
+  --domus-space-2: 8px;
+  --domus-space-3: 12px;
+  --domus-space-4: 16px;
+  --domus-space-5: 24px;
+  --domus-font:
+    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --domus-font-size: 13px;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --domus-brand: #e08a66;
+  --domus-primary: #e08a66;
+  --domus-primary-hover: #eba283;
+  --domus-primary-active: #c9714d;
+  --domus-on-primary: #2a140b;
+  --domus-tint: rgba(224, 138, 102, 0.16);
+  --domus-tint-hover: rgba(224, 138, 102, 0.24);
+  --domus-tint-text: #f4c4ae;
+
+  --domus-bg: #1c1713;
+  --domus-text: #f3eae2;
+  --domus-text-secondary: rgba(243, 234, 226, 0.68);
+  --domus-text-muted: rgba(243, 234, 226, 0.42);
+  --domus-border: rgba(243, 234, 226, 0.14);
+  --domus-border-soft: rgba(243, 234, 226, 0.08);
+
+  --domus-success: #7fb382;
+  --domus-warning: #e0b04f;
+  --domus-danger: #e0707f;
+  --domus-info: #82a6d6;
+
+  --domus-glass: rgba(255, 255, 255, 0.06);
+  --domus-glass-strong: rgba(255, 255, 255, 0.1);
+  --domus-glass-edge: rgba(255, 255, 255, 0.12);
+  --domus-glass-shadow: 0 4px 28px rgba(0, 0, 0, 0.35);
+
+  --domus-page-bg:
+    radial-gradient(
+      900px 520px at 8% -8%,
+      rgba(224, 138, 102, 0.16),
+      transparent 60%
+    ),
+    radial-gradient(
+      760px 520px at 100% 0%,
+      rgba(214, 160, 90, 0.1),
+      transparent 60%
+    ),
+    var(--domus-bg);
+}
+
+html,
+body {
+  min-height: 100%;
+  font-family: var(--domus-font);
+  font-size: var(--domus-font-size);
+  color: var(--domus-text);
+  background: var(--domus-page-bg);
+  background-attachment: fixed;
+}
+
+/* ---- glass ---- */
+
+.glass,
+.ant-card,
+.ant-modal-content,
+.ant-drawer-content,
+.ant-popover-inner,
+.ant-dropdown-menu,
+.ant-select-dropdown,
+.ant-picker-dropdown .ant-picker-panel-container {
+  background: var(--domus-glass);
+  border: 1px solid var(--domus-glass-edge);
+  box-shadow: var(--domus-glass-shadow);
+  -webkit-backdrop-filter: blur(var(--domus-glass-blur)) saturate(140%);
+  backdrop-filter: blur(var(--domus-glass-blur)) saturate(140%);
+}
+
+/* overlays + chrome: denser so text stays readable */
+.glass-strong,
+.ant-modal-content,
+.ant-drawer-content,
+.ant-popover-inner,
+.ant-dropdown-menu,
+.ant-select-dropdown,
+.ant-layout-header,
+.ant-layout-sider {
+  background: var(--domus-glass-strong);
+}
+
+.ant-layout-header,
+.ant-layout-sider {
+  border-color: var(--domus-glass-edge);
+  -webkit-backdrop-filter: blur(var(--domus-glass-blur)) saturate(140%);
+  backdrop-filter: blur(var(--domus-glass-blur)) saturate(140%);
+}
+
+/* no nesting: glass inside glass is not blurred again */
+.glass .glass,
+.ant-card .ant-card,
+.ant-modal-content .ant-card {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+/* fallback when blur is unsupported or the user prefers reduced transparency */
+@supports not (
+    (backdrop-filter: blur(1px)) or
+    (-webkit-backdrop-filter: blur(1px))
+  ) {
+  .glass,
+  .glass-strong,
+  .ant-card,
+  .ant-modal-content,
+  .ant-drawer-content,
+  .ant-popover-inner,
+  .ant-dropdown-menu,
+  .ant-select-dropdown,
+  .ant-layout-header,
+  .ant-layout-sider {
+    background: var(--domus-bg);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass,
+  .glass-strong,
+  .ant-card,
+  .ant-modal-content,
+  .ant-drawer-content,
+  .ant-popover-inner,
+  .ant-dropdown-menu,
+  .ant-select-dropdown,
+  .ant-layout-header,
+  .ant-layout-sider {
+    background: var(--domus-bg);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
