@@ -1,6 +1,6 @@
-import { Button, Empty } from "antd";
 import { data } from "react-router";
 import { ControlPanel } from "~/shared/layout/ControlPanel";
+import { UnderConstruction } from "~/shared/layout/UnderConstruction";
 import { findMenuItem, getModule, modulePath } from "~/shared/modules/registry";
 import { useActiveModule } from "~/shared/modules/useActiveModule";
 import type { Route } from "../../routes/+types/_app.$moduleId.$page";
@@ -38,16 +38,12 @@ export default function ModulePage() {
           ...(activeItem.group ? [{ title: activeItem.group }] : []),
           { title: activeItem.label },
         ]}
-        searchPlaceholder={`Cari di ${activeItem.label.toLowerCase()}`}
-        actions={<Button type="primary">Buat baru</Button>}
       />
       <section className="mx-auto w-full max-w-5xl px-4 py-5">
-        <div className="glass grid place-items-center p-10">
-          <Empty
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description={`Halaman ${activeItem.label} belum dibuat.`}
-          />
-        </div>
+        <UnderConstruction
+          title={activeItem.label}
+          backTo={modulePath(activeModule.id)}
+        />
       </section>
     </>
   );
