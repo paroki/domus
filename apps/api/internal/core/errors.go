@@ -1,0 +1,8 @@
+package core
+
+import "errors"
+
+var (
+	ErrItemNotFound = errors.New("NOT_FOUND")
+	ErrInvalidID    = errors.New("INVALID_ID")
+)
