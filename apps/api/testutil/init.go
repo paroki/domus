@@ -66,6 +66,7 @@ func init() {
 		Config:   cfg,
 		Log:      logger,
 		Ent:      entClient,
+		Authz:    config.GetAuthz(entClient),
 	}
 
 	config.Bootstrap(state)

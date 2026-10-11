@@ -806,7 +806,7 @@ type MembershipMutation struct {
 	scope_type    *membership.ScopeType
 	scope_id      *int64
 	addscope_id   *int64
-	role          *membership.Role
+	role          *string
 	created_at    *time.Time
 	clearedFields map[string]struct{}
 	done          bool
@@ -1041,12 +1041,12 @@ func (m *MembershipMutation) ResetScopeID() {
 }
 
 // SetRole sets the "role" field.
-func (m *MembershipMutation) SetRole(value membership.Role) {
-	m.role = &value
+func (m *MembershipMutation) SetRole(s string) {
+	m.role = &s
 }
 
 // Role returns the value of the "role" field in the mutation.
-func (m *MembershipMutation) Role() (r membership.Role, exists bool) {
+func (m *MembershipMutation) Role() (r string, exists bool) {
 	v := m.role
 	if v == nil {
 		return
@@ -1057,7 +1057,7 @@ func (m *MembershipMutation) Role() (r membership.Role, exists bool) {
 // OldRole returns the old "role" field's value of the Membership entity.
 // If the Membership object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *MembershipMutation) OldRole(ctx context.Context) (v membership.Role, err error) {
+func (m *MembershipMutation) OldRole(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldRole is only allowed on UpdateOne operations")
 	}
@@ -1230,7 +1230,7 @@ func (m *MembershipMutation) SetField(name string, value ent.Value) error {
 		m.SetScopeID(v)
 		return nil
 	case membership.FieldRole:
-		v, ok := value.(membership.Role)
+		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}

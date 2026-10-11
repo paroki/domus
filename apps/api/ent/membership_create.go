@@ -41,7 +41,7 @@ func (_c *MembershipCreate) SetScopeID(v int64) *MembershipCreate {
 }
 
 // SetRole sets the "role" field.
-func (_c *MembershipCreate) SetRole(v membership.Role) *MembershipCreate {
+func (_c *MembershipCreate) SetRole(v string) *MembershipCreate {
 	_c.mutation.SetRole(v)
 	return _c
 }
@@ -179,7 +179,7 @@ func (_c *MembershipCreate) createSpec() (*Membership, *sqlgraph.CreateSpec) {
 		_node.ScopeID = value
 	}
 	if value, ok := _c.mutation.Role(); ok {
-		_spec.SetField(membership.FieldRole, field.TypeEnum, value)
+		_spec.SetField(membership.FieldRole, field.TypeString, value)
 		_node.Role = value
 	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
@@ -281,7 +281,7 @@ func (u *MembershipUpsert) AddScopeID(v int64) *MembershipUpsert {
 }
 
 // SetRole sets the "role" field.
-func (u *MembershipUpsert) SetRole(v membership.Role) *MembershipUpsert {
+func (u *MembershipUpsert) SetRole(v string) *MembershipUpsert {
 	u.Set(membership.FieldRole, v)
 	return u
 }
@@ -387,7 +387,7 @@ func (u *MembershipUpsertOne) UpdateScopeID() *MembershipUpsertOne {
 }
 
 // SetRole sets the "role" field.
-func (u *MembershipUpsertOne) SetRole(v membership.Role) *MembershipUpsertOne {
+func (u *MembershipUpsertOne) SetRole(v string) *MembershipUpsertOne {
 	return u.Update(func(s *MembershipUpsert) {
 		s.SetRole(v)
 	})
@@ -661,7 +661,7 @@ func (u *MembershipUpsertBulk) UpdateScopeID() *MembershipUpsertBulk {
 }
 
 // SetRole sets the "role" field.
-func (u *MembershipUpsertBulk) SetRole(v membership.Role) *MembershipUpsertBulk {
+func (u *MembershipUpsertBulk) SetRole(v string) *MembershipUpsertBulk {
 	return u.Update(func(s *MembershipUpsert) {
 		s.SetRole(v)
 	})

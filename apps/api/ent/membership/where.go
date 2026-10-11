@@ -64,6 +64,11 @@ func ScopeID(v int64) predicate.Membership {
 	return predicate.Membership(sql.FieldEQ(FieldScopeID, v))
 }
 
+// Role applies equality check predicate on the "role" field. It's identical to RoleEQ.
+func Role(v string) predicate.Membership {
+	return predicate.Membership(sql.FieldEQ(FieldRole, v))
+}
+
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.Membership {
 	return predicate.Membership(sql.FieldEQ(FieldCreatedAt, v))
@@ -195,23 +200,68 @@ func ScopeIDLTE(v int64) predicate.Membership {
 }
 
 // RoleEQ applies the EQ predicate on the "role" field.
-func RoleEQ(v Role) predicate.Membership {
+func RoleEQ(v string) predicate.Membership {
 	return predicate.Membership(sql.FieldEQ(FieldRole, v))
 }
 
 // RoleNEQ applies the NEQ predicate on the "role" field.
-func RoleNEQ(v Role) predicate.Membership {
+func RoleNEQ(v string) predicate.Membership {
 	return predicate.Membership(sql.FieldNEQ(FieldRole, v))
 }
 
 // RoleIn applies the In predicate on the "role" field.
-func RoleIn(vs ...Role) predicate.Membership {
+func RoleIn(vs ...string) predicate.Membership {
 	return predicate.Membership(sql.FieldIn(FieldRole, vs...))
 }
 
 // RoleNotIn applies the NotIn predicate on the "role" field.
-func RoleNotIn(vs ...Role) predicate.Membership {
+func RoleNotIn(vs ...string) predicate.Membership {
 	return predicate.Membership(sql.FieldNotIn(FieldRole, vs...))
+}
+
+// RoleGT applies the GT predicate on the "role" field.
+func RoleGT(v string) predicate.Membership {
+	return predicate.Membership(sql.FieldGT(FieldRole, v))
+}
+
+// RoleGTE applies the GTE predicate on the "role" field.
+func RoleGTE(v string) predicate.Membership {
+	return predicate.Membership(sql.FieldGTE(FieldRole, v))
+}
+
+// RoleLT applies the LT predicate on the "role" field.
+func RoleLT(v string) predicate.Membership {
+	return predicate.Membership(sql.FieldLT(FieldRole, v))
+}
+
+// RoleLTE applies the LTE predicate on the "role" field.
+func RoleLTE(v string) predicate.Membership {
+	return predicate.Membership(sql.FieldLTE(FieldRole, v))
+}
+
+// RoleContains applies the Contains predicate on the "role" field.
+func RoleContains(v string) predicate.Membership {
+	return predicate.Membership(sql.FieldContains(FieldRole, v))
+}
+
+// RoleHasPrefix applies the HasPrefix predicate on the "role" field.
+func RoleHasPrefix(v string) predicate.Membership {
+	return predicate.Membership(sql.FieldHasPrefix(FieldRole, v))
+}
+
+// RoleHasSuffix applies the HasSuffix predicate on the "role" field.
+func RoleHasSuffix(v string) predicate.Membership {
+	return predicate.Membership(sql.FieldHasSuffix(FieldRole, v))
+}
+
+// RoleEqualFold applies the EqualFold predicate on the "role" field.
+func RoleEqualFold(v string) predicate.Membership {
+	return predicate.Membership(sql.FieldEqualFold(FieldRole, v))
+}
+
+// RoleContainsFold applies the ContainsFold predicate on the "role" field.
+func RoleContainsFold(v string) predicate.Membership {
+	return predicate.Membership(sql.FieldContainsFold(FieldRole, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/paroki/domus/api/internal/core"
 	"github.com/paroki/domus/api/internal/modules/unit/model"
+	"github.com/paroki/domus/api/internal/platform/authz"
 	"github.com/paroki/domus/api/testutil"
 	"github.com/stretchr/testify/suite"
 )
@@ -17,7 +18,7 @@ type ParishSuite struct {
 
 func (s *ParishSuite) SetupTest() {
 	s.ApiTestSuite.SetupTest()
-	s.User.Roles = []core.UserRole{core.UserRoleSuperadmin}
+	s.GrantRole(authz.RoleSuperadmin, authz.System)
 }
 
 func (s *ParishSuite) createDiocese(name string) model.DioceseResponse {
@@ -167,7 +168,8 @@ func (s *ParishSuite) TestDelete_NotFound() {
 }
 
 func (s *ParishSuite) TestForbidden_NoPermission() {
-	s.User.Roles = []core.UserRole{core.UserRoleUser}
+	// new user without any membership
+	s.User.ID = core.GenerateID()
 
 	s.Request("/parishes", fiber.MethodGet, nil)
 	s.AssertStatus(fiber.StatusForbidden)

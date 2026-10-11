@@ -46,6 +46,10 @@ func init() {
 	membershipDescScopeID := membershipFields[2].Descriptor()
 	// membership.ScopeIDValidator is a validator for the "scope_id" field. It is called by the builders before save.
 	membership.ScopeIDValidator = membershipDescScopeID.Validators[0].(func(int64) error)
+	// membershipDescRole is the schema descriptor for role field.
+	membershipDescRole := membershipFields[3].Descriptor()
+	// membership.RoleValidator is a validator for the "role" field. It is called by the builders before save.
+	membership.RoleValidator = membershipDescRole.Validators[0].(func(string) error)
 	// membershipDescCreatedAt is the schema descriptor for created_at field.
 	membershipDescCreatedAt := membershipFields[4].Descriptor()
 	// membership.DefaultCreatedAt holds the default value on creation for the created_at field.

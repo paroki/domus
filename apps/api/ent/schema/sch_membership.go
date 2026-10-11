@@ -14,13 +14,9 @@ type Membership struct{ ent.Schema }
 func (Membership) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("user_id").NotEmpty(), // = auth.user.id (text), tanpa FK
-		field.Enum("scope_type").Values("diocese", "parish", "unit"),
-		field.Int64("scope_id").Positive(),
-		field.Enum("role").Values(
-			"admin",
-			"writer",
-			"reader",
-		),
+		field.Enum("scope_type").Values("system", "diocese", "parish", "unit"),
+		field.Int64("scope_id").NonNegative(), // 0 for scope_type=system
+		field.String("role").NotEmpty(), // e.g. superadmin, finance-writer
 		field.Time("created_at").Default(time.Now).Immutable(),
 	}
 }

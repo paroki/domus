@@ -24,7 +24,7 @@ type Membership struct {
 	// ScopeID holds the value of the "scope_id" field.
 	ScopeID int64 `json:"scope_id,omitempty"`
 	// Role holds the value of the "role" field.
-	Role membership.Role `json:"role,omitempty"`
+	Role string `json:"role,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt    time.Time `json:"created_at,omitempty"`
 	selectValues sql.SelectValues
@@ -84,7 +84,7 @@ func (_m *Membership) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field role", values[i])
 			} else if value.Valid {
-				_m.Role = membership.Role(value.String)
+				_m.Role = value.String
 			}
 		case membership.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -138,7 +138,7 @@ func (_m *Membership) String() string {
 	builder.WriteString(fmt.Sprintf("%v", _m.ScopeID))
 	builder.WriteString(", ")
 	builder.WriteString("role=")
-	builder.WriteString(fmt.Sprintf("%v", _m.Role))
+	builder.WriteString(_m.Role)
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))

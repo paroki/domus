@@ -41,9 +41,9 @@ var (
 	MembershipsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "user_id", Type: field.TypeString},
-		{Name: "scope_type", Type: field.TypeEnum, Enums: []string{"diocese", "parish", "unit"}},
+		{Name: "scope_type", Type: field.TypeEnum, Enums: []string{"system", "diocese", "parish", "unit"}},
 		{Name: "scope_id", Type: field.TypeInt64},
-		{Name: "role", Type: field.TypeEnum, Enums: []string{"admin", "writer", "reader"}},
+		{Name: "role", Type: field.TypeString},
 		{Name: "created_at", Type: field.TypeTime},
 	}
 	// MembershipsTable holds the schema information for the "memberships" table.

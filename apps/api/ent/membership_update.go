@@ -78,13 +78,13 @@ func (_u *MembershipUpdate) AddScopeID(v int64) *MembershipUpdate {
 }
 
 // SetRole sets the "role" field.
-func (_u *MembershipUpdate) SetRole(v membership.Role) *MembershipUpdate {
+func (_u *MembershipUpdate) SetRole(v string) *MembershipUpdate {
 	_u.mutation.SetRole(v)
 	return _u
 }
 
 // SetNillableRole sets the "role" field if the given value is not nil.
-func (_u *MembershipUpdate) SetNillableRole(v *membership.Role) *MembershipUpdate {
+func (_u *MembershipUpdate) SetNillableRole(v *string) *MembershipUpdate {
 	if v != nil {
 		_u.SetRole(*v)
 	}
@@ -173,7 +173,7 @@ func (_u *MembershipUpdate) sqlSave(ctx context.Context) (_node int, err error) 
 		_spec.AddField(membership.FieldScopeID, field.TypeInt64, value)
 	}
 	if value, ok := _u.mutation.Role(); ok {
-		_spec.SetField(membership.FieldRole, field.TypeEnum, value)
+		_spec.SetField(membership.FieldRole, field.TypeString, value)
 	}
 	_spec.Node.Schema = _u.schemaConfig.Membership
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
@@ -247,13 +247,13 @@ func (_u *MembershipUpdateOne) AddScopeID(v int64) *MembershipUpdateOne {
 }
 
 // SetRole sets the "role" field.
-func (_u *MembershipUpdateOne) SetRole(v membership.Role) *MembershipUpdateOne {
+func (_u *MembershipUpdateOne) SetRole(v string) *MembershipUpdateOne {
 	_u.mutation.SetRole(v)
 	return _u
 }
 
 // SetNillableRole sets the "role" field if the given value is not nil.
-func (_u *MembershipUpdateOne) SetNillableRole(v *membership.Role) *MembershipUpdateOne {
+func (_u *MembershipUpdateOne) SetNillableRole(v *string) *MembershipUpdateOne {
 	if v != nil {
 		_u.SetRole(*v)
 	}
@@ -372,7 +372,7 @@ func (_u *MembershipUpdateOne) sqlSave(ctx context.Context) (_node *Membership, 
 		_spec.AddField(membership.FieldScopeID, field.TypeInt64, value)
 	}
 	if value, ok := _u.mutation.Role(); ok {
-		_spec.SetField(membership.FieldRole, field.TypeEnum, value)
+		_spec.SetField(membership.FieldRole, field.TypeString, value)
 	}
 	_spec.Node.Schema = _u.schemaConfig.Membership
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
