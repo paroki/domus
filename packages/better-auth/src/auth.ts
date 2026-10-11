@@ -1,12 +1,6 @@
 import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
 import { betterAuth } from "better-auth";
-import {
-  admin,
-  jwt,
-  openAPI,
-  organization,
-  testUtils,
-} from "better-auth/plugins";
+import { admin, jwt, openAPI, testUtils } from "better-auth/plugins";
 import { authEnv } from "./authEnv";
 import { authDB, schema } from "./drizzle";
 import { socialProviders } from "./options/socialProviders";
@@ -22,14 +16,6 @@ export const auth = betterAuth({
   }),
   plugins: [
     admin(),
-    organization({
-      teams: {
-        enabled: true,
-        defaultTeam: {
-          enabled: false,
-        },
-      },
-    }),
     jwt(),
     openAPI(),
     ...(process.env.E2E === "true" || process.env.NODE_ENV === "test"
