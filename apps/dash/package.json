@@ -9,6 +9,7 @@
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
+    "@domus/openapi": "workspace:*",
     "@ant-design/icons": "^6.3.4",
     "@domus/better-auth": "workspace:*",
     "@react-router/fs-routes": "^8.4.0",
