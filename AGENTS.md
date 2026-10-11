@@ -79,8 +79,7 @@ Regenerate and commit them in the same change as their source. After changing Sw
 - Responses and errors go through `internal/platform/httpx` (`{data, meta}` / `{error, meta}`); never leak internal error text to clients.
 - Protect routes with `httpx.RequirePermission(enforcer, scope, resource, action)`; add new resources in `internal/platform/authz/resource.go`.
 - IDs are UUIDv7 via the shared ID mixin; writes use the transaction helper in `internal/platform/database`.
-- Every handler needs Swaggo annotations (`@Summary`, `@Tags`, `@Security BearerAuth`, `@Success`, `@Failure`, `@Router`).
-- Tests use testify suites; `testutil` boots the app with an in-memory SQLite Ent client (needs CGO) and a mock JWKS server on a fixed port, so don't parallelize packages that share it.
+- Tests use testify suites; `testutil` boots the app with an in-memory SQLite Ent client (needs CGO) and an ephemeral mock JWKS server.
 
 ### apps/dash (React Router SPA)
 - Framework mode with `ssr: false`: use `clientLoader`/`clientAction`, never server loaders.
