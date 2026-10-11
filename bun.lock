@@ -36,6 +36,7 @@
       "dependencies": {
         "@ant-design/icons": "^6.3.4",
         "@domus/better-auth": "workspace:*",
+        "@domus/openapi": "workspace:*",
         "@react-router/fs-routes": "^8.4.0",
         "@react-router/node": "^8.4.0",
         "@react-router/serve": "^8.4.0",
@@ -95,6 +96,13 @@
         "tsx": "^4.23.15",
         "vite-tsconfig-paths": "^6.1.1",
         "vitest": "^5.0.3",
+      },
+    },
+    "packages/openapi": {
+      "name": "@domus/openapi",
+      "version": "0.0.0",
+      "devDependencies": {
+        "@domus/tsconfig": "workspace:*",
       },
     },
     "packages/tsconfig": {
@@ -264,6 +272,8 @@
     "@domus/dash": ["@domus/dash@workspace:apps/dash"],
 
     "@domus/e2e": ["@domus/e2e@workspace:e2e"],
+
+    "@domus/openapi": ["@domus/openapi@workspace:packages/openapi"],
 
     "@domus/tsconfig": ["@domus/tsconfig@workspace:packages/tsconfig"],
 

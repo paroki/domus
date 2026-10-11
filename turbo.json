@@ -13,15 +13,20 @@
       "persistent": true
     },
     "@domus/better-auth#db:studio": {},
+    "@domus/api#oa:gen": {
+      "inputs": ["internal/**/*.go"],
+      "outputs": ["docs/*"]
+    },
+    "api:gen": {
+      "dependsOn": ["@domus/api#oa:gen"],
+      "cache": false,
+      "persistent": true
+    },
     "db:push": {
       "cache": false,
       "persistent": true
     },
     "db:studio": {
-      "cache": false,
-      "persistent": true
-    },
-    "oa:gen": {
       "cache": false,
       "persistent": true
     },
