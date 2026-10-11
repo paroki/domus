@@ -16,8 +16,8 @@ import type { DomusModule, FlatMenuItem, ModuleMenuItem, TKey } from "./types";
  *
  * Tambah modul baru cukup dengan menambah satu entri di sini: launcher,
  * navbar, dan halaman placeholder-nya otomatis ikut. Kalau modul sudah
- * punya halaman sungguhan, bikin route statis `app/routes/_app.<id>.<slug>.tsx`
- * (route statis menang atas route dinamis `$moduleId/$page`).
+ * punya halaman sungguhan, bikin `features/<Modul>/routes.ts` lalu daftarkan
+ * di `app/routes.ts` (route modul menang atas route dinamis `$moduleId/$page`).
  *
  * Belum ada filter role: semua modul dan menu tampil untuk semua user.
  */

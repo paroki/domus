@@ -3,7 +3,7 @@ import i18n from "~/i18n";
 import { ControlPanel } from "~/shared/layout/ControlPanel";
 import { UnderConstruction } from "~/shared/layout/UnderConstruction";
 import { modulePath } from "~/shared/modules/registry";
-import type { Route } from "../../../routes/+types/_app.sys.diocese";
+import type { Route } from "./+types/DioceseListPage";
 
 export function meta(_: Route.MetaArgs) {
   return [
