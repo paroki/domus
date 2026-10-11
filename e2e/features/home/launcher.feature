@@ -6,9 +6,10 @@ Feature: Launcher
   Scenario: Show all modules
     When I open "/"
     Then I should see the launcher
-    And I should see modules "Website, Sakramen, Keuangan, Umat, Kegiatan"
+    And I should see modules "Sistem, Website, Sakramen, Keuangan, Umat, Kegiatan"
 
   Scenario: Open a module
     When I open "/"
     And I click module "Keuangan"
-    Then I should be on "/keuangan"
+    Then I should be on "/fin"
+
