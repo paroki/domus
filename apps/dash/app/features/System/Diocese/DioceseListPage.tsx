@@ -3,14 +3,18 @@ import { Button, message, Popconfirm, Space, Table, Tooltip } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link, useNavigate } from "react-router";
 import i18n from "~/i18n";
 import { ControlPanel } from "~/shared/layout/ControlPanel";
 import { modulePath } from "~/shared/modules/registry";
-import type { Route } from "./+types/DioceseListPage";
-import { DioceseFormModal } from "./DioceseFormModal";
-import { type Diocese, useDioceses } from "./useDioceses";
+import {
+  type ApiError,
+  type Diocese,
+  useDeleteDioceseMutation,
+  useDiocesesListQuery,
+} from "./useDioceseQueries";
 
-export function meta(_: Route.MetaArgs) {
+export function meta() {
   return [
     {
       title: `${i18n.t("modules.sys.menu.diocese")} | ${i18n.t("modules.sys.name")} | Domus`,
@@ -21,49 +25,36 @@ export function meta(_: Route.MetaArgs) {
 /** Daftar keuskupan dengan aksi tambah, ubah, dan hapus. */
 export default function DioceseListPage() {
   const { t, i18n: i18nInstance } = useTranslation();
+  const navigate = useNavigate();
   const [messageApi, messageContext] = message.useMessage();
-  const { items, loading, loadError, reload, create, update, remove } =
-    useDioceses();
+  const {
+    data: items = [],
+    isLoading: loading,
+    error: loadError,
+    refetch,
+  } = useDiocesesListQuery();
+  const deleteMutation = useDeleteDioceseMutation();
 
   const [search, setSearch] = useState("");
-  const [formOpen, setFormOpen] = useState(false);
-  const [editing, setEditing] = useState<Diocese | null>(null);
 
   const rows = useMemo(() => {
     const q = search.trim().toLowerCase();
     return q ? items.filter((d) => d.name?.toLowerCase().includes(q)) : items;
   }, [items, search]);
 
-  function openCreate() {
-    setEditing(null);
-    setFormOpen(true);
-  }
-
-  function openEdit(diocese: Diocese) {
-    setEditing(diocese);
-    setFormOpen(true);
-  }
-
-  async function handleSubmit(values: { name: string }) {
-    const result = editing?.id
-      ? await update(editing.id, values)
-      : await create(values);
-    if (result.ok) {
-      messageApi.success(editing ? t("diocese.updated") : t("diocese.created"));
-    }
-    return result;
-  }
-
   async function handleDelete(diocese: Diocese) {
     if (!diocese.id) return;
-    const result = await remove(diocese.id);
-    if (result.ok) messageApi.success(t("diocese.deleted"));
-    else
+    try {
+      await deleteMutation.mutateAsync(diocese.id);
+      messageApi.success(t("diocese.deleted"));
+    } catch (err: unknown) {
+      const apiErr = err as ApiError;
       messageApi.error(
-        result.status === 403
+        apiErr.status === 403
           ? t("diocese.forbidden")
           : t("diocese.deleteFailed"),
       );
+    }
   }
 
   const columns: ColumnsType<Diocese> = [
@@ -98,7 +89,9 @@ export default function DioceseListPage() {
               type="text"
               icon={<EditOutlined />}
               aria-label={t("common.edit")}
-              onClick={() => openEdit(diocese)}
+              onClick={() =>
+                navigate(modulePath("sys", `diocese/update/${diocese.id}`))
+              }
             />
           </Tooltip>
           <Popconfirm
@@ -133,9 +126,11 @@ export default function DioceseListPage() {
         searchPlaceholder={t("common.searchPlaceholder")}
         onSearch={setSearch}
         actions={
-          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
-            {t("diocese.add")}
-          </Button>
+          <Link to={modulePath("sys", "diocese/create")}>
+            <Button type="primary" icon={<PlusOutlined />}>
+              {t("diocese.add")}
+            </Button>
+          </Link>
         }
       />
       <section className="mx-auto w-full max-w-5xl px-4 py-5">
@@ -145,8 +140,12 @@ export default function DioceseListPage() {
             role="alert"
             style={{ color: "var(--ant-color-error)" }}
           >
-            <span>{t("diocese.loadFailed")}</span>
-            <Button size="small" onClick={() => void reload()}>
+            <span>
+              {loadError?.status === 403
+                ? t("diocese.forbidden")
+                : t("diocese.loadFailed")}
+            </span>
+            <Button size="small" onClick={() => void refetch()}>
               {t("common.reload")}
             </Button>
           </div>
@@ -161,12 +160,6 @@ export default function DioceseListPage() {
           locale={{ emptyText: t("diocese.empty") }}
         />
       </section>
-      <DioceseFormModal
-        open={formOpen}
-        diocese={editing}
-        onSubmit={handleSubmit}
-        onClose={() => setFormOpen(false)}
-      />
     </>
   );
 }

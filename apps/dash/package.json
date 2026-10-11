@@ -15,6 +15,7 @@
     "@react-router/fs-routes": "^8.4.0",
     "@react-router/node": "^8.4.0",
     "@react-router/serve": "^8.4.0",
+    "@tanstack/react-query": "^5.67.0",
     "antd": "^6.6.5",
     "i18next": "^26.4.2",
     "i18next-browser-languagedetector": "^8.2.1",

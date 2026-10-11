@@ -17,5 +17,8 @@ func GetAuthz(entcli *ent.Client) *authz.Enforcer {
 	if err := authz.LoadMemberships(context.Background(), entcli, e); err != nil {
 		log.Fatalf("failed loading memberships: %v", err)
 	}
+	e.SetLoader(func(ctx context.Context, userID string) error {
+		return authz.LoadUserMemberships(ctx, entcli, e, userID)
+	})
 	return e
 }

@@ -1,6 +1,7 @@
 package authz
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -8,7 +9,7 @@ import (
 
 func mustCan(t *testing.T, e *Enforcer, user string, scope Scope, obj Resource, act Action) bool {
 	t.Helper()
-	ok, err := e.Can(user, scope, obj, act)
+	ok, err := e.Can(context.Background(), user, scope, obj, act)
 	require.NoError(t, err)
 	return ok
 }

@@ -122,10 +122,15 @@ export function getAppServers(): AppServer[] {
       cwd: resolve(rootDir, "apps/api"),
       command: "go",
       args: ["run", "./cmd/api"],
-      url: process.env.API_URL ?? "http://localhost:8002",
-      checkUrl: `${process.env.API_URL ?? "http://localhost:8002"}/live`,
-      env: { ...cleanEnv },
-      enabled: process.env.E2E_START_API === "true",
+      url: env.apiUrl,
+      checkUrl: `${env.apiUrl}/live`,
+      env: {
+        ...cleanEnv,
+        API_PORT: new URL(env.apiUrl).port || "8002",
+        AUTH_URL: env.authUrl,
+        AUTH_JWKS_URL: `${env.authUrl}/jwks`,
+      },
+      enabled: env.startApi,
     },
   ];
 }

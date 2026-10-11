@@ -8,7 +8,7 @@ import {
 } from "@cucumber/cucumber";
 import { type Browser, chromium } from "@playwright/test";
 import { startApps, stopApps } from "./apps";
-import { removeUser } from "./auth";
+import { cleanTestDioceses, removeUser } from "./auth";
 import { env } from "./env";
 import type { DomusWorld } from "./world";
 
@@ -43,6 +43,7 @@ After(async function (this: DomusWorld, scenario) {
     this.attach(png, "image/png");
   }
   await this.context.close();
+  await cleanTestDioceses();
   for (const id of this.userIds) await removeUser(id);
   this.userIds = [];
 });

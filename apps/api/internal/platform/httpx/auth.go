@@ -16,7 +16,7 @@ func RequirePermission(e *authz.Enforcer, scope ScopeFunc, obj authz.Resource, a
 	return func(c fiber.Ctx) error {
 		user := core.UserFromContext(c)
 
-		ok, err := e.Can(user.ID.String(), scope(c), obj, act)
+		ok, err := e.Can(c.Context(), user.ID.String(), scope(c), obj, act)
 		if err != nil {
 			return err
 		}

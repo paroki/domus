@@ -1,6 +1,7 @@
 package authz
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/casbin/casbin/v2"
@@ -24,10 +25,18 @@ e = some(where (p.eft == allow))
 m = g(r.sub, p.sub, r.dom) && r.obj == p.obj && r.act == p.act
 `
 
+type MembershipLoader func(ctx context.Context, userID string) error
+
 // Enforcer wraps a casbin enforcer (RBAC with domain). It is safe for
 // concurrent use, so memberships can be added/removed at runtime.
 type Enforcer struct {
-	e *casbin.SyncedEnforcer
+	e      *casbin.SyncedEnforcer
+	loader MembershipLoader
+}
+
+// SetLoader sets the on-demand membership loader for runtime policy sync.
+func (e *Enforcer) SetLoader(loader MembershipLoader) {
+	e.loader = loader
 }
 
 // New builds an enforcer with the static policies loaded.
@@ -51,8 +60,17 @@ func New() (*Enforcer, error) {
 }
 
 // Can reports whether userID may perform act on obj within scope.
-func (e *Enforcer) Can(userID string, scope Scope, obj Resource, act Action) (bool, error) {
-	return e.e.Enforce(userID, scope.Domain(), string(obj), string(act))
+func (e *Enforcer) Can(ctx context.Context, userID string, scope Scope, obj Resource, act Action) (bool, error) {
+	ok, err := e.e.Enforce(userID, scope.Domain(), string(obj), string(act))
+	if err != nil {
+		return false, err
+	}
+	if !ok && e.loader != nil {
+		if err := e.loader(ctx, userID); err == nil {
+			return e.e.Enforce(userID, scope.Domain(), string(obj), string(act))
+		}
+	}
+	return ok, nil
 }
 
 // AddMembership registers user -> role in scope. Call after the

@@ -9,6 +9,8 @@ import { prefix, type RouteConfigEntry, route } from "@react-router/dev/routes";
  */
 export const systemRoutes: RouteConfigEntry[] = prefix("sys", [
   route("diocese", "features/System/Diocese/DioceseListPage.tsx"),
+  route("diocese/create", "features/System/Diocese/DioceseCreatePage.tsx"),
+  route("diocese/update/:id", "features/System/Diocese/DioceseUpdatePage.tsx"),
   route("parish", "features/System/Parish/ParishListPage.tsx"),
   route("territorial", "features/System/Territorial/TerritorialListPage.tsx"),
 ]);

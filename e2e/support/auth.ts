@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 // NOTE: sesuaikan import ini dengan export instance auth di @domus/better-auth
-import { auth } from "@domus/better-auth/auth";
+import { auth, authDB } from "@domus/better-auth/auth";
+import { sql } from "drizzle-orm";
 import { env } from "./env";
 
 async function testHelpers() {
@@ -16,7 +17,9 @@ async function testHelpers() {
 /** Bikin user test di DB + cookie sesi siap pakai buat Playwright. */
 export async function createSession(overrides: Record<string, unknown> = {}) {
   const t = await testHelpers();
+  const id = (overrides.id as string) ?? randomUUID();
   const user = t.createUser({
+    id,
     email: `e2e-${randomUUID()}@example.com`,
     name: "E2E User",
     ...overrides,
@@ -32,4 +35,14 @@ export async function createSession(overrides: Record<string, unknown> = {}) {
 export async function removeUser(id: string) {
   const t = await testHelpers();
   await t.deleteUser(id);
+}
+
+export async function cleanTestDioceses() {
+  try {
+    await authDB.execute(
+      sql`DELETE FROM public.dioceses WHERE name LIKE 'E2E%'`,
+    );
+  } catch (err) {
+    console.error("[e2e] Failed to clean test dioceses:", err);
+  }
 }
