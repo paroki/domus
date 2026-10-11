@@ -1,1 +1,1 @@
-export { components, paths } from "./api";
+export type { components, paths } from "./api";
