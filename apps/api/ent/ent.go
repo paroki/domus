@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/paroki/domus/api/ent/diocese"
+	"github.com/paroki/domus/api/ent/membership"
 	"github.com/paroki/domus/api/ent/parish"
 	"github.com/paroki/domus/api/ent/parishioner"
 	"github.com/paroki/domus/api/ent/user"
@@ -77,6 +78,7 @@ func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			diocese.Table:     diocese.ValidColumn,
+			membership.Table:  membership.ValidColumn,
 			parish.Table:      parish.ValidColumn,
 			parishioner.Table: parishioner.ValidColumn,
 			user.Table:        user.ValidColumn,

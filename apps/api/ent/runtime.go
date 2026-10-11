@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/paroki/domus/api/ent/diocese"
+	"github.com/paroki/domus/api/ent/membership"
 	"github.com/paroki/domus/api/ent/schema"
 	"github.com/paroki/domus/api/ent/user"
 )
@@ -34,6 +35,20 @@ func init() {
 	dioceseDescName := dioceseFields[1].Descriptor()
 	// diocese.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	diocese.NameValidator = dioceseDescName.Validators[0].(func(string) error)
+	membershipFields := schema.Membership{}.Fields()
+	_ = membershipFields
+	// membershipDescUserID is the schema descriptor for user_id field.
+	membershipDescUserID := membershipFields[0].Descriptor()
+	// membership.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
+	membership.UserIDValidator = membershipDescUserID.Validators[0].(func(string) error)
+	// membershipDescScopeID is the schema descriptor for scope_id field.
+	membershipDescScopeID := membershipFields[2].Descriptor()
+	// membership.ScopeIDValidator is a validator for the "scope_id" field. It is called by the builders before save.
+	membership.ScopeIDValidator = membershipDescScopeID.Validators[0].(func(int64) error)
+	// membershipDescCreatedAt is the schema descriptor for created_at field.
+	membershipDescCreatedAt := membershipFields[4].Descriptor()
+	// membership.DefaultCreatedAt holds the default value on creation for the created_at field.
+	membership.DefaultCreatedAt = membershipDescCreatedAt.Default.(func() time.Time)
 	userMixin := schema.User{}.Mixin()
 	userMixinFields0 := userMixin[0].Fields()
 	_ = userMixinFields0

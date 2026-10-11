@@ -37,6 +37,38 @@ var (
 			},
 		},
 	}
+	// MembershipsColumns holds the columns for the "memberships" table.
+	MembershipsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "user_id", Type: field.TypeString},
+		{Name: "scope_type", Type: field.TypeEnum, Enums: []string{"diocese", "parish", "ward", "organization"}},
+		{Name: "scope_id", Type: field.TypeInt64},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"diocese_admin", "parish_admin", "ward_admin", "org_admin", "org_member"}},
+		{Name: "created_at", Type: field.TypeTime},
+	}
+	// MembershipsTable holds the schema information for the "memberships" table.
+	MembershipsTable = &schema.Table{
+		Name:       "memberships",
+		Columns:    MembershipsColumns,
+		PrimaryKey: []*schema.Column{MembershipsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "membership_user_id_scope_type_scope_id_role",
+				Unique:  true,
+				Columns: []*schema.Column{MembershipsColumns[1], MembershipsColumns[2], MembershipsColumns[3], MembershipsColumns[4]},
+			},
+			{
+				Name:    "membership_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{MembershipsColumns[1]},
+			},
+			{
+				Name:    "membership_scope_type_scope_id",
+				Unique:  false,
+				Columns: []*schema.Column{MembershipsColumns[2], MembershipsColumns[3]},
+			},
+		},
+	}
 	// ParishesColumns holds the columns for the "parishes" table.
 	ParishesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -83,6 +115,7 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		DiocesesTable,
+		MembershipsTable,
 		ParishesTable,
 		ParishionersTable,
 		UsersTable,

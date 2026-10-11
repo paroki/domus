@@ -8,6 +8,7 @@ import "context"
 // that can be passed at runtime.
 type SchemaConfig struct {
 	Diocese     string // Diocese table.
+	Membership  string // Membership table.
 	Parish      string // Parish table.
 	Parishioner string // Parishioner table.
 	User        string // User table.

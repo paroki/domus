@@ -14,6 +14,8 @@ type Tx struct {
 	config
 	// Diocese is the client for interacting with the Diocese builders.
 	Diocese *DioceseClient
+	// Membership is the client for interacting with the Membership builders.
+	Membership *MembershipClient
 	// Parish is the client for interacting with the Parish builders.
 	Parish *ParishClient
 	// Parishioner is the client for interacting with the Parishioner builders.
@@ -152,6 +154,7 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.Diocese = NewDioceseClient(tx.config)
+	tx.Membership = NewMembershipClient(tx.config)
 	tx.Parish = NewParishClient(tx.config)
 	tx.Parishioner = NewParishionerClient(tx.config)
 	tx.User = NewUserClient(tx.config)

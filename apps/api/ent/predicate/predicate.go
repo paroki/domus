@@ -9,6 +9,9 @@ import (
 // Diocese is the predicate function for diocese builders.
 type Diocese func(*sql.Selector)
 
+// Membership is the predicate function for membership builders.
+type Membership func(*sql.Selector)
+
 // Parish is the predicate function for parish builders.
 type Parish func(*sql.Selector)
 
