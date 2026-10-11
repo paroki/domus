@@ -52,7 +52,16 @@ export const en: typeof id = {
     },
   },
   modules: {
-    website: {
+    sys: {
+      name: "System",
+      description: "Master data: dioceses, parishes, and territorial areas.",
+      menu: {
+        diocese: "Dioceses",
+        parish: "Parishes",
+        territorial: "Territorial areas",
+      },
+    },
+    web: {
       name: "Website",
       description: "The parish public site: pages, news, and announcements.",
       menu: {
@@ -63,7 +72,7 @@ export const en: typeof id = {
         pengaturan: "Site settings",
       },
     },
-    sakramen: {
+    sacra: {
       name: "Sacraments",
       description: "Records and archive of parishioners' sacraments.",
       menu: {
@@ -74,7 +83,7 @@ export const en: typeof id = {
         laporan: "Reports",
       },
     },
-    keuangan: {
+    fin: {
       name: "Finance",
       description: "Cash, collections, and the parish budget.",
       groups: {
@@ -88,7 +97,7 @@ export const en: typeof id = {
         laporan: "Reports",
       },
     },
-    umat: {
+    par: {
       name: "Parishioners",
       description: "Parishioner, family, and neighborhood data.",
       menu: {
@@ -98,7 +107,7 @@ export const en: typeof id = {
         pengurus: "Committee",
       },
     },
-    kegiatan: {
+    act: {
       name: "Activities",
       description: "Calendar, Mass schedule, and parish events.",
       menu: {

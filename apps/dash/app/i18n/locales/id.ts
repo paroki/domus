@@ -52,7 +52,16 @@ export const id = {
     },
   },
   modules: {
-    website: {
+    sys: {
+      name: "Sistem",
+      description: "Data induk: keuskupan, paroki, dan wilayah teritorial.",
+      menu: {
+        diocese: "Keuskupan",
+        parish: "Paroki",
+        territorial: "Wilayah teritorial",
+      },
+    },
+    web: {
       name: "Website",
       description: "Situs publik paroki: halaman, berita, dan pengumuman.",
       menu: {
@@ -63,7 +72,7 @@ export const id = {
         pengaturan: "Pengaturan situs",
       },
     },
-    sakramen: {
+    sacra: {
       name: "Sakramen",
       description: "Pencatatan dan arsip sakramen umat.",
       menu: {
@@ -74,7 +83,7 @@ export const id = {
         laporan: "Laporan",
       },
     },
-    keuangan: {
+    fin: {
       name: "Keuangan",
       description: "Kas, kolekte, dan anggaran paroki.",
       groups: {
@@ -88,7 +97,7 @@ export const id = {
         laporan: "Laporan",
       },
     },
-    umat: {
+    par: {
       name: "Umat",
       description: "Data umat, keluarga, dan lingkungan.",
       menu: {
@@ -98,7 +107,7 @@ export const id = {
         pengurus: "Pengurus",
       },
     },
-    kegiatan: {
+    act: {
       name: "Kegiatan",
       description: "Kalender, jadwal misa, dan acara paroki.",
       menu: {
