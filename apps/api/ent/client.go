@@ -20,6 +20,7 @@ import (
 	"github.com/paroki/domus/api/ent/membership"
 	"github.com/paroki/domus/api/ent/parish"
 	"github.com/paroki/domus/api/ent/parishioner"
+	"github.com/paroki/domus/api/ent/unit"
 	"github.com/paroki/domus/api/ent/user"
 
 	"github.com/paroki/domus/api/ent/internal"
@@ -38,6 +39,8 @@ type Client struct {
 	Parish *ParishClient
 	// Parishioner is the client for interacting with the Parishioner builders.
 	Parishioner *ParishionerClient
+	// Unit is the client for interacting with the Unit builders.
+	Unit *UnitClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 }
@@ -55,6 +58,7 @@ func (c *Client) init() {
 	c.Membership = NewMembershipClient(c.config)
 	c.Parish = NewParishClient(c.config)
 	c.Parishioner = NewParishionerClient(c.config)
+	c.Unit = NewUnitClient(c.config)
 	c.User = NewUserClient(c.config)
 }
 
@@ -154,6 +158,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Membership:  NewMembershipClient(cfg),
 		Parish:      NewParishClient(cfg),
 		Parishioner: NewParishionerClient(cfg),
+		Unit:        NewUnitClient(cfg),
 		User:        NewUserClient(cfg),
 	}, nil
 }
@@ -178,6 +183,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Membership:  NewMembershipClient(cfg),
 		Parish:      NewParishClient(cfg),
 		Parishioner: NewParishionerClient(cfg),
+		Unit:        NewUnitClient(cfg),
 		User:        NewUserClient(cfg),
 	}, nil
 }
@@ -207,21 +213,21 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
-	c.Diocese.Use(hooks...)
-	c.Membership.Use(hooks...)
-	c.Parish.Use(hooks...)
-	c.Parishioner.Use(hooks...)
-	c.User.Use(hooks...)
+	for _, n := range []interface{ Use(...Hook) }{
+		c.Diocese, c.Membership, c.Parish, c.Parishioner, c.Unit, c.User,
+	} {
+		n.Use(hooks...)
+	}
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
-	c.Diocese.Intercept(interceptors...)
-	c.Membership.Intercept(interceptors...)
-	c.Parish.Intercept(interceptors...)
-	c.Parishioner.Intercept(interceptors...)
-	c.User.Intercept(interceptors...)
+	for _, n := range []interface{ Intercept(...Interceptor) }{
+		c.Diocese, c.Membership, c.Parish, c.Parishioner, c.Unit, c.User,
+	} {
+		n.Intercept(interceptors...)
+	}
 }
 
 // Mutate implements the ent.Mutator interface.
@@ -235,6 +241,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Parish.mutate(ctx, m)
 	case *ParishionerMutation:
 		return c.Parishioner.mutate(ctx, m)
+	case *UnitMutation:
+		return c.Unit.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
 	default:
@@ -850,6 +858,215 @@ func (c *ParishionerClient) mutate(ctx context.Context, m *ParishionerMutation) 
 	}
 }
 
+// UnitClient is a client for the Unit schema.
+type UnitClient struct {
+	config
+}
+
+// NewUnitClient returns a client for the Unit from the given config.
+func NewUnitClient(c config) *UnitClient {
+	return &UnitClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `unit.Hooks(f(g(h())))`.
+func (c *UnitClient) Use(hooks ...Hook) {
+	c.hooks.Unit = append(c.hooks.Unit, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `unit.Intercept(f(g(h())))`.
+func (c *UnitClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Unit = append(c.inters.Unit, interceptors...)
+}
+
+// Create returns a builder for creating a Unit entity.
+func (c *UnitClient) Create() *UnitCreate {
+	mutation := newUnitMutation(c.config, OpCreate)
+	return &UnitCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Unit entities.
+func (c *UnitClient) CreateBulk(builders ...*UnitCreate) *UnitCreateBulk {
+	return &UnitCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UnitClient) MapCreateBulk(slice any, setFunc func(*UnitCreate, int)) *UnitCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UnitCreateBulk{err: fmt.Errorf("calling to UnitClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UnitCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UnitCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Unit.
+func (c *UnitClient) Update() *UnitUpdate {
+	mutation := newUnitMutation(c.config, OpUpdate)
+	return &UnitUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UnitClient) UpdateOne(_m *Unit) *UnitUpdateOne {
+	mutation := newUnitMutation(c.config, OpUpdateOne, withUnit(_m))
+	return &UnitUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UnitClient) UpdateOneID(id int) *UnitUpdateOne {
+	mutation := newUnitMutation(c.config, OpUpdateOne, withUnitID(id))
+	return &UnitUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Unit.
+func (c *UnitClient) Delete() *UnitDelete {
+	mutation := newUnitMutation(c.config, OpDelete)
+	return &UnitDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UnitClient) DeleteOne(_m *Unit) *UnitDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UnitClient) DeleteOneID(id int) *UnitDeleteOne {
+	builder := c.Delete().Where(unit.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UnitDeleteOne{builder}
+}
+
+// Query returns a query builder for Unit.
+func (c *UnitClient) Query() *UnitQuery {
+	return &UnitQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUnit},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Unit entity by its id.
+func (c *UnitClient) Get(ctx context.Context, id int) (*Unit, error) {
+	return c.Query().Where(unit.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UnitClient) GetX(ctx context.Context, id int) *Unit {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryCreator queries the creator edge of a Unit.
+func (c *UnitClient) QueryCreator(_m *Unit) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(unit.Table, unit.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, unit.CreatorTable, unit.CreatorColumn),
+		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.User
+		step.Edge.Schema = schemaConfig.Unit
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUpdater queries the updater edge of a Unit.
+func (c *UnitClient) QueryUpdater(_m *Unit) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(unit.Table, unit.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, unit.UpdaterTable, unit.UpdaterColumn),
+		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.User
+		step.Edge.Schema = schemaConfig.Unit
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryParent queries the parent edge of a Unit.
+func (c *UnitClient) QueryParent(_m *Unit) *UnitQuery {
+	query := (&UnitClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(unit.Table, unit.FieldID, id),
+			sqlgraph.To(unit.Table, unit.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, unit.ParentTable, unit.ParentColumn),
+		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.Unit
+		step.Edge.Schema = schemaConfig.Unit
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryChildren queries the children edge of a Unit.
+func (c *UnitClient) QueryChildren(_m *Unit) *UnitQuery {
+	query := (&UnitClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(unit.Table, unit.FieldID, id),
+			sqlgraph.To(unit.Table, unit.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, unit.ChildrenTable, unit.ChildrenColumn),
+		)
+		schemaConfig := _m.schemaConfig
+		step.To.Schema = schemaConfig.Unit
+		step.Edge.Schema = schemaConfig.Unit
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *UnitClient) Hooks() []Hook {
+	return c.hooks.Unit
+}
+
+// Interceptors returns the client interceptors.
+func (c *UnitClient) Interceptors() []Interceptor {
+	return c.inters.Unit
+}
+
+func (c *UnitClient) mutate(ctx context.Context, m *UnitMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UnitCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UnitUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UnitUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UnitDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Unit mutation op: %q", m.Op())
+	}
+}
+
 // UserClient is a client for the User schema.
 type UserClient struct {
 	config
@@ -986,10 +1203,10 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Diocese, Membership, Parish, Parishioner, User []ent.Hook
+		Diocese, Membership, Parish, Parishioner, Unit, User []ent.Hook
 	}
 	inters struct {
-		Diocese, Membership, Parish, Parishioner, User []ent.Interceptor
+		Diocese, Membership, Parish, Parishioner, Unit, User []ent.Interceptor
 	}
 )
 

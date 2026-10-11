@@ -62,10 +62,9 @@ type ScopeType string
 
 // ScopeType values.
 const (
-	ScopeTypeDiocese      ScopeType = "diocese"
-	ScopeTypeParish       ScopeType = "parish"
-	ScopeTypeWard         ScopeType = "ward"
-	ScopeTypeOrganization ScopeType = "organization"
+	ScopeTypeDiocese ScopeType = "diocese"
+	ScopeTypeParish  ScopeType = "parish"
+	ScopeTypeUnit    ScopeType = "unit"
 )
 
 func (st ScopeType) String() string {
@@ -75,7 +74,7 @@ func (st ScopeType) String() string {
 // ScopeTypeValidator is a validator for the "scope_type" field enum values. It is called by the builders before save.
 func ScopeTypeValidator(st ScopeType) error {
 	switch st {
-	case ScopeTypeDiocese, ScopeTypeParish, ScopeTypeWard, ScopeTypeOrganization:
+	case ScopeTypeDiocese, ScopeTypeParish, ScopeTypeUnit:
 		return nil
 	default:
 		return fmt.Errorf("membership: invalid enum value for scope_type field: %q", st)
@@ -87,11 +86,9 @@ type Role string
 
 // Role values.
 const (
-	RoleDioceseAdmin Role = "diocese_admin"
-	RoleParishAdmin  Role = "parish_admin"
-	RoleWardAdmin    Role = "ward_admin"
-	RoleOrgAdmin     Role = "org_admin"
-	RoleOrgMember    Role = "org_member"
+	RoleAdmin  Role = "admin"
+	RoleWriter Role = "writer"
+	RoleReader Role = "reader"
 )
 
 func (r Role) String() string {
@@ -101,7 +98,7 @@ func (r Role) String() string {
 // RoleValidator is a validator for the "role" field enum values. It is called by the builders before save.
 func RoleValidator(r Role) error {
 	switch r {
-	case RoleDioceseAdmin, RoleParishAdmin, RoleWardAdmin, RoleOrgAdmin, RoleOrgMember:
+	case RoleAdmin, RoleWriter, RoleReader:
 		return nil
 	default:
 		return fmt.Errorf("membership: invalid enum value for role field: %q", r)

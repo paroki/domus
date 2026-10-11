@@ -9,6 +9,7 @@ import (
 	"github.com/paroki/domus/api/ent/diocese"
 	"github.com/paroki/domus/api/ent/membership"
 	"github.com/paroki/domus/api/ent/schema"
+	"github.com/paroki/domus/api/ent/unit"
 	"github.com/paroki/domus/api/ent/user"
 )
 
@@ -49,6 +50,25 @@ func init() {
 	membershipDescCreatedAt := membershipFields[4].Descriptor()
 	// membership.DefaultCreatedAt holds the default value on creation for the created_at field.
 	membership.DefaultCreatedAt = membershipDescCreatedAt.Default.(func() time.Time)
+	unitMixin := schema.Unit{}.Mixin()
+	unitMixinFields0 := unitMixin[0].Fields()
+	_ = unitMixinFields0
+	unitFields := schema.Unit{}.Fields()
+	_ = unitFields
+	// unitDescCreatedAt is the schema descriptor for createdAt field.
+	unitDescCreatedAt := unitMixinFields0[1].Descriptor()
+	// unit.DefaultCreatedAt holds the default value on creation for the createdAt field.
+	unit.DefaultCreatedAt = unitDescCreatedAt.Default.(func() time.Time)
+	// unitDescUpdatedAt is the schema descriptor for updatedAt field.
+	unitDescUpdatedAt := unitMixinFields0[3].Descriptor()
+	// unit.DefaultUpdatedAt holds the default value on creation for the updatedAt field.
+	unit.DefaultUpdatedAt = unitDescUpdatedAt.Default.(func() time.Time)
+	// unit.UpdateDefaultUpdatedAt holds the default value on update for the updatedAt field.
+	unit.UpdateDefaultUpdatedAt = unitDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// unitDescName is the schema descriptor for name field.
+	unitDescName := unitFields[1].Descriptor()
+	// unit.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	unit.NameValidator = unitDescName.Validators[0].(func(string) error)
 	userMixin := schema.User{}.Mixin()
 	userMixinFields0 := userMixin[0].Fields()
 	_ = userMixinFields0

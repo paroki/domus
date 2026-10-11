@@ -16,6 +16,7 @@ import (
 	"github.com/paroki/domus/api/ent/membership"
 	"github.com/paroki/domus/api/ent/parish"
 	"github.com/paroki/domus/api/ent/parishioner"
+	"github.com/paroki/domus/api/ent/unit"
 	"github.com/paroki/domus/api/ent/user"
 )
 
@@ -81,6 +82,7 @@ func checkColumn(t, c string) error {
 			membership.Table:  membership.ValidColumn,
 			parish.Table:      parish.ValidColumn,
 			parishioner.Table: parishioner.ValidColumn,
+			unit.Table:        unit.ValidColumn,
 			user.Table:        user.ValidColumn,
 		})
 	})

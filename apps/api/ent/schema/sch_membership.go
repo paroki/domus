@@ -14,7 +14,7 @@ type Membership struct{ ent.Schema }
 func (Membership) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("user_id").NotEmpty(), // = auth.user.id (text), tanpa FK
-		field.Enum("scope_type").Values("diocese", "parish", "org"),
+		field.Enum("scope_type").Values("diocese", "parish", "unit"),
 		field.Int64("scope_id").Positive(),
 		field.Enum("role").Values(
 			"admin",
