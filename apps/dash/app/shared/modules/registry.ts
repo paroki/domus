@@ -41,11 +41,11 @@ export const modules: readonly DomusModule[] = [
     icon: GlobalOutlined,
     color: "var(--domus-app-web)",
     menu: [
-      { label: "modules.web.menu.halaman", slug: "halaman" },
-      { label: "modules.web.menu.berita", slug: "berita" },
-      { label: "modules.web.menu.pengumuman", slug: "pengumuman" },
-      { label: "modules.web.menu.galeri", slug: "galeri" },
-      { label: "modules.web.menu.pengaturan", slug: "pengaturan" },
+      { label: "modules.web.menu.pages", slug: "pages" },
+      { label: "modules.web.menu.news", slug: "news" },
+      { label: "modules.web.menu.announcements", slug: "announcements" },
+      { label: "modules.web.menu.gallery", slug: "gallery" },
+      { label: "modules.web.menu.settings", slug: "settings" },
     ],
   },
   {
@@ -55,11 +55,11 @@ export const modules: readonly DomusModule[] = [
     icon: BookOutlined,
     color: "var(--domus-app-sacra)",
     menu: [
-      { label: "modules.sacra.menu.baptis", slug: "baptis" },
-      { label: "modules.sacra.menu.komuni-pertama", slug: "komuni-pertama" },
-      { label: "modules.sacra.menu.krisma", slug: "krisma" },
-      { label: "modules.sacra.menu.perkawinan", slug: "perkawinan" },
-      { label: "modules.sacra.menu.laporan", slug: "laporan" },
+      { label: "modules.sacra.menu.baptism", slug: "baptism" },
+      { label: "modules.sacra.menu.first-communion", slug: "first-communion" },
+      { label: "modules.sacra.menu.confirmation", slug: "confirmation" },
+      { label: "modules.sacra.menu.marriage", slug: "marriage" },
+      { label: "modules.sacra.menu.reports", slug: "reports" },
     ],
   },
   {
@@ -70,15 +70,15 @@ export const modules: readonly DomusModule[] = [
     color: "var(--domus-app-fin)",
     menu: [
       {
-        label: "modules.fin.groups.transaksi",
+        label: "modules.fin.groups.transactions",
         children: [
-          { label: "modules.fin.menu.penerimaan", slug: "penerimaan" },
-          { label: "modules.fin.menu.pengeluaran", slug: "pengeluaran" },
+          { label: "modules.fin.menu.income", slug: "income" },
+          { label: "modules.fin.menu.expenses", slug: "expenses" },
         ],
       },
-      { label: "modules.fin.menu.kolekte", slug: "kolekte" },
-      { label: "modules.fin.menu.anggaran", slug: "anggaran" },
-      { label: "modules.fin.menu.laporan", slug: "laporan" },
+      { label: "modules.fin.menu.collections", slug: "collections" },
+      { label: "modules.fin.menu.budget", slug: "budget" },
+      { label: "modules.fin.menu.reports", slug: "reports" },
     ],
   },
   {
@@ -88,10 +88,10 @@ export const modules: readonly DomusModule[] = [
     icon: TeamOutlined,
     color: "var(--domus-app-par)",
     menu: [
-      { label: "modules.par.menu.daftar", slug: "daftar" },
-      { label: "modules.par.menu.keluarga", slug: "keluarga" },
-      { label: "modules.par.menu.lingkungan", slug: "lingkungan" },
-      { label: "modules.par.menu.pengurus", slug: "pengurus" },
+      { label: "modules.par.menu.list", slug: "list" },
+      { label: "modules.par.menu.families", slug: "families" },
+      { label: "modules.par.menu.neighborhoods", slug: "neighborhoods" },
+      { label: "modules.par.menu.committee", slug: "committee" },
     ],
   },
   {
@@ -101,10 +101,10 @@ export const modules: readonly DomusModule[] = [
     icon: CalendarOutlined,
     color: "var(--domus-app-act)",
     menu: [
-      { label: "modules.act.menu.kalender", slug: "kalender" },
-      { label: "modules.act.menu.jadwal-misa", slug: "jadwal-misa" },
-      { label: "modules.act.menu.acara", slug: "acara" },
-      { label: "modules.act.menu.kepanitiaan", slug: "kepanitiaan" },
+      { label: "modules.act.menu.calendar", slug: "calendar" },
+      { label: "modules.act.menu.mass-schedule", slug: "mass-schedule" },
+      { label: "modules.act.menu.events", slug: "events" },
+      { label: "modules.act.menu.committees", slug: "committees" },
     ],
   },
 ];
