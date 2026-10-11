@@ -14,14 +14,12 @@ type Membership struct{ ent.Schema }
 func (Membership) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("user_id").NotEmpty(), // = auth.user.id (text), tanpa FK
-		field.Enum("scope_type").Values("diocese", "parish", "ward", "organization"),
+		field.Enum("scope_type").Values("diocese", "parish", "org"),
 		field.Int64("scope_id").Positive(),
 		field.Enum("role").Values(
-			"diocese_admin",
-			"parish_admin",
-			"ward_admin",
-			"org_admin",
-			"org_member",
+			"admin",
+			"writer",
+			"reader",
 		),
 		field.Time("created_at").Default(time.Now).Immutable(),
 	}
