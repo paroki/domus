@@ -2,7 +2,7 @@
 
 Guidance for AI coding agents working in the **Domus** monorepo (parish digital administration: diocese → parish → unit/lingkungan, multi-diocese).
 
-Human-facing docs live in [README.md](./README.md) (Indonesian). Visual rules for the dashboard live in [BRANDING.md](./BRANDING.md).
+Human-facing docs live in [README.md](./README.md). Visual rules for the dashboard live in [BRANDING.md](./BRANDING.md).
 
 ## Repo map
 
