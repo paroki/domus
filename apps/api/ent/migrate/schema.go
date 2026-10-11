@@ -37,6 +37,38 @@ var (
 			},
 		},
 	}
+	// MembershipsColumns holds the columns for the "memberships" table.
+	MembershipsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "user_id", Type: field.TypeString},
+		{Name: "scope_type", Type: field.TypeEnum, Enums: []string{"system", "diocese", "parish", "unit"}},
+		{Name: "scope_id", Type: field.TypeInt64},
+		{Name: "role", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+	}
+	// MembershipsTable holds the schema information for the "memberships" table.
+	MembershipsTable = &schema.Table{
+		Name:       "memberships",
+		Columns:    MembershipsColumns,
+		PrimaryKey: []*schema.Column{MembershipsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "membership_user_id_scope_type_scope_id_role",
+				Unique:  true,
+				Columns: []*schema.Column{MembershipsColumns[1], MembershipsColumns[2], MembershipsColumns[3], MembershipsColumns[4]},
+			},
+			{
+				Name:    "membership_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{MembershipsColumns[1]},
+			},
+			{
+				Name:    "membership_scope_type_scope_id",
+				Unique:  false,
+				Columns: []*schema.Column{MembershipsColumns[2], MembershipsColumns[3]},
+			},
+		},
+	}
 	// ParishesColumns holds the columns for the "parishes" table.
 	ParishesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -67,6 +99,43 @@ var (
 		Columns:    ParishionersColumns,
 		PrimaryKey: []*schema.Column{ParishionersColumns[0]},
 	}
+	// UnitsColumns holds the columns for the "units" table.
+	UnitsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString},
+		{Name: "created_by", Type: field.TypeUUID},
+		{Name: "updated_by", Type: field.TypeUUID},
+		{Name: "unit_children", Type: field.TypeInt, Nullable: true},
+	}
+	// UnitsTable holds the schema information for the "units" table.
+	UnitsTable = &schema.Table{
+		Name:       "units",
+		Columns:    UnitsColumns,
+		PrimaryKey: []*schema.Column{UnitsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "units_users_creator",
+				Columns:    []*schema.Column{UnitsColumns[5]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "units_users_updater",
+				Columns:    []*schema.Column{UnitsColumns[6]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "units_units_children",
+				Columns:    []*schema.Column{UnitsColumns[7]},
+				RefColumns: []*schema.Column{UnitsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -83,8 +152,10 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		DiocesesTable,
+		MembershipsTable,
 		ParishesTable,
 		ParishionersTable,
+		UnitsTable,
 		UsersTable,
 	}
 )
@@ -93,4 +164,7 @@ func init() {
 	DiocesesTable.ForeignKeys[0].RefTable = UsersTable
 	DiocesesTable.ForeignKeys[1].RefTable = UsersTable
 	ParishesTable.ForeignKeys[0].RefTable = DiocesesTable
+	UnitsTable.ForeignKeys[0].RefTable = UsersTable
+	UnitsTable.ForeignKeys[1].RefTable = UsersTable
+	UnitsTable.ForeignKeys[2].RefTable = UnitsTable
 }
