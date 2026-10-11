@@ -12,7 +12,7 @@ export abstract class BasePage {
   async expectPath(path: string) {
     await expect(this.page).toHaveURL(
       new RegExp(`${path.replace(/\//g, "\\/")}(\\?.*)?$`),
-      { timeout: 10_000 },
+      { timeout: 20_000 },
     );
   }
 }

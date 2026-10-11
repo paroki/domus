@@ -19,6 +19,14 @@ let browser: Browser;
 BeforeAll({ timeout: 60_000 }, async () => {
   await startApps();
   browser = await chromium.launch({ headless: !env.headed });
+  const page = await browser.newPage();
+  try {
+    await page.goto(env.baseUrl, { timeout: 20_000 });
+  } catch {
+    // Warm-up is best-effort
+  } finally {
+    await page.close();
+  }
 });
 
 AfterAll({ timeout: 15_000 }, async () => {
