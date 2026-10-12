@@ -3,11 +3,138 @@
 package migrate
 
 import (
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/dialect/sql/schema"
 	"entgo.io/ent/schema/field"
 )
 
 var (
+	// AccountsColumns holds the columns for the "accounts" table.
+	AccountsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "code", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString},
+		{Name: "type", Type: field.TypeEnum, Enums: []string{"asset", "liability", "equity", "income", "expense"}},
+		{Name: "normal_balance", Type: field.TypeEnum, Enums: []string{"debit", "credit"}},
+		{Name: "postable", Type: field.TypeBool, Default: true},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "inactive"}, Default: "active"},
+		{Name: "created_by", Type: field.TypeUUID},
+		{Name: "updated_by", Type: field.TypeUUID},
+		{Name: "account_parish", Type: field.TypeInt},
+		{Name: "account_workspace", Type: field.TypeInt},
+		{Name: "account_children", Type: field.TypeUUID, Nullable: true},
+	}
+	// AccountsTable holds the schema information for the "accounts" table.
+	AccountsTable = &schema.Table{
+		Name:       "accounts",
+		Columns:    AccountsColumns,
+		PrimaryKey: []*schema.Column{AccountsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "accounts_users_creator",
+				Columns:    []*schema.Column{AccountsColumns[11]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "accounts_users_updater",
+				Columns:    []*schema.Column{AccountsColumns[12]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "accounts_parishes_parish",
+				Columns:    []*schema.Column{AccountsColumns[13]},
+				RefColumns: []*schema.Column{ParishesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "accounts_workspaces_workspace",
+				Columns:    []*schema.Column{AccountsColumns[14]},
+				RefColumns: []*schema.Column{WorkspacesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "accounts_accounts_children",
+				Columns:    []*schema.Column{AccountsColumns[15]},
+				RefColumns: []*schema.Column{AccountsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "account_code_account_parish",
+				Unique:  true,
+				Columns: []*schema.Column{AccountsColumns[4], AccountsColumns[13]},
+			},
+		},
+	}
+	// AttachmentsColumns holds the columns for the "attachments" table.
+	AttachmentsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "owner_type", Type: field.TypeString},
+		{Name: "owner_id", Type: field.TypeUUID},
+		{Name: "bucket", Type: field.TypeString},
+		{Name: "object_key", Type: field.TypeString},
+		{Name: "filename", Type: field.TypeString},
+		{Name: "mime_type", Type: field.TypeString},
+		{Name: "size", Type: field.TypeInt64},
+		{Name: "checksum", Type: field.TypeString},
+		{Name: "created_by", Type: field.TypeUUID},
+		{Name: "updated_by", Type: field.TypeUUID},
+		{Name: "attachment_parish", Type: field.TypeInt},
+		{Name: "attachment_workspace", Type: field.TypeInt},
+	}
+	// AttachmentsTable holds the schema information for the "attachments" table.
+	AttachmentsTable = &schema.Table{
+		Name:       "attachments",
+		Columns:    AttachmentsColumns,
+		PrimaryKey: []*schema.Column{AttachmentsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "attachments_users_creator",
+				Columns:    []*schema.Column{AttachmentsColumns[11]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "attachments_users_updater",
+				Columns:    []*schema.Column{AttachmentsColumns[12]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "attachments_parishes_parish",
+				Columns:    []*schema.Column{AttachmentsColumns[13]},
+				RefColumns: []*schema.Column{ParishesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "attachments_workspaces_workspace",
+				Columns:    []*schema.Column{AttachmentsColumns[14]},
+				RefColumns: []*schema.Column{WorkspacesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "attachment_bucket_object_key",
+				Unique:  true,
+				Columns: []*schema.Column{AttachmentsColumns[5], AttachmentsColumns[6]},
+			},
+			{
+				Name:    "attachment_owner_type_owner_id",
+				Unique:  false,
+				Columns: []*schema.Column{AttachmentsColumns[3], AttachmentsColumns[4]},
+			},
+		},
+	}
 	// DiocesesColumns holds the columns for the "dioceses" table.
 	DiocesesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -39,11 +166,62 @@ var (
 			},
 		},
 	}
+	// EntriesColumns holds the columns for the "entries" table.
+	EntriesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "date", Type: field.TypeTime},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "created_by", Type: field.TypeUUID},
+		{Name: "updated_by", Type: field.TypeUUID},
+		{Name: "entry_reversed_by", Type: field.TypeUUID, Unique: true, Nullable: true},
+		{Name: "transaction_entries", Type: field.TypeUUID},
+	}
+	// EntriesTable holds the schema information for the "entries" table.
+	EntriesTable = &schema.Table{
+		Name:       "entries",
+		Columns:    EntriesColumns,
+		PrimaryKey: []*schema.Column{EntriesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "entries_users_creator",
+				Columns:    []*schema.Column{EntriesColumns[5]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "entries_users_updater",
+				Columns:    []*schema.Column{EntriesColumns[6]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "entries_entries_reversed_by",
+				Columns:    []*schema.Column{EntriesColumns[7]},
+				RefColumns: []*schema.Column{EntriesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "entries_transactions_entries",
+				Columns:    []*schema.Column{EntriesColumns[8]},
+				RefColumns: []*schema.Column{TransactionsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "entry_date",
+				Unique:  false,
+				Columns: []*schema.Column{EntriesColumns[3]},
+			},
+		},
+	}
 	// MembershipsColumns holds the columns for the "memberships" table.
 	MembershipsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "user_id", Type: field.TypeString},
-		{Name: "scope_type", Type: field.TypeEnum, Enums: []string{"system", "diocese", "parish", "unit"}},
+		{Name: "scope_type", Type: field.TypeEnum, Enums: []string{"system", "diocese", "parish", "workspace"}},
 		{Name: "scope_id", Type: field.TypeInt64},
 		{Name: "role", Type: field.TypeString},
 		{Name: "created_at", Type: field.TypeTime},
@@ -107,6 +285,58 @@ var (
 		Columns:    ParishionersColumns,
 		PrimaryKey: []*schema.Column{ParishionersColumns[0]},
 	}
+	// PostingsColumns holds the columns for the "postings" table.
+	PostingsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "amount", Type: field.TypeInt64},
+		{Name: "side", Type: field.TypeEnum, Enums: []string{"debit", "credit"}},
+		{Name: "memo", Type: field.TypeString, Nullable: true},
+		{Name: "entry_postings", Type: field.TypeUUID},
+		{Name: "created_by", Type: field.TypeUUID},
+		{Name: "updated_by", Type: field.TypeUUID},
+		{Name: "posting_account", Type: field.TypeUUID},
+	}
+	// PostingsTable holds the schema information for the "postings" table.
+	PostingsTable = &schema.Table{
+		Name:       "postings",
+		Columns:    PostingsColumns,
+		PrimaryKey: []*schema.Column{PostingsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "postings_entries_postings",
+				Columns:    []*schema.Column{PostingsColumns[6]},
+				RefColumns: []*schema.Column{EntriesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "postings_users_creator",
+				Columns:    []*schema.Column{PostingsColumns[7]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "postings_users_updater",
+				Columns:    []*schema.Column{PostingsColumns[8]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "postings_accounts_account",
+				Columns:    []*schema.Column{PostingsColumns[9]},
+				RefColumns: []*schema.Column{AccountsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "posting_posting_account",
+				Unique:  false,
+				Columns: []*schema.Column{PostingsColumns[9]},
+			},
+		},
+	}
 	// TerritoriesColumns holds the columns for the "territories" table.
 	TerritoriesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -122,7 +352,6 @@ var (
 		{Name: "created_by", Type: field.TypeUUID},
 		{Name: "updated_by", Type: field.TypeUUID},
 		{Name: "territory_children", Type: field.TypeInt, Nullable: true},
-		{Name: "unit_territory", Type: field.TypeInt, Unique: true, Nullable: true},
 	}
 	// TerritoriesTable holds the schema information for the "territories" table.
 	TerritoriesTable = &schema.Table{
@@ -154,12 +383,6 @@ var (
 				RefColumns: []*schema.Column{TerritoriesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
-			{
-				Symbol:     "territories_units_territory",
-				Columns:    []*schema.Column{TerritoriesColumns[13]},
-				RefColumns: []*schema.Column{UnitsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
 		},
 		Indexes: []*schema.Index{
 			{
@@ -174,58 +397,68 @@ var (
 			},
 		},
 	}
-	// UnitsColumns holds the columns for the "units" table.
-	UnitsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
+	// TransactionsColumns holds the columns for the "transactions" table.
+	TransactionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
-		{Name: "name", Type: field.TypeString},
-		{Name: "code", Type: field.TypeString, Nullable: true},
-		{Name: "kind", Type: field.TypeEnum, Enums: []string{"council", "territorial", "category", "section", "committee"}},
+		{Name: "number", Type: field.TypeString},
+		{Name: "date", Type: field.TypeTime},
+		{Name: "kind", Type: field.TypeEnum, Enums: []string{"income", "expense", "transfer", "adjustment"}},
 		{Name: "description", Type: field.TypeString, Nullable: true},
-		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "inactive"}, Default: "active"},
-		{Name: "parish_units", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"draft", "submitted", "approved", "posted", "void"}, Default: "draft"},
 		{Name: "created_by", Type: field.TypeUUID},
 		{Name: "updated_by", Type: field.TypeUUID},
-		{Name: "unit_children", Type: field.TypeInt, Nullable: true},
+		{Name: "transaction_parish", Type: field.TypeInt},
+		{Name: "transaction_workspace", Type: field.TypeInt, Nullable: true},
 	}
-	// UnitsTable holds the schema information for the "units" table.
-	UnitsTable = &schema.Table{
-		Name:       "units",
-		Columns:    UnitsColumns,
-		PrimaryKey: []*schema.Column{UnitsColumns[0]},
+	// TransactionsTable holds the schema information for the "transactions" table.
+	TransactionsTable = &schema.Table{
+		Name:       "transactions",
+		Columns:    TransactionsColumns,
+		PrimaryKey: []*schema.Column{TransactionsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "units_parishes_units",
-				Columns:    []*schema.Column{UnitsColumns[9]},
+				Symbol:     "transactions_users_creator",
+				Columns:    []*schema.Column{TransactionsColumns[9]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "transactions_users_updater",
+				Columns:    []*schema.Column{TransactionsColumns[10]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "transactions_parishes_parish",
+				Columns:    []*schema.Column{TransactionsColumns[11]},
 				RefColumns: []*schema.Column{ParishesColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
-				Symbol:     "units_users_creator",
-				Columns:    []*schema.Column{UnitsColumns[10]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-			{
-				Symbol:     "units_users_updater",
-				Columns:    []*schema.Column{UnitsColumns[11]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-			{
-				Symbol:     "units_units_children",
-				Columns:    []*schema.Column{UnitsColumns[12]},
-				RefColumns: []*schema.Column{UnitsColumns[0]},
+				Symbol:     "transactions_workspaces_workspace",
+				Columns:    []*schema.Column{TransactionsColumns[12]},
+				RefColumns: []*schema.Column{WorkspacesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "unit_code_parish_units",
+				Name:    "transaction_number_transaction_parish",
 				Unique:  true,
-				Columns: []*schema.Column{UnitsColumns[5], UnitsColumns[9]},
+				Columns: []*schema.Column{TransactionsColumns[4], TransactionsColumns[11]},
+			},
+			{
+				Name:    "transaction_date",
+				Unique:  false,
+				Columns: []*schema.Column{TransactionsColumns[5]},
+			},
+			{
+				Name:    "transaction_status",
+				Unique:  false,
+				Columns: []*schema.Column{TransactionsColumns[8]},
 			},
 		},
 	}
@@ -233,39 +466,122 @@ var (
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "auth_user_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "name", Type: field.TypeString},
 		{Name: "email", Type: field.TypeString},
 		{Name: "avatar", Type: field.TypeString, Nullable: true},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"invited", "active"}, Default: "active"},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
 		Name:       "users",
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "user_email",
+				Unique:  true,
+				Columns: []*schema.Column{UsersColumns[4]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "user_auth_user_id",
+				Unique:  true,
+				Columns: []*schema.Column{UsersColumns[2]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// WorkspacesColumns holds the columns for the "workspaces" table.
+	WorkspacesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "inactive"}, Default: "active"},
+		{Name: "parish_workspaces", Type: field.TypeInt},
+		{Name: "created_by", Type: field.TypeUUID},
+		{Name: "updated_by", Type: field.TypeUUID},
+	}
+	// WorkspacesTable holds the schema information for the "workspaces" table.
+	WorkspacesTable = &schema.Table{
+		Name:       "workspaces",
+		Columns:    WorkspacesColumns,
+		PrimaryKey: []*schema.Column{WorkspacesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "workspaces_parishes_workspaces",
+				Columns:    []*schema.Column{WorkspacesColumns[7]},
+				RefColumns: []*schema.Column{ParishesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "workspaces_users_creator",
+				Columns:    []*schema.Column{WorkspacesColumns[8]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "workspaces_users_updater",
+				Columns:    []*schema.Column{WorkspacesColumns[9]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		AccountsTable,
+		AttachmentsTable,
 		DiocesesTable,
+		EntriesTable,
 		MembershipsTable,
 		ParishesTable,
 		ParishionersTable,
+		PostingsTable,
 		TerritoriesTable,
-		UnitsTable,
+		TransactionsTable,
 		UsersTable,
+		WorkspacesTable,
 	}
 )
 
 func init() {
+	AccountsTable.ForeignKeys[0].RefTable = UsersTable
+	AccountsTable.ForeignKeys[1].RefTable = UsersTable
+	AccountsTable.ForeignKeys[2].RefTable = ParishesTable
+	AccountsTable.ForeignKeys[3].RefTable = WorkspacesTable
+	AccountsTable.ForeignKeys[4].RefTable = AccountsTable
+	AttachmentsTable.ForeignKeys[0].RefTable = UsersTable
+	AttachmentsTable.ForeignKeys[1].RefTable = UsersTable
+	AttachmentsTable.ForeignKeys[2].RefTable = ParishesTable
+	AttachmentsTable.ForeignKeys[3].RefTable = WorkspacesTable
 	DiocesesTable.ForeignKeys[0].RefTable = UsersTable
 	DiocesesTable.ForeignKeys[1].RefTable = UsersTable
+	EntriesTable.ForeignKeys[0].RefTable = UsersTable
+	EntriesTable.ForeignKeys[1].RefTable = UsersTable
+	EntriesTable.ForeignKeys[2].RefTable = EntriesTable
+	EntriesTable.ForeignKeys[3].RefTable = TransactionsTable
 	ParishesTable.ForeignKeys[0].RefTable = DiocesesTable
+	PostingsTable.ForeignKeys[0].RefTable = EntriesTable
+	PostingsTable.ForeignKeys[1].RefTable = UsersTable
+	PostingsTable.ForeignKeys[2].RefTable = UsersTable
+	PostingsTable.ForeignKeys[3].RefTable = AccountsTable
 	TerritoriesTable.ForeignKeys[0].RefTable = ParishesTable
 	TerritoriesTable.ForeignKeys[1].RefTable = UsersTable
 	TerritoriesTable.ForeignKeys[2].RefTable = UsersTable
 	TerritoriesTable.ForeignKeys[3].RefTable = TerritoriesTable
-	TerritoriesTable.ForeignKeys[4].RefTable = UnitsTable
-	UnitsTable.ForeignKeys[0].RefTable = ParishesTable
-	UnitsTable.ForeignKeys[1].RefTable = UsersTable
-	UnitsTable.ForeignKeys[2].RefTable = UsersTable
-	UnitsTable.ForeignKeys[3].RefTable = UnitsTable
+	TransactionsTable.ForeignKeys[0].RefTable = UsersTable
+	TransactionsTable.ForeignKeys[1].RefTable = UsersTable
+	TransactionsTable.ForeignKeys[2].RefTable = ParishesTable
+	TransactionsTable.ForeignKeys[3].RefTable = WorkspacesTable
+	WorkspacesTable.ForeignKeys[0].RefTable = ParishesTable
+	WorkspacesTable.ForeignKeys[1].RefTable = UsersTable
+	WorkspacesTable.ForeignKeys[2].RefTable = UsersTable
 }

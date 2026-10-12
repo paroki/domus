@@ -6,6 +6,8 @@ describe("authEnvConfig", () => {
 
   beforeEach(() => {
     process.env = { ...originalEnv };
+    process.env.API_INTERNAL_URL = "http://localhost:8002";
+    process.env.API_INTERNAL_KEY = "12345678901234567890123456789012";
   });
 
   afterEach(() => {
@@ -130,22 +132,39 @@ describe("authEnvConfig", () => {
     expect(authEnv.AUTH_HOST).toBe("localhost");
   });
 
-  it("should parse SUPERADMIN_EMAIL and default SUPERADMIN_NAME", () => {
+  it("should throw validation error when API_INTERNAL_URL is missing", () => {
     process.env.AUTH_URL = "http://localhost:3000";
     process.env.AUTH_PATH = "/api/auth";
     process.env.AUTH_DB_URL = "postgres://user:pass@localhost:5432/db";
-    delete process.env.SUPERADMIN_EMAIL;
-    delete process.env.SUPERADMIN_NAME;
+    delete process.env.API_INTERNAL_URL;
 
-    const envDefault = authEnvConfig();
-    expect(envDefault.SUPERADMIN_EMAIL).toBeUndefined();
-    expect(envDefault.SUPERADMIN_NAME).toBe("Super Admin");
+    expect(() => authEnvConfig()).toThrow();
+  });
 
-    process.env.SUPERADMIN_EMAIL = "admin@example.com";
-    process.env.SUPERADMIN_NAME = "Root Admin";
+  it("should throw validation error when API_INTERNAL_URL is invalid", () => {
+    process.env.AUTH_URL = "http://localhost:3000";
+    process.env.AUTH_PATH = "/api/auth";
+    process.env.AUTH_DB_URL = "postgres://user:pass@localhost:5432/db";
+    process.env.API_INTERNAL_URL = "not-a-valid-url";
 
-    const envCustom = authEnvConfig();
-    expect(envCustom.SUPERADMIN_EMAIL).toBe("admin@example.com");
-    expect(envCustom.SUPERADMIN_NAME).toBe("Root Admin");
+    expect(() => authEnvConfig()).toThrow();
+  });
+
+  it("should throw validation error when API_INTERNAL_KEY is missing", () => {
+    process.env.AUTH_URL = "http://localhost:3000";
+    process.env.AUTH_PATH = "/api/auth";
+    process.env.AUTH_DB_URL = "postgres://user:pass@localhost:5432/db";
+    delete process.env.API_INTERNAL_KEY;
+
+    expect(() => authEnvConfig()).toThrow();
+  });
+
+  it("should throw validation error when API_INTERNAL_KEY is shorter than 32 characters", () => {
+    process.env.AUTH_URL = "http://localhost:3000";
+    process.env.AUTH_PATH = "/api/auth";
+    process.env.AUTH_DB_URL = "postgres://user:pass@localhost:5432/db";
+    process.env.API_INTERNAL_KEY = "too-short-key";
+
+    expect(() => authEnvConfig()).toThrow();
   });
 });

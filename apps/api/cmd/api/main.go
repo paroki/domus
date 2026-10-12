@@ -21,12 +21,18 @@ func main() {
 
 	fiber := config.GetFiber(cfg, logger)
 	entcli := config.GetEntClient(cfg)
+	if err := config.SeedSuperadmin(ctx, entcli, cfg, logger); err != nil {
+		logger.Error("failed to seed superadmin", "error", err)
+		log.Fatalf("failed to seed superadmin: %v", err)
+	}
+	store := config.GetStorage(cfg, logger)
 	state := config.State{
 		Ent:      entcli,
 		Authz:    config.GetAuthz(entcli),
 		Config:   cfg,
 		FiberApp: fiber,
 		Log:      logger,
+		Storage:  store,
 	}
 	config.Bootstrap(state)
 

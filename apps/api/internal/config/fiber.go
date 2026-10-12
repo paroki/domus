@@ -2,11 +2,13 @@ package config
 
 import (
 	"context"
+	"crypto/subtle"
 	"fmt"
 	"log"
 	"log/slog"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -21,6 +23,7 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/gofiber/fiber/v3/middleware/healthcheck"
 	"github.com/gofiber/fiber/v3/middleware/recover"
+	"github.com/paroki/domus/api/internal/core"
 	"github.com/paroki/domus/api/internal/platform/httpx"
 	slogfiber "github.com/samber/slog-fiber"
 )
@@ -34,9 +37,22 @@ func initMiddlewares(cfg Config, app *fiber.App, logger *slog.Logger) error {
 
 	// cors config
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: cfg.TrustedOrigins,
-		AllowHeaders: []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		AllowOrigins:     cfg.TrustedOrigins,
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Internal-Key"},
+		AllowCredentials: true,
 	}))
+
+	// Dedicated middleware to protect /internal prefix with API_INTERNAL_KEY
+	app.Use(func(c fiber.Ctx) error {
+		if !strings.HasPrefix(c.Path(), "/internal") {
+			return c.Next()
+		}
+		key := c.Get("X-Internal-Key")
+		if key == "" || subtle.ConstantTimeCompare([]byte(key), []byte(cfg.InternalKey)) != 1 {
+			return core.ErrUnauthorized
+		}
+		return c.Next()
+	})
 
 	// jwks config
 	jwks, err := keyfunc.NewDefaultCtx(context.Background(), []string{cfg.JWKSUrl})
@@ -45,13 +61,13 @@ func initMiddlewares(cfg Config, app *fiber.App, logger *slog.Logger) error {
 	}
 	app.Use(jwtware.New(jwtware.Config{
 		Next: func(c fiber.Ctx) bool {
-			return c.Method() == fiber.MethodOptions
+			return c.Method() == fiber.MethodOptions || strings.HasPrefix(c.Path(), "/internal")
 		},
 		KeyFunc:   jwks.KeyfuncCtx(context.Background()),
 		Extractor: extractors.FromAuthHeader("Bearer"),
 		ErrorHandler: func(c fiber.Ctx, err error) error {
 			logger.WarnContext(c, "JWKS Error", "error", err.Error())
-			return fiber.NewError(fiber.StatusUnauthorized, err.Error())
+			return core.ErrUnauthorized
 		},
 	}))
 
@@ -96,6 +112,7 @@ func checkJWKS(ctx context.Context, url string, log *slog.Logger) error {
 
 func GetFiber(cfg Config, logger *slog.Logger) *fiber.App {
 	app := fiber.New(fiber.Config{
+		BodyLimit:       12 * 1024 * 1024,
 		StructValidator: &structValidator{validator.New(validator.WithRequiredStructEnabled())},
 		ErrorHandler:    ErrorHandler(logger),
 	})
@@ -109,15 +126,21 @@ func GetFiber(cfg Config, logger *slog.Logger) *fiber.App {
 	return app
 }
 
+var ErrorMap = core.GlobalErrorMap
+
 func ErrorHandler(log *slog.Logger) fiber.ErrorHandler {
 	return func(c fiber.Ctx, err error) error {
-		status, body := httpx.MapError(err)
-		if status >= 500 {
-			log.ErrorContext(c, "unhandled error", "error", err.Error())
+		item := ErrorMap.Map(err)
+		if item.Code == core.ErrUnknown.Error() {
+			log.ErrorContext(c, "unknown error", "error", err.Error())
 		}
-		return c.Status(status).JSON(httpx.ErrorResponse{
-			Error: body,
-			Meta:  httpx.NewMeta(c, ""),
+		return c.Status(item.Status).JSON(httpx.ErrorResponse{
+			Error: httpx.ErrorBody{
+				Code:    item.Code,
+				Message: item.Message,
+				Fields:  item.Fields,
+			},
+			Meta: httpx.NewMeta(c, ""),
 		})
 	}
 }

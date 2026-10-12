@@ -14,6 +14,17 @@ type Config struct {
 	JWKSUrl        string   `env:"AUTH_JWKS_URL"`
 	DatabaseUrl    string   `env:"API_DB_URL"`
 	TrustedOrigins []string `env:"AUTH_TRUSTED_ORIGINS"`
+	InternalKey    string   `env:"API_INTERNAL_KEY, required"`
+
+	SuperadminEmail string `env:"SUPERADMIN_EMAIL"`
+	SuperadminName  string `env:"SUPERADMIN_NAME, default=Super Admin"`
+
+	S3Endpoint       string `env:"S3_ENDPOINT"`
+	S3AccessKey      string `env:"S3_ACCESS_KEY"`
+	S3SecretKey      string `env:"S3_SECRET_KEY"`
+	S3Region         string `env:"S3_REGION, default=us-east-1"`
+	S3ForcePathStyle bool   `env:"S3_FORCE_PATH_STYLE, default=true"`
+	S3Bucket         string `env:"S3_BUCKET, default=domus-finance"`
 }
 
 func GetConfig() Config {
@@ -21,6 +32,10 @@ func GetConfig() Config {
 
 	if err := envconfig.Process(context.Background(), &config); err != nil {
 		log.Fatalf("Error while parsing config: %s", err)
+	}
+
+	if len(config.InternalKey) < 32 {
+		log.Fatalf("API_INTERNAL_KEY must be at least 32 characters")
 	}
 
 	return config

@@ -3,6 +3,7 @@ import { Button, Layout, Menu, type MenuProps } from "antd";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router";
+import { FinanceWorkspaceSelector } from "~/features/Finance/FinanceWorkspaceSelector";
 import { modulePath } from "~/shared/modules/registry";
 import type { ModuleMenuItem } from "~/shared/modules/types";
 import { useActiveModule } from "~/shared/modules/useActiveModule";
@@ -64,6 +65,7 @@ export function NavBar() {
       ) : (
         <div className="flex-1" />
       )}
+      {activeModule?.id === "fin" && <FinanceWorkspaceSelector />}
       <LanguageSwitcher />
       <UserMenu />
     </Layout.Header>

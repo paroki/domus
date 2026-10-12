@@ -1,11 +1,45 @@
 components:
   schemas:
+    attachment.DownloadResponse:
+      properties:
+        expiresAt:
+          type: string
+        url:
+          type: string
+      type: object
+    attachment.Response:
+      properties:
+        checksum:
+          type: string
+        createdAt:
+          type: string
+        createdBy:
+          $ref: '#/components/schemas/core.User'
+        filename:
+          type: string
+        id:
+          type: string
+        mimeType:
+          type: string
+        ownerId:
+          type: string
+        ownerType:
+          type: string
+        size:
+          type: integer
+        workspaceId:
+          type: integer
+      type: object
     core.AuthenticatedUser:
       properties:
+        authId:
+          type: string
         avatar:
           type: string
         email:
           type: string
+        emailVerified:
+          type: boolean
         id:
           type: string
         name:
@@ -78,11 +112,41 @@ components:
         timestamp:
           type: string
       type: object
+    httpx.WebResponse-array_attachment_Response:
+      properties:
+        data:
+          items:
+            $ref: '#/components/schemas/attachment.Response'
+          type: array
+          uniqueItems: false
+        meta:
+          $ref: '#/components/schemas/httpx.Meta'
+      type: object
+    httpx.WebResponse-array_model_AccountResponse:
+      properties:
+        data:
+          items:
+            $ref: '#/components/schemas/model.AccountResponse'
+          type: array
+          uniqueItems: false
+        meta:
+          $ref: '#/components/schemas/httpx.Meta'
+      type: object
     httpx.WebResponse-array_model_DioceseResponse:
       properties:
         data:
           items:
             $ref: '#/components/schemas/model.DioceseResponse'
+          type: array
+          uniqueItems: false
+        meta:
+          $ref: '#/components/schemas/httpx.Meta'
+      type: object
+    httpx.WebResponse-array_model_FinanceWorkspaceResponse:
+      properties:
+        data:
+          items:
+            $ref: '#/components/schemas/model.FinanceWorkspaceResponse'
           type: array
           uniqueItems: false
         meta:
@@ -108,13 +172,37 @@ components:
         meta:
           $ref: '#/components/schemas/httpx.Meta'
       type: object
-    httpx.WebResponse-array_model_UnitResponse:
+    httpx.WebResponse-array_model_TransactionSummary:
       properties:
         data:
           items:
-            $ref: '#/components/schemas/model.UnitResponse'
+            $ref: '#/components/schemas/model.TransactionSummary'
           type: array
           uniqueItems: false
+        meta:
+          $ref: '#/components/schemas/httpx.Meta'
+      type: object
+    httpx.WebResponse-array_model_WorkspaceResponse:
+      properties:
+        data:
+          items:
+            $ref: '#/components/schemas/model.WorkspaceResponse'
+          type: array
+          uniqueItems: false
+        meta:
+          $ref: '#/components/schemas/httpx.Meta'
+      type: object
+    httpx.WebResponse-attachment_DownloadResponse:
+      properties:
+        data:
+          $ref: '#/components/schemas/attachment.DownloadResponse'
+        meta:
+          $ref: '#/components/schemas/httpx.Meta'
+      type: object
+    httpx.WebResponse-attachment_Response:
+      properties:
+        data:
+          $ref: '#/components/schemas/attachment.Response'
         meta:
           $ref: '#/components/schemas/httpx.Meta'
       type: object
@@ -125,10 +213,38 @@ components:
         meta:
           $ref: '#/components/schemas/httpx.Meta'
       type: object
+    httpx.WebResponse-model_AccountResponse:
+      properties:
+        data:
+          $ref: '#/components/schemas/model.AccountResponse'
+        meta:
+          $ref: '#/components/schemas/httpx.Meta'
+      type: object
+    httpx.WebResponse-model_ActivateFinanceResponse:
+      properties:
+        data:
+          $ref: '#/components/schemas/model.ActivateFinanceResponse'
+        meta:
+          $ref: '#/components/schemas/httpx.Meta'
+      type: object
+    httpx.WebResponse-model_CollectionsResponse:
+      properties:
+        data:
+          $ref: '#/components/schemas/model.CollectionsResponse'
+        meta:
+          $ref: '#/components/schemas/httpx.Meta'
+      type: object
     httpx.WebResponse-model_DioceseResponse:
       properties:
         data:
           $ref: '#/components/schemas/model.DioceseResponse'
+        meta:
+          $ref: '#/components/schemas/httpx.Meta'
+      type: object
+    httpx.WebResponse-model_LedgerResponse:
+      properties:
+        data:
+          $ref: '#/components/schemas/model.LedgerResponse'
         meta:
           $ref: '#/components/schemas/httpx.Meta'
       type: object
@@ -146,12 +262,138 @@ components:
         meta:
           $ref: '#/components/schemas/httpx.Meta'
       type: object
-    httpx.WebResponse-model_UnitResponse:
+    httpx.WebResponse-model_TransactionResponse:
       properties:
         data:
-          $ref: '#/components/schemas/model.UnitResponse'
+          $ref: '#/components/schemas/model.TransactionResponse'
         meta:
           $ref: '#/components/schemas/httpx.Meta'
+      type: object
+    httpx.WebResponse-model_TrialBalanceResponse:
+      properties:
+        data:
+          $ref: '#/components/schemas/model.TrialBalanceResponse'
+        meta:
+          $ref: '#/components/schemas/httpx.Meta'
+      type: object
+    httpx.WebResponse-model_UserInviteResponse:
+      properties:
+        data:
+          $ref: '#/components/schemas/model.UserInviteResponse'
+        meta:
+          $ref: '#/components/schemas/httpx.Meta'
+      type: object
+    httpx.WebResponse-model_WorkspaceResponse:
+      properties:
+        data:
+          $ref: '#/components/schemas/model.WorkspaceResponse'
+        meta:
+          $ref: '#/components/schemas/httpx.Meta'
+      type: object
+    model.AccountResponse:
+      properties:
+        code:
+          type: string
+        createdAt:
+          type: string
+        description:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        normalBalance:
+          type: string
+        parentId:
+          type: string
+        parishId:
+          type: integer
+        postable:
+          type: boolean
+        status:
+          type: string
+        type:
+          type: string
+        updatedAt:
+          type: string
+        workspaceId:
+          type: integer
+      type: object
+    model.ActivateFinanceRequest:
+      properties:
+        parishId:
+          minimum: 1
+          type: integer
+        workspaceId:
+          minimum: 1
+          type: integer
+      required:
+      - parishId
+      - workspaceId
+      type: object
+    model.ActivateFinanceResponse:
+      properties:
+        activeParishId:
+          type: integer
+        activeWorkspaceId:
+          type: integer
+      type: object
+    model.CollectionsResponse:
+      properties:
+        from:
+          type: string
+        grandTotal:
+          type: integer
+        rows:
+          items:
+            $ref: '#/components/schemas/model.CollectionsRow'
+          type: array
+          uniqueItems: false
+        to:
+          type: string
+      type: object
+    model.CollectionsRow:
+      properties:
+        accountId:
+          type: string
+        code:
+          type: string
+        name:
+          type: string
+        total:
+          type: integer
+      type: object
+    model.CreateAccountRequest:
+      properties:
+        code:
+          maxLength: 30
+          type: string
+        description:
+          type: string
+        name:
+          maxLength: 200
+          type: string
+        parentId:
+          type: string
+        postable:
+          type: boolean
+        status:
+          enum:
+          - active
+          - inactive
+          type: string
+        type:
+          enum:
+          - asset
+          - liability
+          - equity
+          - income
+          - expense
+          type: string
+      required:
+      - code
+      - name
+      - type
       type: object
     model.CreateDioceseRequest:
       properties:
@@ -205,24 +447,39 @@ components:
       - name
       - parishId
       type: object
-    model.CreateUnitRequest:
+    model.CreateTransactionRequest:
       properties:
-        code:
+        date:
           type: string
         description:
           type: string
         kind:
           enum:
-          - council
-          - territorial
-          - category
-          - section
-          - committee
+          - income
+          - expense
+          - transfer
+          - adjustment
+          type: string
+        number:
+          type: string
+        postings:
+          items:
+            $ref: '#/components/schemas/model.PostingInput'
+          maxItems: 200
+          minItems: 2
+          type: array
+          uniqueItems: false
+      required:
+      - date
+      - kind
+      - postings
+      type: object
+    model.CreateWorkspaceRequest:
+      properties:
+        description:
           type: string
         name:
           type: string
-        parentId:
-          type: integer
         parishId:
           type: integer
         status:
@@ -230,10 +487,7 @@ components:
           - active
           - inactive
           type: string
-        territoryId:
-          type: integer
       required:
-      - kind
       - name
       - parishId
       type: object
@@ -254,6 +508,140 @@ components:
         updatedBy:
           $ref: '#/components/schemas/core.User'
       type: object
+    model.EntryResponse:
+      properties:
+        date:
+          type: string
+        description:
+          type: string
+        id:
+          type: string
+        postings:
+          items:
+            $ref: '#/components/schemas/model.PostingResponse'
+          type: array
+          uniqueItems: false
+        reversesId:
+          type: string
+      type: object
+    model.FinanceWorkspaceResponse:
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        parishId:
+          type: integer
+      type: object
+    model.InviteUserRequest:
+      properties:
+        email:
+          description: Email is the unique email address of the user.
+          type: string
+        memberships:
+          description: Memberships contains one or more initial scope memberships.
+          items:
+            $ref: '#/components/schemas/model.MembershipInput'
+          minItems: 1
+          type: array
+          uniqueItems: false
+        name:
+          description: Name is the display name of the user.
+          type: string
+      required:
+      - email
+      - memberships
+      - name
+      type: object
+    model.LedgerAccount:
+      properties:
+        code:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        normalBalance:
+          type: string
+        type:
+          type: string
+      type: object
+    model.LedgerResponse:
+      properties:
+        account:
+          $ref: '#/components/schemas/model.LedgerAccount'
+        closingBalance:
+          type: integer
+        openingBalance:
+          type: integer
+        rows:
+          items:
+            $ref: '#/components/schemas/model.LedgerRow'
+          type: array
+          uniqueItems: false
+      type: object
+    model.LedgerRow:
+      properties:
+        balance:
+          type: integer
+        credit:
+          type: integer
+        date:
+          type: string
+        debit:
+          type: integer
+        description:
+          type: string
+        entryId:
+          type: string
+        postingId:
+          type: string
+        transactionId:
+          type: string
+        transactionNumber:
+          type: string
+      type: object
+    model.MembershipInput:
+      properties:
+        role:
+          description: Role is the role name to assign within the scope.
+          type: string
+        scopeId:
+          description: ScopeID is the numeric identifier of the scope (0 for system).
+          minimum: 0
+          type: integer
+        scopeType:
+          description: 'ScopeType defines the scope hierarchy level: system, diocese,
+            parish, or workspace.'
+          enum:
+          - system
+          - diocese
+          - parish
+          - workspace
+          type: string
+      required:
+      - role
+      - scopeType
+      type: object
+    model.MembershipResponse:
+      properties:
+        createdAt:
+          description: CreatedAt is the timestamp when the membership was created.
+          type: string
+        id:
+          description: ID is the database record identifier for the membership.
+          type: integer
+        role:
+          description: Role is the assigned role name.
+          type: string
+        scopeId:
+          description: ScopeID is the numeric identifier of the scope.
+          type: integer
+        scopeType:
+          description: 'ScopeType is the scope level: system, diocese, parish, or
+            workspace.'
+          type: string
+      type: object
     model.ParishResponse:
       properties:
         active:
@@ -273,6 +661,44 @@ components:
         phone:
           type: string
       type: object
+    model.PostingInput:
+      properties:
+        accountId:
+          type: string
+        amount:
+          maximum: 1000000000000000
+          minimum: 1
+          type: integer
+        memo:
+          maxLength: 500
+          type: string
+        side:
+          enum:
+          - debit
+          - credit
+          type: string
+      required:
+      - accountId
+      - amount
+      - side
+      type: object
+    model.PostingResponse:
+      properties:
+        accountCode:
+          type: string
+        accountId:
+          type: string
+        accountName:
+          type: string
+        amount:
+          type: integer
+        id:
+          type: string
+        memo:
+          type: string
+        side:
+          type: string
+      type: object
     model.SearchTerritoryRequest:
       properties:
         cursor:
@@ -288,22 +714,48 @@ components:
         status:
           type: string
       type: object
-    model.SearchUnitRequest:
+    model.SearchTransactionRequest:
+      properties:
+        accountId:
+          type: string
+        cursor:
+          type: string
+        from:
+          type: string
+        kind:
+          enum:
+          - income
+          - expense
+          - transfer
+          - adjustment
+          type: string
+        limit:
+          maximum: 100
+          minimum: 1
+          type: integer
+        q:
+          type: string
+        status:
+          enum:
+          - draft
+          - submitted
+          - approved
+          - posted
+          - void
+          type: string
+        to:
+          type: string
+      type: object
+    model.SearchWorkspaceRequest:
       properties:
         cursor:
           type: string
-        kind:
-          type: string
         limit:
-          type: integer
-        parentId:
           type: integer
         parishId:
           type: integer
         status:
           type: string
-        territoryId:
-          type: integer
       type: object
     model.TerritoryResponse:
       properties:
@@ -327,35 +779,124 @@ components:
           type: integer
         status:
           type: string
-        unitId:
+      type: object
+    model.TransactionResponse:
+      properties:
+        attachments:
+          items:
+            $ref: '#/components/schemas/attachment.Response'
+          type: array
+          uniqueItems: false
+        createdAt:
+          type: string
+        createdBy:
+          $ref: '#/components/schemas/core.User'
+        date:
+          type: string
+        description:
+          type: string
+        entries:
+          items:
+            $ref: '#/components/schemas/model.EntryResponse'
+          type: array
+          uniqueItems: false
+        id:
+          type: string
+        kind:
+          type: string
+        number:
+          type: string
+        status:
+          type: string
+        workspaceId:
           type: integer
       type: object
-    model.UnitResponse:
+    model.TransactionSummary:
       properties:
-        code:
+        date:
           type: string
         description:
           type: string
         id:
-          type: integer
+          type: string
         kind:
           type: string
-        name:
+        number:
           type: string
-        parent:
-          $ref: '#/components/schemas/model.UnitResponse'
-        parentId:
-          type: integer
-        parish:
-          $ref: '#/components/schemas/model.ParishResponse'
-        parishId:
-          type: integer
         status:
           type: string
-        territory:
-          $ref: '#/components/schemas/model.TerritoryResponse'
-        territoryId:
+        totalAmount:
           type: integer
+        workspaceId:
+          type: integer
+      type: object
+    model.TrialBalanceResponse:
+      properties:
+        asOf:
+          type: string
+        rows:
+          items:
+            $ref: '#/components/schemas/model.TrialBalanceRow'
+          type: array
+          uniqueItems: false
+        totals:
+          $ref: '#/components/schemas/model.TrialBalanceTotals'
+      type: object
+    model.TrialBalanceRow:
+      properties:
+        accountId:
+          type: string
+        balance:
+          type: integer
+        code:
+          type: string
+        credit:
+          type: integer
+        debit:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+      type: object
+    model.TrialBalanceTotals:
+      properties:
+        credit:
+          type: integer
+        debit:
+          type: integer
+      type: object
+    model.UpdateAccountRequest:
+      properties:
+        code:
+          maxLength: 30
+          type: string
+        description:
+          type: string
+        name:
+          maxLength: 200
+          type: string
+        parentId:
+          type: string
+        postable:
+          type: boolean
+        status:
+          enum:
+          - active
+          - inactive
+          type: string
+        type:
+          enum:
+          - asset
+          - liability
+          - equity
+          - income
+          - expense
+          type: string
+      required:
+      - code
+      - name
+      - type
       type: object
     model.UpdateDioceseRequest:
       properties:
@@ -409,24 +950,12 @@ components:
       - name
       - parishId
       type: object
-    model.UpdateUnitRequest:
+    model.UpdateWorkspaceRequest:
       properties:
-        code:
-          type: string
         description:
-          type: string
-        kind:
-          enum:
-          - council
-          - territorial
-          - category
-          - section
-          - committee
           type: string
         name:
           type: string
-        parentId:
-          type: integer
         parishId:
           type: integer
         status:
@@ -434,12 +963,54 @@ components:
           - active
           - inactive
           type: string
-        territoryId:
-          type: integer
       required:
-      - kind
       - name
       - parishId
+      type: object
+    model.UserInviteResponse:
+      properties:
+        email:
+          description: Email is the lowercase email of the user.
+          type: string
+        id:
+          description: ID is the unique identifier (UUID v7) of the user.
+          type: string
+        memberships:
+          description: Memberships is the list of memberships associated with the
+            user.
+          items:
+            $ref: '#/components/schemas/model.MembershipResponse'
+          type: array
+          uniqueItems: false
+        name:
+          description: Name is the display name of the user.
+          type: string
+        status:
+          description: Status is the user activation status (e.g., invited, active).
+          type: string
+      type: object
+    model.VoidTransactionRequest:
+      properties:
+        date:
+          type: string
+        reason:
+          maxLength: 500
+          type: string
+      type: object
+    model.WorkspaceResponse:
+      properties:
+        description:
+          type: string
+        id:
+          type: integer
+        name:
+          type: string
+        parish:
+          $ref: '#/components/schemas/model.ParishResponse'
+        parishId:
+          type: integer
+        status:
+          type: string
       type: object
   securitySchemes:
     BearerAuth:
@@ -677,6 +1248,774 @@ paths:
       summary: Update diocese
       tags:
       - Diocese
+  /fin/accounts:
+    get:
+      description: List accounts for active parish and unit with optional filters,
+        sorted by code
+      parameters:
+      - description: Account type
+        in: query
+        name: type
+        schema:
+          enum:
+          - asset
+          - liability
+          - equity
+          - income
+          - expense
+          type: string
+      - description: Status
+        in: query
+        name: status
+        schema:
+          enum:
+          - active
+          - inactive
+          type: string
+      - description: Postable
+        in: query
+        name: postable
+        schema:
+          type: boolean
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.WebResponse-array_model_AccountResponse'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Not Found
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unprocessable Entity
+      security:
+      - BearerAuth: []
+      summary: List accounts
+      tags:
+      - Finance Account
+    post:
+      description: Create a new account in chart of accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/model.CreateAccountRequest'
+              description: Create account request
+              summary: request
+        description: Create account request
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.WebResponse-model_AccountResponse'
+          description: Created
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Not Found
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Conflict
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unprocessable Entity
+      security:
+      - BearerAuth: []
+      summary: Create account
+      tags:
+      - Finance Account
+  /fin/accounts/{id}:
+    delete:
+      description: Soft delete an account (blocked if it has children or postings)
+      parameters:
+      - description: Account ID (UUID)
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Delete account
+      tags:
+      - Finance Account
+    get:
+      description: Get account details by ID
+      parameters:
+      - description: Account ID (UUID)
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.WebResponse-model_AccountResponse'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Get account by ID
+      tags:
+      - Finance Account
+    put:
+      description: Update an existing account
+      parameters:
+      - description: Account ID (UUID)
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/model.UpdateAccountRequest'
+              description: Update account request
+              summary: request
+        description: Update account request
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.WebResponse-model_AccountResponse'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Not Found
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Conflict
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unprocessable Entity
+      security:
+      - BearerAuth: []
+      summary: Update account
+      tags:
+      - Finance Account
+  /fin/activate:
+    post:
+      description: Set active parish and workspace for finance module in user cookie
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/model.ActivateFinanceRequest'
+              description: Activate finance request
+              summary: request
+        description: Activate finance request
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.WebResponse-model_ActivateFinanceResponse'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Forbidden
+      security:
+      - BearerAuth: []
+      summary: Activate finance context
+      tags:
+      - Finance
+  /fin/reports/collections:
+    get:
+      description: Get summary of collections (kolekte) for income accounts within
+        a date range
+      parameters:
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: from
+        required: true
+        schema:
+          type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: to
+        required: true
+        schema:
+          type: string
+      - description: Filter by header account subtree (UUID)
+        in: query
+        name: parentAccountId
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.WebResponse-model_CollectionsResponse'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Not Found
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unprocessable Entity
+      security:
+      - BearerAuth: []
+      summary: Get collections report
+      tags:
+      - Finance Report
+  /fin/reports/ledger:
+    get:
+      description: Get detailed transactions and running balance for an account
+      parameters:
+      - description: Account ID (UUID)
+        in: query
+        name: accountId
+        required: true
+        schema:
+          type: string
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: from
+        required: true
+        schema:
+          type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: to
+        required: true
+        schema:
+          type: string
+      - description: Pagination cursor
+        in: query
+        name: cursor
+        schema:
+          type: string
+      - description: Items per page (default 50, max 200)
+        in: query
+        name: limit
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.WebResponse-model_LedgerResponse'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Not Found
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unprocessable Entity
+      security:
+      - BearerAuth: []
+      summary: Get account ledger
+      tags:
+      - Finance Report
+  /fin/reports/trial-balance:
+    get:
+      description: Get trial balance report as of a specific date
+      parameters:
+      - description: As of date (YYYY-MM-DD)
+        in: query
+        name: asOf
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.WebResponse-model_TrialBalanceResponse'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Not Found
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unprocessable Entity
+      security:
+      - BearerAuth: []
+      summary: Get trial balance
+      tags:
+      - Finance Report
+  /fin/transactions:
+    post:
+      description: Create and post a new transaction with single-step journal entry
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/model.CreateTransactionRequest'
+              description: Create transaction request
+              summary: request
+        description: Create transaction request
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.WebResponse-model_TransactionResponse'
+          description: Created
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Not Found
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Conflict
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unprocessable Entity
+      security:
+      - BearerAuth: []
+      summary: Create transaction
+      tags:
+      - Finance Transaction
+  /fin/transactions/{id}:
+    get:
+      description: Get transaction details including journal entries and postings
+      parameters:
+      - description: Transaction ID (UUID)
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.WebResponse-model_TransactionResponse'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Get transaction by ID
+      tags:
+      - Finance Transaction
+  /fin/transactions/{id}/void:
+    post:
+      description: Void a posted transaction by creating a reversal entry and setting
+        transaction status to void
+      parameters:
+      - description: Transaction ID (UUID)
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/model.VoidTransactionRequest'
+              description: Void transaction request
+              summary: request
+        description: Void transaction request
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.WebResponse-model_TransactionResponse'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Not Found
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Conflict
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unprocessable Entity
+      security:
+      - BearerAuth: []
+      summary: Void transaction
+      tags:
+      - Finance Transaction
+  /fin/transactions/search:
+    post:
+      description: Search transactions with filters and cursor pagination
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/model.SearchTransactionRequest'
+              description: Search transaction request
+              summary: request
+        description: Search transaction request
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.WebResponse-array_model_TransactionSummary'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Not Found
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unprocessable Entity
+      security:
+      - BearerAuth: []
+      summary: Search transactions
+      tags:
+      - Finance Transaction
+  /fin/workspaces:
+    get:
+      description: Get list of workspaces accessible to the current user for finance
+        module
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.WebResponse-array_model_FinanceWorkspaceResponse'
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unauthorized
+      security:
+      - BearerAuth: []
+      summary: Get accessible finance workspaces
+      tags:
+      - Finance
   /parishes:
     get:
       description: Get all parishes list
@@ -898,6 +2237,206 @@ paths:
       summary: Update parish
       tags:
       - Parish
+  /parishes/{parishId}/finance/transactions/{id}/attachments:
+    get:
+      description: List all attachments of an owner record
+      parameters:
+      - description: Parish ID
+        in: path
+        name: parishId
+        required: true
+        schema:
+          type: integer
+      - description: Owner (transaction) ID
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.WebResponse-array_attachment_Response'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: List attachments
+      tags:
+      - Attachment
+    post:
+      description: Upload a file (PDF, JPEG, PNG, max 10 MiB) attached to an owner
+        record, e.g. a finance transaction. Permission is checked at the owner's workspace
+        scope.
+      parameters:
+      - description: Parish ID
+        in: path
+        name: parishId
+        required: true
+        schema:
+          type: integer
+      - description: Owner (transaction) ID
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              properties:
+                file:
+                  description: Attachment file
+                  format: binary
+                  type: string
+              required:
+              - file
+              type: object
+        description: Attachment file
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.WebResponse-attachment_Response'
+          description: Created
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Not Found
+        "413":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Request Entity Too Large
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unprocessable Entity
+      security:
+      - BearerAuth: []
+      summary: Upload attachment
+      tags:
+      - Attachment
+  /parishes/{parishId}/finance/transactions/{id}/attachments/{attachmentId}/download:
+    get:
+      description: Generate a presigned GET URL valid for 5 minutes to download an
+        attachment
+      parameters:
+      - description: Parish ID
+        in: path
+        name: parishId
+        required: true
+        schema:
+          type: integer
+      - description: Owner (transaction) ID
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      - description: Attachment ID
+        in: path
+        name: attachmentId
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.WebResponse-attachment_DownloadResponse'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Get presigned download URL for attachment
+      tags:
+      - Attachment
   /ping:
     get:
       description: Returns current authenticated user information from context
@@ -1167,24 +2706,31 @@ paths:
       summary: Search territories
       tags:
       - Territory
-  /units:
+  /users:
     post:
-      description: Create a new unit
+      description: Invite a new user with initial memberships, or add memberships
+        to an existing user
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/model.CreateUnitRequest'
-              description: Create unit request
+              $ref: '#/components/schemas/model.InviteUserRequest'
+              description: Invite user request
               summary: request
-        description: Create unit request
+        description: Invite user request
         required: true
       responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.WebResponse-model_UserInviteResponse'
+          description: OK
         "201":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/httpx.WebResponse-model_UnitResponse'
+                $ref: '#/components/schemas/httpx.WebResponse-model_UserInviteResponse'
           description: Created
         "400":
           content:
@@ -1212,14 +2758,62 @@ paths:
           description: Unprocessable Entity
       security:
       - BearerAuth: []
-      summary: Create unit
+      summary: Invite user or add memberships
       tags:
-      - Unit
-  /units/{id}:
+      - User
+  /workspaces:
+    post:
+      description: Create a new workspace
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/model.CreateWorkspaceRequest'
+              description: Create workspace request
+              summary: request
+        description: Create workspace request
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.WebResponse-model_WorkspaceResponse'
+          description: Created
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Forbidden
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/httpx.ErrorResponse'
+          description: Unprocessable Entity
+      security:
+      - BearerAuth: []
+      summary: Create workspace
+      tags:
+      - Workspace
+  /workspaces/{id}:
     delete:
-      description: Delete unit by ID
+      description: Delete workspace by ID
       parameters:
-      - description: Unit ID
+      - description: Workspace ID
         in: path
         name: id
         required: true
@@ -1254,13 +2848,13 @@ paths:
           description: Not Found
       security:
       - BearerAuth: []
-      summary: Delete unit
+      summary: Delete workspace
       tags:
-      - Unit
+      - Workspace
     get:
-      description: Get unit details by ID
+      description: Get workspace details by ID
       parameters:
-      - description: Unit ID
+      - description: Workspace ID
         in: path
         name: id
         required: true
@@ -1271,7 +2865,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/httpx.WebResponse-model_UnitResponse'
+                $ref: '#/components/schemas/httpx.WebResponse-model_WorkspaceResponse'
           description: OK
         "400":
           content:
@@ -1299,13 +2893,13 @@ paths:
           description: Not Found
       security:
       - BearerAuth: []
-      summary: Get unit by ID
+      summary: Get workspace by ID
       tags:
-      - Unit
+      - Workspace
     put:
-      description: Update unit by ID
+      description: Update workspace by ID
       parameters:
-      - description: Unit ID
+      - description: Workspace ID
         in: path
         name: id
         required: true
@@ -1315,17 +2909,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/model.UpdateUnitRequest'
-              description: Update unit request
+              $ref: '#/components/schemas/model.UpdateWorkspaceRequest'
+              description: Update workspace request
               summary: request
-        description: Update unit request
+        description: Update workspace request
         required: true
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/httpx.WebResponse-model_UnitResponse'
+                $ref: '#/components/schemas/httpx.WebResponse-model_WorkspaceResponse'
           description: OK
         "400":
           content:
@@ -1359,27 +2953,27 @@ paths:
           description: Unprocessable Entity
       security:
       - BearerAuth: []
-      summary: Update unit
+      summary: Update workspace
       tags:
-      - Unit
-  /units/search:
+      - Workspace
+  /workspaces/search:
     post:
-      description: Search units with filters and cursor pagination
+      description: Search workspaces with filters and cursor pagination
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/model.SearchUnitRequest'
-              description: Search unit request
+              $ref: '#/components/schemas/model.SearchWorkspaceRequest'
+              description: Search workspace request
               summary: request
-        description: Search unit request
+        description: Search workspace request
         required: true
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/httpx.WebResponse-array_model_UnitResponse'
+                $ref: '#/components/schemas/httpx.WebResponse-array_model_WorkspaceResponse'
           description: OK
         "400":
           content:
@@ -1407,8 +3001,8 @@ paths:
           description: Unprocessable Entity
       security:
       - BearerAuth: []
-      summary: Search units
+      summary: Search workspaces
       tags:
-      - Unit
+      - Workspace
 servers:
 - url: https://api.pkrbt.id/

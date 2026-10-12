@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Guidance for AI coding agents working in the **Domus** monorepo (parish digital administration: diocese → parish → unit/lingkungan, multi-diocese).
+Guidance for AI coding agents working in the **Domus** monorepo (parish digital administration: diocese → parish → workspace/lingkungan, multi-diocese).
 
 Human-facing docs live in [README.md](./README.md). Visual rules for the dashboard live in [BRANDING.md](./BRANDING.md).
 
@@ -22,8 +22,8 @@ Tooling: Bun `1.4.2` (workspaces), Node `>=22`, Turborepo, Biome 2, Husky + Comm
 
 1. Users log in through `apps/dash` against `apps/auth` (Better Auth: `admin`, `jwt`, `openAPI` plugins; `testUtils` only when `E2E=true` or `NODE_ENV=test`).
 2. `apps/dash` fetches a JWT (`@domus/better-auth/client` → `token`), caches it, and attaches `Authorization: Bearer` to every API call via `openapi-fetch` (`app/lib/api/client.ts`). A 401 triggers one token refresh and retry, then redirect to `/login`.
-3. `apps/api` verifies the JWT with the JWKS from `apps/auth`, checks `iss`/`aud` against `AUTH_URL`, creates a local user snapshot on first sight, and authorizes with Casbin.
-4. API authz is **membership based**: a membership row = (user, scope type, scope id, role). Scopes are `system`, `diocese`, `parish`, `unit`, with **no inheritance** between scopes. Module roles look like `finance-writer`; `superadmin` is global. Details in `apps/api/internal/platform/authz`.
+3. `apps/api` is the SSOT for users. Users are invited via `POST /users` (`status = invited`). On first social login against `apps/auth`, a `databaseHooks.user.create.before` hook calls `POST /internal/users/resolve` (protected by `API_INTERNAL_KEY`) to verify the email and resolve role; uninvited emails are rejected. On first request with the minted JWT, `UserValidate` binds the auth user ID and activates the user (`status = active`).
+4. API authz is **membership based**: a membership row = (user, scope type, scope id, role). Scopes are `system`, `diocese`, `parish`, `workspace`, with **no inheritance** between scopes. Module roles look like `finance-writer`; `superadmin` is global. Details in `apps/api/internal/platform/authz`.
 5. The API's OpenAPI spec (`apps/api/docs`) is the contract; `packages/openapi/src/api.ts` is generated from it and consumed by the dashboard.
 
 ## Commands (run from repo root)
@@ -48,10 +48,10 @@ Tooling: Bun `1.4.2` (workspaces), Node `>=22`, Turborepo, Biome 2, Husky + Comm
 
 The devcontainer (`.devcontainer/compose.yaml`) sets everything for local dev; CI sets its own copy in `.github/workflows/ci.yml`. No `.env.example` exists in the repo. `.env*` files are git-ignored. `globalEnv` in `turbo.json` covers `AUTH_*`, `KAFKA_*`, `API_*`, `SUPERADMIN_*`.
 
-- auth / better-auth: `AUTH_URL`, `AUTH_HOST?`, `AUTH_PORT?`, `AUTH_PATH`, `AUTH_DB_URL`, `AUTH_SECRET`, `AUTH_TRUSTED_ORIGINS` (comma separated), optional `AUTH_GOOGLE_*` / `AUTH_GITHUB_*`, optional `SUPERADMIN_EMAIL`, `SUPERADMIN_NAME`
-- api: `API_DB_URL`, `API_PORT` (default 8002), `AUTH_URL`, `AUTH_JWKS_URL`, `AUTH_TRUSTED_ORIGINS`
+- auth / better-auth: `AUTH_URL`, `AUTH_HOST?`, `AUTH_PORT?`, `AUTH_PATH`, `AUTH_DB_URL`, `AUTH_SECRET`, `AUTH_TRUSTED_ORIGINS` (comma separated), `API_INTERNAL_URL`, `API_INTERNAL_KEY`, optional `AUTH_GOOGLE_*` / `AUTH_GITHUB_*`
+- api: `API_DB_URL`, `API_PORT` (default 8002), `API_INTERNAL_KEY`, `AUTH_URL`, `AUTH_JWKS_URL`, `AUTH_TRUSTED_ORIGINS`, optional `SUPERADMIN_EMAIL`, `SUPERADMIN_NAME`, `S3_*` (`S3_ENDPOINT`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_REGION`, `S3_FORCE_PATH_STYLE`, `S3_BUCKET` default `domus-finance`)
 - dash: `VITE_AUTH_URL`, `VITE_PUBLIC_URL`, `VITE_API_URL` (default `http://localhost:8002`)
-- provisioned but not used by app code yet: `REDIS_URL`, `S3_*`, `KAFKA_BROKERS`
+- provisioned but not used by app code yet: `REDIS_URL`, `KAFKA_BROKERS`
 
 Never commit real secrets. The `AUTH_SECRET` in compose/CI is a dev-only value.
 
@@ -74,11 +74,11 @@ Never commit real secrets. The `AUTH_SECRET` in compose/CI is a dev-only value.
 Regenerate and commit them in the same change as their source. After changing Swaggo annotations or API response models run `bun run api:gen`. After changing Better Auth plugins/options run `bunx turbo run auth:schema --filter=@domus/better-auth` (task `@domus/better-auth#auth:schema`) and then `bun run db:push` for dev.
 
 ### apps/api (Go)
-- Module path `github.com/paroki/domus/api`. Layout: `cmd/api` (entrypoint), `internal/config` (env, fiber, ent, authz, bootstrap), `internal/core`, `internal/platform/{authz,database,httpx}`, `internal/modules/<name>/{controller,service,repository,model}` (currently `auth`, `unit` for dioceses and parishes), `ent/schema`, `testutil`, `test`.
+- Module path `github.com/paroki/domus/api`. Layout: `cmd/api` (entrypoint), `internal/config` (env, fiber, ent, authz, bootstrap), `internal/core`, `internal/platform/{authz,database,httpx}`, `internal/modules/<name>/{controller,service,repository,model}` (currently `auth`, `unit` for dioceses and parishes, `finance`), `ent/schema`, `testutil`, `test`.
 - Layering is controller → service → repository (Ent). New module: add the folders, a `module.go` with `New(Config)` and `InitRoutes`, then wire it in `internal/config/bootstrap.go`.
 - Responses and errors go through `internal/platform/httpx` (`{data, meta}` / `{error, meta}`); never leak internal error text to clients.
 - Protect routes with `httpx.RequirePermission(enforcer, scope, resource, action)`; add new resources in `internal/platform/authz/resource.go`.
-- IDs are UUIDv7 via the shared ID mixin; writes use the transaction helper in `internal/platform/database`.
+- Internal routes under `POST /internal/*` are authenticated via `X-Internal-Key` with `API_INTERNAL_KEY`. Reverse proxy must not expose `/internal` publicly.
 - Tests use testify suites; `testutil` boots the app with an in-memory SQLite Ent client (needs CGO) and an ephemeral mock JWKS server.
 
 ### apps/dash (React Router SPA)
@@ -112,9 +112,8 @@ Regenerate and commit them in the same change as their source. After changing Sw
 - Don't bypass the JWT/membership checks in `apps/api` for business routes.
 
 ## Known issues / things to verify
-- `AUTH_JWKS_URL` is required by `apps/api` but is not set in `.devcontainer/compose.yaml` or the CI e2e env; set it manually (the JWKS is served by `apps/auth`) or the API will wait on JWKS at startup.
 - `apps/api/package.json` has no `test` or `build` scripts, so `turbo run test|build` skips the Go app.
 - `apps/auth` `test` script is a placeholder that exits 1, and `apps/auth/README.md` / `apps/dash/README.md` are unmodified templates (they mention ports 3000/5173 and SSR that do not apply).
 - `Dockerfile.migrator` header comment references a non-existent `apps/auth/Dockerfile.migrate`; `.devcontainer` comments mention `apps/finance` and `apps/blog`, which do not exist.
 - `apps/dash` pins `typescript ^5.9.3` while the root uses `^6`.
-- Redis, S3 and Kafka are provisioned in devcontainer/CI but unused by application code.
+- Redis and Kafka are provisioned in devcontainer/CI but unused by application code; S3 is used by `apps/api` for finance attachments.

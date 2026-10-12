@@ -5,12 +5,14 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/paroki/domus/api/ent/membership"
+	"github.com/paroki/domus/api/ent/user"
 	"github.com/paroki/domus/api/internal/core"
 	"github.com/paroki/domus/api/internal/platform/authz"
 	"github.com/paroki/domus/api/internal/platform/httpx"
@@ -22,15 +24,43 @@ type ApiTestSuite[T any] struct {
 	suite.Suite
 	HttpResponse *http.Response
 	User         *core.AuthenticatedUser
+	Cookies      []*http.Cookie
 }
 
 func (s *ApiTestSuite[T]) SetupTest() {
+	s.Cookies = nil
+	uid := core.GenerateID()
 	s.User = &core.AuthenticatedUser{
-		Name:  "Test User",
-		Email: "test@example.com",
-		ID:    core.GenerateID(),
-		Roles: []core.UserRole{core.UserRoleAdmin},
+		Name:          "Test User",
+		Email:         "test-" + uid.String() + "@example.com",
+		ID:            uid,
+		AuthID:        &uid,
+		EmailVerified: true,
+		Roles:         []core.UserRole{core.UserRoleAdmin},
 	}
+
+	_, err := entClient.User.Create().
+		SetID(uid).
+		SetName(s.User.Name).
+		SetEmail(s.User.Email).
+		SetAuthUserID(uid).
+		SetStatus(user.StatusActive).
+		Save(context.Background())
+	require.NoError(s.T(), err)
+}
+
+func (s *ApiTestSuite[T]) SetCookie(cookie *http.Cookie) {
+	for i, c := range s.Cookies {
+		if c.Name == cookie.Name {
+			s.Cookies[i] = cookie
+			return
+		}
+	}
+	s.Cookies = append(s.Cookies, cookie)
+}
+
+func (s *ApiTestSuite[T]) ClearCookies() {
+	s.Cookies = nil
 }
 
 // GrantRole creates a Membership row for the current test user and
@@ -72,6 +102,9 @@ func (s *ApiTestSuite[T]) RequestWithToken(path string, method string, requestBo
 	if token != "" {
 		req.Header.Set("Authorization", "Bearer "+token)
 	}
+	for _, c := range s.Cookies {
+		req.AddCookie(c)
+	}
 
 	var err error
 	s.HttpResponse = nil
@@ -83,10 +116,12 @@ func (s *ApiTestSuite[T]) RequestWithClaims(path string, method string, requestB
 	s.T().Helper()
 
 	claims := jwt.MapClaims{
-		"id":    s.User.ID,
-		"name":  s.User.Name,
-		"email": s.User.Email,
-		"roles": s.User.Roles,
+		"id":             s.User.ID,
+		"sub":            s.User.ID.String(),
+		"name":           s.User.Name,
+		"email":          s.User.Email,
+		"email_verified": true,
+		"roles":          s.User.Roles,
 	}
 	for k, v := range extraClaims {
 		claims[k] = v
@@ -99,6 +134,50 @@ func (s *ApiTestSuite[T]) RequestWithClaims(path string, method string, requestB
 func (s *ApiTestSuite[T]) Request(path string, method string, requestBody any) {
 	s.T().Helper()
 	s.RequestWithClaims(path, method, requestBody, nil)
+}
+
+func (s *ApiTestSuite[T]) RequestMultipart(path string, method string, fieldName string, filename string, content []byte) {
+	s.T().Helper()
+	s.RequestMultipartWithClaims(path, method, fieldName, filename, content, nil)
+}
+
+func (s *ApiTestSuite[T]) RequestMultipartWithClaims(path string, method string, fieldName string, filename string, content []byte, extraClaims jwt.MapClaims) {
+	s.T().Helper()
+	var b bytes.Buffer
+	w := multipart.NewWriter(&b)
+	if fieldName != "" {
+		part, err := w.CreateFormFile(fieldName, filename)
+		require.NoError(s.T(), err)
+		_, err = part.Write(content)
+		require.NoError(s.T(), err)
+	}
+	require.NoError(s.T(), w.Close())
+
+	req := httptest.NewRequest(method, path, &b)
+	req.Header.Set("Content-Type", w.FormDataContentType())
+
+	claims := jwt.MapClaims{
+		"id":             s.User.ID,
+		"sub":            s.User.ID.String(),
+		"name":           s.User.Name,
+		"email":          s.User.Email,
+		"email_verified": true,
+		"roles":          s.User.Roles,
+	}
+	for k, v := range extraClaims {
+		claims[k] = v
+	}
+
+	token := SignToken(s.T(), claims)
+	req.Header.Set("Authorization", "Bearer "+token)
+	for _, c := range s.Cookies {
+		req.AddCookie(c)
+	}
+
+	var err error
+	s.HttpResponse = nil
+	s.HttpResponse, err = api.Test(req)
+	require.NoError(s.T(), err)
 }
 
 func (s *ApiTestSuite[T]) GetResponse() httpx.WebResponse[T] {

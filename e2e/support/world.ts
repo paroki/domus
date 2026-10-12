@@ -4,12 +4,13 @@ import {
   World,
 } from "@cucumber/cucumber";
 import type { BrowserContext, Page } from "@playwright/test";
+import { FinancePage } from "../pages/finance/FinancePage";
 import { LauncherPage } from "../pages/LauncherPage";
 import { LoginPage } from "../pages/LoginPage";
 import { DiocesePage } from "../pages/system/DiocesePage";
 import { ParishPage } from "../pages/system/ParishPage";
 import { TerritoryPage } from "../pages/system/TerritoryPage";
-import { UnitPage } from "../pages/system/UnitPage";
+import { WorkspacePage } from "../pages/system/WorkspacePage";
 import { createSession } from "./auth";
 
 export class DomusWorld extends World {
@@ -22,7 +23,8 @@ export class DomusWorld extends World {
   private _diocesePage?: DiocesePage;
   private _parishPage?: ParishPage;
   private _territoryPage?: TerritoryPage;
-  private _unitPage?: UnitPage;
+  private _workspacePage?: WorkspacePage;
+  private _financePage?: FinancePage;
 
   constructor(options: IWorldOptions) {
     super(options);
@@ -53,9 +55,14 @@ export class DomusWorld extends World {
     return this._territoryPage;
   }
 
-  get unitPage() {
-    this._unitPage ??= new UnitPage(this.page);
-    return this._unitPage;
+  get workspacePage() {
+    this._workspacePage ??= new WorkspacePage(this.page);
+    return this._workspacePage;
+  }
+
+  get financePage() {
+    this._financePage ??= new FinancePage(this.page);
+    return this._financePage;
   }
 
   /** Login tanpa OAuth: bikin user via testUtils lalu pasang cookie sesi. */

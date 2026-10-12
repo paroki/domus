@@ -20,12 +20,16 @@ type User struct {
 	ID uuid.UUID `json:"id,omitempty"`
 	// DeletedAt holds the value of the "deletedAt" field.
 	DeletedAt *time.Time `json:"deletedAt,omitempty"`
+	// AuthUserID holds the value of the "auth_user_id" field.
+	AuthUserID *uuid.UUID `json:"auth_user_id,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Email holds the value of the "email" field.
 	Email string `json:"email,omitempty"`
 	// Avatar holds the value of the "avatar" field.
-	Avatar       string `json:"avatar,omitempty"`
+	Avatar string `json:"avatar,omitempty"`
+	// Status holds the value of the "status" field.
+	Status       user.Status `json:"status,omitempty"`
 	selectValues sql.SelectValues
 }
 
@@ -34,7 +38,9 @@ func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case user.FieldName, user.FieldEmail, user.FieldAvatar:
+		case user.FieldAuthUserID:
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
+		case user.FieldName, user.FieldEmail, user.FieldAvatar, user.FieldStatus:
 			values[i] = new(sql.NullString)
 		case user.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
@@ -68,6 +74,13 @@ func (_m *User) assignValues(columns []string, values []any) error {
 				_m.DeletedAt = new(time.Time)
 				*_m.DeletedAt = value.Time
 			}
+		case user.FieldAuthUserID:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field auth_user_id", values[i])
+			} else if value.Valid {
+				_m.AuthUserID = new(uuid.UUID)
+				*_m.AuthUserID = *value.S.(*uuid.UUID)
+			}
 		case user.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
@@ -85,6 +98,12 @@ func (_m *User) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field avatar", values[i])
 			} else if value.Valid {
 				_m.Avatar = value.String
+			}
+		case user.FieldStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field status", values[i])
+			} else if value.Valid {
+				_m.Status = user.Status(value.String)
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
@@ -127,6 +146,11 @@ func (_m *User) String() string {
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteString(", ")
+	if v := _m.AuthUserID; v != nil {
+		builder.WriteString("auth_user_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
@@ -135,6 +159,9 @@ func (_m *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("avatar=")
 	builder.WriteString(_m.Avatar)
+	builder.WriteString(", ")
+	builder.WriteString("status=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Status))
 	builder.WriteByte(')')
 	return builder.String()
 }

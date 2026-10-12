@@ -20,11 +20,13 @@ type softDeleteMutation interface {
 }
 
 var softDeletableQueryTypes = map[string]string{
-	ent.TypeDiocese:   "deleted_at",
-	ent.TypeParish:    "deleted_at",
-	ent.TypeTerritory: "deleted_at",
-	ent.TypeUnit:      "deleted_at",
-	ent.TypeUser:      "deleted_at",
+	ent.TypeAccount:     "deleted_at",
+	ent.TypeDiocese:     "deleted_at",
+	ent.TypeParish:      "deleted_at",
+	ent.TypeTerritory:   "deleted_at",
+	ent.TypeWorkspace:   "deleted_at",
+	ent.TypeTransaction: "deleted_at",
+	ent.TypeUser:        "deleted_at",
 }
 
 func initEntCliSoftDelete(cli *ent.Client) {

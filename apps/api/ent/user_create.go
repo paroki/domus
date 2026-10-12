@@ -38,6 +38,20 @@ func (_c *UserCreate) SetNillableDeletedAt(v *time.Time) *UserCreate {
 	return _c
 }
 
+// SetAuthUserID sets the "auth_user_id" field.
+func (_c *UserCreate) SetAuthUserID(v uuid.UUID) *UserCreate {
+	_c.mutation.SetAuthUserID(v)
+	return _c
+}
+
+// SetNillableAuthUserID sets the "auth_user_id" field if the given value is not nil.
+func (_c *UserCreate) SetNillableAuthUserID(v *uuid.UUID) *UserCreate {
+	if v != nil {
+		_c.SetAuthUserID(*v)
+	}
+	return _c
+}
+
 // SetName sets the "name" field.
 func (_c *UserCreate) SetName(v string) *UserCreate {
 	_c.mutation.SetName(v)
@@ -60,6 +74,20 @@ func (_c *UserCreate) SetAvatar(v string) *UserCreate {
 func (_c *UserCreate) SetNillableAvatar(v *string) *UserCreate {
 	if v != nil {
 		_c.SetAvatar(*v)
+	}
+	return _c
+}
+
+// SetStatus sets the "status" field.
+func (_c *UserCreate) SetStatus(v user.Status) *UserCreate {
+	_c.mutation.SetStatus(v)
+	return _c
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (_c *UserCreate) SetNillableStatus(v *user.Status) *UserCreate {
+	if v != nil {
+		_c.SetStatus(*v)
 	}
 	return _c
 }
@@ -113,6 +141,10 @@ func (_c *UserCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (_c *UserCreate) defaults() {
+	if _, ok := _c.mutation.Status(); !ok {
+		v := user.DefaultStatus
+		_c.mutation.SetStatus(v)
+	}
 	if _, ok := _c.mutation.ID(); !ok {
 		v := user.DefaultID()
 		_c.mutation.SetID(v)
@@ -135,6 +167,14 @@ func (_c *UserCreate) check() error {
 	if v, ok := _c.mutation.Email(); ok {
 		if err := user.EmailValidator(v); err != nil {
 			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.Status(); !ok {
+		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "User.status"`)}
+	}
+	if v, ok := _c.mutation.Status(); ok {
+		if err := user.StatusValidator(v); err != nil {
+			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "User.status": %w`, err)}
 		}
 	}
 	return nil
@@ -178,6 +218,10 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldDeletedAt, field.TypeTime, value)
 		_node.DeletedAt = &value
 	}
+	if value, ok := _c.mutation.AuthUserID(); ok {
+		_spec.SetField(user.FieldAuthUserID, field.TypeUUID, value)
+		_node.AuthUserID = &value
+	}
 	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(user.FieldName, field.TypeString, value)
 		_node.Name = value
@@ -189,6 +233,10 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Avatar(); ok {
 		_spec.SetField(user.FieldAvatar, field.TypeString, value)
 		_node.Avatar = value
+	}
+	if value, ok := _c.mutation.Status(); ok {
+		_spec.SetField(user.FieldStatus, field.TypeEnum, value)
+		_node.Status = value
 	}
 	return _node, _spec
 }
@@ -260,6 +308,24 @@ func (u *UserUpsert) ClearDeletedAt() *UserUpsert {
 	return u
 }
 
+// SetAuthUserID sets the "auth_user_id" field.
+func (u *UserUpsert) SetAuthUserID(v uuid.UUID) *UserUpsert {
+	u.Set(user.FieldAuthUserID, v)
+	return u
+}
+
+// UpdateAuthUserID sets the "auth_user_id" field to the value that was provided on create.
+func (u *UserUpsert) UpdateAuthUserID() *UserUpsert {
+	u.SetExcluded(user.FieldAuthUserID)
+	return u
+}
+
+// ClearAuthUserID clears the value of the "auth_user_id" field.
+func (u *UserUpsert) ClearAuthUserID() *UserUpsert {
+	u.SetNull(user.FieldAuthUserID)
+	return u
+}
+
 // SetName sets the "name" field.
 func (u *UserUpsert) SetName(v string) *UserUpsert {
 	u.Set(user.FieldName, v)
@@ -299,6 +365,18 @@ func (u *UserUpsert) UpdateAvatar() *UserUpsert {
 // ClearAvatar clears the value of the "avatar" field.
 func (u *UserUpsert) ClearAvatar() *UserUpsert {
 	u.SetNull(user.FieldAvatar)
+	return u
+}
+
+// SetStatus sets the "status" field.
+func (u *UserUpsert) SetStatus(v user.Status) *UserUpsert {
+	u.Set(user.FieldStatus, v)
+	return u
+}
+
+// UpdateStatus sets the "status" field to the value that was provided on create.
+func (u *UserUpsert) UpdateStatus() *UserUpsert {
+	u.SetExcluded(user.FieldStatus)
 	return u
 }
 
@@ -371,6 +449,27 @@ func (u *UserUpsertOne) ClearDeletedAt() *UserUpsertOne {
 	})
 }
 
+// SetAuthUserID sets the "auth_user_id" field.
+func (u *UserUpsertOne) SetAuthUserID(v uuid.UUID) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetAuthUserID(v)
+	})
+}
+
+// UpdateAuthUserID sets the "auth_user_id" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdateAuthUserID() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateAuthUserID()
+	})
+}
+
+// ClearAuthUserID clears the value of the "auth_user_id" field.
+func (u *UserUpsertOne) ClearAuthUserID() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.ClearAuthUserID()
+	})
+}
+
 // SetName sets the "name" field.
 func (u *UserUpsertOne) SetName(v string) *UserUpsertOne {
 	return u.Update(func(s *UserUpsert) {
@@ -417,6 +516,20 @@ func (u *UserUpsertOne) UpdateAvatar() *UserUpsertOne {
 func (u *UserUpsertOne) ClearAvatar() *UserUpsertOne {
 	return u.Update(func(s *UserUpsert) {
 		s.ClearAvatar()
+	})
+}
+
+// SetStatus sets the "status" field.
+func (u *UserUpsertOne) SetStatus(v user.Status) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetStatus(v)
+	})
+}
+
+// UpdateStatus sets the "status" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdateStatus() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateStatus()
 	})
 }
 
@@ -656,6 +769,27 @@ func (u *UserUpsertBulk) ClearDeletedAt() *UserUpsertBulk {
 	})
 }
 
+// SetAuthUserID sets the "auth_user_id" field.
+func (u *UserUpsertBulk) SetAuthUserID(v uuid.UUID) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetAuthUserID(v)
+	})
+}
+
+// UpdateAuthUserID sets the "auth_user_id" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdateAuthUserID() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateAuthUserID()
+	})
+}
+
+// ClearAuthUserID clears the value of the "auth_user_id" field.
+func (u *UserUpsertBulk) ClearAuthUserID() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.ClearAuthUserID()
+	})
+}
+
 // SetName sets the "name" field.
 func (u *UserUpsertBulk) SetName(v string) *UserUpsertBulk {
 	return u.Update(func(s *UserUpsert) {
@@ -702,6 +836,20 @@ func (u *UserUpsertBulk) UpdateAvatar() *UserUpsertBulk {
 func (u *UserUpsertBulk) ClearAvatar() *UserUpsertBulk {
 	return u.Update(func(s *UserUpsert) {
 		s.ClearAvatar()
+	})
+}
+
+// SetStatus sets the "status" field.
+func (u *UserUpsertBulk) SetStatus(v user.Status) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetStatus(v)
+	})
+}
+
+// UpdateStatus sets the "status" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdateStatus() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateStatus()
 	})
 }
 

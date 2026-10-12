@@ -7,9 +7,11 @@ const (
 	ResourceDiocese   Resource = "dioceses"
 	ResourceParish    Resource = "parishes"
 	ResourceTerritory Resource = "territories"
-	ResourceUnit      Resource = "units"
+	ResourceWorkspace Resource = "workspaces"
 	ResourceFinance   Resource = "finance"
 	ResourceSacrament Resource = "sacrament"
+	// ResourceUser represents the user management resource.
+	ResourceUser Resource = "users"
 )
 
 const (

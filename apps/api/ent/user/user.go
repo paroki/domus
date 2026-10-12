@@ -3,6 +3,8 @@
 package user
 
 import (
+	"fmt"
+
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 )
@@ -14,12 +16,16 @@ const (
 	FieldID = "id"
 	// FieldDeletedAt holds the string denoting the deletedat field in the database.
 	FieldDeletedAt = "deleted_at"
+	// FieldAuthUserID holds the string denoting the auth_user_id field in the database.
+	FieldAuthUserID = "auth_user_id"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
 	// FieldEmail holds the string denoting the email field in the database.
 	FieldEmail = "email"
 	// FieldAvatar holds the string denoting the avatar field in the database.
 	FieldAvatar = "avatar"
+	// FieldStatus holds the string denoting the status field in the database.
+	FieldStatus = "status"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 )
@@ -28,9 +34,11 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldDeletedAt,
+	FieldAuthUserID,
 	FieldName,
 	FieldEmail,
 	FieldAvatar,
+	FieldStatus,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -52,6 +60,32 @@ var (
 	DefaultID func() uuid.UUID
 )
 
+// Status defines the type for the "status" enum field.
+type Status string
+
+// StatusActive is the default value of the Status enum.
+const DefaultStatus = StatusActive
+
+// Status values.
+const (
+	StatusInvited Status = "invited"
+	StatusActive  Status = "active"
+)
+
+func (s Status) String() string {
+	return string(s)
+}
+
+// StatusValidator is a validator for the "status" field enum values. It is called by the builders before save.
+func StatusValidator(s Status) error {
+	switch s {
+	case StatusInvited, StatusActive:
+		return nil
+	default:
+		return fmt.Errorf("user: invalid enum value for status field: %q", s)
+	}
+}
+
 // OrderOption defines the ordering options for the User queries.
 type OrderOption func(*sql.Selector)
 
@@ -63,6 +97,11 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 // ByDeletedAt orders the results by the deletedAt field.
 func ByDeletedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDeletedAt, opts...).ToFunc()
+}
+
+// ByAuthUserID orders the results by the auth_user_id field.
+func ByAuthUserID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAuthUserID, opts...).ToFunc()
 }
 
 // ByName orders the results by the name field.
@@ -78,4 +117,9 @@ func ByEmail(opts ...sql.OrderTermOption) OrderOption {
 // ByAvatar orders the results by the avatar field.
 func ByAvatar(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAvatar, opts...).ToFunc()
+}
+
+// ByStatus orders the results by the status field.
+func ByStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStatus, opts...).ToFunc()
 }

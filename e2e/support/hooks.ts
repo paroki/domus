@@ -10,9 +10,10 @@ import { type Browser, chromium } from "@playwright/test";
 import { startApps, stopApps } from "./apps";
 import {
   cleanTestDioceses,
+  cleanTestMemberships,
   cleanTestParishes,
   cleanTestTerritories,
-  cleanTestUnits,
+  cleanTestWorkspaces,
   removeUser,
 } from "./auth";
 import { env } from "./env";
@@ -57,10 +58,11 @@ After(async function (this: DomusWorld, scenario) {
     this.attach(png, "image/png");
   }
   await this.context.close();
-  await cleanTestUnits();
+  await cleanTestWorkspaces();
   await cleanTestTerritories();
   await cleanTestParishes();
   await cleanTestDioceses();
+  await cleanTestMemberships();
   for (const id of this.userIds) await removeUser(id);
   this.userIds = [];
 });

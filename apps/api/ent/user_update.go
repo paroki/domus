@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 	"github.com/paroki/domus/api/ent/internal"
 	"github.com/paroki/domus/api/ent/predicate"
 	"github.com/paroki/domus/api/ent/user"
@@ -46,6 +47,26 @@ func (_u *UserUpdate) SetNillableDeletedAt(v *time.Time) *UserUpdate {
 // ClearDeletedAt clears the value of the "deletedAt" field.
 func (_u *UserUpdate) ClearDeletedAt() *UserUpdate {
 	_u.mutation.ClearDeletedAt()
+	return _u
+}
+
+// SetAuthUserID sets the "auth_user_id" field.
+func (_u *UserUpdate) SetAuthUserID(v uuid.UUID) *UserUpdate {
+	_u.mutation.SetAuthUserID(v)
+	return _u
+}
+
+// SetNillableAuthUserID sets the "auth_user_id" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableAuthUserID(v *uuid.UUID) *UserUpdate {
+	if v != nil {
+		_u.SetAuthUserID(*v)
+	}
+	return _u
+}
+
+// ClearAuthUserID clears the value of the "auth_user_id" field.
+func (_u *UserUpdate) ClearAuthUserID() *UserUpdate {
+	_u.mutation.ClearAuthUserID()
 	return _u
 }
 
@@ -97,6 +118,20 @@ func (_u *UserUpdate) ClearAvatar() *UserUpdate {
 	return _u
 }
 
+// SetStatus sets the "status" field.
+func (_u *UserUpdate) SetStatus(v user.Status) *UserUpdate {
+	_u.mutation.SetStatus(v)
+	return _u
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableStatus(v *user.Status) *UserUpdate {
+	if v != nil {
+		_u.SetStatus(*v)
+	}
+	return _u
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdate) Mutation() *UserMutation {
 	return _u.mutation
@@ -141,6 +176,11 @@ func (_u *UserUpdate) check() error {
 			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Status(); ok {
+		if err := user.StatusValidator(v); err != nil {
+			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "User.status": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -162,6 +202,12 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if _u.mutation.DeletedAtCleared() {
 		_spec.ClearField(user.FieldDeletedAt, field.TypeTime)
 	}
+	if value, ok := _u.mutation.AuthUserID(); ok {
+		_spec.SetField(user.FieldAuthUserID, field.TypeUUID, value)
+	}
+	if _u.mutation.AuthUserIDCleared() {
+		_spec.ClearField(user.FieldAuthUserID, field.TypeUUID)
+	}
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(user.FieldName, field.TypeString, value)
 	}
@@ -173,6 +219,9 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.AvatarCleared() {
 		_spec.ClearField(user.FieldAvatar, field.TypeString)
+	}
+	if value, ok := _u.mutation.Status(); ok {
+		_spec.SetField(user.FieldStatus, field.TypeEnum, value)
 	}
 	_spec.Node.Schema = _u.schemaConfig.User
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
@@ -213,6 +262,26 @@ func (_u *UserUpdateOne) SetNillableDeletedAt(v *time.Time) *UserUpdateOne {
 // ClearDeletedAt clears the value of the "deletedAt" field.
 func (_u *UserUpdateOne) ClearDeletedAt() *UserUpdateOne {
 	_u.mutation.ClearDeletedAt()
+	return _u
+}
+
+// SetAuthUserID sets the "auth_user_id" field.
+func (_u *UserUpdateOne) SetAuthUserID(v uuid.UUID) *UserUpdateOne {
+	_u.mutation.SetAuthUserID(v)
+	return _u
+}
+
+// SetNillableAuthUserID sets the "auth_user_id" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableAuthUserID(v *uuid.UUID) *UserUpdateOne {
+	if v != nil {
+		_u.SetAuthUserID(*v)
+	}
+	return _u
+}
+
+// ClearAuthUserID clears the value of the "auth_user_id" field.
+func (_u *UserUpdateOne) ClearAuthUserID() *UserUpdateOne {
+	_u.mutation.ClearAuthUserID()
 	return _u
 }
 
@@ -261,6 +330,20 @@ func (_u *UserUpdateOne) SetNillableAvatar(v *string) *UserUpdateOne {
 // ClearAvatar clears the value of the "avatar" field.
 func (_u *UserUpdateOne) ClearAvatar() *UserUpdateOne {
 	_u.mutation.ClearAvatar()
+	return _u
+}
+
+// SetStatus sets the "status" field.
+func (_u *UserUpdateOne) SetStatus(v user.Status) *UserUpdateOne {
+	_u.mutation.SetStatus(v)
+	return _u
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableStatus(v *user.Status) *UserUpdateOne {
+	if v != nil {
+		_u.SetStatus(*v)
+	}
 	return _u
 }
 
@@ -321,6 +404,11 @@ func (_u *UserUpdateOne) check() error {
 			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Status(); ok {
+		if err := user.StatusValidator(v); err != nil {
+			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "User.status": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -359,6 +447,12 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	if _u.mutation.DeletedAtCleared() {
 		_spec.ClearField(user.FieldDeletedAt, field.TypeTime)
 	}
+	if value, ok := _u.mutation.AuthUserID(); ok {
+		_spec.SetField(user.FieldAuthUserID, field.TypeUUID, value)
+	}
+	if _u.mutation.AuthUserIDCleared() {
+		_spec.ClearField(user.FieldAuthUserID, field.TypeUUID)
+	}
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(user.FieldName, field.TypeString, value)
 	}
@@ -370,6 +464,9 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	}
 	if _u.mutation.AvatarCleared() {
 		_spec.ClearField(user.FieldAvatar, field.TypeString)
+	}
+	if value, ok := _u.mutation.Status(); ok {
+		_spec.SetField(user.FieldStatus, field.TypeEnum, value)
 	}
 	_spec.Node.Schema = _u.schemaConfig.User
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
