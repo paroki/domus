@@ -1,0 +1,2 @@
+# ponytail: enable bun test when test files exist
+exit 0
