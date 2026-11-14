@@ -8,16 +8,18 @@ const Configuration: UserConfig = {
       2,
       'always',
       [
+        // app / domain
         'api',
         'ui',
         'db',
         'auth',
         'core',
-        'tools',
+        // infra / cross-cutting
         'deps',
-        'docker',
-        'github',
         'release',
+        'tools',
+        'deploy',
+        'docs',
       ],
     ],
     'header-max-length': [2, 'always', 80],
