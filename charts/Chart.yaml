@@ -1,0 +1,14 @@
+apiVersion: v2
+name: domus
+description: Domus application (Go API + embedded SPA) for Kubernetes
+type: application
+# version and appVersion are bumped by release-please. Do not edit by hand.
+version: 0.1.0 # x-release-please-version
+appVersion: "0.1.0" # x-release-please-version
+home: https://github.com/paroki/domus
+sources:
+  - https://github.com/paroki/domus
+keywords:
+  - domus
+maintainers:
+  - name: Anthonius

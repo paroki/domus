@@ -1,0 +1,39 @@
+[tools]
+air = "latest"
+go = "latest"
+node = "26"
+swag = "v2.0.0-rc6"
+
+[tasks."dev:backend"]
+description = "Run Go backend dev server with air"
+run = "air"
+
+[tasks."dev:ui"]
+description = "Run React Router UI dev server"
+dir = "ui"
+run = "bun run dev"
+
+[tasks.dev]
+description = "Run full dev stack concurrently"
+depends = ["dev:backend", "dev:ui"]
+
+[tasks.build]
+description = "Build backend binary and UI"
+depends = ["build:ui", "build:backend"]
+
+[tasks."build:backend"]
+description = "Build Go binary"
+run = "go build -o bin/domus ./cmd/domus"
+
+[tasks."build:ui"]
+description = "Build UI bundle"
+dir = "ui"
+run = "bun run build"
+
+[tasks.test]
+description = "Run Go and UI tests"
+run = "go test ./... && cd ui && bun run typecheck"
+
+[tasks.generate]
+description = "Generate API docs via swag"
+run = "swag init -g internal/app/fiber.go -o api"
