@@ -3,7 +3,7 @@
 | Field    | Value                                                                                                                                  |
 | :------- | :------------------------------------------------------------------------------------------------------------------------------------- |
 | Document | `docs/auth.md`                                                                                                                         |
-| Version  | 1.0.0                                                                                                                                  |
+| Version  | 1.0.1                                                                                                                                  |
 | Status   | Draft                                                                                                                                  |
 | Date     | 2026-11-17                                                                                                                             |
 | Features | `auth` and `user` (backend `internal/auth`, `internal/user`; UI `ui/app/features/auth`, `ui/app/features/user`)                        |
@@ -14,6 +14,7 @@
 | Version | Date       | Notes         |
 | :------ | :--------- | :------------ |
 | 1.0.0   | 2026-11-17 | Initial draft |
+| 1.0.1   | 2026-11-17 | Current user moves to `user` (D-11); OTP-6 covers invite requests; CLI skips channel validation; 90-day session cap; depguard boundaries; trimmed section 17 |
 
 ---
 
@@ -77,7 +78,7 @@ Domus digitalizes parish administration and management. It currently has no conc
 | D-08 | Sessions are server-side, revocable, and carried in an `HttpOnly` cookie. No JWT.                                                                         |
 | D-09 | `identity`, `invite`, `session`, and short-lived flow state belong to `auth`. `user` owns profile, role, and status.                                      |
 | D-10 | Dependency direction is `auth → user` only. `user` never imports `auth`.                                                                                  |
-| D-11 | The authenticated request identity (principal) lives in `internal/platform/httpx`.                                                                        |
+| D-11 | The authenticated caller is the `user` feature's `User`, read with `user.Current(c)`. Only `auth.Middleware` sets it, so no feature other than `auth` imports `auth`.                                                                        |
 | D-12 | Databases: Postgres for CI and production; SQLite via `modernc.org/sqlite` (pure Go, no CGO) for local testing.                                           |
 | D-13 | Environment variables: `APP_*` for global and platform concerns, `<FEATURE>_*` for feature concerns. Mailer and WhatsApp settings use `AUTH_*`.           |
 | D-14 | The first administrator is created through a CLI-generated admin invite, not through an environment secret.                                               |
@@ -154,10 +155,10 @@ Keywords MUST, SHOULD, and MAY follow RFC 2119.
 | :---- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | OTP-1 | A code is 6 decimal digits from a CSPRNG. It is stored as HMAC-SHA256 keyed by `AUTH_SECRET`, never in plaintext or as a bare hash. Comparison MUST be constant-time.                                                                  |
 | OTP-2 | A code is single-use, expires after `AUTH_OTP_TTL`, and is invalidated after `AUTH_OTP_MAX_ATTEMPTS` failed verifications. A new request for the same target invalidates the previous code.                                            |
-| OTP-3 | The user supplies one identifier in a single field: an email address (contains `@`) or a WhatsApp number. Emails are trimmed and lowercased. Numbers are normalized to E.164 (`08…`, `628…`, and `+628…` all become `+628…`).            |
+| OTP-3 | The user supplies one identifier in a single field: an email address (contains `@`) or a WhatsApp number. Emails are trimmed and lowercased. Numbers are normalized to E.164 with Indonesia (`+62`) as the default country (`08…`, `628…`, and `+628…` all become `+628…`).            |
 | OTP-4 | For a **known user**, the code is sent to **all** of that user's verified OTP identities (`email`, `whatsapp`) concurrently. Success means at least one channel accepted the message. A single code is valid regardless of channel.     |
 | OTP-5 | For an **unknown identifier**, a code is sent only when the request carries a valid invite (3.1). Otherwise nothing is sent.                                                                                                           |
-| OTP-6 | The login response to an OTP request MUST be identical in body, status, and shape for known, unknown, and unreachable identifiers (`202`). Delivery failures are logged, not reported. Onboarding requests MAY report a delivery failure, since the target is the identifier the requester typed. |
+| OTP-6 | The login response to an OTP request MUST be identical in body, status, and shape for known, unknown, and unreachable identifiers (`202`). Delivery failures are logged, not reported. This holds for requests that carry an invite too: the response MUST NOT differ between known and unknown identifiers. Only the authenticated add-identity flow MAY report a delivery failure. |
 | OTP-7 | Verification outcomes: known identity gives a session; unknown identity with a valid invite gives an onboarding ticket; otherwise a generic `otp_invalid`.                                                                              |
 | OTP-8 | Resend cooldown is `AUTH_OTP_RESEND_COOLDOWN`. Sends per target are capped at `AUTH_OTP_MAX_SENDS_PER_HOUR`. Attempts and cooldown are counted **per user** (or per identifier when there is no user), not per channel.                |
 | OTP-9 | Rate-limit state MUST live in the database (not process memory), because Domus can run multiple replicas behind the HPA.                                                                                                               |
@@ -190,7 +191,7 @@ Keywords MUST, SHOULD, and MAY follow RFC 2119.
 | ID    | Requirement                                                                                                                                                                                                                     |
 | :---- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | SES-1 | A session is a 256-bit random token, stored hashed in the database, carried in the `domus_session` cookie: `HttpOnly`, `Path=/`, `SameSite=Lax`, `Secure` when `APP_BASE_URL` is `https`.                                         |
-| SES-2 | Expiry is sliding: `AUTH_SESSION_TTL` from last activity. `last_seen_at` updates are throttled (at most once per minute per session).                                                                                            |
+| SES-2 | Expiry is sliding: `AUTH_SESSION_TTL` from last activity. `last_seen_at` updates are throttled (at most once per minute per session). A session also expires 90 days after creation regardless of activity.                                                                                            |
 | SES-3 | A new session MUST be created at every sign-in; no session identifier is reused across authentication events.                                                                                                                    |
 | SES-4 | Logout deletes the session server-side.                                                                                                                                                                                          |
 | SES-5 | Disabling a user deletes all of that user's sessions. A disabled user cannot sign in.                                                                                                                                            |
@@ -205,7 +206,8 @@ Keywords MUST, SHOULD, and MAY follow RFC 2119.
 | USR-2 | Any signed-in user can read and update their own name (`/api/users/me`).                                                                                                          |
 | USR-3 | Admins can list users, read a user, change a user's role, and enable or disable a user.                                                                                           |
 | USR-4 | The system MUST refuse to demote or disable the last active admin (`last_admin`).                                                                                                 |
-| USR-5 | The `user` feature exposes a root-package API (see 7.3) to `auth` for lookup and transactional creation. It exposes no authentication concepts.                                   |
+| USR-5 | The `user` feature exposes a root-package API (see 7.3) to `auth` for lookup and transactional creation. It exposes no session or credential concepts. |
+| USR-6 | Any feature reads the authenticated caller with `user.Current` and guards routes with `user.RequireRole`. Only `auth.Middleware` sets the current user (see 7.6).                                   |
 
 ### 4.8 CLI (`CLI`)
 
@@ -213,7 +215,7 @@ Keywords MUST, SHOULD, and MAY follow RFC 2119.
 | :---- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | CLI-1 | `domus invite create --role <admin\|member> --expires <duration> --max-uses <n> [--label <text>]` prints the invite URL once.                                           |
 | CLI-2 | `domus invite list` and `domus invite revoke <id>` manage existing invites.                                                                                              |
-| CLI-3 | The CLI uses the same `auth` root API as the HTTP handlers and requires `APP_DATABASE_URL` and `APP_BASE_URL`. It does not start the HTTP server.                       |
+| CLI-3 | The CLI uses the same `auth` root API as the HTTP handlers and requires only `APP_DATABASE_URL` and `APP_BASE_URL`. It does not start the HTTP server and skips the channel and provider startup validation of 9.3.                       |
 
 ---
 
@@ -225,13 +227,13 @@ Keywords MUST, SHOULD, and MAY follow RFC 2119.
 | SEC-2  | OTP codes are stored per OTP-1 and are never logged, including in error paths.                                                                                                                               |
 | SEC-3  | Request logging MUST redact invite tokens, session cookies, onboarding cookies, OTP codes, OAuth `code` and `state` parameters, and provider secrets.                                                       |
 | SEC-4  | OTP request responses MUST not enable enumeration of registered emails or numbers (OTP-6).                                                                                                                   |
-| SEC-5  | OTP and onboarding endpoints MUST be rate limited per target (database-backed, OTP-8) and additionally per client IP on a best-effort basis.                                                                 |
+| SEC-5  | OTP and onboarding endpoints MUST be rate limited per target (database-backed, OTP-8) and additionally per client IP on a best-effort basis (requires `APP_TRUSTED_PROXIES`, see 14.1).                                                                 |
 | SEC-6  | Provider-asserted emails are trusted for linking only when marked verified.                                                                                                                                  |
 | SEC-7  | `AUTH_SECRET`, OAuth client secrets, the SMTP password, and the GoWA password are secrets: delivered through Kubernetes secrets (`extraEnvFrom`), never committed, never echoed in logs or errors.            |
 | SEC-8  | Invite links in a shared group are bearer tokens visible to every member. Mitigations are mandatory expiry, a use cap, and revocation (INV-3, INV-6).                                                       |
 | SEC-9  | Expired invites, OTP challenges, onboarding tickets, OAuth states, and sessions MUST be purged by a periodic cleanup so personal data is not retained past its purpose.                                     |
 | SEC-10 | Email addresses and phone numbers are personal data. Collection is limited to what sign-in needs. Obligations under Indonesian personal data protection law apply and SHOULD be reviewed before launch.     |
-| SEC-11 | Authorization checks (`admin` role) are enforced in handlers via a shared guard; services receive the acting user id as an argument and never read HTTP context.                                            |
+| SEC-11 | Authorization checks (`admin` role) are enforced in handlers via `user.RequireRole`; services receive the acting user id as an argument and never read HTTP context.                                            |
 | SEC-12 | Authentication events (sign-in success and failure, onboarding, invite create and revoke, identity added or removed, user disabled) are emitted as structured `slog` entries without sensitive values.       |
 
 ---
@@ -307,11 +309,13 @@ Unique index on `(type, subject)`.
 ### 7.1 Package layout
 
 ```txt
+.golangci.yml                  # depguard: feature and layer boundaries
+docs/auth.md
 ent/schema/                    # user, identity, invite, session,
                                # otp_challenge, onboarding_ticket, oauth_state
 internal/
 ├── app/                       # wiring: config, router, auth middleware
-├── platform/httpx/            # envelope, errors, Principal, RequireRole
+├── platform/httpx/            # envelope, errors
 ├── auth/
 │   ├── auth.go                # New(cfg, client, users), Register(r): wiring only
 │   ├── api.go                 # cross-feature API: Middleware, CreateInvite, ...
@@ -324,7 +328,7 @@ internal/
 │   └── sender/                # email.go, whatsapp.go (GoWA)
 └── user/
     ├── user.go
-    ├── api.go                 # cross-feature API used by auth
+    ├── api.go                 # cross-feature API: FindByID, Create, Current, RequireRole
     ├── domain/
     ├── repo/
     ├── service/
@@ -336,10 +340,10 @@ ui/app/features/user/          # renamed from users
 
 ### 7.2 Dependency rules
 
-- `handler → service → repo → domain` inside each feature (unchanged from `AGENTS.md`).
+- `handler → service → repo → domain` inside each feature. The boundaries in this section are enforced by depguard (`.golangci.yml`).
 - `provider/` and `sender/` implement interfaces declared in `auth/domain` and depend only on `domain`. `service` never imports them; `auth.go` wires them from `Config`.
-- Between features the only edge is **`auth → user`**, and only through the root package `internal/user`. `user` MUST NOT import `internal/auth`, which prevents an import cycle. The `/me` style endpoints in `user` obtain the caller from `httpx.Principal`, not from `auth`.
-- `internal/platform/httpx` MUST NOT import any feature. `Principal.Role` is therefore a plain `string`.
+- Between `auth` and `user` the only edge is **`auth → user`**, and only through the root package `internal/user`. `user` MUST NOT import `internal/auth`, which prevents an import cycle. Any other feature may import `internal/user` to read the current user and MUST NOT import `internal/auth`.
+- `internal/platform/httpx` MUST NOT import any feature.
 
 ### 7.3 Cross-feature API (`api.go`)
 
@@ -349,6 +353,9 @@ Each feature's root package exposes its cross-feature surface in `api.go`: expor
 // internal/user/api.go
 func (f *Feature) FindByID(ctx context.Context, id uuid.UUID) (User, error)
 func (f *Feature) Create(ctx context.Context, db *ent.Client, in NewUser) (User, error)
+func Current(c fiber.Ctx) (User, bool)  // set by auth.Middleware
+func SetCurrent(c fiber.Ctx, u User)    // auth.Middleware only
+func RequireRole(role Role) fiber.Handler
 
 // internal/auth/api.go
 func (f *Feature) Middleware() fiber.Handler
@@ -396,9 +403,9 @@ type Sender interface {
 
 Onboarding spans two features. `auth.service` opens `client.Tx(ctx)`, passes `tx.Client()` into `user.Create(ctx, db, in)`, writes identities and consumes the invite with the same tx client, then commits. Passing a tx-scoped `*ent.Client` as an argument is the sanctioned cross-feature transaction pattern.
 
-### 7.6 Request principal
+### 7.6 Current user
 
-`httpx` provides `Principal{UserID uuid.UUID, Role string}`, `SetPrincipal(c, p)`, `PrincipalFrom(c)`, and `RequireRole(role)`. `auth.Middleware()` resolves the session cookie, loads the user through `user.FindByID`, rejects disabled users, and sets the principal. `internal/app/fiber.go` installs it on the `/api` group before feature registration. Handlers read the principal and pass `UserID` to services as an ordinary argument.
+The authenticated caller is the `user` feature's `User`, so no feature other than `auth` needs to import `auth`. `auth.Middleware()` resolves the session cookie, loads the user through `user.FindByID`, rejects disabled users, and calls `user.SetCurrent`. `internal/app/fiber.go` installs it on the `/api` group before feature registration. Handlers call `user.Current(c)`, or guard a route with `user.RequireRole(role)`, and pass the user id to services as an ordinary argument. Services never import `fiber`. `Role` is a typed enum owned by `user`.
 
 ### 7.7 Persistence
 
@@ -441,13 +448,15 @@ All routes live under `/api`, use the `{ data, meta, error }` envelope, and carr
 
 Invite and OTP tokens travel in request bodies, never in API paths or query strings (SEC-3). The `/invite/:token` path exists only as a UI route.
 
+`/api/users/me` MUST be registered before `/api/users/{id}`.
+
 ---
 
 ## 9. Configuration
 
 ### 9.1 Environment variable conventions
 
-These rules are recorded in `AGENTS.md` (section 17) and apply to every feature.
+These rules are recorded in `AGENTS.md` (the required change is listed in section 17 of this document) and apply to every feature.
 
 1. `APP_*` is for global and platform concerns (base URL, database, trusted proxies, and so on).
 2. `<FEATURE>_*` is for a single feature, for example `AUTH_*`. A driver adds a sub-namespace: `<FEATURE>_<DRIVER>_*`, for example `AUTH_OAUTH_GOOGLE_*`.
@@ -463,7 +472,7 @@ These rules are recorded in `AGENTS.md` (section 17) and apply to every feature.
 | `APP_BASE_URL`     | URL    | Yes      | Public origin without trailing slash. Used for invite links, OAuth redirect URIs, `Secure` cookies, and origin checks. |
 | `APP_DATABASE_URL` | string | Yes      | Defined by the database bootstrap issue. `postgres://…` in CI and production; a SQLite DSN locally. |
 
-Client IP detection behind the ingress relies on Fiber's trusted proxy configuration, owned by the platform (a future `APP_TRUSTED_PROXIES`).
+Client IP detection behind the ingress relies on Fiber's trusted proxy configuration, owned by the platform (`APP_TRUSTED_PROXIES`, a prerequisite, see 14.1).
 
 ### 9.3 `AUTH_*` variables
 
@@ -489,9 +498,9 @@ Client IP detection behind the ingress relies on Fiber's trusted proxy configura
 | `AUTH_WHATSAPP_GOWA_USERNAME`         | string   | none    | If GoWA basic auth is enabled    | No     | Confirm exact GoWA fields against its documentation at build time.  |
 | `AUTH_WHATSAPP_GOWA_PASSWORD`         | string   | none    | If GoWA basic auth is enabled    | Yes    |                                                                     |
 
-Startup validation: `AUTH_SECRET` is required; at least one OTP channel **or** one OAuth provider MUST be enabled; every enabled provider has complete credentials; enabled channels have complete settings.
+Server startup validation (not applied to the CLI): `AUTH_SECRET` is required; at least one OTP channel **or** one OAuth provider MUST be enabled; every enabled provider has complete credentials; enabled channels have complete settings.
 
-Constants (not configurable): OTP length 6, OAuth state lifetime 10 minutes, onboarding ticket lifetime 30 minutes, cookie names `domus_session` and `domus_onboarding`.
+Constants (not configurable): OTP length 6, OAuth state lifetime 10 minutes, onboarding ticket lifetime 30 minutes, session absolute lifetime 90 days, cookie names `domus_session` and `domus_onboarding`.
 
 GoWA is a separate application that must run on its own with a dedicated WhatsApp number. Its deployment is an operations concern; Domus only needs its address and credentials.
 
@@ -531,7 +540,7 @@ Sentinel errors live in `domain/errors.go` and map to HTTP statuses through `htt
 | `invite_not_found`, `invite_expired`, `invite_revoked`, `invite_exhausted` | Invite is unusable for the stated reason.                |
 | `otp_invalid`                                              | Wrong, expired, or exhausted code (indistinguishable by design).     |
 | `otp_rate_limited`                                         | Cooldown or hourly cap reached.                                      |
-| `otp_delivery_failed`                                      | Onboarding-only: no channel accepted the message.                    |
+| `otp_delivery_failed`                                      | Add-identity only (authenticated caller): no channel accepted the message.                    |
 | `not_registered`                                           | OAuth identity unknown and no valid invite.                          |
 | `provider_unavailable`                                     | Provider not enabled or upstream failure.                            |
 | `onboarding_expired`                                       | Ticket missing, expired, or already used.                            |
@@ -576,16 +585,7 @@ Sentinel errors live in `domain/errors.go` and map to HTTP statuses through `htt
 - **Handler tests** cover envelope, status mapping, cookies, origin checks, and deny-by-default.
 - **UI tests** (`bun test`) cover the login code step, invite states, and onboarding prefill.
 
-Run before finishing each change (from `AGENTS.md`):
-
-| Scope                         | Command                                                              |
-| :---------------------------- | :------------------------------------------------------------------- |
-| Regenerate OpenAPI and types  | `mise run api`                                                       |
-| Go tests with race detector   | `go test -race ./...`                                                |
-| Vulnerability check           | `govulncheck ./...`                                                  |
-| Full lint and typecheck       | `mise run lint`                                                      |
-| UI tests                      | `bun test --cwd ui --pass-with-no-tests`                             |
-| Helm lint and render          | `helm lint charts --strict && helm template domus charts > /dev/null` |
+Run the verification commands listed in `AGENTS.md` before finishing each change.
 
 ---
 
@@ -596,12 +596,14 @@ Run before finishing each change (from `AGENTS.md`):
 1. **Environment prefix migration**: rename existing unprefixed variables to `APP_*`.
 2. **Database bootstrap**: Ent setup under `ent/`, Postgres and SQLite drivers, migration strategy, `mise` codegen task, `APP_DATABASE_URL`, `APP_BASE_URL`, CI Postgres service.
 3. **`AGENTS.md` update** with the changes in section 17.
+4. **Boundary lint**: `.golangci.yml` with depguard rules, run in CI.
+5. **Trusted proxies**: `APP_TRUSTED_PROXIES`, needed for per-IP rate limits (SEC-5).
 
 ### 14.2 Phases
 
 | Phase | Scope                                                                                                                                      |
 | :---- | :----------------------------------------------------------------------------------------------------------------------------------------- |
-| 1     | `user` feature: schema, service, handlers, `api.go`, UI rename. `httpx` Principal and `RequireRole`.                                       |
+| 1     | `user` feature: schema, service, handlers, `api.go`, UI rename. `user.Current`, `user.SetCurrent`, and `user.RequireRole`.                                       |
 | 2     | `auth` core: invite, session, middleware (deny-by-default), onboarding ticket, CLI invite commands. First admin can sign up by invite.    |
 | 3     | OTP with the email sender: challenge, rate limits, cleanup job.                                                                            |
 | 4     | WhatsApp (GoWA) sender and simultaneous multi-channel delivery.                                                                            |
@@ -632,7 +634,8 @@ These are defaults chosen to complete the draft. Change them in a later version 
 
 - Roles are limited to `admin` and `member`; full RBAC is a separate PRD.
 - Invite creation requires an expiry and a use count. Server-side upper bounds: expiry at most 30 days, maximum uses at most 500.
-- Session lifetime is 30 days sliding.
+- Session lifetime is 30 days sliding, with a 90-day absolute maximum.
+- Phone numbers without a country code are assumed to be Indonesian.
 - A user may have no `email` identity if the OAuth provider supplied no verified email.
 - OTP message language is Indonesian, matching the default UI locale.
 - The invite URL is shown only once; there is no "copy link again".
@@ -642,11 +645,11 @@ These are defaults chosen to complete the draft. Change them in a later version 
 
 ## 17. Required `AGENTS.md` Changes
 
-To be applied in a separate `docs(docs)` commit, so agents follow the same rules this PRD assumes:
+To be applied in a separate `docs(docs)` commit. `AGENTS.md` stays lean: it holds rules an agent cannot infer from code or config, and boundaries that depguard enforces are only pointed to, not described.
 
 1. Add the **environment variable conventions** of section 9.1.
 2. Allow a root-package **`api.go`** for cross-feature calls (exported methods and aliases), and keep `<feature>.go` wiring-only. State the rule: cross-feature dependency edges must be acyclic and are documented in the PRD that introduces them.
-3. Allow **driver subpackages** (for example `provider/`, `sender/`) that implement interfaces declared in `domain/` and are wired only from the feature root.
-4. Document the **transaction pattern**: cross-feature atomic work passes a tx-scoped `*ent.Client` as an argument.
-5. Document **`httpx.Principal`**: handlers read it and pass the user id to services; services never import `httpx`.
-6. Record **deny-by-default** for `/api` routes, with explicit public markers.
+3. Document the **transaction pattern**: cross-feature atomic work passes a tx-scoped `*ent.Client` as an argument.
+4. Document the **current user**: handlers read it with `user.Current` and pass the user id to services; services never read HTTP context.
+5. Record **deny-by-default** for `/api` routes, with explicit public markers.
+6. Point to `.golangci.yml` as the enforcement of feature and layer boundaries.
