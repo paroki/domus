@@ -3,7 +3,7 @@ version: "2"
 # Enforces feature and layer boundaries (see AGENTS.md, "Backend Features").
 # Add an isolation block per feature when you add a feature.
 linters:
-  default: none
+  default: standard
   enable:
     - depguard
   settings:
