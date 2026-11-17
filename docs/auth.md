@@ -3,7 +3,7 @@
 | Field    | Value                                                                                                                                  |
 | :------- | :------------------------------------------------------------------------------------------------------------------------------------- |
 | Document | `docs/auth.md`                                                                                                                         |
-| Version  | 1.0.1                                                                                                                                  |
+| Version  | 1.0.0                                                                                                                                  |
 | Status   | Draft                                                                                                                                  |
 | Date     | 2026-11-17                                                                                                                             |
 | Features | `auth` and `user` (backend `internal/auth`, `internal/user`; UI `ui/app/features/auth`, `ui/app/features/user`)                        |
@@ -14,7 +14,6 @@
 | Version | Date       | Notes         |
 | :------ | :--------- | :------------ |
 | 1.0.0   | 2026-11-17 | Initial draft |
-| 1.0.1   | 2026-11-17 | Current user moves to `user` (D-11); OTP-6 covers invite requests; CLI skips channel validation; 90-day session cap; depguard boundaries; trimmed section 17 |
 
 ---
 
