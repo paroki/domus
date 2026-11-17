@@ -5,11 +5,148 @@
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
+/* Map design tokens (set per theme/mode below) to Tailwind utilities. */
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  --color-accent: var(--accent);
+  --color-danger: var(--danger);
+  --color-on-danger: var(--on-danger);
+  --color-success-bg: var(--success-bg);
+  --color-success-fg: var(--success-fg);
+  --color-warning-bg: var(--warning-bg);
+  --color-warning-fg: var(--warning-fg);
+  --color-danger-bg: var(--danger-bg);
+  --color-danger-fg: var(--danger-fg);
+  --color-neutral-bg: var(--neutral-bg);
+  --color-neutral-fg: var(--neutral-fg);
+  --color-plate-1: var(--plate-1);
+  --color-plate-2: var(--plate-2);
+  --color-plate-3: var(--plate-3);
+  --color-plate-4: var(--plate-4);
+  --color-plate-5: var(--plate-5);
+  --color-plate-6: var(--plate-6);
+}
+
+/*
+ * Themes: Deep Sacristy Green (default) and Warm Terracotta, each light/dark.
+ * <html data-theme="green|terracotta" data-mode="light|dark"> is set by the
+ * inline script in root.tsx and by ThemeProvider.
+ * Order matters: later rules with equal specificity win.
+ */
+
+/* Green, light (default) */
+:root {
+  --canvas: #f3f5f1;
+  --surface: #ffffff;
+  --surface-2: #e9eee7;
+  --fg: #17211c;
+  --muted: #55645c;
+  --line: #d9dfd6;
+  --primary: #1f4d3a;
+  --on-primary: #ffffff;
+  --accent: #8a5f12;
+  --danger: #a8342a;
+  --on-danger: #ffffff;
+  --success-bg: #dceBe2;
+  --success-fg: #17482f;
+  --warning-bg: #f6e6c4;
+  --warning-fg: #6b4a0b;
+  --danger-bg: #f3d8d4;
+  --danger-fg: #8a2a22;
+  --neutral-bg: #e3e7e4;
+  --neutral-fg: #3d4a43;
+  --plate-1: #1f4d3a;
+  --plate-2: #8a5f12;
+  --plate-3: #2f6f8f;
+  --plate-4: #7a4a8c;
+  --plate-5: #5b6670;
+  --plate-6: #a0522d;
+}
+
+/* Terracotta, light */
+:root[data-theme="terracotta"] {
+  --canvas: #faf5f0;
+  --surface: #ffffff;
+  --surface-2: #f3ebe3;
+  --fg: #2a1d17;
+  --muted: #6b5a50;
+  --line: #e8ddd3;
+  --primary: #b4492e;
+  --on-primary: #ffffff;
+  --accent: #8a5f12;
+  --neutral-bg: #ede4dc;
+  --neutral-fg: #4f4038;
+  --plate-1: #b4492e;
+  --plate-2: #8a5f12;
+  --plate-3: #3f6f63;
+  --plate-4: #6b4e8a;
+  --plate-5: #5b6670;
+  --plate-6: #2f6f8f;
+}
+
+/* Green, dark */
+:root[data-mode="dark"] {
+  --canvas: #0f1a15;
+  --surface: #172620;
+  --surface-2: #1e3028;
+  --fg: #e8f0eb;
+  --muted: #a3b5ab;
+  --line: #26382f;
+  --primary: #6fbf9a;
+  --on-primary: #0f1a15;
+  --accent: #d9a441;
+  --danger: #c0463b;
+  --success-bg: #1e3a2d;
+  --success-fg: #9ad9b8;
+  --warning-bg: #3d2f10;
+  --warning-fg: #f0c46a;
+  --danger-bg: #3f1e1a;
+  --danger-fg: #f0a59c;
+  --neutral-bg: #26382f;
+  --neutral-fg: #c3d0c8;
+  --plate-1: #2e7d5b;
+  --plate-2: #9a6c14;
+  --plate-3: #3b7fa0;
+  --plate-4: #8a58a0;
+  --plate-5: #66727d;
+  --plate-6: #b5643f;
+  color-scheme: dark;
+}
+
+/* Terracotta, dark */
+:root[data-theme="terracotta"][data-mode="dark"] {
+  --canvas: #1c1411;
+  --surface: #271c17;
+  --surface-2: #30231d;
+  --fg: #f5eae3;
+  --muted: #bfaa9f;
+  --line: #3a2b24;
+  --primary: #e58c6e;
+  --on-primary: #1c1411;
+  --accent: #f0a93e;
+  --neutral-bg: #3a2b24;
+  --neutral-fg: #d8c7bc;
+  --plate-1: #c2553a;
+  --plate-2: #9a6c14;
+  --plate-3: #4c8374;
+  --plate-4: #7c5c9c;
+  --plate-5: #66727d;
+  --plate-6: #3b7fa0;
+}
+
 html,
 body {
-  @apply bg-white dark:bg-gray-950;
+  @apply bg-canvas text-fg;
+}
 
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
-  }
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
