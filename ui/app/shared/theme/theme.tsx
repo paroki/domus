@@ -21,7 +21,11 @@ const DARK_QUERY = "(prefers-color-scheme: dark)";
  */
 export const themeInitScript = `(function(){try{var d=document.documentElement,t=localStorage.getItem("${THEME_KEY}"),m=localStorage.getItem("${MODE_KEY}")||"system",k=m==="dark"||(m!=="light"&&matchMedia("${DARK_QUERY}").matches);d.dataset.theme=t==="terracotta"?"terracotta":"green";d.dataset.mode=k?"dark":"light"}catch(e){}})()`;
 
-function read<T extends string>(key: string, allowed: readonly T[], fallback: T): T {
+function read<T extends string>(
+  key: string,
+  allowed: readonly T[],
+  fallback: T,
+): T {
   try {
     const v = localStorage.getItem(key);
     return allowed.includes(v as T) ? (v as T) : fallback;
@@ -39,7 +43,8 @@ function write(key: string, value: string) {
 }
 
 function apply(theme: Theme, mode: Mode) {
-  const dark = mode === "dark" || (mode === "system" && matchMedia(DARK_QUERY).matches);
+  const dark =
+    mode === "dark" || (mode === "system" && matchMedia(DARK_QUERY).matches);
   const el = document.documentElement;
   el.dataset.theme = theme;
   el.dataset.mode = dark ? "dark" : "light";

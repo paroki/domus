@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-sans:
+    "Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
 /* Map design tokens (set per theme/mode below) to Tailwind utilities. */
@@ -54,7 +55,7 @@
   --accent: #8a5f12;
   --danger: #a8342a;
   --on-danger: #ffffff;
-  --success-bg: #dceBe2;
+  --success-bg: #dcebe2;
   --success-fg: #17482f;
   --warning-bg: #f6e6c4;
   --warning-fg: #6b4a0b;
