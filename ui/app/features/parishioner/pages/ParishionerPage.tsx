@@ -4,7 +4,7 @@ import { UnderConstruction } from "~/shared/ui/UnderConstruction";
 import { app } from "../app";
 import type { Route } from "./+types/ParishionerPage";
 
-export function meta({}: Route.MetaArgs) {
+export function meta(_: Route.MetaArgs) {
   return [{ title: `${i18n.t("apps.parishioner.name")} · Domus` }];
 }
 

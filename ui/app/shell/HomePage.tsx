@@ -7,7 +7,7 @@ import { plateBg } from "~/shared/ui/plate";
 
 import type { Route } from "./+types/HomePage";
 
-export function meta({}: Route.MetaArgs) {
+export function meta(_: Route.MetaArgs) {
   return [
     { title: "Domus" },
     { name: "description", content: i18n.t("home.subtitle") },
