@@ -8,12 +8,9 @@ const Configuration: UserConfig = {
       2,
       'always',
       [
-        // app / domain
+        // app
         'api',
         'ui',
-        'db',
-        'auth',
-        'core',
         // infra / cross-cutting
         'deps',
         'release',
