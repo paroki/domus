@@ -39,7 +39,7 @@ func TestGetFiber(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected test error: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		t.Fatalf("expected status 200, got %d", resp.StatusCode)
@@ -57,7 +57,7 @@ func TestGetFiber(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected test error: %v", err)
 	}
-	defer apiResp.Body.Close()
+	defer func() { _ = apiResp.Body.Close() }()
 	if apiResp.StatusCode != 404 {
 		t.Fatalf("expected 404 for unknown /api route, got %d", apiResp.StatusCode)
 	}
