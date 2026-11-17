@@ -1,0 +1,96 @@
+version: "2"
+
+# Enforces feature and layer boundaries (see AGENTS.md, "Backend Features").
+# Add an isolation block per feature when you add a feature.
+linters:
+  default: none
+  enable:
+    - depguard
+  settings:
+    depguard:
+      rules:
+        # Layers: services stay free of HTTP concerns.
+        service-no-http:
+          list-mode: lax
+          files:
+            - "**/internal/*/service/**"
+          deny:
+            - pkg: github.com/gofiber/fiber
+              desc: services must not import fiber
+            - pkg: github.com/paroki/domus/internal/platform/httpx
+              desc: services must not import httpx
+
+        # Platform never depends on features or the app.
+        platform-leaf:
+          list-mode: lax
+          files:
+            - "**/internal/platform/**"
+          deny:
+            - pkg: github.com/paroki/domus/internal/app
+              desc: platform must not import app
+            - pkg: github.com/paroki/domus/internal/auth
+              desc: platform must not import features
+            - pkg: github.com/paroki/domus/internal/user
+              desc: platform must not import features
+
+        # auth: only app and cmd import the root; nobody imports its subpackages.
+        auth-subpackages:
+          list-mode: lax
+          files:
+            - "!**/internal/auth/**"
+          deny:
+            - pkg: github.com/paroki/domus/internal/auth/
+              desc: import the feature root package internal/auth only
+        auth-root:
+          list-mode: lax
+          files:
+            - "!**/internal/auth/**"
+            - "!**/internal/app/**"
+            - "!**/cmd/**"
+          deny:
+            - pkg: github.com/paroki/domus/internal/auth
+              desc: only app and cmd may import auth; read the caller with user.Current
+        auth-no-repo:
+          list-mode: lax
+          files:
+            - "**/internal/auth/handler/**"
+            - "**/internal/auth/provider/**"
+            - "**/internal/auth/sender/**"
+          deny:
+            - pkg: github.com/paroki/domus/internal/auth/repo
+              desc: only service may use repo
+        auth-service-no-drivers:
+          list-mode: lax
+          files:
+            - "**/internal/auth/service/**"
+          deny:
+            - pkg: github.com/paroki/domus/internal/auth/provider
+              desc: drivers are wired from auth.go, never imported by service
+            - pkg: github.com/paroki/domus/internal/auth/sender
+              desc: drivers are wired from auth.go, never imported by service
+        auth-drivers-domain-only:
+          list-mode: lax
+          files:
+            - "**/internal/auth/provider/**"
+            - "**/internal/auth/sender/**"
+          deny:
+            - pkg: github.com/paroki/domus/internal/auth/service
+              desc: drivers depend only on domain
+            - pkg: github.com/paroki/domus/internal/auth/handler
+              desc: drivers depend only on domain
+
+        # user: never imports auth; subpackages are private.
+        user-subpackages:
+          list-mode: lax
+          files:
+            - "!**/internal/user/**"
+          deny:
+            - pkg: github.com/paroki/domus/internal/user/
+              desc: import the feature root package internal/user only
+        user-handler-no-repo:
+          list-mode: lax
+          files:
+            - "**/internal/user/handler/**"
+          deny:
+            - pkg: github.com/paroki/domus/internal/user/repo
+              desc: handlers must call service, not repo

@@ -1,6 +1,7 @@
 [tools]
 air = "latest"
 go = "latest"
+golangci-lint = "latest"
 node = "26"
 swag = "v2.0.0-rc6"
 
@@ -33,6 +34,10 @@ run = "bun run build"
 [tasks.test]
 description = "Run Go and UI tests"
 run = "go test ./... && cd ui && bun run typecheck"
+
+[tasks.lint]
+description = "Lint Go code (feature and layer boundaries via depguard)"
+run = "golangci-lint run"
 
 [tasks.generate]
 description = "Generate API docs via swag"
