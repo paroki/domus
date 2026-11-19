@@ -87,6 +87,10 @@ Environment variables from values.config.
   value: {{ $c.shutdownTimeout | quote }}
 - name: BODY_LIMIT
   value: {{ $c.bodyLimit | quote }}
+- name: AUTO_MIGRATE
+  value: {{ $c.autoMigrate | quote }}
+- name: TRUST_PROXY
+  value: {{ $c.trustProxy | quote }}
 {{- with .Values.extraEnv }}
 {{ toYaml . }}
 {{- end }}
