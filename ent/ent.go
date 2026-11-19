@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/paroki/domus/ent/casbinrule"
 	"github.com/paroki/domus/ent/meta"
 )
 
@@ -73,7 +74,8 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			meta.Table: meta.ValidColumn,
+			casbinrule.Table: casbinrule.ValidColumn,
+			meta.Table:       meta.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

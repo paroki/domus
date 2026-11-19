@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/paroki/domus/ent/casbinrule"
 	"github.com/paroki/domus/ent/meta"
 	"github.com/paroki/domus/ent/schema"
 )
@@ -14,6 +15,43 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	casbinruleMixin := schema.CasbinRule{}.Mixin()
+	casbinruleMixinFields0 := casbinruleMixin[0].Fields()
+	_ = casbinruleMixinFields0
+	casbinruleFields := schema.CasbinRule{}.Fields()
+	_ = casbinruleFields
+	// casbinruleDescPtype is the schema descriptor for ptype field.
+	casbinruleDescPtype := casbinruleFields[0].Descriptor()
+	// casbinrule.PtypeValidator is a validator for the "ptype" field. It is called by the builders before save.
+	casbinrule.PtypeValidator = casbinruleDescPtype.Validators[0].(func(string) error)
+	// casbinruleDescV0 is the schema descriptor for v0 field.
+	casbinruleDescV0 := casbinruleFields[1].Descriptor()
+	// casbinrule.DefaultV0 holds the default value on creation for the v0 field.
+	casbinrule.DefaultV0 = casbinruleDescV0.Default.(string)
+	// casbinruleDescV1 is the schema descriptor for v1 field.
+	casbinruleDescV1 := casbinruleFields[2].Descriptor()
+	// casbinrule.DefaultV1 holds the default value on creation for the v1 field.
+	casbinrule.DefaultV1 = casbinruleDescV1.Default.(string)
+	// casbinruleDescV2 is the schema descriptor for v2 field.
+	casbinruleDescV2 := casbinruleFields[3].Descriptor()
+	// casbinrule.DefaultV2 holds the default value on creation for the v2 field.
+	casbinrule.DefaultV2 = casbinruleDescV2.Default.(string)
+	// casbinruleDescV3 is the schema descriptor for v3 field.
+	casbinruleDescV3 := casbinruleFields[4].Descriptor()
+	// casbinrule.DefaultV3 holds the default value on creation for the v3 field.
+	casbinrule.DefaultV3 = casbinruleDescV3.Default.(string)
+	// casbinruleDescV4 is the schema descriptor for v4 field.
+	casbinruleDescV4 := casbinruleFields[5].Descriptor()
+	// casbinrule.DefaultV4 holds the default value on creation for the v4 field.
+	casbinrule.DefaultV4 = casbinruleDescV4.Default.(string)
+	// casbinruleDescV5 is the schema descriptor for v5 field.
+	casbinruleDescV5 := casbinruleFields[6].Descriptor()
+	// casbinrule.DefaultV5 holds the default value on creation for the v5 field.
+	casbinrule.DefaultV5 = casbinruleDescV5.Default.(string)
+	// casbinruleDescID is the schema descriptor for id field.
+	casbinruleDescID := casbinruleMixinFields0[0].Descriptor()
+	// casbinrule.DefaultID holds the default value on creation for the id field.
+	casbinrule.DefaultID = casbinruleDescID.Default.(func() uuid.UUID)
 	metaMixin := schema.Meta{}.Mixin()
 	metaMixinFields0 := metaMixin[0].Fields()
 	_ = metaMixinFields0
