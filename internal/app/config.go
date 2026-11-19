@@ -18,6 +18,9 @@ type Config struct {
 	IdleTimeout     time.Duration `env:"IDLE_TIMEOUT, default=60s"`
 	ShutdownTimeout time.Duration `env:"SHUTDOWN_TIMEOUT, default=10s"`
 	BodyLimit       int           `env:"BODY_LIMIT, default=4194304"`
+	DatabaseURL     string        `env:"DATABASE_URL, default=postgres://domus:domus@localhost:5432/domus?sslmode=disable"`
+	DBMaxOpenConns  int           `env:"DB_MAX_OPEN_CONNS, default=25"`
+	DBMaxIdleConns  int           `env:"DB_MAX_IDLE_CONNS, default=5"`
 }
 
 func GetConfig(ctx context.Context) (Config, error) {
