@@ -51,10 +51,16 @@ func GetFiber(cfg Config, logger *slog.Logger, features ...Feature) *fiber.App {
 	mountFeatures(api, features...)
 
 	mcpArgs := make([]any, 0, len(features))
+	var resolver mcpx.PrincipalResolver
 	for _, f := range features {
 		mcpArgs = append(mcpArgs, f)
+		if resolver == nil {
+			if pr, ok := f.(interface{ PrincipalResolver() mcpx.PrincipalResolver }); ok {
+				resolver = pr.PrincipalResolver()
+			}
+		}
 	}
-	mcpHandler := mcpx.NewHandler(mcpx.NewServer(cfg.AppName, mcpArgs...), nil)
+	mcpHandler := mcpx.NewHandler(mcpx.NewServer(cfg.AppName, mcpArgs...), resolver)
 	app.All("/mcp", mcpHandler)
 	app.All("/mcp/*", mcpHandler)
 

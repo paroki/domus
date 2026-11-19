@@ -23,3 +23,12 @@ var (
 	ErrAccountNotFound        = httpx.NewError(http.StatusNotFound, "USER_ACCOUNT_NOT_FOUND", "Linked account not found.")
 	ErrLastAccountRequired    = httpx.NewError(http.StatusConflict, "USER_LAST_ACCOUNT_REQUIRED", "Cannot unlink the last authentication account.")
 )
+
+// ValidationError constructs a 422 VALIDATION_ERROR AppError for a single field.
+func ValidationError(field, code, message string) error {
+	return httpx.ValidationError(httpx.FieldError{
+		Field:   field,
+		Code:    code,
+		Message: message,
+	})
+}
