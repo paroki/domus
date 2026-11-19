@@ -8,15 +8,26 @@ import (
 
 	"github.com/casbin/casbin/v2"
 	"github.com/casbin/casbin/v2/model"
+	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
+	"github.com/paroki/domus/internal/platform/authx"
+	"github.com/paroki/domus/internal/platform/httpx"
 )
 
 const (
-	// DomainGlobal represents the wildcard global domain for Super Admin and shared policies.
+	// DomainGlobal represents the wildcard global domain for shared policies.
 	DomainGlobal = "*"
-	// RoleSuperAdmin is the global Super Admin role identifier.
-	RoleSuperAdmin = "user:super-admin"
+)
+
+// Action represents a Casbin permission action.
+type Action string
+
+const (
+	// ActionRead grants read access to a resource.
+	ActionRead Action = "read"
+	// ActionWrite grants write access to a resource.
+	ActionWrite Action = "write"
 )
 
 var (
@@ -78,7 +89,6 @@ func NewEnforcer(client *ent.Client) (*Enforcer, error) {
 	if err != nil {
 		return nil, fmt.Errorf("create casbin enforcer: %w", err)
 	}
-	registerMatcherFuncs(e)
 	return &Enforcer{inner: e}, nil
 }
 
@@ -92,40 +102,7 @@ func NewMemoryEnforcer() (*Enforcer, error) {
 	if err != nil {
 		return nil, fmt.Errorf("create memory casbin enforcer: %w", err)
 	}
-	registerMatcherFuncs(e)
 	return &Enforcer{inner: e}, nil
-}
-
-func registerMatcherFuncs(e *casbin.Enforcer) {
-	e.AddFunction("domainMatch", func(args ...any) (any, error) {
-		if len(args) != 3 {
-			return false, nil
-		}
-		sub, ok1 := args[0].(string)
-		role, ok2 := args[1].(string)
-		dom, ok3 := args[2].(string)
-		if !ok1 || !ok2 || !ok3 {
-			return false, nil
-		}
-
-		// Check if dom has any parent domain via g2(dom, parent) where sub holds role in parent.
-		g2Rules, err := e.GetNamedGroupingPolicy("g2")
-		if err != nil {
-			return false, err
-		}
-		for _, rule := range g2Rules {
-			if len(rule) >= 2 && rule[0] == dom {
-				has, err := e.HasGroupingPolicy(sub, role, rule[1])
-				if err != nil {
-					return false, err
-				}
-				if has {
-					return true, nil
-				}
-			}
-		}
-		return false, nil
-	})
 }
 
 // RegisterFeatures calls RegisterPermissions on every feature implementing PermissionFeature.
@@ -143,13 +120,31 @@ func RegisterFeatures(ctx context.Context, e *Enforcer, features ...any) error {
 }
 
 // Enforce checks whether sub is allowed to perform act on obj within dom.
-func (e *Enforcer) Enforce(sub, dom, obj, act string) (bool, error) {
-	return e.inner.Enforce(sub, dom, obj, act)
+func (e *Enforcer) Enforce(sub, dom, obj string, act Action) (bool, error) {
+	return e.inner.Enforce(sub, dom, obj, string(act))
 }
 
 // HasRoleInDomain reports whether sub holds role directly in dom.
 func (e *Enforcer) HasRoleInDomain(sub, role, dom string) (bool, error) {
 	return e.inner.HasGroupingPolicy(sub, role, dom)
+}
+
+// RolesForUserInDomain returns all roles held by sub within dom.
+func (e *Enforcer) RolesForUserInDomain(sub, dom string) ([]string, error) {
+	roles := e.inner.GetRolesForUserInDomain(sub, dom)
+	if roles == nil {
+		return []string{}, nil
+	}
+	return roles, nil
+}
+
+// UsersForRoleInDomain returns all subjects holding role within dom.
+func (e *Enforcer) UsersForRoleInDomain(role, dom string) ([]string, error) {
+	users := e.inner.GetUsersForRoleInDomain(role, dom)
+	if users == nil {
+		return []string{}, nil
+	}
+	return users, nil
 }
 
 // AssignRole assigns role to sub in dom.
@@ -164,14 +159,37 @@ func (e *Enforcer) RevokeRole(_ context.Context, sub, role, dom string) error {
 	return err
 }
 
-// LinkOrgToParish records a g2 domain hierarchy link from org:<orgID> to parish:<parishID>.
-func (e *Enforcer) LinkOrgToParish(_ context.Context, orgID, parishID uuid.UUID) error {
-	_, err := e.inner.AddNamedGroupingPolicy("g2", OrgDomain(orgID), ParishDomain(parishID))
+// AddPermissionForRole grants role permission to perform act on obj within dom.
+func (e *Enforcer) AddPermissionForRole(_ context.Context, role, dom, obj string, act Action) error {
+	_, err := e.inner.AddPolicy(role, dom, obj, string(act))
 	return err
 }
 
-// AddPermissionForRole grants role permission to perform act on obj within dom.
-func (e *Enforcer) AddPermissionForRole(_ context.Context, role, dom, obj, act string) error {
-	_, err := e.inner.AddPolicy(role, dom, obj, act)
-	return err
+// Require returns a Fiber middleware enforcing that the authenticated principal
+// has permission to perform act on obj within the resolved domain (defaulting to DomainGlobal).
+func (e *Enforcer) Require(obj string, act Action, domFn ...func(fiber.Ctx) (string, error)) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		p, ok := authx.UserContext(c.Context())
+		if !ok || p.UserID == uuid.Nil {
+			return httpx.Unauthorized("authentication required")
+		}
+
+		dom := DomainGlobal
+		if len(domFn) > 0 && domFn[0] != nil {
+			var err error
+			dom, err = domFn[0](c)
+			if err != nil {
+				return err
+			}
+		}
+
+		allowed, err := e.Enforce(p.Subject(), dom, obj, act)
+		if err != nil {
+			return httpx.InternalError(err)
+		}
+		if !allowed {
+			return httpx.Forbidden("insufficient permissions")
+		}
+		return c.Next()
+	}
 }
