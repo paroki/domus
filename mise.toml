@@ -30,6 +30,10 @@ run = "swag init -g cmd/domus/main.go -o api"
 description = "Generate Go mocks via go generate"
 run = "go generate ./..."
 
+[tasks.ent]
+description = "Generate Entgo graph client"
+run = "go generate ./ent/..."
+
 # --- Build ---
 [tasks."build:ui"]
 description = "Build UI bundle"
