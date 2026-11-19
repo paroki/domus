@@ -5,7 +5,14 @@ WORKDIR /app/ui
 COPY ui/package.json ui/bun.lock ./
 RUN bun install --frozen-lockfile
 COPY ui/ ./
-RUN bun run build
+# Public DSN is baked into the client bundle; auth token is a build secret
+# used only for source map upload.
+ARG APP_SENTRY_UI_DSN
+ARG APP_SENTRY_ENVIRONMENT
+ARG APP_SENTRY_RELEASE
+RUN --mount=type=secret,id=sentry_auth_token \
+    SENTRY_AUTH_TOKEN="$(cat /run/secrets/sentry_auth_token 2>/dev/null)" \
+    bun run build
 
 FROM golang:1.27-alpine AS go-builder
 WORKDIR /app
