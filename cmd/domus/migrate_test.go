@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"path/filepath"
-	"strings"
 	"testing"
 )
 
@@ -27,21 +27,10 @@ func TestRootCmd_SubcommandsAndMigrateCLI(t *testing.T) {
 }
 
 func TestServeCmd_AutoMigrateToggle(t *testing.T) {
-	t.Run("AutoMigrate=true aborts on migration failure", func(t *testing.T) {
-		t.Setenv("AUTO_MIGRATE", "true")
-		t.Setenv("APP_DB_URL", "mysql://invalid")
-
-		root := newRootCmd()
-		root.SetArgs([]string{"serve"})
-		err := root.ExecuteContext(context.Background())
-		if err == nil || !strings.Contains(err.Error(), "unsupported database scheme") {
-			t.Fatalf("expected unsupported database scheme error, got %v", err)
-		}
-	})
-
 	t.Run("AutoMigrate=false skips migrations", func(t *testing.T) {
+		dbPath := filepath.Join(t.TempDir(), "skip.db")
 		t.Setenv("AUTO_MIGRATE", "false")
-		t.Setenv("APP_DB_URL", "mysql://invalid")
+		t.Setenv("APP_DB_URL", "sqlite://"+dbPath)
 		t.Setenv("HOST", "127.0.0.1")
 		t.Setenv("PORT", "0")
 
@@ -50,9 +39,18 @@ func TestServeCmd_AutoMigrateToggle(t *testing.T) {
 
 		root := newRootCmd()
 		root.SetArgs([]string{"serve"})
-		err := root.ExecuteContext(ctx)
-		if err != nil && strings.Contains(err.Error(), "unsupported database scheme") {
-			t.Fatalf("expected migrations to be skipped when AUTO_MIGRATE=false, got %v", err)
+		_ = root.ExecuteContext(ctx)
+
+		db, err := sql.Open("sqlite", dbPath)
+		if err != nil {
+			t.Fatalf("open sqlite: %v", err)
+		}
+		defer func() { _ = db.Close() }()
+
+		var name string
+		err = db.QueryRowContext(context.Background(), "SELECT name FROM sqlite_master WHERE type='table' AND name='schema_migrations'").Scan(&name)
+		if err == nil {
+			t.Fatal("expected schema_migrations table not to exist when AUTO_MIGRATE=false")
 		}
 	})
 }

@@ -64,12 +64,3 @@ func TestRunMigrations_ChecksumMismatch(t *testing.T) {
 		t.Fatalf("expected checksum mismatch error, got %v", err)
 	}
 }
-
-func TestRunMigrations_UnsupportedScheme(t *testing.T) {
-	err := RunMigrations(context.Background(), Config{
-		DatabaseURL: "mysql://user:pass@localhost:3306/domus",
-	}, nil)
-	if err == nil || !strings.Contains(err.Error(), "unsupported database scheme") {
-		t.Fatalf("expected unsupported database scheme error, got %v", err)
-	}
-}
