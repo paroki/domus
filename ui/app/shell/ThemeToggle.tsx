@@ -1,7 +1,7 @@
 import { Monitor, Moon, Palette, Sun } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-import { useTheme, type Mode, type Theme } from "~/shared/theme/theme";
+import { type Mode, type Theme, useTheme } from "~/shared/theme/theme";
 
 const nextMode: Record<Mode, Mode> = {
   system: "light",

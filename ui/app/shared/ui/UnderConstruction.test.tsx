@@ -24,7 +24,9 @@ test("UnderConstruction renders the localized title, description and a link home
   );
 
   assert.ok(html.includes("Halaman Organisasi sedang dibangun"));
-  assert.ok(html.includes("Struktur organisasi, wilayah, dan lingkungan paroki."));
+  assert.ok(
+    html.includes("Struktur organisasi, wilayah, dan lingkungan paroki."),
+  );
   assert.ok(html.includes('href="/"'));
   assert.ok(html.includes("bg-plate-1"));
 });
