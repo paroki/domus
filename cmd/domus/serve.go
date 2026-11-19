@@ -16,10 +16,7 @@ func newServeCmd() *cobra.Command {
 				return err
 			}
 			logger := app.GetLogger(cfg)
-			fiberApp, err := app.GetFiber(cfg, logger)
-			if err != nil {
-				return err
-			}
+			fiberApp := app.GetFiber(cfg, logger)
 			return app.New(cfg, fiberApp, logger).Serve(ctx)
 		},
 	}
