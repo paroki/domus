@@ -103,6 +103,21 @@ run = "rm -rf bin tmp api ui/build && mkdir -p ui/build/client && touch ui/build
 description = "Lint and template-check Helm chart"
 run = "helm lint charts --strict && helm template domus charts > /dev/null"
 
+[tasks."check:env"]
+description = "Verify every Go env var is in .env.example and the helm chart"
+run = '''
+#!/usr/bin/env bash
+set -uo pipefail
+failed=0
+vars=$(grep -rhoE 'env:"[A-Z0-9_]+' --include='*.go' internal cmd | grep -v _test | sed 's/env:"//' | sort -u)
+for v in $vars; do
+  grep -qE "^${v}=" .env.example || { echo "missing in .env.example: $v"; failed=1; }
+  grep -q "\"$v\"\|name: $v\$" charts/templates/_helpers.tpl || { echo "missing in chart: $v"; failed=1; }
+done
+# chart-only vars (HOST/PORT are mapped from values) are covered by the loop above.
+exit "$failed"
+'''
+
 # --- Quality Control (continue on failure, report at end) ---
 [tasks."qc:api"]
 description = "Run all API format, vet, lint, vulncheck, and test checks"
@@ -138,6 +153,7 @@ run_check "go vet" go vet ./...
 run_check "golangci-lint" golangci-lint run ./...
 run_check "govulncheck" govulncheck ./...
 run_check "go test -race" go test -race ./...
+run_check "env vars" mise run check:env
 
 echo ""
 echo "=== qc:api summary ==="
