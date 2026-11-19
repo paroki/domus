@@ -1,11 +1,14 @@
 [tools]
 air = "latest"
+biome = "2.6.7"
 go = "latest"
+golangci-lint = "2.15.0"
 node = "26"
 swag = "v2.0.0-rc6"
 
-[tasks."dev:backend"]
-description = "Run Go backend dev server with air"
+# --- Dev ---
+[tasks."dev:api"]
+description = "Run Go API dev server with air"
 run = "air"
 
 [tasks."dev:ui"]
@@ -15,25 +18,157 @@ run = "bun run dev"
 
 [tasks.dev]
 description = "Run full dev stack concurrently"
-depends = ["dev:backend", "dev:ui"]
+depends = ["dev:api", "dev:ui"]
 
-[tasks.build]
-description = "Build backend binary and UI"
-depends = ["build:ui", "build:backend"]
+# --- Codegen ---
+[tasks.api]
+description = "Generate OpenAPI spec via swag"
+run = "swag init -g cmd/domus/main.go -o api"
 
-[tasks."build:backend"]
-description = "Build Go binary"
-run = "go build -o bin/domus ./cmd/domus"
-
+# --- Build ---
 [tasks."build:ui"]
 description = "Build UI bundle"
 dir = "ui"
-run = "bun run build"
+run = "bun run build && mkdir -p build/client && touch build/client/.keep"
+
+[tasks."build:api"]
+description = "Build Go API binary"
+run = "go build -o bin/domus ./cmd/domus"
+
+[tasks.build]
+description = "Build UI bundle then Go binary"
+run = ["mise run build:ui", "mise run build:api"]
+
+# --- Test ---
+[tasks."test:api"]
+description = "Run Go tests with race detector"
+run = "go test -race ./..."
+
+[tasks."test:ui"]
+description = "Run UI tests"
+dir = "ui"
+run = "bun test --pass-with-no-tests"
 
 [tasks.test]
-description = "Run Go and UI tests"
-run = "go test ./... && cd ui && bun run typecheck"
+description = "Run API and UI tests"
+depends = ["test:api", "test:ui"]
 
-[tasks.generate]
-description = "Generate API docs via swag"
-run = "swag init -g internal/app/fiber.go -o api"
+# --- Dev Utilities ---
+[tasks."fmt:api"]
+description = "Format Go files"
+run = "gofmt -w ."
+
+[tasks."fmt:ui"]
+description = "Format and organize UI imports via biome"
+run = "biome check --write ui/app"
+
+[tasks.fmt]
+description = "Format API and UI code"
+depends = ["fmt:api", "fmt:ui"]
+
+[tasks.tidy]
+description = "Tidy Go modules"
+run = "go mod tidy"
+
+[tasks.clean]
+description = "Clean build and temp artifacts"
+run = "rm -rf bin tmp api ui/build && mkdir -p ui/build/client && touch ui/build/client/.keep"
+
+[tasks."lint:helm"]
+description = "Lint and template-check Helm chart"
+run = "helm lint charts --strict && helm template domus charts > /dev/null"
+
+# --- Quality Control (continue on failure, report at end) ---
+[tasks."qc:api"]
+description = "Run all API format, vet, lint, vulncheck, and test checks"
+run = '''
+#!/usr/bin/env bash
+set -uo pipefail
+report=()
+failed=0
+
+run_check() {
+  local name="$1"; shift
+  echo "==> [qc:api] $name"
+  if "$@"; then
+    report+=("PASS: $name")
+  else
+    report+=("FAIL: $name")
+    failed=1
+  fi
+}
+
+check_gofmt() {
+  local out
+  out=$(gofmt -l .)
+  if [ -n "$out" ]; then
+    echo "Unformatted files:"
+    echo "$out"
+    return 1
+  fi
+}
+
+run_check "gofmt" check_gofmt
+run_check "go vet" go vet ./...
+run_check "golangci-lint" golangci-lint run ./...
+run_check "govulncheck" govulncheck ./...
+run_check "go test -race" go test -race ./...
+
+echo ""
+echo "=== qc:api summary ==="
+printf '  %s\n' "${report[@]}"
+exit "$failed"
+'''
+
+[tasks."qc:ui"]
+description = "Run all UI format/lint, typecheck, test, and build checks"
+run = '''
+#!/usr/bin/env bash
+set -uo pipefail
+report=()
+failed=0
+
+run_check() {
+  local name="$1"; shift
+  echo "==> [qc:ui] $name"
+  if "$@"; then
+    report+=("PASS: $name")
+  else
+    report+=("FAIL: $name")
+    failed=1
+  fi
+}
+
+run_check "biome check" biome check ui/app
+run_check "typecheck" bun run --cwd ui typecheck
+run_check "test" bun test --cwd ui --pass-with-no-tests
+run_check "build" mise run build:ui
+
+echo ""
+echo "=== qc:ui summary ==="
+printf '  %s\n' "${report[@]}"
+exit "$failed"
+'''
+
+[tasks.qc]
+description = "Run qc:api and qc:ui (continue on failure, report at end)"
+run = '''
+#!/usr/bin/env bash
+set -uo pipefail
+report=()
+failed=0
+
+for task in qc:api qc:ui; do
+  if mise run "$task"; then
+    report+=("PASS: $task")
+  else
+    report+=("FAIL: $task")
+    failed=1
+  fi
+done
+
+echo ""
+echo "=== qc summary ==="
+printf '  %s\n' "${report[@]}"
+exit "$failed"
+'''
