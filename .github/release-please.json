@@ -9,6 +9,7 @@
   "packages": {
     ".": {
       "package-name": "domus",
+      "skip-changelog": true,
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         "charts/Chart.yaml"
