@@ -18,7 +18,7 @@ func TestRootCmd_SubcommandsAndMigrateCLI(t *testing.T) {
 	}
 
 	dbPath := filepath.Join(t.TempDir(), "cli.db")
-	t.Setenv("DATABASE_URL", "sqlite://"+dbPath)
+	t.Setenv("APP_DB_URL", "sqlite://"+dbPath)
 
 	root.SetArgs([]string{"migrate"})
 	if err := root.ExecuteContext(context.Background()); err != nil {
@@ -29,7 +29,7 @@ func TestRootCmd_SubcommandsAndMigrateCLI(t *testing.T) {
 func TestServeCmd_AutoMigrateToggle(t *testing.T) {
 	t.Run("AutoMigrate=true aborts on migration failure", func(t *testing.T) {
 		t.Setenv("AUTO_MIGRATE", "true")
-		t.Setenv("DATABASE_URL", "mysql://invalid")
+		t.Setenv("APP_DB_URL", "mysql://invalid")
 
 		root := newRootCmd()
 		root.SetArgs([]string{"serve"})
@@ -41,7 +41,7 @@ func TestServeCmd_AutoMigrateToggle(t *testing.T) {
 
 	t.Run("AutoMigrate=false skips migrations", func(t *testing.T) {
 		t.Setenv("AUTO_MIGRATE", "false")
-		t.Setenv("DATABASE_URL", "mysql://invalid")
+		t.Setenv("APP_DB_URL", "mysql://invalid")
 		t.Setenv("HOST", "127.0.0.1")
 		t.Setenv("PORT", "0")
 

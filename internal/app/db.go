@@ -21,12 +21,6 @@ func OpenDB(ctx context.Context, cfg Config) (*ent.Client, error) {
 		if err != nil {
 			return nil, fmt.Errorf("open postgres: %w", err)
 		}
-		if cfg.DBMaxOpenConns > 0 {
-			db.SetMaxOpenConns(cfg.DBMaxOpenConns)
-		}
-		if cfg.DBMaxIdleConns > 0 {
-			db.SetMaxIdleConns(cfg.DBMaxIdleConns)
-		}
 		if err := db.PingContext(ctx); err != nil {
 			_ = db.Close()
 			return nil, fmt.Errorf("ping postgres: %w", err)
