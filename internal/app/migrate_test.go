@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"log/slog"
-	"path/filepath"
 	"strings"
 	"testing"
 	"testing/fstest"
@@ -12,8 +11,17 @@ import (
 
 func TestRunMigrations_IdempotentSQLite(t *testing.T) {
 	ctx := context.Background()
-	dbPath := filepath.Join(t.TempDir(), "domus.db")
-	cfg := Config{DatabaseURL: "sqlite://" + dbPath}
+	dsn := "file:migrate_idempotent?mode=memory&cache=shared"
+	db, err := sql.Open("sqlite", dsn)
+	if err != nil {
+		t.Fatalf("open sqlite: %v", err)
+	}
+	defer func() { _ = db.Close() }()
+	if err := db.PingContext(ctx); err != nil {
+		t.Fatalf("ping sqlite: %v", err)
+	}
+
+	cfg := Config{DatabaseURL: dsn}
 	logger := slog.New(slog.DiscardHandler)
 
 	if err := RunMigrations(ctx, cfg, logger); err != nil {
@@ -23,12 +31,6 @@ func TestRunMigrations_IdempotentSQLite(t *testing.T) {
 	if err := RunMigrations(ctx, cfg, logger); err != nil {
 		t.Fatalf("second RunMigrations failed: %v", err)
 	}
-
-	db, err := sql.Open("sqlite", dbPath)
-	if err != nil {
-		t.Fatalf("open sqlite: %v", err)
-	}
-	defer func() { _ = db.Close() }()
 
 	var count int
 	if err := db.QueryRowContext(ctx, "SELECT COUNT(*) FROM schema_migrations").Scan(&count); err != nil {
@@ -46,8 +48,17 @@ func TestRunMigrations_IdempotentSQLite(t *testing.T) {
 
 func TestRunMigrations_ChecksumMismatch(t *testing.T) {
 	ctx := context.Background()
-	dbPath := filepath.Join(t.TempDir(), "mismatch.db")
-	cfg := Config{DatabaseURL: "sqlite://" + dbPath}
+	dsn := "file:migrate_mismatch?mode=memory&cache=shared"
+	db, err := sql.Open("sqlite", dsn)
+	if err != nil {
+		t.Fatalf("open sqlite: %v", err)
+	}
+	defer func() { _ = db.Close() }()
+	if err := db.PingContext(ctx); err != nil {
+		t.Fatalf("ping sqlite: %v", err)
+	}
+
+	cfg := Config{DatabaseURL: dsn}
 
 	fs1 := fstest.MapFS{
 		"001_init.sql": &fstest.MapFile{Data: []byte("CREATE TABLE t1 (id TEXT PRIMARY KEY);")},
@@ -59,7 +70,7 @@ func TestRunMigrations_ChecksumMismatch(t *testing.T) {
 	fs2 := fstest.MapFS{
 		"001_init.sql": &fstest.MapFile{Data: []byte("CREATE TABLE t1 (id TEXT PRIMARY KEY, extra TEXT);")},
 	}
-	err := runMigrationsFromFS(ctx, cfg, nil, fs2)
+	err = runMigrationsFromFS(ctx, cfg, nil, fs2)
 	if err == nil || !strings.Contains(err.Error(), "checksum mismatch") {
 		t.Fatalf("expected checksum mismatch error, got %v", err)
 	}
