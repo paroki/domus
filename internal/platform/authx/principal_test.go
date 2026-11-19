@@ -2,10 +2,12 @@ package authx_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/google/uuid"
 	"github.com/paroki/domus/internal/platform/authx"
+	"github.com/paroki/domus/internal/platform/httpx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -43,13 +45,36 @@ func TestPrincipalContext(t *testing.T) {
 	assert.False(t, ok)
 
 	p := authx.Principal{
-		UserID:  uuid.Must(uuid.NewV7()),
-		Email:   "toni@paroki.org",
-		Name:    "Toni",
-		Channel: "web",
+		UserID:    uuid.Must(uuid.NewV7()),
+		SessionID: uuid.Must(uuid.NewV7()),
+		Email:     "toni@paroki.org",
+		Name:      "Toni",
+		Channel:   "web",
 	}
 	ctx := authx.WithPrincipal(context.Background(), p)
 	got, ok := authx.UserContext(ctx)
 	require.True(t, ok)
 	assert.Equal(t, p, got)
+
+	got2, ok := authx.FromContext(ctx)
+	require.True(t, ok)
+	assert.Equal(t, p, got2)
+}
+
+func TestRequireTenant(t *testing.T) {
+	_, err := authx.RequireTenant(context.Background())
+	require.Error(t, err)
+	assert.True(t, errors.Is(err, httpx.ErrUnauthorized))
+
+	uid := uuid.Must(uuid.NewV7())
+	noTenantCtx := authx.WithPrincipal(context.Background(), authx.Principal{UserID: uid})
+	_, err = authx.RequireTenant(noTenantCtx)
+	require.ErrorIs(t, err, authx.ErrTenantRequired)
+
+	pid := uuid.Must(uuid.NewV7())
+	tenantCtx := authx.WithPrincipal(context.Background(), authx.Principal{UserID: uid, ParishID: pid})
+	p, err := authx.RequireTenant(tenantCtx)
+	require.NoError(t, err)
+	assert.Equal(t, uid, p.UserID)
+	assert.Equal(t, pid, p.ParishID)
 }

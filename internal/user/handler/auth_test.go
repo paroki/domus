@@ -81,7 +81,7 @@ func (s *AuthHandlerSuite) SetupTest() {
 		GitHubID:       "github-id",
 		GitHubSecret:   "github-secret",
 	}
-	s.feature = user.New(s.cfg, s.client, s.otpSender, slog.New(slog.DiscardHandler))
+	s.feature = user.New(s.client, nil, s.cfg, slog.New(slog.DiscardHandler), user.WithOTPSender(s.otpSender))
 	s.WithFeatures(s.feature)
 }
 

@@ -12,20 +12,23 @@ import (
 
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/ent/user"
+	"github.com/paroki/domus/internal/platform/authz"
 	"github.com/paroki/domus/internal/user/domain"
 	"github.com/paroki/domus/internal/user/repo"
 )
 
 // Config holds service-level authentication and session settings.
 type Config struct {
-	OTPTTL         time.Duration
-	OTPMaxAttempts int
-	OTPCooldown    time.Duration
-	SessionTTL     time.Duration
-	GoogleID       string
-	GoogleSecret   string
-	GitHubID       string
-	GitHubSecret   string
+	SuperAdminEmail string
+	SuperAdminName  string
+	OTPTTL          time.Duration
+	OTPMaxAttempts  int
+	OTPCooldown     time.Duration
+	SessionTTL      time.Duration
+	GoogleID        string
+	GoogleSecret    string
+	GitHubID        string
+	GitHubSecret    string
 }
 
 // LogOTPSender is the default OTPSender that logs dispatched codes via slog.
@@ -51,12 +54,13 @@ func (s *LogOTPSender) SendOTP(ctx context.Context, channel, target, code string
 type Service struct {
 	cfg            Config
 	repo           *repo.Repository
+	enforcer       *authz.Enforcer
 	otpSender      domain.OTPSender
 	oauthProviders map[string]domain.OAuthProvider
 }
 
 // New constructs a Service with configured OAuth2 providers and OTP sender.
-func New(cfg Config, r *repo.Repository, otpSender domain.OTPSender, logger *slog.Logger) *Service {
+func New(cfg Config, r *repo.Repository, enforcer *authz.Enforcer, otpSender domain.OTPSender, logger *slog.Logger) *Service {
 	if otpSender == nil {
 		otpSender = NewLogOTPSender(logger)
 	}
@@ -70,6 +74,7 @@ func New(cfg Config, r *repo.Repository, otpSender domain.OTPSender, logger *slo
 	return &Service{
 		cfg:            cfg,
 		repo:           r,
+		enforcer:       enforcer,
 		otpSender:      otpSender,
 		oauthProviders: providers,
 	}
@@ -134,6 +139,11 @@ func (s *Service) EnsureUser(ctx context.Context, email, name, phone, provider, 
 	})
 	if err != nil {
 		return nil, err
+	}
+	if s.enforcer != nil {
+		if err := s.enforcer.AssignRole(ctx, authz.UserSubject(out.ID), domain.RoleUser, authz.DomainGlobal); err != nil {
+			return nil, err
+		}
 	}
 	return out, nil
 }

@@ -19,6 +19,7 @@ var (
 	ErrOAuthStateInvalid      = httpx.NewError(http.StatusBadRequest, "AUTH_OAUTH_STATE_INVALID", "Invalid or expired OAuth state.")
 	ErrOAuthEmailUnverified   = httpx.NewError(http.StatusForbidden, "AUTH_OAUTH_EMAIL_UNVERIFIED", "OAuth provider email is not verified.")
 	ErrSessionNotFound        = httpx.NewError(http.StatusNotFound, "USER_SESSION_NOT_FOUND", "Session not found.")
+	ErrSessionInvalid         = httpx.Unauthorized("Invalid or expired session.")
 	ErrAccountNotFound        = httpx.NewError(http.StatusNotFound, "USER_ACCOUNT_NOT_FOUND", "Linked account not found.")
 	ErrLastAccountRequired    = httpx.NewError(http.StatusConflict, "USER_LAST_ACCOUNT_REQUIRED", "Cannot unlink the last authentication account.")
 )
