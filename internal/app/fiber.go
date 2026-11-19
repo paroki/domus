@@ -44,9 +44,7 @@ func GetFiber(cfg Config, logger *slog.Logger, features ...Feature) *fiber.App {
 	})
 
 	api := app.Group("/api")
-	api.Get("/health", func(c fiber.Ctx) error {
-		return httpx.OK(c, fiber.Map{"status": "ok"})
-	})
+	api.Get("/health", healthHandler)
 	mountFeatures(api, features...)
 
 	mcpArgs := make([]any, 0, len(features))
@@ -77,4 +75,18 @@ func GetFiber(cfg Config, logger *slog.Logger, features ...Feature) *fiber.App {
 	}
 
 	return app
+}
+
+type healthStatus struct {
+	Status string `json:"status"`
+}
+
+// @Summary Health check
+// @ID getHealth
+// @Tags system
+// @Produce json
+// @Success 200 {object} httpx.Envelope[healthStatus]
+// @Router /health [get]
+func healthHandler(c fiber.Ctx) error {
+	return httpx.OK(c, healthStatus{Status: "ok"})
 }
