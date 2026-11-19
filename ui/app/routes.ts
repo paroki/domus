@@ -3,6 +3,7 @@ import {
   layout,
   type RouteConfig,
   type RouteConfigEntry,
+  route,
 } from "@react-router/dev/routes";
 
 // Every features/<feature>/routes.ts is picked up automatically: add a feature
@@ -13,8 +14,11 @@ const featureRoutes = import.meta.glob<RouteConfigEntry[]>(
 );
 
 export default [
-  layout("./shell/AppShell.tsx", [
-    index("./shell/HomePage.tsx"),
-    ...Object.values(featureRoutes).flat(),
+  route("login", "./features/user/pages/LoginPage.tsx"),
+  layout("./features/user/components/RequireAuth.tsx", [
+    layout("./shell/AppShell.tsx", [
+      index("./shell/HomePage.tsx"),
+      ...Object.values(featureRoutes).flat(),
+    ]),
   ]),
 ] satisfies RouteConfig;

@@ -8,4 +8,5 @@ export const app: AppDef = {
   order: 5,
   plate: 6,
   icon: UserCog,
+  roles: ["user:super-admin"],
 };

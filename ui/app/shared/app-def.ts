@@ -11,4 +11,6 @@ export type AppDef = {
   /** Icon plate color token: plate-1 … plate-6. */
   plate: 1 | 2 | 3 | 4 | 5 | 6;
   icon: LucideIcon;
+  /** Optional required global roles; if set, caller must hold at least one. */
+  roles?: string[];
 };

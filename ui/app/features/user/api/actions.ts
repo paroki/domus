@@ -1,0 +1,134 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { api, setActiveParish, unwrap } from "~/shared/api/client";
+import { USER_ERRORS } from "./errors";
+import { userKeys } from "./keys";
+import type {
+  AdminCreateUserRequest,
+  AdminUpdateUserRequest,
+  RequestOTPRequest,
+  SwitchSessionParishRequest,
+  UpdateMeRequest,
+  VerifyOTPRequest,
+} from "./types";
+
+export function useRequestOTP() {
+  return useMutation({
+    mutationFn: (body: RequestOTPRequest) =>
+      unwrap(api.POST("/auth/otp", { body }), USER_ERRORS),
+  });
+}
+
+export function useVerifyOTP() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: VerifyOTPRequest) =>
+      unwrap(api.POST("/auth/otp/verify", { body }), USER_ERRORS),
+    onSuccess: async (data) => {
+      setActiveParish(data.activeParishId ?? null);
+      await qc.invalidateQueries({ queryKey: userKeys.me() });
+    },
+  });
+}
+
+export function useLogout() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      await api.POST("/auth/logout");
+    },
+    onSettled: () => {
+      setActiveParish(null);
+      qc.clear();
+    },
+  });
+}
+
+export function useUpdateMe() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: UpdateMeRequest) =>
+      unwrap(api.PATCH("/me", { body }), USER_ERRORS),
+    onSuccess: () => qc.invalidateQueries({ queryKey: userKeys.me() }),
+  });
+}
+
+export function useSwitchParish() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: SwitchSessionParishRequest) => {
+      await unwrap(api.PATCH("/me/session", { body }), USER_ERRORS);
+      return body.activeParishId;
+    },
+    onSuccess: async (parishId) => {
+      setActiveParish(parishId);
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: userKeys.me() }),
+        qc.invalidateQueries({ queryKey: userKeys.sessions() }),
+      ]);
+    },
+  });
+}
+
+export function useRevokeSession() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await unwrap(
+        api.DELETE("/me/sessions/{id}", { params: { path: { id } } }),
+        USER_ERRORS,
+      );
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: userKeys.sessions() }),
+  });
+}
+
+export function useUnlinkAccount() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await unwrap(
+        api.DELETE("/me/accounts/{id}", { params: { path: { id } } }),
+        USER_ERRORS,
+      );
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: userKeys.accounts() }),
+  });
+}
+
+export function useAdminCreateUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: AdminCreateUserRequest) =>
+      unwrap(api.POST("/users", { body }), USER_ERRORS),
+    onSuccess: () => qc.invalidateQueries({ queryKey: userKeys.list() }),
+  });
+}
+
+export function useAdminUpdateUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string; body: AdminUpdateUserRequest }) =>
+      unwrap(
+        api.PATCH("/users/{id}", { params: { path: { id } }, body }),
+        USER_ERRORS,
+      ),
+    onSuccess: (_data, { id }) =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: userKeys.list() }),
+        qc.invalidateQueries({ queryKey: userKeys.detail(id) }),
+      ]),
+  });
+}
+
+export function useAdminDeleteUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await unwrap(
+        api.DELETE("/users/{id}", { params: { path: { id } } }),
+        USER_ERRORS,
+      );
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: userKeys.list() }),
+  });
+}

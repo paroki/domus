@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router";
 
 import { apps } from "~/apps";
+import { useMe } from "~/features/user/api/queries";
 import i18n from "~/shared/i18n";
 import { plateBg } from "~/shared/ui/plate";
 
@@ -17,11 +18,16 @@ export function meta({}: Route.MetaArgs) {
 export default function HomePage() {
   const { t } = useTranslation();
   const [params] = useSearchParams();
+  const { data: me } = useMe();
   const q = (params.get("q") ?? "").trim();
+  const userRoles = me?.roles ?? [];
 
-  const visible = apps.filter((app) =>
-    t(`apps.${app.id}.name`).toLowerCase().includes(q.toLowerCase()),
-  );
+  const visible = apps.filter((app) => {
+    if (app.roles?.length && !app.roles.some((r) => userRoles.includes(r))) {
+      return false;
+    }
+    return t(`apps.${app.id}.name`).toLowerCase().includes(q.toLowerCase());
+  });
 
   return (
     <div className="flex flex-1 flex-col items-center gap-12 px-6 pt-16 pb-12 sm:pt-[72px]">
