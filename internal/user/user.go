@@ -110,7 +110,13 @@ func New(db *ent.Client, enforcer *authz.Enforcer, cfg Config, logger *slog.Logg
 
 // Register mounts user and authentication routes under /api.
 func (f *Feature) Register(api fiber.Router) {
-	f.handler.Register(api)
+	f.handler.Register(
+		api,
+		f.AuthenticateMiddleware(),
+		f.RequireAuth(),
+		f.Require(PermUsers, authz.ActionRead),
+		f.Require(PermUsers, authz.ActionWrite),
+	)
 }
 
 // RegisterPermissions registers user feature policies with the Casbin enforcer.
@@ -175,6 +181,11 @@ func (f *Feature) RequireAuth() fiber.Handler {
 
 // Require enforces Casbin permission checks for the given resource and action.
 func (f *Feature) Require(obj string, act authz.Action, domFn ...func(fiber.Ctx) (string, error)) fiber.Handler {
+	if f.enforcer == nil {
+		return func(_ fiber.Ctx) error {
+			return httpx.InternalError(errors.New("authz enforcer not configured"))
+		}
+	}
 	return f.enforcer.Require(obj, act, domFn...)
 }
 

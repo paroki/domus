@@ -2,6 +2,8 @@ package main
 
 import (
 	"github.com/paroki/domus/internal/app"
+	"github.com/paroki/domus/internal/platform/authz"
+	"github.com/paroki/domus/internal/user"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +23,31 @@ func newServeCmd() *cobra.Command {
 					return err
 				}
 			}
-			fiberApp := app.GetFiber(cfg, logger)
+
+			db, err := app.OpenDB(ctx, cfg)
+			if err != nil {
+				return err
+			}
+			defer func() { _ = db.Close() }()
+
+			enforcer, err := authz.NewEnforcer(db)
+			if err != nil {
+				return err
+			}
+
+			userCfg, err := user.GetConfig(ctx)
+			if err != nil {
+				return err
+			}
+			userFeature := user.New(db, enforcer, userCfg, logger)
+			if err := authz.RegisterFeatures(ctx, enforcer, userFeature); err != nil {
+				return err
+			}
+			if err := userFeature.Bootstrap(ctx); err != nil {
+				return err
+			}
+
+			fiberApp := app.GetFiber(cfg, logger, userFeature)
 			return app.New(cfg, fiberApp, logger).Serve(ctx)
 		},
 	}

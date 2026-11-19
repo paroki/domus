@@ -256,3 +256,170 @@ func (r *Repository) SetUserDefaultParishIfNil(ctx context.Context, userID, pari
 		Save(ctx)
 	return err
 }
+
+// UpdateUser updates mutable fields on a non-deleted User.
+func (r *Repository) UpdateUser(
+	ctx context.Context,
+	id uuid.UUID,
+	name *string,
+	phone *string,
+	avatarURL *string,
+	defaultParishID *uuid.UUID,
+	status *user.Status,
+) (*ent.User, error) {
+	upd := r.client.User.UpdateOneID(id)
+	if name != nil {
+		upd.SetName(*name)
+	}
+	if phone != nil {
+		if *phone == "" {
+			upd.ClearPhone()
+		} else {
+			upd.SetPhone(*phone)
+		}
+	}
+	if avatarURL != nil {
+		if *avatarURL == "" {
+			upd.ClearAvatarURL()
+		} else {
+			upd.SetAvatarURL(*avatarURL)
+		}
+	}
+	if defaultParishID != nil {
+		if *defaultParishID == uuid.Nil {
+			upd.ClearDefaultParishID()
+		} else {
+			upd.SetDefaultParishID(*defaultParishID)
+		}
+	}
+	if status != nil {
+		upd.SetStatus(*status)
+	}
+	return upd.Save(ctx)
+}
+
+// SoftDeleteUser sets deleted_at on a User.
+func (r *Repository) SoftDeleteUser(ctx context.Context, id uuid.UUID, deletedAt time.Time) error {
+	return r.client.User.UpdateOneID(id).
+		SetDeletedAt(deletedAt).
+		Exec(ctx)
+}
+
+// UpdateSessionActiveParish updates active_parish_id on a UserSession owned by userID.
+func (r *Repository) UpdateSessionActiveParish(ctx context.Context, sessionID, userID, parishID uuid.UUID) error {
+	n, err := r.client.UserSession.Update().
+		Where(usersession.IDEQ(sessionID), usersession.UserIDEQ(userID)).
+		SetActiveParishID(parishID).
+		Save(ctx)
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return &ent.NotFoundError{}
+	}
+	return nil
+}
+
+// SearchUserSessions returns active non-expired sessions for userID ordered by (created_at DESC, id DESC).
+func (r *Repository) SearchUserSessions(
+	ctx context.Context,
+	userID uuid.UUID,
+	now time.Time,
+	cursorCreatedAt *time.Time,
+	cursorID *uuid.UUID,
+	limit int,
+) ([]*ent.UserSession, error) {
+	q := r.client.UserSession.Query().
+		Where(usersession.UserIDEQ(userID), usersession.ExpiresAtGT(now))
+	if cursorCreatedAt != nil && cursorID != nil {
+		q = q.Where(usersession.Or(
+			usersession.CreatedAtLT(*cursorCreatedAt),
+			usersession.And(usersession.CreatedAtEQ(*cursorCreatedAt), usersession.IDLT(*cursorID)),
+		))
+	}
+	return q.Order(ent.Desc(usersession.FieldCreatedAt), ent.Desc(usersession.FieldID)).
+		Limit(limit).
+		All(ctx)
+}
+
+// DeleteUserSessionByID deletes a UserSession scoped to userID and returns the affected row count.
+func (r *Repository) DeleteUserSessionByID(ctx context.Context, sessionID, userID uuid.UUID) (int, error) {
+	return r.client.UserSession.Delete().
+		Where(usersession.IDEQ(sessionID), usersession.UserIDEQ(userID)).
+		Exec(ctx)
+}
+
+// SearchUserAccounts returns linked accounts for userID ordered by (created_at DESC, id DESC).
+func (r *Repository) SearchUserAccounts(
+	ctx context.Context,
+	userID uuid.UUID,
+	cursorCreatedAt *time.Time,
+	cursorID *uuid.UUID,
+	limit int,
+) ([]*ent.UserAccount, error) {
+	q := r.client.UserAccount.Query().
+		Where(useraccount.UserIDEQ(userID))
+	if cursorCreatedAt != nil && cursorID != nil {
+		q = q.Where(useraccount.Or(
+			useraccount.CreatedAtLT(*cursorCreatedAt),
+			useraccount.And(useraccount.CreatedAtEQ(*cursorCreatedAt), useraccount.IDLT(*cursorID)),
+		))
+	}
+	return q.Order(ent.Desc(useraccount.FieldCreatedAt), ent.Desc(useraccount.FieldID)).
+		Limit(limit).
+		All(ctx)
+}
+
+// CountUserAccounts returns the number of linked accounts for userID.
+func (r *Repository) CountUserAccounts(ctx context.Context, userID uuid.UUID) (int, error) {
+	return r.client.UserAccount.Query().
+		Where(useraccount.UserIDEQ(userID)).
+		Count(ctx)
+}
+
+// DeleteUserAccountByID deletes a UserAccount scoped to userID and returns the affected row count.
+func (r *Repository) DeleteUserAccountByID(ctx context.Context, accountID, userID uuid.UUID) (int, error) {
+	return r.client.UserAccount.Delete().
+		Where(useraccount.IDEQ(accountID), useraccount.UserIDEQ(userID)).
+		Exec(ctx)
+}
+
+// SearchUsers returns non-deleted users matching optional search query and status filter.
+func (r *Repository) SearchUsers(
+	ctx context.Context,
+	q string,
+	status string,
+	cursorCreatedAt *time.Time,
+	cursorID *uuid.UUID,
+	limit int,
+) ([]*ent.User, error) {
+	query := r.client.User.Query().Where(user.DeletedAtIsNil())
+	if q != "" {
+		query = query.Where(user.Or(
+			user.NameContainsFold(q),
+			user.EmailContainsFold(q),
+		))
+	}
+	if status != "" {
+		query = query.Where(user.StatusEQ(user.Status(status)))
+	}
+	if cursorCreatedAt != nil && cursorID != nil {
+		query = query.Where(user.Or(
+			user.CreatedAtLT(*cursorCreatedAt),
+			user.And(user.CreatedAtEQ(*cursorCreatedAt), user.IDLT(*cursorID)),
+		))
+	}
+	return query.Order(ent.Desc(user.FieldCreatedAt), ent.Desc(user.FieldID)).
+		Limit(limit).
+		All(ctx)
+}
+
+// CountActiveUsersByIDs returns the count of non-deleted active users among ids.
+func (r *Repository) CountActiveUsersByIDs(ctx context.Context, ids []uuid.UUID) (int, error) {
+	if len(ids) == 0 {
+		return 0, nil
+	}
+	return r.client.User.Query().
+		Where(user.IDIn(ids...), user.DeletedAtIsNil(), user.StatusEQ(user.StatusActive)).
+		Count(ctx)
+}
