@@ -3,6 +3,7 @@ air = "latest"
 biome = "2.6.7"
 go = "latest"
 golangci-lint = "2.15.0"
+"go:go.uber.org/mock/mockgen" = "0.6.0"
 node = "26"
 swag = "v2.0.0-rc6"
 
@@ -24,6 +25,10 @@ depends = ["dev:api", "dev:ui"]
 [tasks.api]
 description = "Generate OpenAPI spec via swag"
 run = "swag init -g cmd/domus/main.go -o api"
+
+[tasks.mock]
+description = "Generate Go mocks via go generate"
+run = "go generate ./..."
 
 # --- Build ---
 [tasks."build:ui"]
