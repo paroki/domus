@@ -18,10 +18,10 @@ import (
 // GetFiber initializes the HTTP server. ponytail: inline slog middleware and ErrorHandler; extract to internal/platform/httpx when multiple Fiber apps or custom error codes added.
 func GetFiber(cfg Config, logger *slog.Logger, features ...Feature) *fiber.App {
 	app := fiber.New(fiber.Config{
-		AppName:      cfg.AppName,
-		ReadTimeout:  cfg.ReadTimeout,
-		WriteTimeout: cfg.WriteTimeout,
-		IdleTimeout:  cfg.IdleTimeout,
+		AppName:         cfg.AppName,
+		ReadTimeout:     cfg.ReadTimeout,
+		WriteTimeout:    cfg.WriteTimeout,
+		IdleTimeout:     cfg.IdleTimeout,
 		BodyLimit:       cfg.BodyLimit,
 		StructValidator: newStructValidator(),
 		ErrorHandler: func(c fiber.Ctx, err error) error {
