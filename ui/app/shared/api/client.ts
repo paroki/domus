@@ -60,6 +60,9 @@ export function getActiveParishId(): string | null {
   return activeParishId;
 }
 
+export const setActiveParish = setActiveParishId;
+export const getActiveParish = getActiveParishId;
+
 export const api = createClient<paths>({ baseUrl: "/api" });
 
 api.use({
