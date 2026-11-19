@@ -32,6 +32,17 @@ config:
   bodyLimit: 4194304
   autoMigrate: true
   trustProxy: true
+  user:
+    # -- Bootstrap super admin email (USER_SUPER_ADMIN_EMAIL).
+    superAdminEmail: ""
+    superAdminName: Super Admin
+    otpTtl: 5m
+    otpMaxAttempts: 5
+    otpCooldown: 60s
+    sessionTtl: 720h
+    cookieName: domus_session
+    # -- Set true when served over HTTPS.
+    cookieSecure: true
   sentry:
     # -- domus-api DSN (public). Empty disables Sentry.
     dsn: ""
@@ -39,6 +50,10 @@ config:
     # -- Defaults to chart appVersion.
     release: ""
     tracesSampleRate: 0.1
+
+# -- Existing Secret holding optional keys: db-url (APP_DB_URL), google-id,
+# google-secret, github-id, github-secret (AUTH_GOOGLE_*, AUTH_GITHUB_*).
+existingSecret: ""
 
 # -- Extra environment variables for container.
 extraEnv: []
