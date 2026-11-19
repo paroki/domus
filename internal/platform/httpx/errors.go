@@ -14,15 +14,16 @@ import (
 
 // Base sentinel errors for HTTP error mapping and errors.Is checks.
 var (
-	ErrBadRequest   = errors.New("bad request")
-	ErrUnauthorized = errors.New("unauthorized")
-	ErrForbidden    = errors.New("forbidden")
-	ErrNotFound     = errors.New("not found")
-	ErrConflict     = errors.New("conflict")
-	ErrGone         = errors.New("gone")
-	ErrValidation   = errors.New("validation failed")
-	ErrRateLimited  = errors.New("rate limited")
-	ErrInternal     = errors.New("internal error")
+	ErrBadRequest    = errors.New("bad request")
+	ErrInvalidCursor = errors.New("invalid cursor")
+	ErrUnauthorized  = errors.New("unauthorized")
+	ErrForbidden     = errors.New("forbidden")
+	ErrNotFound      = errors.New("not found")
+	ErrConflict      = errors.New("conflict")
+	ErrGone          = errors.New("gone")
+	ErrValidation    = errors.New("validation failed")
+	ErrRateLimited   = errors.New("rate limited")
+	ErrInternal      = errors.New("internal error")
 )
 
 // AppError represents a structured HTTP error returned by handlers or services.
@@ -63,6 +64,16 @@ func NewError(status int, code, message string, details ...FieldError) *AppError
 // BadRequest constructs a 400 BAD_REQUEST AppError wrapping ErrBadRequest.
 func BadRequest(message string) *AppError {
 	return &AppError{Status: fiber.StatusBadRequest, Code: "BAD_REQUEST", Message: message, Err: ErrBadRequest}
+}
+
+// InvalidCursor constructs a 400 INVALID_CURSOR AppError wrapping ErrBadRequest and ErrInvalidCursor.
+func InvalidCursor(message string) *AppError {
+	return &AppError{
+		Status:  fiber.StatusBadRequest,
+		Code:    "INVALID_CURSOR",
+		Message: message,
+		Err:     errors.Join(ErrBadRequest, ErrInvalidCursor),
+	}
 }
 
 // Unauthorized constructs a 401 UNAUTHORIZED AppError wrapping ErrUnauthorized.

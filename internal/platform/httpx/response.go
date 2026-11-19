@@ -1,17 +1,39 @@
 package httpx
 
-import "github.com/gofiber/fiber/v3"
+import (
+	"encoding/json"
+
+	"github.com/gofiber/fiber/v3"
+)
 
 // Envelope is the standard Domus HTTP JSON response shape { data, meta, error }.
 type Envelope[T any] struct {
-	Data  T             `json:"data"`
-	Meta  *Meta         `json:"meta"`
-	Error *ErrorPayload `json:"error"`
+	Data  T             `json:"data,omitempty"`
+	Meta  *Meta         `json:"meta,omitempty"`
+	Error *ErrorPayload `json:"error,omitempty"`
+}
+
+// MarshalJSON serializes Envelope[T] with mutually exclusive error and data/meta keys.
+func (e Envelope[T]) MarshalJSON() ([]byte, error) {
+	if e.Error != nil {
+		return json.Marshal(struct {
+			Error *ErrorPayload `json:"error"`
+		}{
+			Error: e.Error,
+		})
+	}
+	return json.Marshal(struct {
+		Data T     `json:"data"`
+		Meta *Meta `json:"meta,omitempty"`
+	}{
+		Data: e.Data,
+		Meta: e.Meta,
+	})
 }
 
 // Meta holds cursor pagination metadata for list responses.
 type Meta struct {
-	NextCursor string `json:"nextCursor"`
+	NextCursor string `json:"nextCursor,omitempty"`
 	HasMore    bool   `json:"hasMore"`
 	Limit      int    `json:"limit"`
 	Total      *int   `json:"total,omitempty"`
