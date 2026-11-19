@@ -18,13 +18,16 @@ import (
 // GetFiber initializes the HTTP server. ponytail: inline slog middleware; extract to internal/platform/httpx when multiple Fiber apps added.
 func GetFiber(cfg Config, logger *slog.Logger, features ...Feature) *fiber.App {
 	app := fiber.New(fiber.Config{
-		AppName:         cfg.AppName,
-		ReadTimeout:     cfg.ReadTimeout,
-		WriteTimeout:    cfg.WriteTimeout,
-		IdleTimeout:     cfg.IdleTimeout,
-		BodyLimit:       cfg.BodyLimit,
-		StructValidator: newStructValidator(),
-		ErrorHandler:    httpx.ErrorHandler(logger),
+		AppName:          cfg.AppName,
+		ReadTimeout:      cfg.ReadTimeout,
+		WriteTimeout:     cfg.WriteTimeout,
+		IdleTimeout:      cfg.IdleTimeout,
+		BodyLimit:        cfg.BodyLimit,
+		ProxyHeader:      fiber.HeaderXForwardedFor,
+		TrustProxy:       cfg.TrustProxy,
+		TrustProxyConfig: fiber.TrustProxyConfig{Private: true, Loopback: true},
+		StructValidator:  newStructValidator(),
+		ErrorHandler:     httpx.ErrorHandler(logger),
 	})
 
 	app.Use(requestid.New())

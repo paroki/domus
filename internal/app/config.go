@@ -22,6 +22,7 @@ type Config struct {
 	DBMaxOpenConns  int           `env:"DB_MAX_OPEN_CONNS, default=25"`
 	DBMaxIdleConns  int           `env:"DB_MAX_IDLE_CONNS, default=5"`
 	AutoMigrate     bool          `env:"AUTO_MIGRATE, default=true"`
+	TrustProxy      bool          `env:"TRUST_PROXY, default=false"`
 }
 
 func GetConfig(ctx context.Context) (Config, error) {
