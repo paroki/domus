@@ -11,6 +11,7 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/requestid"
 	"github.com/gofiber/fiber/v3/middleware/static"
 	"github.com/paroki/domus/internal/platform/httpx"
+	"github.com/paroki/domus/internal/platform/mcpx"
 	"github.com/paroki/domus/ui"
 )
 
@@ -47,12 +48,22 @@ func GetFiber(cfg Config, logger *slog.Logger, features ...Feature) *fiber.App {
 		return httpx.OK(c, fiber.Map{"status": "ok"})
 	})
 	mountFeatures(api, features...)
+
+	mcpArgs := make([]any, 0, len(features))
+	for _, f := range features {
+		mcpArgs = append(mcpArgs, f)
+	}
+	mcpHandler := mcpx.NewHandler(mcpx.NewServer(cfg.AppName, mcpArgs...), nil)
+	app.All("/mcp", mcpHandler)
+	app.All("/mcp/*", mcpHandler)
+
 	// ponytail: serves embedded SPA without custom Cache-Control headers; add immutable asset caching when CDN/traffic requires.
 	if distFS, err := ui.DistFS(); err == nil {
 		app.Use(static.New("", static.Config{
 			FS: distFS,
 			Next: func(c fiber.Ctx) bool {
-				return strings.HasPrefix(c.Path(), "/api")
+				p := c.Path()
+				return strings.HasPrefix(p, "/api") || p == "/mcp" || strings.HasPrefix(p, "/mcp/")
 			},
 			NotFoundHandler: func(c fiber.Ctx) error {
 				index, err := fs.ReadFile(distFS, "index.html")
