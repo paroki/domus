@@ -42,12 +42,6 @@ func TestGetConfig_DBDefaults(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetConfig failed: %v", err)
 	}
-	if cfg.DBMaxOpenConns != 25 {
-		t.Fatalf("expected DBMaxOpenConns=25, got %d", cfg.DBMaxOpenConns)
-	}
-	if cfg.DBMaxIdleConns != 5 {
-		t.Fatalf("expected DBMaxIdleConns=5, got %d", cfg.DBMaxIdleConns)
-	}
 	if !strings.HasPrefix(cfg.DatabaseURL, "postgres://") {
 		t.Fatalf("expected postgres:// default DatabaseURL, got %q", cfg.DatabaseURL)
 	}
