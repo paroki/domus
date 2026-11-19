@@ -32,6 +32,7 @@ func GetFiber(cfg Config, logger *slog.Logger, features ...Feature) *fiber.App {
 
 	app.Use(requestid.New())
 	app.Use(recover.New())
+	app.Use(sentryMiddleware)
 	app.Use(func(c fiber.Ctx) error {
 		start := time.Now()
 		err := c.Next()
