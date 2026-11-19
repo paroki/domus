@@ -3,10 +3,13 @@ package app
 import (
 	"context"
 	"database/sql"
+	"io/fs"
 	"log/slog"
 	"strings"
 	"testing"
 	"testing/fstest"
+
+	"github.com/paroki/domus/migrations"
 )
 
 func TestRunMigrations_IdempotentSQLite(t *testing.T) {
@@ -32,12 +35,16 @@ func TestRunMigrations_IdempotentSQLite(t *testing.T) {
 		t.Fatalf("second RunMigrations failed: %v", err)
 	}
 
+	sqlFiles, err := fs.Glob(migrations.FS, "*.sql")
+	if err != nil {
+		t.Fatalf("glob migrations: %v", err)
+	}
 	var count int
 	if err := db.QueryRowContext(ctx, "SELECT COUNT(*) FROM schema_migrations").Scan(&count); err != nil {
 		t.Fatalf("query schema_migrations: %v", err)
 	}
-	if count != 1 {
-		t.Fatalf("expected 1 applied migration, got %d", count)
+	if count != len(sqlFiles) {
+		t.Fatalf("expected %d applied migrations, got %d", len(sqlFiles), count)
 	}
 
 	var metaTable string

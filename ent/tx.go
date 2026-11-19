@@ -16,6 +16,14 @@ type Tx struct {
 	CasbinRule *CasbinRuleClient
 	// Meta is the client for interacting with the Meta builders.
 	Meta *MetaClient
+	// User is the client for interacting with the User builders.
+	User *UserClient
+	// UserAccount is the client for interacting with the UserAccount builders.
+	UserAccount *UserAccountClient
+	// UserOTP is the client for interacting with the UserOTP builders.
+	UserOTP *UserOTPClient
+	// UserSession is the client for interacting with the UserSession builders.
+	UserSession *UserSessionClient
 
 	// lazily loaded.
 	client     *Client
@@ -149,6 +157,10 @@ func (tx *Tx) Client() *Client {
 func (tx *Tx) init() {
 	tx.CasbinRule = NewCasbinRuleClient(tx.config)
 	tx.Meta = NewMetaClient(tx.config)
+	tx.User = NewUserClient(tx.config)
+	tx.UserAccount = NewUserAccountClient(tx.config)
+	tx.UserOTP = NewUserOTPClient(tx.config)
+	tx.UserSession = NewUserSessionClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

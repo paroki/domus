@@ -14,6 +14,10 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/paroki/domus/ent/casbinrule"
 	"github.com/paroki/domus/ent/meta"
+	"github.com/paroki/domus/ent/user"
+	"github.com/paroki/domus/ent/useraccount"
+	"github.com/paroki/domus/ent/userotp"
+	"github.com/paroki/domus/ent/usersession"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -74,8 +78,12 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			casbinrule.Table: casbinrule.ValidColumn,
-			meta.Table:       meta.ValidColumn,
+			casbinrule.Table:  casbinrule.ValidColumn,
+			meta.Table:        meta.ValidColumn,
+			user.Table:        user.ValidColumn,
+			useraccount.Table: useraccount.ValidColumn,
+			userotp.Table:     userotp.ValidColumn,
+			usersession.Table: usersession.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

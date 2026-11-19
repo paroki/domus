@@ -11,3 +11,15 @@ type CasbinRule func(*sql.Selector)
 
 // Meta is the predicate function for meta builders.
 type Meta func(*sql.Selector)
+
+// User is the predicate function for user builders.
+type User func(*sql.Selector)
+
+// UserAccount is the predicate function for useraccount builders.
+type UserAccount func(*sql.Selector)
+
+// UserOTP is the predicate function for userotp builders.
+type UserOTP func(*sql.Selector)
+
+// UserSession is the predicate function for usersession builders.
+type UserSession func(*sql.Selector)
