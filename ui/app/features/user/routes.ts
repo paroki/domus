@@ -1,5 +1,5 @@
 import { type RouteConfig, route } from "@react-router/dev/routes";
 
 export default [
-  route("org", "./features/organization/pages/OrganizationPage.tsx"),
+  route("users", "./features/user/pages/UserPage.tsx"),
 ] satisfies RouteConfig;
