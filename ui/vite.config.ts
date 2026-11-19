@@ -13,7 +13,7 @@ export default defineConfig({
     // Uploads source maps only when SENTRY_AUTH_TOKEN is set (CI/release build).
     sentryVitePlugin({
       org: "doyolabs",
-      project: "domus-frontend",
+      project: "domus-ui",
       authToken: process.env.SENTRY_AUTH_TOKEN,
       disable: !process.env.SENTRY_AUTH_TOKEN,
       release: { name: process.env.APP_SENTRY_RELEASE },
