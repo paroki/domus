@@ -195,3 +195,64 @@ func (r *Repository) DeleteSessionByTokenHash(ctx context.Context, tokenHash str
 		Exec(ctx)
 	return err
 }
+
+// FindSessionWithUserByTokenHash returns the UserSession and its non-deleted User.
+func (r *Repository) FindSessionWithUserByTokenHash(ctx context.Context, tokenHash string) (*ent.UserSession, *ent.User, error) {
+	sess, err := r.client.UserSession.Query().
+		Where(usersession.TokenHashEQ(tokenHash)).
+		WithUser(func(q *ent.UserQuery) {
+			q.Where(user.DeletedAtIsNil())
+		}).
+		Only(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	if sess.Edges.User == nil {
+		return nil, nil, &ent.NotFoundError{}
+	}
+	return sess, sess.Edges.User, nil
+}
+
+// RefreshSession updates last_active_at and sliding expires_at on a UserSession.
+func (r *Repository) RefreshSession(ctx context.Context, id uuid.UUID, lastActiveAt, expiresAt time.Time) error {
+	return r.client.UserSession.UpdateOneID(id).
+		SetLastActiveAt(lastActiveAt).
+		SetExpiresAt(expiresAt).
+		Exec(ctx)
+}
+
+// DeleteSessionByID hard-deletes a UserSession by ID.
+func (r *Repository) DeleteSessionByID(ctx context.Context, id uuid.UUID) error {
+	return r.client.UserSession.DeleteOneID(id).Exec(ctx)
+}
+
+// DeleteSessionsByUserID hard-deletes all UserSession rows for userID.
+func (r *Repository) DeleteSessionsByUserID(ctx context.Context, userID uuid.UUID) error {
+	_, err := r.client.UserSession.Delete().
+		Where(usersession.UserIDEQ(userID)).
+		Exec(ctx)
+	return err
+}
+
+// UpdateAccountLastUsed updates last_used_at on a UserAccount.
+func (r *Repository) UpdateAccountLastUsed(ctx context.Context, id uuid.UUID, at time.Time) error {
+	return r.client.UserAccount.UpdateOneID(id).
+		SetLastUsedAt(at).
+		Exec(ctx)
+}
+
+// UpdateAccountActiveParish sets active_parish_id on a UserAccount.
+func (r *Repository) UpdateAccountActiveParish(ctx context.Context, id, parishID uuid.UUID) error {
+	return r.client.UserAccount.UpdateOneID(id).
+		SetActiveParishID(parishID).
+		Exec(ctx)
+}
+
+// SetUserDefaultParishIfNil sets default_parish_id on User only if currently nil.
+func (r *Repository) SetUserDefaultParishIfNil(ctx context.Context, userID, parishID uuid.UUID) error {
+	_, err := r.client.User.Update().
+		Where(user.IDEQ(userID), user.DefaultParishIDIsNil()).
+		SetDefaultParishID(parishID).
+		Save(ctx)
+	return err
+}
