@@ -28,11 +28,7 @@ func main() {
 	}
 }
 
-func run() error {
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
-	context.AfterFunc(ctx, stop)
-
+func newRootCmd() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:           "domus",
 		Short:         "Domus backend service",
@@ -40,7 +36,14 @@ func run() error {
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
-	rootCmd.AddCommand(newServeCmd())
+	rootCmd.AddCommand(newServeCmd(), newMigrateCmd())
+	return rootCmd
+}
 
-	return rootCmd.ExecuteContext(ctx)
+func run() error {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	context.AfterFunc(ctx, stop)
+
+	return newRootCmd().ExecuteContext(ctx)
 }

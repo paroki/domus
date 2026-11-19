@@ -16,6 +16,11 @@ func newServeCmd() *cobra.Command {
 				return err
 			}
 			logger := app.GetLogger(cfg)
+			if cfg.AutoMigrate {
+				if err := app.RunMigrations(ctx, cfg, logger); err != nil {
+					return err
+				}
+			}
 			fiberApp := app.GetFiber(cfg, logger)
 			return app.New(cfg, fiberApp, logger).Serve(ctx)
 		},
