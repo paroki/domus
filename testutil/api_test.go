@@ -50,9 +50,10 @@ func (f pingFeature) Register(api fiber.Router) {
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(testutil.Envelope[any]{
 				Error: &testutil.ErrorPayload{
-					Code:    "PING_FAILED",
-					Message: err.Error(),
-					Details: []testutil.FieldError{{Field: "message", Message: "invalid"}},
+					Code:      "PING_FAILED",
+					Message:   err.Error(),
+					RequestID: "req-123",
+					Details:   []testutil.FieldError{{Field: "message", Code: "INVALID", Message: "invalid"}},
 				},
 			})
 		}
@@ -73,7 +74,7 @@ func (f pingFeature) Register(api fiber.Router) {
 		}
 		return c.Status(fiber.StatusOK).JSON(testutil.Envelope[[]pingResponse]{
 			Data: []pingResponse{{Reply: items[0]}, {Reply: items[1]}},
-			Meta: &testutil.Meta{Page: 1, Limit: 2, Total: total, TotalPages: 2},
+			Meta: &testutil.Meta{NextCursor: "cursor-2", HasMore: true, Limit: 2, Total: &total},
 		})
 	})
 
@@ -176,8 +177,11 @@ func (s *PingApiSuite) TestPagedList() {
 	s.Len(env.Data, 2)
 	s.Equal("a", env.Data[0].Reply)
 	s.Require().NotNil(env.Meta)
-	s.Equal(3, env.Meta.Total)
-	s.Equal(2, env.Meta.TotalPages)
+	s.Equal("cursor-2", env.Meta.NextCursor)
+	s.True(env.Meta.HasMore)
+	s.Equal(2, env.Meta.Limit)
+	s.Require().NotNil(env.Meta.Total)
+	s.Equal(3, *env.Meta.Total)
 }
 
 func (s *PingApiSuite) TestMultipartUpload() {
@@ -202,7 +206,9 @@ func (s *PingApiSuite) TestErrorAndStatusHelpers() {
 	errEnv := s.GetErrorResponse()
 	s.Require().NotNil(errEnv.Error)
 	s.Equal("PING_FAILED", errEnv.Error.Code)
-	s.Len(errEnv.Error.Details, 1)
+	s.Equal("req-123", errEnv.Error.RequestID)
+	s.Require().Len(errEnv.Error.Details, 1)
+	s.Equal("INVALID", errEnv.Error.Details[0].Code)
 
 	s.Request("/api/pings/status/204", http.MethodGet, nil)
 	s.NoContent()
