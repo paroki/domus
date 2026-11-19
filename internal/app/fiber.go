@@ -15,7 +15,7 @@ import (
 )
 
 // GetFiber initializes the HTTP server. ponytail: inline slog middleware and ErrorHandler; extract to internal/platform/httpx when multiple Fiber apps or custom error codes added.
-func GetFiber(cfg Config, logger *slog.Logger) *fiber.App {
+func GetFiber(cfg Config, logger *slog.Logger, features ...Feature) (*fiber.App, error) {
 	app := fiber.New(fiber.Config{
 		AppName:      cfg.AppName,
 		ReadTimeout:  cfg.ReadTimeout,
@@ -58,6 +58,9 @@ func GetFiber(cfg Config, logger *slog.Logger) *fiber.App {
 	api.Get("/health", func(c fiber.Ctx) error {
 		return c.SendString("ok")
 	})
+	if err := mountFeatures(api, features...); err != nil {
+		return nil, err
+	}
 	// ponytail: serves embedded SPA without custom Cache-Control headers; add immutable asset caching when CDN/traffic requires.
 	if distFS, err := ui.DistFS(); err == nil {
 		app.Use(static.New("", static.Config{
@@ -76,5 +79,5 @@ func GetFiber(cfg Config, logger *slog.Logger) *fiber.App {
 		}))
 	}
 
-	return app
+	return app, nil
 }
