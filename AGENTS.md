@@ -73,6 +73,8 @@ Domain units across both backend and frontend are called **features** (never "mo
    - **Dependency direction**: `handler → service → repo → domain`. `<feature>.go` wires `repo`, `service`, and `handler` together inside `New(...)`.
    - **Feature contract** (`internal/app/feature.go`): every facade satisfies `app.Feature` — `Register(api fiber.Router)` receives the `/api` router group and mounts one or more prefix groups itself via `api.Group(...)` (plural kebab-case recommended, e.g. `/auth`, `/users`, `/parishioners`). Features MUST NOT import `internal/app`; pass them to `app.GetFiber(cfg, logger, features...)`.
    - **Feature conventions**: each feature uses its own env prefix `<FEATURE>_*` (global server config uses `APP_*`), defines its own role constants in `domain/` (enforced via Casbin in `internal/platform/authz`), and defines feature-scoped sentinel errors in `domain/errors.go`.
+   - **Self-contained Casbin permissions**: define feature-scoped role constants (`<feature>:<kebab-role>`) and resource constants (`<feature>:<resource>`) in `domain/`, and expose `RegisterPermissions(ctx context.Context, e *casbin.Enforcer) error` on the `<feature>.go` facade.
+   - **Self-contained MCP tools**: expose `RegisterMCP(s *mcp.Server)` on the `<feature>.go` facade with tool names formatted as `<feature>_<snake_case_action>`.
    - **Thin handlers**: a handler only parses/validates the request, calls `service`, and maps the result or error to the `httpx` envelope. NEVER put business logic in `handler/`, and NEVER call `repo/` from `handler/`.
    - **Service**: owns all business rules and orchestration. It uses `domain` types only; it MUST NOT import `fiber`, `handler`, or `httpx`.
    - Unified HTTP response envelope `{ data, meta, error }` and status mapping are provided by `internal/platform/httpx`.
@@ -97,6 +99,11 @@ Domain units across both backend and frontend are called **features** (never "mo
     mise run api
     ```
   - NEVER hand-edit `api/swagger.json` or `ui/app/shared/api/schema.d.ts`.
+- **API Testing (`testutil.ApiTestSuite[T]`)**:
+  - Embed `testutil.ApiTestSuite[T]` (`testutil/api.go`) in Fiber v3 handler/API suites. Use `WithFeatures(...)` or `SetApp(...)`, `Request` / `RequestWithToken` / `RequestMultipart`, `SetHeader` / `SetCookie` / `ClearCookies`, envelope decoders (`GetResponse`, `PagedResponse`, `GetErrorResponse`, `DecodeAs[R]`), and status assertions (`OK`, `Created`, `NoContent`, `BadRequest`, `Unauthorized`, `Forbidden`, `NotFound`, `Conflict`, `UnprocessableEntity`).
+- **Consumer-Driven Mocks (`go.uber.org/mock`)**:
+  - Define mockable consumer interfaces in `dir/foo_test.go` with `//go:generate mockgen -source=foo_test.go -destination=mocks/mock_<name>.go -package=mocks`.
+  - Run `mise run mock` (`go generate ./...`) and commit generated `dir/mocks/` files; CI verifies `go generate ./... && git diff --exit-code`.
 
 ## 4. Frontend: React Router Framework Mode (`ssr: false`)
 
@@ -140,6 +147,7 @@ Run the narrowest verification covering your change before finishing:
 | Scope                             | Command                                                              |
 | :-------------------------------- | :------------------------------------------------------------------- |
 | Regenerate OpenAPI 3.1 + UI types | `mise run api`                                                       |
+| Regenerate Go mocks               | `mise run mock`                                                      |
 | Go tests (race detector)          | `go test -race ./...`                                                |
 | Go vulnerability check            | `govulncheck ./...`                                                  |
 | Full QC (API + UI, continue-on-fail)  | `mise run qc`                                                        |
