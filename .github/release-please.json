@@ -12,7 +12,7 @@
       "skip-changelog": true,
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
-        "charts/Chart.yaml"
+        { "type": "generic", "path": "charts/Chart.yaml" }
       ]
     }
   },
