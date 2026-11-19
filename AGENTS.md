@@ -142,8 +142,10 @@ Run the narrowest verification covering your change before finishing:
 | Regenerate OpenAPI 3.1 + UI types | `mise run api`                                                       |
 | Go tests (race detector)          | `go test -race ./...`                                                |
 | Go vulnerability check            | `govulncheck ./...`                                                  |
-| Full lint & typecheck (Go + UI)   | `mise run lint`                                                      |
-| UI format / lint check            | `bunx biome check .`                                                 |
-| UI tests                          | `bun test --cwd ui --pass-with-no-tests`                             |
-| Build embedded UI assets          | `mise run build-ui`                                                  |
+| Full QC (API + UI, continue-on-fail)  | `mise run qc`                                                        |
+| API QC (gofmt, vet, lint, vuln, test) | `mise run qc:api`                                                    |
+| UI QC (biome, typecheck, test, build) | `mise run qc:ui`                                                     |
+| UI format / lint check                | `biome check ui/app`                                                 |
+| UI tests                              | `bun test --cwd ui --pass-with-no-tests`                             |
+| Build embedded UI assets              | `mise run build:ui`                                                  |
 | Helm chart lint & render          | `helm lint charts --strict && helm template domus charts > /dev/null` |
