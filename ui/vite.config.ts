@@ -1,9 +1,25 @@
 import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  plugins: [tailwindcss(), reactRouter()],
+  // Expose only APP_SENTRY_* (never APP_DB_URL etc.) to the client bundle.
+  envPrefix: ["VITE_", "APP_SENTRY_"],
+  build: { sourcemap: true },
+  plugins: [
+    tailwindcss(),
+    reactRouter(),
+    // Uploads source maps only when SENTRY_AUTH_TOKEN is set (CI/release build).
+    sentryVitePlugin({
+      org: "doyolabs",
+      project: "domus-frontend",
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      disable: !process.env.SENTRY_AUTH_TOKEN,
+      release: { name: process.env.APP_SENTRY_RELEASE },
+      sourcemaps: { filesToDeleteAfterUpload: ["build/client/**/*.map"] },
+    }),
+  ],
   resolve: {
     tsconfigPaths: true,
   },
