@@ -5,6 +5,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -48,8 +49,8 @@ func TestGetFiber(t *testing.T) {
 		t.Fatal("expected X-Request-ID response header")
 	}
 	body, _ := io.ReadAll(resp.Body)
-	if string(body) != "ok" {
-		t.Fatalf("expected body 'ok', got %q", string(body))
+	if !strings.Contains(string(body), `"status":"ok"`) {
+		t.Fatalf("expected health json with status ok, got %q", string(body))
 	}
 
 	apiMissing := httptest.NewRequest("GET", "/api/unknown", nil)

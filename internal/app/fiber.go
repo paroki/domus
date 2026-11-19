@@ -1,21 +1,20 @@
 package app
 
 import (
-	"errors"
 	"io/fs"
 	"log/slog"
 	"strings"
 	"time"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/recover"
 	"github.com/gofiber/fiber/v3/middleware/requestid"
 	"github.com/gofiber/fiber/v3/middleware/static"
+	"github.com/paroki/domus/internal/platform/httpx"
 	"github.com/paroki/domus/ui"
 )
 
-// GetFiber initializes the HTTP server. ponytail: inline slog middleware and ErrorHandler; extract to internal/platform/httpx when multiple Fiber apps or custom error codes added.
+// GetFiber initializes the HTTP server. ponytail: inline slog middleware; extract to internal/platform/httpx when multiple Fiber apps added.
 func GetFiber(cfg Config, logger *slog.Logger, features ...Feature) *fiber.App {
 	app := fiber.New(fiber.Config{
 		AppName:         cfg.AppName,
@@ -24,22 +23,7 @@ func GetFiber(cfg Config, logger *slog.Logger, features ...Feature) *fiber.App {
 		IdleTimeout:     cfg.IdleTimeout,
 		BodyLimit:       cfg.BodyLimit,
 		StructValidator: newStructValidator(),
-		ErrorHandler: func(c fiber.Ctx, err error) error {
-			code := fiber.StatusInternalServerError
-			if e, ok := errors.AsType[*fiber.Error](err); ok {
-				code = e.Code
-			} else if _, ok := errors.AsType[validator.ValidationErrors](err); ok {
-				code = fiber.StatusUnprocessableEntity
-			}
-			logger.ErrorContext(c.Context(), "request error",
-				"request_id", requestid.FromContext(c),
-				"method", c.Method(),
-				"path", c.Path(),
-				"status", code,
-				"err", err,
-			)
-			return c.Status(code).JSON(fiber.Map{"error": err.Error()})
-		},
+		ErrorHandler:    httpx.ErrorHandler(logger),
 	})
 
 	app.Use(requestid.New())
@@ -60,7 +44,7 @@ func GetFiber(cfg Config, logger *slog.Logger, features ...Feature) *fiber.App {
 
 	api := app.Group("/api")
 	api.Get("/health", func(c fiber.Ctx) error {
-		return c.SendString("ok")
+		return httpx.OK(c, fiber.Map{"status": "ok"})
 	})
 	mountFeatures(api, features...)
 	// ponytail: serves embedded SPA without custom Cache-Control headers; add immutable asset caching when CDN/traffic requires.
