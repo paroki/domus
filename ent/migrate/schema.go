@@ -8,6 +8,30 @@ import (
 )
 
 var (
+	// CasbinRulesColumns holds the columns for the "casbin_rules" table.
+	CasbinRulesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "ptype", Type: field.TypeString},
+		{Name: "v0", Type: field.TypeString, Default: ""},
+		{Name: "v1", Type: field.TypeString, Default: ""},
+		{Name: "v2", Type: field.TypeString, Default: ""},
+		{Name: "v3", Type: field.TypeString, Default: ""},
+		{Name: "v4", Type: field.TypeString, Default: ""},
+		{Name: "v5", Type: field.TypeString, Default: ""},
+	}
+	// CasbinRulesTable holds the schema information for the "casbin_rules" table.
+	CasbinRulesTable = &schema.Table{
+		Name:       "casbin_rules",
+		Columns:    CasbinRulesColumns,
+		PrimaryKey: []*schema.Column{CasbinRulesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "casbinrule_ptype_v0_v1_v2_v3",
+				Unique:  false,
+				Columns: []*schema.Column{CasbinRulesColumns[1], CasbinRulesColumns[2], CasbinRulesColumns[3], CasbinRulesColumns[4], CasbinRulesColumns[5]},
+			},
+		},
+	}
 	// MetaColumns holds the columns for the "meta" table.
 	MetaColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -24,6 +48,7 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		CasbinRulesTable,
 		MetaTable,
 	}
 )
