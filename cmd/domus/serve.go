@@ -18,6 +18,11 @@ func newServeCmd() *cobra.Command {
 				return err
 			}
 			logger := app.GetLogger(cfg)
+			flush, err := app.InitSentry(cfg)
+			if err != nil {
+				return err
+			}
+			defer flush()
 			if cfg.AutoMigrate {
 				if err := app.RunMigrations(ctx, cfg, logger); err != nil {
 					return err
