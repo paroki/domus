@@ -9,7 +9,7 @@ import type { AppDef } from "~/shared/app-def";
 import { UnderConstruction } from "./UnderConstruction";
 
 const app: AppDef = {
-  id: "organization",
+  id: "org",
   path: "/org",
   order: 1,
   plate: 1,

@@ -25,7 +25,7 @@ const id = {
     back: "Kembali ke beranda",
   },
   apps: {
-    organization: {
+    org: {
       name: "Organisasi",
       description: "Struktur organisasi, wilayah, dan lingkungan paroki.",
     },
@@ -33,21 +33,9 @@ const id = {
       name: "Kegiatan",
       description: "Jadwal misa dan kegiatan paroki.",
     },
-    sacrament: {
-      name: "Sakramen",
-      description: "Pencatatan baptis, komuni, krisma, dan perkawinan.",
-    },
-    parishioner: {
-      name: "Data Umat",
-      description: "Data umat dan keluarga paroki.",
-    },
-    users: {
+    user: {
       name: "Pengguna",
       description: "Akun dan hak akses pengguna aplikasi.",
-    },
-    settings: {
-      name: "Pengaturan",
-      description: "Preferensi dan konfigurasi aplikasi.",
     },
   },
 } as const;
