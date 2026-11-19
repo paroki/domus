@@ -9,6 +9,10 @@ import (
 	"github.com/paroki/domus/ent/casbinrule"
 	"github.com/paroki/domus/ent/meta"
 	"github.com/paroki/domus/ent/schema"
+	"github.com/paroki/domus/ent/user"
+	"github.com/paroki/domus/ent/useraccount"
+	"github.com/paroki/domus/ent/userotp"
+	"github.com/paroki/domus/ent/usersession"
 )
 
 // The init function reads all schema descriptors with runtime code
@@ -77,4 +81,138 @@ func init() {
 	metaDescID := metaMixinFields0[0].Descriptor()
 	// meta.DefaultID holds the default value on creation for the id field.
 	meta.DefaultID = metaDescID.Default.(func() uuid.UUID)
+	userMixin := schema.User{}.Mixin()
+	userMixinFields0 := userMixin[0].Fields()
+	_ = userMixinFields0
+	userMixinFields1 := userMixin[1].Fields()
+	_ = userMixinFields1
+	userFields := schema.User{}.Fields()
+	_ = userFields
+	// userDescCreatedAt is the schema descriptor for created_at field.
+	userDescCreatedAt := userMixinFields1[0].Descriptor()
+	// user.DefaultCreatedAt holds the default value on creation for the created_at field.
+	user.DefaultCreatedAt = userDescCreatedAt.Default.(func() time.Time)
+	// userDescUpdatedAt is the schema descriptor for updated_at field.
+	userDescUpdatedAt := userMixinFields1[1].Descriptor()
+	// user.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	user.DefaultUpdatedAt = userDescUpdatedAt.Default.(func() time.Time)
+	// user.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	user.UpdateDefaultUpdatedAt = userDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// userDescEmail is the schema descriptor for email field.
+	userDescEmail := userFields[0].Descriptor()
+	// user.EmailValidator is a validator for the "email" field. It is called by the builders before save.
+	user.EmailValidator = userDescEmail.Validators[0].(func(string) error)
+	// userDescName is the schema descriptor for name field.
+	userDescName := userFields[1].Descriptor()
+	// user.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	user.NameValidator = userDescName.Validators[0].(func(string) error)
+	// userDescID is the schema descriptor for id field.
+	userDescID := userMixinFields0[0].Descriptor()
+	// user.DefaultID holds the default value on creation for the id field.
+	user.DefaultID = userDescID.Default.(func() uuid.UUID)
+	useraccountMixin := schema.UserAccount{}.Mixin()
+	useraccountMixinFields0 := useraccountMixin[0].Fields()
+	_ = useraccountMixinFields0
+	useraccountMixinFields1 := useraccountMixin[1].Fields()
+	_ = useraccountMixinFields1
+	useraccountFields := schema.UserAccount{}.Fields()
+	_ = useraccountFields
+	// useraccountDescCreatedAt is the schema descriptor for created_at field.
+	useraccountDescCreatedAt := useraccountMixinFields1[0].Descriptor()
+	// useraccount.DefaultCreatedAt holds the default value on creation for the created_at field.
+	useraccount.DefaultCreatedAt = useraccountDescCreatedAt.Default.(func() time.Time)
+	// useraccountDescUpdatedAt is the schema descriptor for updated_at field.
+	useraccountDescUpdatedAt := useraccountMixinFields1[1].Descriptor()
+	// useraccount.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	useraccount.DefaultUpdatedAt = useraccountDescUpdatedAt.Default.(func() time.Time)
+	// useraccount.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	useraccount.UpdateDefaultUpdatedAt = useraccountDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// useraccountDescProvider is the schema descriptor for provider field.
+	useraccountDescProvider := useraccountFields[1].Descriptor()
+	// useraccount.ProviderValidator is a validator for the "provider" field. It is called by the builders before save.
+	useraccount.ProviderValidator = useraccountDescProvider.Validators[0].(func(string) error)
+	// useraccountDescSubject is the schema descriptor for subject field.
+	useraccountDescSubject := useraccountFields[2].Descriptor()
+	// useraccount.SubjectValidator is a validator for the "subject" field. It is called by the builders before save.
+	useraccount.SubjectValidator = useraccountDescSubject.Validators[0].(func(string) error)
+	// useraccountDescID is the schema descriptor for id field.
+	useraccountDescID := useraccountMixinFields0[0].Descriptor()
+	// useraccount.DefaultID holds the default value on creation for the id field.
+	useraccount.DefaultID = useraccountDescID.Default.(func() uuid.UUID)
+	userotpMixin := schema.UserOTP{}.Mixin()
+	userotpMixinFields0 := userotpMixin[0].Fields()
+	_ = userotpMixinFields0
+	userotpMixinFields1 := userotpMixin[1].Fields()
+	_ = userotpMixinFields1
+	userotpFields := schema.UserOTP{}.Fields()
+	_ = userotpFields
+	// userotpDescCreatedAt is the schema descriptor for created_at field.
+	userotpDescCreatedAt := userotpMixinFields1[0].Descriptor()
+	// userotp.DefaultCreatedAt holds the default value on creation for the created_at field.
+	userotp.DefaultCreatedAt = userotpDescCreatedAt.Default.(func() time.Time)
+	// userotpDescUpdatedAt is the schema descriptor for updated_at field.
+	userotpDescUpdatedAt := userotpMixinFields1[1].Descriptor()
+	// userotp.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	userotp.DefaultUpdatedAt = userotpDescUpdatedAt.Default.(func() time.Time)
+	// userotp.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	userotp.UpdateDefaultUpdatedAt = userotpDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// userotpDescChannel is the schema descriptor for channel field.
+	userotpDescChannel := userotpFields[0].Descriptor()
+	// userotp.DefaultChannel holds the default value on creation for the channel field.
+	userotp.DefaultChannel = userotpDescChannel.Default.(string)
+	// userotp.ChannelValidator is a validator for the "channel" field. It is called by the builders before save.
+	userotp.ChannelValidator = userotpDescChannel.Validators[0].(func(string) error)
+	// userotpDescTarget is the schema descriptor for target field.
+	userotpDescTarget := userotpFields[1].Descriptor()
+	// userotp.TargetValidator is a validator for the "target" field. It is called by the builders before save.
+	userotp.TargetValidator = userotpDescTarget.Validators[0].(func(string) error)
+	// userotpDescCodeHash is the schema descriptor for code_hash field.
+	userotpDescCodeHash := userotpFields[2].Descriptor()
+	// userotp.CodeHashValidator is a validator for the "code_hash" field. It is called by the builders before save.
+	userotp.CodeHashValidator = userotpDescCodeHash.Validators[0].(func(string) error)
+	// userotpDescAttempts is the schema descriptor for attempts field.
+	userotpDescAttempts := userotpFields[3].Descriptor()
+	// userotp.DefaultAttempts holds the default value on creation for the attempts field.
+	userotp.DefaultAttempts = userotpDescAttempts.Default.(int)
+	// userotpDescID is the schema descriptor for id field.
+	userotpDescID := userotpMixinFields0[0].Descriptor()
+	// userotp.DefaultID holds the default value on creation for the id field.
+	userotp.DefaultID = userotpDescID.Default.(func() uuid.UUID)
+	usersessionMixin := schema.UserSession{}.Mixin()
+	usersessionMixinFields0 := usersessionMixin[0].Fields()
+	_ = usersessionMixinFields0
+	usersessionMixinFields1 := usersessionMixin[1].Fields()
+	_ = usersessionMixinFields1
+	usersessionFields := schema.UserSession{}.Fields()
+	_ = usersessionFields
+	// usersessionDescCreatedAt is the schema descriptor for created_at field.
+	usersessionDescCreatedAt := usersessionMixinFields1[0].Descriptor()
+	// usersession.DefaultCreatedAt holds the default value on creation for the created_at field.
+	usersession.DefaultCreatedAt = usersessionDescCreatedAt.Default.(func() time.Time)
+	// usersessionDescUpdatedAt is the schema descriptor for updated_at field.
+	usersessionDescUpdatedAt := usersessionMixinFields1[1].Descriptor()
+	// usersession.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	usersession.DefaultUpdatedAt = usersessionDescUpdatedAt.Default.(func() time.Time)
+	// usersession.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	usersession.UpdateDefaultUpdatedAt = usersessionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// usersessionDescTokenHash is the schema descriptor for token_hash field.
+	usersessionDescTokenHash := usersessionFields[1].Descriptor()
+	// usersession.TokenHashValidator is a validator for the "token_hash" field. It is called by the builders before save.
+	usersession.TokenHashValidator = usersessionDescTokenHash.Validators[0].(func(string) error)
+	// usersessionDescUserAgent is the schema descriptor for user_agent field.
+	usersessionDescUserAgent := usersessionFields[2].Descriptor()
+	// usersession.DefaultUserAgent holds the default value on creation for the user_agent field.
+	usersession.DefaultUserAgent = usersessionDescUserAgent.Default.(string)
+	// usersessionDescIPAddress is the schema descriptor for ip_address field.
+	usersessionDescIPAddress := usersessionFields[3].Descriptor()
+	// usersession.DefaultIPAddress holds the default value on creation for the ip_address field.
+	usersession.DefaultIPAddress = usersessionDescIPAddress.Default.(string)
+	// usersessionDescLastActiveAt is the schema descriptor for last_active_at field.
+	usersessionDescLastActiveAt := usersessionFields[5].Descriptor()
+	// usersession.DefaultLastActiveAt holds the default value on creation for the last_active_at field.
+	usersession.DefaultLastActiveAt = usersessionDescLastActiveAt.Default.(func() time.Time)
+	// usersessionDescID is the schema descriptor for id field.
+	usersessionDescID := usersessionMixinFields0[0].Descriptor()
+	// usersession.DefaultID holds the default value on creation for the id field.
+	usersession.DefaultID = usersessionDescID.Default.(func() uuid.UUID)
 }

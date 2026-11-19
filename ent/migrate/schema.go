@@ -3,6 +3,7 @@
 package migrate
 
 import (
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/dialect/sql/schema"
 	"entgo.io/ent/schema/field"
 )
@@ -46,12 +47,161 @@ var (
 		Columns:    MetaColumns,
 		PrimaryKey: []*schema.Column{MetaColumns[0]},
 	}
+	// UsersColumns holds the columns for the "users" table.
+	UsersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "email", Type: field.TypeString, Unique: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "phone", Type: field.TypeString, Nullable: true},
+		{Name: "avatar_url", Type: field.TypeString, Nullable: true},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "disabled"}, Default: "active"},
+		{Name: "default_parish_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "last_login_at", Type: field.TypeTime, Nullable: true},
+	}
+	// UsersTable holds the schema information for the "users" table.
+	UsersTable = &schema.Table{
+		Name:       "users",
+		Columns:    UsersColumns,
+		PrimaryKey: []*schema.Column{UsersColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "user_email",
+				Unique:  true,
+				Columns: []*schema.Column{UsersColumns[4]},
+			},
+			{
+				Name:    "user_status",
+				Unique:  false,
+				Columns: []*schema.Column{UsersColumns[8]},
+			},
+		},
+	}
+	// UserAccountsColumns holds the columns for the "user_accounts" table.
+	UserAccountsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "provider", Type: field.TypeString},
+		{Name: "subject", Type: field.TypeString},
+		{Name: "email", Type: field.TypeString, Nullable: true},
+		{Name: "display_name", Type: field.TypeString, Nullable: true},
+		{Name: "avatar_url", Type: field.TypeString, Nullable: true},
+		{Name: "active_parish_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "last_used_at", Type: field.TypeTime, Nullable: true},
+		{Name: "user_id", Type: field.TypeUUID},
+	}
+	// UserAccountsTable holds the schema information for the "user_accounts" table.
+	UserAccountsTable = &schema.Table{
+		Name:       "user_accounts",
+		Columns:    UserAccountsColumns,
+		PrimaryKey: []*schema.Column{UserAccountsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_accounts_users_accounts",
+				Columns:    []*schema.Column{UserAccountsColumns[10]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "useraccount_provider_subject",
+				Unique:  true,
+				Columns: []*schema.Column{UserAccountsColumns[3], UserAccountsColumns[4]},
+			},
+			{
+				Name:    "useraccount_user_id_provider",
+				Unique:  false,
+				Columns: []*schema.Column{UserAccountsColumns[10], UserAccountsColumns[3]},
+			},
+		},
+	}
+	// UserOtpsColumns holds the columns for the "user_otps" table.
+	UserOtpsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "channel", Type: field.TypeString, Default: "email"},
+		{Name: "target", Type: field.TypeString},
+		{Name: "code_hash", Type: field.TypeString},
+		{Name: "attempts", Type: field.TypeInt, Default: 0},
+		{Name: "expires_at", Type: field.TypeTime},
+	}
+	// UserOtpsTable holds the schema information for the "user_otps" table.
+	UserOtpsTable = &schema.Table{
+		Name:       "user_otps",
+		Columns:    UserOtpsColumns,
+		PrimaryKey: []*schema.Column{UserOtpsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "userotp_channel_target",
+				Unique:  false,
+				Columns: []*schema.Column{UserOtpsColumns[3], UserOtpsColumns[4]},
+			},
+			{
+				Name:    "userotp_expires_at",
+				Unique:  false,
+				Columns: []*schema.Column{UserOtpsColumns[7]},
+			},
+		},
+	}
+	// UserSessionsColumns holds the columns for the "user_sessions" table.
+	UserSessionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "token_hash", Type: field.TypeString, Unique: true},
+		{Name: "user_agent", Type: field.TypeString, Default: ""},
+		{Name: "ip_address", Type: field.TypeString, Default: ""},
+		{Name: "active_parish_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "last_active_at", Type: field.TypeTime},
+		{Name: "expires_at", Type: field.TypeTime},
+		{Name: "user_id", Type: field.TypeUUID},
+	}
+	// UserSessionsTable holds the schema information for the "user_sessions" table.
+	UserSessionsTable = &schema.Table{
+		Name:       "user_sessions",
+		Columns:    UserSessionsColumns,
+		PrimaryKey: []*schema.Column{UserSessionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_sessions_users_sessions",
+				Columns:    []*schema.Column{UserSessionsColumns[9]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "usersession_token_hash",
+				Unique:  true,
+				Columns: []*schema.Column{UserSessionsColumns[3]},
+			},
+			{
+				Name:    "usersession_user_id_expires_at",
+				Unique:  false,
+				Columns: []*schema.Column{UserSessionsColumns[9], UserSessionsColumns[8]},
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		CasbinRulesTable,
 		MetaTable,
+		UsersTable,
+		UserAccountsTable,
+		UserOtpsTable,
+		UserSessionsTable,
 	}
 )
 
 func init() {
+	UserAccountsTable.ForeignKeys[0].RefTable = UsersTable
+	UserOtpsTable.Annotation = &entsql.Annotation{
+		Table: "user_otps",
+	}
+	UserSessionsTable.ForeignKeys[0].RefTable = UsersTable
 }
