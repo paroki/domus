@@ -34,6 +34,14 @@ run = "go generate ./..."
 description = "Generate Entgo graph client"
 run = "go generate ./ent/..."
 
+[tasks."migrate:diff"]
+description = "Generate a new Atlas SQL migration from Ent schema"
+run = "atlas migrate diff --env local"
+
+[tasks."migrate:lint"]
+description = "Validate Atlas migration directory"
+run = "atlas migrate validate --env local"
+
 # --- Build ---
 [tasks."build:ui"]
 description = "Build UI bundle"
