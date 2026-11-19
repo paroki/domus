@@ -64,14 +64,14 @@ func EncodeCursor(createdAt time.Time, id string) string {
 func DecodeCursor(raw string) (Cursor, error) {
 	decoded, err := base64.RawURLEncoding.DecodeString(raw)
 	if err != nil {
-		return Cursor{}, BadRequest("Invalid pagination cursor.")
+		return Cursor{}, InvalidCursor("Invalid pagination cursor.")
 	}
 	var cur Cursor
 	if err := json.Unmarshal(decoded, &cur); err != nil {
-		return Cursor{}, BadRequest("Invalid pagination cursor.")
+		return Cursor{}, InvalidCursor("Invalid pagination cursor.")
 	}
 	if cur.ID == "" || cur.CreatedAt.IsZero() {
-		return Cursor{}, BadRequest("Invalid pagination cursor.")
+		return Cursor{}, InvalidCursor("Invalid pagination cursor.")
 	}
 	return cur, nil
 }

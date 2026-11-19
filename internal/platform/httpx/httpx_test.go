@@ -65,28 +65,28 @@ func TestResponseHelpers(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	raw, _ := io.ReadAll(resp.Body)
-	assert.JSONEq(t, `{"data":{"id":"1"},"meta":null,"error":null}`, string(raw))
+	assert.JSONEq(t, `{"data":{"id":"1"}}`, string(raw))
 
 	// Created
 	resp, err = app.Test(httptest.NewRequest(http.MethodPost, "/created", nil))
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, resp.StatusCode)
 	raw, _ = io.ReadAll(resp.Body)
-	assert.JSONEq(t, `{"data":{"id":"2"},"meta":null,"error":null}`, string(raw))
+	assert.JSONEq(t, `{"data":{"id":"2"}}`, string(raw))
 
-	// List with nil slice serializes [] instead of null
+	// List with nil slice serializes [] instead of null and omits empty nextCursor
 	resp, err = app.Test(httptest.NewRequest(http.MethodGet, "/list-nil", nil))
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	raw, _ = io.ReadAll(resp.Body)
-	assert.JSONEq(t, `{"data":[],"meta":{"nextCursor":"","hasMore":false,"limit":20},"error":null}`, string(raw))
+	assert.JSONEq(t, `{"data":[],"meta":{"hasMore":false,"limit":20}}`, string(raw))
 
 	// List with Total
 	resp, err = app.Test(httptest.NewRequest(http.MethodGet, "/list-total", nil))
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	raw, _ = io.ReadAll(resp.Body)
-	assert.JSONEq(t, `{"data":[{"id":"a"},{"id":"b"}],"meta":{"nextCursor":"cur-1","hasMore":true,"limit":2,"total":2},"error":null}`, string(raw))
+	assert.JSONEq(t, `{"data":[{"id":"a"},{"id":"b"}],"meta":{"nextCursor":"cur-1","hasMore":true,"limit":2,"total":2}}`, string(raw))
 
 	// NoContent
 	resp, err = app.Test(httptest.NewRequest(http.MethodDelete, "/no-content", nil))
@@ -139,10 +139,11 @@ func TestPaginationAndCursor(t *testing.T) {
 	assert.Equal(t, "user-42", decoded.ID)
 	assert.True(t, now.Equal(decoded.CreatedAt))
 
-	// Invalid cursors -> ErrBadRequest
+	// Invalid cursors -> ErrInvalidCursor + ErrBadRequest
 	for _, bad := range []string{"not-base64!", "e30", "eyJpZCI6IjEifQ"} {
 		_, err := httpx.DecodeCursor(bad)
 		require.Error(t, err)
+		assert.ErrorIs(t, err, httpx.ErrInvalidCursor)
 		assert.ErrorIs(t, err, httpx.ErrBadRequest)
 	}
 }
@@ -156,6 +157,7 @@ func TestAppErrorsAndHandler(t *testing.T) {
 		code     string
 	}{
 		{"BadRequest", httpx.BadRequest("bad"), httpx.ErrBadRequest, http.StatusBadRequest, "BAD_REQUEST"},
+		{"InvalidCursor", httpx.InvalidCursor("bad cursor"), httpx.ErrInvalidCursor, http.StatusBadRequest, "INVALID_CURSOR"},
 		{"Unauthorized", httpx.Unauthorized("unauth"), httpx.ErrUnauthorized, http.StatusUnauthorized, "UNAUTHORIZED"},
 		{"Forbidden", httpx.Forbidden("forbid"), httpx.ErrForbidden, http.StatusForbidden, "FORBIDDEN"},
 		{"NotFound", httpx.NotFound("missing"), httpx.ErrNotFound, http.StatusNotFound, "NOT_FOUND"},
@@ -180,8 +182,17 @@ func TestAppErrorsAndHandler(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, tc.status, resp.StatusCode)
 
+			raw, err := io.ReadAll(resp.Body)
+			require.NoError(t, err)
+
+			var rawMap map[string]any
+			require.NoError(t, json.Unmarshal(raw, &rawMap))
+			assert.NotContains(t, rawMap, "data")
+			assert.NotContains(t, rawMap, "meta")
+			assert.Contains(t, rawMap, "error")
+
 			var env httpx.Envelope[any]
-			require.NoError(t, json.NewDecoder(resp.Body).Decode(&env))
+			require.NoError(t, json.Unmarshal(raw, &env))
 			require.NotNil(t, env.Error)
 			assert.Equal(t, tc.code, env.Error.Code)
 			assert.NotEmpty(t, env.Error.RequestID)
