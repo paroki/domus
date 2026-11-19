@@ -32,6 +32,13 @@ config:
   bodyLimit: 4194304
   autoMigrate: true
   trustProxy: true
+  sentry:
+    # -- domus-api DSN (public). Empty disables Sentry.
+    dsn: ""
+    environment: production
+    # -- Defaults to chart appVersion.
+    release: ""
+    tracesSampleRate: 0.1
 
 # -- Extra environment variables for container.
 extraEnv: []

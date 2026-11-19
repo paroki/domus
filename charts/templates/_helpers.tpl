@@ -91,6 +91,16 @@ Environment variables from values.config.
   value: {{ $c.autoMigrate | quote }}
 - name: TRUST_PROXY
   value: {{ $c.trustProxy | quote }}
+{{- with $c.sentry.dsn }}
+- name: APP_SENTRY_DSN
+  value: {{ . | quote }}
+{{- end }}
+- name: APP_SENTRY_ENVIRONMENT
+  value: {{ $c.sentry.environment | quote }}
+- name: APP_SENTRY_RELEASE
+  value: {{ default .Chart.AppVersion $c.sentry.release | quote }}
+- name: APP_SENTRY_TRACES_SAMPLE_RATE
+  value: {{ $c.sentry.tracesSampleRate | quote }}
 {{- with .Values.extraEnv }}
 {{ toYaml . }}
 {{- end }}
