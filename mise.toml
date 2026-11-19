@@ -22,9 +22,17 @@ description = "Run full dev stack concurrently"
 depends = ["dev:api", "dev:ui"]
 
 # --- Codegen ---
+[tasks."api:spec"]
+description = "Generate OpenAPI 3.1 spec via swag"
+run = "swag init --v3.1 -d cmd/domus,internal/app,internal/platform/httpx -g main.go --parseInternal --outputTypes json -o api"
+
+[tasks."api:types"]
+description = "Generate TypeScript API schema from OpenAPI spec"
+run = "bun run --cwd ui api:types && biome check --write ui/app/shared/api/schema.d.ts"
+
 [tasks.api]
-description = "Generate OpenAPI spec via swag"
-run = "swag init -g cmd/domus/main.go -o api"
+description = "Generate OpenAPI 3.1 spec and TypeScript schema"
+run = ["mise run api:spec", "mise run api:types"]
 
 [tasks.mock]
 description = "Generate Go mocks via go generate"
