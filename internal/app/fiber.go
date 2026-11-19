@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/recover"
 	"github.com/gofiber/fiber/v3/middleware/requestid"
@@ -21,11 +22,14 @@ func GetFiber(cfg Config, logger *slog.Logger, features ...Feature) *fiber.App {
 		ReadTimeout:  cfg.ReadTimeout,
 		WriteTimeout: cfg.WriteTimeout,
 		IdleTimeout:  cfg.IdleTimeout,
-		BodyLimit:    cfg.BodyLimit,
+		BodyLimit:       cfg.BodyLimit,
+		StructValidator: newStructValidator(),
 		ErrorHandler: func(c fiber.Ctx, err error) error {
 			code := fiber.StatusInternalServerError
 			if e, ok := errors.AsType[*fiber.Error](err); ok {
 				code = e.Code
+			} else if _, ok := errors.AsType[validator.ValidationErrors](err); ok {
+				code = fiber.StatusUnprocessableEntity
 			}
 			logger.ErrorContext(c.Context(), "request error",
 				"request_id", requestid.FromContext(c),
