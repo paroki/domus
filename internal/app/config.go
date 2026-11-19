@@ -21,6 +21,7 @@ type Config struct {
 	DatabaseURL     string        `env:"DATABASE_URL, default=postgres://domus:domus@localhost:5432/domus?sslmode=disable"`
 	DBMaxOpenConns  int           `env:"DB_MAX_OPEN_CONNS, default=25"`
 	DBMaxIdleConns  int           `env:"DB_MAX_IDLE_CONNS, default=5"`
+	AutoMigrate     bool          `env:"AUTO_MIGRATE, default=true"`
 }
 
 func GetConfig(ctx context.Context) (Config, error) {
