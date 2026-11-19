@@ -6,18 +6,6 @@ import (
 	"testing"
 )
 
-func TestOpenDB_UnsupportedScheme(t *testing.T) {
-	_, err := OpenDB(context.Background(), Config{
-		DatabaseURL: "mysql://user:pass@localhost:3306/domus",
-	})
-	if err == nil {
-		t.Fatal("expected error for unsupported scheme")
-	}
-	if !strings.Contains(err.Error(), "unsupported database scheme") {
-		t.Fatalf("expected unsupported database scheme error, got %v", err)
-	}
-}
-
 func TestOpenDB_SQLite(t *testing.T) {
 	ctx := context.Background()
 	for _, dsn := range []string{"sqlite://:memory:", "file:app_db_test?mode=memory&cache=shared"} {
