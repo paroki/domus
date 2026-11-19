@@ -25,24 +25,26 @@ type Envelope[T any] struct {
 	Error *ErrorPayload `json:"error,omitempty"`
 }
 
-// Meta holds pagination metadata returned in list responses.
+// Meta holds cursor pagination metadata returned in list responses.
 type Meta struct {
-	Page       int `json:"page,omitempty"`
-	Limit      int `json:"limit,omitempty"`
-	Total      int `json:"total,omitempty"`
-	TotalPages int `json:"total_pages,omitempty"`
+	NextCursor string `json:"nextCursor,omitempty"`
+	HasMore    bool   `json:"hasMore"`
+	Limit      int    `json:"limit,omitempty"`
+	Total      *int   `json:"total,omitempty"`
 }
 
 // ErrorPayload represents the structured error object in Envelope.Error.
 type ErrorPayload struct {
-	Code    string       `json:"code"`
-	Message string       `json:"message"`
-	Details []FieldError `json:"details,omitempty"`
+	Code      string       `json:"code"`
+	Message   string       `json:"message"`
+	RequestID string       `json:"requestId,omitempty"`
+	Details   []FieldError `json:"details,omitempty"`
 }
 
 // FieldError represents a single field-level validation error.
 type FieldError struct {
 	Field   string `json:"field"`
+	Code    string `json:"code,omitempty"`
 	Message string `json:"message"`
 }
 
