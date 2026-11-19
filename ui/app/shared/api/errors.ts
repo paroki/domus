@@ -1,5 +1,6 @@
 export const BASE_ERRORS: Record<string, string> = {
   BAD_REQUEST: "The request could not be processed.",
+  INVALID_CURSOR: "Invalid or expired pagination cursor.",
   UNAUTHORIZED: "Authentication is required to continue.",
   FORBIDDEN: "You do not have permission to perform this action.",
   NOT_FOUND: "The requested resource was not found.",
