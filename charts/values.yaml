@@ -30,6 +30,8 @@ config:
   idleTimeout: 60s
   shutdownTimeout: 10s
   bodyLimit: 4194304
+  autoMigrate: true
+  trustProxy: true
 
 # -- Extra environment variables for container.
 extraEnv: []
