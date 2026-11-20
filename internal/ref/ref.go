@@ -79,6 +79,8 @@ func (f *Feature) Register(api fiber.Router) {
 		f.users.Require(PermDioceses, authz.ActionWrite),
 		f.users.Require(PermParishes, authz.ActionRead),
 		f.users.Require(PermParishes, authz.ActionWrite),
+		f.users.Require(PermMasterData, authz.ActionRead),
+		f.users.Require(PermMasterData, authz.ActionWrite, parishDomainFromContext),
 	)
 }
 
@@ -142,4 +144,12 @@ func requireTenantMiddleware() fiber.Handler {
 		}
 		return c.Next()
 	}
+}
+
+func parishDomainFromContext(c fiber.Ctx) (string, error) {
+	p, err := user.RequireTenant(c.Context())
+	if err != nil {
+		return "", err
+	}
+	return authz.ParishDomain(p.ParishID), nil
 }

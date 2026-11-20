@@ -333,6 +333,74 @@ export interface paths {
     patch: operations["updateDiocese"];
     trace?: never;
   };
+  "/ref/lookups": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create lookup
+     * @description Creates a global (super-admin) or parish-scoped (parish-admin) lookup, reactivating soft-deleted matches.
+     */
+    post: operations["createLookup"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/ref/lookups/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Search lookups
+     * @description Searches global and/or parish-scoped lookups with tenant override on matching (category, code).
+     */
+    post: operations["searchLookups"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/ref/lookups/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get lookup
+     * @description Returns a single non-deleted lookup if global or owned by the active parish.
+     */
+    get: operations["getLookup"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete lookup
+     * @description Soft-deletes a global (super-admin) or parish-scoped (parish-admin) lookup.
+     */
+    delete: operations["deleteLookup"];
+    options?: never;
+    head?: never;
+    /**
+     * Update lookup
+     * @description Updates mutable fields of a global (super-admin) or parish-scoped (parish-admin) lookup.
+     */
+    patch: operations["updateLookup"];
+    trace?: never;
+  };
   "/ref/parishes": {
     parameters: {
       query?: never;
@@ -489,6 +557,210 @@ export interface paths {
     patch: operations["updateParishMember"];
     trace?: never;
   };
+  "/ref/periods": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create period
+     * @description Creates a period with date overlap validation and atomic isCurrent rotation.
+     */
+    post: operations["createPeriod"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/ref/periods/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Search periods
+     * @description Searches fiscal and liturgical periods in the active parish with optional filters and cursor pagination.
+     */
+    post: operations["searchPeriods"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/ref/periods/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get period
+     * @description Returns a single non-deleted period in the active parish.
+     */
+    get: operations["getPeriod"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete period
+     * @description Soft-deletes a period in the active parish.
+     */
+    delete: operations["deletePeriod"];
+    options?: never;
+    head?: never;
+    /**
+     * Update period
+     * @description Updates mutable fields of a period with overlap validation and atomic isCurrent rotation.
+     */
+    patch: operations["updatePeriod"];
+    trace?: never;
+  };
+  "/ref/wards": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create ward
+     * @description Creates a ward or reactivates a soft-deleted match in the active parish.
+     */
+    post: operations["createWard"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/ref/wards/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Search wards
+     * @description Searches wards in the active parish with optional query, zone/active filters, and cursor pagination.
+     */
+    post: operations["searchWards"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/ref/wards/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get ward
+     * @description Returns a single non-deleted ward in the active parish.
+     */
+    get: operations["getWard"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete ward
+     * @description Soft-deletes a ward in the active parish.
+     */
+    delete: operations["deleteWard"];
+    options?: never;
+    head?: never;
+    /**
+     * Update ward
+     * @description Updates mutable fields of a ward in the active parish.
+     */
+    patch: operations["updateWard"];
+    trace?: never;
+  };
+  "/ref/zones": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create zone
+     * @description Creates a zone/station or reactivates a soft-deleted match in the active parish.
+     */
+    post: operations["createZone"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/ref/zones/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Search zones
+     * @description Searches zones/stations in the active parish with optional query, type/active filters, and cursor pagination.
+     */
+    post: operations["searchZones"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/ref/zones/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get zone
+     * @description Returns a single non-deleted zone in the active parish.
+     */
+    get: operations["getZone"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete zone
+     * @description Soft-deletes a zone when no non-deleted wards reference it.
+     */
+    delete: operations["deleteZone"];
+    options?: never;
+    head?: never;
+    /**
+     * Update zone
+     * @description Updates mutable fields of a zone/station in the active parish.
+     */
+    patch: operations["updateZone"];
+    trace?: never;
+  };
   "/users": {
     parameters: {
       query?: never;
@@ -603,6 +875,13 @@ export interface components {
       phone?: string;
       website?: string;
     };
+    "domain.CreateLookupRequest": {
+      category: string;
+      code: string;
+      global?: boolean;
+      label: string;
+      sortOrder?: number;
+    };
     "domain.CreateParishRequest": {
       active?: boolean;
       address?: string;
@@ -616,6 +895,31 @@ export interface components {
       patronSaint?: string;
       phone?: string;
       website?: string;
+    };
+    "domain.CreatePeriodRequest": {
+      code: string;
+      endDate: string;
+      isCurrent?: boolean;
+      name: string;
+      startDate: string;
+      /** @enum {string} */
+      type?: "fiscal" | "liturgical";
+    };
+    "domain.CreateWardRequest": {
+      code: string;
+      headName?: string;
+      headPhone?: string;
+      name: string;
+      patronSaint?: string;
+      zoneId: string;
+    };
+    "domain.CreateZoneRequest": {
+      code: string;
+      coordinatorName?: string;
+      coordinatorPhone?: string;
+      name: string;
+      /** @enum {string} */
+      type?: "zone" | "station";
     };
     "domain.DioceseResponse": {
       active?: boolean;
@@ -632,6 +936,23 @@ export interface components {
     };
     "domain.DioceseSearchFilter": {
       active?: boolean;
+    };
+    "domain.LookupResponse": {
+      active?: boolean;
+      category?: string;
+      code?: string;
+      createdAt?: string;
+      id?: string;
+      label?: string;
+      parishId?: string;
+      sortOrder?: number;
+      updatedAt?: string;
+    };
+    "domain.LookupSearchFilter": {
+      active?: boolean;
+      category?: string;
+      /** @enum {string} */
+      scope?: "all" | "global" | "parish";
     };
     "domain.ParishMemberResponse": {
       createdAt?: string;
@@ -670,6 +991,26 @@ export interface components {
       dioceseId?: string;
       memberOnly?: boolean;
     };
+    "domain.PeriodResponse": {
+      code?: string;
+      createdAt?: string;
+      endDate?: string;
+      id?: string;
+      isCurrent?: boolean;
+      name?: string;
+      parishId?: string;
+      startDate?: string;
+      status?: string;
+      type?: string;
+      updatedAt?: string;
+    };
+    "domain.PeriodSearchFilter": {
+      isCurrent?: boolean;
+      /** @enum {string} */
+      status?: "open" | "closed";
+      /** @enum {string} */
+      type?: "fiscal" | "liturgical";
+    };
     "domain.RequestOTPRequest": {
       email: string;
     };
@@ -687,6 +1028,12 @@ export interface components {
       limit?: number;
       q?: string;
     };
+    "domain.SearchLookupsRequest": {
+      cursor?: string;
+      filter?: components["schemas"]["domain.LookupSearchFilter"];
+      limit?: number;
+      q?: string;
+    };
     "domain.SearchParishMembersRequest": {
       cursor?: string;
       filter?: components["schemas"]["domain.ParishMemberSearchFilter"];
@@ -699,6 +1046,12 @@ export interface components {
       limit?: number;
       q?: string;
     };
+    "domain.SearchPeriodsRequest": {
+      cursor?: string;
+      filter?: components["schemas"]["domain.PeriodSearchFilter"];
+      limit?: number;
+      q?: string;
+    };
     "domain.SearchSessionsRequest": {
       cursor?: string;
       limit?: number;
@@ -706,6 +1059,18 @@ export interface components {
     "domain.SearchUsersRequest": {
       cursor?: string;
       filter?: components["schemas"]["domain.UserSearchFilter"];
+      limit?: number;
+      q?: string;
+    };
+    "domain.SearchWardsRequest": {
+      cursor?: string;
+      filter?: components["schemas"]["domain.WardSearchFilter"];
+      limit?: number;
+      q?: string;
+    };
+    "domain.SearchZonesRequest": {
+      cursor?: string;
+      filter?: components["schemas"]["domain.ZoneSearchFilter"];
       limit?: number;
       q?: string;
     };
@@ -721,6 +1086,13 @@ export interface components {
       name?: string;
       phone?: string;
       website?: string;
+    };
+    "domain.UpdateLookupRequest": {
+      active?: boolean;
+      category?: string;
+      code?: string;
+      label?: string;
+      sortOrder?: number;
     };
     "domain.UpdateMeRequest": {
       avatarUrl?: string;
@@ -756,6 +1128,33 @@ export interface components {
       patronSaint?: string;
       phone?: string;
       website?: string;
+    };
+    "domain.UpdatePeriodRequest": {
+      code?: string;
+      endDate?: string;
+      isCurrent?: boolean;
+      name?: string;
+      startDate?: string;
+      /** @enum {string} */
+      status?: "open" | "closed";
+    };
+    "domain.UpdateWardRequest": {
+      active?: boolean;
+      code?: string;
+      headName?: string;
+      headPhone?: string;
+      name?: string;
+      patronSaint?: string;
+      zoneId?: string;
+    };
+    "domain.UpdateZoneRequest": {
+      active?: boolean;
+      code?: string;
+      coordinatorName?: string;
+      coordinatorPhone?: string;
+      name?: string;
+      /** @enum {string} */
+      type?: "zone" | "station";
     };
     "domain.UserAccountResponse": {
       activeParishId?: string;
@@ -800,6 +1199,40 @@ export interface components {
       code: string;
       email: string;
     };
+    "domain.WardResponse": {
+      active?: boolean;
+      code?: string;
+      createdAt?: string;
+      headName?: string;
+      headPhone?: string;
+      id?: string;
+      name?: string;
+      parishId?: string;
+      patronSaint?: string;
+      updatedAt?: string;
+      zoneId?: string;
+    };
+    "domain.WardSearchFilter": {
+      active?: boolean;
+      zoneId?: string;
+    };
+    "domain.ZoneResponse": {
+      active?: boolean;
+      code?: string;
+      coordinatorName?: string;
+      coordinatorPhone?: string;
+      createdAt?: string;
+      id?: string;
+      name?: string;
+      parishId?: string;
+      type?: string;
+      updatedAt?: string;
+    };
+    "domain.ZoneSearchFilter": {
+      active?: boolean;
+      /** @enum {string} */
+      type?: "zone" | "station";
+    };
     "httpx.Envelope-any": {
       data?: unknown;
       error?: components["schemas"]["httpx.ErrorPayload"];
@@ -815,6 +1248,11 @@ export interface components {
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
+    "httpx.Envelope-array_domain_LookupResponse": {
+      data?: components["schemas"]["domain.LookupResponse"][];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
     "httpx.Envelope-array_domain_ParishMemberResponse": {
       data?: components["schemas"]["domain.ParishMemberResponse"][];
       error?: components["schemas"]["httpx.ErrorPayload"];
@@ -822,6 +1260,11 @@ export interface components {
     };
     "httpx.Envelope-array_domain_ParishResponse": {
       data?: components["schemas"]["domain.ParishResponse"][];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-array_domain_PeriodResponse": {
+      data?: components["schemas"]["domain.PeriodResponse"][];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -840,6 +1283,16 @@ export interface components {
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
+    "httpx.Envelope-array_domain_WardResponse": {
+      data?: components["schemas"]["domain.WardResponse"][];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-array_domain_ZoneResponse": {
+      data?: components["schemas"]["domain.ZoneResponse"][];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
     "httpx.Envelope-domain_AuthProvidersResponse": {
       data?: components["schemas"]["domain.AuthProvidersResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
@@ -855,6 +1308,11 @@ export interface components {
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
+    "httpx.Envelope-domain_LookupResponse": {
+      data?: components["schemas"]["domain.LookupResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
     "httpx.Envelope-domain_ParishMemberResponse": {
       data?: components["schemas"]["domain.ParishMemberResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
@@ -865,6 +1323,11 @@ export interface components {
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
+    "httpx.Envelope-domain_PeriodResponse": {
+      data?: components["schemas"]["domain.PeriodResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
     "httpx.Envelope-domain_RequestOTPResponse": {
       data?: components["schemas"]["domain.RequestOTPResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
@@ -872,6 +1335,16 @@ export interface components {
     };
     "httpx.Envelope-domain_UserResponse": {
       data?: components["schemas"]["domain.UserResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_WardResponse": {
+      data?: components["schemas"]["domain.WardResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_ZoneResponse": {
+      data?: components["schemas"]["domain.ZoneResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -1836,6 +2309,317 @@ export interface operations {
       };
     };
   };
+  createLookup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Lookup creation payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.CreateLookupRequest"];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_LookupResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  searchLookups: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Search parameters */
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["domain.SearchLookupsRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_LookupResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  getLookup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Lookup UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_LookupResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  deleteLookup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Lookup UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  updateLookup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Lookup UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Lookup update payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UpdateLookupRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_LookupResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
   createParish: {
     parameters: {
       query?: never;
@@ -2522,6 +3306,957 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["httpx.Envelope-domain_ParishMemberResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  createPeriod: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Period creation payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.CreatePeriodRequest"];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_PeriodResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  searchPeriods: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Search parameters */
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["domain.SearchPeriodsRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_PeriodResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  getPeriod: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Period UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_PeriodResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  deletePeriod: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Period UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  updatePeriod: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Period UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Period update payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UpdatePeriodRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_PeriodResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  createWard: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Ward creation payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.CreateWardRequest"];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_WardResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  searchWards: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Search parameters */
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["domain.SearchWardsRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_WardResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  getWard: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Ward UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_WardResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  deleteWard: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Ward UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  updateWard: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Ward UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Ward update payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UpdateWardRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_WardResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  createZone: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Zone creation payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.CreateZoneRequest"];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_ZoneResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  searchZones: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Search parameters */
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["domain.SearchZonesRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_ZoneResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  getZone: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Zone UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_ZoneResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  deleteZone: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Zone UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  updateZone: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Zone UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Zone update payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UpdateZoneRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_ZoneResponse"];
         };
       };
       /** @description Bad Request */

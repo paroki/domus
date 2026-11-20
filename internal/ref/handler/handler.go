@@ -22,7 +22,7 @@ func New(svc *service.Service) *Handler {
 	return &Handler{service: svc}
 }
 
-// Register mounts /ref/dioceses and /ref/parishes routes onto api (/api).
+// Register mounts /ref/dioceses, /ref/parishes, /ref/zones, /ref/wards, /ref/lookups, and /ref/periods routes onto api (/api).
 func (h *Handler) Register(
 	api fiber.Router,
 	authMW fiber.Handler,
@@ -32,6 +32,8 @@ func (h *Handler) Register(
 	requireDioceseWrite fiber.Handler,
 	requireParishRead fiber.Handler,
 	requireParishWrite fiber.Handler,
+	requireMasterDataRead fiber.Handler,
+	requireMasterDataWrite fiber.Handler,
 ) {
 	dioceses := api.Group("/ref/dioceses", authMW, requireAuth)
 	dioceses.Post("/search", requireDioceseRead, h.SearchDioceses)
@@ -54,6 +56,34 @@ func (h *Handler) Register(
 	parishes.Post("/:id/members", h.AddParishMember)
 	parishes.Patch("/:id/members/:userId", h.UpdateParishMember)
 	parishes.Delete("/:id/members/:userId", h.RemoveParishMember)
+
+	zones := api.Group("/ref/zones", authMW, requireAuth, requireTenant)
+	zones.Post("/search", requireMasterDataRead, h.SearchZones)
+	zones.Get("/:id", requireMasterDataRead, h.GetZone)
+	zones.Post("", requireMasterDataWrite, h.CreateZone)
+	zones.Patch("/:id", requireMasterDataWrite, h.UpdateZone)
+	zones.Delete("/:id", requireMasterDataWrite, h.DeleteZone)
+
+	wards := api.Group("/ref/wards", authMW, requireAuth, requireTenant)
+	wards.Post("/search", requireMasterDataRead, h.SearchWards)
+	wards.Get("/:id", requireMasterDataRead, h.GetWard)
+	wards.Post("", requireMasterDataWrite, h.CreateWard)
+	wards.Patch("/:id", requireMasterDataWrite, h.UpdateWard)
+	wards.Delete("/:id", requireMasterDataWrite, h.DeleteWard)
+
+	lookups := api.Group("/ref/lookups", authMW, requireAuth)
+	lookups.Post("/search", requireMasterDataRead, h.SearchLookups)
+	lookups.Get("/:id", requireMasterDataRead, h.GetLookup)
+	lookups.Post("", h.CreateLookup)
+	lookups.Patch("/:id", h.UpdateLookup)
+	lookups.Delete("/:id", h.DeleteLookup)
+
+	periods := api.Group("/ref/periods", authMW, requireAuth, requireTenant)
+	periods.Post("/search", requireMasterDataRead, h.SearchPeriods)
+	periods.Get("/:id", requireMasterDataRead, h.GetPeriod)
+	periods.Post("", requireMasterDataWrite, h.CreatePeriod)
+	periods.Patch("/:id", requireMasterDataWrite, h.UpdatePeriod)
+	periods.Delete("/:id", requireMasterDataWrite, h.DeletePeriod)
 }
 
 func decodeStrictJSON(c fiber.Ctx, dst any) error {

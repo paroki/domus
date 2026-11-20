@@ -354,3 +354,250 @@ func (s *RefFeatureSuite) TestFacadeHelpers() {
 	s.Equal(pm1.ID, pm2.ID)
 	s.NotEqual(uuid.Nil, pm1.ID)
 }
+
+func (s *RefFeatureSuite) setupTwoParishesWithAliceAdmin() (domain.ParishResponse, domain.ParishResponse) {
+	s.loginViaOTP("admin@paroki.org")
+	s.Request("/api/ref/dioceses", http.MethodPost, domain.CreateDioceseRequest{Code: "kaj", Name: "KAJ"})
+	s.Created()
+	d := testutil.DecodeAs[domain.DioceseResponse](s).Data
+
+	s.Request("/api/ref/parishes", http.MethodPost, domain.CreateParishRequest{DioceseID: d.ID, Code: "p-01", Name: "Paroki 1"})
+	s.Created()
+	p1 := testutil.DecodeAs[domain.ParishResponse](s).Data
+
+	s.Request("/api/ref/parishes", http.MethodPost, domain.CreateParishRequest{DioceseID: d.ID, Code: "p-02", Name: "Paroki 2"})
+	s.Created()
+	p2 := testutil.DecodeAs[domain.ParishResponse](s).Data
+
+	s.Request("/api/ref/parishes/"+p1.ID.String()+"/members", http.MethodPost, domain.AddParishMemberRequest{
+		Email: "alice@paroki.org",
+		Name:  "Alice",
+		Role:  "admin",
+	})
+	s.Created()
+	return p1, p2
+}
+
+func (s *RefFeatureSuite) TestZoneAndWardCRUD_ReactivationIsolationAndInUse() {
+	p1, p2 := s.setupTwoParishesWithAliceAdmin()
+
+	// Missing tenant returns 400 TENANT_REQUIRED.
+	s.Request("/api/ref/zones/search", http.MethodPost, domain.SearchZonesRequest{})
+	s.BadRequest()
+
+	// Super-admin without ref:parish-admin in p1 gets 403 on write.
+	s.SetHeader("X-Parish-Id", p1.ID.String())
+	s.Request("/api/ref/zones", http.MethodPost, domain.CreateZoneRequest{Code: "z-super", Name: "Denied"})
+	s.Forbidden()
+
+	// Alice (parish-admin of p1) creates Zone with E.164 phone normalization.
+	s.loginViaOTP("alice@paroki.org")
+	coordPhone := "0811-2233-4455"
+	s.Request("/api/ref/zones", http.MethodPost, domain.CreateZoneRequest{
+		Code:             "WIL-01",
+		Name:             "Wilayah 1",
+		CoordinatorPhone: &coordPhone,
+	})
+	s.Created()
+	z1 := testutil.DecodeAs[domain.ZoneResponse](s).Data
+	s.Equal("wil-01", z1.Code)
+	s.Equal("zone", z1.Type)
+	s.Require().NotNil(z1.CoordinatorPhone)
+	s.Equal("+6281122334455", *z1.CoordinatorPhone)
+
+	// Delete & reactivate Zone.
+	s.Request("/api/ref/zones/"+z1.ID.String(), http.MethodDelete, nil)
+	s.NoContent()
+	s.Request("/api/ref/zones", http.MethodPost, domain.CreateZoneRequest{
+		Type: "station",
+		Code: "wil-01",
+		Name: "Stasi 1",
+	})
+	s.Created()
+	zReactivated := testutil.DecodeAs[domain.ZoneResponse](s).Data
+	s.Equal(z1.ID, zReactivated.ID)
+	s.Equal("station", zReactivated.Type)
+
+	// Create Ward under Zone -> Delete Zone blocked with 409 REF_IN_USE.
+	s.Request("/api/ref/wards", http.MethodPost, domain.CreateWardRequest{
+		ZoneID: z1.ID,
+		Code:   "LING-01",
+		Name:   "Lingkungan 1",
+	})
+	s.Created()
+	w1 := testutil.DecodeAs[domain.WardResponse](s).Data
+
+	s.Request("/api/ref/zones/"+z1.ID.String(), http.MethodDelete, nil)
+	s.Conflict()
+	s.Equal("REF_IN_USE", s.GetErrorResponse().Error.Code)
+
+	// Delete Ward -> Delete Zone succeeds.
+	s.Request("/api/ref/wards/"+w1.ID.String(), http.MethodDelete, nil)
+	s.NoContent()
+	s.Request("/api/ref/zones/"+z1.ID.String(), http.MethodDelete, nil)
+	s.NoContent()
+
+	// Cross-tenant isolation: zone in p2 is 404 when active parish is p1.
+	z2, err := s.client.Zone.Create().SetParishID(p2.ID).SetCode("z-p2").SetName("Zone P2").Save(context.Background())
+	s.Require().NoError(err)
+	s.Request("/api/ref/zones/"+z2.ID.String(), http.MethodGet, nil)
+	s.NotFound()
+	s.Request("/api/ref/wards", http.MethodPost, domain.CreateWardRequest{
+		ZoneID: z2.ID,
+		Code:   "w-x",
+		Name:   "Cross Tenant",
+	})
+	s.NotFound()
+}
+
+func (s *RefFeatureSuite) TestLookup_HybridGlobalAndParishOverride() {
+	p1, _ := s.setupTwoParishesWithAliceAdmin()
+
+	// SuperAdmin creates global lookup.
+	s.Request("/api/ref/lookups", http.MethodPost, domain.CreateLookupRequest{
+		Category:  "SACRAMENT",
+		Code:      "BAPTISM",
+		Label:     "Baptism",
+		SortOrder: 1,
+		Global:    true,
+	})
+	s.Created()
+	globalRow := testutil.DecodeAs[domain.LookupResponse](s).Data
+	s.Nil(globalRow.ParishID)
+	s.Equal("sacrament", globalRow.Category)
+	s.Equal("baptism", globalRow.Code)
+
+	// Alice cannot create or update global lookup.
+	s.loginViaOTP("alice@paroki.org")
+	s.Request("/api/ref/lookups", http.MethodPost, domain.CreateLookupRequest{
+		Category: "sacrament",
+		Code:     "confirmation",
+		Label:    "Confirmation",
+		Global:   true,
+	})
+	s.Forbidden()
+	newLabel := "Hacked"
+	s.Request("/api/ref/lookups/"+globalRow.ID.String(), http.MethodPatch, domain.UpdateLookupRequest{Label: &newLabel})
+	s.Forbidden()
+
+	// Alice creates parish override for (sacrament, baptism).
+	s.Request("/api/ref/lookups", http.MethodPost, domain.CreateLookupRequest{
+		Category:  "sacrament",
+		Code:      "baptism",
+		Label:     "Baptis Paroki",
+		SortOrder: 1,
+	})
+	s.Created()
+	parishRow := testutil.DecodeAs[domain.LookupResponse](s).Data
+	s.Require().NotNil(parishRow.ParishID)
+	s.Equal(p1.ID, *parishRow.ParishID)
+
+	// Search scope=all merges and overrides global with parish row.
+	s.Request("/api/ref/lookups/search", http.MethodPost, domain.SearchLookupsRequest{
+		Filter: &domain.LookupSearchFilter{Category: "sacrament", Scope: "all"},
+	})
+	s.OK()
+	allRows := testutil.DecodeAs[[]domain.LookupResponse](s).Data
+	s.Len(allRows, 1)
+	s.Equal("Baptis Paroki", allRows[0].Label)
+
+	// Search scope=global returns global row.
+	s.Request("/api/ref/lookups/search", http.MethodPost, domain.SearchLookupsRequest{
+		Filter: &domain.LookupSearchFilter{Category: "sacrament", Scope: "global"},
+	})
+	s.OK()
+	globalList := testutil.DecodeAs[[]domain.LookupResponse](s).Data
+	s.Len(globalList, 1)
+	s.Equal("Baptism", globalList[0].Label)
+
+	// SuperAdmin deletes and recreates global lookup -> reactivates cleanly.
+	s.loginViaOTP("admin@paroki.org")
+	s.Request("/api/ref/lookups/"+globalRow.ID.String(), http.MethodDelete, nil)
+	s.NoContent()
+	s.Request("/api/ref/lookups", http.MethodPost, domain.CreateLookupRequest{
+		Category: "sacrament",
+		Code:     "baptism",
+		Label:    "Baptism v2",
+		Global:   true,
+	})
+	s.Created()
+	reactivated := testutil.DecodeAs[domain.LookupResponse](s).Data
+	s.Equal(globalRow.ID, reactivated.ID)
+	s.Equal("Baptism v2", reactivated.Label)
+}
+
+func (s *RefFeatureSuite) TestPeriod_OverlapValidationAndIsCurrentRotation() {
+	s.setupTwoParishesWithAliceAdmin()
+	s.loginViaOTP("alice@paroki.org")
+
+	// Invalid date range returns 422.
+	s.Request("/api/ref/periods", http.MethodPost, domain.CreatePeriodRequest{
+		Code:      "bad",
+		Name:      "Bad",
+		StartDate: "2026-12-31",
+		EndDate:   "2026-01-01",
+	})
+	s.UnprocessableEntity()
+
+	// Create FY2026 as current.
+	s.Request("/api/ref/periods", http.MethodPost, domain.CreatePeriodRequest{
+		Type:      "fiscal",
+		Code:      "FY2026",
+		Name:      "Fiscal 2026",
+		StartDate: "2026-01-01",
+		EndDate:   "2026-12-31",
+		IsCurrent: true,
+	})
+	s.Created()
+	fy26 := testutil.DecodeAs[domain.PeriodResponse](s).Data
+	s.True(fy26.IsCurrent)
+
+	// Overlapping fiscal period returns 409 REF_PERIOD_OVERLAP.
+	s.Request("/api/ref/periods", http.MethodPost, domain.CreatePeriodRequest{
+		Type:      "fiscal",
+		Code:      "FY2026-H2",
+		Name:      "Overlap",
+		StartDate: "2026-06-01",
+		EndDate:   "2027-05-31",
+	})
+	s.Conflict()
+	s.Equal("REF_PERIOD_OVERLAP", s.GetErrorResponse().Error.Code)
+
+	// Same dates with type=liturgical succeeds.
+	s.Request("/api/ref/periods", http.MethodPost, domain.CreatePeriodRequest{
+		Type:      "liturgical",
+		Code:      "LIT-2026",
+		Name:      "Liturgical 2026",
+		StartDate: "2026-01-01",
+		EndDate:   "2026-12-31",
+		IsCurrent: true,
+	})
+	s.Created()
+
+	// Create FY2027 with isCurrent=true -> clears FY2026.isCurrent.
+	s.Request("/api/ref/periods", http.MethodPost, domain.CreatePeriodRequest{
+		Type:      "fiscal",
+		Code:      "FY2027",
+		Name:      "Fiscal 2027",
+		StartDate: "2027-01-01",
+		EndDate:   "2027-12-31",
+		IsCurrent: true,
+	})
+	s.Created()
+	fy27 := testutil.DecodeAs[domain.PeriodResponse](s).Data
+	s.True(fy27.IsCurrent)
+
+	s.Request("/api/ref/periods/"+fy26.ID.String(), http.MethodGet, nil)
+	s.OK()
+	got26 := testutil.DecodeAs[domain.PeriodResponse](s).Data
+	s.False(got26.IsCurrent)
+
+	// PATCH FY2026 isCurrent=true -> clears FY2027.isCurrent.
+	tVal := true
+	s.Request("/api/ref/periods/"+fy26.ID.String(), http.MethodPatch, domain.UpdatePeriodRequest{IsCurrent: &tVal})
+	s.OK()
+	s.Request("/api/ref/periods/"+fy27.ID.String(), http.MethodGet, nil)
+	s.OK()
+	got27 := testutil.DecodeAs[domain.PeriodResponse](s).Data
+	s.False(got27.IsCurrent)
+}
