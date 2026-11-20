@@ -34,6 +34,9 @@ config:
     cookieName: domus_session
     # -- Set true when served over HTTPS.
     cookieSecure: true
+  org:
+    inviteDefaultTtl: 24h
+    inviteMaxTtl: 168h
   sentry:
     # -- domus-api DSN (public). Empty disables Sentry.
     dsn: ""

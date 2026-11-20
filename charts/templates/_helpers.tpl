@@ -93,6 +93,12 @@ Environment variables from values.config.
 - name: AUTH_SESSION_COOKIE_SECURE
   value: {{ .cookieSecure | quote }}
 {{- end }}
+{{- with .Values.config.org }}
+- name: ORG_INVITE_DEFAULT_TTL
+  value: {{ .inviteDefaultTtl | quote }}
+- name: ORG_INVITE_MAX_TTL
+  value: {{ .inviteMaxTtl | quote }}
+{{- end }}
 {{- with .Values.existingSecret }}
 {{- range $env, $key := dict "APP_DB_URL" "db-url" "AUTH_GOOGLE_ID" "google-id" "AUTH_GOOGLE_SECRET" "google-secret" "AUTH_GITHUB_ID" "github-id" "AUTH_GITHUB_SECRET" "github-secret" "APP_SMTP_PASS" "smtp-pass" }}
 - name: {{ $env }}
