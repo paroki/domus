@@ -76,12 +76,12 @@ export default function ParishProfilePage() {
     try {
       await updateProfile.mutateAsync({
         name: name.trim(),
-        patronSaint: patronSaint.trim() || undefined,
-        pastorName: pastorName.trim() || undefined,
-        phone: phone.trim() || undefined,
-        email: email.trim() || undefined,
-        address: address.trim() || undefined,
-        website: website.trim() || undefined,
+        patronSaint: patronSaint.trim(),
+        pastorName: pastorName.trim(),
+        phone: phone.trim(),
+        email: email.trim(),
+        address: address.trim(),
+        website: website.trim(),
       });
       setProfileSaved(true);
     } catch (err) {

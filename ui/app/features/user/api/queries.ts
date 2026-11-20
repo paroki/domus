@@ -5,9 +5,12 @@ import {
   useQuery,
 } from "@tanstack/react-query";
 import { api, unwrap, unwrapMeta } from "~/shared/api/client";
+import { meQueryOptions, useMe } from "~/shared/api/session";
 import { USER_ERRORS } from "./errors";
 import { userKeys } from "./keys";
 import type { SearchUsersRequest } from "./types";
+
+export { meQueryOptions, useMe };
 
 export function authProvidersQueryOptions() {
   return queryOptions({
@@ -22,18 +25,6 @@ export function authProvidersQueryOptions() {
 
 export function useAuthProviders() {
   return useQuery(authProvidersQueryOptions());
-}
-
-export function meQueryOptions() {
-  return queryOptions({
-    queryKey: userKeys.me(),
-    queryFn: () => unwrap(api.GET("/me"), USER_ERRORS),
-    retry: false,
-  });
-}
-
-export function useMe() {
-  return useQuery(meQueryOptions());
 }
 
 export function useMySessions(limit = 20) {

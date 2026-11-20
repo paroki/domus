@@ -1,4 +1,3 @@
-import { useQueryClient } from "@tanstack/react-query";
 import {
   ChevronDown,
   Church,
@@ -11,10 +10,12 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router";
 
-import { refKeys } from "~/features/ref/api/keys";
-import { useParishesSearch } from "~/features/ref/api/queries";
-import { useLogout, useSwitchParish } from "~/features/user/api/actions";
-import { useMe } from "~/features/user/api/queries";
+import {
+  useLogout,
+  useMe,
+  useSessionParishes,
+  useSwitchParish,
+} from "~/shared/api/session";
 import { ThemeToggle } from "./ThemeToggle";
 
 function getInitials(name?: string): string {
@@ -30,11 +31,10 @@ export function Header() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const { data: me } = useMe();
-  const qc = useQueryClient();
   const logout = useLogout();
   const switchParish = useSwitchParish();
   const isSuperAdmin = Boolean(me?.roles?.includes("user:super-admin"));
-  const parishesQuery = useParishesSearch(
+  const parishesQuery = useSessionParishes(
     {
       filter: isSuperAdmin
         ? { active: true }
@@ -160,7 +160,6 @@ export function Header() {
                         await switchParish.mutateAsync({
                           activeParishId: p.id,
                         });
-                        await qc.invalidateQueries({ queryKey: refKeys.all });
                       }}
                       className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm hover:bg-fg/8 ${
                         p.id === me.activeParishId

@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, setActiveParish, unwrap } from "~/shared/api/client";
+import { api, unwrap } from "~/shared/api/client";
+import { useSwitchParish } from "~/shared/api/session";
 import { REF_ERRORS } from "./errors";
 import { refKeys } from "./keys";
 import type {
@@ -30,23 +31,14 @@ async function unwrapVoid(
 }
 
 export function useActivateSessionParish() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (parishId: string) => {
-      await unwrap(
-        api.PATCH("/me/session", { body: { activeParishId: parishId } }),
-        REF_ERRORS,
-      );
-      return parishId;
-    },
-    onSuccess: async (parishId) => {
-      setActiveParish(parishId);
-      await Promise.all([
-        qc.invalidateQueries({ queryKey: refKeys.all }),
-        qc.invalidateQueries({ queryKey: ["user", "me"] }),
-      ]);
-    },
-  });
+  const switchParish = useSwitchParish();
+  return {
+    ...switchParish,
+    mutate: (parishId: string) =>
+      switchParish.mutate({ activeParishId: parishId }),
+    mutateAsync: (parishId: string) =>
+      switchParish.mutateAsync({ activeParishId: parishId }),
+  };
 }
 
 export function useCreateDiocese() {

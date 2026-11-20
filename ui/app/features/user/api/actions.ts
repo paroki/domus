@@ -1,15 +1,17 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, setActiveParish, unwrap } from "~/shared/api/client";
+import { useLogout, useSwitchParish } from "~/shared/api/session";
 import { USER_ERRORS } from "./errors";
 import { userKeys } from "./keys";
 import type {
   AdminCreateUserRequest,
   AdminUpdateUserRequest,
   RequestOTPRequest,
-  SwitchSessionParishRequest,
   UpdateMeRequest,
   VerifyOTPRequest,
 } from "./types";
+
+export { useLogout, useSwitchParish };
 
 export function useRequestOTP() {
   return useMutation({
@@ -30,42 +32,12 @@ export function useVerifyOTP() {
   });
 }
 
-export function useLogout() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async () => {
-      await api.POST("/auth/logout");
-    },
-    onSettled: () => {
-      setActiveParish(null);
-      qc.clear();
-    },
-  });
-}
-
 export function useUpdateMe() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: UpdateMeRequest) =>
       unwrap(api.PATCH("/me", { body }), USER_ERRORS),
     onSuccess: () => qc.invalidateQueries({ queryKey: userKeys.me() }),
-  });
-}
-
-export function useSwitchParish() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (body: SwitchSessionParishRequest) => {
-      await unwrap(api.PATCH("/me/session", { body }), USER_ERRORS);
-      return body.activeParishId;
-    },
-    onSuccess: async (parishId) => {
-      setActiveParish(parishId);
-      await Promise.all([
-        qc.invalidateQueries({ queryKey: userKeys.me() }),
-        qc.invalidateQueries({ queryKey: userKeys.sessions() }),
-      ]);
-    },
   });
 }
 

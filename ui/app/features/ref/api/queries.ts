@@ -5,6 +5,7 @@ import {
   useQuery,
 } from "@tanstack/react-query";
 import { api, unwrap, unwrapMeta } from "~/shared/api/client";
+import { useMe } from "~/shared/api/session";
 import { REF_ERRORS } from "./errors";
 import { refKeys } from "./keys";
 import type {
@@ -18,11 +19,7 @@ import type {
 } from "./types";
 
 export function useCurrentIdentity() {
-  return useQuery({
-    queryKey: ["user", "me"] as const,
-    queryFn: () => unwrap(api.GET("/me"), REF_ERRORS),
-    retry: false,
-  });
+  return useMe();
 }
 
 export function useDiocesesSearch(

@@ -121,8 +121,8 @@ export default function TerritoryPage() {
             type: zType,
             code,
             name: zName.trim(),
-            coordinatorName: zCoordName.trim() || undefined,
-            coordinatorPhone: zCoordPhone.trim() || undefined,
+            coordinatorName: zCoordName.trim(),
+            coordinatorPhone: zCoordPhone.trim(),
           },
         });
       } else {
@@ -160,9 +160,9 @@ export default function TerritoryPage() {
             zoneId: targetZoneId,
             code,
             name: wName.trim(),
-            patronSaint: wPatron.trim() || undefined,
-            headName: wHeadName.trim() || undefined,
-            headPhone: wHeadPhone.trim() || undefined,
+            patronSaint: wPatron.trim(),
+            headName: wHeadName.trim(),
+            headPhone: wHeadPhone.trim(),
           },
         });
       } else {
