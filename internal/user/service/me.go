@@ -18,7 +18,7 @@ func (s *Service) GetMe(ctx context.Context, p authx.Principal) (domain.UserResp
 	if err != nil {
 		return domain.UserResponse{}, err
 	}
-	roles, err := s.loadGlobalRoles(u.ID)
+	roles, err := s.loadRoles(u.ID, p.ParishID)
 	if err != nil {
 		return domain.UserResponse{}, err
 	}
@@ -65,7 +65,7 @@ func (s *Service) UpdateMe(ctx context.Context, p authx.Principal, req domain.Up
 		return domain.UserResponse{}, err
 	}
 
-	roles, err := s.loadGlobalRoles(u.ID)
+	roles, err := s.loadRoles(u.ID, p.ParishID)
 	if err != nil {
 		return domain.UserResponse{}, err
 	}

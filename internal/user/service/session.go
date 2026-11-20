@@ -44,7 +44,7 @@ func (s *Service) ResolveSession(ctx context.Context, rawToken string, headerPar
 		return authx.Principal{}, err
 	}
 
-	roles, err := s.loadGlobalRoles(u.ID)
+	roles, err := s.loadRoles(u.ID, parishID)
 	if err != nil {
 		return authx.Principal{}, err
 	}
@@ -85,7 +85,7 @@ func (s *Service) ResolveByChannel(ctx context.Context, provider, subject string
 	}
 
 	parishID := resolveParishID(overrideParishID, acc.ActiveParishID, u.DefaultParishID)
-	roles, err := s.loadGlobalRoles(u.ID)
+	roles, err := s.loadRoles(u.ID, parishID)
 	if err != nil {
 		return authx.Principal{}, err
 	}
@@ -172,6 +172,35 @@ func (s *Service) loadGlobalRoles(userID uuid.UUID) ([]string, error) {
 		return []string{}, nil
 	}
 	return s.enforcer.RolesForUserInDomain(authz.UserSubject(userID), authz.DomainGlobal)
+}
+
+func (s *Service) loadRoles(userID, parishID uuid.UUID) ([]string, error) {
+	globalRoles, err := s.loadGlobalRoles(userID)
+	if err != nil {
+		return nil, err
+	}
+	if s.enforcer == nil || parishID == uuid.Nil {
+		return globalRoles, nil
+	}
+	parishRoles, err := s.enforcer.RolesForUserInDomain(authz.UserSubject(userID), authz.ParishDomain(parishID))
+	if err != nil {
+		return nil, err
+	}
+	seen := make(map[string]struct{}, len(globalRoles)+len(parishRoles))
+	merged := make([]string, 0, len(globalRoles)+len(parishRoles))
+	for _, r := range globalRoles {
+		if _, ok := seen[r]; !ok {
+			seen[r] = struct{}{}
+			merged = append(merged, r)
+		}
+	}
+	for _, r := range parishRoles {
+		if _, ok := seen[r]; !ok {
+			seen[r] = struct{}{}
+			merged = append(merged, r)
+		}
+	}
+	return merged, nil
 }
 
 func normalizeChannelSubject(provider, rawSubject string) (string, error) {

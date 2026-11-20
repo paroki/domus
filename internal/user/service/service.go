@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/internal/platform/authz"
@@ -177,7 +178,11 @@ func (s *Service) createSession(ctx context.Context, r *repo.Repository, u *ent.
 		return "", nil, err
 	}
 	userResp := toUserResponse(u)
-	roles, err := s.loadGlobalRoles(u.ID)
+	var activeParishID uuid.UUID
+	if u.DefaultParishID != nil {
+		activeParishID = *u.DefaultParishID
+	}
+	roles, err := s.loadRoles(u.ID, activeParishID)
 	if err != nil {
 		return "", nil, err
 	}
