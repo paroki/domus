@@ -23,10 +23,9 @@ func newServeCmd() *cobra.Command {
 				return err
 			}
 			defer flush()
-			if cfg.AutoMigrate {
-				if err := app.RunMigrations(ctx, cfg, logger); err != nil {
-					return err
-				}
+			// ponytail: always auto-migrate on serve; add APP_AUTO_MIGRATE to Config when separate migration job needed.
+			if err := app.RunMigrations(ctx, cfg, logger); err != nil {
+				return err
 			}
 
 			db, err := app.OpenDB(ctx, cfg)

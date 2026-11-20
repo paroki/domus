@@ -97,7 +97,7 @@ func initMCPSession(t *testing.T, f *fiber.App) string {
 }
 
 func TestAppGetFiber_MCPDiscoveryAndSPAExclusion(t *testing.T) {
-	f := app.GetFiber(app.Config{AppName: "domus-test"}, slog.New(slog.DiscardHandler), customMCPFeature{})
+	f := app.GetFiber(app.Config{}, slog.New(slog.DiscardHandler), customMCPFeature{})
 
 	// Verify GET /mcp does NOT fall back to SPA index.html (returns 400 from MCP handler, not 200 HTML).
 	getResp, err := f.Test(httptest.NewRequest(http.MethodGet, "/mcp", nil))

@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"net"
+	"time"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -23,11 +24,12 @@ func New(cfg Config, fiber *fiber.App, logger *slog.Logger) *Domus {
 }
 
 func (d *Domus) Serve(ctx context.Context) error {
-	addr := net.JoinHostPort(d.cfg.Host, d.cfg.Port)
+	// ponytail: bind all interfaces and fixed 10s shutdown timeout; add APP_HOST/APP_SHUTDOWN_TIMEOUT to Config when needed.
+	addr := net.JoinHostPort("0.0.0.0", d.cfg.Port)
 	d.logger.InfoContext(ctx, "starting server", "addr", addr)
 	return d.fiber.Listen(addr, fiber.ListenConfig{
 		DisableStartupMessage: true,
 		GracefulContext:       ctx,
-		ShutdownTimeout:       d.cfg.ShutdownTimeout,
+		ShutdownTimeout:       10 * time.Second,
 	})
 }

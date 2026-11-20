@@ -12,13 +12,14 @@ import (
 // InitSentry configures the global Sentry client. With an empty DSN the SDK is
 // a no-op. The returned func flushes buffered events and must be deferred.
 func InitSentry(cfg Config) (func(), error) {
+	// ponytail: fixed server name & 0.1 trace sample rate; add to Config when per-env tuning needed.
 	err := sentry.Init(sentry.ClientOptions{
 		Dsn:              cfg.SentryDSN,
 		Environment:      cfg.SentryEnvironment,
 		Release:          cfg.SentryRelease,
-		ServerName:       cfg.AppName,
+		ServerName:       "domus",
 		EnableTracing:    true,
-		TracesSampleRate: cfg.SentryTracesSampleRate,
+		TracesSampleRate: 0.1,
 	})
 	return func() { sentry.Flush(2 * time.Second) }, err
 }

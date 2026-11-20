@@ -15,16 +15,16 @@ import (
 	"github.com/paroki/domus/ui"
 )
 
-// GetFiber initializes the HTTP server. ponytail: inline slog middleware; extract to internal/platform/httpx when multiple Fiber apps added.
-func GetFiber(cfg Config, logger *slog.Logger, features ...Feature) *fiber.App {
+// GetFiber initializes the HTTP server. ponytail: inline slog middleware & hardcoded server defaults; extract or add to Config when needed.
+func GetFiber(_ Config, logger *slog.Logger, features ...Feature) *fiber.App {
 	app := fiber.New(fiber.Config{
-		AppName:          cfg.AppName,
-		ReadTimeout:      cfg.ReadTimeout,
-		WriteTimeout:     cfg.WriteTimeout,
-		IdleTimeout:      cfg.IdleTimeout,
-		BodyLimit:        cfg.BodyLimit,
+		AppName:          "domus",
+		ReadTimeout:      10 * time.Second,
+		WriteTimeout:     10 * time.Second,
+		IdleTimeout:      60 * time.Second,
+		BodyLimit:        4 * 1024 * 1024,
 		ProxyHeader:      fiber.HeaderXForwardedFor,
-		TrustProxy:       cfg.TrustProxy,
+		TrustProxy:       true,
 		TrustProxyConfig: fiber.TrustProxyConfig{Private: true, Loopback: true},
 		StructValidator:  newStructValidator(),
 		ErrorHandler:     httpx.ErrorHandler(logger),
@@ -61,7 +61,7 @@ func GetFiber(cfg Config, logger *slog.Logger, features ...Feature) *fiber.App {
 			}
 		}
 	}
-	mcpHandler := mcpx.NewHandler(mcpx.NewServer(cfg.AppName, mcpArgs...), resolver)
+	mcpHandler := mcpx.NewHandler(mcpx.NewServer("domus", mcpArgs...), resolver)
 	app.All("/mcp", mcpHandler)
 	app.All("/mcp/*", mcpHandler)
 
