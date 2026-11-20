@@ -4,7 +4,6 @@ go 1.27.1
 
 require (
 	entgo.io/ent v0.14.6
-	github.com/casbin/casbin/v2 v2.135.0
 	github.com/casbin/casbin/v3 v3.10.0
 	github.com/getsentry/sentry-go v0.50.0
 	github.com/go-playground/validator/v10 v10.30.6

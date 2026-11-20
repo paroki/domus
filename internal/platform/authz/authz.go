@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/casbin/casbin/v2"
-	"github.com/casbin/casbin/v2/model"
+	"github.com/casbin/casbin/v3"
+	"github.com/casbin/casbin/v3/model"
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
