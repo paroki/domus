@@ -157,8 +157,15 @@ func (s *Service) createSession(ctx context.Context, r *repo.Repository, u *ent.
 	if _, err := r.CreateSession(ctx, u.ID, sha256Hex(rawToken), userAgent, ipAddress, u.DefaultParishID, expiresAt); err != nil {
 		return "", nil, err
 	}
+	userResp := toUserResponse(u)
+	roles, err := s.loadGlobalRoles(u.ID)
+	if err != nil {
+		return "", nil, err
+	}
+	userResp.Roles = roles
+	userResp.ActiveParishID = u.DefaultParishID
 	return rawToken, &domain.AuthSessionResponse{
-		User:           toUserResponse(u),
+		User:           userResp,
 		ActiveParishID: u.DefaultParishID,
 		ExpiresAt:      expiresAt,
 	}, nil

@@ -546,6 +546,15 @@ export interface operations {
           "application/json": components["schemas"]["httpx.Envelope-domain_RequestOTPResponse"];
         };
       };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
       /** @description Forbidden */
       403: {
         headers: {
@@ -605,6 +614,15 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["httpx.Envelope-domain_AuthSessionResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
         };
       };
       /** @description Unauthorized */

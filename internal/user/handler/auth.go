@@ -43,6 +43,7 @@ func (h *Handler) GetProviders(c fiber.Ctx) error {
 //	@Produce		json
 //	@Param			body	body		domain.RequestOTPRequest	true	"Email address"
 //	@Success		200		{object}	httpx.Envelope[domain.RequestOTPResponse]
+//	@Failure		400		{object}	httpx.Envelope[any]
 //	@Failure		403		{object}	httpx.Envelope[any]
 //	@Failure		404		{object}	httpx.Envelope[any]
 //	@Failure		422		{object}	httpx.Envelope[any]
@@ -50,7 +51,7 @@ func (h *Handler) GetProviders(c fiber.Ctx) error {
 //	@Router			/auth/otp [post]
 func (h *Handler) RequestOTP(c fiber.Ctx) error {
 	var req domain.RequestOTPRequest
-	if err := c.Bind().Body(&req); err != nil {
+	if err := decodeStrictJSON(c, &req); err != nil {
 		return err
 	}
 	res, err := h.service.RequestOTP(c.Context(), req.Email)
@@ -70,6 +71,7 @@ func (h *Handler) RequestOTP(c fiber.Ctx) error {
 //	@Produce		json
 //	@Param			body	body		domain.VerifyOTPRequest	true	"OTP verification payload"
 //	@Success		200		{object}	httpx.Envelope[domain.AuthSessionResponse]
+//	@Failure		400		{object}	httpx.Envelope[any]
 //	@Failure		401		{object}	httpx.Envelope[any]
 //	@Failure		403		{object}	httpx.Envelope[any]
 //	@Failure		404		{object}	httpx.Envelope[any]
@@ -77,7 +79,7 @@ func (h *Handler) RequestOTP(c fiber.Ctx) error {
 //	@Router			/auth/otp/verify [post]
 func (h *Handler) VerifyOTP(c fiber.Ctx) error {
 	var req domain.VerifyOTPRequest
-	if err := c.Bind().Body(&req); err != nil {
+	if err := decodeStrictJSON(c, &req); err != nil {
 		return err
 	}
 	rawToken, res, err := h.service.VerifyOTP(c.Context(), req.Email, req.Code, c.Get(fiber.HeaderUserAgent), c.IP())
