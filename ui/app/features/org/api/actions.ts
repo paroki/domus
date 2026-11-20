@@ -170,6 +170,7 @@ export function useOrgVerifyOTP() {
       }
       await Promise.all([
         qc.invalidateQueries({ queryKey: sessionKeys.me }),
+        qc.invalidateQueries({ queryKey: sessionKeys.parishes() }),
         qc.invalidateQueries({ queryKey: orgKeys.all }),
       ]);
     },

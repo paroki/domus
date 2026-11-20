@@ -86,7 +86,7 @@ export default function OrgJoinPage() {
     }
   }
 
-  if (previewQuery.isLoading) {
+  if (previewQuery.isLoading || meQuery.isLoading) {
     return (
       <main className="flex min-h-dvh items-center justify-center bg-canvas px-4 py-10">
         <p className="text-sm text-muted">Memuat undangan organisasi…</p>

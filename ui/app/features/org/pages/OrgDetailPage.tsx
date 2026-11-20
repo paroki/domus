@@ -1,5 +1,6 @@
 import {
   ArrowLeft,
+  Building2,
   Check,
   Copy,
   Link2,
@@ -55,7 +56,8 @@ export default function OrgDetailPage() {
   const { t } = useTranslation();
   const { orgId = "" } = useParams();
   const navigate = useNavigate();
-  const { data: me } = useMe();
+  const { data: me, isLoading: meLoading } = useMe();
+  const hasParish = Boolean(me?.activeParishId);
   const parishAdmin = isParishAdmin(me?.roles);
 
   const orgQuery = useOrg(orgId);
@@ -75,6 +77,11 @@ export default function OrgDetailPage() {
   const [memberQ, setMemberQ] = useState("");
   const [memberRoleFilter, setMemberRoleFilter] = useState("");
   const [memberStatusFilter, setMemberStatusFilter] = useState("");
+  const [memberPeriodFilter, setMemberPeriodFilter] = useState("");
+
+  const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
+  const [editMemberPos, setEditMemberPos] = useState("");
+  const [editMemberPeriodId, setEditMemberPeriodId] = useState("");
 
   const [addEmail, setAddEmail] = useState("");
   const [addName, setAddName] = useState("");
@@ -96,13 +103,14 @@ export default function OrgDetailPage() {
       filter: {
         role: (memberRoleFilter as "admin" | "member") || undefined,
         status: (memberStatusFilter as "active" | "inactive") || undefined,
+        periodId: memberPeriodFilter || undefined,
       },
     },
     Boolean(org) && isOrgMember,
   );
   const invitesQuery = useOrgInvites(orgId, {}, Boolean(org) && isOrgAdmin);
   const lookupsQuery = useOrgPositionLookups(isOrgAdmin);
-  const periodsQuery = useOrgPeriods(isOrgAdmin);
+  const periodsQuery = useOrgPeriods(Boolean(org) && isOrgMember);
 
   const updateOrg = useUpdateOrg(orgId);
   const deleteOrg = useDeleteOrg();
@@ -144,6 +152,7 @@ export default function OrgDetailPage() {
   }
 
   async function handleDeleteOrg() {
+    if (!window.confirm(t("org.confirmDeleteOrg"))) return;
     setPageError(null);
     try {
       await deleteOrg.mutateAsync(orgId);
@@ -226,9 +235,48 @@ export default function OrgDetailPage() {
   }
 
   async function handleRemoveMember(userId: string) {
+    const isLeaving = userId === me?.id;
+    if (
+      !window.confirm(
+        isLeaving ? t("org.confirmLeaveOrg") : t("org.confirmRemoveMember"),
+      )
+    ) {
+      return;
+    }
     setPageError(null);
     try {
       await removeMember.mutateAsync(userId);
+      if (isLeaving) {
+        navigate("/org", { replace: true });
+      }
+    } catch (err) {
+      setPageError(resolveOrgError(err));
+    }
+  }
+
+  function startEditMember(
+    userId: string,
+    position?: string | null,
+    periodId?: string | null,
+  ) {
+    setEditingMemberId(userId);
+    setEditMemberPos(position ?? "");
+    setEditMemberPeriodId(periodId ?? "");
+  }
+
+  async function handleSaveMemberEdit(e: FormEvent, userId: string) {
+    e.preventDefault();
+    setPageError(null);
+    try {
+      await updateMember.mutateAsync({
+        userId,
+        body: {
+          position: editMemberPos.trim(),
+          periodId:
+            editMemberPeriodId || "00000000-0000-0000-0000-000000000000",
+        },
+      });
+      setEditingMemberId(null);
     } catch (err) {
       setPageError(resolveOrgError(err));
     }
@@ -255,13 +303,43 @@ export default function OrgDetailPage() {
   }
 
   async function handleCopyInvite(inviteId: string, code: string) {
-    const url = buildInviteJoinUrl(window.location.origin, code);
-    await navigator.clipboard.writeText(url);
-    setCopiedId(inviteId);
-    setTimeout(() => setCopiedId(null), 2000);
+    setPageError(null);
+    try {
+      const url = buildInviteJoinUrl(window.location.origin, code);
+      await navigator.clipboard.writeText(url);
+      setCopiedId(inviteId);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (err) {
+      setPageError(resolveOrgError(err));
+    }
   }
 
-  if (orgQuery.isLoading) {
+  async function handleRevokeInvite(invId: string) {
+    setPageError(null);
+    try {
+      await revokeInvite.mutateAsync(invId);
+    } catch (err) {
+      setPageError(resolveOrgError(err));
+    }
+  }
+
+  if (!meLoading && !hasParish) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-8">
+        <Card className="p-6 text-center">
+          <Building2 aria-hidden className="mx-auto mb-3 size-8 text-muted" />
+          <h1 className="text-lg font-semibold text-fg">
+            {t("org.noParishTitle")}
+          </h1>
+          <p className="mt-1 text-sm text-muted">
+            {t("org.noParishDescription")}
+          </p>
+        </Card>
+      </div>
+    );
+  }
+
+  if (meLoading || orgQuery.isLoading) {
     return (
       <div className="mx-auto max-w-5xl px-4 py-8 text-sm text-muted">
         Memuat detail organisasi…
@@ -269,11 +347,15 @@ export default function OrgDetailPage() {
     );
   }
 
-  if (!org) {
+  if (orgQuery.isError || !org) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-8">
         <Card className="p-6 text-center">
-          <p className="text-sm text-muted">Organisasi tidak ditemukan.</p>
+          <p className="text-sm text-muted">
+            {orgQuery.isError
+              ? resolveOrgError(orgQuery.error)
+              : "Organisasi tidak ditemukan."}
+          </p>
           <Link to="/org" className="mt-3 inline-block text-sm text-primary">
             ← {t("org.backToDirectory")}
           </Link>
@@ -284,6 +366,9 @@ export default function OrgDetailPage() {
 
   const members = membersQuery.data?.pages.flatMap((p) => p.data ?? []) ?? [];
   const invites = invitesQuery.data?.pages.flatMap((p) => p.data ?? []) ?? [];
+  const periodNameById = new Map(
+    (periodsQuery.data ?? []).map((p) => [p.id, p.name]),
+  );
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-6">
@@ -580,61 +665,165 @@ export default function OrgDetailPage() {
               <option value="active">Aktif</option>
               <option value="inactive">Nonaktif</option>
             </select>
+            <select
+              value={memberPeriodFilter}
+              onChange={(e) => setMemberPeriodFilter(e.target.value)}
+              className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+            >
+              <option value="">{t("org.allPeriods")}</option>
+              {(periodsQuery.data ?? []).map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
           </div>
 
-          <div className="divide-y divide-line">
-            {members.map((m) => (
-              <div
-                key={m.id}
-                className="flex flex-wrap items-center justify-between gap-3 py-3"
+          {membersQuery.isLoading ? (
+            <p className="text-sm text-muted">{t("org.loadingMembers")}</p>
+          ) : members.length === 0 ? (
+            <p className="text-sm text-muted">{t("org.noMembers")}</p>
+          ) : (
+            <div className="divide-y divide-line">
+              {members.map((m) => {
+                const periodLabel = m.periodId
+                  ? periodNameById.get(m.periodId)
+                  : undefined;
+                const isEditingRow =
+                  Boolean(m.userId) && editingMemberId === m.userId;
+                return (
+                  <div key={m.id} className="flex flex-col gap-3 py-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-medium text-fg">{m.name}</span>
+                          <Badge
+                            tone={m.role === "admin" ? "warning" : "neutral"}
+                          >
+                            {m.role === "admin"
+                              ? t("org.orgAdminBadge")
+                              : t("org.orgMemberBadge")}
+                          </Badge>
+                          <Badge
+                            tone={m.status === "active" ? "success" : "danger"}
+                          >
+                            {m.status === "active" ? "Aktif" : "Nonaktif"}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted">
+                          {m.email}
+                          {m.position ? ` · ${m.position}` : ""}
+                          {periodLabel ? ` · ${periodLabel}` : ""}
+                        </p>
+                      </div>
+
+                      {isOrgAdmin && m.userId && (
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            variant="outline"
+                            onClick={() =>
+                              startEditMember(
+                                m.userId ?? "",
+                                m.position,
+                                m.periodId,
+                              )
+                            }
+                          >
+                            <Pencil aria-hidden className="size-3.5" />
+                            {t("org.editMember")}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() =>
+                              handleToggleRole(
+                                m.userId ?? "",
+                                m.role ?? "member",
+                              )
+                            }
+                          >
+                            {m.role === "admin"
+                              ? "Jadikan Anggota"
+                              : "Jadikan Admin"}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() =>
+                              handleToggleStatus(
+                                m.userId ?? "",
+                                m.status ?? "active",
+                              )
+                            }
+                          >
+                            {m.status === "active" ? "Nonaktifkan" : "Aktifkan"}
+                          </Button>
+                          <Button
+                            variant="danger"
+                            onClick={() => handleRemoveMember(m.userId ?? "")}
+                          >
+                            Hapus
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+
+                    {isEditingRow && (
+                      <form
+                        onSubmit={(e) =>
+                          handleSaveMemberEdit(e, m.userId ?? "")
+                        }
+                        className="flex flex-wrap items-end gap-2 rounded-lg border border-line bg-canvas p-3"
+                      >
+                        <input
+                          type="text"
+                          list="org-position-suggestions"
+                          value={editMemberPos}
+                          onChange={(e) => setEditMemberPos(e.target.value)}
+                          placeholder="Jabatan (kosongkan untuk hapus)"
+                          className="h-9 flex-1 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
+                        />
+                        <select
+                          value={editMemberPeriodId}
+                          onChange={(e) =>
+                            setEditMemberPeriodId(e.target.value)
+                          }
+                          className="h-9 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
+                        >
+                          <option value="">Tanpa Periode</option>
+                          {(periodsQuery.data ?? []).map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.name}
+                            </option>
+                          ))}
+                        </select>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setEditingMemberId(null)}
+                        >
+                          Batal
+                        </Button>
+                        <Button type="submit" disabled={updateMember.isPending}>
+                          Simpan
+                        </Button>
+                      </form>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {membersQuery.hasNextPage && (
+            <div className="flex justify-center pt-2">
+              <Button
+                variant="outline"
+                disabled={membersQuery.isFetchingNextPage}
+                onClick={() => membersQuery.fetchNextPage()}
               >
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-medium text-fg">{m.name}</span>
-                    <Badge tone={m.role === "admin" ? "warning" : "neutral"}>
-                      {m.role === "admin"
-                        ? t("org.orgAdminBadge")
-                        : t("org.orgMemberBadge")}
-                    </Badge>
-                    <Badge tone={m.status === "active" ? "success" : "danger"}>
-                      {m.status === "active" ? "Aktif" : "Nonaktif"}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-muted">
-                    {m.email}
-                    {m.position ? ` · ${m.position}` : ""}
-                  </p>
-                </div>
-
-                {isOrgAdmin && m.userId && (
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() =>
-                        handleToggleRole(m.userId ?? "", m.role ?? "member")
-                      }
-                    >
-                      {m.role === "admin" ? "Jadikan Anggota" : "Jadikan Admin"}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() =>
-                        handleToggleStatus(m.userId ?? "", m.status ?? "active")
-                      }
-                    >
-                      {m.status === "active" ? "Nonaktifkan" : "Aktifkan"}
-                    </Button>
-                    <Button
-                      variant="danger"
-                      onClick={() => handleRemoveMember(m.userId ?? "")}
-                    >
-                      Hapus
-                    </Button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+                {t("org.loadMore")}
+              </Button>
+            </div>
+          )}
         </Card>
       )}
 
@@ -693,79 +882,98 @@ export default function OrgDetailPage() {
             </div>
           </form>
 
-          <div className="divide-y divide-line">
-            {invites.map((inv) => {
-              const invId = inv.id ?? "";
-              const invCode = inv.code ?? "";
-              const status = computeInviteStatus({
-                revokedAt: inv.revokedAt,
-                expiresAt: inv.expiresAt ?? "",
-                maxUses: inv.maxUses,
-                usedCount: inv.usedCount ?? 0,
-              });
-              const meta = inviteStatusMeta(status);
-              const shareUrl =
-                typeof window !== "undefined"
-                  ? buildInviteJoinUrl(window.location.origin, invCode)
-                  : `/org/join/${invCode}`;
-              return (
-                <div
-                  key={invId}
-                  className="flex flex-wrap items-center justify-between gap-3 py-3"
-                >
-                  <div className="flex flex-col gap-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-mono text-sm font-semibold text-fg">
-                        {invCode}
-                      </span>
-                      <Badge tone={meta.tone}>{meta.label}</Badge>
-                      <Badge tone="neutral">{inv.role}</Badge>
-                      {inv.defaultPosition && (
-                        <span className="text-xs text-muted">
-                          · {inv.defaultPosition}
+          {invitesQuery.isLoading ? (
+            <p className="text-sm text-muted">{t("org.loadingInvites")}</p>
+          ) : invites.length === 0 ? (
+            <p className="text-sm text-muted">{t("org.noInvites")}</p>
+          ) : (
+            <div className="divide-y divide-line">
+              {invites.map((inv) => {
+                const invId = inv.id ?? "";
+                const invCode = inv.code ?? "";
+                const status = computeInviteStatus({
+                  revokedAt: inv.revokedAt,
+                  expiresAt: inv.expiresAt ?? "",
+                  maxUses: inv.maxUses,
+                  usedCount: inv.usedCount ?? 0,
+                });
+                const meta = inviteStatusMeta(status);
+                const shareUrl =
+                  typeof window !== "undefined"
+                    ? buildInviteJoinUrl(window.location.origin, invCode)
+                    : `/org/join/${invCode}`;
+                return (
+                  <div
+                    key={invId}
+                    className="flex flex-wrap items-center justify-between gap-3 py-3"
+                  >
+                    <div className="flex flex-col gap-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-sm font-semibold text-fg">
+                          {invCode}
                         </span>
+                        <Badge tone={meta.tone}>{meta.label}</Badge>
+                        <Badge tone="neutral">{inv.role}</Badge>
+                        {inv.defaultPosition && (
+                          <span className="text-xs text-muted">
+                            · {inv.defaultPosition}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted">
+                        {shareUrl} · Terpakai: {inv.usedCount ?? 0}
+                        {inv.maxUses != null ? ` / ${inv.maxUses}` : ""} ·
+                        Kedaluwarsa:{" "}
+                        {inv.expiresAt
+                          ? new Date(inv.expiresAt).toLocaleString("id-ID")
+                          : "-"}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => handleCopyInvite(invId, invCode)}
+                      >
+                        {copiedId === invId ? (
+                          <>
+                            <Check aria-hidden className="size-4" />
+                            {t("org.copied")}
+                          </>
+                        ) : (
+                          <>
+                            <Copy aria-hidden className="size-4" />
+                            {t("org.copyLink")}
+                          </>
+                        )}
+                      </Button>
+                      {status === "active" && (
+                        <Button
+                          variant="danger"
+                          disabled={revokeInvite.isPending}
+                          onClick={() => handleRevokeInvite(invId)}
+                        >
+                          {t("org.revokeInvite")}
+                        </Button>
                       )}
                     </div>
-                    <p className="text-xs text-muted">
-                      {shareUrl} · Terpakai: {inv.usedCount ?? 0}
-                      {inv.maxUses != null ? ` / ${inv.maxUses}` : ""} ·
-                      Kedaluwarsa:{" "}
-                      {inv.expiresAt
-                        ? new Date(inv.expiresAt).toLocaleString("id-ID")
-                        : "-"}
-                    </p>
                   </div>
+                );
+              })}
+            </div>
+          )}
 
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => handleCopyInvite(invId, invCode)}
-                    >
-                      {copiedId === invId ? (
-                        <>
-                          <Check aria-hidden className="size-4" />
-                          {t("org.copied")}
-                        </>
-                      ) : (
-                        <>
-                          <Copy aria-hidden className="size-4" />
-                          {t("org.copyLink")}
-                        </>
-                      )}
-                    </Button>
-                    {status === "active" && (
-                      <Button
-                        variant="danger"
-                        onClick={() => revokeInvite.mutateAsync(invId)}
-                      >
-                        {t("org.revokeInvite")}
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          {invitesQuery.hasNextPage && (
+            <div className="flex justify-center pt-2">
+              <Button
+                variant="outline"
+                disabled={invitesQuery.isFetchingNextPage}
+                onClick={() => invitesQuery.fetchNextPage()}
+              >
+                {t("org.loadMore")}
+              </Button>
+            </div>
+          )}
         </Card>
       )}
     </div>
