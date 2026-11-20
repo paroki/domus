@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"io"
 	"log/slog"
 	"net/http"
 	"testing"
@@ -16,6 +17,7 @@ import (
 	"github.com/paroki/domus/ent/usersession"
 	"github.com/paroki/domus/internal/platform/authx"
 	"github.com/paroki/domus/internal/platform/authz"
+	"github.com/paroki/domus/internal/platform/errx"
 	"github.com/paroki/domus/internal/platform/httpx"
 	"github.com/paroki/domus/internal/user"
 	"github.com/paroki/domus/internal/user/domain"
@@ -205,10 +207,20 @@ func (s *UserFeatureSuite) TestMiddleware_CookieBearerTenantAndDisabled() {
 
 func (s *UserFeatureSuite) TestChannelResolution_AndSwitchChannelParish() {
 	ctx := context.Background()
-	uResp, err := s.feature.EnsureUser(ctx, "botuser@paroki.org", "Bot User", "+628123456789", "telegram", "tg-999")
+	uResp, err := s.feature.EnsureUser(ctx, "botuser@paroki.org", "Bot User", "08123456789", "telegram", "tg-999")
 	s.Require().NoError(err)
-	_, err = s.feature.EnsureUser(ctx, "botuser@paroki.org", "Bot User", "+628123456789", "whatsapp", "+628123456789")
+	s.Require().NotNil(uResp.Phone)
+	s.Equal("+628123456789", *uResp.Phone)
+
+	_, err = s.feature.EnsureUser(ctx, "botuser@paroki.org", "Bot User", "08123456789", "whatsapp", "08123456789")
 	s.Require().NoError(err)
+
+	// Invalid phone -> 422 VALIDATION_ERROR
+	_, err = s.feature.EnsureUser(ctx, "badphone@paroki.org", "Bad Phone", "not-a-phone", "whatsapp", "")
+	var appErr *errx.Error
+	s.Require().ErrorAs(err, &appErr)
+	s.Equal(errx.KindValidation, appErr.Kind)
+	s.Equal("VALIDATION_ERROR", appErr.Code)
 
 	// Unknown channel -> 404 USER_NOT_FOUND
 	_, err = s.feature.ResolveByChannel(ctx, "telegram", "unknown-id", uuid.Nil)
@@ -224,9 +236,10 @@ func (s *UserFeatureSuite) TestChannelResolution_AndSwitchChannelParish() {
 	s.Equal("telegram", pTg.Channel)
 	s.Equal(parish1, pTg.ParishID)
 
-	// Override takes precedence over account active_parish_id
+	// Local WhatsApp subject normalizes to E.164 on SwitchChannelParish and ResolveByChannel
 	parish2 := uuid.Must(uuid.NewV7())
-	pWa, err := s.feature.ResolveByChannel(ctx, "whatsapp", "+628123456789", parish2)
+	s.Require().NoError(s.feature.SwitchChannelParish(ctx, "whatsapp", "08123456789", parish2))
+	pWa, err := s.feature.ResolveByChannel(ctx, "whatsapp", "08123456789", uuid.Nil)
 	s.Require().NoError(err)
 	s.Equal("whatsapp", pWa.Channel)
 	s.Equal(parish2, pWa.ParishID)
@@ -236,4 +249,76 @@ func (s *UserFeatureSuite) TestChannelResolution_AndSwitchChannelParish() {
 	s.Require().NoError(err)
 	_, err = s.feature.ResolveByChannel(ctx, "telegram", "tg-999", uuid.Nil)
 	s.ErrorIs(err, domain.ErrUserDisabled)
+}
+
+func (s *UserFeatureSuite) TestMCP_PrincipalResolverCookieAndBearer() {
+	ctx := context.Background()
+	s.Require().NoError(s.feature.Bootstrap(ctx))
+	admin, err := s.client.User.Query().Where(entuser.EmailEQ("admin@paroki.org")).Only(ctx)
+	s.Require().NoError(err)
+	cookie := s.issueSessionFor("admin@paroki.org")
+
+	initAndPing := func(withCookie bool) string {
+		s.ClearCookies()
+		if withCookie {
+			s.SetCookie(cookie)
+		}
+		s.SetHeader("Accept", "application/json, text/event-stream")
+		initPayload := map[string]any{
+			"jsonrpc": "2.0",
+			"id":      1,
+			"method":  "initialize",
+			"params": map[string]any{
+				"protocolVersion": "2025-06-18",
+				"capabilities":    map[string]any{},
+				"clientInfo":      map[string]any{"name": "test", "version": "1.0.0"},
+			},
+		}
+		if withCookie {
+			s.Request("/mcp", http.MethodPost, initPayload)
+		} else {
+			s.RequestWithToken("/mcp", http.MethodPost, initPayload, cookie.Value)
+		}
+		s.OK()
+		mcpSessionID := s.GetHttpResponse().Header.Get("Mcp-Session-Id")
+		s.Require().NotEmpty(mcpSessionID)
+
+		s.SetHeader("Mcp-Session-Id", mcpSessionID)
+		notifPayload := map[string]any{
+			"jsonrpc": "2.0",
+			"method":  "notifications/initialized",
+		}
+		if withCookie {
+			s.Request("/mcp", http.MethodPost, notifPayload)
+		} else {
+			s.RequestWithToken("/mcp", http.MethodPost, notifPayload, cookie.Value)
+		}
+		s.Require().Less(s.GetHttpResponse().StatusCode, 300)
+
+		pingPayload := map[string]any{
+			"jsonrpc": "2.0",
+			"id":      2,
+			"method":  "tools/call",
+			"params": map[string]any{
+				"name":      "system_ping",
+				"arguments": map[string]any{},
+			},
+		}
+		if withCookie {
+			s.Request("/mcp", http.MethodPost, pingPayload)
+		} else {
+			s.RequestWithToken("/mcp", http.MethodPost, pingPayload, cookie.Value)
+		}
+		s.OK()
+		bodyBytes, err := io.ReadAll(s.GetHttpResponse().Body)
+		s.Require().NoError(err)
+		return string(bodyBytes)
+	}
+
+	// Cookie auth on /mcp -> PrincipalResolver populates userId
+	s.Contains(initAndPing(true), admin.ID.String())
+
+	// Bearer token auth on /mcp -> PrincipalResolver populates userId
+	s.Headers.Del("Mcp-Session-Id")
+	s.Contains(initAndPing(false), admin.ID.String())
 }

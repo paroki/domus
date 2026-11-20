@@ -62,7 +62,11 @@ func (s *Service) ResolveSession(ctx context.Context, rawToken string, headerPar
 
 // ResolveByChannel resolves a linked channel identity (e.g. telegram, whatsapp) into an authx.Principal.
 func (s *Service) ResolveByChannel(ctx context.Context, provider, subject string, overrideParishID uuid.UUID) (authx.Principal, error) {
-	acc, err := s.repo.FindAccountByProviderSubject(ctx, provider, subject)
+	normSubject, err := normalizeChannelSubject(provider, subject)
+	if err != nil {
+		return authx.Principal{}, err
+	}
+	acc, err := s.repo.FindAccountByProviderSubject(ctx, provider, normSubject)
 	if ent.IsNotFound(err) {
 		return authx.Principal{}, domain.ErrUserNotFound
 	}
@@ -98,7 +102,11 @@ func (s *Service) ResolveByChannel(ctx context.Context, provider, subject string
 
 // SwitchChannelParish persists the active parish for a linked channel account (and initializes user default if nil).
 func (s *Service) SwitchChannelParish(ctx context.Context, provider, subject string, parishID uuid.UUID) error {
-	acc, err := s.repo.FindAccountByProviderSubject(ctx, provider, subject)
+	normSubject, err := normalizeChannelSubject(provider, subject)
+	if err != nil {
+		return err
+	}
+	acc, err := s.repo.FindAccountByProviderSubject(ctx, provider, normSubject)
 	if ent.IsNotFound(err) {
 		return domain.ErrAccountNotFound
 	}
@@ -164,6 +172,14 @@ func (s *Service) loadGlobalRoles(userID uuid.UUID) ([]string, error) {
 		return []string{}, nil
 	}
 	return s.enforcer.RolesForUserInDomain(authz.UserSubject(userID), authz.DomainGlobal)
+}
+
+func normalizeChannelSubject(provider, rawSubject string) (string, error) {
+	subject := strings.TrimSpace(rawSubject)
+	if provider == domain.ProviderWhatsApp && subject != "" && !strings.Contains(subject, "@") {
+		return normalizePhone(subject)
+	}
+	return subject, nil
 }
 
 func resolveParishID(override uuid.UUID, scoped, fallback *uuid.UUID) uuid.UUID {

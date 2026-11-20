@@ -189,10 +189,31 @@ func (f *Feature) Require(obj string, act authz.Action, domFn ...func(fiber.Ctx)
 	return f.enforcer.Require(obj, act, domFn...)
 }
 
-// PrincipalResolver returns an mcpx.PrincipalResolver reading the authenticated Principal from Fiber context.
+// PrincipalResolver returns an mcpx.PrincipalResolver reading the authenticated Principal from Fiber context
+// or resolving it from a session cookie or Bearer token when called outside AuthenticateMiddleware (e.g. /mcp).
 func (f *Feature) PrincipalResolver() mcpx.PrincipalResolver {
 	return func(c fiber.Ctx) (authx.Principal, bool) {
-		return authx.FromContext(c.Context())
+		if p, ok := authx.FromContext(c.Context()); ok && p.UserID != uuid.Nil {
+			return p, true
+		}
+		token := f.extractSessionToken(c)
+		if token == "" {
+			return authx.Principal{}, false
+		}
+		var headerParishID uuid.UUID
+		if rawParish := strings.TrimSpace(c.Get("X-Parish-Id")); rawParish != "" {
+			parsed, err := uuid.Parse(rawParish)
+			if err != nil {
+				return authx.Principal{}, false
+			}
+			headerParishID = parsed
+		}
+		p, err := f.service.ResolveSession(c.Context(), token, headerParishID)
+		if err != nil {
+			return authx.Principal{}, false
+		}
+		c.SetContext(authx.WithPrincipal(c.Context(), p))
+		return p, true
 	}
 }
 

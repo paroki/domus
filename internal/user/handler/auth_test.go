@@ -345,11 +345,13 @@ func (s *AuthHandlerSuite) TestOAuth_RedirectAndCallbackFlows() {
 
 func (s *AuthHandlerSuite) TestEnsureUser_CreatesAndLinksIdempotently() {
 	ctx := context.Background()
-	u1, err := s.feature.EnsureUser(ctx, "Invite@Paroki.org", "Invited User", "+628123", "email", "")
+	u1, err := s.feature.EnsureUser(ctx, "Invite@Paroki.org", "Invited User", "08123456789", "email", "")
 	s.Require().NoError(err)
 	s.Equal("invite@paroki.org", u1.Email)
+	s.Require().NotNil(u1.Phone)
+	s.Equal("+628123456789", *u1.Phone)
 
-	u2, err := s.feature.EnsureUser(ctx, "invite@paroki.org", "Invited User", "", "whatsapp", "+628123")
+	u2, err := s.feature.EnsureUser(ctx, "invite@paroki.org", "Invited User", "", "whatsapp", "08123456789")
 	s.Require().NoError(err)
 	s.Equal(u1.ID, u2.ID)
 }
