@@ -40,9 +40,16 @@ config:
     environment: production
     # -- Defaults to chart appVersion.
     release: ""
+  smtp:
+    # -- SMTP host (APP_SMTP_HOST). Empty disables SMTP and uses log OTP fallback.
+    host: ""
+    port: 587
+    user: ""
+    from: "Domus <no-reply@example.com>"
 
 # -- Existing Secret holding optional keys: db-url (APP_DB_URL), google-id,
-# google-secret, github-id, github-secret (AUTH_GOOGLE_*, AUTH_GITHUB_*).
+# google-secret, github-id, github-secret (AUTH_GOOGLE_*, AUTH_GITHUB_*),
+# smtp-pass (APP_SMTP_PASS).
 existingSecret: ""
 
 # -- Extra environment variables for container.

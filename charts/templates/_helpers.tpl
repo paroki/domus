@@ -94,7 +94,7 @@ Environment variables from values.config.
   value: {{ .cookieSecure | quote }}
 {{- end }}
 {{- with .Values.existingSecret }}
-{{- range $env, $key := dict "APP_DB_URL" "db-url" "AUTH_GOOGLE_ID" "google-id" "AUTH_GOOGLE_SECRET" "google-secret" "AUTH_GITHUB_ID" "github-id" "AUTH_GITHUB_SECRET" "github-secret" }}
+{{- range $env, $key := dict "APP_DB_URL" "db-url" "AUTH_GOOGLE_ID" "google-id" "AUTH_GOOGLE_SECRET" "google-secret" "AUTH_GITHUB_ID" "github-id" "AUTH_GITHUB_SECRET" "github-secret" "APP_SMTP_PASS" "smtp-pass" }}
 - name: {{ $env }}
   valueFrom:
     secretKeyRef:
@@ -102,6 +102,20 @@ Environment variables from values.config.
       key: {{ $key }}
       optional: true
 {{- end }}
+{{- end }}
+{{- with $c.smtp }}
+{{- with .host }}
+- name: APP_SMTP_HOST
+  value: {{ . | quote }}
+{{- end }}
+- name: APP_SMTP_PORT
+  value: {{ .port | quote }}
+{{- with .user }}
+- name: APP_SMTP_USER
+  value: {{ . | quote }}
+{{- end }}
+- name: APP_SMTP_FROM
+  value: {{ .from | quote }}
 {{- end }}
 {{- with $c.sentry.dsn }}
 - name: APP_SENTRY_DSN
