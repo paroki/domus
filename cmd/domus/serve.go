@@ -1,8 +1,11 @@
 package main
 
 import (
+	"strings"
+
 	"github.com/paroki/domus/internal/app"
 	"github.com/paroki/domus/internal/platform/authz"
+	"github.com/paroki/domus/internal/platform/mailx"
 	"github.com/paroki/domus/internal/ref"
 	"github.com/paroki/domus/internal/user"
 	"github.com/spf13/cobra"
@@ -44,7 +47,21 @@ func newServeCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			userFeature := user.New(db, enforcer, userCfg, logger)
+			var userOpts []user.Option
+			if strings.TrimSpace(cfg.SMTPHost) != "" {
+				mailer, err := mailx.New(mailx.Config{
+					Host: cfg.SMTPHost,
+					Port: cfg.SMTPPort,
+					User: cfg.SMTPUser,
+					Pass: cfg.SMTPPass,
+					From: cfg.SMTPFrom,
+				})
+				if err != nil {
+					return err
+				}
+				userOpts = append(userOpts, user.WithOTPSender(user.NewMailOTPSender(mailer, userCfg.OTPTTL)))
+			}
+			userFeature := user.New(db, enforcer, userCfg, logger, userOpts...)
 			refFeature := ref.New(db, enforcer, userFeature)
 			if err := authz.RegisterFeatures(ctx, enforcer, userFeature, refFeature); err != nil {
 				return err

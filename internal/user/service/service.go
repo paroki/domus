@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"fmt"
 	"log/slog"
 	"strings"
 	"time"
@@ -14,6 +15,7 @@ import (
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/internal/platform/authz"
+	"github.com/paroki/domus/internal/platform/mailx"
 	"github.com/paroki/domus/internal/user/domain"
 	"github.com/paroki/domus/internal/user/repo"
 )
@@ -49,6 +51,35 @@ func NewLogOTPSender(logger *slog.Logger) *LogOTPSender {
 func (s *LogOTPSender) SendOTP(ctx context.Context, channel, target, code string) error {
 	s.logger.InfoContext(ctx, "otp dispatched", "channel", channel, "target", target, "code", code)
 	return nil
+}
+
+// MailOTPSender delivers email OTP codes via mailx.Mailer.
+type MailOTPSender struct {
+	mailer *mailx.Mailer
+	otpTTL time.Duration
+}
+
+// NewMailOTPSender constructs a MailOTPSender backed by mailer.
+func NewMailOTPSender(mailer *mailx.Mailer, otpTTL time.Duration) *MailOTPSender {
+	return &MailOTPSender{mailer: mailer, otpTTL: otpTTL}
+}
+
+// SendOTP sends the 6-digit OTP code to target over email.
+func (s *MailOTPSender) SendOTP(ctx context.Context, channel, target, code string) error {
+	if channel != "" && channel != domain.ProviderEmail {
+		return fmt.Errorf("mailx otp sender: unsupported channel %q", channel)
+	}
+	ttlMins := max(1, int(s.otpTTL.Minutes()))
+	body := fmt.Sprintf(
+		"Kode OTP login Domus Anda adalah: %s\n\nKode ini berlaku selama %d menit. Jangan berikan kode ini kepada siapa pun.",
+		code,
+		ttlMins,
+	)
+	return s.mailer.Send(ctx, mailx.Message{
+		To:       target,
+		Subject:  "Kode Verifikasi Login Domus",
+		TextBody: body,
+	})
 }
 
 // Service implements user identity, OTP, OAuth2, and session business logic.

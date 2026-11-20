@@ -1,12 +1,15 @@
 package user_test
 
 import (
+	"bufio"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"io"
 	"log/slog"
+	"net"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -19,6 +22,7 @@ import (
 	"github.com/paroki/domus/internal/platform/authz"
 	"github.com/paroki/domus/internal/platform/errx"
 	"github.com/paroki/domus/internal/platform/httpx"
+	"github.com/paroki/domus/internal/platform/mailx"
 	"github.com/paroki/domus/internal/user"
 	"github.com/paroki/domus/internal/user/domain"
 	"github.com/paroki/domus/testutil"
@@ -321,4 +325,95 @@ func (s *UserFeatureSuite) TestMCP_PrincipalResolverCookieAndBearer() {
 	// Bearer token auth on /mcp -> PrincipalResolver populates userId
 	s.Headers.Del("Mcp-Session-Id")
 	s.Contains(initAndPing(false), admin.ID.String())
+}
+
+func (s *UserFeatureSuite) TestMailOTPSender_AndLogFallback() {
+	// Default LogOTPSender fallback (no WithOTPSender) succeeds.
+	fallbackFeature := user.New(s.client, s.enforcer, s.cfg, slog.New(slog.DiscardHandler))
+	s.Require().NoError(fallbackFeature.Bootstrap(context.Background()))
+	s.WithFeatures(fallbackFeature)
+	s.Request("/api/auth/otp", http.MethodPost, domain.RequestOTPRequest{Email: "admin@paroki.org"})
+	s.OK()
+
+	// MailOTPSender delivers 6-digit OTP over SMTP and rejects non-email channels.
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	s.Require().NoError(err)
+	defer func() { _ = ln.Close() }()
+
+	received := make(chan string, 1)
+	go func() {
+		conn, acceptErr := ln.Accept()
+		if acceptErr != nil {
+			return
+		}
+		defer func() { _ = conn.Close() }()
+		rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
+		writeLine := func(line string) {
+			_, _ = rw.WriteString(line + "\r\n")
+			_ = rw.Flush()
+		}
+		writeLine("220 localhost ESMTP")
+		var full strings.Builder
+		for {
+			line, readErr := rw.ReadString('\n')
+			if readErr != nil {
+				return
+			}
+			full.WriteString(line)
+			trimmed := strings.TrimRight(line, "\r\n")
+			upper := strings.ToUpper(trimmed)
+			switch {
+			case strings.HasPrefix(upper, "EHLO "), strings.HasPrefix(upper, "HELO "):
+				writeLine("250 OK")
+			case strings.HasPrefix(upper, "MAIL FROM:"), strings.HasPrefix(upper, "RCPT TO:"):
+				writeLine("250 OK")
+			case upper == "DATA":
+				writeLine("354 End")
+				for {
+					dline, derr := rw.ReadString('\n')
+					if derr != nil {
+						return
+					}
+					full.WriteString(dline)
+					if strings.TrimRight(dline, "\r\n") == "." {
+						break
+					}
+				}
+				writeLine("250 Queued")
+			case upper == "QUIT":
+				writeLine("221 Bye")
+				received <- full.String()
+				return
+			default:
+				writeLine("500 Unknown")
+			}
+		}
+	}()
+
+	port := ln.Addr().(*net.TCPAddr).Port
+	mailer, err := mailx.New(mailx.Config{
+		Host: "127.0.0.1",
+		Port: port,
+		From: "Domus <no-reply@example.com>",
+	})
+	s.Require().NoError(err)
+
+	otpSender := user.NewMailOTPSender(mailer, 5*time.Minute)
+	s.Error(otpSender.SendOTP(context.Background(), "whatsapp", "+6281234567890", "123456"))
+
+	mailFeature := user.New(s.client, s.enforcer, s.cfg, slog.New(slog.DiscardHandler), user.WithOTPSender(otpSender))
+	_, err = mailFeature.EnsureUser(context.Background(), "mailtest@paroki.org", "Mail Test", "", "email", "mailtest@paroki.org")
+	s.Require().NoError(err)
+	s.WithFeatures(mailFeature)
+
+	s.Request("/api/auth/otp", http.MethodPost, domain.RequestOTPRequest{Email: "mailtest@paroki.org"})
+	s.OK()
+
+	select {
+	case rawSMTP := <-received:
+		s.Contains(rawSMTP, "Kode Verifikasi Login Domus")
+		s.Contains(rawSMTP, "5 menit")
+	case <-time.After(5 * time.Second):
+		s.FailNow("timed out waiting for SMTP OTP delivery")
+	}
 }

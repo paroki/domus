@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log/slog"
 	"strings"
+	"time"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
@@ -12,6 +13,7 @@ import (
 	"github.com/paroki/domus/internal/platform/authx"
 	"github.com/paroki/domus/internal/platform/authz"
 	"github.com/paroki/domus/internal/platform/httpx"
+	"github.com/paroki/domus/internal/platform/mailx"
 	"github.com/paroki/domus/internal/platform/mcpx"
 	"github.com/paroki/domus/internal/user/domain"
 	"github.com/paroki/domus/internal/user/handler"
@@ -49,6 +51,11 @@ func WithOTPSender(sender domain.OTPSender) Option {
 	return func(o *options) {
 		o.otpSender = sender
 	}
+}
+
+// NewMailOTPSender constructs an email OTPSender backed by mailer.
+func NewMailOTPSender(mailer *mailx.Mailer, otpTTL time.Duration) domain.OTPSender {
+	return service.NewMailOTPSender(mailer, otpTTL)
 }
 
 // WithOAuthProvider registers a custom or test OAuth2 provider driver.
