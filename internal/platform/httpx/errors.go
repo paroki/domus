@@ -10,6 +10,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/requestid"
+	"github.com/paroki/domus/internal/platform/errx"
 )
 
 // Base sentinel errors for HTTP error mapping and errors.Is checks.
@@ -153,6 +154,28 @@ func ErrorHandler(logger *slog.Logger) fiber.ErrorHandler {
 				message = appErr.Message
 				details = appErr.Details
 			}
+		} else if domErr, ok := errors.AsType[*errx.Error](err); ok {
+			status = statusForKind(domErr.Kind)
+			if status >= fiber.StatusInternalServerError {
+				code = "INTERNAL_ERROR"
+				message = "An unexpected internal error occurred."
+			} else {
+				code = domErr.Code
+				if code == "" {
+					code = defaultCodeForStatus(status)
+				}
+				message = domErr.Message
+				if len(domErr.Details) > 0 {
+					details = make([]FieldError, len(domErr.Details))
+					for i, d := range domErr.Details {
+						details[i] = FieldError{
+							Field:   d.Field,
+							Code:    d.Code,
+							Message: d.Message,
+						}
+					}
+				}
+			}
 		} else if valErrs, ok := errors.AsType[validator.ValidationErrors](err); ok {
 			status = fiber.StatusUnprocessableEntity
 			code = "VALIDATION_ERROR"
@@ -199,6 +222,29 @@ func ErrorHandler(logger *slog.Logger) fiber.ErrorHandler {
 				Details:   details,
 			},
 		})
+	}
+}
+
+func statusForKind(kind errx.Kind) int {
+	switch kind {
+	case errx.KindInvalid:
+		return fiber.StatusBadRequest
+	case errx.KindUnauthorized:
+		return fiber.StatusUnauthorized
+	case errx.KindForbidden:
+		return fiber.StatusForbidden
+	case errx.KindNotFound:
+		return fiber.StatusNotFound
+	case errx.KindConflict:
+		return fiber.StatusConflict
+	case errx.KindGone:
+		return fiber.StatusGone
+	case errx.KindValidation:
+		return fiber.StatusUnprocessableEntity
+	case errx.KindRateLimited:
+		return fiber.StatusTooManyRequests
+	default:
+		return fiber.StatusInternalServerError
 	}
 }
 
