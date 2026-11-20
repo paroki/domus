@@ -10,11 +10,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
 	entuser "github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/useraccount"
 	"github.com/paroki/domus/ent/userotp"
 	"github.com/paroki/domus/ent/usersession"
+	"github.com/paroki/domus/internal/platform/authz"
 	"github.com/paroki/domus/internal/user"
 	"github.com/paroki/domus/internal/user/domain"
 	"github.com/paroki/domus/testutil"
@@ -56,6 +58,7 @@ func (p *stubOAuthProvider) Exchange(_ context.Context, _, _ string) (domain.OAu
 type AuthHandlerSuite struct {
 	testutil.ApiTestSuite[any]
 	client    *ent.Client
+	enforcer  *authz.Enforcer
 	otpSender *stubOTPSender
 	feature   *user.Feature
 	cfg       user.Config
@@ -68,6 +71,9 @@ func TestAuthHandlerSuite(t *testing.T) {
 func (s *AuthHandlerSuite) SetupTest() {
 	s.ApiTestSuite.SetupTest()
 	s.client = testutil.NewEntClient(s.T())
+	enforcer, err := authz.NewEnforcer(s.client)
+	s.Require().NoError(err)
+	s.enforcer = enforcer
 	s.otpSender = &stubOTPSender{}
 	s.cfg = user.Config{
 		OTPTTL:         5 * time.Minute,
@@ -81,7 +87,7 @@ func (s *AuthHandlerSuite) SetupTest() {
 		GitHubID:       "github-id",
 		GitHubSecret:   "github-secret",
 	}
-	s.feature = user.New(s.client, nil, s.cfg, slog.New(slog.DiscardHandler), user.WithOTPSender(s.otpSender))
+	s.feature = user.New(s.client, s.enforcer, s.cfg, slog.New(slog.DiscardHandler), user.WithOTPSender(s.otpSender))
 	s.WithFeatures(s.feature)
 }
 
@@ -104,6 +110,14 @@ func (s *AuthHandlerSuite) TestGetProviders_DeterministicOrder() {
 }
 
 func (s *AuthHandlerSuite) TestOTP_RequestVerifyAndLogoutFlow() {
+	// Unknown JSON field on /api/auth/otp -> 400 BAD_REQUEST
+	s.Request("/api/auth/otp", http.MethodPost, map[string]any{
+		"email":   "missing@paroki.org",
+		"unknown": "field",
+	})
+	s.BadRequest()
+	s.Equal("BAD_REQUEST", s.GetErrorResponse().Error.Code)
+
 	// Unregistered user -> 404 USER_NOT_FOUND
 	s.Request("/api/auth/otp", http.MethodPost, domain.RequestOTPRequest{Email: "missing@paroki.org"})
 	s.NotFound()
@@ -116,7 +130,13 @@ func (s *AuthHandlerSuite) TestOTP_RequestVerifyAndLogoutFlow() {
 	s.Equal("USER_DISABLED", s.GetErrorResponse().Error.Code)
 
 	// Active user -> 200 and hashed OTP stored
+	parishID := uuid.New()
 	u := s.createTestUser("alice@paroki.org", "Alice", entuser.StatusActive)
+	u, err := s.client.User.UpdateOneID(u.ID).SetDefaultParishID(parishID).Save(context.Background())
+	s.Require().NoError(err)
+	err = s.enforcer.AssignRole(context.Background(), authz.UserSubject(u.ID), user.RoleUser, authz.DomainGlobal)
+	s.Require().NoError(err)
+
 	s.Request("/api/auth/otp", http.MethodPost, domain.RequestOTPRequest{Email: "ALICE@paroki.org"})
 	s.OK()
 
@@ -135,6 +155,15 @@ func (s *AuthHandlerSuite) TestOTP_RequestVerifyAndLogoutFlow() {
 	s.Equal(http.StatusTooManyRequests, s.GetHttpResponse().StatusCode)
 	s.Equal("AUTH_OTP_RATE_LIMITED", s.GetErrorResponse().Error.Code)
 
+	// Unknown JSON field on /api/auth/otp/verify -> 400 BAD_REQUEST
+	s.Request("/api/auth/otp/verify", http.MethodPost, map[string]any{
+		"email":   "alice@paroki.org",
+		"code":    "000000",
+		"unknown": "field",
+	})
+	s.BadRequest()
+	s.Equal("BAD_REQUEST", s.GetErrorResponse().Error.Code)
+
 	// Wrong code -> 401 AUTH_OTP_INVALID, increments attempts
 	s.Request("/api/auth/otp/verify", http.MethodPost, domain.VerifyOTPRequest{Email: "alice@paroki.org", Code: "000000"})
 	s.Unauthorized()
@@ -151,6 +180,9 @@ func (s *AuthHandlerSuite) TestOTP_RequestVerifyAndLogoutFlow() {
 	sessionRes := testutil.DecodeAs[domain.AuthSessionResponse](&s.ApiTestSuite)
 	s.Equal(u.ID, sessionRes.Data.User.ID)
 	s.NotNil(sessionRes.Data.User.LastLoginAt)
+	s.Contains(sessionRes.Data.User.Roles, user.RoleUser)
+	s.Require().NotNil(sessionRes.Data.User.ActiveParishID)
+	s.Equal(parishID, *sessionRes.Data.User.ActiveParishID)
 
 	var sessionCookie *http.Cookie
 	for _, c := range s.GetHttpResponse().Cookies() {
