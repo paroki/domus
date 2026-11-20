@@ -12,6 +12,8 @@ const id = {
     account: "Akun saya",
     profileSecurity: "Profil & Keamanan",
     logout: "Keluar",
+    selectParish: "Pilih Paroki",
+    parishSwitcher: "Pindah paroki aktif",
   },
   theme: {
     modeLabel: "Mode tampilan: {{mode}}. Klik untuk mengganti.",
@@ -38,6 +40,10 @@ const id = {
     user: {
       name: "Pengguna",
       description: "Akun dan hak akses pengguna aplikasi.",
+    },
+    ref: {
+      name: "Pengaturan Paroki",
+      description: "Keuskupan, paroki, wilayah, kamus referensi, dan periode.",
     },
   },
   auth: {
@@ -109,6 +115,56 @@ const id = {
     enableUser: "Aktifkan",
     deleteUser: "Hapus",
     confirmDelete: "Hapus pengguna {{name}}?",
+  },
+  ref: {
+    settingsTitle: "Pengaturan Paroki",
+    settingsSubtitle:
+      "Kelola profil paroki, struktur wilayah, kamus, dan periode.",
+    settingsEmpty: "Tidak ada menu pengaturan yang tersedia.",
+    searchPlaceholder: "Cari pengaturan…",
+    backToSettings: "Pengaturan Paroki",
+    profileTitle: "Profil Paroki",
+    profileSubtitle:
+      "Perbarui identitas paroki aktif dan kelola admin/anggota.",
+    noActiveParish: "Pilih paroki aktif terlebih dahulu dari menu di atas.",
+    forbiddenParishAdmin:
+      "Hanya Admin Paroki yang dapat mengubah profil paroki ini.",
+    forbiddenSuperAdmin:
+      "Hanya Super Admin yang dapat mengelola keuskupan dan paroki.",
+    saved: "Tersimpan",
+    saving: "Menyimpan…",
+    saveProfile: "Simpan Profil",
+    nameLabel: "Nama",
+    patronSaintLabel: "Santo/Santa Pelindung",
+    pastorNameLabel: "Pastor Paroki",
+    phoneLabel: "Telepon",
+    emailLabel: "Email",
+    websiteLabel: "Situs Web",
+    addressLabel: "Alamat",
+    membersTitle: "Admin & Anggota Paroki",
+    searchMembersPlaceholder: "Cari anggota…",
+    addMember: "Tambah Anggota",
+    roleLabel: "Peran",
+    roleAdmin: "Admin Paroki",
+    roleMember: "Anggota",
+    removeMember: "Hapus anggota",
+    membersEmpty: "Belum ada anggota terdaftar.",
+    parishesTitle: "Keuskupan & Paroki",
+    parishesSubtitle:
+      "Kelola keuskupan, tenant paroki, dan tunjuk Admin Paroki.",
+    diocesesSection: "Keuskupan",
+    parishesSection: "Paroki",
+    appointAdminSection: "Tunjuk Admin Paroki",
+    codePlaceholder: "Kode (mis. kaj)",
+    dioceseNamePlaceholder: "Nama keuskupan",
+    bishopPlaceholder: "Nama uskup (opsional)",
+    parishNamePlaceholder: "Nama paroki",
+    selectDiocese: "Pilih keuskupan",
+    selectDioceseFirst: "Buat atau pilih keuskupan terlebih dahulu.",
+    addDiocese: "Tambah Keuskupan",
+    addParish: "Tambah Paroki",
+    appointAdmin: "Tunjuk Admin",
+    emptyList: "Belum ada data.",
   },
 } as const;
 

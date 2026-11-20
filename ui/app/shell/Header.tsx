@@ -1,9 +1,19 @@
-import { Church, LogOut, Search, Shield, User } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  ChevronDown,
+  Church,
+  LogOut,
+  Search,
+  Shield,
+  User,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router";
 
-import { useLogout } from "~/features/user/api/actions";
+import { refKeys } from "~/features/ref/api/keys";
+import { useParishesSearch } from "~/features/ref/api/queries";
+import { useLogout, useSwitchParish } from "~/features/user/api/actions";
 import { useMe } from "~/features/user/api/queries";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -20,19 +30,41 @@ export function Header() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const { data: me } = useMe();
+  const qc = useQueryClient();
   const logout = useLogout();
+  const switchParish = useSwitchParish();
+  const isSuperAdmin = Boolean(me?.roles?.includes("user:super-admin"));
+  const parishesQuery = useParishesSearch(
+    {
+      filter: isSuperAdmin
+        ? { active: true }
+        : { active: true, memberOnly: true },
+    },
+    Boolean(me),
+  );
+  const parishes =
+    parishesQuery.data?.pages.flatMap((page) => page.data ?? []) ?? [];
+  const activeParish = parishes.find((p) => p.id === me?.activeParishId);
+  const [parishOpen, setParishOpen] = useState(false);
+  const parishRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open && !parishOpen) return;
     function onPointerDown(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
+      if (parishRef.current && !parishRef.current.contains(e.target as Node)) {
+        setParishOpen(false);
+      }
     }
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        setOpen(false);
+        setParishOpen(false);
+      }
     }
     document.addEventListener("mousedown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
@@ -40,7 +72,7 @@ export function Header() {
       document.removeEventListener("mousedown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [open]);
+  }, [open, parishOpen]);
 
   async function handleLogout() {
     setOpen(false);
@@ -86,6 +118,65 @@ export function Header() {
       </form>
 
       <div className="ml-auto flex items-center gap-1 sm:ml-0">
+        {me && (
+          <div ref={parishRef} className="relative mr-1">
+            <button
+              type="button"
+              aria-label={t("header.parishSwitcher")}
+              aria-expanded={parishOpen}
+              aria-haspopup="menu"
+              onClick={() => setParishOpen((v) => !v)}
+              className="inline-flex h-9 max-w-44 items-center gap-1.5 rounded-full border border-line bg-canvas px-3 text-xs font-semibold text-fg hover:bg-fg/8"
+            >
+              <Church aria-hidden className="size-3.5 shrink-0 text-muted" />
+              <span className="truncate">
+                {activeParish?.name ?? t("header.selectParish")}
+              </span>
+              <ChevronDown
+                aria-hidden
+                className="size-3.5 shrink-0 text-muted"
+              />
+            </button>
+            {parishOpen && (
+              <div
+                role="menu"
+                aria-label={t("header.parishSwitcher")}
+                className="absolute right-0 z-50 mt-2 max-h-64 w-60 overflow-y-auto rounded-xl border border-line bg-surface p-1.5 shadow-lg"
+              >
+                {parishes.length === 0 ? (
+                  <p className="px-3 py-2 text-xs text-muted">
+                    {t("ref.emptyList")}
+                  </p>
+                ) : (
+                  parishes.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      role="menuitem"
+                      disabled={switchParish.isPending}
+                      onClick={async () => {
+                        if (!p.id) return;
+                        setParishOpen(false);
+                        await switchParish.mutateAsync({
+                          activeParishId: p.id,
+                        });
+                        await qc.invalidateQueries({ queryKey: refKeys.all });
+                      }}
+                      className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm hover:bg-fg/8 ${
+                        p.id === me.activeParishId
+                          ? "font-semibold text-primary"
+                          : "text-fg"
+                      }`}
+                    >
+                      <span className="truncate">{p.name}</span>
+                      <span className="ml-2 text-xs text-muted">{p.code}</span>
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+        )}
         <ThemeToggle />
         <div ref={menuRef} className="relative ml-1">
           <button
