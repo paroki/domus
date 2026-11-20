@@ -86,7 +86,7 @@ Environment variables from values.config.
 - name: SHUTDOWN_TIMEOUT
   value: {{ $c.shutdownTimeout | quote }}
 - name: BODY_LIMIT
-  value: {{ $c.bodyLimit | quote }}
+  value: {{ int $c.bodyLimit | quote }}
 - name: AUTO_MIGRATE
   value: {{ $c.autoMigrate | quote }}
 - name: TRUST_PROXY
