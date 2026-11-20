@@ -11,9 +11,6 @@ const Configuration: UserConfig = {
         // app / domain
         'api',
         'ui',
-        'db',
-        'auth',
-        'core',
         // infra / cross-cutting
         'deps',
         'release',
