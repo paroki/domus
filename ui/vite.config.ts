@@ -10,12 +10,12 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     reactRouter(),
-    // Uploads source maps only when SENTRY_AUTH_TOKEN is set (CI/release build).
+    // Uploads source maps only when APP_SENTRY_AUTH_TOKEN is set (CI/release build).
     sentryVitePlugin({
       org: "doyolabs",
       project: "domus-ui",
-      authToken: process.env.SENTRY_AUTH_TOKEN,
-      disable: !process.env.SENTRY_AUTH_TOKEN,
+      authToken: process.env.APP_SENTRY_AUTH_TOKEN,
+      disable: !process.env.APP_SENTRY_AUTH_TOKEN,
       release: { name: process.env.APP_SENTRY_RELEASE },
       sourcemaps: { filesToDeleteAfterUpload: ["build/client/**/*.map"] },
     }),
