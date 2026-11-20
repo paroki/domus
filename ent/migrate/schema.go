@@ -99,6 +99,14 @@ var (
 				Columns: []*schema.Column{LookupsColumns[9], LookupsColumns[4], LookupsColumns[5]},
 			},
 			{
+				Name:    "lookup_global_category_code",
+				Unique:  true,
+				Columns: []*schema.Column{LookupsColumns[4], LookupsColumns[5]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "parish_id IS NULL",
+				},
+			},
+			{
 				Name:    "lookup_parish_id_category_sort_order",
 				Unique:  false,
 				Columns: []*schema.Column{LookupsColumns[9], LookupsColumns[4], LookupsColumns[7]},

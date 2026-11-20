@@ -64,6 +64,9 @@ func (s *Service) SearchLookups(
 		merged = append(merged, row)
 	}
 	sort.Slice(merged, func(i, j int) bool {
+		if merged[i].SortOrder != merged[j].SortOrder {
+			return merged[i].SortOrder < merged[j].SortOrder
+		}
 		if !merged[i].CreatedAt.Equal(merged[j].CreatedAt) {
 			return merged[i].CreatedAt.After(merged[j].CreatedAt)
 		}

@@ -2,6 +2,7 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
@@ -48,6 +49,10 @@ func (Lookup) Edges() []ent.Edge {
 func (Lookup) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("parish_id", "category", "code").Unique(),
+		index.Fields("category", "code").
+			Unique().
+			Annotations(entsql.IndexWhere("parish_id IS NULL")).
+			StorageKey("lookup_global_category_code"),
 		index.Fields("parish_id", "category", "sort_order"),
 	}
 }

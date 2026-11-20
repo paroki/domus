@@ -308,6 +308,18 @@ func (s *RefFeatureSuite) TestParishMember_CasbinSyncAndLastAdminGuard() {
 
 	s.Request("/api/ref/parishes/"+p1.ID.String()+"/members/"+bob.UserID.String(), http.MethodDelete, nil)
 	s.NoContent()
+
+	// Adding an existing user by email with empty Name preserves their existing name.
+	existingCarol, err := s.userFeature.EnsureUser(context.Background(), "carol@paroki.org", "Carol Original", "", "email", "carol@paroki.org")
+	s.Require().NoError(err)
+	s.Request("/api/ref/parishes/"+p1.ID.String()+"/members", http.MethodPost, domain.AddParishMemberRequest{
+		Email: "carol@paroki.org",
+		Role:  "member",
+	})
+	s.Created()
+	carolMember := testutil.DecodeAs[domain.ParishMemberResponse](s).Data
+	s.Equal(existingCarol.ID, carolMember.UserID)
+	s.Equal("Carol Original", carolMember.Name)
 }
 
 func (s *RefFeatureSuite) TestFacadeHelpers() {
@@ -524,6 +536,38 @@ func (s *RefFeatureSuite) TestLookup_HybridGlobalAndParishOverride() {
 	reactivated := testutil.DecodeAs[domain.LookupResponse](s).Data
 	s.Equal(globalRow.ID, reactivated.ID)
 	s.Equal("Baptism v2", reactivated.Label)
+}
+
+func (s *RefFeatureSuite) TestLookup_SearchSortOrder() {
+	s.setupTwoParishesWithAliceAdmin()
+	s.loginViaOTP("alice@paroki.org")
+
+	for _, tc := range []struct {
+		code  string
+		order int
+	}{
+		{code: "third", order: 30},
+		{code: "first", order: 10},
+		{code: "second", order: 20},
+	} {
+		s.Request("/api/ref/lookups", http.MethodPost, domain.CreateLookupRequest{
+			Category:  "status",
+			Code:      tc.code,
+			Label:     tc.code,
+			SortOrder: tc.order,
+		})
+		s.Created()
+	}
+
+	s.Request("/api/ref/lookups/search", http.MethodPost, domain.SearchLookupsRequest{
+		Filter: &domain.LookupSearchFilter{Category: "status"},
+	})
+	s.OK()
+	rows := testutil.DecodeAs[[]domain.LookupResponse](s).Data
+	s.Require().Len(rows, 3)
+	s.Equal("first", rows[0].Code)
+	s.Equal("second", rows[1].Code)
+	s.Equal("third", rows[2].Code)
 }
 
 func (s *RefFeatureSuite) TestPeriod_OverlapValidationAndIsCurrentRotation() {

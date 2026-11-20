@@ -360,23 +360,30 @@ func (s *Service) AddParishMember(
 		if email == "" {
 			return domain.ParishMemberResponse{}, domain.ValidationError("email", "REQUIRED", "Email or userId is required.")
 		}
-		name := strings.TrimSpace(req.Name)
-		if name == "" {
-			name = email
-		}
-		var phoneStr string
-		if req.Phone != nil {
-			norm, err := normalizePhone(*req.Phone)
+		existingUser, err := s.repo.FindUserByEmail(ctx, email)
+		if err == nil {
+			targetUserID = existingUser.ID
+		} else if !ent.IsNotFound(err) {
+			return domain.ParishMemberResponse{}, err
+		} else {
+			name := strings.TrimSpace(req.Name)
+			if name == "" {
+				name = email
+			}
+			var phoneStr string
+			if req.Phone != nil {
+				norm, err := normalizePhone(*req.Phone)
+				if err != nil {
+					return domain.ParishMemberResponse{}, err
+				}
+				phoneStr = norm
+			}
+			uid, err := s.users.EnsureUser(ctx, email, name, phoneStr, "email", email)
 			if err != nil {
 				return domain.ParishMemberResponse{}, err
 			}
-			phoneStr = norm
+			targetUserID = uid
 		}
-		uid, err := s.users.EnsureUser(ctx, email, name, phoneStr, "email", email)
-		if err != nil {
-			return domain.ParishMemberResponse{}, err
-		}
-		targetUserID = uid
 	}
 
 	var created *ent.ParishMember
@@ -427,21 +434,29 @@ func (s *Service) UpdateParishMember(
 		return domain.ParishMemberResponse{}, err
 	}
 
-	existing, err := s.repo.FindParishMember(ctx, parishID, targetUserID)
-	if ent.IsNotFound(err) {
-		return domain.ParishMemberResponse{}, domain.ErrParishMemberNotFound
-	}
-	if err != nil {
-		return domain.ParishMemberResponse{}, err
-	}
-
-	if existing.Role == parishmember.RoleAdmin && req.Role == string(parishmember.RoleMember) {
-		if err := s.guardNotLastParishAdmin(ctx, parishID); err != nil {
-			return domain.ParishMemberResponse{}, err
+	var updated *ent.ParishMember
+	err := s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
+		existing, err := txRepo.FindParishMember(ctx, parishID, targetUserID)
+		if ent.IsNotFound(err) {
+			return domain.ErrParishMemberNotFound
 		}
-	}
+		if err != nil {
+			return err
+		}
 
-	updated, err := s.repo.UpdateParishMemberRole(ctx, existing.ID, parishmember.Role(req.Role))
+		if existing.Role == parishmember.RoleAdmin && req.Role == string(parishmember.RoleMember) {
+			if err := guardNotLastParishAdmin(ctx, txRepo, parishID); err != nil {
+				return err
+			}
+		}
+
+		u, err := txRepo.UpdateParishMemberRole(ctx, existing.ID, parishmember.Role(req.Role))
+		if err != nil {
+			return err
+		}
+		updated = u
+		return nil
+	})
 	if err != nil {
 		return domain.ParishMemberResponse{}, err
 	}
@@ -473,31 +488,36 @@ func (s *Service) RemoveParishMember(ctx context.Context, p authx.Principal, par
 		return err
 	}
 
-	existing, err := s.repo.FindParishMember(ctx, parishID, targetUserID)
-	if ent.IsNotFound(err) {
-		return domain.ErrParishMemberNotFound
-	}
+	var wasAdmin bool
+	err := s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
+		existing, err := txRepo.FindParishMember(ctx, parishID, targetUserID)
+		if ent.IsNotFound(err) {
+			return domain.ErrParishMemberNotFound
+		}
+		if err != nil {
+			return err
+		}
+
+		if existing.Role == parishmember.RoleAdmin {
+			if err := guardNotLastParishAdmin(ctx, txRepo, parishID); err != nil {
+				return err
+			}
+			wasAdmin = true
+		}
+
+		return txRepo.DeleteParishMember(ctx, existing.ID)
+	})
 	if err != nil {
 		return err
 	}
-
-	if existing.Role == parishmember.RoleAdmin {
-		if err := s.guardNotLastParishAdmin(ctx, parishID); err != nil {
-			return err
-		}
-	}
-
-	if err := s.repo.DeleteParishMember(ctx, existing.ID); err != nil {
-		return err
-	}
-	if existing.Role == parishmember.RoleAdmin && s.enforcer != nil {
+	if wasAdmin && s.enforcer != nil {
 		return s.enforcer.RevokeRole(ctx, authz.UserSubject(targetUserID), roleParishAdmin, authz.ParishDomain(parishID))
 	}
 	return nil
 }
 
-func (s *Service) guardNotLastParishAdmin(ctx context.Context, parishID uuid.UUID) error {
-	count, err := s.repo.CountParishAdmins(ctx, parishID)
+func guardNotLastParishAdmin(ctx context.Context, r *repo.Repository, parishID uuid.UUID) error {
+	count, err := r.CountParishAdmins(ctx, parishID)
 	if err != nil {
 		return err
 	}

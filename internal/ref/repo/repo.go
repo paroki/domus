@@ -45,6 +45,13 @@ func (r *Repository) FindUserByID(ctx context.Context, id uuid.UUID) (*ent.User,
 		Only(ctx)
 }
 
+// FindUserByEmail returns a non-deleted user by email.
+func (r *Repository) FindUserByEmail(ctx context.Context, email string) (*ent.User, error) {
+	return r.client.User.Query().
+		Where(user.EmailEQ(email), user.DeletedAtIsNil()).
+		Only(ctx)
+}
+
 // SetUserDefaultParishIfNil sets User.default_parish_id only when currently unset.
 func (r *Repository) SetUserDefaultParishIfNil(ctx context.Context, userID, parishID uuid.UUID) error {
 	_, err := r.client.User.Update().
