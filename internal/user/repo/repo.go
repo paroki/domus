@@ -46,6 +46,30 @@ func (r *Repository) FindUserByEmail(ctx context.Context, email string) (*ent.Us
 		Only(ctx)
 }
 
+// FindUserByEmailIncludeDeleted returns the user matching email, including soft-deleted records.
+func (r *Repository) FindUserByEmailIncludeDeleted(ctx context.Context, email string) (*ent.User, error) {
+	return r.client.User.Query().
+		Where(user.EmailEQ(email)).
+		Only(ctx)
+}
+
+// ReactivateUser restores a soft-deleted user to active status with fresh profile fields.
+func (r *Repository) ReactivateUser(ctx context.Context, id uuid.UUID, name string, phone *string) (*ent.User, error) {
+	upd := r.client.User.UpdateOneID(id).
+		ClearDeletedAt().
+		SetStatus(user.StatusActive).
+		SetName(name).
+		ClearAvatarURL().
+		ClearDefaultParishID().
+		ClearLastLoginAt()
+	if phone != nil && *phone != "" {
+		upd.SetPhone(*phone)
+	} else {
+		upd.ClearPhone()
+	}
+	return upd.Save(ctx)
+}
+
 // FindUserByID returns the non-soft-deleted user matching id.
 func (r *Repository) FindUserByID(ctx context.Context, id uuid.UUID) (*ent.User, error) {
 	return r.client.User.Query().
@@ -382,6 +406,21 @@ func (r *Repository) DeleteUserAccountByID(ctx context.Context, accountID, userI
 	return r.client.UserAccount.Delete().
 		Where(useraccount.IDEQ(accountID), useraccount.UserIDEQ(userID)).
 		Exec(ctx)
+}
+
+// DeleteAccountsByUserID hard-deletes all UserAccount rows owned by userID.
+func (r *Repository) DeleteAccountsByUserID(ctx context.Context, userID uuid.UUID) error {
+	_, err := r.client.UserAccount.Delete().
+		Where(useraccount.UserIDEQ(userID)).
+		Exec(ctx)
+	return err
+}
+
+// FindUserAccountByID returns the UserAccount matching accountID and userID.
+func (r *Repository) FindUserAccountByID(ctx context.Context, accountID, userID uuid.UUID) (*ent.UserAccount, error) {
+	return r.client.UserAccount.Query().
+		Where(useraccount.IDEQ(accountID), useraccount.UserIDEQ(userID)).
+		Only(ctx)
 }
 
 // SearchUsers returns non-deleted users matching optional search query and status filter.

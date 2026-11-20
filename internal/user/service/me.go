@@ -173,19 +173,20 @@ func (s *Service) SearchMyAccounts(
 
 // UnlinkMyAccount removes a linked provider account unless it is the user's last remaining account.
 func (s *Service) UnlinkMyAccount(ctx context.Context, p authx.Principal, accountID uuid.UUID) error {
-	count, err := s.repo.CountUserAccounts(ctx, p.UserID)
-	if err != nil {
+	return s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
+		if _, err := txRepo.FindUserAccountByID(ctx, accountID, p.UserID); ent.IsNotFound(err) {
+			return domain.ErrAccountNotFound
+		} else if err != nil {
+			return err
+		}
+		count, err := txRepo.CountUserAccounts(ctx, p.UserID)
+		if err != nil {
+			return err
+		}
+		if count <= 1 {
+			return domain.ErrLastAccountRequired
+		}
+		_, err = txRepo.DeleteUserAccountByID(ctx, accountID, p.UserID)
 		return err
-	}
-	if count <= 1 {
-		return domain.ErrLastAccountRequired
-	}
-	deleted, err := s.repo.DeleteUserAccountByID(ctx, accountID, p.UserID)
-	if err != nil {
-		return err
-	}
-	if deleted == 0 {
-		return domain.ErrAccountNotFound
-	}
-	return nil
+	})
 }

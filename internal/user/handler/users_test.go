@@ -178,4 +178,30 @@ func (s *UsersHandlerSuite) TestAdminUsers_RBACAndCRUDLifecycle() {
 
 	s.Request("/api/users/"+uuid.Must(uuid.NewV7()).String(), http.MethodGet, nil)
 	s.NotFound()
+
+	// Re-creating soft-deleted email via POST /api/users reactivates the user without stale super-admin role
+	s.Request("/api/users", http.MethodPost, domain.AdminCreateUserRequest{
+		Email:        "second-admin@paroki.org",
+		Name:         "Restored Regular",
+		IsSuperAdmin: false,
+	})
+	s.Created()
+	reactivated := testutil.DecodeAs[domain.UserResponse](&s.ApiTestSuite).Data
+	s.Equal(created.ID, reactivated.ID)
+	s.Equal("Restored Regular", reactivated.Name)
+	s.Contains(reactivated.Roles, user.RoleUser)
+	s.NotContains(reactivated.Roles, user.RoleSuperAdmin)
+
+	// Soft-delete again and re-invite via EnsureUser -> reactivates cleanly
+	s.Request("/api/users/"+created.ID.String(), http.MethodDelete, nil)
+	s.NoContent()
+
+	reinvited, err := s.feature.EnsureUser(context.Background(), "second-admin@paroki.org", "Reinvited User", "08123456789", "whatsapp", "08123456789")
+	s.Require().NoError(err)
+	s.Equal(created.ID, reinvited.ID)
+	s.Require().NotNil(reinvited.Phone)
+	s.Equal("+628123456789", *reinvited.Phone)
+
+	s.Request("/api/users/"+created.ID.String(), http.MethodGet, nil)
+	s.OK()
 }
