@@ -45,13 +45,10 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          PR_NUMBER="${{ fromJson(steps.release.outputs.pr).number }}"
           PR_BRANCH="${{ fromJson(steps.release.outputs.pr).headBranchName }}"
           git fetch origin "${PR_BRANCH}"
           git checkout "${PR_BRANCH}"
           bun .github/scripts/generate-changelog.ts
-          bun .github/scripts/generate-changelog.ts --stdout > /tmp/pr-body.md
-          gh pr edit "${PR_NUMBER}" -F /tmp/pr-body.md
           if [ -n "$(git status --porcelain CHANGELOG.md)" ]; then
             FILE_SHA=$(gh api "repos/${{ github.repository }}/contents/CHANGELOG.md?ref=${PR_BRANCH}" --jq '.sha' 2>/dev/null || true)
             PR_BRANCH="${PR_BRANCH}" FILE_SHA="${FILE_SHA}" bun -e '
