@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/paroki/domus/internal/platform/httpx"
 	"github.com/paroki/domus/testutil"
 	"github.com/paroki/domus/testutil/mocks"
 	"github.com/stretchr/testify/suite"
@@ -48,16 +49,16 @@ func (f pingFeature) Register(api fiber.Router) {
 		}
 		reply, err := f.svc.Ping(c.Context(), req.Message)
 		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(testutil.Envelope[any]{
-				Error: &testutil.ErrorPayload{
+			return c.Status(fiber.StatusBadRequest).JSON(httpx.Envelope[any]{
+				Error: &httpx.ErrorPayload{
 					Code:      "PING_FAILED",
 					Message:   err.Error(),
 					RequestID: "req-123",
-					Details:   []testutil.FieldError{{Field: "message", Code: "INVALID", Message: "invalid"}},
+					Details:   []httpx.FieldError{{Field: "message", Code: "INVALID", Message: "invalid"}},
 				},
 			})
 		}
-		return c.Status(fiber.StatusCreated).JSON(testutil.Envelope[pingResponse]{
+		return c.Status(fiber.StatusCreated).JSON(httpx.Envelope[pingResponse]{
 			Data: pingResponse{
 				Reply:  reply,
 				Header: c.Get("X-Custom"),
@@ -72,9 +73,9 @@ func (f pingFeature) Register(api fiber.Router) {
 		if err != nil {
 			return err
 		}
-		return c.Status(fiber.StatusOK).JSON(testutil.Envelope[[]pingResponse]{
+		return c.Status(fiber.StatusOK).JSON(httpx.Envelope[[]pingResponse]{
 			Data: []pingResponse{{Reply: items[0]}, {Reply: items[1]}},
-			Meta: &testutil.Meta{NextCursor: "cursor-2", HasMore: true, Limit: 2, Total: &total},
+			Meta: &httpx.Meta{NextCursor: "cursor-2", HasMore: true, Limit: 2, Total: &total},
 		})
 	})
 
@@ -96,7 +97,7 @@ func (f pingFeature) Register(api fiber.Router) {
 		if err != nil {
 			return err
 		}
-		return c.Status(fiber.StatusOK).JSON(testutil.Envelope[pingResponse]{
+		return c.Status(fiber.StatusOK).JSON(httpx.Envelope[pingResponse]{
 			Data: pingResponse{Reply: stored},
 		})
 	})
@@ -106,8 +107,8 @@ func (f pingFeature) Register(api fiber.Router) {
 		if code == fiber.StatusNoContent {
 			return c.SendStatus(fiber.StatusNoContent)
 		}
-		return c.Status(code).JSON(testutil.Envelope[any]{
-			Error: &testutil.ErrorPayload{
+		return c.Status(code).JSON(httpx.Envelope[any]{
+			Error: &httpx.ErrorPayload{
 				Code:    "STATUS_ERROR",
 				Message: "status error",
 			},
