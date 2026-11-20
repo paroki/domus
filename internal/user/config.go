@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/sethvargo/go-envconfig"
+	"github.com/sethvargo/go-envconfig/v2"
 )
 
 // Config holds configuration for the user and authentication feature.
