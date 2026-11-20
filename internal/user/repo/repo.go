@@ -7,6 +7,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
+	"github.com/paroki/domus/ent/parish"
+	"github.com/paroki/domus/ent/parishmember"
 	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/useraccount"
 	"github.com/paroki/domus/ent/userotp"
@@ -279,6 +281,28 @@ func (r *Repository) SetUserDefaultParishIfNil(ctx context.Context, userID, pari
 		SetDefaultParishID(parishID).
 		Save(ctx)
 	return err
+}
+
+// IsActiveParish reports whether parishID refers to an active, non-deleted Parish.
+func (r *Repository) IsActiveParish(ctx context.Context, parishID uuid.UUID) (bool, error) {
+	return r.client.Parish.Query().
+		Where(
+			parish.IDEQ(parishID),
+			parish.DeletedAtIsNil(),
+			parish.ActiveEQ(true),
+		).
+		Exist(ctx)
+}
+
+// IsActiveParishMember reports whether userID is a member of an active, non-deleted Parish.
+func (r *Repository) IsActiveParishMember(ctx context.Context, userID, parishID uuid.UUID) (bool, error) {
+	return r.client.ParishMember.Query().
+		Where(
+			parishmember.UserIDEQ(userID),
+			parishmember.ParishIDEQ(parishID),
+			parishmember.HasParishWith(parish.DeletedAtIsNil(), parish.ActiveEQ(true)),
+		).
+		Exist(ctx)
 }
 
 // UpdateUser updates mutable fields on a non-deleted User.

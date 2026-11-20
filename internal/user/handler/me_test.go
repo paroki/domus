@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
+	"github.com/paroki/domus/ent/parishmember"
 	entuser "github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/internal/platform/authz"
 	"github.com/paroki/domus/internal/user"
@@ -108,11 +109,19 @@ func (s *MeHandlerSuite) TestGetAndUpdateMe_PhoneE164AndStrictJSON() {
 }
 
 func (s *MeHandlerSuite) TestSwitchSessionParish_AndMultiDeviceSessions() {
+	ctx := context.Background()
 	u, cookie1 := s.loginUser("multi@paroki.org", "Multi Device", "Firefox/130")
 	_, cookie2 := s.loginUser("multi@paroki.org", "Multi Device", "Mobile/1.0")
 
+	d, err := s.client.Diocese.Create().SetCode("kaj").SetName("KAJ").Save(ctx)
+	s.Require().NoError(err)
+	p, err := s.client.Parish.Create().SetDioceseID(d.ID).SetCode("p-01").SetName("Paroki 1").Save(ctx)
+	s.Require().NoError(err)
+	_, err = s.client.ParishMember.Create().SetParishID(p.ID).SetUserID(u.ID).SetRole(parishmember.RoleMember).Save(ctx)
+	s.Require().NoError(err)
+
 	// Switch session parish on device 1
-	parishID := uuid.Must(uuid.NewV7())
+	parishID := p.ID
 	s.SetCookie(cookie1)
 	s.Request("/api/me/session", http.MethodPatch, domain.SwitchSessionParishRequest{ActiveParishID: parishID})
 	s.NoContent()
@@ -194,5 +203,56 @@ func (s *MeHandlerSuite) TestSearchAndUnlinkAccounts_LastAccountGuard() {
 	s.Require().Len(accounts2, 2)
 
 	s.Request("/api/me/accounts/"+accounts2[0].ID.String(), http.MethodDelete, nil)
+	s.NoContent()
+}
+
+func (s *MeHandlerSuite) TestParishMembershipEnforcement_SwitchAndHeader() {
+	ctx := context.Background()
+	d, err := s.client.Diocese.Create().SetCode("kaj").SetName("KAJ").Save(ctx)
+	s.Require().NoError(err)
+	memberParish, err := s.client.Parish.Create().SetDioceseID(d.ID).SetCode("p-mem").SetName("Member Parish").Save(ctx)
+	s.Require().NoError(err)
+	otherParish, err := s.client.Parish.Create().SetDioceseID(d.ID).SetCode("p-oth").SetName("Other Parish").Save(ctx)
+	s.Require().NoError(err)
+	inactiveParish, err := s.client.Parish.Create().SetDioceseID(d.ID).SetCode("p-ina").SetName("Inactive Parish").SetActive(false).Save(ctx)
+	s.Require().NoError(err)
+
+	regularUser, regularCookie := s.loginUser("regular@paroki.org", "Regular User", "Browser/1")
+	_, err = s.client.ParishMember.Create().SetParishID(memberParish.ID).SetUserID(regularUser.ID).SetRole(parishmember.RoleMember).Save(ctx)
+	s.Require().NoError(err)
+	_, err = s.client.ParishMember.Create().SetParishID(inactiveParish.ID).SetUserID(regularUser.ID).SetRole(parishmember.RoleMember).Save(ctx)
+	s.Require().NoError(err)
+
+	s.SetCookie(regularCookie)
+
+	// Non-member parish switch -> 403
+	s.Request("/api/me/session", http.MethodPatch, domain.SwitchSessionParishRequest{ActiveParishID: otherParish.ID})
+	s.Forbidden()
+
+	// Inactive parish switch -> 403
+	s.Request("/api/me/session", http.MethodPatch, domain.SwitchSessionParishRequest{ActiveParishID: inactiveParish.ID})
+	s.Forbidden()
+
+	// Member of active parish switch -> 204
+	s.Request("/api/me/session", http.MethodPatch, domain.SwitchSessionParishRequest{ActiveParishID: memberParish.ID})
+	s.NoContent()
+
+	// X-Parish-Id for non-member parish -> 403
+	s.SetHeader("X-Parish-Id", otherParish.ID.String())
+	s.Request("/api/me", http.MethodGet, nil)
+	s.Forbidden()
+
+	// X-Parish-Id for member parish -> 200
+	s.SetHeader("X-Parish-Id", memberParish.ID.String())
+	s.Request("/api/me", http.MethodGet, nil)
+	s.OK()
+
+	// Super-admin can switch to any active parish -> 204
+	s.Headers.Del("X-Parish-Id")
+	s.ClearCookies()
+	adminUser, adminCookie := s.loginUser("super@paroki.org", "Super Admin", "Browser/1")
+	s.Require().NoError(s.enforcer.AssignRole(ctx, authz.UserSubject(adminUser.ID), domain.RoleSuperAdmin, authz.DomainGlobal))
+	s.SetCookie(adminCookie)
+	s.Request("/api/me/session", http.MethodPatch, domain.SwitchSessionParishRequest{ActiveParishID: otherParish.ID})
 	s.NoContent()
 }

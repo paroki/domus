@@ -83,6 +83,9 @@ func (s *Service) SwitchSessionParish(ctx context.Context, p authx.Principal, pa
 	if p.SessionID == uuid.Nil {
 		return domain.ErrSessionNotFound
 	}
+	if err := s.guardParishAccess(ctx, p.UserID, parishID); err != nil {
+		return err
+	}
 	return s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
 		if err := txRepo.UpdateSessionActiveParish(ctx, p.SessionID, p.UserID, parishID); err != nil {
 			if ent.IsNotFound(err) {

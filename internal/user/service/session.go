@@ -10,6 +10,7 @@ import (
 	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/internal/platform/authx"
 	"github.com/paroki/domus/internal/platform/authz"
+	"github.com/paroki/domus/internal/platform/errx"
 	"github.com/paroki/domus/internal/user/domain"
 	"github.com/paroki/domus/internal/user/repo"
 )
@@ -37,6 +38,22 @@ func (s *Service) ResolveSession(ctx context.Context, rawToken string, headerPar
 	if u.Status == user.StatusDisabled {
 		_ = s.repo.DeleteSessionsByUserID(ctx, u.ID)
 		return authx.Principal{}, domain.ErrUserDisabled
+	}
+
+	if headerParishID != uuid.Nil {
+		isSuper, err := s.hasSuperAdminRole(u.ID)
+		if err != nil {
+			return authx.Principal{}, err
+		}
+		if !isSuper {
+			ok, err := s.repo.IsActiveParishMember(ctx, u.ID, headerParishID)
+			if err != nil {
+				return authx.Principal{}, err
+			}
+			if !ok {
+				return authx.Principal{}, errx.Forbidden("FORBIDDEN", "User is not a member of this parish.")
+			}
+		}
 	}
 
 	parishID := resolveParishID(headerParishID, sess.ActiveParishID, u.DefaultParishID)
@@ -163,6 +180,38 @@ func (s *Service) BootstrapSuperAdmin(ctx context.Context) error {
 		if err := s.enforcer.AssignRole(ctx, sub, domain.RoleUser, authz.DomainGlobal); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func (s *Service) hasSuperAdminRole(userID uuid.UUID) (bool, error) {
+	if s.enforcer == nil {
+		return false, nil
+	}
+	return s.enforcer.HasRoleInDomain(authz.UserSubject(userID), domain.RoleSuperAdmin, authz.DomainGlobal)
+}
+
+func (s *Service) guardParishAccess(ctx context.Context, userID, parishID uuid.UUID) error {
+	isSuper, err := s.hasSuperAdminRole(userID)
+	if err != nil {
+		return err
+	}
+	if isSuper {
+		ok, err := s.repo.IsActiveParish(ctx, parishID)
+		if err != nil {
+			return err
+		}
+		if !ok {
+			return errx.Forbidden("FORBIDDEN", "Parish not found or inactive.")
+		}
+		return nil
+	}
+	ok, err := s.repo.IsActiveParishMember(ctx, userID, parishID)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return errx.Forbidden("FORBIDDEN", "User is not a member of this parish.")
 	}
 	return nil
 }
