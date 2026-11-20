@@ -104,20 +104,32 @@ func (s *Service) EnsureUser(ctx context.Context, email, name, phone, provider, 
 	if strings.TrimSpace(name) == "" {
 		name = normEmail
 	}
+	normPhone, err := normalizePhone(phone)
+	if err != nil {
+		return nil, err
+	}
 	if provider == "" {
 		provider = domain.ProviderEmail
 	}
-	if subject == "" {
-		subject = normEmail
+	normSubject, err := normalizeChannelSubject(provider, subject)
+	if err != nil {
+		return nil, err
+	}
+	if normSubject == "" {
+		if provider == domain.ProviderWhatsApp && normPhone != "" {
+			normSubject = normPhone
+		} else {
+			normSubject = normEmail
+		}
 	}
 
 	var out *domain.UserResponse
-	err := s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
+	err = s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
 		u, err := txRepo.FindUserByEmail(ctx, normEmail)
 		if ent.IsNotFound(err) {
 			var phonePtr *string
-			if p := strings.TrimSpace(phone); p != "" {
-				phonePtr = &p
+			if normPhone != "" {
+				phonePtr = &normPhone
 			}
 			u, err = txRepo.CreateUser(ctx, normEmail, strings.TrimSpace(name), phonePtr)
 			if err != nil {
@@ -130,7 +142,7 @@ func (s *Service) EnsureUser(ctx context.Context, email, name, phone, provider, 
 		}
 
 		now := time.Now().UTC()
-		if _, err := txRepo.UpsertAccount(ctx, u.ID, provider, subject, &u.Email, &u.Name, u.AvatarURL, now); err != nil {
+		if _, err := txRepo.UpsertAccount(ctx, u.ID, provider, normSubject, &u.Email, &u.Name, u.AvatarURL, now); err != nil {
 			return err
 		}
 		res := toUserResponse(u)
