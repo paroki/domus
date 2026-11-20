@@ -16,6 +16,10 @@ type Tx struct {
 	CasbinRule *CasbinRuleClient
 	// Diocese is the client for interacting with the Diocese builders.
 	Diocese *DioceseClient
+	// Event is the client for interacting with the Event builders.
+	Event *EventClient
+	// EventRSVP is the client for interacting with the EventRSVP builders.
+	EventRSVP *EventRSVPClient
 	// Lookup is the client for interacting with the Lookup builders.
 	Lookup *LookupClient
 	// Meta is the client for interacting with the Meta builders.
@@ -177,6 +181,8 @@ func (tx *Tx) Client() *Client {
 func (tx *Tx) init() {
 	tx.CasbinRule = NewCasbinRuleClient(tx.config)
 	tx.Diocese = NewDioceseClient(tx.config)
+	tx.Event = NewEventClient(tx.config)
+	tx.EventRSVP = NewEventRSVPClient(tx.config)
 	tx.Lookup = NewLookupClient(tx.config)
 	tx.Meta = NewMetaClient(tx.config)
 	tx.OrgInvite = NewOrgInviteClient(tx.config)

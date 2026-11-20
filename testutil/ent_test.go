@@ -7,6 +7,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
+	"github.com/paroki/domus/ent/event"
+	"github.com/paroki/domus/ent/eventrsvp"
 	"github.com/paroki/domus/ent/meta"
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orginvite"
@@ -450,6 +452,63 @@ func TestOrgSchemas_HierarchyUniquenessAndMixins(t *testing.T) {
 		SetCode("INV-ORG-01").
 		SetExpiresAt(time.Now().Add(24 * time.Hour)).
 		SetCreatedBy(userID).
+		Save(ctx)
+	require.Error(t, err)
+	assert.True(t, ent.IsConstraintError(err))
+}
+
+func TestNewEntClient_EventAndRSVPSchemas(t *testing.T) {
+	ctx := context.Background()
+	client := testutil.NewEntClient(t)
+
+	parishID := schema.NewID()
+	orgID := schema.NewID()
+	creatorID := schema.NewID()
+	userID := schema.NewID()
+	startAt := time.Now().UTC().Add(24 * time.Hour)
+	endAt := startAt.Add(2 * time.Hour)
+
+	ev, err := client.Event.Create().
+		SetParishID(parishID).
+		SetOrgID(orgID).
+		SetCreatedBy(creatorID).
+		SetTitle("Rapat Pleno DPP").
+		SetStartAt(startAt).
+		SetEndAt(endAt).
+		Save(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, 7, int(ev.ID.Version()))
+	assert.False(t, ev.CreatedAt.IsZero())
+	assert.False(t, ev.UpdatedAt.IsZero())
+	assert.Nil(t, ev.DeletedAt)
+	assert.Equal(t, event.VisibilityPublic, ev.Visibility)
+	assert.True(t, ev.RsvpEnabled)
+	assert.Equal(t, event.StatusScheduled, ev.Status)
+
+	rsvp, err := client.EventRSVP.Create().
+		SetParishID(parishID).
+		SetEvent(ev).
+		SetUserID(userID).
+		SetStatus(eventrsvp.StatusGoing).
+		Save(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, 7, int(rsvp.ID.Version()))
+	assert.False(t, rsvp.CreatedAt.IsZero())
+	assert.False(t, rsvp.UpdatedAt.IsZero())
+	assert.Equal(t, ev.ID, rsvp.EventID)
+
+	// Query Event -> EventRSVP edge.
+	rsvps, err := ev.QueryRsvps().All(ctx)
+	require.NoError(t, err)
+	require.Len(t, rsvps, 1)
+	assert.Equal(t, rsvp.ID, rsvps[0].ID)
+
+	// (event_id, user_id) uniqueness.
+	_, err = client.EventRSVP.Create().
+		SetParishID(parishID).
+		SetEvent(ev).
+		SetUserID(userID).
+		SetStatus(eventrsvp.StatusMaybe).
 		Save(ctx)
 	require.Error(t, err)
 	assert.True(t, ent.IsConstraintError(err))

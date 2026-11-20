@@ -8,6 +8,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent/casbinrule"
 	"github.com/paroki/domus/ent/diocese"
+	"github.com/paroki/domus/ent/event"
+	"github.com/paroki/domus/ent/eventrsvp"
 	"github.com/paroki/domus/ent/lookup"
 	"github.com/paroki/domus/ent/meta"
 	"github.com/paroki/domus/ent/organization"
@@ -99,6 +101,56 @@ func init() {
 	dioceseDescID := dioceseMixinFields0[0].Descriptor()
 	// diocese.DefaultID holds the default value on creation for the id field.
 	diocese.DefaultID = dioceseDescID.Default.(func() uuid.UUID)
+	eventMixin := schema.Event{}.Mixin()
+	eventMixinFields0 := eventMixin[0].Fields()
+	_ = eventMixinFields0
+	eventMixinFields1 := eventMixin[1].Fields()
+	_ = eventMixinFields1
+	eventFields := schema.Event{}.Fields()
+	_ = eventFields
+	// eventDescCreatedAt is the schema descriptor for created_at field.
+	eventDescCreatedAt := eventMixinFields1[0].Descriptor()
+	// event.DefaultCreatedAt holds the default value on creation for the created_at field.
+	event.DefaultCreatedAt = eventDescCreatedAt.Default.(func() time.Time)
+	// eventDescUpdatedAt is the schema descriptor for updated_at field.
+	eventDescUpdatedAt := eventMixinFields1[1].Descriptor()
+	// event.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	event.DefaultUpdatedAt = eventDescUpdatedAt.Default.(func() time.Time)
+	// event.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	event.UpdateDefaultUpdatedAt = eventDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// eventDescTitle is the schema descriptor for title field.
+	eventDescTitle := eventFields[3].Descriptor()
+	// event.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	event.TitleValidator = eventDescTitle.Validators[0].(func(string) error)
+	// eventDescRsvpEnabled is the schema descriptor for rsvp_enabled field.
+	eventDescRsvpEnabled := eventFields[9].Descriptor()
+	// event.DefaultRsvpEnabled holds the default value on creation for the rsvp_enabled field.
+	event.DefaultRsvpEnabled = eventDescRsvpEnabled.Default.(bool)
+	// eventDescID is the schema descriptor for id field.
+	eventDescID := eventMixinFields0[0].Descriptor()
+	// event.DefaultID holds the default value on creation for the id field.
+	event.DefaultID = eventDescID.Default.(func() uuid.UUID)
+	eventrsvpMixin := schema.EventRSVP{}.Mixin()
+	eventrsvpMixinFields0 := eventrsvpMixin[0].Fields()
+	_ = eventrsvpMixinFields0
+	eventrsvpMixinFields1 := eventrsvpMixin[1].Fields()
+	_ = eventrsvpMixinFields1
+	eventrsvpFields := schema.EventRSVP{}.Fields()
+	_ = eventrsvpFields
+	// eventrsvpDescCreatedAt is the schema descriptor for created_at field.
+	eventrsvpDescCreatedAt := eventrsvpMixinFields1[0].Descriptor()
+	// eventrsvp.DefaultCreatedAt holds the default value on creation for the created_at field.
+	eventrsvp.DefaultCreatedAt = eventrsvpDescCreatedAt.Default.(func() time.Time)
+	// eventrsvpDescUpdatedAt is the schema descriptor for updated_at field.
+	eventrsvpDescUpdatedAt := eventrsvpMixinFields1[1].Descriptor()
+	// eventrsvp.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	eventrsvp.DefaultUpdatedAt = eventrsvpDescUpdatedAt.Default.(func() time.Time)
+	// eventrsvp.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	eventrsvp.UpdateDefaultUpdatedAt = eventrsvpDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// eventrsvpDescID is the schema descriptor for id field.
+	eventrsvpDescID := eventrsvpMixinFields0[0].Descriptor()
+	// eventrsvp.DefaultID holds the default value on creation for the id field.
+	eventrsvp.DefaultID = eventrsvpDescID.Default.(func() uuid.UUID)
 	lookupMixin := schema.Lookup{}.Mixin()
 	lookupMixinFields0 := lookupMixin[0].Fields()
 	_ = lookupMixinFields0

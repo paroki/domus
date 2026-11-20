@@ -14,6 +14,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/paroki/domus/ent/casbinrule"
 	"github.com/paroki/domus/ent/diocese"
+	"github.com/paroki/domus/ent/event"
+	"github.com/paroki/domus/ent/eventrsvp"
 	"github.com/paroki/domus/ent/lookup"
 	"github.com/paroki/domus/ent/meta"
 	"github.com/paroki/domus/ent/organization"
@@ -90,6 +92,8 @@ func checkColumn(t, c string) error {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			casbinrule.Table:   casbinrule.ValidColumn,
 			diocese.Table:      diocese.ValidColumn,
+			event.Table:        event.ValidColumn,
+			eventrsvp.Table:    eventrsvp.ValidColumn,
 			lookup.Table:       lookup.ValidColumn,
 			meta.Table:         meta.ValidColumn,
 			orginvite.Table:    orginvite.ValidColumn,

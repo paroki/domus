@@ -808,3 +808,42 @@ func (s *OrgFeatureSuite) TestIssue94_ReactivationInactiveMemberCycleMaxUsesAndO
 	s.Require().NotNil(sess.User.Phone)
 	s.Equal("+6281234567890", *sess.User.Phone)
 }
+
+func (s *OrgFeatureSuite) TestDeleteOrganization_InUseWithEvent() {
+	parishID, _, _, _, parishAdminID := s.seedParishWithAdmin("padmin@paroki.org")
+	s.SetHeader("X-Parish-Id", parishID.String())
+
+	s.Request("/api/orgs", http.MethodPost, domain.CreateOrganizationRequest{
+		Kind: "section",
+		Code: "sek-evt",
+		Name: "Seksi Acara",
+	})
+	s.Created()
+	orgRow := testutil.DecodeAs[domain.OrganizationResponse](s).Data
+
+	ctx := context.Background()
+	startAt := time.Now().UTC().Add(24 * time.Hour)
+	ev, err := s.client.Event.Create().
+		SetParishID(parishID).
+		SetOrgID(orgRow.ID).
+		SetCreatedBy(parishAdminID).
+		SetTitle("Rapat Persiapan").
+		SetStartAt(startAt).
+		SetEndAt(startAt.Add(time.Hour)).
+		Save(ctx)
+	s.Require().NoError(err)
+
+	// Active Event blocks organization deletion with 409 ORG_IN_USE.
+	s.Request(fmt.Sprintf("/api/orgs/%s", orgRow.ID), http.MethodDelete, nil)
+	s.Conflict()
+	s.Equal("ORG_IN_USE", s.GetErrorResponse().Error.Code)
+
+	// Soft-deleted Event does not block organization deletion.
+	err = s.client.Event.UpdateOneID(ev.ID).
+		SetDeletedAt(time.Now().UTC()).
+		Exec(ctx)
+	s.Require().NoError(err)
+
+	s.Request(fmt.Sprintf("/api/orgs/%s", orgRow.ID), http.MethodDelete, nil)
+	s.NoContent()
+}

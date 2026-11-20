@@ -33,6 +33,30 @@ func (f DioceseFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, err
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.DioceseMutation", m)
 }
 
+// The EventFunc type is an adapter to allow the use of ordinary
+// function as Event mutator.
+type EventFunc func(context.Context, *ent.EventMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f EventFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.EventMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EventMutation", m)
+}
+
+// The EventRSVPFunc type is an adapter to allow the use of ordinary
+// function as EventRSVP mutator.
+type EventRSVPFunc func(context.Context, *ent.EventRSVPMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f EventRSVPFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.EventRSVPMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EventRSVPMutation", m)
+}
+
 // The LookupFunc type is an adapter to allow the use of ordinary
 // function as Lookup mutator.
 type LookupFunc func(context.Context, *ent.LookupMutation) (ent.Value, error)

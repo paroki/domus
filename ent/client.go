@@ -18,6 +18,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/paroki/domus/ent/casbinrule"
 	"github.com/paroki/domus/ent/diocese"
+	"github.com/paroki/domus/ent/event"
+	"github.com/paroki/domus/ent/eventrsvp"
 	"github.com/paroki/domus/ent/lookup"
 	"github.com/paroki/domus/ent/meta"
 	"github.com/paroki/domus/ent/organization"
@@ -43,6 +45,10 @@ type Client struct {
 	CasbinRule *CasbinRuleClient
 	// Diocese is the client for interacting with the Diocese builders.
 	Diocese *DioceseClient
+	// Event is the client for interacting with the Event builders.
+	Event *EventClient
+	// EventRSVP is the client for interacting with the EventRSVP builders.
+	EventRSVP *EventRSVPClient
 	// Lookup is the client for interacting with the Lookup builders.
 	Lookup *LookupClient
 	// Meta is the client for interacting with the Meta builders.
@@ -84,6 +90,8 @@ func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.CasbinRule = NewCasbinRuleClient(c.config)
 	c.Diocese = NewDioceseClient(c.config)
+	c.Event = NewEventClient(c.config)
+	c.EventRSVP = NewEventRSVPClient(c.config)
 	c.Lookup = NewLookupClient(c.config)
 	c.Meta = NewMetaClient(c.config)
 	c.OrgInvite = NewOrgInviteClient(c.config)
@@ -192,6 +200,8 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		config:       cfg,
 		CasbinRule:   NewCasbinRuleClient(cfg),
 		Diocese:      NewDioceseClient(cfg),
+		Event:        NewEventClient(cfg),
+		EventRSVP:    NewEventRSVPClient(cfg),
 		Lookup:       NewLookupClient(cfg),
 		Meta:         NewMetaClient(cfg),
 		OrgInvite:    NewOrgInviteClient(cfg),
@@ -227,6 +237,8 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		config:       cfg,
 		CasbinRule:   NewCasbinRuleClient(cfg),
 		Diocese:      NewDioceseClient(cfg),
+		Event:        NewEventClient(cfg),
+		EventRSVP:    NewEventRSVPClient(cfg),
 		Lookup:       NewLookupClient(cfg),
 		Meta:         NewMetaClient(cfg),
 		OrgInvite:    NewOrgInviteClient(cfg),
@@ -270,9 +282,9 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.CasbinRule, c.Diocese, c.Lookup, c.Meta, c.OrgInvite, c.OrgMember,
-		c.Organization, c.Parish, c.ParishMember, c.Period, c.User, c.UserAccount,
-		c.UserOTP, c.UserSession, c.Ward, c.Zone,
+		c.CasbinRule, c.Diocese, c.Event, c.EventRSVP, c.Lookup, c.Meta, c.OrgInvite,
+		c.OrgMember, c.Organization, c.Parish, c.ParishMember, c.Period, c.User,
+		c.UserAccount, c.UserOTP, c.UserSession, c.Ward, c.Zone,
 	} {
 		n.Use(hooks...)
 	}
@@ -282,9 +294,9 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.CasbinRule, c.Diocese, c.Lookup, c.Meta, c.OrgInvite, c.OrgMember,
-		c.Organization, c.Parish, c.ParishMember, c.Period, c.User, c.UserAccount,
-		c.UserOTP, c.UserSession, c.Ward, c.Zone,
+		c.CasbinRule, c.Diocese, c.Event, c.EventRSVP, c.Lookup, c.Meta, c.OrgInvite,
+		c.OrgMember, c.Organization, c.Parish, c.ParishMember, c.Period, c.User,
+		c.UserAccount, c.UserOTP, c.UserSession, c.Ward, c.Zone,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -297,6 +309,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.CasbinRule.mutate(ctx, m)
 	case *DioceseMutation:
 		return c.Diocese.mutate(ctx, m)
+	case *EventMutation:
+		return c.Event.mutate(ctx, m)
+	case *EventRSVPMutation:
+		return c.EventRSVP.mutate(ctx, m)
 	case *LookupMutation:
 		return c.Lookup.mutate(ctx, m)
 	case *MetaMutation:
@@ -609,6 +625,304 @@ func (c *DioceseClient) mutate(ctx context.Context, m *DioceseMutation) (Value, 
 		return (&DioceseDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Diocese mutation op: %q", m.Op())
+	}
+}
+
+// EventClient is a client for the Event schema.
+type EventClient struct {
+	config
+}
+
+// NewEventClient returns a client for the Event from the given config.
+func NewEventClient(c config) *EventClient {
+	return &EventClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `event.Hooks(f(g(h())))`.
+func (c *EventClient) Use(hooks ...Hook) {
+	c.hooks.Event = append(c.hooks.Event, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `event.Intercept(f(g(h())))`.
+func (c *EventClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Event = append(c.inters.Event, interceptors...)
+}
+
+// Create returns a builder for creating a Event entity.
+func (c *EventClient) Create() *EventCreate {
+	mutation := newEventMutation(c.config, OpCreate)
+	return &EventCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Event entities.
+func (c *EventClient) CreateBulk(builders ...*EventCreate) *EventCreateBulk {
+	return &EventCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *EventClient) MapCreateBulk(slice any, setFunc func(*EventCreate, int)) *EventCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &EventCreateBulk{err: fmt.Errorf("calling to EventClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*EventCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &EventCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Event.
+func (c *EventClient) Update() *EventUpdate {
+	mutation := newEventMutation(c.config, OpUpdate)
+	return &EventUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *EventClient) UpdateOne(_m *Event) *EventUpdateOne {
+	mutation := newEventMutation(c.config, OpUpdateOne, withEvent(_m))
+	return &EventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *EventClient) UpdateOneID(id uuid.UUID) *EventUpdateOne {
+	mutation := newEventMutation(c.config, OpUpdateOne, withEventID(id))
+	return &EventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Event.
+func (c *EventClient) Delete() *EventDelete {
+	mutation := newEventMutation(c.config, OpDelete)
+	return &EventDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *EventClient) DeleteOne(_m *Event) *EventDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *EventClient) DeleteOneID(id uuid.UUID) *EventDeleteOne {
+	builder := c.Delete().Where(event.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &EventDeleteOne{builder}
+}
+
+// Query returns a query builder for Event.
+func (c *EventClient) Query() *EventQuery {
+	return &EventQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeEvent},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Event entity by its id.
+func (c *EventClient) Get(ctx context.Context, id uuid.UUID) (*Event, error) {
+	return c.Query().Where(event.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *EventClient) GetX(ctx context.Context, id uuid.UUID) *Event {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryRsvps queries the rsvps edge of a Event.
+func (c *EventClient) QueryRsvps(_m *Event) *EventRSVPQuery {
+	query := (&EventRSVPClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(event.Table, event.FieldID, id),
+			sqlgraph.To(eventrsvp.Table, eventrsvp.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, event.RsvpsTable, event.RsvpsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *EventClient) Hooks() []Hook {
+	return c.hooks.Event
+}
+
+// Interceptors returns the client interceptors.
+func (c *EventClient) Interceptors() []Interceptor {
+	return c.inters.Event
+}
+
+func (c *EventClient) mutate(ctx context.Context, m *EventMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&EventCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&EventUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&EventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&EventDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Event mutation op: %q", m.Op())
+	}
+}
+
+// EventRSVPClient is a client for the EventRSVP schema.
+type EventRSVPClient struct {
+	config
+}
+
+// NewEventRSVPClient returns a client for the EventRSVP from the given config.
+func NewEventRSVPClient(c config) *EventRSVPClient {
+	return &EventRSVPClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `eventrsvp.Hooks(f(g(h())))`.
+func (c *EventRSVPClient) Use(hooks ...Hook) {
+	c.hooks.EventRSVP = append(c.hooks.EventRSVP, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `eventrsvp.Intercept(f(g(h())))`.
+func (c *EventRSVPClient) Intercept(interceptors ...Interceptor) {
+	c.inters.EventRSVP = append(c.inters.EventRSVP, interceptors...)
+}
+
+// Create returns a builder for creating a EventRSVP entity.
+func (c *EventRSVPClient) Create() *EventRSVPCreate {
+	mutation := newEventRSVPMutation(c.config, OpCreate)
+	return &EventRSVPCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of EventRSVP entities.
+func (c *EventRSVPClient) CreateBulk(builders ...*EventRSVPCreate) *EventRSVPCreateBulk {
+	return &EventRSVPCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *EventRSVPClient) MapCreateBulk(slice any, setFunc func(*EventRSVPCreate, int)) *EventRSVPCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &EventRSVPCreateBulk{err: fmt.Errorf("calling to EventRSVPClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*EventRSVPCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &EventRSVPCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for EventRSVP.
+func (c *EventRSVPClient) Update() *EventRSVPUpdate {
+	mutation := newEventRSVPMutation(c.config, OpUpdate)
+	return &EventRSVPUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *EventRSVPClient) UpdateOne(_m *EventRSVP) *EventRSVPUpdateOne {
+	mutation := newEventRSVPMutation(c.config, OpUpdateOne, withEventRSVP(_m))
+	return &EventRSVPUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *EventRSVPClient) UpdateOneID(id uuid.UUID) *EventRSVPUpdateOne {
+	mutation := newEventRSVPMutation(c.config, OpUpdateOne, withEventRSVPID(id))
+	return &EventRSVPUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for EventRSVP.
+func (c *EventRSVPClient) Delete() *EventRSVPDelete {
+	mutation := newEventRSVPMutation(c.config, OpDelete)
+	return &EventRSVPDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *EventRSVPClient) DeleteOne(_m *EventRSVP) *EventRSVPDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *EventRSVPClient) DeleteOneID(id uuid.UUID) *EventRSVPDeleteOne {
+	builder := c.Delete().Where(eventrsvp.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &EventRSVPDeleteOne{builder}
+}
+
+// Query returns a query builder for EventRSVP.
+func (c *EventRSVPClient) Query() *EventRSVPQuery {
+	return &EventRSVPQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeEventRSVP},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a EventRSVP entity by its id.
+func (c *EventRSVPClient) Get(ctx context.Context, id uuid.UUID) (*EventRSVP, error) {
+	return c.Query().Where(eventrsvp.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *EventRSVPClient) GetX(ctx context.Context, id uuid.UUID) *EventRSVP {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryEvent queries the event edge of a EventRSVP.
+func (c *EventRSVPClient) QueryEvent(_m *EventRSVP) *EventQuery {
+	query := (&EventClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(eventrsvp.Table, eventrsvp.FieldID, id),
+			sqlgraph.To(event.Table, event.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, eventrsvp.EventTable, eventrsvp.EventColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *EventRSVPClient) Hooks() []Hook {
+	return c.hooks.EventRSVP
+}
+
+// Interceptors returns the client interceptors.
+func (c *EventRSVPClient) Interceptors() []Interceptor {
+	return c.inters.EventRSVP
+}
+
+func (c *EventRSVPClient) mutate(ctx context.Context, m *EventRSVPMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&EventRSVPCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&EventRSVPUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&EventRSVPUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&EventRSVPDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown EventRSVP mutation op: %q", m.Op())
 	}
 }
 
@@ -2845,13 +3159,13 @@ func (c *ZoneClient) mutate(ctx context.Context, m *ZoneMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		CasbinRule, Diocese, Lookup, Meta, OrgInvite, OrgMember, Organization, Parish,
-		ParishMember, Period, User, UserAccount, UserOTP, UserSession, Ward,
-		Zone []ent.Hook
+		CasbinRule, Diocese, Event, EventRSVP, Lookup, Meta, OrgInvite, OrgMember,
+		Organization, Parish, ParishMember, Period, User, UserAccount, UserOTP,
+		UserSession, Ward, Zone []ent.Hook
 	}
 	inters struct {
-		CasbinRule, Diocese, Lookup, Meta, OrgInvite, OrgMember, Organization, Parish,
-		ParishMember, Period, User, UserAccount, UserOTP, UserSession, Ward,
-		Zone []ent.Interceptor
+		CasbinRule, Diocese, Event, EventRSVP, Lookup, Meta, OrgInvite, OrgMember,
+		Organization, Parish, ParishMember, Period, User, UserAccount, UserOTP,
+		UserSession, Ward, Zone []ent.Interceptor
 	}
 )

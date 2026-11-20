@@ -66,6 +66,95 @@ var (
 			},
 		},
 	}
+	// EventsColumns holds the columns for the "events" table.
+	EventsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "parish_id", Type: field.TypeUUID},
+		{Name: "org_id", Type: field.TypeUUID},
+		{Name: "created_by", Type: field.TypeUUID},
+		{Name: "title", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "location", Type: field.TypeString, Nullable: true},
+		{Name: "start_at", Type: field.TypeTime},
+		{Name: "end_at", Type: field.TypeTime},
+		{Name: "visibility", Type: field.TypeEnum, Enums: []string{"public", "private"}, Default: "public"},
+		{Name: "rsvp_enabled", Type: field.TypeBool, Default: true},
+		{Name: "rsvp_deadline", Type: field.TypeTime, Nullable: true},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"scheduled", "cancelled"}, Default: "scheduled"},
+	}
+	// EventsTable holds the schema information for the "events" table.
+	EventsTable = &schema.Table{
+		Name:       "events",
+		Columns:    EventsColumns,
+		PrimaryKey: []*schema.Column{EventsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "event_parish_id_start_at",
+				Unique:  false,
+				Columns: []*schema.Column{EventsColumns[4], EventsColumns[10]},
+			},
+			{
+				Name:    "event_parish_id_org_id_start_at",
+				Unique:  false,
+				Columns: []*schema.Column{EventsColumns[4], EventsColumns[5], EventsColumns[10]},
+			},
+			{
+				Name:    "event_parish_id_visibility_status_start_at",
+				Unique:  false,
+				Columns: []*schema.Column{EventsColumns[4], EventsColumns[12], EventsColumns[15], EventsColumns[10]},
+			},
+			{
+				Name:    "event_org_id",
+				Unique:  false,
+				Columns: []*schema.Column{EventsColumns[5]},
+			},
+		},
+	}
+	// EventRsvpsColumns holds the columns for the "event_rsvps" table.
+	EventRsvpsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "parish_id", Type: field.TypeUUID},
+		{Name: "user_id", Type: field.TypeUUID},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"going", "maybe", "not_going"}},
+		{Name: "note", Type: field.TypeString, Nullable: true},
+		{Name: "event_id", Type: field.TypeUUID},
+	}
+	// EventRsvpsTable holds the schema information for the "event_rsvps" table.
+	EventRsvpsTable = &schema.Table{
+		Name:       "event_rsvps",
+		Columns:    EventRsvpsColumns,
+		PrimaryKey: []*schema.Column{EventRsvpsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "event_rsvps_events_rsvps",
+				Columns:    []*schema.Column{EventRsvpsColumns[7]},
+				RefColumns: []*schema.Column{EventsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "eventrsvp_event_id_user_id",
+				Unique:  true,
+				Columns: []*schema.Column{EventRsvpsColumns[7], EventRsvpsColumns[4]},
+			},
+			{
+				Name:    "eventrsvp_event_id_status_updated_at",
+				Unique:  false,
+				Columns: []*schema.Column{EventRsvpsColumns[7], EventRsvpsColumns[5], EventRsvpsColumns[2]},
+			},
+			{
+				Name:    "eventrsvp_parish_id_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{EventRsvpsColumns[3], EventRsvpsColumns[4]},
+			},
+		},
+	}
 	// LookupsColumns holds the columns for the "lookups" table.
 	LookupsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -629,6 +718,8 @@ var (
 	Tables = []*schema.Table{
 		CasbinRulesTable,
 		DiocesesTable,
+		EventsTable,
+		EventRsvpsTable,
 		LookupsTable,
 		MetaTable,
 		OrgInvitesTable,
@@ -647,6 +738,10 @@ var (
 )
 
 func init() {
+	EventRsvpsTable.ForeignKeys[0].RefTable = EventsTable
+	EventRsvpsTable.Annotation = &entsql.Annotation{
+		Table: "event_rsvps",
+	}
 	LookupsTable.ForeignKeys[0].RefTable = ParishesTable
 	OrgInvitesTable.ForeignKeys[0].RefTable = OrganizationsTable
 	OrgMembersTable.ForeignKeys[0].RefTable = OrganizationsTable

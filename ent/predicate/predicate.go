@@ -12,6 +12,12 @@ type CasbinRule func(*sql.Selector)
 // Diocese is the predicate function for diocese builders.
 type Diocese func(*sql.Selector)
 
+// Event is the predicate function for event builders.
+type Event func(*sql.Selector)
+
+// EventRSVP is the predicate function for eventrsvp builders.
+type EventRSVP func(*sql.Selector)
+
 // Lookup is the predicate function for lookup builders.
 type Lookup func(*sql.Selector)
 

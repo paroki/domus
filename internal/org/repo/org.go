@@ -7,6 +7,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
+	"github.com/paroki/domus/ent/event"
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orgmember"
 )
@@ -170,6 +171,13 @@ func (r *Repository) SoftDeleteOrg(ctx context.Context, id uuid.UUID, at time.Ti
 func (r *Repository) HasChildOrgs(ctx context.Context, orgID uuid.UUID) (bool, error) {
 	return r.client.Organization.Query().
 		Where(organization.ParentIDEQ(orgID), organization.DeletedAtIsNil()).
+		Exist(ctx)
+}
+
+// HasOrgEvents reports whether any non-deleted Event belongs to orgID.
+func (r *Repository) HasOrgEvents(ctx context.Context, orgID uuid.UUID) (bool, error) {
+	return r.client.Event.Query().
+		Where(event.OrgIDEQ(orgID), event.DeletedAtIsNil()).
 		Exist(ctx)
 }
 

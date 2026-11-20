@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
+	"github.com/paroki/domus/ent/event"
 	"github.com/paroki/domus/ent/lookup"
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/parish"
@@ -181,7 +182,7 @@ func (r *Repository) SoftDeleteParish(ctx context.Context, id uuid.UUID, at time
 		Exec(ctx)
 }
 
-// HasParishChildren reports whether any non-deleted Zone, Ward, Lookup, or Period belongs to parishID.
+// HasParishChildren reports whether any non-deleted Zone, Ward, Lookup, Organization, Event, or Period belongs to parishID.
 func (r *Repository) HasParishChildren(ctx context.Context, parishID uuid.UUID) (bool, error) {
 	if has, err := r.client.Zone.Query().Where(zone.ParishIDEQ(parishID), zone.DeletedAtIsNil()).Exist(ctx); err != nil || has {
 		return has, err
@@ -193,6 +194,9 @@ func (r *Repository) HasParishChildren(ctx context.Context, parishID uuid.UUID) 
 		return has, err
 	}
 	if has, err := r.client.Organization.Query().Where(organization.ParishIDEQ(parishID), organization.DeletedAtIsNil()).Exist(ctx); err != nil || has {
+		return has, err
+	}
+	if has, err := r.client.Event.Query().Where(event.ParishIDEQ(parishID), event.DeletedAtIsNil()).Exist(ctx); err != nil || has {
 		return has, err
 	}
 	return r.client.Period.Query().Where(period.ParishIDEQ(parishID), period.DeletedAtIsNil()).Exist(ctx)

@@ -324,7 +324,7 @@ func (s *Service) UpdateOrganization(ctx context.Context, p authx.Principal, id 
 	return toOrgResponse(updated, myRole), nil
 }
 
-// DeleteOrganization soft-deletes an Organization if it has no non-deleted child organizations.
+// DeleteOrganization soft-deletes an Organization if it has no non-deleted child organizations or events.
 func (s *Service) DeleteOrganization(ctx context.Context, p authx.Principal, id uuid.UUID) error {
 	isParishAdm, err := s.isParishAdmin(p, p.ParishID)
 	if err != nil {
@@ -343,6 +343,12 @@ func (s *Service) DeleteOrganization(ctx context.Context, p authx.Principal, id 
 	inUse, err := s.repo.HasChildOrgs(ctx, id)
 	if err != nil {
 		return err
+	}
+	if !inUse {
+		inUse, err = s.repo.HasOrgEvents(ctx, id)
+		if err != nil {
+			return err
+		}
 	}
 	if inUse {
 		return domain.ErrInUse
