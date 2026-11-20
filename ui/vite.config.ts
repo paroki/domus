@@ -23,7 +23,7 @@ export default defineConfig({
   resolve: {
     tsconfigPaths: true,
   },
-  // ponytail: targets default backend port 8080; read process.env.API_TARGET when multi-port dev setups needed.
+  // ponytail: targets default backend port 8080; read process.env.VITE_API_TARGET when multi-port dev setups needed.
   server: {
     host: true,
     allowedHosts: ["dev.itstoni.com"],
