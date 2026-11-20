@@ -15,6 +15,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/requestid"
+	"github.com/paroki/domus/internal/platform/errx"
 	"github.com/paroki/domus/internal/platform/httpx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -260,4 +261,48 @@ func TestValidationAndFiberAndUnknownErrors(t *testing.T) {
 	assert.Equal(t, http.StatusTeapot, resp.StatusCode)
 	require.NoError(t, json.NewDecoder(resp.Body).Decode(&env))
 	assert.Equal(t, "TEAPOT", env.Error.Code)
+}
+
+func TestErrorHandler_Errx(t *testing.T) {
+	app := fiber.New(fiber.Config{
+		ErrorHandler: httpx.ErrorHandler(slog.New(slog.DiscardHandler)),
+	})
+	app.Get("/not-found", func(c fiber.Ctx) error {
+		return errx.NotFound("USER_NOT_FOUND", "User not found.")
+	})
+	app.Get("/validation", func(c fiber.Ctx) error {
+		return errx.ValidationError(errx.FieldError{
+			Field:   "phone",
+			Code:    "INVALID_PHONE",
+			Message: "Phone must be E.164.",
+		})
+	})
+	app.Get("/internal", func(c fiber.Ctx) error {
+		return errx.Internal("DB_FAILURE", "secret sql error", errors.New("sql: conn refused"))
+	})
+
+	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/not-found", nil))
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+	var env httpx.Envelope[any]
+	require.NoError(t, json.NewDecoder(resp.Body).Decode(&env))
+	require.NotNil(t, env.Error)
+	assert.Equal(t, "USER_NOT_FOUND", env.Error.Code)
+	assert.Equal(t, "User not found.", env.Error.Message)
+
+	resp, err = app.Test(httptest.NewRequest(http.MethodGet, "/validation", nil))
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusUnprocessableEntity, resp.StatusCode)
+	require.NoError(t, json.NewDecoder(resp.Body).Decode(&env))
+	require.NotNil(t, env.Error)
+	assert.Equal(t, "VALIDATION_ERROR", env.Error.Code)
+	require.Len(t, env.Error.Details, 1)
+	assert.Equal(t, "phone", env.Error.Details[0].Field)
+	assert.Equal(t, "INVALID_PHONE", env.Error.Details[0].Code)
+
+	resp, err = app.Test(httptest.NewRequest(http.MethodGet, "/internal", nil))
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+	raw, _ := io.ReadAll(resp.Body)
+	assert.False(t, strings.Contains(string(raw), "secret sql error"))
 }
