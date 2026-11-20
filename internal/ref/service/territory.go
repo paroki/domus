@@ -168,7 +168,7 @@ func (s *Service) UpdateZone(ctx context.Context, parishID, zoneID uuid.UUID, re
 	return toZoneResponse(updated), nil
 }
 
-// DeleteZone soft-deletes a Zone if no non-deleted Wards reference it.
+// DeleteZone soft-deletes a Zone if no non-deleted Wards or Organizations reference it.
 func (s *Service) DeleteZone(ctx context.Context, parishID, zoneID uuid.UUID) error {
 	if _, err := s.repo.FindZoneInParish(ctx, parishID, zoneID); ent.IsNotFound(err) {
 		return domain.ErrZoneNotFound
@@ -178,6 +178,12 @@ func (s *Service) DeleteZone(ctx context.Context, parishID, zoneID uuid.UUID) er
 	inUse, err := s.repo.HasWardsByZone(ctx, parishID, zoneID)
 	if err != nil {
 		return err
+	}
+	if !inUse {
+		inUse, err = s.repo.HasOrganizationsByZone(ctx, parishID, zoneID)
+		if err != nil {
+			return err
+		}
 	}
 	if inUse {
 		return domain.ErrInUse
@@ -348,12 +354,19 @@ func (s *Service) UpdateWard(ctx context.Context, parishID, wardID uuid.UUID, re
 	return toWardResponse(updated), nil
 }
 
-// DeleteWard soft-deletes a Ward in parishID.
+// DeleteWard soft-deletes a Ward in parishID if no non-deleted Organizations reference it.
 func (s *Service) DeleteWard(ctx context.Context, parishID, wardID uuid.UUID) error {
 	if _, err := s.repo.FindWardInParish(ctx, parishID, wardID); ent.IsNotFound(err) {
 		return domain.ErrWardNotFound
 	} else if err != nil {
 		return err
+	}
+	inUse, err := s.repo.HasOrganizationsByWard(ctx, parishID, wardID)
+	if err != nil {
+		return err
+	}
+	if inUse {
+		return domain.ErrInUse
 	}
 	return s.repo.SoftDeleteWard(ctx, wardID, time.Now().UTC())
 }

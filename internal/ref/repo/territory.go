@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
+	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/ward"
 	"github.com/paroki/domus/ent/zone"
 )
@@ -144,6 +145,20 @@ func (r *Repository) SoftDeleteZone(ctx context.Context, id uuid.UUID, at time.T
 func (r *Repository) HasWardsByZone(ctx context.Context, parishID, zoneID uuid.UUID) (bool, error) {
 	return r.client.Ward.Query().
 		Where(ward.ParishIDEQ(parishID), ward.ZoneIDEQ(zoneID), ward.DeletedAtIsNil()).
+		Exist(ctx)
+}
+
+// HasOrganizationsByZone reports whether any non-deleted Organization references zoneID in parishID.
+func (r *Repository) HasOrganizationsByZone(ctx context.Context, parishID, zoneID uuid.UUID) (bool, error) {
+	return r.client.Organization.Query().
+		Where(organization.ParishIDEQ(parishID), organization.ZoneIDEQ(zoneID), organization.DeletedAtIsNil()).
+		Exist(ctx)
+}
+
+// HasOrganizationsByWard reports whether any non-deleted Organization references wardID in parishID.
+func (r *Repository) HasOrganizationsByWard(ctx context.Context, parishID, wardID uuid.UUID) (bool, error) {
+	return r.client.Organization.Query().
+		Where(organization.ParishIDEQ(parishID), organization.WardIDEQ(wardID), organization.DeletedAtIsNil()).
 		Exist(ctx)
 }
 

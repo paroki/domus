@@ -265,6 +265,138 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/orgs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create organization
+     * @description Creates an organization (or reactivates a soft-deleted one) in the active parish (requires ref:parish-admin).
+     */
+    post: operations["createOrganization"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/orgs/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Search organizations
+     * @description Searches organizations within the active parish with optional filters and cursor pagination.
+     */
+    post: operations["searchOrganizations"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/orgs/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get organization
+     * @description Returns a single non-deleted organization in the active parish.
+     */
+    get: operations["getOrganization"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete organization
+     * @description Soft-deletes an organization if it has no active child organizations (requires ref:parish-admin).
+     */
+    delete: operations["deleteOrganization"];
+    options?: never;
+    head?: never;
+    /**
+     * Update organization
+     * @description Updates an organization in the active parish (requires org:admin or ref:parish-admin).
+     */
+    patch: operations["updateOrganization"];
+    trace?: never;
+  };
+  "/orgs/{id}/members": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Add organization member
+     * @description Adds a member to an organization with optional user onboarding (requires org:admin, or ref:parish-admin appointing admin).
+     */
+    post: operations["addOrgMember"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/orgs/{id}/members/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Search organization members
+     * @description Searches members of an organization (requires org:admin or org:member).
+     */
+    post: operations["searchOrgMembers"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/orgs/{id}/members/{userId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Remove organization member
+     * @description Removes a member from an organization (org:admin or self-leave) while guarding the last active admin.
+     */
+    delete: operations["removeOrgMember"];
+    options?: never;
+    head?: never;
+    /**
+     * Update organization member
+     * @description Updates an organization member and syncs Casbin roles while guarding the last active admin.
+     */
+    patch: operations["updateOrgMember"];
+    trace?: never;
+  };
   "/ref/dioceses": {
     parameters: {
       query?: never;
@@ -836,6 +968,20 @@ export interface components {
     "app.healthStatus": {
       status?: string;
     };
+    "domain.AddOrgMemberRequest": {
+      email?: string;
+      endDate?: string;
+      name?: string;
+      periodId?: string;
+      phone?: string;
+      position?: string;
+      /** @enum {string} */
+      role?: "admin" | "member";
+      startDate?: string;
+      /** @enum {string} */
+      status?: "active" | "inactive";
+      userId?: string;
+    };
     "domain.AddParishMemberRequest": {
       email?: string;
       name?: string;
@@ -881,6 +1027,27 @@ export interface components {
       global?: boolean;
       label: string;
       sortOrder?: number;
+    };
+    "domain.CreateOrganizationRequest": {
+      active?: boolean;
+      code: string;
+      description?: string;
+      initialAdminEmail?: string;
+      initialAdminName?: string;
+      initialAdminUserId?: string;
+      /** @enum {string} */
+      kind?:
+        | "dpp"
+        | "bgkp"
+        | "section"
+        | "categorical"
+        | "zone"
+        | "ward"
+        | "community";
+      name: string;
+      parentId?: string;
+      wardId?: string;
+      zoneId?: string;
     };
     "domain.CreateParishRequest": {
       active?: boolean;
@@ -953,6 +1120,59 @@ export interface components {
       category?: string;
       /** @enum {string} */
       scope?: "all" | "global" | "parish";
+    };
+    "domain.OrgMemberResponse": {
+      createdAt?: string;
+      email?: string;
+      endDate?: string;
+      id?: string;
+      name?: string;
+      orgId?: string;
+      parishId?: string;
+      periodId?: string;
+      phone?: string;
+      position?: string;
+      role?: string;
+      startDate?: string;
+      status?: string;
+      updatedAt?: string;
+      userId?: string;
+    };
+    "domain.OrgMemberSearchFilter": {
+      periodId?: string;
+      /** @enum {string} */
+      role?: "admin" | "member";
+      /** @enum {string} */
+      status?: "active" | "inactive";
+    };
+    "domain.OrganizationResponse": {
+      active?: boolean;
+      code?: string;
+      createdAt?: string;
+      description?: string;
+      id?: string;
+      kind?: string;
+      myRole?: string;
+      name?: string;
+      parentId?: string;
+      parishId?: string;
+      updatedAt?: string;
+      wardId?: string;
+      zoneId?: string;
+    };
+    "domain.OrganizationSearchFilter": {
+      active?: boolean;
+      /** @enum {string} */
+      kind?:
+        | "dpp"
+        | "bgkp"
+        | "section"
+        | "categorical"
+        | "zone"
+        | "ward"
+        | "community";
+      myOrgsOnly?: boolean;
+      parentId?: string;
     };
     "domain.ParishMemberResponse": {
       createdAt?: string;
@@ -1034,6 +1254,18 @@ export interface components {
       limit?: number;
       q?: string;
     };
+    "domain.SearchOrgMembersRequest": {
+      cursor?: string;
+      filter?: components["schemas"]["domain.OrgMemberSearchFilter"];
+      limit?: number;
+      q?: string;
+    };
+    "domain.SearchOrganizationsRequest": {
+      cursor?: string;
+      filter?: components["schemas"]["domain.OrganizationSearchFilter"];
+      limit?: number;
+      q?: string;
+    };
     "domain.SearchParishMembersRequest": {
       cursor?: string;
       filter?: components["schemas"]["domain.ParishMemberSearchFilter"];
@@ -1099,6 +1331,34 @@ export interface components {
       defaultParishId?: string;
       name?: string;
       phone?: string;
+    };
+    "domain.UpdateOrgMemberRequest": {
+      endDate?: string;
+      periodId?: string;
+      position?: string;
+      /** @enum {string} */
+      role?: "admin" | "member";
+      startDate?: string;
+      /** @enum {string} */
+      status?: "active" | "inactive";
+    };
+    "domain.UpdateOrganizationRequest": {
+      active?: boolean;
+      code?: string;
+      description?: string;
+      /** @enum {string} */
+      kind?:
+        | "dpp"
+        | "bgkp"
+        | "section"
+        | "categorical"
+        | "zone"
+        | "ward"
+        | "community";
+      name?: string;
+      parentId?: string;
+      wardId?: string;
+      zoneId?: string;
     };
     "domain.UpdateParishMemberRequest": {
       /** @enum {string} */
@@ -1253,6 +1513,16 @@ export interface components {
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
+    "httpx.Envelope-array_domain_OrgMemberResponse": {
+      data?: components["schemas"]["domain.OrgMemberResponse"][];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-array_domain_OrganizationResponse": {
+      data?: components["schemas"]["domain.OrganizationResponse"][];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
     "httpx.Envelope-array_domain_ParishMemberResponse": {
       data?: components["schemas"]["domain.ParishMemberResponse"][];
       error?: components["schemas"]["httpx.ErrorPayload"];
@@ -1310,6 +1580,16 @@ export interface components {
     };
     "httpx.Envelope-domain_LookupResponse": {
       data?: components["schemas"]["domain.LookupResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_OrgMemberResponse": {
+      data?: components["schemas"]["domain.OrgMemberResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_OrganizationResponse": {
+      data?: components["schemas"]["domain.OrganizationResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -1980,6 +2260,633 @@ export interface operations {
       };
       /** @description Not Found */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  createOrganization: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Organization creation payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.CreateOrganizationRequest"];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_OrganizationResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  searchOrganizations: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Search parameters */
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["domain.SearchOrganizationsRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_OrganizationResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  getOrganization: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Organization UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_OrganizationResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  deleteOrganization: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Organization UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  updateOrganization: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Organization UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Organization update payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UpdateOrganizationRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_OrganizationResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  addOrgMember: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Organization UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Member payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.AddOrgMemberRequest"];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_OrgMemberResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  searchOrgMembers: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Organization UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Search parameters */
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["domain.SearchOrgMembersRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_OrgMemberResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  removeOrgMember: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Organization UUID */
+        id: string;
+        /** @description User UUID */
+        userId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  updateOrgMember: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Organization UUID */
+        id: string;
+        /** @description User UUID */
+        userId: string;
+      };
+      cookie?: never;
+    };
+    /** @description Member update payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UpdateOrgMemberRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_OrgMemberResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
         headers: {
           [name: string]: unknown;
         };

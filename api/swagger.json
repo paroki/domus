@@ -9,6 +9,49 @@
                 },
                 "type": "object"
             },
+            "domain.AddOrgMemberRequest": {
+                "properties": {
+                    "email": {
+                        "type": "string"
+                    },
+                    "endDate": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "periodId": {
+                        "type": "string"
+                    },
+                    "phone": {
+                        "type": "string"
+                    },
+                    "position": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "enum": [
+                            "admin",
+                            "member"
+                        ],
+                        "type": "string"
+                    },
+                    "startDate": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "enum": [
+                            "active",
+                            "inactive"
+                        ],
+                        "type": "string"
+                    },
+                    "userId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.AddParishMemberRequest": {
                 "properties": {
                     "email": {
@@ -160,6 +203,58 @@
                     "category",
                     "code",
                     "label"
+                ],
+                "type": "object"
+            },
+            "domain.CreateOrganizationRequest": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "initialAdminEmail": {
+                        "type": "string"
+                    },
+                    "initialAdminName": {
+                        "type": "string"
+                    },
+                    "initialAdminUserId": {
+                        "type": "string"
+                    },
+                    "kind": {
+                        "enum": [
+                            "dpp",
+                            "bgkp",
+                            "section",
+                            "categorical",
+                            "zone",
+                            "ward",
+                            "community"
+                        ],
+                        "type": "string"
+                    },
+                    "name": {
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "parentId": {
+                        "type": "string"
+                    },
+                    "wardId": {
+                        "type": "string"
+                    },
+                    "zoneId": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "code",
+                    "name"
                 ],
                 "type": "object"
             },
@@ -394,6 +489,148 @@
                             "global",
                             "parish"
                         ],
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.OrgMemberResponse": {
+                "properties": {
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "endDate": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "orgId": {
+                        "type": "string"
+                    },
+                    "parishId": {
+                        "type": "string"
+                    },
+                    "periodId": {
+                        "type": "string"
+                    },
+                    "phone": {
+                        "type": "string"
+                    },
+                    "position": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "type": "string"
+                    },
+                    "startDate": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    },
+                    "userId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.OrgMemberSearchFilter": {
+                "properties": {
+                    "periodId": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "enum": [
+                            "admin",
+                            "member"
+                        ],
+                        "type": "string"
+                    },
+                    "status": {
+                        "enum": [
+                            "active",
+                            "inactive"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.OrganizationResponse": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "kind": {
+                        "type": "string"
+                    },
+                    "myRole": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "parentId": {
+                        "type": "string"
+                    },
+                    "parishId": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    },
+                    "wardId": {
+                        "type": "string"
+                    },
+                    "zoneId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.OrganizationSearchFilter": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "kind": {
+                        "enum": [
+                            "dpp",
+                            "bgkp",
+                            "section",
+                            "categorical",
+                            "zone",
+                            "ward",
+                            "community"
+                        ],
+                        "type": "string"
+                    },
+                    "myOrgsOnly": {
+                        "type": "boolean"
+                    },
+                    "parentId": {
                         "type": "string"
                     }
                 },
@@ -640,6 +877,44 @@
                 },
                 "type": "object"
             },
+            "domain.SearchOrgMembersRequest": {
+                "properties": {
+                    "cursor": {
+                        "type": "string"
+                    },
+                    "filter": {
+                        "$ref": "#/components/schemas/domain.OrgMemberSearchFilter"
+                    },
+                    "limit": {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "q": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.SearchOrganizationsRequest": {
+                "properties": {
+                    "cursor": {
+                        "type": "string"
+                    },
+                    "filter": {
+                        "$ref": "#/components/schemas/domain.OrganizationSearchFilter"
+                    },
+                    "limit": {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "q": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.SearchParishMembersRequest": {
                 "properties": {
                     "cursor": {
@@ -842,6 +1117,76 @@
                         "type": "string"
                     },
                     "phone": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.UpdateOrgMemberRequest": {
+                "properties": {
+                    "endDate": {
+                        "type": "string"
+                    },
+                    "periodId": {
+                        "type": "string"
+                    },
+                    "position": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "enum": [
+                            "admin",
+                            "member"
+                        ],
+                        "type": "string"
+                    },
+                    "startDate": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "enum": [
+                            "active",
+                            "inactive"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.UpdateOrganizationRequest": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "kind": {
+                        "enum": [
+                            "dpp",
+                            "bgkp",
+                            "section",
+                            "categorical",
+                            "zone",
+                            "ward",
+                            "community"
+                        ],
+                        "type": "string"
+                    },
+                    "name": {
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "parentId": {
+                        "type": "string"
+                    },
+                    "wardId": {
+                        "type": "string"
+                    },
+                    "zoneId": {
                         "type": "string"
                     }
                 },
@@ -1314,6 +1659,42 @@
                 },
                 "type": "object"
             },
+            "httpx.Envelope-array_domain_OrgMemberResponse": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.OrgMemberResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-array_domain_OrganizationResponse": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.OrganizationResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
             "httpx.Envelope-array_domain_ParishMemberResponse": {
                 "properties": {
                     "data": {
@@ -1504,6 +1885,34 @@
                 "properties": {
                     "data": {
                         "$ref": "#/components/schemas/domain.LookupResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_OrgMemberResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.OrgMemberResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_OrganizationResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.OrganizationResponse"
                     },
                     "error": {
                         "$ref": "#/components/schemas/httpx.ErrorPayload"
@@ -2412,6 +2821,795 @@
                 "summary": "Revoke a user session",
                 "tags": [
                     "Me"
+                ]
+            }
+        },
+        "/orgs": {
+            "post": {
+                "description": "Creates an organization (or reactivates a soft-deleted one) in the active parish (requires ref:parish-admin).",
+                "operationId": "createOrganization",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.CreateOrganizationRequest",
+                                "summary": "body",
+                                "description": "Organization creation payload"
+                            }
+                        }
+                    },
+                    "description": "Organization creation payload",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_OrganizationResponse"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Create organization",
+                "tags": [
+                    "Org"
+                ]
+            }
+        },
+        "/orgs/search": {
+            "post": {
+                "description": "Searches organizations within the active parish with optional filters and cursor pagination.",
+                "operationId": "searchOrganizations",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.SearchOrganizationsRequest",
+                                "summary": "body",
+                                "description": "Search parameters"
+                            }
+                        }
+                    },
+                    "description": "Search parameters"
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_OrganizationResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    }
+                },
+                "summary": "Search organizations",
+                "tags": [
+                    "Org"
+                ]
+            }
+        },
+        "/orgs/{id}": {
+            "delete": {
+                "description": "Soft-deletes an organization if it has no active child organizations (requires ref:parish-admin).",
+                "operationId": "deleteOrganization",
+                "parameters": [
+                    {
+                        "description": "Organization UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    }
+                },
+                "summary": "Delete organization",
+                "tags": [
+                    "Org"
+                ]
+            },
+            "get": {
+                "description": "Returns a single non-deleted organization in the active parish.",
+                "operationId": "getOrganization",
+                "parameters": [
+                    {
+                        "description": "Organization UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_OrganizationResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Get organization",
+                "tags": [
+                    "Org"
+                ]
+            },
+            "patch": {
+                "description": "Updates an organization in the active parish (requires org:admin or ref:parish-admin).",
+                "operationId": "updateOrganization",
+                "parameters": [
+                    {
+                        "description": "Organization UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.UpdateOrganizationRequest",
+                                "summary": "body",
+                                "description": "Organization update payload"
+                            }
+                        }
+                    },
+                    "description": "Organization update payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_OrganizationResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Update organization",
+                "tags": [
+                    "Org"
+                ]
+            }
+        },
+        "/orgs/{id}/members": {
+            "post": {
+                "description": "Adds a member to an organization with optional user onboarding (requires org:admin, or ref:parish-admin appointing admin).",
+                "operationId": "addOrgMember",
+                "parameters": [
+                    {
+                        "description": "Organization UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.AddOrgMemberRequest",
+                                "summary": "body",
+                                "description": "Member payload"
+                            }
+                        }
+                    },
+                    "description": "Member payload",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_OrgMemberResponse"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Add organization member",
+                "tags": [
+                    "Org"
+                ]
+            }
+        },
+        "/orgs/{id}/members/search": {
+            "post": {
+                "description": "Searches members of an organization (requires org:admin or org:member).",
+                "operationId": "searchOrgMembers",
+                "parameters": [
+                    {
+                        "description": "Organization UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.SearchOrgMembersRequest",
+                                "summary": "body",
+                                "description": "Search parameters"
+                            }
+                        }
+                    },
+                    "description": "Search parameters"
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_OrgMemberResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Search organization members",
+                "tags": [
+                    "Org"
+                ]
+            }
+        },
+        "/orgs/{id}/members/{userId}": {
+            "delete": {
+                "description": "Removes a member from an organization (org:admin or self-leave) while guarding the last active admin.",
+                "operationId": "removeOrgMember",
+                "parameters": [
+                    {
+                        "description": "Organization UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "User UUID",
+                        "in": "path",
+                        "name": "userId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    }
+                },
+                "summary": "Remove organization member",
+                "tags": [
+                    "Org"
+                ]
+            },
+            "patch": {
+                "description": "Updates an organization member and syncs Casbin roles while guarding the last active admin.",
+                "operationId": "updateOrgMember",
+                "parameters": [
+                    {
+                        "description": "Organization UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "User UUID",
+                        "in": "path",
+                        "name": "userId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.UpdateOrgMemberRequest",
+                                "summary": "body",
+                                "description": "Member update payload"
+                            }
+                        }
+                    },
+                    "description": "Member update payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_OrgMemberResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Update organization member",
+                "tags": [
+                    "Org"
                 ]
             }
         },

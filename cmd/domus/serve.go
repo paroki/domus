@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/paroki/domus/internal/app"
+	"github.com/paroki/domus/internal/org"
 	"github.com/paroki/domus/internal/platform/authz"
 	"github.com/paroki/domus/internal/platform/mailx"
 	"github.com/paroki/domus/internal/ref"
@@ -63,14 +64,19 @@ func newServeCmd() *cobra.Command {
 			}
 			userFeature := user.New(db, enforcer, userCfg, logger, userOpts...)
 			refFeature := ref.New(db, enforcer, userFeature)
-			if err := authz.RegisterFeatures(ctx, enforcer, userFeature, refFeature); err != nil {
+			orgCfg, err := org.GetConfig(ctx)
+			if err != nil {
+				return err
+			}
+			orgFeature := org.New(db, enforcer, userFeature, refFeature, orgCfg)
+			if err := authz.RegisterFeatures(ctx, enforcer, userFeature, refFeature, orgFeature); err != nil {
 				return err
 			}
 			if err := userFeature.Bootstrap(ctx); err != nil {
 				return err
 			}
 
-			fiberApp := app.GetFiber(cfg, logger, userFeature, refFeature)
+			fiberApp := app.GetFiber(cfg, logger, userFeature, refFeature, orgFeature)
 			return app.New(cfg, fiberApp, logger).Serve(ctx)
 		},
 	}

@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/ent/lookup"
+	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/parish"
 	"github.com/paroki/domus/ent/parishmember"
 	"github.com/paroki/domus/ent/period"
@@ -189,6 +190,9 @@ func (r *Repository) HasParishChildren(ctx context.Context, parishID uuid.UUID) 
 		return has, err
 	}
 	if has, err := r.client.Lookup.Query().Where(lookup.ParishIDEQ(parishID), lookup.DeletedAtIsNil()).Exist(ctx); err != nil || has {
+		return has, err
+	}
+	if has, err := r.client.Organization.Query().Where(organization.ParishIDEQ(parishID), organization.DeletedAtIsNil()).Exist(ctx); err != nil || has {
 		return has, err
 	}
 	return r.client.Period.Query().Where(period.ParishIDEQ(parishID), period.DeletedAtIsNil()).Exist(ctx)
