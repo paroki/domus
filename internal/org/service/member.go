@@ -132,6 +132,24 @@ func (s *Service) AddOrgMember(
 		existing, findErr := txRepo.FindOrgMember(ctx, orgID, targetUserID)
 		switch {
 		case findErr == nil:
+			if existing.Status == orgmember.StatusInactive {
+				activeStatus := orgmember.StatusActive
+				upd, updErr := txRepo.UpdateOrgMember(
+					ctx,
+					existing.ID,
+					&role,
+					trimOptString(req.Position),
+					req.PeriodID,
+					trimOptString(req.StartDate),
+					trimOptString(req.EndDate),
+					&activeStatus,
+				)
+				if updErr != nil {
+					return updErr
+				}
+				saved = upd
+				return nil
+			}
 			if !isOrgAdm && isParishAdm {
 				// Idempotent upgrade to active admin by parish-admin.
 				adminRole := orgmember.RoleAdmin
@@ -353,26 +371,33 @@ func (s *Service) resolveOrEnsureMemberUser(ctx context.Context, parishID uuid.U
 		if email == "" {
 			return uuid.Nil, domain.ValidationError("email", "REQUIRED", "Email or userId is required.")
 		}
-		if s.users == nil {
-			return uuid.Nil, domain.ValidationError("email", "UNAVAILABLE", "User onboarding is unavailable.")
-		}
-		name := strings.TrimSpace(req.Name)
-		if name == "" {
-			name = email
-		}
-		var phoneStr string
-		if req.Phone != nil {
-			norm, err := normalizePhone(*req.Phone)
+		existingUser, err := s.repo.FindUserByEmail(ctx, email)
+		if err == nil {
+			targetUserID = existingUser.ID
+		} else if !ent.IsNotFound(err) {
+			return uuid.Nil, err
+		} else {
+			if s.users == nil {
+				return uuid.Nil, domain.ValidationError("email", "UNAVAILABLE", "User onboarding is unavailable.")
+			}
+			name := strings.TrimSpace(req.Name)
+			if name == "" {
+				name = email
+			}
+			var phoneStr string
+			if req.Phone != nil {
+				norm, err := normalizePhone(*req.Phone)
+				if err != nil {
+					return uuid.Nil, err
+				}
+				phoneStr = norm
+			}
+			uid, err := s.users.EnsureUser(ctx, email, name, phoneStr, "email", email)
 			if err != nil {
 				return uuid.Nil, err
 			}
-			phoneStr = norm
+			targetUserID = uid
 		}
-		uid, err := s.users.EnsureUser(ctx, email, name, phoneStr, "email", email)
-		if err != nil {
-			return uuid.Nil, err
-		}
-		targetUserID = uid
 	}
 
 	if s.refs != nil {

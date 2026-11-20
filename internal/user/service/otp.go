@@ -117,7 +117,11 @@ func (s *Service) VerifyOTP(ctx context.Context, req domain.VerifyOTPRequest, us
 	if inviteCode != "" && s.inviteJoiner != nil {
 		var phoneStr string
 		if req.Phone != nil {
-			phoneStr = *req.Phone
+			normPhone, err := normalizePhone(*req.Phone)
+			if err != nil {
+				return "", nil, err
+			}
+			phoneStr = normPhone
 		}
 		ensured, err := s.EnsureUser(ctx, normEmail, req.Name, phoneStr, domain.ProviderEmail, normEmail)
 		if err != nil {

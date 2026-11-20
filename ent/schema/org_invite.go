@@ -26,7 +26,7 @@ func (OrgInvite) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("parish_id", uuid.UUID{}),
 		field.UUID("org_id", uuid.UUID{}),
-		field.String("code").NotEmpty().Unique(),
+		field.String("code").NotEmpty(),
 		field.Enum("role").Values("admin", "member").Default("member"),
 		field.String("default_position").Optional().Nillable(),
 		field.Int("max_uses").Optional().Nillable(),

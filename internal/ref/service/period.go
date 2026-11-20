@@ -226,6 +226,13 @@ func (s *Service) DeletePeriod(ctx context.Context, parishID, periodID uuid.UUID
 	} else if err != nil {
 		return err
 	}
+	inUse, err := s.repo.HasOrgMembersByPeriod(ctx, parishID, periodID)
+	if err != nil {
+		return err
+	}
+	if inUse {
+		return domain.ErrInUse
+	}
 	return s.repo.SoftDeletePeriod(ctx, periodID, time.Now().UTC())
 }
 

@@ -10,6 +10,7 @@ import (
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orginvite"
 	"github.com/paroki/domus/ent/parish"
+	"github.com/paroki/domus/internal/org/domain"
 )
 
 // OrgInviteInput holds fields for creating an OrgInvite.
@@ -129,9 +130,19 @@ func (r *Repository) FindActiveOrgAndParish(ctx context.Context, orgID, parishID
 	return orgRow, parishRow, nil
 }
 
-// IncrementOrgInviteUsedCount atomically increments used_count by 1.
-func (r *Repository) IncrementOrgInviteUsedCount(ctx context.Context, inviteID uuid.UUID) error {
-	return r.client.OrgInvite.UpdateOneID(inviteID).
-		AddUsedCount(1).
-		Exec(ctx)
+// IncrementOrgInviteUsedCount atomically increments used_count by 1 if max_uses allows.
+func (r *Repository) IncrementOrgInviteUsedCount(ctx context.Context, inviteID uuid.UUID, maxUses *int) error {
+	q := r.client.OrgInvite.Update().
+		Where(orginvite.IDEQ(inviteID), orginvite.RevokedAtIsNil())
+	if maxUses != nil {
+		q = q.Where(orginvite.UsedCountLT(*maxUses))
+	}
+	affected, err := q.AddUsedCount(1).Save(ctx)
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		return domain.ErrInviteMaxUsesReached
+	}
+	return nil
 }

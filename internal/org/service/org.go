@@ -129,18 +129,25 @@ func (s *Service) CreateOrganization(ctx context.Context, p authx.Principal, req
 		}
 		initialAdminID = u.ID
 	} else if email := normalizeEmail(req.InitialAdminEmail); email != "" {
-		if s.users == nil {
-			return domain.OrganizationResponse{}, domain.ValidationError("initialAdminEmail", "UNAVAILABLE", "User onboarding is unavailable.")
-		}
-		adminName := strings.TrimSpace(req.InitialAdminName)
-		if adminName == "" {
-			adminName = email
-		}
-		uid, err := s.users.EnsureUser(ctx, email, adminName, "", "email", email)
-		if err != nil {
+		existingUser, err := s.repo.FindUserByEmail(ctx, email)
+		if err == nil {
+			initialAdminID = existingUser.ID
+		} else if !ent.IsNotFound(err) {
 			return domain.OrganizationResponse{}, err
+		} else {
+			if s.users == nil {
+				return domain.OrganizationResponse{}, domain.ValidationError("initialAdminEmail", "UNAVAILABLE", "User onboarding is unavailable.")
+			}
+			adminName := strings.TrimSpace(req.InitialAdminName)
+			if adminName == "" {
+				adminName = email
+			}
+			uid, err := s.users.EnsureUser(ctx, email, adminName, "", "email", email)
+			if err != nil {
+				return domain.OrganizationResponse{}, err
+			}
+			initialAdminID = uid
 		}
-		initialAdminID = uid
 	}
 	if initialAdminID != uuid.Nil && s.refs != nil {
 		if err := s.refs.EnsureParishMember(ctx, p.ParishID, initialAdminID); err != nil {
@@ -192,7 +199,9 @@ func (s *Service) CreateOrganization(ctx context.Context, p authx.Principal, req
 		}
 
 		if initialAdminID != uuid.Nil {
-			if _, err := txRepo.FindOrgMember(ctx, out.ID, initialAdminID); ent.IsNotFound(err) {
+			existingMember, err := txRepo.FindOrgMember(ctx, out.ID, initialAdminID)
+			switch {
+			case ent.IsNotFound(err):
 				if _, err := txRepo.CreateOrgMember(ctx, repo.OrgMemberInput{
 					ParishID: p.ParishID,
 					OrgID:    out.ID,
@@ -202,7 +211,13 @@ func (s *Service) CreateOrganization(ctx context.Context, p authx.Principal, req
 				}); err != nil {
 					return err
 				}
-			} else if err != nil {
+			case err == nil:
+				adminRole := orgmember.RoleAdmin
+				activeStatus := orgmember.StatusActive
+				if _, err := txRepo.UpdateOrgMember(ctx, existingMember.ID, &adminRole, nil, nil, nil, nil, &activeStatus); err != nil {
+					return err
+				}
+			default:
 				return err
 			}
 		}
@@ -340,10 +355,32 @@ func (s *Service) validateOrgRefs(ctx context.Context, parishID, selfID uuid.UUI
 		if selfID != uuid.Nil && *parentID == selfID {
 			return domain.ValidationError("parentId", "INVALID_PARENT", "Organization cannot be its own parent.")
 		}
-		if _, err := s.repo.FindOrgInParish(ctx, parishID, *parentID); ent.IsNotFound(err) {
+		parent, err := s.repo.FindOrgInParish(ctx, parishID, *parentID)
+		if ent.IsNotFound(err) {
 			return domain.ErrOrgNotFound
 		} else if err != nil {
 			return err
+		}
+		if selfID != uuid.Nil {
+			visited := map[uuid.UUID]struct{}{parent.ID: {}}
+			cur := parent.ParentID
+			for cur != nil && *cur != uuid.Nil {
+				if *cur == selfID {
+					return domain.ValidationError("parentId", "INVALID_PARENT", "Organization hierarchy cannot contain a cycle.")
+				}
+				if _, seen := visited[*cur]; seen {
+					break
+				}
+				visited[*cur] = struct{}{}
+				anc, err := s.repo.FindOrgInParish(ctx, parishID, *cur)
+				if ent.IsNotFound(err) {
+					break
+				}
+				if err != nil {
+					return err
+				}
+				cur = anc.ParentID
+			}
 		}
 	}
 	if zoneID != nil && *zoneID != uuid.Nil && s.refs != nil {

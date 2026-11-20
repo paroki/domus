@@ -265,7 +265,7 @@ func (s *Service) redeemInviteInternal(ctx context.Context, code string, userID,
 				return updErr
 			}
 			savedMember = upd
-			return txRepo.IncrementOrgInviteUsedCount(ctx, txInv.ID)
+			return txRepo.IncrementOrgInviteUsedCount(ctx, txInv.ID, txInv.MaxUses)
 
 		case ent.IsNotFound(findErr):
 			created, createErr := txRepo.CreateOrgMember(ctx, repo.OrgMemberInput{
@@ -280,7 +280,7 @@ func (s *Service) redeemInviteInternal(ctx context.Context, code string, userID,
 				return createErr
 			}
 			savedMember = created
-			return txRepo.IncrementOrgInviteUsedCount(ctx, txInv.ID)
+			return txRepo.IncrementOrgInviteUsedCount(ctx, txInv.ID, txInv.MaxUses)
 
 		default:
 			return findErr

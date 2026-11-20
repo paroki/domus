@@ -12,8 +12,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/ent/orginvite"
+	"github.com/paroki/domus/ent/orgmember"
 	"github.com/paroki/domus/internal/org"
 	"github.com/paroki/domus/internal/org/domain"
+	orgrepo "github.com/paroki/domus/internal/org/repo"
 	"github.com/paroki/domus/internal/platform/authz"
 	"github.com/paroki/domus/internal/ref"
 	refdomain "github.com/paroki/domus/internal/ref/domain"
@@ -370,7 +372,7 @@ func (s *OrgFeatureSuite) TestOrgMemberCRUD_LeastPrivilegeCasbinAndLastAdminGuar
 }
 
 func (s *OrgFeatureSuite) TestOrgFacadeHelpersAndRefDeleteGuards() {
-	parishID, zoneID, wardID, _, parishAdminID := s.seedParishWithAdmin("padmin@paroki.org")
+	parishID, zoneID, wardID, periodID, parishAdminID := s.seedParishWithAdmin("padmin@paroki.org")
 	s.SetHeader("X-Parish-Id", parishID.String())
 
 	s.Request("/api/orgs", http.MethodPost, domain.CreateOrganizationRequest{
@@ -408,6 +410,19 @@ func (s *OrgFeatureSuite) TestOrgFacadeHelpersAndRefDeleteGuards() {
 	s.Equal("REF_IN_USE", s.GetErrorResponse().Error.Code)
 
 	s.Request(fmt.Sprintf("/api/ref/zones/%s", zoneID), http.MethodDelete, nil)
+	s.Conflict()
+	s.Equal("REF_IN_USE", s.GetErrorResponse().Error.Code)
+
+	// Period cannot be deleted while referenced by an OrgMember.
+	s.Request(fmt.Sprintf("/api/orgs/%s/members", orgRow.ID), http.MethodPost, domain.AddOrgMemberRequest{
+		Email:    "period-mem@paroki.org",
+		Name:     "Period Member",
+		Role:     "member",
+		PeriodID: &periodID,
+	})
+	s.Created()
+
+	s.Request(fmt.Sprintf("/api/ref/periods/%s", periodID), http.MethodDelete, nil)
 	s.Conflict()
 	s.Equal("REF_IN_USE", s.GetErrorResponse().Error.Code)
 }
@@ -628,4 +643,168 @@ func (s *OrgFeatureSuite) TestOrgInvites_LifecycleRedeemAndGuestOnboarding() {
 	isAdm, err := s.orgFeature.IsAdmin(context.Background(), orgRow.ID, me.ID)
 	s.Require().NoError(err)
 	s.True(isAdm)
+}
+
+func (s *OrgFeatureSuite) TestIssue94_ReactivationInactiveMemberCycleMaxUsesAndOTPPhone() {
+	parishID, _, _, _, parishAdminID := s.seedParishWithAdmin("padmin@paroki.org")
+	s.SetHeader("X-Parish-Id", parishID.String())
+	ctx := context.Background()
+
+	// Pre-create an existing user with a distinct display name.
+	existingUser, err := s.userFeature.EnsureUser(ctx, "budi@paroki.org", "Budi Santoso", "", "email", "budi@paroki.org")
+	s.Require().NoError(err)
+
+	// Create org with InitialAdminEmail (omitting InitialAdminName) -> preserves Budi's name.
+	s.Request("/api/orgs", http.MethodPost, domain.CreateOrganizationRequest{
+		Kind:              "section",
+		Code:              "org-cycle-a",
+		Name:              "Org A",
+		InitialAdminEmail: "budi@paroki.org",
+	})
+	s.Created()
+	orgA := testutil.DecodeAs[domain.OrganizationResponse](s).Data
+
+	budiAfterCreate, err := s.client.User.Get(ctx, existingUser.ID)
+	s.Require().NoError(err)
+	s.Equal("Budi Santoso", budiAfterCreate.Name)
+
+	// Demote & deactivate Budi's OrgMember row, then soft-delete Org A.
+	s.Request(fmt.Sprintf("/api/orgs/%s/members", orgA.ID), http.MethodPost, domain.AddOrgMemberRequest{
+		UserID: &parishAdminID,
+		Role:   "admin",
+	})
+	s.Created()
+	memberRole := "member"
+	inactiveStatus := "inactive"
+	s.Request(fmt.Sprintf("/api/orgs/%s/members/%s", orgA.ID, existingUser.ID), http.MethodPatch, domain.UpdateOrgMemberRequest{
+		Role:   &memberRole,
+		Status: &inactiveStatus,
+	})
+	s.OK()
+	s.Request(fmt.Sprintf("/api/orgs/%s", orgA.ID), http.MethodDelete, nil)
+	s.NoContent()
+
+	// Reactivate Org A with InitialAdminEmail -> existing OrgMember row must become active admin.
+	s.Request("/api/orgs", http.MethodPost, domain.CreateOrganizationRequest{
+		Kind:              "section",
+		Code:              "org-cycle-a",
+		Name:              "Org A Reactivated",
+		InitialAdminEmail: "budi@paroki.org",
+	})
+	s.Created()
+	reactivatedA := testutil.DecodeAs[domain.OrganizationResponse](s).Data
+	s.Equal(orgA.ID, reactivatedA.ID)
+
+	budiMember, err := s.client.OrgMember.Query().
+		Where(orgmember.OrgIDEQ(orgA.ID), orgmember.UserIDEQ(existingUser.ID)).
+		Only(ctx)
+	s.Require().NoError(err)
+	s.Equal(orgmember.RoleAdmin, budiMember.Role)
+	s.Equal(orgmember.StatusActive, budiMember.Status)
+
+	// Add a member, deactivate them, then re-add via Email (no Name) -> reactivates & preserves name.
+	memUser, err := s.userFeature.EnsureUser(ctx, "siti@paroki.org", "Siti Rahayu", "", "email", "siti@paroki.org")
+	s.Require().NoError(err)
+	s.Request(fmt.Sprintf("/api/orgs/%s/members", orgA.ID), http.MethodPost, domain.AddOrgMemberRequest{
+		UserID: &memUser.ID,
+		Role:   "member",
+	})
+	s.Created()
+	s.Request(fmt.Sprintf("/api/orgs/%s/members/%s", orgA.ID, memUser.ID), http.MethodPatch, domain.UpdateOrgMemberRequest{
+		Status: &inactiveStatus,
+	})
+	s.OK()
+
+	posBendahara := "Bendahara"
+	s.Request(fmt.Sprintf("/api/orgs/%s/members", orgA.ID), http.MethodPost, domain.AddOrgMemberRequest{
+		Email:    "siti@paroki.org",
+		Role:     "member",
+		Position: &posBendahara,
+	})
+	s.Created()
+	readded := testutil.DecodeAs[domain.OrgMemberResponse](s).Data
+	s.Equal("active", readded.Status)
+	s.Require().NotNil(readded.Position)
+	s.Equal("Bendahara", *readded.Position)
+	sitiAfter, err := s.client.User.Get(ctx, memUser.ID)
+	s.Require().NoError(err)
+	s.Equal("Siti Rahayu", sitiAfter.Name)
+
+	// Cyclic parentId rejection: A -> B -> C, then patching A.parentId = C fails with 422 INVALID_PARENT.
+	s.Request("/api/orgs", http.MethodPost, domain.CreateOrganizationRequest{
+		Kind:     "section",
+		Code:     "org-cycle-b",
+		Name:     "Org B",
+		ParentID: &orgA.ID,
+	})
+	s.Created()
+	orgB := testutil.DecodeAs[domain.OrganizationResponse](s).Data
+
+	s.Request("/api/orgs", http.MethodPost, domain.CreateOrganizationRequest{
+		Kind:     "section",
+		Code:     "org-cycle-c",
+		Name:     "Org C",
+		ParentID: &orgB.ID,
+	})
+	s.Created()
+	orgC := testutil.DecodeAs[domain.OrganizationResponse](s).Data
+
+	s.Request(fmt.Sprintf("/api/orgs/%s", orgA.ID), http.MethodPatch, domain.UpdateOrganizationRequest{
+		ParentID: &orgC.ID,
+	})
+	s.UnprocessableEntity()
+	s.Equal("VALIDATION_ERROR", s.GetErrorResponse().Error.Code)
+
+	// Atomic IncrementOrgInviteUsedCount max_uses boundary check.
+	maxOne := 1
+	s.Request(fmt.Sprintf("/api/orgs/%s/invites", orgA.ID), http.MethodPost, domain.CreateOrgInviteRequest{
+		Role:    "member",
+		MaxUses: &maxOne,
+	})
+	s.Created()
+	inv := testutil.DecodeAs[domain.OrgInviteResponse](s).Data
+
+	r := orgrepo.New(s.client)
+	s.Require().NoError(r.IncrementOrgInviteUsedCount(ctx, inv.ID, &maxOne))
+	err = r.IncrementOrgInviteUsedCount(ctx, inv.ID, &maxOne)
+	s.Require().ErrorIs(err, domain.ErrInviteMaxUsesReached)
+
+	// VerifyOTP guest invite onboarding normalizes and validates req.Phone.
+	s.Request(fmt.Sprintf("/api/orgs/%s/invites", orgA.ID), http.MethodPost, domain.CreateOrgInviteRequest{
+		Role: "member",
+	})
+	s.Created()
+	openInv := testutil.DecodeAs[domain.OrgInviteResponse](s).Data
+
+	s.ClearCookies()
+	s.SetHeader("X-Parish-Id", "")
+	s.Request("/api/auth/otp", http.MethodPost, userdomain.RequestOTPRequest{
+		Email:      "phoneguest@paroki.org",
+		InviteCode: openInv.Code,
+	})
+	s.OK()
+
+	badPhone := "not-a-phone"
+	s.Request("/api/auth/otp/verify", http.MethodPost, userdomain.VerifyOTPRequest{
+		Email:      "phoneguest@paroki.org",
+		Code:       s.sender.lastCode,
+		InviteCode: openInv.Code,
+		Name:       "Phone Guest",
+		Phone:      &badPhone,
+	})
+	s.UnprocessableEntity()
+	s.Equal("VALIDATION_ERROR", s.GetErrorResponse().Error.Code)
+
+	localPhone := "081234567890"
+	s.Request("/api/auth/otp/verify", http.MethodPost, userdomain.VerifyOTPRequest{
+		Email:      "phoneguest@paroki.org",
+		Code:       s.sender.lastCode,
+		InviteCode: openInv.Code,
+		Name:       "Phone Guest",
+		Phone:      &localPhone,
+	})
+	s.OK()
+	sess := testutil.DecodeAs[userdomain.AuthSessionResponse](s).Data
+	s.Require().NotNil(sess.User.Phone)
+	s.Equal("+6281234567890", *sess.User.Phone)
 }

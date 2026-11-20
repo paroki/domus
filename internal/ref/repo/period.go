@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
+	"github.com/paroki/domus/ent/orgmember"
 	"github.com/paroki/domus/ent/period"
 )
 
@@ -161,6 +162,13 @@ func (r *Repository) UpdatePeriod(
 		upd.SetIsCurrent(*isCurrent)
 	}
 	return upd.Save(ctx)
+}
+
+// HasOrgMembersByPeriod reports whether any OrgMember in parishID references periodID.
+func (r *Repository) HasOrgMembersByPeriod(ctx context.Context, parishID, periodID uuid.UUID) (bool, error) {
+	return r.client.OrgMember.Query().
+		Where(orgmember.ParishIDEQ(parishID), orgmember.PeriodIDEQ(periodID)).
+		Exist(ctx)
 }
 
 // SoftDeletePeriod sets deleted_at and clears is_current on a Period.

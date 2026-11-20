@@ -133,7 +133,7 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "parish_id", Type: field.TypeUUID},
-		{Name: "code", Type: field.TypeString, Unique: true},
+		{Name: "code", Type: field.TypeString},
 		{Name: "role", Type: field.TypeEnum, Enums: []string{"admin", "member"}, Default: "member"},
 		{Name: "default_position", Type: field.TypeString, Nullable: true},
 		{Name: "max_uses", Type: field.TypeInt, Nullable: true},
