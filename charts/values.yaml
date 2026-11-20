@@ -22,16 +22,7 @@ image:
 port: 8080
 
 config:
-  appName: domus
-  host: 0.0.0.0
   logLevel: info
-  readTimeout: 10s
-  writeTimeout: 10s
-  idleTimeout: 60s
-  shutdownTimeout: 10s
-  bodyLimit: 4194304
-  autoMigrate: true
-  trustProxy: true
   user:
     # -- Bootstrap super admin email (USER_SUPER_ADMIN_EMAIL).
     superAdminEmail: ""
@@ -49,7 +40,6 @@ config:
     environment: production
     # -- Defaults to chart appVersion.
     release: ""
-    tracesSampleRate: 0.1
 
 # -- Existing Secret holding optional keys: db-url (APP_DB_URL), google-id,
 # google-secret, github-id, github-secret (AUTH_GOOGLE_*, AUTH_GITHUB_*).

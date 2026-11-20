@@ -69,28 +69,10 @@ Environment variables from values.config.
 */}}
 {{- define "domus.env" -}}
 {{- $c := .Values.config -}}
-- name: APP_NAME
-  value: {{ $c.appName | quote }}
-- name: HOST
-  value: {{ $c.host | quote }}
-- name: PORT
+- name: APP_PORT
   value: {{ .Values.port | quote }}
-- name: LOG_LEVEL
+- name: APP_LOG_LEVEL
   value: {{ $c.logLevel | quote }}
-- name: READ_TIMEOUT
-  value: {{ $c.readTimeout | quote }}
-- name: WRITE_TIMEOUT
-  value: {{ $c.writeTimeout | quote }}
-- name: IDLE_TIMEOUT
-  value: {{ $c.idleTimeout | quote }}
-- name: SHUTDOWN_TIMEOUT
-  value: {{ $c.shutdownTimeout | quote }}
-- name: BODY_LIMIT
-  value: {{ int $c.bodyLimit | quote }}
-- name: AUTO_MIGRATE
-  value: {{ $c.autoMigrate | quote }}
-- name: TRUST_PROXY
-  value: {{ $c.trustProxy | quote }}
 {{- with .Values.config.user }}
 {{- with .superAdminEmail }}
 - name: USER_SUPER_ADMIN_EMAIL
@@ -129,8 +111,6 @@ Environment variables from values.config.
   value: {{ $c.sentry.environment | quote }}
 - name: APP_SENTRY_RELEASE
   value: {{ default .Chart.AppVersion $c.sentry.release | quote }}
-- name: APP_SENTRY_TRACES_SAMPLE_RATE
-  value: {{ $c.sentry.tracesSampleRate | quote }}
 {{- with .Values.extraEnv }}
 {{ toYaml . }}
 {{- end }}
