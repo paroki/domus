@@ -265,6 +265,230 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/ref/dioceses": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create diocese
+     * @description Creates a diocese or reactivates a soft-deleted diocese with the same code.
+     */
+    post: operations["createDiocese"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/ref/dioceses/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Search dioceses
+     * @description Searches dioceses with optional query, active filter, and cursor pagination.
+     */
+    post: operations["searchDioceses"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/ref/dioceses/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get diocese
+     * @description Returns a single non-deleted diocese by ID.
+     */
+    get: operations["getDiocese"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete diocese
+     * @description Soft-deletes a diocese when no active parishes reference it.
+     */
+    delete: operations["deleteDiocese"];
+    options?: never;
+    head?: never;
+    /**
+     * Update diocese
+     * @description Updates mutable fields of a diocese.
+     */
+    patch: operations["updateDiocese"];
+    trace?: never;
+  };
+  "/ref/parishes": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create parish
+     * @description Creates a parish or reactivates a soft-deleted parish with the same code.
+     */
+    post: operations["createParish"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/ref/parishes/current": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get current parish
+     * @description Returns the parish resolved from the active session or X-Parish-Id header.
+     */
+    get: operations["getCurrentParish"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Update current parish profile
+     * @description Updates mutable profile fields of the active parish (requires ref:parish-admin).
+     */
+    patch: operations["updateCurrentParishProfile"];
+    trace?: never;
+  };
+  "/ref/parishes/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Search parishes
+     * @description Searches parishes with optional query, diocese/active/memberOnly filters, and cursor pagination.
+     */
+    post: operations["searchParishes"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/ref/parishes/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get parish
+     * @description Returns a single non-deleted parish by ID.
+     */
+    get: operations["getParish"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete parish
+     * @description Soft-deletes a parish when no zones, wards, lookups, or periods reference it.
+     */
+    delete: operations["deleteParish"];
+    options?: never;
+    head?: never;
+    /**
+     * Update parish
+     * @description Updates parish fields (super-admin) or profile fields (parish-admin).
+     */
+    patch: operations["updateParish"];
+    trace?: never;
+  };
+  "/ref/parishes/{id}/members": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Add parish member
+     * @description Adds a user (or creates/invites via email) as a member or admin of a parish.
+     */
+    post: operations["addParishMember"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/ref/parishes/{id}/members/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Search parish members
+     * @description Searches members of a parish with optional query, role filter, and cursor pagination.
+     */
+    post: operations["searchParishMembers"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/ref/parishes/{id}/members/{userId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Remove parish member
+     * @description Removes a member from a parish and revokes Casbin parish-admin policy.
+     */
+    delete: operations["removeParishMember"];
+    options?: never;
+    head?: never;
+    /**
+     * Update parish member
+     * @description Updates a parish member role and syncs Casbin parish-admin policy.
+     */
+    patch: operations["updateParishMember"];
+    trace?: never;
+  };
   "/users": {
     parameters: {
       query?: never;
@@ -340,6 +564,14 @@ export interface components {
     "app.healthStatus": {
       status?: string;
     };
+    "domain.AddParishMemberRequest": {
+      email?: string;
+      name?: string;
+      phone?: string;
+      /** @enum {string} */
+      role?: "admin" | "member";
+      userId?: string;
+    };
     "domain.AdminCreateUserRequest": {
       email: string;
       isSuperAdmin?: boolean;
@@ -361,6 +593,83 @@ export interface components {
       expiresAt?: string;
       user?: components["schemas"]["domain.UserResponse"];
     };
+    "domain.CreateDioceseRequest": {
+      active?: boolean;
+      address?: string;
+      bishopName?: string;
+      code: string;
+      email?: string;
+      name: string;
+      phone?: string;
+      website?: string;
+    };
+    "domain.CreateParishRequest": {
+      active?: boolean;
+      address?: string;
+      code: string;
+      dioceseId: string;
+      email?: string;
+      letterhead?: string;
+      logoUrl?: string;
+      name: string;
+      pastorName?: string;
+      patronSaint?: string;
+      phone?: string;
+      website?: string;
+    };
+    "domain.DioceseResponse": {
+      active?: boolean;
+      address?: string;
+      bishopName?: string;
+      code?: string;
+      createdAt?: string;
+      email?: string;
+      id?: string;
+      name?: string;
+      phone?: string;
+      updatedAt?: string;
+      website?: string;
+    };
+    "domain.DioceseSearchFilter": {
+      active?: boolean;
+    };
+    "domain.ParishMemberResponse": {
+      createdAt?: string;
+      email?: string;
+      id?: string;
+      name?: string;
+      parishId?: string;
+      phone?: string;
+      role?: string;
+      updatedAt?: string;
+      userId?: string;
+    };
+    "domain.ParishMemberSearchFilter": {
+      /** @enum {string} */
+      role?: "admin" | "member";
+    };
+    "domain.ParishResponse": {
+      active?: boolean;
+      address?: string;
+      code?: string;
+      createdAt?: string;
+      dioceseId?: string;
+      email?: string;
+      id?: string;
+      letterhead?: string;
+      logoUrl?: string;
+      name?: string;
+      pastorName?: string;
+      patronSaint?: string;
+      phone?: string;
+      updatedAt?: string;
+      website?: string;
+    };
+    "domain.ParishSearchFilter": {
+      active?: boolean;
+      dioceseId?: string;
+      memberOnly?: boolean;
+    };
     "domain.RequestOTPRequest": {
       email: string;
     };
@@ -371,6 +680,24 @@ export interface components {
     "domain.SearchAccountsRequest": {
       cursor?: string;
       limit?: number;
+    };
+    "domain.SearchDiocesesRequest": {
+      cursor?: string;
+      filter?: components["schemas"]["domain.DioceseSearchFilter"];
+      limit?: number;
+      q?: string;
+    };
+    "domain.SearchParishMembersRequest": {
+      cursor?: string;
+      filter?: components["schemas"]["domain.ParishMemberSearchFilter"];
+      limit?: number;
+      q?: string;
+    };
+    "domain.SearchParishesRequest": {
+      cursor?: string;
+      filter?: components["schemas"]["domain.ParishSearchFilter"];
+      limit?: number;
+      q?: string;
     };
     "domain.SearchSessionsRequest": {
       cursor?: string;
@@ -385,11 +712,50 @@ export interface components {
     "domain.SwitchSessionParishRequest": {
       activeParishId: string;
     };
+    "domain.UpdateDioceseRequest": {
+      active?: boolean;
+      address?: string;
+      bishopName?: string;
+      code?: string;
+      email?: string;
+      name?: string;
+      phone?: string;
+      website?: string;
+    };
     "domain.UpdateMeRequest": {
       avatarUrl?: string;
       defaultParishId?: string;
       name?: string;
       phone?: string;
+    };
+    "domain.UpdateParishMemberRequest": {
+      /** @enum {string} */
+      role: "admin" | "member";
+    };
+    "domain.UpdateParishProfileRequest": {
+      address?: string;
+      email?: string;
+      letterhead?: string;
+      logoUrl?: string;
+      name?: string;
+      pastorName?: string;
+      patronSaint?: string;
+      phone?: string;
+      website?: string;
+    };
+    "domain.UpdateParishRequest": {
+      active?: boolean;
+      address?: string;
+      code?: string;
+      dioceseId?: string;
+      email?: string;
+      letterhead?: string;
+      logoUrl?: string;
+      name?: string;
+      pastorName?: string;
+      patronSaint?: string;
+      phone?: string;
+      website?: string;
     };
     "domain.UserAccountResponse": {
       activeParishId?: string;
@@ -444,6 +810,21 @@ export interface components {
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
+    "httpx.Envelope-array_domain_DioceseResponse": {
+      data?: components["schemas"]["domain.DioceseResponse"][];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-array_domain_ParishMemberResponse": {
+      data?: components["schemas"]["domain.ParishMemberResponse"][];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-array_domain_ParishResponse": {
+      data?: components["schemas"]["domain.ParishResponse"][];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
     "httpx.Envelope-array_domain_UserAccountResponse": {
       data?: components["schemas"]["domain.UserAccountResponse"][];
       error?: components["schemas"]["httpx.ErrorPayload"];
@@ -466,6 +847,21 @@ export interface components {
     };
     "httpx.Envelope-domain_AuthSessionResponse": {
       data?: components["schemas"]["domain.AuthSessionResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_DioceseResponse": {
+      data?: components["schemas"]["domain.DioceseResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_ParishMemberResponse": {
+      data?: components["schemas"]["domain.ParishMemberResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_ParishResponse": {
+      data?: components["schemas"]["domain.ParishResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -1111,6 +1507,1070 @@ export interface operations {
       };
       /** @description Not Found */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  createDiocese: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Diocese creation payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.CreateDioceseRequest"];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_DioceseResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  searchDioceses: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Search parameters */
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["domain.SearchDiocesesRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_DioceseResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  getDiocese: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Diocese UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_DioceseResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  deleteDiocese: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Diocese UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  updateDiocese: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Diocese UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Diocese update payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UpdateDioceseRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_DioceseResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  createParish: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Parish creation payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.CreateParishRequest"];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_ParishResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  getCurrentParish: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_ParishResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  updateCurrentParishProfile: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Parish profile payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UpdateParishProfileRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_ParishResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  searchParishes: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Search parameters */
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["domain.SearchParishesRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_ParishResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  getParish: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Parish UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_ParishResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  deleteParish: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Parish UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  updateParish: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Parish UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Parish update payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UpdateParishRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_ParishResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  addParishMember: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Parish UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Member payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.AddParishMemberRequest"];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_ParishMemberResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  searchParishMembers: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Parish UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Search parameters */
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["domain.SearchParishMembersRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_ParishMemberResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  removeParishMember: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Parish UUID */
+        id: string;
+        /** @description User UUID */
+        userId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  updateParishMember: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Parish UUID */
+        id: string;
+        /** @description User UUID */
+        userId: string;
+      };
+      cookie?: never;
+    };
+    /** @description Role update payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UpdateParishMemberRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_ParishMemberResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
         headers: {
           [name: string]: unknown;
         };

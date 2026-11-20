@@ -9,6 +9,30 @@
                 },
                 "type": "object"
             },
+            "domain.AddParishMemberRequest": {
+                "properties": {
+                    "email": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "phone": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "enum": [
+                            "admin",
+                            "member"
+                        ],
+                        "type": "string"
+                    },
+                    "userId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.AdminCreateUserRequest": {
                 "properties": {
                     "email": {
@@ -79,6 +103,241 @@
                 },
                 "type": "object"
             },
+            "domain.CreateDioceseRequest": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "address": {
+                        "type": "string"
+                    },
+                    "bishopName": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "phone": {
+                        "type": "string"
+                    },
+                    "website": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "code",
+                    "name"
+                ],
+                "type": "object"
+            },
+            "domain.CreateParishRequest": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "address": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "dioceseId": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "letterhead": {
+                        "type": "string"
+                    },
+                    "logoUrl": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "pastorName": {
+                        "type": "string"
+                    },
+                    "patronSaint": {
+                        "type": "string"
+                    },
+                    "phone": {
+                        "type": "string"
+                    },
+                    "website": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "code",
+                    "dioceseId",
+                    "name"
+                ],
+                "type": "object"
+            },
+            "domain.DioceseResponse": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "address": {
+                        "type": "string"
+                    },
+                    "bishopName": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "phone": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    },
+                    "website": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.DioceseSearchFilter": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.ParishMemberResponse": {
+                "properties": {
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "parishId": {
+                        "type": "string"
+                    },
+                    "phone": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    },
+                    "userId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.ParishMemberSearchFilter": {
+                "properties": {
+                    "role": {
+                        "enum": [
+                            "admin",
+                            "member"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.ParishResponse": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "address": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "dioceseId": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "letterhead": {
+                        "type": "string"
+                    },
+                    "logoUrl": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "pastorName": {
+                        "type": "string"
+                    },
+                    "patronSaint": {
+                        "type": "string"
+                    },
+                    "phone": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    },
+                    "website": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.ParishSearchFilter": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "dioceseId": {
+                        "type": "string"
+                    },
+                    "memberOnly": {
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
             "domain.RequestOTPRequest": {
                 "properties": {
                     "email": {
@@ -110,6 +369,63 @@
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.SearchDiocesesRequest": {
+                "properties": {
+                    "cursor": {
+                        "type": "string"
+                    },
+                    "filter": {
+                        "$ref": "#/components/schemas/domain.DioceseSearchFilter"
+                    },
+                    "limit": {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "q": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.SearchParishMembersRequest": {
+                "properties": {
+                    "cursor": {
+                        "type": "string"
+                    },
+                    "filter": {
+                        "$ref": "#/components/schemas/domain.ParishMemberSearchFilter"
+                    },
+                    "limit": {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "q": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.SearchParishesRequest": {
+                "properties": {
+                    "cursor": {
+                        "type": "string"
+                    },
+                    "filter": {
+                        "$ref": "#/components/schemas/domain.ParishSearchFilter"
+                    },
+                    "limit": {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "q": {
+                        "type": "string"
                     }
                 },
                 "type": "object"
@@ -157,6 +473,36 @@
                 ],
                 "type": "object"
             },
+            "domain.UpdateDioceseRequest": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "address": {
+                        "type": "string"
+                    },
+                    "bishopName": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "phone": {
+                        "type": "string"
+                    },
+                    "website": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.UpdateMeRequest": {
                 "properties": {
                     "avatarUrl": {
@@ -170,6 +516,96 @@
                         "type": "string"
                     },
                     "phone": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.UpdateParishMemberRequest": {
+                "properties": {
+                    "role": {
+                        "enum": [
+                            "admin",
+                            "member"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "role"
+                ],
+                "type": "object"
+            },
+            "domain.UpdateParishProfileRequest": {
+                "properties": {
+                    "address": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "letterhead": {
+                        "type": "string"
+                    },
+                    "logoUrl": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "pastorName": {
+                        "type": "string"
+                    },
+                    "patronSaint": {
+                        "type": "string"
+                    },
+                    "phone": {
+                        "type": "string"
+                    },
+                    "website": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.UpdateParishRequest": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "address": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "dioceseId": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "letterhead": {
+                        "type": "string"
+                    },
+                    "logoUrl": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "pastorName": {
+                        "type": "string"
+                    },
+                    "patronSaint": {
+                        "type": "string"
+                    },
+                    "phone": {
+                        "type": "string"
+                    },
+                    "website": {
                         "type": "string"
                     }
                 },
@@ -334,6 +770,60 @@
                 },
                 "type": "object"
             },
+            "httpx.Envelope-array_domain_DioceseResponse": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.DioceseResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-array_domain_ParishMemberResponse": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.ParishMemberResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-array_domain_ParishResponse": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.ParishResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
             "httpx.Envelope-array_domain_UserAccountResponse": {
                 "properties": {
                     "data": {
@@ -406,6 +896,48 @@
                 "properties": {
                     "data": {
                         "$ref": "#/components/schemas/domain.AuthSessionResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_DioceseResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.DioceseResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_ParishMemberResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.ParishMemberResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_ParishResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.ParishResponse"
                     },
                     "error": {
                         "$ref": "#/components/schemas/httpx.ErrorPayload"
@@ -1244,6 +1776,1320 @@
                 "summary": "Revoke a user session",
                 "tags": [
                     "Me"
+                ]
+            }
+        },
+        "/ref/dioceses": {
+            "post": {
+                "description": "Creates a diocese or reactivates a soft-deleted diocese with the same code.",
+                "operationId": "createDiocese",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.CreateDioceseRequest",
+                                "summary": "body",
+                                "description": "Diocese creation payload"
+                            }
+                        }
+                    },
+                    "description": "Diocese creation payload",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_DioceseResponse"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Create diocese",
+                "tags": [
+                    "Ref"
+                ]
+            }
+        },
+        "/ref/dioceses/search": {
+            "post": {
+                "description": "Searches dioceses with optional query, active filter, and cursor pagination.",
+                "operationId": "searchDioceses",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.SearchDiocesesRequest",
+                                "summary": "body",
+                                "description": "Search parameters"
+                            }
+                        }
+                    },
+                    "description": "Search parameters"
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_DioceseResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    }
+                },
+                "summary": "Search dioceses",
+                "tags": [
+                    "Ref"
+                ]
+            }
+        },
+        "/ref/dioceses/{id}": {
+            "delete": {
+                "description": "Soft-deletes a diocese when no active parishes reference it.",
+                "operationId": "deleteDiocese",
+                "parameters": [
+                    {
+                        "description": "Diocese UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    }
+                },
+                "summary": "Delete diocese",
+                "tags": [
+                    "Ref"
+                ]
+            },
+            "get": {
+                "description": "Returns a single non-deleted diocese by ID.",
+                "operationId": "getDiocese",
+                "parameters": [
+                    {
+                        "description": "Diocese UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_DioceseResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Get diocese",
+                "tags": [
+                    "Ref"
+                ]
+            },
+            "patch": {
+                "description": "Updates mutable fields of a diocese.",
+                "operationId": "updateDiocese",
+                "parameters": [
+                    {
+                        "description": "Diocese UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.UpdateDioceseRequest",
+                                "summary": "body",
+                                "description": "Diocese update payload"
+                            }
+                        }
+                    },
+                    "description": "Diocese update payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_DioceseResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Update diocese",
+                "tags": [
+                    "Ref"
+                ]
+            }
+        },
+        "/ref/parishes": {
+            "post": {
+                "description": "Creates a parish or reactivates a soft-deleted parish with the same code.",
+                "operationId": "createParish",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.CreateParishRequest",
+                                "summary": "body",
+                                "description": "Parish creation payload"
+                            }
+                        }
+                    },
+                    "description": "Parish creation payload",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_ParishResponse"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Create parish",
+                "tags": [
+                    "Ref"
+                ]
+            }
+        },
+        "/ref/parishes/current": {
+            "get": {
+                "description": "Returns the parish resolved from the active session or X-Parish-Id header.",
+                "operationId": "getCurrentParish",
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_ParishResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Get current parish",
+                "tags": [
+                    "Ref"
+                ]
+            },
+            "patch": {
+                "description": "Updates mutable profile fields of the active parish (requires ref:parish-admin).",
+                "operationId": "updateCurrentParishProfile",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.UpdateParishProfileRequest",
+                                "summary": "body",
+                                "description": "Parish profile payload"
+                            }
+                        }
+                    },
+                    "description": "Parish profile payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_ParishResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Update current parish profile",
+                "tags": [
+                    "Ref"
+                ]
+            }
+        },
+        "/ref/parishes/search": {
+            "post": {
+                "description": "Searches parishes with optional query, diocese/active/memberOnly filters, and cursor pagination.",
+                "operationId": "searchParishes",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.SearchParishesRequest",
+                                "summary": "body",
+                                "description": "Search parameters"
+                            }
+                        }
+                    },
+                    "description": "Search parameters"
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_ParishResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    }
+                },
+                "summary": "Search parishes",
+                "tags": [
+                    "Ref"
+                ]
+            }
+        },
+        "/ref/parishes/{id}": {
+            "delete": {
+                "description": "Soft-deletes a parish when no zones, wards, lookups, or periods reference it.",
+                "operationId": "deleteParish",
+                "parameters": [
+                    {
+                        "description": "Parish UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    }
+                },
+                "summary": "Delete parish",
+                "tags": [
+                    "Ref"
+                ]
+            },
+            "get": {
+                "description": "Returns a single non-deleted parish by ID.",
+                "operationId": "getParish",
+                "parameters": [
+                    {
+                        "description": "Parish UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_ParishResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Get parish",
+                "tags": [
+                    "Ref"
+                ]
+            },
+            "patch": {
+                "description": "Updates parish fields (super-admin) or profile fields (parish-admin).",
+                "operationId": "updateParish",
+                "parameters": [
+                    {
+                        "description": "Parish UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.UpdateParishRequest",
+                                "summary": "body",
+                                "description": "Parish update payload"
+                            }
+                        }
+                    },
+                    "description": "Parish update payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_ParishResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Update parish",
+                "tags": [
+                    "Ref"
+                ]
+            }
+        },
+        "/ref/parishes/{id}/members": {
+            "post": {
+                "description": "Adds a user (or creates/invites via email) as a member or admin of a parish.",
+                "operationId": "addParishMember",
+                "parameters": [
+                    {
+                        "description": "Parish UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.AddParishMemberRequest",
+                                "summary": "body",
+                                "description": "Member payload"
+                            }
+                        }
+                    },
+                    "description": "Member payload",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_ParishMemberResponse"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Add parish member",
+                "tags": [
+                    "Ref"
+                ]
+            }
+        },
+        "/ref/parishes/{id}/members/search": {
+            "post": {
+                "description": "Searches members of a parish with optional query, role filter, and cursor pagination.",
+                "operationId": "searchParishMembers",
+                "parameters": [
+                    {
+                        "description": "Parish UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.SearchParishMembersRequest",
+                                "summary": "body",
+                                "description": "Search parameters"
+                            }
+                        }
+                    },
+                    "description": "Search parameters"
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_ParishMemberResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Search parish members",
+                "tags": [
+                    "Ref"
+                ]
+            }
+        },
+        "/ref/parishes/{id}/members/{userId}": {
+            "delete": {
+                "description": "Removes a member from a parish and revokes Casbin parish-admin policy.",
+                "operationId": "removeParishMember",
+                "parameters": [
+                    {
+                        "description": "Parish UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "User UUID",
+                        "in": "path",
+                        "name": "userId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    }
+                },
+                "summary": "Remove parish member",
+                "tags": [
+                    "Ref"
+                ]
+            },
+            "patch": {
+                "description": "Updates a parish member role and syncs Casbin parish-admin policy.",
+                "operationId": "updateParishMember",
+                "parameters": [
+                    {
+                        "description": "Parish UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "User UUID",
+                        "in": "path",
+                        "name": "userId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.UpdateParishMemberRequest",
+                                "summary": "body",
+                                "description": "Role update payload"
+                            }
+                        }
+                    },
+                    "description": "Role update payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_ParishMemberResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Update parish member",
+                "tags": [
+                    "Ref"
                 ]
             }
         },
