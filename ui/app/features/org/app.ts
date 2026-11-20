@@ -1,4 +1,4 @@
-import { Network } from "lucide-react";
+import { Building2 } from "lucide-react";
 
 import type { AppDef } from "~/shared/app-def";
 
@@ -7,5 +7,5 @@ export const app: AppDef = {
   path: "/org",
   order: 1,
   plate: 1,
-  icon: Network,
+  icon: Building2,
 };

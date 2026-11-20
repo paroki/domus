@@ -223,6 +223,45 @@ const id = {
     closePeriod: "Tutup",
     reopenPeriod: "Buka Kembali",
   },
+  org: {
+    title: "Direktori Organisasi",
+    subtitle:
+      "Jelajahi struktur organisasi, pengurus, dan tautan undangan paroki.",
+    noParishTitle: "Paroki aktif belum dipilih",
+    noParishDescription:
+      "Pilih paroki aktif di bagian atas halaman atau gabung melalui tautan undangan.",
+    allOrgs: "Semua Organisasi",
+    myOrgs: "Organisasi Saya",
+    allKinds: "Semua Jenis",
+    searchPlaceholder: "Cari nama atau kode organisasi…",
+    addOrg: "Tambah Organisasi",
+    createOrgTitle: "Tambah Organisasi Baru",
+    orgAdminBadge: "Admin Organisasi",
+    orgMemberBadge: "Anggota",
+    enterAsAdmin: "Masuk sebagai Admin",
+    backToDirectory: "Kembali ke Direktori Organisasi",
+    editOrg: "Ubah Profil Organisasi",
+    deleteOrg: "Hapus Organisasi",
+    rosterRestrictedTitle: "Keanggotaan Diperlukan",
+    rosterRestrictedDescription:
+      "Hanya anggota atau pengurus organisasi ini yang dapat melihat daftar anggota internal.",
+    parishAdminBanner:
+      "Anda adalah Admin Paroki, namun belum terdaftar sebagai pengurus organisasi ini.",
+    joinAsOrgAdmin: "Gabung sebagai Admin Organisasi",
+    appointOrgAdmin: "Tunjuk Admin Organisasi",
+    rosterTitle: "Daftar Anggota",
+    invitesTitle: "Tautan Undangan",
+    createInvite: "Buat Tautan Undangan",
+    copyLink: "Salin Tautan",
+    copied: "Tersalin",
+    revokeInvite: "Cabut Tautan",
+    leaveOrg: "Keluar dari Organisasi",
+    joinTitle: "Undangan Organisasi",
+    joinButton: "Gabung ke {{orgName}}",
+    joining: "Bergabung…",
+    invalidInviteTitle: "Tautan Undangan Tidak Berlaku",
+    backHome: "Kembali ke Beranda",
+  },
 } as const;
 
 export default id;
