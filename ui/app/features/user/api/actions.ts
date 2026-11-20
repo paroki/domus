@@ -78,7 +78,11 @@ export function useRevokeSession() {
         USER_ERRORS,
       );
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: userKeys.sessions() }),
+    onSuccess: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: userKeys.sessions() }),
+        qc.invalidateQueries({ queryKey: userKeys.me() }),
+      ]),
   });
 }
 
