@@ -21,6 +21,30 @@ func (f CasbinRuleFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, 
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CasbinRuleMutation", m)
 }
 
+// The DioceseFunc type is an adapter to allow the use of ordinary
+// function as Diocese mutator.
+type DioceseFunc func(context.Context, *ent.DioceseMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f DioceseFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.DioceseMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.DioceseMutation", m)
+}
+
+// The LookupFunc type is an adapter to allow the use of ordinary
+// function as Lookup mutator.
+type LookupFunc func(context.Context, *ent.LookupMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f LookupFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.LookupMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LookupMutation", m)
+}
+
 // The MetaFunc type is an adapter to allow the use of ordinary
 // function as Meta mutator.
 type MetaFunc func(context.Context, *ent.MetaMutation) (ent.Value, error)
@@ -31,6 +55,42 @@ func (f MetaFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error)
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MetaMutation", m)
+}
+
+// The ParishFunc type is an adapter to allow the use of ordinary
+// function as Parish mutator.
+type ParishFunc func(context.Context, *ent.ParishMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ParishFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ParishMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ParishMutation", m)
+}
+
+// The ParishMemberFunc type is an adapter to allow the use of ordinary
+// function as ParishMember mutator.
+type ParishMemberFunc func(context.Context, *ent.ParishMemberMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ParishMemberFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ParishMemberMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ParishMemberMutation", m)
+}
+
+// The PeriodFunc type is an adapter to allow the use of ordinary
+// function as Period mutator.
+type PeriodFunc func(context.Context, *ent.PeriodMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f PeriodFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.PeriodMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PeriodMutation", m)
 }
 
 // The UserFunc type is an adapter to allow the use of ordinary
@@ -79,6 +139,30 @@ func (f UserSessionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value,
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserSessionMutation", m)
+}
+
+// The WardFunc type is an adapter to allow the use of ordinary
+// function as Ward mutator.
+type WardFunc func(context.Context, *ent.WardMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f WardFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.WardMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.WardMutation", m)
+}
+
+// The ZoneFunc type is an adapter to allow the use of ordinary
+// function as Zone mutator.
+type ZoneFunc func(context.Context, *ent.ZoneMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ZoneFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ZoneMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ZoneMutation", m)
 }
 
 // Condition is a hook condition function.

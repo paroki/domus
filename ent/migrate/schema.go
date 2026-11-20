@@ -33,6 +33,78 @@ var (
 			},
 		},
 	}
+	// DiocesesColumns holds the columns for the "dioceses" table.
+	DiocesesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "code", Type: field.TypeString, Unique: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "bishop_name", Type: field.TypeString, Nullable: true},
+		{Name: "address", Type: field.TypeString, Nullable: true},
+		{Name: "phone", Type: field.TypeString, Nullable: true},
+		{Name: "email", Type: field.TypeString, Nullable: true},
+		{Name: "website", Type: field.TypeString, Nullable: true},
+		{Name: "active", Type: field.TypeBool, Default: true},
+	}
+	// DiocesesTable holds the schema information for the "dioceses" table.
+	DiocesesTable = &schema.Table{
+		Name:       "dioceses",
+		Columns:    DiocesesColumns,
+		PrimaryKey: []*schema.Column{DiocesesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "diocese_code",
+				Unique:  true,
+				Columns: []*schema.Column{DiocesesColumns[4]},
+			},
+			{
+				Name:    "diocese_active",
+				Unique:  false,
+				Columns: []*schema.Column{DiocesesColumns[11]},
+			},
+		},
+	}
+	// LookupsColumns holds the columns for the "lookups" table.
+	LookupsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "category", Type: field.TypeString},
+		{Name: "code", Type: field.TypeString},
+		{Name: "label", Type: field.TypeString},
+		{Name: "sort_order", Type: field.TypeInt, Default: 0},
+		{Name: "active", Type: field.TypeBool, Default: true},
+		{Name: "parish_id", Type: field.TypeUUID, Nullable: true},
+	}
+	// LookupsTable holds the schema information for the "lookups" table.
+	LookupsTable = &schema.Table{
+		Name:       "lookups",
+		Columns:    LookupsColumns,
+		PrimaryKey: []*schema.Column{LookupsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "lookups_parishes_lookups",
+				Columns:    []*schema.Column{LookupsColumns[9]},
+				RefColumns: []*schema.Column{ParishesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "lookup_parish_id_category_code",
+				Unique:  true,
+				Columns: []*schema.Column{LookupsColumns[9], LookupsColumns[4], LookupsColumns[5]},
+			},
+			{
+				Name:    "lookup_parish_id_category_sort_order",
+				Unique:  false,
+				Columns: []*schema.Column{LookupsColumns[9], LookupsColumns[4], LookupsColumns[7]},
+			},
+		},
+	}
 	// MetaColumns holds the columns for the "meta" table.
 	MetaColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -46,6 +118,127 @@ var (
 		Name:       "meta",
 		Columns:    MetaColumns,
 		PrimaryKey: []*schema.Column{MetaColumns[0]},
+	}
+	// ParishesColumns holds the columns for the "parishes" table.
+	ParishesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "code", Type: field.TypeString, Unique: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "patron_saint", Type: field.TypeString, Nullable: true},
+		{Name: "pastor_name", Type: field.TypeString, Nullable: true},
+		{Name: "address", Type: field.TypeString, Nullable: true},
+		{Name: "phone", Type: field.TypeString, Nullable: true},
+		{Name: "email", Type: field.TypeString, Nullable: true},
+		{Name: "website", Type: field.TypeString, Nullable: true},
+		{Name: "logo_url", Type: field.TypeString, Nullable: true},
+		{Name: "letterhead", Type: field.TypeString, Nullable: true},
+		{Name: "active", Type: field.TypeBool, Default: true},
+		{Name: "diocese_id", Type: field.TypeUUID},
+	}
+	// ParishesTable holds the schema information for the "parishes" table.
+	ParishesTable = &schema.Table{
+		Name:       "parishes",
+		Columns:    ParishesColumns,
+		PrimaryKey: []*schema.Column{ParishesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "parishes_dioceses_parishes",
+				Columns:    []*schema.Column{ParishesColumns[15]},
+				RefColumns: []*schema.Column{DiocesesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "parish_code",
+				Unique:  true,
+				Columns: []*schema.Column{ParishesColumns[4]},
+			},
+			{
+				Name:    "parish_diocese_id_active",
+				Unique:  false,
+				Columns: []*schema.Column{ParishesColumns[15], ParishesColumns[14]},
+			},
+		},
+	}
+	// ParishMembersColumns holds the columns for the "parish_members" table.
+	ParishMembersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "user_id", Type: field.TypeUUID},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"admin", "member"}, Default: "member"},
+		{Name: "parish_id", Type: field.TypeUUID},
+	}
+	// ParishMembersTable holds the schema information for the "parish_members" table.
+	ParishMembersTable = &schema.Table{
+		Name:       "parish_members",
+		Columns:    ParishMembersColumns,
+		PrimaryKey: []*schema.Column{ParishMembersColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "parish_members_parishes_members",
+				Columns:    []*schema.Column{ParishMembersColumns[5]},
+				RefColumns: []*schema.Column{ParishesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "parishmember_parish_id_user_id",
+				Unique:  true,
+				Columns: []*schema.Column{ParishMembersColumns[5], ParishMembersColumns[3]},
+			},
+			{
+				Name:    "parishmember_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{ParishMembersColumns[3]},
+			},
+		},
+	}
+	// PeriodsColumns holds the columns for the "periods" table.
+	PeriodsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "type", Type: field.TypeEnum, Enums: []string{"fiscal", "liturgical"}, Default: "fiscal"},
+		{Name: "code", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString},
+		{Name: "start_date", Type: field.TypeString},
+		{Name: "end_date", Type: field.TypeString},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"open", "closed"}, Default: "open"},
+		{Name: "is_current", Type: field.TypeBool, Default: false},
+		{Name: "parish_id", Type: field.TypeUUID},
+	}
+	// PeriodsTable holds the schema information for the "periods" table.
+	PeriodsTable = &schema.Table{
+		Name:       "periods",
+		Columns:    PeriodsColumns,
+		PrimaryKey: []*schema.Column{PeriodsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "periods_parishes_periods",
+				Columns:    []*schema.Column{PeriodsColumns[11]},
+				RefColumns: []*schema.Column{ParishesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "period_parish_id_code",
+				Unique:  true,
+				Columns: []*schema.Column{PeriodsColumns[11], PeriodsColumns[5]},
+			},
+			{
+				Name:    "period_parish_id_type_is_current",
+				Unique:  false,
+				Columns: []*schema.Column{PeriodsColumns[11], PeriodsColumns[4], PeriodsColumns[10]},
+			},
+		},
 	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
@@ -187,21 +380,122 @@ var (
 			},
 		},
 	}
+	// WardsColumns holds the columns for the "wards" table.
+	WardsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "code", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString},
+		{Name: "patron_saint", Type: field.TypeString, Nullable: true},
+		{Name: "head_name", Type: field.TypeString, Nullable: true},
+		{Name: "head_phone", Type: field.TypeString, Nullable: true},
+		{Name: "active", Type: field.TypeBool, Default: true},
+		{Name: "parish_id", Type: field.TypeUUID},
+		{Name: "zone_id", Type: field.TypeUUID},
+	}
+	// WardsTable holds the schema information for the "wards" table.
+	WardsTable = &schema.Table{
+		Name:       "wards",
+		Columns:    WardsColumns,
+		PrimaryKey: []*schema.Column{WardsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "wards_parishes_wards",
+				Columns:    []*schema.Column{WardsColumns[10]},
+				RefColumns: []*schema.Column{ParishesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "wards_zones_wards",
+				Columns:    []*schema.Column{WardsColumns[11]},
+				RefColumns: []*schema.Column{ZonesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "ward_parish_id_code",
+				Unique:  true,
+				Columns: []*schema.Column{WardsColumns[10], WardsColumns[4]},
+			},
+			{
+				Name:    "ward_parish_id_zone_id_active",
+				Unique:  false,
+				Columns: []*schema.Column{WardsColumns[10], WardsColumns[11], WardsColumns[9]},
+			},
+		},
+	}
+	// ZonesColumns holds the columns for the "zones" table.
+	ZonesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "type", Type: field.TypeEnum, Enums: []string{"zone", "station"}, Default: "zone"},
+		{Name: "code", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString},
+		{Name: "coordinator_name", Type: field.TypeString, Nullable: true},
+		{Name: "coordinator_phone", Type: field.TypeString, Nullable: true},
+		{Name: "active", Type: field.TypeBool, Default: true},
+		{Name: "parish_id", Type: field.TypeUUID},
+	}
+	// ZonesTable holds the schema information for the "zones" table.
+	ZonesTable = &schema.Table{
+		Name:       "zones",
+		Columns:    ZonesColumns,
+		PrimaryKey: []*schema.Column{ZonesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "zones_parishes_zones",
+				Columns:    []*schema.Column{ZonesColumns[10]},
+				RefColumns: []*schema.Column{ParishesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "zone_parish_id_code",
+				Unique:  true,
+				Columns: []*schema.Column{ZonesColumns[10], ZonesColumns[5]},
+			},
+			{
+				Name:    "zone_parish_id_type_active",
+				Unique:  false,
+				Columns: []*schema.Column{ZonesColumns[10], ZonesColumns[4], ZonesColumns[9]},
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		CasbinRulesTable,
+		DiocesesTable,
+		LookupsTable,
 		MetaTable,
+		ParishesTable,
+		ParishMembersTable,
+		PeriodsTable,
 		UsersTable,
 		UserAccountsTable,
 		UserOtpsTable,
 		UserSessionsTable,
+		WardsTable,
+		ZonesTable,
 	}
 )
 
 func init() {
+	LookupsTable.ForeignKeys[0].RefTable = ParishesTable
+	ParishesTable.ForeignKeys[0].RefTable = DiocesesTable
+	ParishMembersTable.ForeignKeys[0].RefTable = ParishesTable
+	PeriodsTable.ForeignKeys[0].RefTable = ParishesTable
 	UserAccountsTable.ForeignKeys[0].RefTable = UsersTable
 	UserOtpsTable.Annotation = &entsql.Annotation{
 		Table: "user_otps",
 	}
 	UserSessionsTable.ForeignKeys[0].RefTable = UsersTable
+	WardsTable.ForeignKeys[0].RefTable = ParishesTable
+	WardsTable.ForeignKeys[1].RefTable = ZonesTable
+	ZonesTable.ForeignKeys[0].RefTable = ParishesTable
 }

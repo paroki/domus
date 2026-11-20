@@ -8,8 +8,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/ent/meta"
+	"github.com/paroki/domus/ent/parishmember"
+	"github.com/paroki/domus/ent/period"
 	"github.com/paroki/domus/ent/schema"
 	"github.com/paroki/domus/ent/user"
+	"github.com/paroki/domus/ent/zone"
 	"github.com/paroki/domus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -180,4 +183,174 @@ func TestUserOTPSchema_Persistence(t *testing.T) {
 	assert.Equal(t, 0, otp.Attempts)
 	assert.Equal(t, "dave@paroki.org", otp.Target)
 	assert.Equal(t, "sha256-otp-hash", otp.CodeHash)
+}
+
+func TestRefSchemas_TerritoryHierarchyAndUniqueness(t *testing.T) {
+	ctx := context.Background()
+	client := testutil.NewEntClient(t)
+
+	diocese, err := client.Diocese.Create().
+		SetCode("KAJ").
+		SetName("Keuskupan Agung Jakarta").
+		Save(ctx)
+	require.NoError(t, err)
+	assert.True(t, diocese.Active)
+	assert.Nil(t, diocese.DeletedAt)
+
+	p1, err := client.Parish.Create().
+		SetDiocese(diocese).
+		SetCode("P001").
+		SetName("Paroki Katedral").
+		Save(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, diocese.ID, p1.DioceseID)
+
+	p2, err := client.Parish.Create().
+		SetDiocese(diocese).
+		SetCode("P002").
+		SetName("Paroki Blok B").
+		Save(ctx)
+	require.NoError(t, err)
+
+	z1, err := client.Zone.Create().
+		SetParish(p1).
+		SetCode("WIL-01").
+		SetName("Wilayah 1").
+		Save(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, zone.TypeZone, z1.Type)
+
+	// Same (parish_id, code) on Zone fails; different parish succeeds.
+	_, err = client.Zone.Create().
+		SetParish(p1).
+		SetCode("WIL-01").
+		SetName("Wilayah Duplikat").
+		Save(ctx)
+	require.Error(t, err)
+	assert.True(t, ent.IsConstraintError(err))
+
+	z2, err := client.Zone.Create().
+		SetParish(p2).
+		SetType(zone.TypeStation).
+		SetCode("WIL-01").
+		SetName("Stasi 1").
+		Save(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, zone.TypeStation, z2.Type)
+
+	w1, err := client.Ward.Create().
+		SetParish(p1).
+		SetZone(z1).
+		SetCode("LING-01").
+		SetName("Lingkungan 1").
+		Save(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, p1.ID, w1.ParishID)
+	assert.Equal(t, z1.ID, w1.ZoneID)
+
+	// Same (parish_id, code) on Ward fails.
+	_, err = client.Ward.Create().
+		SetParish(p1).
+		SetZone(z1).
+		SetCode("LING-01").
+		SetName("Lingkungan Duplikat").
+		Save(ctx)
+	require.Error(t, err)
+	assert.True(t, ent.IsConstraintError(err))
+
+	// Traverse Diocese -> Parishes -> Zones -> Wards.
+	parishes, err := diocese.QueryParishes().All(ctx)
+	require.NoError(t, err)
+	assert.Len(t, parishes, 2)
+
+	wards, err := z1.QueryWards().All(ctx)
+	require.NoError(t, err)
+	assert.Len(t, wards, 1)
+	assert.Equal(t, w1.ID, wards[0].ID)
+}
+
+func TestParishMemberSchema_UniqueParishUserAndNoSoftDelete(t *testing.T) {
+	ctx := context.Background()
+	client := testutil.NewEntClient(t)
+
+	// ParishMember must NOT embed SoftDeleteMixin.
+	assert.Len(t, schema.ParishMember{}.Mixin(), 2)
+
+	diocese, err := client.Diocese.Create().SetCode("KAS").SetName("Keuskupan Agung Semarang").Save(ctx)
+	require.NoError(t, err)
+	parish, err := client.Parish.Create().SetDiocese(diocese).SetCode("P-KAS-01").SetName("Paroki Kotabaru").Save(ctx)
+	require.NoError(t, err)
+
+	userID := schema.NewID()
+	member, err := client.ParishMember.Create().
+		SetParish(parish).
+		SetUserID(userID).
+		SetRole(parishmember.RoleAdmin).
+		Save(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, parishmember.RoleAdmin, member.Role)
+
+	_, err = client.ParishMember.Create().
+		SetParish(parish).
+		SetUserID(userID).
+		Save(ctx)
+	require.Error(t, err)
+	assert.True(t, ent.IsConstraintError(err))
+}
+
+func TestLookupAndPeriodSchemas_GlobalVsTenantAndPersistence(t *testing.T) {
+	ctx := context.Background()
+	client := testutil.NewEntClient(t)
+
+	diocese, err := client.Diocese.Create().SetCode("KBD").SetName("Keuskupan Bandung").Save(ctx)
+	require.NoError(t, err)
+	parish, err := client.Parish.Create().SetDiocese(diocese).SetCode("P-KBD-01").SetName("Paroki Katedral Bandung").Save(ctx)
+	require.NoError(t, err)
+
+	// Global lookup (parish_id = nil)
+	globalLookup, err := client.Lookup.Create().
+		SetCategory("sacrament").
+		SetCode("BAPTISM").
+		SetLabel("Baptis").
+		SetSortOrder(1).
+		Save(ctx)
+	require.NoError(t, err)
+	assert.Nil(t, globalLookup.ParishID)
+
+	// Tenant lookup (parish_id = parish.ID)
+	tenantLookup, err := client.Lookup.Create().
+		SetParish(parish).
+		SetCategory("sacrament").
+		SetCode("BAPTISM").
+		SetLabel("Baptis Paroki").
+		SetSortOrder(1).
+		Save(ctx)
+	require.NoError(t, err)
+	require.NotNil(t, tenantLookup.ParishID)
+	assert.Equal(t, parish.ID, *tenantLookup.ParishID)
+
+	// Duplicate tenant lookup fails
+	_, err = client.Lookup.Create().
+		SetParish(parish).
+		SetCategory("sacrament").
+		SetCode("BAPTISM").
+		SetLabel("Duplicate").
+		Save(ctx)
+	require.Error(t, err)
+	assert.True(t, ent.IsConstraintError(err))
+
+	// Period persistence
+	p, err := client.Period.Create().
+		SetParish(parish).
+		SetType(period.TypeLiturgical).
+		SetCode("LIT-2026").
+		SetName("Tahun Liturgi 2026").
+		SetStartDate("2025-11-30").
+		SetEndDate("2026-11-28").
+		SetIsCurrent(true).
+		Save(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, period.TypeLiturgical, p.Type)
+	assert.Equal(t, period.StatusOpen, p.Status)
+	assert.True(t, p.IsCurrent)
 }

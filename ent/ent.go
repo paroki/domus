@@ -13,11 +13,18 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/paroki/domus/ent/casbinrule"
+	"github.com/paroki/domus/ent/diocese"
+	"github.com/paroki/domus/ent/lookup"
 	"github.com/paroki/domus/ent/meta"
+	"github.com/paroki/domus/ent/parish"
+	"github.com/paroki/domus/ent/parishmember"
+	"github.com/paroki/domus/ent/period"
 	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/useraccount"
 	"github.com/paroki/domus/ent/userotp"
 	"github.com/paroki/domus/ent/usersession"
+	"github.com/paroki/domus/ent/ward"
+	"github.com/paroki/domus/ent/zone"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -78,12 +85,19 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			casbinrule.Table:  casbinrule.ValidColumn,
-			meta.Table:        meta.ValidColumn,
-			user.Table:        user.ValidColumn,
-			useraccount.Table: useraccount.ValidColumn,
-			userotp.Table:     userotp.ValidColumn,
-			usersession.Table: usersession.ValidColumn,
+			casbinrule.Table:   casbinrule.ValidColumn,
+			diocese.Table:      diocese.ValidColumn,
+			lookup.Table:       lookup.ValidColumn,
+			meta.Table:         meta.ValidColumn,
+			parish.Table:       parish.ValidColumn,
+			parishmember.Table: parishmember.ValidColumn,
+			period.Table:       period.ValidColumn,
+			user.Table:         user.ValidColumn,
+			useraccount.Table:  useraccount.ValidColumn,
+			userotp.Table:      userotp.ValidColumn,
+			usersession.Table:  usersession.ValidColumn,
+			ward.Table:         ward.ValidColumn,
+			zone.Table:         zone.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

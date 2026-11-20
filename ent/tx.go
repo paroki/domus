@@ -14,8 +14,18 @@ type Tx struct {
 	config
 	// CasbinRule is the client for interacting with the CasbinRule builders.
 	CasbinRule *CasbinRuleClient
+	// Diocese is the client for interacting with the Diocese builders.
+	Diocese *DioceseClient
+	// Lookup is the client for interacting with the Lookup builders.
+	Lookup *LookupClient
 	// Meta is the client for interacting with the Meta builders.
 	Meta *MetaClient
+	// Parish is the client for interacting with the Parish builders.
+	Parish *ParishClient
+	// ParishMember is the client for interacting with the ParishMember builders.
+	ParishMember *ParishMemberClient
+	// Period is the client for interacting with the Period builders.
+	Period *PeriodClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// UserAccount is the client for interacting with the UserAccount builders.
@@ -24,6 +34,10 @@ type Tx struct {
 	UserOTP *UserOTPClient
 	// UserSession is the client for interacting with the UserSession builders.
 	UserSession *UserSessionClient
+	// Ward is the client for interacting with the Ward builders.
+	Ward *WardClient
+	// Zone is the client for interacting with the Zone builders.
+	Zone *ZoneClient
 
 	// lazily loaded.
 	client     *Client
@@ -156,11 +170,18 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.CasbinRule = NewCasbinRuleClient(tx.config)
+	tx.Diocese = NewDioceseClient(tx.config)
+	tx.Lookup = NewLookupClient(tx.config)
 	tx.Meta = NewMetaClient(tx.config)
+	tx.Parish = NewParishClient(tx.config)
+	tx.ParishMember = NewParishMemberClient(tx.config)
+	tx.Period = NewPeriodClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.UserAccount = NewUserAccountClient(tx.config)
 	tx.UserOTP = NewUserOTPClient(tx.config)
 	tx.UserSession = NewUserSessionClient(tx.config)
+	tx.Ward = NewWardClient(tx.config)
+	tx.Zone = NewZoneClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

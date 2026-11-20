@@ -9,8 +9,23 @@ import (
 // CasbinRule is the predicate function for casbinrule builders.
 type CasbinRule func(*sql.Selector)
 
+// Diocese is the predicate function for diocese builders.
+type Diocese func(*sql.Selector)
+
+// Lookup is the predicate function for lookup builders.
+type Lookup func(*sql.Selector)
+
 // Meta is the predicate function for meta builders.
 type Meta func(*sql.Selector)
+
+// Parish is the predicate function for parish builders.
+type Parish func(*sql.Selector)
+
+// ParishMember is the predicate function for parishmember builders.
+type ParishMember func(*sql.Selector)
+
+// Period is the predicate function for period builders.
+type Period func(*sql.Selector)
 
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
@@ -23,3 +38,9 @@ type UserOTP func(*sql.Selector)
 
 // UserSession is the predicate function for usersession builders.
 type UserSession func(*sql.Selector)
+
+// Ward is the predicate function for ward builders.
+type Ward func(*sql.Selector)
+
+// Zone is the predicate function for zone builders.
+type Zone func(*sql.Selector)

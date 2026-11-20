@@ -13,12 +13,19 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent/casbinrule"
+	"github.com/paroki/domus/ent/diocese"
+	"github.com/paroki/domus/ent/lookup"
 	"github.com/paroki/domus/ent/meta"
+	"github.com/paroki/domus/ent/parish"
+	"github.com/paroki/domus/ent/parishmember"
+	"github.com/paroki/domus/ent/period"
 	"github.com/paroki/domus/ent/predicate"
 	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/useraccount"
 	"github.com/paroki/domus/ent/userotp"
 	"github.com/paroki/domus/ent/usersession"
+	"github.com/paroki/domus/ent/ward"
+	"github.com/paroki/domus/ent/zone"
 )
 
 const (
@@ -30,12 +37,19 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeCasbinRule  = "CasbinRule"
-	TypeMeta        = "Meta"
-	TypeUser        = "User"
-	TypeUserAccount = "UserAccount"
-	TypeUserOTP     = "UserOTP"
-	TypeUserSession = "UserSession"
+	TypeCasbinRule   = "CasbinRule"
+	TypeDiocese      = "Diocese"
+	TypeLookup       = "Lookup"
+	TypeMeta         = "Meta"
+	TypeParish       = "Parish"
+	TypeParishMember = "ParishMember"
+	TypePeriod       = "Period"
+	TypeUser         = "User"
+	TypeUserAccount  = "UserAccount"
+	TypeUserOTP      = "UserOTP"
+	TypeUserSession  = "UserSession"
+	TypeWard         = "Ward"
+	TypeZone         = "Zone"
 )
 
 // CasbinRuleMutation represents an operation that mutates the CasbinRule nodes in the graph.
@@ -694,6 +708,1983 @@ func (m *CasbinRuleMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown CasbinRule edge %s", name)
 }
 
+// DioceseMutation represents an operation that mutates the Diocese nodes in the graph.
+type DioceseMutation struct {
+	config
+	op              Op
+	typ             string
+	id              *uuid.UUID
+	created_at      *time.Time
+	updated_at      *time.Time
+	deleted_at      *time.Time
+	code            *string
+	name            *string
+	bishop_name     *string
+	address         *string
+	phone           *string
+	email           *string
+	website         *string
+	active          *bool
+	clearedFields   map[string]struct{}
+	parishes        map[uuid.UUID]struct{}
+	removedparishes map[uuid.UUID]struct{}
+	clearedparishes bool
+	done            bool
+	oldValue        func(context.Context) (*Diocese, error)
+	predicates      []predicate.Diocese
+}
+
+var _ ent.Mutation = (*DioceseMutation)(nil)
+
+// dioceseOption allows management of the mutation configuration using functional options.
+type dioceseOption func(*DioceseMutation)
+
+// newDioceseMutation creates new mutation for the Diocese entity.
+func newDioceseMutation(c config, op Op, opts ...dioceseOption) *DioceseMutation {
+	m := &DioceseMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeDiocese,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withDioceseID sets the ID field of the mutation.
+func withDioceseID(id uuid.UUID) dioceseOption {
+	return func(m *DioceseMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Diocese
+		)
+		m.oldValue = func(ctx context.Context) (*Diocese, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Diocese.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withDiocese sets the old Diocese of the mutation.
+func withDiocese(node *Diocese) dioceseOption {
+	return func(m *DioceseMutation) {
+		m.oldValue = func(context.Context) (*Diocese, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m DioceseMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m DioceseMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Diocese entities.
+func (m *DioceseMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *DioceseMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *DioceseMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Diocese.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *DioceseMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *DioceseMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the Diocese entity.
+// If the Diocese object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DioceseMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *DioceseMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *DioceseMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *DioceseMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the Diocese entity.
+// If the Diocese object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DioceseMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *DioceseMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *DioceseMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *DioceseMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the Diocese entity.
+// If the Diocese object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DioceseMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *DioceseMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[diocese.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *DioceseMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[diocese.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *DioceseMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, diocese.FieldDeletedAt)
+}
+
+// SetCode sets the "code" field.
+func (m *DioceseMutation) SetCode(s string) {
+	m.code = &s
+}
+
+// Code returns the value of the "code" field in the mutation.
+func (m *DioceseMutation) Code() (r string, exists bool) {
+	v := m.code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCode returns the old "code" field's value of the Diocese entity.
+// If the Diocese object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DioceseMutation) OldCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCode: %w", err)
+	}
+	return oldValue.Code, nil
+}
+
+// ResetCode resets all changes to the "code" field.
+func (m *DioceseMutation) ResetCode() {
+	m.code = nil
+}
+
+// SetName sets the "name" field.
+func (m *DioceseMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *DioceseMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Diocese entity.
+// If the Diocese object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DioceseMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *DioceseMutation) ResetName() {
+	m.name = nil
+}
+
+// SetBishopName sets the "bishop_name" field.
+func (m *DioceseMutation) SetBishopName(s string) {
+	m.bishop_name = &s
+}
+
+// BishopName returns the value of the "bishop_name" field in the mutation.
+func (m *DioceseMutation) BishopName() (r string, exists bool) {
+	v := m.bishop_name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBishopName returns the old "bishop_name" field's value of the Diocese entity.
+// If the Diocese object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DioceseMutation) OldBishopName(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBishopName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBishopName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBishopName: %w", err)
+	}
+	return oldValue.BishopName, nil
+}
+
+// ClearBishopName clears the value of the "bishop_name" field.
+func (m *DioceseMutation) ClearBishopName() {
+	m.bishop_name = nil
+	m.clearedFields[diocese.FieldBishopName] = struct{}{}
+}
+
+// BishopNameCleared returns if the "bishop_name" field was cleared in this mutation.
+func (m *DioceseMutation) BishopNameCleared() bool {
+	_, ok := m.clearedFields[diocese.FieldBishopName]
+	return ok
+}
+
+// ResetBishopName resets all changes to the "bishop_name" field.
+func (m *DioceseMutation) ResetBishopName() {
+	m.bishop_name = nil
+	delete(m.clearedFields, diocese.FieldBishopName)
+}
+
+// SetAddress sets the "address" field.
+func (m *DioceseMutation) SetAddress(s string) {
+	m.address = &s
+}
+
+// Address returns the value of the "address" field in the mutation.
+func (m *DioceseMutation) Address() (r string, exists bool) {
+	v := m.address
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAddress returns the old "address" field's value of the Diocese entity.
+// If the Diocese object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DioceseMutation) OldAddress(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAddress is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAddress requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAddress: %w", err)
+	}
+	return oldValue.Address, nil
+}
+
+// ClearAddress clears the value of the "address" field.
+func (m *DioceseMutation) ClearAddress() {
+	m.address = nil
+	m.clearedFields[diocese.FieldAddress] = struct{}{}
+}
+
+// AddressCleared returns if the "address" field was cleared in this mutation.
+func (m *DioceseMutation) AddressCleared() bool {
+	_, ok := m.clearedFields[diocese.FieldAddress]
+	return ok
+}
+
+// ResetAddress resets all changes to the "address" field.
+func (m *DioceseMutation) ResetAddress() {
+	m.address = nil
+	delete(m.clearedFields, diocese.FieldAddress)
+}
+
+// SetPhone sets the "phone" field.
+func (m *DioceseMutation) SetPhone(s string) {
+	m.phone = &s
+}
+
+// Phone returns the value of the "phone" field in the mutation.
+func (m *DioceseMutation) Phone() (r string, exists bool) {
+	v := m.phone
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPhone returns the old "phone" field's value of the Diocese entity.
+// If the Diocese object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DioceseMutation) OldPhone(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPhone is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPhone requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPhone: %w", err)
+	}
+	return oldValue.Phone, nil
+}
+
+// ClearPhone clears the value of the "phone" field.
+func (m *DioceseMutation) ClearPhone() {
+	m.phone = nil
+	m.clearedFields[diocese.FieldPhone] = struct{}{}
+}
+
+// PhoneCleared returns if the "phone" field was cleared in this mutation.
+func (m *DioceseMutation) PhoneCleared() bool {
+	_, ok := m.clearedFields[diocese.FieldPhone]
+	return ok
+}
+
+// ResetPhone resets all changes to the "phone" field.
+func (m *DioceseMutation) ResetPhone() {
+	m.phone = nil
+	delete(m.clearedFields, diocese.FieldPhone)
+}
+
+// SetEmail sets the "email" field.
+func (m *DioceseMutation) SetEmail(s string) {
+	m.email = &s
+}
+
+// Email returns the value of the "email" field in the mutation.
+func (m *DioceseMutation) Email() (r string, exists bool) {
+	v := m.email
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEmail returns the old "email" field's value of the Diocese entity.
+// If the Diocese object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DioceseMutation) OldEmail(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEmail is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEmail requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEmail: %w", err)
+	}
+	return oldValue.Email, nil
+}
+
+// ClearEmail clears the value of the "email" field.
+func (m *DioceseMutation) ClearEmail() {
+	m.email = nil
+	m.clearedFields[diocese.FieldEmail] = struct{}{}
+}
+
+// EmailCleared returns if the "email" field was cleared in this mutation.
+func (m *DioceseMutation) EmailCleared() bool {
+	_, ok := m.clearedFields[diocese.FieldEmail]
+	return ok
+}
+
+// ResetEmail resets all changes to the "email" field.
+func (m *DioceseMutation) ResetEmail() {
+	m.email = nil
+	delete(m.clearedFields, diocese.FieldEmail)
+}
+
+// SetWebsite sets the "website" field.
+func (m *DioceseMutation) SetWebsite(s string) {
+	m.website = &s
+}
+
+// Website returns the value of the "website" field in the mutation.
+func (m *DioceseMutation) Website() (r string, exists bool) {
+	v := m.website
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWebsite returns the old "website" field's value of the Diocese entity.
+// If the Diocese object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DioceseMutation) OldWebsite(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWebsite is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWebsite requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWebsite: %w", err)
+	}
+	return oldValue.Website, nil
+}
+
+// ClearWebsite clears the value of the "website" field.
+func (m *DioceseMutation) ClearWebsite() {
+	m.website = nil
+	m.clearedFields[diocese.FieldWebsite] = struct{}{}
+}
+
+// WebsiteCleared returns if the "website" field was cleared in this mutation.
+func (m *DioceseMutation) WebsiteCleared() bool {
+	_, ok := m.clearedFields[diocese.FieldWebsite]
+	return ok
+}
+
+// ResetWebsite resets all changes to the "website" field.
+func (m *DioceseMutation) ResetWebsite() {
+	m.website = nil
+	delete(m.clearedFields, diocese.FieldWebsite)
+}
+
+// SetActive sets the "active" field.
+func (m *DioceseMutation) SetActive(b bool) {
+	m.active = &b
+}
+
+// Active returns the value of the "active" field in the mutation.
+func (m *DioceseMutation) Active() (r bool, exists bool) {
+	v := m.active
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldActive returns the old "active" field's value of the Diocese entity.
+// If the Diocese object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DioceseMutation) OldActive(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldActive is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldActive requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldActive: %w", err)
+	}
+	return oldValue.Active, nil
+}
+
+// ResetActive resets all changes to the "active" field.
+func (m *DioceseMutation) ResetActive() {
+	m.active = nil
+}
+
+// AddParishIDs adds the "parishes" edge to the Parish entity by ids.
+func (m *DioceseMutation) AddParishIDs(ids ...uuid.UUID) {
+	if m.parishes == nil {
+		m.parishes = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.parishes[ids[i]] = struct{}{}
+	}
+}
+
+// ClearParishes clears the "parishes" edge to the Parish entity.
+func (m *DioceseMutation) ClearParishes() {
+	m.clearedparishes = true
+}
+
+// ParishesCleared reports if the "parishes" edge to the Parish entity was cleared.
+func (m *DioceseMutation) ParishesCleared() bool {
+	return m.clearedparishes
+}
+
+// RemoveParishIDs removes the "parishes" edge to the Parish entity by IDs.
+func (m *DioceseMutation) RemoveParishIDs(ids ...uuid.UUID) {
+	if m.removedparishes == nil {
+		m.removedparishes = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.parishes, ids[i])
+		m.removedparishes[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedParishes returns the removed IDs of the "parishes" edge to the Parish entity.
+func (m *DioceseMutation) RemovedParishesIDs() (ids []uuid.UUID) {
+	for id := range m.removedparishes {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ParishesIDs returns the "parishes" edge IDs in the mutation.
+func (m *DioceseMutation) ParishesIDs() (ids []uuid.UUID) {
+	for id := range m.parishes {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetParishes resets all changes to the "parishes" edge.
+func (m *DioceseMutation) ResetParishes() {
+	m.parishes = nil
+	m.clearedparishes = false
+	m.removedparishes = nil
+}
+
+// Where appends a list predicates to the DioceseMutation builder.
+func (m *DioceseMutation) Where(ps ...predicate.Diocese) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the DioceseMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *DioceseMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Diocese, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *DioceseMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *DioceseMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Diocese).
+func (m *DioceseMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *DioceseMutation) Fields() []string {
+	fields := make([]string, 0, 11)
+	if m.created_at != nil {
+		fields = append(fields, diocese.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, diocese.FieldUpdatedAt)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, diocese.FieldDeletedAt)
+	}
+	if m.code != nil {
+		fields = append(fields, diocese.FieldCode)
+	}
+	if m.name != nil {
+		fields = append(fields, diocese.FieldName)
+	}
+	if m.bishop_name != nil {
+		fields = append(fields, diocese.FieldBishopName)
+	}
+	if m.address != nil {
+		fields = append(fields, diocese.FieldAddress)
+	}
+	if m.phone != nil {
+		fields = append(fields, diocese.FieldPhone)
+	}
+	if m.email != nil {
+		fields = append(fields, diocese.FieldEmail)
+	}
+	if m.website != nil {
+		fields = append(fields, diocese.FieldWebsite)
+	}
+	if m.active != nil {
+		fields = append(fields, diocese.FieldActive)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *DioceseMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case diocese.FieldCreatedAt:
+		return m.CreatedAt()
+	case diocese.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case diocese.FieldDeletedAt:
+		return m.DeletedAt()
+	case diocese.FieldCode:
+		return m.Code()
+	case diocese.FieldName:
+		return m.Name()
+	case diocese.FieldBishopName:
+		return m.BishopName()
+	case diocese.FieldAddress:
+		return m.Address()
+	case diocese.FieldPhone:
+		return m.Phone()
+	case diocese.FieldEmail:
+		return m.Email()
+	case diocese.FieldWebsite:
+		return m.Website()
+	case diocese.FieldActive:
+		return m.Active()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *DioceseMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case diocese.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case diocese.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case diocese.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case diocese.FieldCode:
+		return m.OldCode(ctx)
+	case diocese.FieldName:
+		return m.OldName(ctx)
+	case diocese.FieldBishopName:
+		return m.OldBishopName(ctx)
+	case diocese.FieldAddress:
+		return m.OldAddress(ctx)
+	case diocese.FieldPhone:
+		return m.OldPhone(ctx)
+	case diocese.FieldEmail:
+		return m.OldEmail(ctx)
+	case diocese.FieldWebsite:
+		return m.OldWebsite(ctx)
+	case diocese.FieldActive:
+		return m.OldActive(ctx)
+	}
+	return nil, fmt.Errorf("unknown Diocese field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *DioceseMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case diocese.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case diocese.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case diocese.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case diocese.FieldCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCode(v)
+		return nil
+	case diocese.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case diocese.FieldBishopName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBishopName(v)
+		return nil
+	case diocese.FieldAddress:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAddress(v)
+		return nil
+	case diocese.FieldPhone:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPhone(v)
+		return nil
+	case diocese.FieldEmail:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEmail(v)
+		return nil
+	case diocese.FieldWebsite:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWebsite(v)
+		return nil
+	case diocese.FieldActive:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetActive(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Diocese field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *DioceseMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *DioceseMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *DioceseMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Diocese numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *DioceseMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(diocese.FieldDeletedAt) {
+		fields = append(fields, diocese.FieldDeletedAt)
+	}
+	if m.FieldCleared(diocese.FieldBishopName) {
+		fields = append(fields, diocese.FieldBishopName)
+	}
+	if m.FieldCleared(diocese.FieldAddress) {
+		fields = append(fields, diocese.FieldAddress)
+	}
+	if m.FieldCleared(diocese.FieldPhone) {
+		fields = append(fields, diocese.FieldPhone)
+	}
+	if m.FieldCleared(diocese.FieldEmail) {
+		fields = append(fields, diocese.FieldEmail)
+	}
+	if m.FieldCleared(diocese.FieldWebsite) {
+		fields = append(fields, diocese.FieldWebsite)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *DioceseMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *DioceseMutation) ClearField(name string) error {
+	switch name {
+	case diocese.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case diocese.FieldBishopName:
+		m.ClearBishopName()
+		return nil
+	case diocese.FieldAddress:
+		m.ClearAddress()
+		return nil
+	case diocese.FieldPhone:
+		m.ClearPhone()
+		return nil
+	case diocese.FieldEmail:
+		m.ClearEmail()
+		return nil
+	case diocese.FieldWebsite:
+		m.ClearWebsite()
+		return nil
+	}
+	return fmt.Errorf("unknown Diocese nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *DioceseMutation) ResetField(name string) error {
+	switch name {
+	case diocese.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case diocese.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case diocese.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case diocese.FieldCode:
+		m.ResetCode()
+		return nil
+	case diocese.FieldName:
+		m.ResetName()
+		return nil
+	case diocese.FieldBishopName:
+		m.ResetBishopName()
+		return nil
+	case diocese.FieldAddress:
+		m.ResetAddress()
+		return nil
+	case diocese.FieldPhone:
+		m.ResetPhone()
+		return nil
+	case diocese.FieldEmail:
+		m.ResetEmail()
+		return nil
+	case diocese.FieldWebsite:
+		m.ResetWebsite()
+		return nil
+	case diocese.FieldActive:
+		m.ResetActive()
+		return nil
+	}
+	return fmt.Errorf("unknown Diocese field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *DioceseMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.parishes != nil {
+		edges = append(edges, diocese.EdgeParishes)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *DioceseMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case diocese.EdgeParishes:
+		ids := make([]ent.Value, 0, len(m.parishes))
+		for id := range m.parishes {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *DioceseMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.removedparishes != nil {
+		edges = append(edges, diocese.EdgeParishes)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *DioceseMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case diocese.EdgeParishes:
+		ids := make([]ent.Value, 0, len(m.removedparishes))
+		for id := range m.removedparishes {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *DioceseMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedparishes {
+		edges = append(edges, diocese.EdgeParishes)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *DioceseMutation) EdgeCleared(name string) bool {
+	switch name {
+	case diocese.EdgeParishes:
+		return m.clearedparishes
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *DioceseMutation) ClearEdge(name string) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Diocese unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *DioceseMutation) ResetEdge(name string) error {
+	switch name {
+	case diocese.EdgeParishes:
+		m.ResetParishes()
+		return nil
+	}
+	return fmt.Errorf("unknown Diocese edge %s", name)
+}
+
+// LookupMutation represents an operation that mutates the Lookup nodes in the graph.
+type LookupMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *uuid.UUID
+	created_at    *time.Time
+	updated_at    *time.Time
+	deleted_at    *time.Time
+	category      *string
+	code          *string
+	label         *string
+	sort_order    *int
+	addsort_order *int
+	active        *bool
+	clearedFields map[string]struct{}
+	parish        *uuid.UUID
+	clearedparish bool
+	done          bool
+	oldValue      func(context.Context) (*Lookup, error)
+	predicates    []predicate.Lookup
+}
+
+var _ ent.Mutation = (*LookupMutation)(nil)
+
+// lookupOption allows management of the mutation configuration using functional options.
+type lookupOption func(*LookupMutation)
+
+// newLookupMutation creates new mutation for the Lookup entity.
+func newLookupMutation(c config, op Op, opts ...lookupOption) *LookupMutation {
+	m := &LookupMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeLookup,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withLookupID sets the ID field of the mutation.
+func withLookupID(id uuid.UUID) lookupOption {
+	return func(m *LookupMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Lookup
+		)
+		m.oldValue = func(ctx context.Context) (*Lookup, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Lookup.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withLookup sets the old Lookup of the mutation.
+func withLookup(node *Lookup) lookupOption {
+	return func(m *LookupMutation) {
+		m.oldValue = func(context.Context) (*Lookup, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m LookupMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m LookupMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Lookup entities.
+func (m *LookupMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *LookupMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *LookupMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Lookup.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *LookupMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *LookupMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the Lookup entity.
+// If the Lookup object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LookupMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *LookupMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *LookupMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *LookupMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the Lookup entity.
+// If the Lookup object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LookupMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *LookupMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *LookupMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *LookupMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the Lookup entity.
+// If the Lookup object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LookupMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *LookupMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[lookup.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *LookupMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[lookup.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *LookupMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, lookup.FieldDeletedAt)
+}
+
+// SetParishID sets the "parish_id" field.
+func (m *LookupMutation) SetParishID(u uuid.UUID) {
+	m.parish = &u
+}
+
+// ParishID returns the value of the "parish_id" field in the mutation.
+func (m *LookupMutation) ParishID() (r uuid.UUID, exists bool) {
+	v := m.parish
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldParishID returns the old "parish_id" field's value of the Lookup entity.
+// If the Lookup object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LookupMutation) OldParishID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldParishID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldParishID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldParishID: %w", err)
+	}
+	return oldValue.ParishID, nil
+}
+
+// ClearParishID clears the value of the "parish_id" field.
+func (m *LookupMutation) ClearParishID() {
+	m.parish = nil
+	m.clearedFields[lookup.FieldParishID] = struct{}{}
+}
+
+// ParishIDCleared returns if the "parish_id" field was cleared in this mutation.
+func (m *LookupMutation) ParishIDCleared() bool {
+	_, ok := m.clearedFields[lookup.FieldParishID]
+	return ok
+}
+
+// ResetParishID resets all changes to the "parish_id" field.
+func (m *LookupMutation) ResetParishID() {
+	m.parish = nil
+	delete(m.clearedFields, lookup.FieldParishID)
+}
+
+// SetCategory sets the "category" field.
+func (m *LookupMutation) SetCategory(s string) {
+	m.category = &s
+}
+
+// Category returns the value of the "category" field in the mutation.
+func (m *LookupMutation) Category() (r string, exists bool) {
+	v := m.category
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCategory returns the old "category" field's value of the Lookup entity.
+// If the Lookup object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LookupMutation) OldCategory(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCategory is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCategory requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCategory: %w", err)
+	}
+	return oldValue.Category, nil
+}
+
+// ResetCategory resets all changes to the "category" field.
+func (m *LookupMutation) ResetCategory() {
+	m.category = nil
+}
+
+// SetCode sets the "code" field.
+func (m *LookupMutation) SetCode(s string) {
+	m.code = &s
+}
+
+// Code returns the value of the "code" field in the mutation.
+func (m *LookupMutation) Code() (r string, exists bool) {
+	v := m.code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCode returns the old "code" field's value of the Lookup entity.
+// If the Lookup object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LookupMutation) OldCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCode: %w", err)
+	}
+	return oldValue.Code, nil
+}
+
+// ResetCode resets all changes to the "code" field.
+func (m *LookupMutation) ResetCode() {
+	m.code = nil
+}
+
+// SetLabel sets the "label" field.
+func (m *LookupMutation) SetLabel(s string) {
+	m.label = &s
+}
+
+// Label returns the value of the "label" field in the mutation.
+func (m *LookupMutation) Label() (r string, exists bool) {
+	v := m.label
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLabel returns the old "label" field's value of the Lookup entity.
+// If the Lookup object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LookupMutation) OldLabel(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLabel is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLabel requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLabel: %w", err)
+	}
+	return oldValue.Label, nil
+}
+
+// ResetLabel resets all changes to the "label" field.
+func (m *LookupMutation) ResetLabel() {
+	m.label = nil
+}
+
+// SetSortOrder sets the "sort_order" field.
+func (m *LookupMutation) SetSortOrder(i int) {
+	m.sort_order = &i
+	m.addsort_order = nil
+}
+
+// SortOrder returns the value of the "sort_order" field in the mutation.
+func (m *LookupMutation) SortOrder() (r int, exists bool) {
+	v := m.sort_order
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSortOrder returns the old "sort_order" field's value of the Lookup entity.
+// If the Lookup object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LookupMutation) OldSortOrder(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSortOrder is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSortOrder requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSortOrder: %w", err)
+	}
+	return oldValue.SortOrder, nil
+}
+
+// AddSortOrder adds i to the "sort_order" field.
+func (m *LookupMutation) AddSortOrder(i int) {
+	if m.addsort_order != nil {
+		*m.addsort_order += i
+	} else {
+		m.addsort_order = &i
+	}
+}
+
+// AddedSortOrder returns the value that was added to the "sort_order" field in this mutation.
+func (m *LookupMutation) AddedSortOrder() (r int, exists bool) {
+	v := m.addsort_order
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSortOrder resets all changes to the "sort_order" field.
+func (m *LookupMutation) ResetSortOrder() {
+	m.sort_order = nil
+	m.addsort_order = nil
+}
+
+// SetActive sets the "active" field.
+func (m *LookupMutation) SetActive(b bool) {
+	m.active = &b
+}
+
+// Active returns the value of the "active" field in the mutation.
+func (m *LookupMutation) Active() (r bool, exists bool) {
+	v := m.active
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldActive returns the old "active" field's value of the Lookup entity.
+// If the Lookup object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LookupMutation) OldActive(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldActive is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldActive requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldActive: %w", err)
+	}
+	return oldValue.Active, nil
+}
+
+// ResetActive resets all changes to the "active" field.
+func (m *LookupMutation) ResetActive() {
+	m.active = nil
+}
+
+// ClearParish clears the "parish" edge to the Parish entity.
+func (m *LookupMutation) ClearParish() {
+	m.clearedparish = true
+	m.clearedFields[lookup.FieldParishID] = struct{}{}
+}
+
+// ParishCleared reports if the "parish" edge to the Parish entity was cleared.
+func (m *LookupMutation) ParishCleared() bool {
+	return m.ParishIDCleared() || m.clearedparish
+}
+
+// ParishIDs returns the "parish" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ParishID instead. It exists only for internal usage by the builders.
+func (m *LookupMutation) ParishIDs() (ids []uuid.UUID) {
+	if id := m.parish; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetParish resets all changes to the "parish" edge.
+func (m *LookupMutation) ResetParish() {
+	m.parish = nil
+	m.clearedparish = false
+}
+
+// Where appends a list predicates to the LookupMutation builder.
+func (m *LookupMutation) Where(ps ...predicate.Lookup) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the LookupMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *LookupMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Lookup, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *LookupMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *LookupMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Lookup).
+func (m *LookupMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *LookupMutation) Fields() []string {
+	fields := make([]string, 0, 9)
+	if m.created_at != nil {
+		fields = append(fields, lookup.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, lookup.FieldUpdatedAt)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, lookup.FieldDeletedAt)
+	}
+	if m.parish != nil {
+		fields = append(fields, lookup.FieldParishID)
+	}
+	if m.category != nil {
+		fields = append(fields, lookup.FieldCategory)
+	}
+	if m.code != nil {
+		fields = append(fields, lookup.FieldCode)
+	}
+	if m.label != nil {
+		fields = append(fields, lookup.FieldLabel)
+	}
+	if m.sort_order != nil {
+		fields = append(fields, lookup.FieldSortOrder)
+	}
+	if m.active != nil {
+		fields = append(fields, lookup.FieldActive)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *LookupMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case lookup.FieldCreatedAt:
+		return m.CreatedAt()
+	case lookup.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case lookup.FieldDeletedAt:
+		return m.DeletedAt()
+	case lookup.FieldParishID:
+		return m.ParishID()
+	case lookup.FieldCategory:
+		return m.Category()
+	case lookup.FieldCode:
+		return m.Code()
+	case lookup.FieldLabel:
+		return m.Label()
+	case lookup.FieldSortOrder:
+		return m.SortOrder()
+	case lookup.FieldActive:
+		return m.Active()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *LookupMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case lookup.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case lookup.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case lookup.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case lookup.FieldParishID:
+		return m.OldParishID(ctx)
+	case lookup.FieldCategory:
+		return m.OldCategory(ctx)
+	case lookup.FieldCode:
+		return m.OldCode(ctx)
+	case lookup.FieldLabel:
+		return m.OldLabel(ctx)
+	case lookup.FieldSortOrder:
+		return m.OldSortOrder(ctx)
+	case lookup.FieldActive:
+		return m.OldActive(ctx)
+	}
+	return nil, fmt.Errorf("unknown Lookup field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *LookupMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case lookup.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case lookup.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case lookup.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case lookup.FieldParishID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetParishID(v)
+		return nil
+	case lookup.FieldCategory:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCategory(v)
+		return nil
+	case lookup.FieldCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCode(v)
+		return nil
+	case lookup.FieldLabel:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLabel(v)
+		return nil
+	case lookup.FieldSortOrder:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSortOrder(v)
+		return nil
+	case lookup.FieldActive:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetActive(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Lookup field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *LookupMutation) AddedFields() []string {
+	var fields []string
+	if m.addsort_order != nil {
+		fields = append(fields, lookup.FieldSortOrder)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *LookupMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case lookup.FieldSortOrder:
+		return m.AddedSortOrder()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *LookupMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case lookup.FieldSortOrder:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSortOrder(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Lookup numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *LookupMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(lookup.FieldDeletedAt) {
+		fields = append(fields, lookup.FieldDeletedAt)
+	}
+	if m.FieldCleared(lookup.FieldParishID) {
+		fields = append(fields, lookup.FieldParishID)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *LookupMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *LookupMutation) ClearField(name string) error {
+	switch name {
+	case lookup.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case lookup.FieldParishID:
+		m.ClearParishID()
+		return nil
+	}
+	return fmt.Errorf("unknown Lookup nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *LookupMutation) ResetField(name string) error {
+	switch name {
+	case lookup.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case lookup.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case lookup.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case lookup.FieldParishID:
+		m.ResetParishID()
+		return nil
+	case lookup.FieldCategory:
+		m.ResetCategory()
+		return nil
+	case lookup.FieldCode:
+		m.ResetCode()
+		return nil
+	case lookup.FieldLabel:
+		m.ResetLabel()
+		return nil
+	case lookup.FieldSortOrder:
+		m.ResetSortOrder()
+		return nil
+	case lookup.FieldActive:
+		m.ResetActive()
+		return nil
+	}
+	return fmt.Errorf("unknown Lookup field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *LookupMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.parish != nil {
+		edges = append(edges, lookup.EdgeParish)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *LookupMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case lookup.EdgeParish:
+		if id := m.parish; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *LookupMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *LookupMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *LookupMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedparish {
+		edges = append(edges, lookup.EdgeParish)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *LookupMutation) EdgeCleared(name string) bool {
+	switch name {
+	case lookup.EdgeParish:
+		return m.clearedparish
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *LookupMutation) ClearEdge(name string) error {
+	switch name {
+	case lookup.EdgeParish:
+		m.ClearParish()
+		return nil
+	}
+	return fmt.Errorf("unknown Lookup unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *LookupMutation) ResetEdge(name string) error {
+	switch name {
+	case lookup.EdgeParish:
+		m.ResetParish()
+		return nil
+	}
+	return fmt.Errorf("unknown Lookup edge %s", name)
+}
+
 // MetaMutation represents an operation that mutates the Meta nodes in the graph.
 type MetaMutation struct {
 	config
@@ -1186,6 +3177,3289 @@ func (m *MetaMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *MetaMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown Meta edge %s", name)
+}
+
+// ParishMutation represents an operation that mutates the Parish nodes in the graph.
+type ParishMutation struct {
+	config
+	op             Op
+	typ            string
+	id             *uuid.UUID
+	created_at     *time.Time
+	updated_at     *time.Time
+	deleted_at     *time.Time
+	code           *string
+	name           *string
+	patron_saint   *string
+	pastor_name    *string
+	address        *string
+	phone          *string
+	email          *string
+	website        *string
+	logo_url       *string
+	letterhead     *string
+	active         *bool
+	clearedFields  map[string]struct{}
+	diocese        *uuid.UUID
+	cleareddiocese bool
+	members        map[uuid.UUID]struct{}
+	removedmembers map[uuid.UUID]struct{}
+	clearedmembers bool
+	zones          map[uuid.UUID]struct{}
+	removedzones   map[uuid.UUID]struct{}
+	clearedzones   bool
+	wards          map[uuid.UUID]struct{}
+	removedwards   map[uuid.UUID]struct{}
+	clearedwards   bool
+	lookups        map[uuid.UUID]struct{}
+	removedlookups map[uuid.UUID]struct{}
+	clearedlookups bool
+	periods        map[uuid.UUID]struct{}
+	removedperiods map[uuid.UUID]struct{}
+	clearedperiods bool
+	done           bool
+	oldValue       func(context.Context) (*Parish, error)
+	predicates     []predicate.Parish
+}
+
+var _ ent.Mutation = (*ParishMutation)(nil)
+
+// parishOption allows management of the mutation configuration using functional options.
+type parishOption func(*ParishMutation)
+
+// newParishMutation creates new mutation for the Parish entity.
+func newParishMutation(c config, op Op, opts ...parishOption) *ParishMutation {
+	m := &ParishMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeParish,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withParishID sets the ID field of the mutation.
+func withParishID(id uuid.UUID) parishOption {
+	return func(m *ParishMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Parish
+		)
+		m.oldValue = func(ctx context.Context) (*Parish, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Parish.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withParish sets the old Parish of the mutation.
+func withParish(node *Parish) parishOption {
+	return func(m *ParishMutation) {
+		m.oldValue = func(context.Context) (*Parish, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ParishMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ParishMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Parish entities.
+func (m *ParishMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ParishMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ParishMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Parish.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ParishMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ParishMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the Parish entity.
+// If the Parish object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParishMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ParishMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *ParishMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *ParishMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the Parish entity.
+// If the Parish object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParishMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *ParishMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *ParishMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *ParishMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the Parish entity.
+// If the Parish object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParishMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *ParishMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[parish.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *ParishMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[parish.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *ParishMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, parish.FieldDeletedAt)
+}
+
+// SetDioceseID sets the "diocese_id" field.
+func (m *ParishMutation) SetDioceseID(u uuid.UUID) {
+	m.diocese = &u
+}
+
+// DioceseID returns the value of the "diocese_id" field in the mutation.
+func (m *ParishMutation) DioceseID() (r uuid.UUID, exists bool) {
+	v := m.diocese
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDioceseID returns the old "diocese_id" field's value of the Parish entity.
+// If the Parish object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParishMutation) OldDioceseID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDioceseID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDioceseID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDioceseID: %w", err)
+	}
+	return oldValue.DioceseID, nil
+}
+
+// ResetDioceseID resets all changes to the "diocese_id" field.
+func (m *ParishMutation) ResetDioceseID() {
+	m.diocese = nil
+}
+
+// SetCode sets the "code" field.
+func (m *ParishMutation) SetCode(s string) {
+	m.code = &s
+}
+
+// Code returns the value of the "code" field in the mutation.
+func (m *ParishMutation) Code() (r string, exists bool) {
+	v := m.code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCode returns the old "code" field's value of the Parish entity.
+// If the Parish object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParishMutation) OldCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCode: %w", err)
+	}
+	return oldValue.Code, nil
+}
+
+// ResetCode resets all changes to the "code" field.
+func (m *ParishMutation) ResetCode() {
+	m.code = nil
+}
+
+// SetName sets the "name" field.
+func (m *ParishMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *ParishMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Parish entity.
+// If the Parish object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParishMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *ParishMutation) ResetName() {
+	m.name = nil
+}
+
+// SetPatronSaint sets the "patron_saint" field.
+func (m *ParishMutation) SetPatronSaint(s string) {
+	m.patron_saint = &s
+}
+
+// PatronSaint returns the value of the "patron_saint" field in the mutation.
+func (m *ParishMutation) PatronSaint() (r string, exists bool) {
+	v := m.patron_saint
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPatronSaint returns the old "patron_saint" field's value of the Parish entity.
+// If the Parish object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParishMutation) OldPatronSaint(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPatronSaint is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPatronSaint requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPatronSaint: %w", err)
+	}
+	return oldValue.PatronSaint, nil
+}
+
+// ClearPatronSaint clears the value of the "patron_saint" field.
+func (m *ParishMutation) ClearPatronSaint() {
+	m.patron_saint = nil
+	m.clearedFields[parish.FieldPatronSaint] = struct{}{}
+}
+
+// PatronSaintCleared returns if the "patron_saint" field was cleared in this mutation.
+func (m *ParishMutation) PatronSaintCleared() bool {
+	_, ok := m.clearedFields[parish.FieldPatronSaint]
+	return ok
+}
+
+// ResetPatronSaint resets all changes to the "patron_saint" field.
+func (m *ParishMutation) ResetPatronSaint() {
+	m.patron_saint = nil
+	delete(m.clearedFields, parish.FieldPatronSaint)
+}
+
+// SetPastorName sets the "pastor_name" field.
+func (m *ParishMutation) SetPastorName(s string) {
+	m.pastor_name = &s
+}
+
+// PastorName returns the value of the "pastor_name" field in the mutation.
+func (m *ParishMutation) PastorName() (r string, exists bool) {
+	v := m.pastor_name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPastorName returns the old "pastor_name" field's value of the Parish entity.
+// If the Parish object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParishMutation) OldPastorName(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPastorName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPastorName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPastorName: %w", err)
+	}
+	return oldValue.PastorName, nil
+}
+
+// ClearPastorName clears the value of the "pastor_name" field.
+func (m *ParishMutation) ClearPastorName() {
+	m.pastor_name = nil
+	m.clearedFields[parish.FieldPastorName] = struct{}{}
+}
+
+// PastorNameCleared returns if the "pastor_name" field was cleared in this mutation.
+func (m *ParishMutation) PastorNameCleared() bool {
+	_, ok := m.clearedFields[parish.FieldPastorName]
+	return ok
+}
+
+// ResetPastorName resets all changes to the "pastor_name" field.
+func (m *ParishMutation) ResetPastorName() {
+	m.pastor_name = nil
+	delete(m.clearedFields, parish.FieldPastorName)
+}
+
+// SetAddress sets the "address" field.
+func (m *ParishMutation) SetAddress(s string) {
+	m.address = &s
+}
+
+// Address returns the value of the "address" field in the mutation.
+func (m *ParishMutation) Address() (r string, exists bool) {
+	v := m.address
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAddress returns the old "address" field's value of the Parish entity.
+// If the Parish object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParishMutation) OldAddress(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAddress is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAddress requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAddress: %w", err)
+	}
+	return oldValue.Address, nil
+}
+
+// ClearAddress clears the value of the "address" field.
+func (m *ParishMutation) ClearAddress() {
+	m.address = nil
+	m.clearedFields[parish.FieldAddress] = struct{}{}
+}
+
+// AddressCleared returns if the "address" field was cleared in this mutation.
+func (m *ParishMutation) AddressCleared() bool {
+	_, ok := m.clearedFields[parish.FieldAddress]
+	return ok
+}
+
+// ResetAddress resets all changes to the "address" field.
+func (m *ParishMutation) ResetAddress() {
+	m.address = nil
+	delete(m.clearedFields, parish.FieldAddress)
+}
+
+// SetPhone sets the "phone" field.
+func (m *ParishMutation) SetPhone(s string) {
+	m.phone = &s
+}
+
+// Phone returns the value of the "phone" field in the mutation.
+func (m *ParishMutation) Phone() (r string, exists bool) {
+	v := m.phone
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPhone returns the old "phone" field's value of the Parish entity.
+// If the Parish object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParishMutation) OldPhone(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPhone is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPhone requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPhone: %w", err)
+	}
+	return oldValue.Phone, nil
+}
+
+// ClearPhone clears the value of the "phone" field.
+func (m *ParishMutation) ClearPhone() {
+	m.phone = nil
+	m.clearedFields[parish.FieldPhone] = struct{}{}
+}
+
+// PhoneCleared returns if the "phone" field was cleared in this mutation.
+func (m *ParishMutation) PhoneCleared() bool {
+	_, ok := m.clearedFields[parish.FieldPhone]
+	return ok
+}
+
+// ResetPhone resets all changes to the "phone" field.
+func (m *ParishMutation) ResetPhone() {
+	m.phone = nil
+	delete(m.clearedFields, parish.FieldPhone)
+}
+
+// SetEmail sets the "email" field.
+func (m *ParishMutation) SetEmail(s string) {
+	m.email = &s
+}
+
+// Email returns the value of the "email" field in the mutation.
+func (m *ParishMutation) Email() (r string, exists bool) {
+	v := m.email
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEmail returns the old "email" field's value of the Parish entity.
+// If the Parish object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParishMutation) OldEmail(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEmail is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEmail requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEmail: %w", err)
+	}
+	return oldValue.Email, nil
+}
+
+// ClearEmail clears the value of the "email" field.
+func (m *ParishMutation) ClearEmail() {
+	m.email = nil
+	m.clearedFields[parish.FieldEmail] = struct{}{}
+}
+
+// EmailCleared returns if the "email" field was cleared in this mutation.
+func (m *ParishMutation) EmailCleared() bool {
+	_, ok := m.clearedFields[parish.FieldEmail]
+	return ok
+}
+
+// ResetEmail resets all changes to the "email" field.
+func (m *ParishMutation) ResetEmail() {
+	m.email = nil
+	delete(m.clearedFields, parish.FieldEmail)
+}
+
+// SetWebsite sets the "website" field.
+func (m *ParishMutation) SetWebsite(s string) {
+	m.website = &s
+}
+
+// Website returns the value of the "website" field in the mutation.
+func (m *ParishMutation) Website() (r string, exists bool) {
+	v := m.website
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWebsite returns the old "website" field's value of the Parish entity.
+// If the Parish object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParishMutation) OldWebsite(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWebsite is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWebsite requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWebsite: %w", err)
+	}
+	return oldValue.Website, nil
+}
+
+// ClearWebsite clears the value of the "website" field.
+func (m *ParishMutation) ClearWebsite() {
+	m.website = nil
+	m.clearedFields[parish.FieldWebsite] = struct{}{}
+}
+
+// WebsiteCleared returns if the "website" field was cleared in this mutation.
+func (m *ParishMutation) WebsiteCleared() bool {
+	_, ok := m.clearedFields[parish.FieldWebsite]
+	return ok
+}
+
+// ResetWebsite resets all changes to the "website" field.
+func (m *ParishMutation) ResetWebsite() {
+	m.website = nil
+	delete(m.clearedFields, parish.FieldWebsite)
+}
+
+// SetLogoURL sets the "logo_url" field.
+func (m *ParishMutation) SetLogoURL(s string) {
+	m.logo_url = &s
+}
+
+// LogoURL returns the value of the "logo_url" field in the mutation.
+func (m *ParishMutation) LogoURL() (r string, exists bool) {
+	v := m.logo_url
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLogoURL returns the old "logo_url" field's value of the Parish entity.
+// If the Parish object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParishMutation) OldLogoURL(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLogoURL is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLogoURL requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLogoURL: %w", err)
+	}
+	return oldValue.LogoURL, nil
+}
+
+// ClearLogoURL clears the value of the "logo_url" field.
+func (m *ParishMutation) ClearLogoURL() {
+	m.logo_url = nil
+	m.clearedFields[parish.FieldLogoURL] = struct{}{}
+}
+
+// LogoURLCleared returns if the "logo_url" field was cleared in this mutation.
+func (m *ParishMutation) LogoURLCleared() bool {
+	_, ok := m.clearedFields[parish.FieldLogoURL]
+	return ok
+}
+
+// ResetLogoURL resets all changes to the "logo_url" field.
+func (m *ParishMutation) ResetLogoURL() {
+	m.logo_url = nil
+	delete(m.clearedFields, parish.FieldLogoURL)
+}
+
+// SetLetterhead sets the "letterhead" field.
+func (m *ParishMutation) SetLetterhead(s string) {
+	m.letterhead = &s
+}
+
+// Letterhead returns the value of the "letterhead" field in the mutation.
+func (m *ParishMutation) Letterhead() (r string, exists bool) {
+	v := m.letterhead
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLetterhead returns the old "letterhead" field's value of the Parish entity.
+// If the Parish object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParishMutation) OldLetterhead(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLetterhead is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLetterhead requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLetterhead: %w", err)
+	}
+	return oldValue.Letterhead, nil
+}
+
+// ClearLetterhead clears the value of the "letterhead" field.
+func (m *ParishMutation) ClearLetterhead() {
+	m.letterhead = nil
+	m.clearedFields[parish.FieldLetterhead] = struct{}{}
+}
+
+// LetterheadCleared returns if the "letterhead" field was cleared in this mutation.
+func (m *ParishMutation) LetterheadCleared() bool {
+	_, ok := m.clearedFields[parish.FieldLetterhead]
+	return ok
+}
+
+// ResetLetterhead resets all changes to the "letterhead" field.
+func (m *ParishMutation) ResetLetterhead() {
+	m.letterhead = nil
+	delete(m.clearedFields, parish.FieldLetterhead)
+}
+
+// SetActive sets the "active" field.
+func (m *ParishMutation) SetActive(b bool) {
+	m.active = &b
+}
+
+// Active returns the value of the "active" field in the mutation.
+func (m *ParishMutation) Active() (r bool, exists bool) {
+	v := m.active
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldActive returns the old "active" field's value of the Parish entity.
+// If the Parish object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParishMutation) OldActive(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldActive is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldActive requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldActive: %w", err)
+	}
+	return oldValue.Active, nil
+}
+
+// ResetActive resets all changes to the "active" field.
+func (m *ParishMutation) ResetActive() {
+	m.active = nil
+}
+
+// ClearDiocese clears the "diocese" edge to the Diocese entity.
+func (m *ParishMutation) ClearDiocese() {
+	m.cleareddiocese = true
+	m.clearedFields[parish.FieldDioceseID] = struct{}{}
+}
+
+// DioceseCleared reports if the "diocese" edge to the Diocese entity was cleared.
+func (m *ParishMutation) DioceseCleared() bool {
+	return m.cleareddiocese
+}
+
+// DioceseIDs returns the "diocese" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// DioceseID instead. It exists only for internal usage by the builders.
+func (m *ParishMutation) DioceseIDs() (ids []uuid.UUID) {
+	if id := m.diocese; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetDiocese resets all changes to the "diocese" edge.
+func (m *ParishMutation) ResetDiocese() {
+	m.diocese = nil
+	m.cleareddiocese = false
+}
+
+// AddMemberIDs adds the "members" edge to the ParishMember entity by ids.
+func (m *ParishMutation) AddMemberIDs(ids ...uuid.UUID) {
+	if m.members == nil {
+		m.members = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.members[ids[i]] = struct{}{}
+	}
+}
+
+// ClearMembers clears the "members" edge to the ParishMember entity.
+func (m *ParishMutation) ClearMembers() {
+	m.clearedmembers = true
+}
+
+// MembersCleared reports if the "members" edge to the ParishMember entity was cleared.
+func (m *ParishMutation) MembersCleared() bool {
+	return m.clearedmembers
+}
+
+// RemoveMemberIDs removes the "members" edge to the ParishMember entity by IDs.
+func (m *ParishMutation) RemoveMemberIDs(ids ...uuid.UUID) {
+	if m.removedmembers == nil {
+		m.removedmembers = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.members, ids[i])
+		m.removedmembers[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedMembers returns the removed IDs of the "members" edge to the ParishMember entity.
+func (m *ParishMutation) RemovedMembersIDs() (ids []uuid.UUID) {
+	for id := range m.removedmembers {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// MembersIDs returns the "members" edge IDs in the mutation.
+func (m *ParishMutation) MembersIDs() (ids []uuid.UUID) {
+	for id := range m.members {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetMembers resets all changes to the "members" edge.
+func (m *ParishMutation) ResetMembers() {
+	m.members = nil
+	m.clearedmembers = false
+	m.removedmembers = nil
+}
+
+// AddZoneIDs adds the "zones" edge to the Zone entity by ids.
+func (m *ParishMutation) AddZoneIDs(ids ...uuid.UUID) {
+	if m.zones == nil {
+		m.zones = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.zones[ids[i]] = struct{}{}
+	}
+}
+
+// ClearZones clears the "zones" edge to the Zone entity.
+func (m *ParishMutation) ClearZones() {
+	m.clearedzones = true
+}
+
+// ZonesCleared reports if the "zones" edge to the Zone entity was cleared.
+func (m *ParishMutation) ZonesCleared() bool {
+	return m.clearedzones
+}
+
+// RemoveZoneIDs removes the "zones" edge to the Zone entity by IDs.
+func (m *ParishMutation) RemoveZoneIDs(ids ...uuid.UUID) {
+	if m.removedzones == nil {
+		m.removedzones = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.zones, ids[i])
+		m.removedzones[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedZones returns the removed IDs of the "zones" edge to the Zone entity.
+func (m *ParishMutation) RemovedZonesIDs() (ids []uuid.UUID) {
+	for id := range m.removedzones {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ZonesIDs returns the "zones" edge IDs in the mutation.
+func (m *ParishMutation) ZonesIDs() (ids []uuid.UUID) {
+	for id := range m.zones {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetZones resets all changes to the "zones" edge.
+func (m *ParishMutation) ResetZones() {
+	m.zones = nil
+	m.clearedzones = false
+	m.removedzones = nil
+}
+
+// AddWardIDs adds the "wards" edge to the Ward entity by ids.
+func (m *ParishMutation) AddWardIDs(ids ...uuid.UUID) {
+	if m.wards == nil {
+		m.wards = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.wards[ids[i]] = struct{}{}
+	}
+}
+
+// ClearWards clears the "wards" edge to the Ward entity.
+func (m *ParishMutation) ClearWards() {
+	m.clearedwards = true
+}
+
+// WardsCleared reports if the "wards" edge to the Ward entity was cleared.
+func (m *ParishMutation) WardsCleared() bool {
+	return m.clearedwards
+}
+
+// RemoveWardIDs removes the "wards" edge to the Ward entity by IDs.
+func (m *ParishMutation) RemoveWardIDs(ids ...uuid.UUID) {
+	if m.removedwards == nil {
+		m.removedwards = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.wards, ids[i])
+		m.removedwards[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedWards returns the removed IDs of the "wards" edge to the Ward entity.
+func (m *ParishMutation) RemovedWardsIDs() (ids []uuid.UUID) {
+	for id := range m.removedwards {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// WardsIDs returns the "wards" edge IDs in the mutation.
+func (m *ParishMutation) WardsIDs() (ids []uuid.UUID) {
+	for id := range m.wards {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetWards resets all changes to the "wards" edge.
+func (m *ParishMutation) ResetWards() {
+	m.wards = nil
+	m.clearedwards = false
+	m.removedwards = nil
+}
+
+// AddLookupIDs adds the "lookups" edge to the Lookup entity by ids.
+func (m *ParishMutation) AddLookupIDs(ids ...uuid.UUID) {
+	if m.lookups == nil {
+		m.lookups = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.lookups[ids[i]] = struct{}{}
+	}
+}
+
+// ClearLookups clears the "lookups" edge to the Lookup entity.
+func (m *ParishMutation) ClearLookups() {
+	m.clearedlookups = true
+}
+
+// LookupsCleared reports if the "lookups" edge to the Lookup entity was cleared.
+func (m *ParishMutation) LookupsCleared() bool {
+	return m.clearedlookups
+}
+
+// RemoveLookupIDs removes the "lookups" edge to the Lookup entity by IDs.
+func (m *ParishMutation) RemoveLookupIDs(ids ...uuid.UUID) {
+	if m.removedlookups == nil {
+		m.removedlookups = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.lookups, ids[i])
+		m.removedlookups[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedLookups returns the removed IDs of the "lookups" edge to the Lookup entity.
+func (m *ParishMutation) RemovedLookupsIDs() (ids []uuid.UUID) {
+	for id := range m.removedlookups {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// LookupsIDs returns the "lookups" edge IDs in the mutation.
+func (m *ParishMutation) LookupsIDs() (ids []uuid.UUID) {
+	for id := range m.lookups {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetLookups resets all changes to the "lookups" edge.
+func (m *ParishMutation) ResetLookups() {
+	m.lookups = nil
+	m.clearedlookups = false
+	m.removedlookups = nil
+}
+
+// AddPeriodIDs adds the "periods" edge to the Period entity by ids.
+func (m *ParishMutation) AddPeriodIDs(ids ...uuid.UUID) {
+	if m.periods == nil {
+		m.periods = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.periods[ids[i]] = struct{}{}
+	}
+}
+
+// ClearPeriods clears the "periods" edge to the Period entity.
+func (m *ParishMutation) ClearPeriods() {
+	m.clearedperiods = true
+}
+
+// PeriodsCleared reports if the "periods" edge to the Period entity was cleared.
+func (m *ParishMutation) PeriodsCleared() bool {
+	return m.clearedperiods
+}
+
+// RemovePeriodIDs removes the "periods" edge to the Period entity by IDs.
+func (m *ParishMutation) RemovePeriodIDs(ids ...uuid.UUID) {
+	if m.removedperiods == nil {
+		m.removedperiods = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.periods, ids[i])
+		m.removedperiods[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedPeriods returns the removed IDs of the "periods" edge to the Period entity.
+func (m *ParishMutation) RemovedPeriodsIDs() (ids []uuid.UUID) {
+	for id := range m.removedperiods {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// PeriodsIDs returns the "periods" edge IDs in the mutation.
+func (m *ParishMutation) PeriodsIDs() (ids []uuid.UUID) {
+	for id := range m.periods {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetPeriods resets all changes to the "periods" edge.
+func (m *ParishMutation) ResetPeriods() {
+	m.periods = nil
+	m.clearedperiods = false
+	m.removedperiods = nil
+}
+
+// Where appends a list predicates to the ParishMutation builder.
+func (m *ParishMutation) Where(ps ...predicate.Parish) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ParishMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ParishMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Parish, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ParishMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ParishMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Parish).
+func (m *ParishMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ParishMutation) Fields() []string {
+	fields := make([]string, 0, 15)
+	if m.created_at != nil {
+		fields = append(fields, parish.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, parish.FieldUpdatedAt)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, parish.FieldDeletedAt)
+	}
+	if m.diocese != nil {
+		fields = append(fields, parish.FieldDioceseID)
+	}
+	if m.code != nil {
+		fields = append(fields, parish.FieldCode)
+	}
+	if m.name != nil {
+		fields = append(fields, parish.FieldName)
+	}
+	if m.patron_saint != nil {
+		fields = append(fields, parish.FieldPatronSaint)
+	}
+	if m.pastor_name != nil {
+		fields = append(fields, parish.FieldPastorName)
+	}
+	if m.address != nil {
+		fields = append(fields, parish.FieldAddress)
+	}
+	if m.phone != nil {
+		fields = append(fields, parish.FieldPhone)
+	}
+	if m.email != nil {
+		fields = append(fields, parish.FieldEmail)
+	}
+	if m.website != nil {
+		fields = append(fields, parish.FieldWebsite)
+	}
+	if m.logo_url != nil {
+		fields = append(fields, parish.FieldLogoURL)
+	}
+	if m.letterhead != nil {
+		fields = append(fields, parish.FieldLetterhead)
+	}
+	if m.active != nil {
+		fields = append(fields, parish.FieldActive)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ParishMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case parish.FieldCreatedAt:
+		return m.CreatedAt()
+	case parish.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case parish.FieldDeletedAt:
+		return m.DeletedAt()
+	case parish.FieldDioceseID:
+		return m.DioceseID()
+	case parish.FieldCode:
+		return m.Code()
+	case parish.FieldName:
+		return m.Name()
+	case parish.FieldPatronSaint:
+		return m.PatronSaint()
+	case parish.FieldPastorName:
+		return m.PastorName()
+	case parish.FieldAddress:
+		return m.Address()
+	case parish.FieldPhone:
+		return m.Phone()
+	case parish.FieldEmail:
+		return m.Email()
+	case parish.FieldWebsite:
+		return m.Website()
+	case parish.FieldLogoURL:
+		return m.LogoURL()
+	case parish.FieldLetterhead:
+		return m.Letterhead()
+	case parish.FieldActive:
+		return m.Active()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ParishMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case parish.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case parish.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case parish.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case parish.FieldDioceseID:
+		return m.OldDioceseID(ctx)
+	case parish.FieldCode:
+		return m.OldCode(ctx)
+	case parish.FieldName:
+		return m.OldName(ctx)
+	case parish.FieldPatronSaint:
+		return m.OldPatronSaint(ctx)
+	case parish.FieldPastorName:
+		return m.OldPastorName(ctx)
+	case parish.FieldAddress:
+		return m.OldAddress(ctx)
+	case parish.FieldPhone:
+		return m.OldPhone(ctx)
+	case parish.FieldEmail:
+		return m.OldEmail(ctx)
+	case parish.FieldWebsite:
+		return m.OldWebsite(ctx)
+	case parish.FieldLogoURL:
+		return m.OldLogoURL(ctx)
+	case parish.FieldLetterhead:
+		return m.OldLetterhead(ctx)
+	case parish.FieldActive:
+		return m.OldActive(ctx)
+	}
+	return nil, fmt.Errorf("unknown Parish field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ParishMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case parish.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case parish.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case parish.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case parish.FieldDioceseID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDioceseID(v)
+		return nil
+	case parish.FieldCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCode(v)
+		return nil
+	case parish.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case parish.FieldPatronSaint:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPatronSaint(v)
+		return nil
+	case parish.FieldPastorName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPastorName(v)
+		return nil
+	case parish.FieldAddress:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAddress(v)
+		return nil
+	case parish.FieldPhone:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPhone(v)
+		return nil
+	case parish.FieldEmail:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEmail(v)
+		return nil
+	case parish.FieldWebsite:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWebsite(v)
+		return nil
+	case parish.FieldLogoURL:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLogoURL(v)
+		return nil
+	case parish.FieldLetterhead:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLetterhead(v)
+		return nil
+	case parish.FieldActive:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetActive(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Parish field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ParishMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ParishMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ParishMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Parish numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ParishMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(parish.FieldDeletedAt) {
+		fields = append(fields, parish.FieldDeletedAt)
+	}
+	if m.FieldCleared(parish.FieldPatronSaint) {
+		fields = append(fields, parish.FieldPatronSaint)
+	}
+	if m.FieldCleared(parish.FieldPastorName) {
+		fields = append(fields, parish.FieldPastorName)
+	}
+	if m.FieldCleared(parish.FieldAddress) {
+		fields = append(fields, parish.FieldAddress)
+	}
+	if m.FieldCleared(parish.FieldPhone) {
+		fields = append(fields, parish.FieldPhone)
+	}
+	if m.FieldCleared(parish.FieldEmail) {
+		fields = append(fields, parish.FieldEmail)
+	}
+	if m.FieldCleared(parish.FieldWebsite) {
+		fields = append(fields, parish.FieldWebsite)
+	}
+	if m.FieldCleared(parish.FieldLogoURL) {
+		fields = append(fields, parish.FieldLogoURL)
+	}
+	if m.FieldCleared(parish.FieldLetterhead) {
+		fields = append(fields, parish.FieldLetterhead)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ParishMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ParishMutation) ClearField(name string) error {
+	switch name {
+	case parish.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case parish.FieldPatronSaint:
+		m.ClearPatronSaint()
+		return nil
+	case parish.FieldPastorName:
+		m.ClearPastorName()
+		return nil
+	case parish.FieldAddress:
+		m.ClearAddress()
+		return nil
+	case parish.FieldPhone:
+		m.ClearPhone()
+		return nil
+	case parish.FieldEmail:
+		m.ClearEmail()
+		return nil
+	case parish.FieldWebsite:
+		m.ClearWebsite()
+		return nil
+	case parish.FieldLogoURL:
+		m.ClearLogoURL()
+		return nil
+	case parish.FieldLetterhead:
+		m.ClearLetterhead()
+		return nil
+	}
+	return fmt.Errorf("unknown Parish nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ParishMutation) ResetField(name string) error {
+	switch name {
+	case parish.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case parish.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case parish.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case parish.FieldDioceseID:
+		m.ResetDioceseID()
+		return nil
+	case parish.FieldCode:
+		m.ResetCode()
+		return nil
+	case parish.FieldName:
+		m.ResetName()
+		return nil
+	case parish.FieldPatronSaint:
+		m.ResetPatronSaint()
+		return nil
+	case parish.FieldPastorName:
+		m.ResetPastorName()
+		return nil
+	case parish.FieldAddress:
+		m.ResetAddress()
+		return nil
+	case parish.FieldPhone:
+		m.ResetPhone()
+		return nil
+	case parish.FieldEmail:
+		m.ResetEmail()
+		return nil
+	case parish.FieldWebsite:
+		m.ResetWebsite()
+		return nil
+	case parish.FieldLogoURL:
+		m.ResetLogoURL()
+		return nil
+	case parish.FieldLetterhead:
+		m.ResetLetterhead()
+		return nil
+	case parish.FieldActive:
+		m.ResetActive()
+		return nil
+	}
+	return fmt.Errorf("unknown Parish field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ParishMutation) AddedEdges() []string {
+	edges := make([]string, 0, 6)
+	if m.diocese != nil {
+		edges = append(edges, parish.EdgeDiocese)
+	}
+	if m.members != nil {
+		edges = append(edges, parish.EdgeMembers)
+	}
+	if m.zones != nil {
+		edges = append(edges, parish.EdgeZones)
+	}
+	if m.wards != nil {
+		edges = append(edges, parish.EdgeWards)
+	}
+	if m.lookups != nil {
+		edges = append(edges, parish.EdgeLookups)
+	}
+	if m.periods != nil {
+		edges = append(edges, parish.EdgePeriods)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ParishMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case parish.EdgeDiocese:
+		if id := m.diocese; id != nil {
+			return []ent.Value{*id}
+		}
+	case parish.EdgeMembers:
+		ids := make([]ent.Value, 0, len(m.members))
+		for id := range m.members {
+			ids = append(ids, id)
+		}
+		return ids
+	case parish.EdgeZones:
+		ids := make([]ent.Value, 0, len(m.zones))
+		for id := range m.zones {
+			ids = append(ids, id)
+		}
+		return ids
+	case parish.EdgeWards:
+		ids := make([]ent.Value, 0, len(m.wards))
+		for id := range m.wards {
+			ids = append(ids, id)
+		}
+		return ids
+	case parish.EdgeLookups:
+		ids := make([]ent.Value, 0, len(m.lookups))
+		for id := range m.lookups {
+			ids = append(ids, id)
+		}
+		return ids
+	case parish.EdgePeriods:
+		ids := make([]ent.Value, 0, len(m.periods))
+		for id := range m.periods {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ParishMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 6)
+	if m.removedmembers != nil {
+		edges = append(edges, parish.EdgeMembers)
+	}
+	if m.removedzones != nil {
+		edges = append(edges, parish.EdgeZones)
+	}
+	if m.removedwards != nil {
+		edges = append(edges, parish.EdgeWards)
+	}
+	if m.removedlookups != nil {
+		edges = append(edges, parish.EdgeLookups)
+	}
+	if m.removedperiods != nil {
+		edges = append(edges, parish.EdgePeriods)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ParishMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case parish.EdgeMembers:
+		ids := make([]ent.Value, 0, len(m.removedmembers))
+		for id := range m.removedmembers {
+			ids = append(ids, id)
+		}
+		return ids
+	case parish.EdgeZones:
+		ids := make([]ent.Value, 0, len(m.removedzones))
+		for id := range m.removedzones {
+			ids = append(ids, id)
+		}
+		return ids
+	case parish.EdgeWards:
+		ids := make([]ent.Value, 0, len(m.removedwards))
+		for id := range m.removedwards {
+			ids = append(ids, id)
+		}
+		return ids
+	case parish.EdgeLookups:
+		ids := make([]ent.Value, 0, len(m.removedlookups))
+		for id := range m.removedlookups {
+			ids = append(ids, id)
+		}
+		return ids
+	case parish.EdgePeriods:
+		ids := make([]ent.Value, 0, len(m.removedperiods))
+		for id := range m.removedperiods {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ParishMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 6)
+	if m.cleareddiocese {
+		edges = append(edges, parish.EdgeDiocese)
+	}
+	if m.clearedmembers {
+		edges = append(edges, parish.EdgeMembers)
+	}
+	if m.clearedzones {
+		edges = append(edges, parish.EdgeZones)
+	}
+	if m.clearedwards {
+		edges = append(edges, parish.EdgeWards)
+	}
+	if m.clearedlookups {
+		edges = append(edges, parish.EdgeLookups)
+	}
+	if m.clearedperiods {
+		edges = append(edges, parish.EdgePeriods)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ParishMutation) EdgeCleared(name string) bool {
+	switch name {
+	case parish.EdgeDiocese:
+		return m.cleareddiocese
+	case parish.EdgeMembers:
+		return m.clearedmembers
+	case parish.EdgeZones:
+		return m.clearedzones
+	case parish.EdgeWards:
+		return m.clearedwards
+	case parish.EdgeLookups:
+		return m.clearedlookups
+	case parish.EdgePeriods:
+		return m.clearedperiods
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ParishMutation) ClearEdge(name string) error {
+	switch name {
+	case parish.EdgeDiocese:
+		m.ClearDiocese()
+		return nil
+	}
+	return fmt.Errorf("unknown Parish unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ParishMutation) ResetEdge(name string) error {
+	switch name {
+	case parish.EdgeDiocese:
+		m.ResetDiocese()
+		return nil
+	case parish.EdgeMembers:
+		m.ResetMembers()
+		return nil
+	case parish.EdgeZones:
+		m.ResetZones()
+		return nil
+	case parish.EdgeWards:
+		m.ResetWards()
+		return nil
+	case parish.EdgeLookups:
+		m.ResetLookups()
+		return nil
+	case parish.EdgePeriods:
+		m.ResetPeriods()
+		return nil
+	}
+	return fmt.Errorf("unknown Parish edge %s", name)
+}
+
+// ParishMemberMutation represents an operation that mutates the ParishMember nodes in the graph.
+type ParishMemberMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *uuid.UUID
+	created_at    *time.Time
+	updated_at    *time.Time
+	user_id       *uuid.UUID
+	role          *parishmember.Role
+	clearedFields map[string]struct{}
+	parish        *uuid.UUID
+	clearedparish bool
+	done          bool
+	oldValue      func(context.Context) (*ParishMember, error)
+	predicates    []predicate.ParishMember
+}
+
+var _ ent.Mutation = (*ParishMemberMutation)(nil)
+
+// parishmemberOption allows management of the mutation configuration using functional options.
+type parishmemberOption func(*ParishMemberMutation)
+
+// newParishMemberMutation creates new mutation for the ParishMember entity.
+func newParishMemberMutation(c config, op Op, opts ...parishmemberOption) *ParishMemberMutation {
+	m := &ParishMemberMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeParishMember,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withParishMemberID sets the ID field of the mutation.
+func withParishMemberID(id uuid.UUID) parishmemberOption {
+	return func(m *ParishMemberMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ParishMember
+		)
+		m.oldValue = func(ctx context.Context) (*ParishMember, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ParishMember.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withParishMember sets the old ParishMember of the mutation.
+func withParishMember(node *ParishMember) parishmemberOption {
+	return func(m *ParishMemberMutation) {
+		m.oldValue = func(context.Context) (*ParishMember, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ParishMemberMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ParishMemberMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of ParishMember entities.
+func (m *ParishMemberMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ParishMemberMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ParishMemberMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ParishMember.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ParishMemberMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ParishMemberMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the ParishMember entity.
+// If the ParishMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParishMemberMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ParishMemberMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *ParishMemberMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *ParishMemberMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the ParishMember entity.
+// If the ParishMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParishMemberMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *ParishMemberMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetParishID sets the "parish_id" field.
+func (m *ParishMemberMutation) SetParishID(u uuid.UUID) {
+	m.parish = &u
+}
+
+// ParishID returns the value of the "parish_id" field in the mutation.
+func (m *ParishMemberMutation) ParishID() (r uuid.UUID, exists bool) {
+	v := m.parish
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldParishID returns the old "parish_id" field's value of the ParishMember entity.
+// If the ParishMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParishMemberMutation) OldParishID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldParishID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldParishID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldParishID: %w", err)
+	}
+	return oldValue.ParishID, nil
+}
+
+// ResetParishID resets all changes to the "parish_id" field.
+func (m *ParishMemberMutation) ResetParishID() {
+	m.parish = nil
+}
+
+// SetUserID sets the "user_id" field.
+func (m *ParishMemberMutation) SetUserID(u uuid.UUID) {
+	m.user_id = &u
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *ParishMemberMutation) UserID() (r uuid.UUID, exists bool) {
+	v := m.user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the ParishMember entity.
+// If the ParishMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParishMemberMutation) OldUserID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *ParishMemberMutation) ResetUserID() {
+	m.user_id = nil
+}
+
+// SetRole sets the "role" field.
+func (m *ParishMemberMutation) SetRole(pa parishmember.Role) {
+	m.role = &pa
+}
+
+// Role returns the value of the "role" field in the mutation.
+func (m *ParishMemberMutation) Role() (r parishmember.Role, exists bool) {
+	v := m.role
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRole returns the old "role" field's value of the ParishMember entity.
+// If the ParishMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParishMemberMutation) OldRole(ctx context.Context) (v parishmember.Role, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRole is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRole requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRole: %w", err)
+	}
+	return oldValue.Role, nil
+}
+
+// ResetRole resets all changes to the "role" field.
+func (m *ParishMemberMutation) ResetRole() {
+	m.role = nil
+}
+
+// ClearParish clears the "parish" edge to the Parish entity.
+func (m *ParishMemberMutation) ClearParish() {
+	m.clearedparish = true
+	m.clearedFields[parishmember.FieldParishID] = struct{}{}
+}
+
+// ParishCleared reports if the "parish" edge to the Parish entity was cleared.
+func (m *ParishMemberMutation) ParishCleared() bool {
+	return m.clearedparish
+}
+
+// ParishIDs returns the "parish" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ParishID instead. It exists only for internal usage by the builders.
+func (m *ParishMemberMutation) ParishIDs() (ids []uuid.UUID) {
+	if id := m.parish; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetParish resets all changes to the "parish" edge.
+func (m *ParishMemberMutation) ResetParish() {
+	m.parish = nil
+	m.clearedparish = false
+}
+
+// Where appends a list predicates to the ParishMemberMutation builder.
+func (m *ParishMemberMutation) Where(ps ...predicate.ParishMember) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ParishMemberMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ParishMemberMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ParishMember, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ParishMemberMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ParishMemberMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ParishMember).
+func (m *ParishMemberMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ParishMemberMutation) Fields() []string {
+	fields := make([]string, 0, 5)
+	if m.created_at != nil {
+		fields = append(fields, parishmember.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, parishmember.FieldUpdatedAt)
+	}
+	if m.parish != nil {
+		fields = append(fields, parishmember.FieldParishID)
+	}
+	if m.user_id != nil {
+		fields = append(fields, parishmember.FieldUserID)
+	}
+	if m.role != nil {
+		fields = append(fields, parishmember.FieldRole)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ParishMemberMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case parishmember.FieldCreatedAt:
+		return m.CreatedAt()
+	case parishmember.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case parishmember.FieldParishID:
+		return m.ParishID()
+	case parishmember.FieldUserID:
+		return m.UserID()
+	case parishmember.FieldRole:
+		return m.Role()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ParishMemberMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case parishmember.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case parishmember.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case parishmember.FieldParishID:
+		return m.OldParishID(ctx)
+	case parishmember.FieldUserID:
+		return m.OldUserID(ctx)
+	case parishmember.FieldRole:
+		return m.OldRole(ctx)
+	}
+	return nil, fmt.Errorf("unknown ParishMember field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ParishMemberMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case parishmember.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case parishmember.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case parishmember.FieldParishID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetParishID(v)
+		return nil
+	case parishmember.FieldUserID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case parishmember.FieldRole:
+		v, ok := value.(parishmember.Role)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRole(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ParishMember field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ParishMemberMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ParishMemberMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ParishMemberMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown ParishMember numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ParishMemberMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ParishMemberMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ParishMemberMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown ParishMember nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ParishMemberMutation) ResetField(name string) error {
+	switch name {
+	case parishmember.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case parishmember.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case parishmember.FieldParishID:
+		m.ResetParishID()
+		return nil
+	case parishmember.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case parishmember.FieldRole:
+		m.ResetRole()
+		return nil
+	}
+	return fmt.Errorf("unknown ParishMember field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ParishMemberMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.parish != nil {
+		edges = append(edges, parishmember.EdgeParish)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ParishMemberMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case parishmember.EdgeParish:
+		if id := m.parish; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ParishMemberMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ParishMemberMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ParishMemberMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedparish {
+		edges = append(edges, parishmember.EdgeParish)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ParishMemberMutation) EdgeCleared(name string) bool {
+	switch name {
+	case parishmember.EdgeParish:
+		return m.clearedparish
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ParishMemberMutation) ClearEdge(name string) error {
+	switch name {
+	case parishmember.EdgeParish:
+		m.ClearParish()
+		return nil
+	}
+	return fmt.Errorf("unknown ParishMember unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ParishMemberMutation) ResetEdge(name string) error {
+	switch name {
+	case parishmember.EdgeParish:
+		m.ResetParish()
+		return nil
+	}
+	return fmt.Errorf("unknown ParishMember edge %s", name)
+}
+
+// PeriodMutation represents an operation that mutates the Period nodes in the graph.
+type PeriodMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *uuid.UUID
+	created_at    *time.Time
+	updated_at    *time.Time
+	deleted_at    *time.Time
+	_type         *period.Type
+	code          *string
+	name          *string
+	start_date    *string
+	end_date      *string
+	status        *period.Status
+	is_current    *bool
+	clearedFields map[string]struct{}
+	parish        *uuid.UUID
+	clearedparish bool
+	done          bool
+	oldValue      func(context.Context) (*Period, error)
+	predicates    []predicate.Period
+}
+
+var _ ent.Mutation = (*PeriodMutation)(nil)
+
+// periodOption allows management of the mutation configuration using functional options.
+type periodOption func(*PeriodMutation)
+
+// newPeriodMutation creates new mutation for the Period entity.
+func newPeriodMutation(c config, op Op, opts ...periodOption) *PeriodMutation {
+	m := &PeriodMutation{
+		config:        c,
+		op:            op,
+		typ:           TypePeriod,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withPeriodID sets the ID field of the mutation.
+func withPeriodID(id uuid.UUID) periodOption {
+	return func(m *PeriodMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Period
+		)
+		m.oldValue = func(ctx context.Context) (*Period, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Period.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withPeriod sets the old Period of the mutation.
+func withPeriod(node *Period) periodOption {
+	return func(m *PeriodMutation) {
+		m.oldValue = func(context.Context) (*Period, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m PeriodMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m PeriodMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Period entities.
+func (m *PeriodMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *PeriodMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *PeriodMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Period.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *PeriodMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *PeriodMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the Period entity.
+// If the Period object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PeriodMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *PeriodMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *PeriodMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *PeriodMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the Period entity.
+// If the Period object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PeriodMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *PeriodMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *PeriodMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *PeriodMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the Period entity.
+// If the Period object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PeriodMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *PeriodMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[period.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *PeriodMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[period.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *PeriodMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, period.FieldDeletedAt)
+}
+
+// SetParishID sets the "parish_id" field.
+func (m *PeriodMutation) SetParishID(u uuid.UUID) {
+	m.parish = &u
+}
+
+// ParishID returns the value of the "parish_id" field in the mutation.
+func (m *PeriodMutation) ParishID() (r uuid.UUID, exists bool) {
+	v := m.parish
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldParishID returns the old "parish_id" field's value of the Period entity.
+// If the Period object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PeriodMutation) OldParishID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldParishID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldParishID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldParishID: %w", err)
+	}
+	return oldValue.ParishID, nil
+}
+
+// ResetParishID resets all changes to the "parish_id" field.
+func (m *PeriodMutation) ResetParishID() {
+	m.parish = nil
+}
+
+// SetType sets the "type" field.
+func (m *PeriodMutation) SetType(pe period.Type) {
+	m._type = &pe
+}
+
+// GetType returns the value of the "type" field in the mutation.
+func (m *PeriodMutation) GetType() (r period.Type, exists bool) {
+	v := m._type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldType returns the old "type" field's value of the Period entity.
+// If the Period object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PeriodMutation) OldType(ctx context.Context) (v period.Type, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldType: %w", err)
+	}
+	return oldValue.Type, nil
+}
+
+// ResetType resets all changes to the "type" field.
+func (m *PeriodMutation) ResetType() {
+	m._type = nil
+}
+
+// SetCode sets the "code" field.
+func (m *PeriodMutation) SetCode(s string) {
+	m.code = &s
+}
+
+// Code returns the value of the "code" field in the mutation.
+func (m *PeriodMutation) Code() (r string, exists bool) {
+	v := m.code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCode returns the old "code" field's value of the Period entity.
+// If the Period object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PeriodMutation) OldCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCode: %w", err)
+	}
+	return oldValue.Code, nil
+}
+
+// ResetCode resets all changes to the "code" field.
+func (m *PeriodMutation) ResetCode() {
+	m.code = nil
+}
+
+// SetName sets the "name" field.
+func (m *PeriodMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *PeriodMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Period entity.
+// If the Period object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PeriodMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *PeriodMutation) ResetName() {
+	m.name = nil
+}
+
+// SetStartDate sets the "start_date" field.
+func (m *PeriodMutation) SetStartDate(s string) {
+	m.start_date = &s
+}
+
+// StartDate returns the value of the "start_date" field in the mutation.
+func (m *PeriodMutation) StartDate() (r string, exists bool) {
+	v := m.start_date
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStartDate returns the old "start_date" field's value of the Period entity.
+// If the Period object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PeriodMutation) OldStartDate(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStartDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStartDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStartDate: %w", err)
+	}
+	return oldValue.StartDate, nil
+}
+
+// ResetStartDate resets all changes to the "start_date" field.
+func (m *PeriodMutation) ResetStartDate() {
+	m.start_date = nil
+}
+
+// SetEndDate sets the "end_date" field.
+func (m *PeriodMutation) SetEndDate(s string) {
+	m.end_date = &s
+}
+
+// EndDate returns the value of the "end_date" field in the mutation.
+func (m *PeriodMutation) EndDate() (r string, exists bool) {
+	v := m.end_date
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEndDate returns the old "end_date" field's value of the Period entity.
+// If the Period object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PeriodMutation) OldEndDate(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEndDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEndDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEndDate: %w", err)
+	}
+	return oldValue.EndDate, nil
+}
+
+// ResetEndDate resets all changes to the "end_date" field.
+func (m *PeriodMutation) ResetEndDate() {
+	m.end_date = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *PeriodMutation) SetStatus(pe period.Status) {
+	m.status = &pe
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *PeriodMutation) Status() (r period.Status, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the Period entity.
+// If the Period object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PeriodMutation) OldStatus(ctx context.Context) (v period.Status, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *PeriodMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetIsCurrent sets the "is_current" field.
+func (m *PeriodMutation) SetIsCurrent(b bool) {
+	m.is_current = &b
+}
+
+// IsCurrent returns the value of the "is_current" field in the mutation.
+func (m *PeriodMutation) IsCurrent() (r bool, exists bool) {
+	v := m.is_current
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsCurrent returns the old "is_current" field's value of the Period entity.
+// If the Period object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PeriodMutation) OldIsCurrent(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsCurrent is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsCurrent requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsCurrent: %w", err)
+	}
+	return oldValue.IsCurrent, nil
+}
+
+// ResetIsCurrent resets all changes to the "is_current" field.
+func (m *PeriodMutation) ResetIsCurrent() {
+	m.is_current = nil
+}
+
+// ClearParish clears the "parish" edge to the Parish entity.
+func (m *PeriodMutation) ClearParish() {
+	m.clearedparish = true
+	m.clearedFields[period.FieldParishID] = struct{}{}
+}
+
+// ParishCleared reports if the "parish" edge to the Parish entity was cleared.
+func (m *PeriodMutation) ParishCleared() bool {
+	return m.clearedparish
+}
+
+// ParishIDs returns the "parish" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ParishID instead. It exists only for internal usage by the builders.
+func (m *PeriodMutation) ParishIDs() (ids []uuid.UUID) {
+	if id := m.parish; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetParish resets all changes to the "parish" edge.
+func (m *PeriodMutation) ResetParish() {
+	m.parish = nil
+	m.clearedparish = false
+}
+
+// Where appends a list predicates to the PeriodMutation builder.
+func (m *PeriodMutation) Where(ps ...predicate.Period) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the PeriodMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *PeriodMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Period, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *PeriodMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *PeriodMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Period).
+func (m *PeriodMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *PeriodMutation) Fields() []string {
+	fields := make([]string, 0, 11)
+	if m.created_at != nil {
+		fields = append(fields, period.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, period.FieldUpdatedAt)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, period.FieldDeletedAt)
+	}
+	if m.parish != nil {
+		fields = append(fields, period.FieldParishID)
+	}
+	if m._type != nil {
+		fields = append(fields, period.FieldType)
+	}
+	if m.code != nil {
+		fields = append(fields, period.FieldCode)
+	}
+	if m.name != nil {
+		fields = append(fields, period.FieldName)
+	}
+	if m.start_date != nil {
+		fields = append(fields, period.FieldStartDate)
+	}
+	if m.end_date != nil {
+		fields = append(fields, period.FieldEndDate)
+	}
+	if m.status != nil {
+		fields = append(fields, period.FieldStatus)
+	}
+	if m.is_current != nil {
+		fields = append(fields, period.FieldIsCurrent)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *PeriodMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case period.FieldCreatedAt:
+		return m.CreatedAt()
+	case period.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case period.FieldDeletedAt:
+		return m.DeletedAt()
+	case period.FieldParishID:
+		return m.ParishID()
+	case period.FieldType:
+		return m.GetType()
+	case period.FieldCode:
+		return m.Code()
+	case period.FieldName:
+		return m.Name()
+	case period.FieldStartDate:
+		return m.StartDate()
+	case period.FieldEndDate:
+		return m.EndDate()
+	case period.FieldStatus:
+		return m.Status()
+	case period.FieldIsCurrent:
+		return m.IsCurrent()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *PeriodMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case period.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case period.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case period.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case period.FieldParishID:
+		return m.OldParishID(ctx)
+	case period.FieldType:
+		return m.OldType(ctx)
+	case period.FieldCode:
+		return m.OldCode(ctx)
+	case period.FieldName:
+		return m.OldName(ctx)
+	case period.FieldStartDate:
+		return m.OldStartDate(ctx)
+	case period.FieldEndDate:
+		return m.OldEndDate(ctx)
+	case period.FieldStatus:
+		return m.OldStatus(ctx)
+	case period.FieldIsCurrent:
+		return m.OldIsCurrent(ctx)
+	}
+	return nil, fmt.Errorf("unknown Period field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PeriodMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case period.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case period.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case period.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case period.FieldParishID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetParishID(v)
+		return nil
+	case period.FieldType:
+		v, ok := value.(period.Type)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetType(v)
+		return nil
+	case period.FieldCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCode(v)
+		return nil
+	case period.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case period.FieldStartDate:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStartDate(v)
+		return nil
+	case period.FieldEndDate:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEndDate(v)
+		return nil
+	case period.FieldStatus:
+		v, ok := value.(period.Status)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case period.FieldIsCurrent:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsCurrent(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Period field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *PeriodMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *PeriodMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PeriodMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Period numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *PeriodMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(period.FieldDeletedAt) {
+		fields = append(fields, period.FieldDeletedAt)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *PeriodMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *PeriodMutation) ClearField(name string) error {
+	switch name {
+	case period.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown Period nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *PeriodMutation) ResetField(name string) error {
+	switch name {
+	case period.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case period.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case period.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case period.FieldParishID:
+		m.ResetParishID()
+		return nil
+	case period.FieldType:
+		m.ResetType()
+		return nil
+	case period.FieldCode:
+		m.ResetCode()
+		return nil
+	case period.FieldName:
+		m.ResetName()
+		return nil
+	case period.FieldStartDate:
+		m.ResetStartDate()
+		return nil
+	case period.FieldEndDate:
+		m.ResetEndDate()
+		return nil
+	case period.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case period.FieldIsCurrent:
+		m.ResetIsCurrent()
+		return nil
+	}
+	return fmt.Errorf("unknown Period field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *PeriodMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.parish != nil {
+		edges = append(edges, period.EdgeParish)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *PeriodMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case period.EdgeParish:
+		if id := m.parish; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *PeriodMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *PeriodMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *PeriodMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedparish {
+		edges = append(edges, period.EdgeParish)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *PeriodMutation) EdgeCleared(name string) bool {
+	switch name {
+	case period.EdgeParish:
+		return m.clearedparish
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *PeriodMutation) ClearEdge(name string) error {
+	switch name {
+	case period.EdgeParish:
+		m.ClearParish()
+		return nil
+	}
+	return fmt.Errorf("unknown Period unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *PeriodMutation) ResetEdge(name string) error {
+	switch name {
+	case period.EdgeParish:
+		m.ResetParish()
+		return nil
+	}
+	return fmt.Errorf("unknown Period edge %s", name)
 }
 
 // UserMutation represents an operation that mutates the User nodes in the graph.
@@ -4780,4 +10054,2072 @@ func (m *UserSessionMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown UserSession edge %s", name)
+}
+
+// WardMutation represents an operation that mutates the Ward nodes in the graph.
+type WardMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *uuid.UUID
+	created_at    *time.Time
+	updated_at    *time.Time
+	deleted_at    *time.Time
+	code          *string
+	name          *string
+	patron_saint  *string
+	head_name     *string
+	head_phone    *string
+	active        *bool
+	clearedFields map[string]struct{}
+	parish        *uuid.UUID
+	clearedparish bool
+	zone          *uuid.UUID
+	clearedzone   bool
+	done          bool
+	oldValue      func(context.Context) (*Ward, error)
+	predicates    []predicate.Ward
+}
+
+var _ ent.Mutation = (*WardMutation)(nil)
+
+// wardOption allows management of the mutation configuration using functional options.
+type wardOption func(*WardMutation)
+
+// newWardMutation creates new mutation for the Ward entity.
+func newWardMutation(c config, op Op, opts ...wardOption) *WardMutation {
+	m := &WardMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeWard,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withWardID sets the ID field of the mutation.
+func withWardID(id uuid.UUID) wardOption {
+	return func(m *WardMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Ward
+		)
+		m.oldValue = func(ctx context.Context) (*Ward, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Ward.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withWard sets the old Ward of the mutation.
+func withWard(node *Ward) wardOption {
+	return func(m *WardMutation) {
+		m.oldValue = func(context.Context) (*Ward, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m WardMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m WardMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Ward entities.
+func (m *WardMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *WardMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *WardMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Ward.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *WardMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *WardMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the Ward entity.
+// If the Ward object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WardMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *WardMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *WardMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *WardMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the Ward entity.
+// If the Ward object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WardMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *WardMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *WardMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *WardMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the Ward entity.
+// If the Ward object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WardMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *WardMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[ward.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *WardMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[ward.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *WardMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, ward.FieldDeletedAt)
+}
+
+// SetParishID sets the "parish_id" field.
+func (m *WardMutation) SetParishID(u uuid.UUID) {
+	m.parish = &u
+}
+
+// ParishID returns the value of the "parish_id" field in the mutation.
+func (m *WardMutation) ParishID() (r uuid.UUID, exists bool) {
+	v := m.parish
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldParishID returns the old "parish_id" field's value of the Ward entity.
+// If the Ward object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WardMutation) OldParishID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldParishID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldParishID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldParishID: %w", err)
+	}
+	return oldValue.ParishID, nil
+}
+
+// ResetParishID resets all changes to the "parish_id" field.
+func (m *WardMutation) ResetParishID() {
+	m.parish = nil
+}
+
+// SetZoneID sets the "zone_id" field.
+func (m *WardMutation) SetZoneID(u uuid.UUID) {
+	m.zone = &u
+}
+
+// ZoneID returns the value of the "zone_id" field in the mutation.
+func (m *WardMutation) ZoneID() (r uuid.UUID, exists bool) {
+	v := m.zone
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldZoneID returns the old "zone_id" field's value of the Ward entity.
+// If the Ward object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WardMutation) OldZoneID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldZoneID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldZoneID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldZoneID: %w", err)
+	}
+	return oldValue.ZoneID, nil
+}
+
+// ResetZoneID resets all changes to the "zone_id" field.
+func (m *WardMutation) ResetZoneID() {
+	m.zone = nil
+}
+
+// SetCode sets the "code" field.
+func (m *WardMutation) SetCode(s string) {
+	m.code = &s
+}
+
+// Code returns the value of the "code" field in the mutation.
+func (m *WardMutation) Code() (r string, exists bool) {
+	v := m.code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCode returns the old "code" field's value of the Ward entity.
+// If the Ward object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WardMutation) OldCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCode: %w", err)
+	}
+	return oldValue.Code, nil
+}
+
+// ResetCode resets all changes to the "code" field.
+func (m *WardMutation) ResetCode() {
+	m.code = nil
+}
+
+// SetName sets the "name" field.
+func (m *WardMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *WardMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Ward entity.
+// If the Ward object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WardMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *WardMutation) ResetName() {
+	m.name = nil
+}
+
+// SetPatronSaint sets the "patron_saint" field.
+func (m *WardMutation) SetPatronSaint(s string) {
+	m.patron_saint = &s
+}
+
+// PatronSaint returns the value of the "patron_saint" field in the mutation.
+func (m *WardMutation) PatronSaint() (r string, exists bool) {
+	v := m.patron_saint
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPatronSaint returns the old "patron_saint" field's value of the Ward entity.
+// If the Ward object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WardMutation) OldPatronSaint(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPatronSaint is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPatronSaint requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPatronSaint: %w", err)
+	}
+	return oldValue.PatronSaint, nil
+}
+
+// ClearPatronSaint clears the value of the "patron_saint" field.
+func (m *WardMutation) ClearPatronSaint() {
+	m.patron_saint = nil
+	m.clearedFields[ward.FieldPatronSaint] = struct{}{}
+}
+
+// PatronSaintCleared returns if the "patron_saint" field was cleared in this mutation.
+func (m *WardMutation) PatronSaintCleared() bool {
+	_, ok := m.clearedFields[ward.FieldPatronSaint]
+	return ok
+}
+
+// ResetPatronSaint resets all changes to the "patron_saint" field.
+func (m *WardMutation) ResetPatronSaint() {
+	m.patron_saint = nil
+	delete(m.clearedFields, ward.FieldPatronSaint)
+}
+
+// SetHeadName sets the "head_name" field.
+func (m *WardMutation) SetHeadName(s string) {
+	m.head_name = &s
+}
+
+// HeadName returns the value of the "head_name" field in the mutation.
+func (m *WardMutation) HeadName() (r string, exists bool) {
+	v := m.head_name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldHeadName returns the old "head_name" field's value of the Ward entity.
+// If the Ward object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WardMutation) OldHeadName(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldHeadName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldHeadName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldHeadName: %w", err)
+	}
+	return oldValue.HeadName, nil
+}
+
+// ClearHeadName clears the value of the "head_name" field.
+func (m *WardMutation) ClearHeadName() {
+	m.head_name = nil
+	m.clearedFields[ward.FieldHeadName] = struct{}{}
+}
+
+// HeadNameCleared returns if the "head_name" field was cleared in this mutation.
+func (m *WardMutation) HeadNameCleared() bool {
+	_, ok := m.clearedFields[ward.FieldHeadName]
+	return ok
+}
+
+// ResetHeadName resets all changes to the "head_name" field.
+func (m *WardMutation) ResetHeadName() {
+	m.head_name = nil
+	delete(m.clearedFields, ward.FieldHeadName)
+}
+
+// SetHeadPhone sets the "head_phone" field.
+func (m *WardMutation) SetHeadPhone(s string) {
+	m.head_phone = &s
+}
+
+// HeadPhone returns the value of the "head_phone" field in the mutation.
+func (m *WardMutation) HeadPhone() (r string, exists bool) {
+	v := m.head_phone
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldHeadPhone returns the old "head_phone" field's value of the Ward entity.
+// If the Ward object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WardMutation) OldHeadPhone(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldHeadPhone is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldHeadPhone requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldHeadPhone: %w", err)
+	}
+	return oldValue.HeadPhone, nil
+}
+
+// ClearHeadPhone clears the value of the "head_phone" field.
+func (m *WardMutation) ClearHeadPhone() {
+	m.head_phone = nil
+	m.clearedFields[ward.FieldHeadPhone] = struct{}{}
+}
+
+// HeadPhoneCleared returns if the "head_phone" field was cleared in this mutation.
+func (m *WardMutation) HeadPhoneCleared() bool {
+	_, ok := m.clearedFields[ward.FieldHeadPhone]
+	return ok
+}
+
+// ResetHeadPhone resets all changes to the "head_phone" field.
+func (m *WardMutation) ResetHeadPhone() {
+	m.head_phone = nil
+	delete(m.clearedFields, ward.FieldHeadPhone)
+}
+
+// SetActive sets the "active" field.
+func (m *WardMutation) SetActive(b bool) {
+	m.active = &b
+}
+
+// Active returns the value of the "active" field in the mutation.
+func (m *WardMutation) Active() (r bool, exists bool) {
+	v := m.active
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldActive returns the old "active" field's value of the Ward entity.
+// If the Ward object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WardMutation) OldActive(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldActive is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldActive requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldActive: %w", err)
+	}
+	return oldValue.Active, nil
+}
+
+// ResetActive resets all changes to the "active" field.
+func (m *WardMutation) ResetActive() {
+	m.active = nil
+}
+
+// ClearParish clears the "parish" edge to the Parish entity.
+func (m *WardMutation) ClearParish() {
+	m.clearedparish = true
+	m.clearedFields[ward.FieldParishID] = struct{}{}
+}
+
+// ParishCleared reports if the "parish" edge to the Parish entity was cleared.
+func (m *WardMutation) ParishCleared() bool {
+	return m.clearedparish
+}
+
+// ParishIDs returns the "parish" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ParishID instead. It exists only for internal usage by the builders.
+func (m *WardMutation) ParishIDs() (ids []uuid.UUID) {
+	if id := m.parish; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetParish resets all changes to the "parish" edge.
+func (m *WardMutation) ResetParish() {
+	m.parish = nil
+	m.clearedparish = false
+}
+
+// ClearZone clears the "zone" edge to the Zone entity.
+func (m *WardMutation) ClearZone() {
+	m.clearedzone = true
+	m.clearedFields[ward.FieldZoneID] = struct{}{}
+}
+
+// ZoneCleared reports if the "zone" edge to the Zone entity was cleared.
+func (m *WardMutation) ZoneCleared() bool {
+	return m.clearedzone
+}
+
+// ZoneIDs returns the "zone" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ZoneID instead. It exists only for internal usage by the builders.
+func (m *WardMutation) ZoneIDs() (ids []uuid.UUID) {
+	if id := m.zone; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetZone resets all changes to the "zone" edge.
+func (m *WardMutation) ResetZone() {
+	m.zone = nil
+	m.clearedzone = false
+}
+
+// Where appends a list predicates to the WardMutation builder.
+func (m *WardMutation) Where(ps ...predicate.Ward) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the WardMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *WardMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Ward, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *WardMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *WardMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Ward).
+func (m *WardMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *WardMutation) Fields() []string {
+	fields := make([]string, 0, 11)
+	if m.created_at != nil {
+		fields = append(fields, ward.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, ward.FieldUpdatedAt)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, ward.FieldDeletedAt)
+	}
+	if m.parish != nil {
+		fields = append(fields, ward.FieldParishID)
+	}
+	if m.zone != nil {
+		fields = append(fields, ward.FieldZoneID)
+	}
+	if m.code != nil {
+		fields = append(fields, ward.FieldCode)
+	}
+	if m.name != nil {
+		fields = append(fields, ward.FieldName)
+	}
+	if m.patron_saint != nil {
+		fields = append(fields, ward.FieldPatronSaint)
+	}
+	if m.head_name != nil {
+		fields = append(fields, ward.FieldHeadName)
+	}
+	if m.head_phone != nil {
+		fields = append(fields, ward.FieldHeadPhone)
+	}
+	if m.active != nil {
+		fields = append(fields, ward.FieldActive)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *WardMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case ward.FieldCreatedAt:
+		return m.CreatedAt()
+	case ward.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case ward.FieldDeletedAt:
+		return m.DeletedAt()
+	case ward.FieldParishID:
+		return m.ParishID()
+	case ward.FieldZoneID:
+		return m.ZoneID()
+	case ward.FieldCode:
+		return m.Code()
+	case ward.FieldName:
+		return m.Name()
+	case ward.FieldPatronSaint:
+		return m.PatronSaint()
+	case ward.FieldHeadName:
+		return m.HeadName()
+	case ward.FieldHeadPhone:
+		return m.HeadPhone()
+	case ward.FieldActive:
+		return m.Active()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *WardMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case ward.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case ward.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case ward.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case ward.FieldParishID:
+		return m.OldParishID(ctx)
+	case ward.FieldZoneID:
+		return m.OldZoneID(ctx)
+	case ward.FieldCode:
+		return m.OldCode(ctx)
+	case ward.FieldName:
+		return m.OldName(ctx)
+	case ward.FieldPatronSaint:
+		return m.OldPatronSaint(ctx)
+	case ward.FieldHeadName:
+		return m.OldHeadName(ctx)
+	case ward.FieldHeadPhone:
+		return m.OldHeadPhone(ctx)
+	case ward.FieldActive:
+		return m.OldActive(ctx)
+	}
+	return nil, fmt.Errorf("unknown Ward field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *WardMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case ward.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case ward.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case ward.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case ward.FieldParishID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetParishID(v)
+		return nil
+	case ward.FieldZoneID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetZoneID(v)
+		return nil
+	case ward.FieldCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCode(v)
+		return nil
+	case ward.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case ward.FieldPatronSaint:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPatronSaint(v)
+		return nil
+	case ward.FieldHeadName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetHeadName(v)
+		return nil
+	case ward.FieldHeadPhone:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetHeadPhone(v)
+		return nil
+	case ward.FieldActive:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetActive(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Ward field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *WardMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *WardMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *WardMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Ward numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *WardMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(ward.FieldDeletedAt) {
+		fields = append(fields, ward.FieldDeletedAt)
+	}
+	if m.FieldCleared(ward.FieldPatronSaint) {
+		fields = append(fields, ward.FieldPatronSaint)
+	}
+	if m.FieldCleared(ward.FieldHeadName) {
+		fields = append(fields, ward.FieldHeadName)
+	}
+	if m.FieldCleared(ward.FieldHeadPhone) {
+		fields = append(fields, ward.FieldHeadPhone)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *WardMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *WardMutation) ClearField(name string) error {
+	switch name {
+	case ward.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case ward.FieldPatronSaint:
+		m.ClearPatronSaint()
+		return nil
+	case ward.FieldHeadName:
+		m.ClearHeadName()
+		return nil
+	case ward.FieldHeadPhone:
+		m.ClearHeadPhone()
+		return nil
+	}
+	return fmt.Errorf("unknown Ward nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *WardMutation) ResetField(name string) error {
+	switch name {
+	case ward.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case ward.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case ward.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case ward.FieldParishID:
+		m.ResetParishID()
+		return nil
+	case ward.FieldZoneID:
+		m.ResetZoneID()
+		return nil
+	case ward.FieldCode:
+		m.ResetCode()
+		return nil
+	case ward.FieldName:
+		m.ResetName()
+		return nil
+	case ward.FieldPatronSaint:
+		m.ResetPatronSaint()
+		return nil
+	case ward.FieldHeadName:
+		m.ResetHeadName()
+		return nil
+	case ward.FieldHeadPhone:
+		m.ResetHeadPhone()
+		return nil
+	case ward.FieldActive:
+		m.ResetActive()
+		return nil
+	}
+	return fmt.Errorf("unknown Ward field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *WardMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.parish != nil {
+		edges = append(edges, ward.EdgeParish)
+	}
+	if m.zone != nil {
+		edges = append(edges, ward.EdgeZone)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *WardMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case ward.EdgeParish:
+		if id := m.parish; id != nil {
+			return []ent.Value{*id}
+		}
+	case ward.EdgeZone:
+		if id := m.zone; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *WardMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *WardMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *WardMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedparish {
+		edges = append(edges, ward.EdgeParish)
+	}
+	if m.clearedzone {
+		edges = append(edges, ward.EdgeZone)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *WardMutation) EdgeCleared(name string) bool {
+	switch name {
+	case ward.EdgeParish:
+		return m.clearedparish
+	case ward.EdgeZone:
+		return m.clearedzone
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *WardMutation) ClearEdge(name string) error {
+	switch name {
+	case ward.EdgeParish:
+		m.ClearParish()
+		return nil
+	case ward.EdgeZone:
+		m.ClearZone()
+		return nil
+	}
+	return fmt.Errorf("unknown Ward unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *WardMutation) ResetEdge(name string) error {
+	switch name {
+	case ward.EdgeParish:
+		m.ResetParish()
+		return nil
+	case ward.EdgeZone:
+		m.ResetZone()
+		return nil
+	}
+	return fmt.Errorf("unknown Ward edge %s", name)
+}
+
+// ZoneMutation represents an operation that mutates the Zone nodes in the graph.
+type ZoneMutation struct {
+	config
+	op                Op
+	typ               string
+	id                *uuid.UUID
+	created_at        *time.Time
+	updated_at        *time.Time
+	deleted_at        *time.Time
+	_type             *zone.Type
+	code              *string
+	name              *string
+	coordinator_name  *string
+	coordinator_phone *string
+	active            *bool
+	clearedFields     map[string]struct{}
+	parish            *uuid.UUID
+	clearedparish     bool
+	wards             map[uuid.UUID]struct{}
+	removedwards      map[uuid.UUID]struct{}
+	clearedwards      bool
+	done              bool
+	oldValue          func(context.Context) (*Zone, error)
+	predicates        []predicate.Zone
+}
+
+var _ ent.Mutation = (*ZoneMutation)(nil)
+
+// zoneOption allows management of the mutation configuration using functional options.
+type zoneOption func(*ZoneMutation)
+
+// newZoneMutation creates new mutation for the Zone entity.
+func newZoneMutation(c config, op Op, opts ...zoneOption) *ZoneMutation {
+	m := &ZoneMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeZone,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withZoneID sets the ID field of the mutation.
+func withZoneID(id uuid.UUID) zoneOption {
+	return func(m *ZoneMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Zone
+		)
+		m.oldValue = func(ctx context.Context) (*Zone, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Zone.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withZone sets the old Zone of the mutation.
+func withZone(node *Zone) zoneOption {
+	return func(m *ZoneMutation) {
+		m.oldValue = func(context.Context) (*Zone, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ZoneMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ZoneMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Zone entities.
+func (m *ZoneMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ZoneMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ZoneMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Zone.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ZoneMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ZoneMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the Zone entity.
+// If the Zone object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ZoneMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ZoneMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *ZoneMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *ZoneMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the Zone entity.
+// If the Zone object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ZoneMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *ZoneMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *ZoneMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *ZoneMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the Zone entity.
+// If the Zone object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ZoneMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *ZoneMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[zone.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *ZoneMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[zone.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *ZoneMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, zone.FieldDeletedAt)
+}
+
+// SetParishID sets the "parish_id" field.
+func (m *ZoneMutation) SetParishID(u uuid.UUID) {
+	m.parish = &u
+}
+
+// ParishID returns the value of the "parish_id" field in the mutation.
+func (m *ZoneMutation) ParishID() (r uuid.UUID, exists bool) {
+	v := m.parish
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldParishID returns the old "parish_id" field's value of the Zone entity.
+// If the Zone object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ZoneMutation) OldParishID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldParishID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldParishID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldParishID: %w", err)
+	}
+	return oldValue.ParishID, nil
+}
+
+// ResetParishID resets all changes to the "parish_id" field.
+func (m *ZoneMutation) ResetParishID() {
+	m.parish = nil
+}
+
+// SetType sets the "type" field.
+func (m *ZoneMutation) SetType(z zone.Type) {
+	m._type = &z
+}
+
+// GetType returns the value of the "type" field in the mutation.
+func (m *ZoneMutation) GetType() (r zone.Type, exists bool) {
+	v := m._type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldType returns the old "type" field's value of the Zone entity.
+// If the Zone object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ZoneMutation) OldType(ctx context.Context) (v zone.Type, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldType: %w", err)
+	}
+	return oldValue.Type, nil
+}
+
+// ResetType resets all changes to the "type" field.
+func (m *ZoneMutation) ResetType() {
+	m._type = nil
+}
+
+// SetCode sets the "code" field.
+func (m *ZoneMutation) SetCode(s string) {
+	m.code = &s
+}
+
+// Code returns the value of the "code" field in the mutation.
+func (m *ZoneMutation) Code() (r string, exists bool) {
+	v := m.code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCode returns the old "code" field's value of the Zone entity.
+// If the Zone object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ZoneMutation) OldCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCode: %w", err)
+	}
+	return oldValue.Code, nil
+}
+
+// ResetCode resets all changes to the "code" field.
+func (m *ZoneMutation) ResetCode() {
+	m.code = nil
+}
+
+// SetName sets the "name" field.
+func (m *ZoneMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *ZoneMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Zone entity.
+// If the Zone object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ZoneMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *ZoneMutation) ResetName() {
+	m.name = nil
+}
+
+// SetCoordinatorName sets the "coordinator_name" field.
+func (m *ZoneMutation) SetCoordinatorName(s string) {
+	m.coordinator_name = &s
+}
+
+// CoordinatorName returns the value of the "coordinator_name" field in the mutation.
+func (m *ZoneMutation) CoordinatorName() (r string, exists bool) {
+	v := m.coordinator_name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCoordinatorName returns the old "coordinator_name" field's value of the Zone entity.
+// If the Zone object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ZoneMutation) OldCoordinatorName(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCoordinatorName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCoordinatorName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCoordinatorName: %w", err)
+	}
+	return oldValue.CoordinatorName, nil
+}
+
+// ClearCoordinatorName clears the value of the "coordinator_name" field.
+func (m *ZoneMutation) ClearCoordinatorName() {
+	m.coordinator_name = nil
+	m.clearedFields[zone.FieldCoordinatorName] = struct{}{}
+}
+
+// CoordinatorNameCleared returns if the "coordinator_name" field was cleared in this mutation.
+func (m *ZoneMutation) CoordinatorNameCleared() bool {
+	_, ok := m.clearedFields[zone.FieldCoordinatorName]
+	return ok
+}
+
+// ResetCoordinatorName resets all changes to the "coordinator_name" field.
+func (m *ZoneMutation) ResetCoordinatorName() {
+	m.coordinator_name = nil
+	delete(m.clearedFields, zone.FieldCoordinatorName)
+}
+
+// SetCoordinatorPhone sets the "coordinator_phone" field.
+func (m *ZoneMutation) SetCoordinatorPhone(s string) {
+	m.coordinator_phone = &s
+}
+
+// CoordinatorPhone returns the value of the "coordinator_phone" field in the mutation.
+func (m *ZoneMutation) CoordinatorPhone() (r string, exists bool) {
+	v := m.coordinator_phone
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCoordinatorPhone returns the old "coordinator_phone" field's value of the Zone entity.
+// If the Zone object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ZoneMutation) OldCoordinatorPhone(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCoordinatorPhone is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCoordinatorPhone requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCoordinatorPhone: %w", err)
+	}
+	return oldValue.CoordinatorPhone, nil
+}
+
+// ClearCoordinatorPhone clears the value of the "coordinator_phone" field.
+func (m *ZoneMutation) ClearCoordinatorPhone() {
+	m.coordinator_phone = nil
+	m.clearedFields[zone.FieldCoordinatorPhone] = struct{}{}
+}
+
+// CoordinatorPhoneCleared returns if the "coordinator_phone" field was cleared in this mutation.
+func (m *ZoneMutation) CoordinatorPhoneCleared() bool {
+	_, ok := m.clearedFields[zone.FieldCoordinatorPhone]
+	return ok
+}
+
+// ResetCoordinatorPhone resets all changes to the "coordinator_phone" field.
+func (m *ZoneMutation) ResetCoordinatorPhone() {
+	m.coordinator_phone = nil
+	delete(m.clearedFields, zone.FieldCoordinatorPhone)
+}
+
+// SetActive sets the "active" field.
+func (m *ZoneMutation) SetActive(b bool) {
+	m.active = &b
+}
+
+// Active returns the value of the "active" field in the mutation.
+func (m *ZoneMutation) Active() (r bool, exists bool) {
+	v := m.active
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldActive returns the old "active" field's value of the Zone entity.
+// If the Zone object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ZoneMutation) OldActive(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldActive is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldActive requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldActive: %w", err)
+	}
+	return oldValue.Active, nil
+}
+
+// ResetActive resets all changes to the "active" field.
+func (m *ZoneMutation) ResetActive() {
+	m.active = nil
+}
+
+// ClearParish clears the "parish" edge to the Parish entity.
+func (m *ZoneMutation) ClearParish() {
+	m.clearedparish = true
+	m.clearedFields[zone.FieldParishID] = struct{}{}
+}
+
+// ParishCleared reports if the "parish" edge to the Parish entity was cleared.
+func (m *ZoneMutation) ParishCleared() bool {
+	return m.clearedparish
+}
+
+// ParishIDs returns the "parish" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ParishID instead. It exists only for internal usage by the builders.
+func (m *ZoneMutation) ParishIDs() (ids []uuid.UUID) {
+	if id := m.parish; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetParish resets all changes to the "parish" edge.
+func (m *ZoneMutation) ResetParish() {
+	m.parish = nil
+	m.clearedparish = false
+}
+
+// AddWardIDs adds the "wards" edge to the Ward entity by ids.
+func (m *ZoneMutation) AddWardIDs(ids ...uuid.UUID) {
+	if m.wards == nil {
+		m.wards = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.wards[ids[i]] = struct{}{}
+	}
+}
+
+// ClearWards clears the "wards" edge to the Ward entity.
+func (m *ZoneMutation) ClearWards() {
+	m.clearedwards = true
+}
+
+// WardsCleared reports if the "wards" edge to the Ward entity was cleared.
+func (m *ZoneMutation) WardsCleared() bool {
+	return m.clearedwards
+}
+
+// RemoveWardIDs removes the "wards" edge to the Ward entity by IDs.
+func (m *ZoneMutation) RemoveWardIDs(ids ...uuid.UUID) {
+	if m.removedwards == nil {
+		m.removedwards = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.wards, ids[i])
+		m.removedwards[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedWards returns the removed IDs of the "wards" edge to the Ward entity.
+func (m *ZoneMutation) RemovedWardsIDs() (ids []uuid.UUID) {
+	for id := range m.removedwards {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// WardsIDs returns the "wards" edge IDs in the mutation.
+func (m *ZoneMutation) WardsIDs() (ids []uuid.UUID) {
+	for id := range m.wards {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetWards resets all changes to the "wards" edge.
+func (m *ZoneMutation) ResetWards() {
+	m.wards = nil
+	m.clearedwards = false
+	m.removedwards = nil
+}
+
+// Where appends a list predicates to the ZoneMutation builder.
+func (m *ZoneMutation) Where(ps ...predicate.Zone) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ZoneMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ZoneMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Zone, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ZoneMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ZoneMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Zone).
+func (m *ZoneMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ZoneMutation) Fields() []string {
+	fields := make([]string, 0, 10)
+	if m.created_at != nil {
+		fields = append(fields, zone.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, zone.FieldUpdatedAt)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, zone.FieldDeletedAt)
+	}
+	if m.parish != nil {
+		fields = append(fields, zone.FieldParishID)
+	}
+	if m._type != nil {
+		fields = append(fields, zone.FieldType)
+	}
+	if m.code != nil {
+		fields = append(fields, zone.FieldCode)
+	}
+	if m.name != nil {
+		fields = append(fields, zone.FieldName)
+	}
+	if m.coordinator_name != nil {
+		fields = append(fields, zone.FieldCoordinatorName)
+	}
+	if m.coordinator_phone != nil {
+		fields = append(fields, zone.FieldCoordinatorPhone)
+	}
+	if m.active != nil {
+		fields = append(fields, zone.FieldActive)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ZoneMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case zone.FieldCreatedAt:
+		return m.CreatedAt()
+	case zone.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case zone.FieldDeletedAt:
+		return m.DeletedAt()
+	case zone.FieldParishID:
+		return m.ParishID()
+	case zone.FieldType:
+		return m.GetType()
+	case zone.FieldCode:
+		return m.Code()
+	case zone.FieldName:
+		return m.Name()
+	case zone.FieldCoordinatorName:
+		return m.CoordinatorName()
+	case zone.FieldCoordinatorPhone:
+		return m.CoordinatorPhone()
+	case zone.FieldActive:
+		return m.Active()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ZoneMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case zone.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case zone.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case zone.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case zone.FieldParishID:
+		return m.OldParishID(ctx)
+	case zone.FieldType:
+		return m.OldType(ctx)
+	case zone.FieldCode:
+		return m.OldCode(ctx)
+	case zone.FieldName:
+		return m.OldName(ctx)
+	case zone.FieldCoordinatorName:
+		return m.OldCoordinatorName(ctx)
+	case zone.FieldCoordinatorPhone:
+		return m.OldCoordinatorPhone(ctx)
+	case zone.FieldActive:
+		return m.OldActive(ctx)
+	}
+	return nil, fmt.Errorf("unknown Zone field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ZoneMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case zone.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case zone.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case zone.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case zone.FieldParishID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetParishID(v)
+		return nil
+	case zone.FieldType:
+		v, ok := value.(zone.Type)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetType(v)
+		return nil
+	case zone.FieldCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCode(v)
+		return nil
+	case zone.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case zone.FieldCoordinatorName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCoordinatorName(v)
+		return nil
+	case zone.FieldCoordinatorPhone:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCoordinatorPhone(v)
+		return nil
+	case zone.FieldActive:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetActive(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Zone field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ZoneMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ZoneMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ZoneMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Zone numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ZoneMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(zone.FieldDeletedAt) {
+		fields = append(fields, zone.FieldDeletedAt)
+	}
+	if m.FieldCleared(zone.FieldCoordinatorName) {
+		fields = append(fields, zone.FieldCoordinatorName)
+	}
+	if m.FieldCleared(zone.FieldCoordinatorPhone) {
+		fields = append(fields, zone.FieldCoordinatorPhone)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ZoneMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ZoneMutation) ClearField(name string) error {
+	switch name {
+	case zone.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case zone.FieldCoordinatorName:
+		m.ClearCoordinatorName()
+		return nil
+	case zone.FieldCoordinatorPhone:
+		m.ClearCoordinatorPhone()
+		return nil
+	}
+	return fmt.Errorf("unknown Zone nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ZoneMutation) ResetField(name string) error {
+	switch name {
+	case zone.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case zone.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case zone.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case zone.FieldParishID:
+		m.ResetParishID()
+		return nil
+	case zone.FieldType:
+		m.ResetType()
+		return nil
+	case zone.FieldCode:
+		m.ResetCode()
+		return nil
+	case zone.FieldName:
+		m.ResetName()
+		return nil
+	case zone.FieldCoordinatorName:
+		m.ResetCoordinatorName()
+		return nil
+	case zone.FieldCoordinatorPhone:
+		m.ResetCoordinatorPhone()
+		return nil
+	case zone.FieldActive:
+		m.ResetActive()
+		return nil
+	}
+	return fmt.Errorf("unknown Zone field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ZoneMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.parish != nil {
+		edges = append(edges, zone.EdgeParish)
+	}
+	if m.wards != nil {
+		edges = append(edges, zone.EdgeWards)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ZoneMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case zone.EdgeParish:
+		if id := m.parish; id != nil {
+			return []ent.Value{*id}
+		}
+	case zone.EdgeWards:
+		ids := make([]ent.Value, 0, len(m.wards))
+		for id := range m.wards {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ZoneMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.removedwards != nil {
+		edges = append(edges, zone.EdgeWards)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ZoneMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case zone.EdgeWards:
+		ids := make([]ent.Value, 0, len(m.removedwards))
+		for id := range m.removedwards {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ZoneMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedparish {
+		edges = append(edges, zone.EdgeParish)
+	}
+	if m.clearedwards {
+		edges = append(edges, zone.EdgeWards)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ZoneMutation) EdgeCleared(name string) bool {
+	switch name {
+	case zone.EdgeParish:
+		return m.clearedparish
+	case zone.EdgeWards:
+		return m.clearedwards
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ZoneMutation) ClearEdge(name string) error {
+	switch name {
+	case zone.EdgeParish:
+		m.ClearParish()
+		return nil
+	}
+	return fmt.Errorf("unknown Zone unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ZoneMutation) ResetEdge(name string) error {
+	switch name {
+	case zone.EdgeParish:
+		m.ResetParish()
+		return nil
+	case zone.EdgeWards:
+		m.ResetWards()
+		return nil
+	}
+	return fmt.Errorf("unknown Zone edge %s", name)
 }
