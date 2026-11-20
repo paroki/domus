@@ -14,39 +14,10 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/paroki/domus/internal/app"
+	"github.com/paroki/domus/internal/platform/httpx"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
-
-// Envelope mirrors the standard Domus API response shape { data, meta, error }.
-type Envelope[T any] struct {
-	Data  T             `json:"data"`
-	Meta  *Meta         `json:"meta,omitempty"`
-	Error *ErrorPayload `json:"error,omitempty"`
-}
-
-// Meta holds cursor pagination metadata returned in list responses.
-type Meta struct {
-	NextCursor string `json:"nextCursor,omitempty"`
-	HasMore    bool   `json:"hasMore"`
-	Limit      int    `json:"limit,omitempty"`
-	Total      *int   `json:"total,omitempty"`
-}
-
-// ErrorPayload represents the structured error object in Envelope.Error.
-type ErrorPayload struct {
-	Code      string       `json:"code"`
-	Message   string       `json:"message"`
-	RequestID string       `json:"requestId,omitempty"`
-	Details   []FieldError `json:"details,omitempty"`
-}
-
-// FieldError represents a single field-level validation error.
-type FieldError struct {
-	Field   string `json:"field"`
-	Code    string `json:"code,omitempty"`
-	Message string `json:"message"`
-}
 
 // ApiTestSuite provides reusable Fiber v3 HTTP test helpers for feature suites.
 type ApiTestSuite[T any] struct {
@@ -203,26 +174,26 @@ func (s *ApiTestSuite[T]) applyRequestMeta(req *http.Request, defaultContentType
 	}
 }
 
-// GetResponse decodes s.HttpResponse.Body into Envelope[T].
-func (s *ApiTestSuite[T]) GetResponse() Envelope[T] {
+// GetResponse decodes s.HttpResponse.Body into httpx.Envelope[T].
+func (s *ApiTestSuite[T]) GetResponse() httpx.Envelope[T] {
 	s.T().Helper()
 	return DecodeAs[T](s)
 }
 
-// PagedResponse decodes s.HttpResponse.Body into Envelope[[]T].
-func (s *ApiTestSuite[T]) PagedResponse() Envelope[[]T] {
+// PagedResponse decodes s.HttpResponse.Body into httpx.Envelope[[]T].
+func (s *ApiTestSuite[T]) PagedResponse() httpx.Envelope[[]T] {
 	s.T().Helper()
 	return DecodeAs[[]T](s)
 }
 
-// GetErrorResponse decodes s.HttpResponse.Body into Envelope[any].
-func (s *ApiTestSuite[T]) GetErrorResponse() Envelope[any] {
+// GetErrorResponse decodes s.HttpResponse.Body into httpx.Envelope[any].
+func (s *ApiTestSuite[T]) GetErrorResponse() httpx.Envelope[any] {
 	s.T().Helper()
 	return DecodeAs[any](s)
 }
 
-// DecodeAs decodes the JSON response body from s.GetHttpResponse() into Envelope[R].
-func DecodeAs[R any](s interface{ GetHttpResponse() *http.Response }) Envelope[R] {
+// DecodeAs decodes the JSON response body from s.GetHttpResponse() into httpx.Envelope[R].
+func DecodeAs[R any](s interface{ GetHttpResponse() *http.Response }) httpx.Envelope[R] {
 	var t *testing.T
 	if tp, ok := s.(interface{ T() *testing.T }); ok {
 		t = tp.T()
@@ -248,7 +219,7 @@ func DecodeAs[R any](s interface{ GetHttpResponse() *http.Response }) Envelope[R
 	// Restore body so subsequent reads/assertions on the same response still work.
 	resp.Body = io.NopCloser(bytes.NewReader(raw))
 
-	var env Envelope[R]
+	var env httpx.Envelope[R]
 	err = json.Unmarshal(raw, &env)
 	if t != nil {
 		require.NoError(t, err, "unmarshal response envelope: %s", string(raw))
