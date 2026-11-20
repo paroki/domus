@@ -55,15 +55,20 @@ func (s *Service) AdminCreateUser(ctx context.Context, req domain.AdminCreateUse
 		}
 	}
 
-	if existing, err := s.repo.FindUserByEmail(ctx, normEmail); err == nil && existing != nil {
-		return domain.UserResponse{}, domain.ErrUserEmailConflict
-	} else if err != nil && !ent.IsNotFound(err) {
-		return domain.UserResponse{}, err
-	}
-
 	var created *ent.User
 	err := s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
-		u, err := txRepo.CreateUser(ctx, normEmail, strings.TrimSpace(req.Name), phonePtr)
+		existing, err := txRepo.FindUserByEmailIncludeDeleted(ctx, normEmail)
+		var u *ent.User
+		switch {
+		case err == nil && existing.DeletedAt == nil:
+			return domain.ErrUserEmailConflict
+		case err == nil && existing.DeletedAt != nil:
+			u, err = txRepo.ReactivateUser(ctx, existing.ID, strings.TrimSpace(req.Name), phonePtr)
+		case ent.IsNotFound(err):
+			u, err = txRepo.CreateUser(ctx, normEmail, strings.TrimSpace(req.Name), phonePtr)
+		default:
+			return err
+		}
 		if err != nil {
 			if ent.IsConstraintError(err) {
 				return domain.ErrUserEmailConflict
@@ -207,12 +212,28 @@ func (s *Service) AdminDeleteUser(ctx context.Context, id uuid.UUID) error {
 		return err
 	}
 
-	return s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
+	err = s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
 		if err := txRepo.SoftDeleteUser(ctx, id, time.Now().UTC()); err != nil {
 			return err
 		}
-		return txRepo.DeleteSessionsByUserID(ctx, id)
+		if err := txRepo.DeleteSessionsByUserID(ctx, id); err != nil {
+			return err
+		}
+		return txRepo.DeleteAccountsByUserID(ctx, id)
 	})
+	if err != nil {
+		return err
+	}
+
+	if s.enforcer != nil {
+		sub := authz.UserSubject(id)
+		for _, role := range []string{domain.RoleSuperAdmin, domain.RoleUser} {
+			if err := s.enforcer.RevokeRole(ctx, sub, role, authz.DomainGlobal); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func (s *Service) guardNotLastSuperAdmin(ctx context.Context, u *ent.User) error {

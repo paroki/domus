@@ -169,6 +169,11 @@ func (s *MeHandlerSuite) TestSearchAndUnlinkAccounts_LastAccountGuard() {
 	_, cookie := s.loginUser("acct@paroki.org", "Acct User", "Browser/1")
 	s.SetCookie(cookie)
 
+	// Unknown account ID returns 404 USER_ACCOUNT_NOT_FOUND even when user has only 1 account
+	s.Request("/api/me/accounts/"+uuid.Must(uuid.NewV7()).String(), http.MethodDelete, nil)
+	s.NotFound()
+	s.Equal("USER_ACCOUNT_NOT_FOUND", s.GetErrorResponse().Error.Code)
+
 	// Only 1 account -> cannot unlink (409 USER_LAST_ACCOUNT_REQUIRED)
 	s.Request("/api/me/accounts/search", http.MethodPost, nil)
 	s.OK()

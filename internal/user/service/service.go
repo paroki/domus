@@ -123,21 +123,28 @@ func (s *Service) EnsureUser(ctx context.Context, email, name, phone, provider, 
 		}
 	}
 
+	var phonePtr *string
+	if normPhone != "" {
+		phonePtr = &normPhone
+	}
+
 	var out *domain.UserResponse
 	err = s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
-		u, err := txRepo.FindUserByEmail(ctx, normEmail)
-		if ent.IsNotFound(err) {
-			var phonePtr *string
-			if normPhone != "" {
-				phonePtr = &normPhone
-			}
+		u, err := txRepo.FindUserByEmailIncludeDeleted(ctx, normEmail)
+		switch {
+		case ent.IsNotFound(err):
 			u, err = txRepo.CreateUser(ctx, normEmail, strings.TrimSpace(name), phonePtr)
 			if err != nil {
 				return err
 			}
-		} else if err != nil {
+		case err != nil:
 			return err
-		} else if u.Status == user.StatusDisabled {
+		case u.DeletedAt != nil:
+			u, err = txRepo.ReactivateUser(ctx, u.ID, strings.TrimSpace(name), phonePtr)
+			if err != nil {
+				return err
+			}
+		case u.Status == user.StatusDisabled:
 			return domain.ErrUserDisabled
 		}
 
