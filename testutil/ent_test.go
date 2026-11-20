@@ -8,6 +8,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/ent/meta"
+	"github.com/paroki/domus/ent/organization"
+	"github.com/paroki/domus/ent/orginvite"
+	"github.com/paroki/domus/ent/orgmember"
 	"github.com/paroki/domus/ent/parishmember"
 	"github.com/paroki/domus/ent/period"
 	"github.com/paroki/domus/ent/schema"
@@ -353,4 +356,101 @@ func TestLookupAndPeriodSchemas_GlobalVsTenantAndPersistence(t *testing.T) {
 	assert.Equal(t, period.TypeLiturgical, p.Type)
 	assert.Equal(t, period.StatusOpen, p.Status)
 	assert.True(t, p.IsCurrent)
+}
+
+func TestOrgSchemas_HierarchyUniquenessAndMixins(t *testing.T) {
+	ctx := context.Background()
+	client := testutil.NewEntClient(t)
+
+	// Mixin checks: Organization has SoftDeleteMixin (3); OrgMember and OrgInvite do not (2).
+	assert.Len(t, schema.Organization{}.Mixin(), 3)
+	assert.Len(t, schema.OrgMember{}.Mixin(), 2)
+	assert.Len(t, schema.OrgInvite{}.Mixin(), 2)
+
+	parishID := schema.NewID()
+	otherParishID := schema.NewID()
+	userID := schema.NewID()
+
+	// Organization parent/child self-edge.
+	parent, err := client.Organization.Create().
+		SetParishID(parishID).
+		SetKind(organization.KindDpp).
+		SetCode("DPP-01").
+		SetName("Dewan Pastoral Paroki").
+		Save(ctx)
+	require.NoError(t, err)
+	assert.True(t, parent.Active)
+
+	child, err := client.Organization.Create().
+		SetParishID(parishID).
+		SetParent(parent).
+		SetKind(organization.KindSection).
+		SetCode("SEK-LIT").
+		SetName("Seksi Liturgi").
+		Save(ctx)
+	require.NoError(t, err)
+	require.NotNil(t, child.ParentID)
+	assert.Equal(t, parent.ID, *child.ParentID)
+
+	children, err := parent.QueryChildren().All(ctx)
+	require.NoError(t, err)
+	require.Len(t, children, 1)
+	assert.Equal(t, child.ID, children[0].ID)
+
+	// (parish_id, code) uniqueness on Organization: same parish fails, different parish succeeds.
+	_, err = client.Organization.Create().
+		SetParishID(parishID).
+		SetCode("DPP-01").
+		SetName("Duplicate DPP").
+		Save(ctx)
+	require.Error(t, err)
+	assert.True(t, ent.IsConstraintError(err))
+
+	_, err = client.Organization.Create().
+		SetParishID(otherParishID).
+		SetCode("DPP-01").
+		SetName("Other Parish DPP").
+		Save(ctx)
+	require.NoError(t, err)
+
+	// OrgMember (org_id, user_id) uniqueness.
+	member, err := client.OrgMember.Create().
+		SetParishID(parishID).
+		SetOrganization(parent).
+		SetUserID(userID).
+		SetRole(orgmember.RoleAdmin).
+		Save(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, orgmember.RoleAdmin, member.Role)
+	assert.Equal(t, orgmember.StatusActive, member.Status)
+
+	_, err = client.OrgMember.Create().
+		SetParishID(parishID).
+		SetOrganization(parent).
+		SetUserID(userID).
+		Save(ctx)
+	require.Error(t, err)
+	assert.True(t, ent.IsConstraintError(err))
+
+	// OrgInvite code uniqueness.
+	invite, err := client.OrgInvite.Create().
+		SetParishID(parishID).
+		SetOrganization(parent).
+		SetCode("INV-ORG-01").
+		SetExpiresAt(time.Now().Add(24 * time.Hour)).
+		SetCreatedBy(userID).
+		Save(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, 0, invite.UsedCount)
+	assert.Equal(t, orginvite.RoleMember, invite.Role)
+
+	_, err = client.OrgInvite.Create().
+		SetParishID(parishID).
+		SetOrganization(child).
+		SetCode("INV-ORG-01").
+		SetExpiresAt(time.Now().Add(24 * time.Hour)).
+		SetCreatedBy(userID).
+		Save(ctx)
+	require.Error(t, err)
+	assert.True(t, ent.IsConstraintError(err))
 }

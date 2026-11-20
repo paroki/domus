@@ -127,6 +127,156 @@ var (
 		Columns:    MetaColumns,
 		PrimaryKey: []*schema.Column{MetaColumns[0]},
 	}
+	// OrgInvitesColumns holds the columns for the "org_invites" table.
+	OrgInvitesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "parish_id", Type: field.TypeUUID},
+		{Name: "code", Type: field.TypeString, Unique: true},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"admin", "member"}, Default: "member"},
+		{Name: "default_position", Type: field.TypeString, Nullable: true},
+		{Name: "max_uses", Type: field.TypeInt, Nullable: true},
+		{Name: "used_count", Type: field.TypeInt, Default: 0},
+		{Name: "expires_at", Type: field.TypeTime},
+		{Name: "revoked_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_by", Type: field.TypeUUID},
+		{Name: "org_id", Type: field.TypeUUID},
+	}
+	// OrgInvitesTable holds the schema information for the "org_invites" table.
+	OrgInvitesTable = &schema.Table{
+		Name:       "org_invites",
+		Columns:    OrgInvitesColumns,
+		PrimaryKey: []*schema.Column{OrgInvitesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "org_invites_organizations_invites",
+				Columns:    []*schema.Column{OrgInvitesColumns[12]},
+				RefColumns: []*schema.Column{OrganizationsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "orginvite_code",
+				Unique:  true,
+				Columns: []*schema.Column{OrgInvitesColumns[4]},
+			},
+			{
+				Name:    "orginvite_org_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{OrgInvitesColumns[12], OrgInvitesColumns[1]},
+			},
+			{
+				Name:    "orginvite_parish_id_org_id",
+				Unique:  false,
+				Columns: []*schema.Column{OrgInvitesColumns[3], OrgInvitesColumns[12]},
+			},
+		},
+	}
+	// OrgMembersColumns holds the columns for the "org_members" table.
+	OrgMembersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "parish_id", Type: field.TypeUUID},
+		{Name: "user_id", Type: field.TypeUUID},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"admin", "member"}, Default: "member"},
+		{Name: "position", Type: field.TypeString, Nullable: true},
+		{Name: "period_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "start_date", Type: field.TypeString, Nullable: true},
+		{Name: "end_date", Type: field.TypeString, Nullable: true},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "inactive"}, Default: "active"},
+		{Name: "org_id", Type: field.TypeUUID},
+	}
+	// OrgMembersTable holds the schema information for the "org_members" table.
+	OrgMembersTable = &schema.Table{
+		Name:       "org_members",
+		Columns:    OrgMembersColumns,
+		PrimaryKey: []*schema.Column{OrgMembersColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "org_members_organizations_members",
+				Columns:    []*schema.Column{OrgMembersColumns[11]},
+				RefColumns: []*schema.Column{OrganizationsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "orgmember_org_id_user_id",
+				Unique:  true,
+				Columns: []*schema.Column{OrgMembersColumns[11], OrgMembersColumns[4]},
+			},
+			{
+				Name:    "orgmember_parish_id_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{OrgMembersColumns[3], OrgMembersColumns[4]},
+			},
+			{
+				Name:    "orgmember_org_id_role_status",
+				Unique:  false,
+				Columns: []*schema.Column{OrgMembersColumns[11], OrgMembersColumns[5], OrgMembersColumns[10]},
+			},
+		},
+	}
+	// OrganizationsColumns holds the columns for the "organizations" table.
+	OrganizationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "parish_id", Type: field.TypeUUID},
+		{Name: "zone_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "ward_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "kind", Type: field.TypeEnum, Enums: []string{"dpp", "bgkp", "section", "categorical", "zone", "ward", "community"}, Default: "section"},
+		{Name: "code", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "active", Type: field.TypeBool, Default: true},
+		{Name: "parent_id", Type: field.TypeUUID, Nullable: true},
+	}
+	// OrganizationsTable holds the schema information for the "organizations" table.
+	OrganizationsTable = &schema.Table{
+		Name:       "organizations",
+		Columns:    OrganizationsColumns,
+		PrimaryKey: []*schema.Column{OrganizationsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "organizations_organizations_children",
+				Columns:    []*schema.Column{OrganizationsColumns[12]},
+				RefColumns: []*schema.Column{OrganizationsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "organization_parish_id_code",
+				Unique:  true,
+				Columns: []*schema.Column{OrganizationsColumns[4], OrganizationsColumns[8]},
+			},
+			{
+				Name:    "organization_parish_id_kind_active",
+				Unique:  false,
+				Columns: []*schema.Column{OrganizationsColumns[4], OrganizationsColumns[7], OrganizationsColumns[11]},
+			},
+			{
+				Name:    "organization_parish_id_parent_id",
+				Unique:  false,
+				Columns: []*schema.Column{OrganizationsColumns[4], OrganizationsColumns[12]},
+			},
+			{
+				Name:    "organization_parish_id_zone_id",
+				Unique:  false,
+				Columns: []*schema.Column{OrganizationsColumns[4], OrganizationsColumns[5]},
+			},
+			{
+				Name:    "organization_parish_id_ward_id",
+				Unique:  false,
+				Columns: []*schema.Column{OrganizationsColumns[4], OrganizationsColumns[6]},
+			},
+		},
+	}
 	// ParishesColumns holds the columns for the "parishes" table.
 	ParishesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -481,6 +631,9 @@ var (
 		DiocesesTable,
 		LookupsTable,
 		MetaTable,
+		OrgInvitesTable,
+		OrgMembersTable,
+		OrganizationsTable,
 		ParishesTable,
 		ParishMembersTable,
 		PeriodsTable,
@@ -495,6 +648,9 @@ var (
 
 func init() {
 	LookupsTable.ForeignKeys[0].RefTable = ParishesTable
+	OrgInvitesTable.ForeignKeys[0].RefTable = OrganizationsTable
+	OrgMembersTable.ForeignKeys[0].RefTable = OrganizationsTable
+	OrganizationsTable.ForeignKeys[0].RefTable = OrganizationsTable
 	ParishesTable.ForeignKeys[0].RefTable = DiocesesTable
 	ParishMembersTable.ForeignKeys[0].RefTable = ParishesTable
 	PeriodsTable.ForeignKeys[0].RefTable = ParishesTable

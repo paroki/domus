@@ -57,6 +57,42 @@ func (f MetaFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error)
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MetaMutation", m)
 }
 
+// The OrgInviteFunc type is an adapter to allow the use of ordinary
+// function as OrgInvite mutator.
+type OrgInviteFunc func(context.Context, *ent.OrgInviteMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f OrgInviteFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.OrgInviteMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.OrgInviteMutation", m)
+}
+
+// The OrgMemberFunc type is an adapter to allow the use of ordinary
+// function as OrgMember mutator.
+type OrgMemberFunc func(context.Context, *ent.OrgMemberMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f OrgMemberFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.OrgMemberMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.OrgMemberMutation", m)
+}
+
+// The OrganizationFunc type is an adapter to allow the use of ordinary
+// function as Organization mutator.
+type OrganizationFunc func(context.Context, *ent.OrganizationMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f OrganizationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.OrganizationMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.OrganizationMutation", m)
+}
+
 // The ParishFunc type is an adapter to allow the use of ordinary
 // function as Parish mutator.
 type ParishFunc func(context.Context, *ent.ParishMutation) (ent.Value, error)

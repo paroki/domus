@@ -16,6 +16,9 @@ import (
 	"github.com/paroki/domus/ent/diocese"
 	"github.com/paroki/domus/ent/lookup"
 	"github.com/paroki/domus/ent/meta"
+	"github.com/paroki/domus/ent/organization"
+	"github.com/paroki/domus/ent/orginvite"
+	"github.com/paroki/domus/ent/orgmember"
 	"github.com/paroki/domus/ent/parish"
 	"github.com/paroki/domus/ent/parishmember"
 	"github.com/paroki/domus/ent/period"
@@ -89,6 +92,9 @@ func checkColumn(t, c string) error {
 			diocese.Table:      diocese.ValidColumn,
 			lookup.Table:       lookup.ValidColumn,
 			meta.Table:         meta.ValidColumn,
+			orginvite.Table:    orginvite.ValidColumn,
+			orgmember.Table:    orgmember.ValidColumn,
+			organization.Table: organization.ValidColumn,
 			parish.Table:       parish.ValidColumn,
 			parishmember.Table: parishmember.ValidColumn,
 			period.Table:       period.ValidColumn,

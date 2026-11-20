@@ -18,6 +18,15 @@ type Lookup func(*sql.Selector)
 // Meta is the predicate function for meta builders.
 type Meta func(*sql.Selector)
 
+// OrgInvite is the predicate function for orginvite builders.
+type OrgInvite func(*sql.Selector)
+
+// OrgMember is the predicate function for orgmember builders.
+type OrgMember func(*sql.Selector)
+
+// Organization is the predicate function for organization builders.
+type Organization func(*sql.Selector)
+
 // Parish is the predicate function for parish builders.
 type Parish func(*sql.Selector)
 

@@ -10,6 +10,9 @@ import (
 	"github.com/paroki/domus/ent/diocese"
 	"github.com/paroki/domus/ent/lookup"
 	"github.com/paroki/domus/ent/meta"
+	"github.com/paroki/domus/ent/organization"
+	"github.com/paroki/domus/ent/orginvite"
+	"github.com/paroki/domus/ent/orgmember"
 	"github.com/paroki/domus/ent/parish"
 	"github.com/paroki/domus/ent/parishmember"
 	"github.com/paroki/domus/ent/period"
@@ -162,6 +165,89 @@ func init() {
 	metaDescID := metaMixinFields0[0].Descriptor()
 	// meta.DefaultID holds the default value on creation for the id field.
 	meta.DefaultID = metaDescID.Default.(func() uuid.UUID)
+	orginviteMixin := schema.OrgInvite{}.Mixin()
+	orginviteMixinFields0 := orginviteMixin[0].Fields()
+	_ = orginviteMixinFields0
+	orginviteMixinFields1 := orginviteMixin[1].Fields()
+	_ = orginviteMixinFields1
+	orginviteFields := schema.OrgInvite{}.Fields()
+	_ = orginviteFields
+	// orginviteDescCreatedAt is the schema descriptor for created_at field.
+	orginviteDescCreatedAt := orginviteMixinFields1[0].Descriptor()
+	// orginvite.DefaultCreatedAt holds the default value on creation for the created_at field.
+	orginvite.DefaultCreatedAt = orginviteDescCreatedAt.Default.(func() time.Time)
+	// orginviteDescUpdatedAt is the schema descriptor for updated_at field.
+	orginviteDescUpdatedAt := orginviteMixinFields1[1].Descriptor()
+	// orginvite.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	orginvite.DefaultUpdatedAt = orginviteDescUpdatedAt.Default.(func() time.Time)
+	// orginvite.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	orginvite.UpdateDefaultUpdatedAt = orginviteDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// orginviteDescCode is the schema descriptor for code field.
+	orginviteDescCode := orginviteFields[2].Descriptor()
+	// orginvite.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	orginvite.CodeValidator = orginviteDescCode.Validators[0].(func(string) error)
+	// orginviteDescUsedCount is the schema descriptor for used_count field.
+	orginviteDescUsedCount := orginviteFields[6].Descriptor()
+	// orginvite.DefaultUsedCount holds the default value on creation for the used_count field.
+	orginvite.DefaultUsedCount = orginviteDescUsedCount.Default.(int)
+	// orginviteDescID is the schema descriptor for id field.
+	orginviteDescID := orginviteMixinFields0[0].Descriptor()
+	// orginvite.DefaultID holds the default value on creation for the id field.
+	orginvite.DefaultID = orginviteDescID.Default.(func() uuid.UUID)
+	orgmemberMixin := schema.OrgMember{}.Mixin()
+	orgmemberMixinFields0 := orgmemberMixin[0].Fields()
+	_ = orgmemberMixinFields0
+	orgmemberMixinFields1 := orgmemberMixin[1].Fields()
+	_ = orgmemberMixinFields1
+	orgmemberFields := schema.OrgMember{}.Fields()
+	_ = orgmemberFields
+	// orgmemberDescCreatedAt is the schema descriptor for created_at field.
+	orgmemberDescCreatedAt := orgmemberMixinFields1[0].Descriptor()
+	// orgmember.DefaultCreatedAt holds the default value on creation for the created_at field.
+	orgmember.DefaultCreatedAt = orgmemberDescCreatedAt.Default.(func() time.Time)
+	// orgmemberDescUpdatedAt is the schema descriptor for updated_at field.
+	orgmemberDescUpdatedAt := orgmemberMixinFields1[1].Descriptor()
+	// orgmember.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	orgmember.DefaultUpdatedAt = orgmemberDescUpdatedAt.Default.(func() time.Time)
+	// orgmember.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	orgmember.UpdateDefaultUpdatedAt = orgmemberDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// orgmemberDescID is the schema descriptor for id field.
+	orgmemberDescID := orgmemberMixinFields0[0].Descriptor()
+	// orgmember.DefaultID holds the default value on creation for the id field.
+	orgmember.DefaultID = orgmemberDescID.Default.(func() uuid.UUID)
+	organizationMixin := schema.Organization{}.Mixin()
+	organizationMixinFields0 := organizationMixin[0].Fields()
+	_ = organizationMixinFields0
+	organizationMixinFields1 := organizationMixin[1].Fields()
+	_ = organizationMixinFields1
+	organizationFields := schema.Organization{}.Fields()
+	_ = organizationFields
+	// organizationDescCreatedAt is the schema descriptor for created_at field.
+	organizationDescCreatedAt := organizationMixinFields1[0].Descriptor()
+	// organization.DefaultCreatedAt holds the default value on creation for the created_at field.
+	organization.DefaultCreatedAt = organizationDescCreatedAt.Default.(func() time.Time)
+	// organizationDescUpdatedAt is the schema descriptor for updated_at field.
+	organizationDescUpdatedAt := organizationMixinFields1[1].Descriptor()
+	// organization.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	organization.DefaultUpdatedAt = organizationDescUpdatedAt.Default.(func() time.Time)
+	// organization.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	organization.UpdateDefaultUpdatedAt = organizationDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// organizationDescCode is the schema descriptor for code field.
+	organizationDescCode := organizationFields[5].Descriptor()
+	// organization.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	organization.CodeValidator = organizationDescCode.Validators[0].(func(string) error)
+	// organizationDescName is the schema descriptor for name field.
+	organizationDescName := organizationFields[6].Descriptor()
+	// organization.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	organization.NameValidator = organizationDescName.Validators[0].(func(string) error)
+	// organizationDescActive is the schema descriptor for active field.
+	organizationDescActive := organizationFields[8].Descriptor()
+	// organization.DefaultActive holds the default value on creation for the active field.
+	organization.DefaultActive = organizationDescActive.Default.(bool)
+	// organizationDescID is the schema descriptor for id field.
+	organizationDescID := organizationMixinFields0[0].Descriptor()
+	// organization.DefaultID holds the default value on creation for the id field.
+	organization.DefaultID = organizationDescID.Default.(func() uuid.UUID)
 	parishMixin := schema.Parish{}.Mixin()
 	parishMixinFields0 := parishMixin[0].Fields()
 	_ = parishMixinFields0

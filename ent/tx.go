@@ -20,6 +20,12 @@ type Tx struct {
 	Lookup *LookupClient
 	// Meta is the client for interacting with the Meta builders.
 	Meta *MetaClient
+	// OrgInvite is the client for interacting with the OrgInvite builders.
+	OrgInvite *OrgInviteClient
+	// OrgMember is the client for interacting with the OrgMember builders.
+	OrgMember *OrgMemberClient
+	// Organization is the client for interacting with the Organization builders.
+	Organization *OrganizationClient
 	// Parish is the client for interacting with the Parish builders.
 	Parish *ParishClient
 	// ParishMember is the client for interacting with the ParishMember builders.
@@ -173,6 +179,9 @@ func (tx *Tx) init() {
 	tx.Diocese = NewDioceseClient(tx.config)
 	tx.Lookup = NewLookupClient(tx.config)
 	tx.Meta = NewMetaClient(tx.config)
+	tx.OrgInvite = NewOrgInviteClient(tx.config)
+	tx.OrgMember = NewOrgMemberClient(tx.config)
+	tx.Organization = NewOrganizationClient(tx.config)
 	tx.Parish = NewParishClient(tx.config)
 	tx.ParishMember = NewParishMemberClient(tx.config)
 	tx.Period = NewPeriodClient(tx.config)
