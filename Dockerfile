@@ -11,7 +11,7 @@ ARG APP_SENTRY_UI_DSN
 ARG APP_SENTRY_ENVIRONMENT
 ARG APP_SENTRY_RELEASE
 RUN --mount=type=secret,id=sentry_auth_token \
-    SENTRY_AUTH_TOKEN="$(cat /run/secrets/sentry_auth_token 2>/dev/null)" \
+    APP_SENTRY_AUTH_TOKEN="$(cat /run/secrets/sentry_auth_token 2>/dev/null)" \
     bun run build
 
 FROM golang:1.27-alpine AS go-builder
