@@ -10,7 +10,7 @@ interface CommitInfo {
 	subject: string;
 }
 
-const SECTION_CONFIG: Array<{
+const TYPE_SECTIONS: Array<{
 	key: string;
 	title: string;
 	match: (c: CommitInfo) => boolean;
@@ -23,13 +23,47 @@ const SECTION_CONFIG: Array<{
 		match: (c) => c.type === "perf",
 	},
 	{ key: "revert", title: "⏪ Reverts", match: (c) => c.type === "revert" },
+];
+
+const SCOPE_GROUPS: Array<{
+	key: string;
+	title: string;
+	omitScope: boolean;
+	match: (c: CommitInfo) => boolean;
+}> = [
+	{ key: "api", title: "⚙️ API", omitScope: true, match: (c) => c.scope === "api" },
+	{ key: "ui", title: "🖥️ UI", omitScope: true, match: (c) => c.scope === "ui" },
 	{
-		key: "deps",
-		title: "📦 Dependencies",
-		match: (c) =>
-			c.type === "deps" || (c.type === "chore" && c.scope === "deps"),
+		key: "other",
+		title: "🔧 Other",
+		omitScope: false,
+		match: (c) => c.scope !== "api" && c.scope !== "ui",
 	},
 ];
+
+function isDepsCommit(c: CommitInfo): boolean {
+	return c.type === "deps" || (c.type === "chore" && c.scope === "deps");
+}
+
+function renderItems(
+	commits: CommitInfo[],
+	itemTemplate: string,
+	repoUrl: string,
+	omitScope: boolean,
+): string {
+	return commits
+		.map((c) => {
+			const scopePrefix = !omitScope && c.scope ? `**${c.scope}:** ` : "";
+			const commitUrl = `${repoUrl}/commit/${c.hash}`;
+			return itemTemplate
+				.replace("{{scopePrefix}}", scopePrefix)
+				.replace("{{subject}}", c.subject)
+				.replace("{{shortHash}}", c.shortHash)
+				.replace("{{commitUrl}}", commitUrl)
+				.trim();
+		})
+		.join("\n");
+}
 
 function sh(cmd: string): string {
 	try {
@@ -140,33 +174,57 @@ export function generateReleaseNotes(): string {
 		join(templateDir, "section.md"),
 		"utf-8",
 	);
+	const subsectionTemplate = readFileSync(
+		join(templateDir, "subsection.md"),
+		"utf-8",
+	);
 	const itemTemplate = readFileSync(join(templateDir, "item.md"), "utf-8");
 
 	const renderedSections: string[] = [];
 
-	for (const sec of SECTION_CONFIG) {
-		const matchingCommits = commits.filter(sec.match);
-		if (matchingCommits.length === 0) continue;
+	for (const group of SCOPE_GROUPS) {
+		const groupCommits = commits.filter(
+			(c) => !isDepsCommit(c) && group.match(c),
+		);
+		if (groupCommits.length === 0) continue;
 
-		const items = matchingCommits
-			.map((c) => {
-				const scopePrefix = c.scope ? `**${c.scope}:** ` : "";
-				const commitUrl = `${repoUrl}/commit/${c.hash}`;
-				return itemTemplate
-					.replace("{{scopePrefix}}", scopePrefix)
-					.replace("{{subject}}", c.subject)
-					.replace("{{shortHash}}", c.shortHash)
-					.replace("{{commitUrl}}", commitUrl)
-					.trim();
-			})
-			.join("\n");
+		const renderedSubsections: string[] = [];
+		for (const sec of TYPE_SECTIONS) {
+			const matchingCommits = groupCommits.filter(sec.match);
+			if (matchingCommits.length === 0) continue;
+
+			const items = renderItems(
+				matchingCommits,
+				itemTemplate,
+				repoUrl,
+				group.omitScope,
+			);
+			const renderedSub = subsectionTemplate
+				.replace("{{sectionTitle}}", sec.title)
+				.replace("{{items}}", items)
+				.trim();
+
+			renderedSubsections.push(renderedSub);
+		}
+
+		if (renderedSubsections.length === 0) continue;
 
 		const renderedSec = sectionTemplate
-			.replace("{{sectionTitle}}", sec.title)
-			.replace("{{items}}", items)
+			.replace("{{sectionTitle}}", group.title)
+			.replace("{{items}}", renderedSubsections.join("\n\n"))
 			.trim();
 
 		renderedSections.push(renderedSec);
+	}
+
+	const depsCommits = commits.filter(isDepsCommit);
+	if (depsCommits.length > 0) {
+		const items = renderItems(depsCommits, itemTemplate, repoUrl, false);
+		const renderedDeps = sectionTemplate
+			.replace("{{sectionTitle}}", "📦 Dependencies")
+			.replace("{{items}}", items)
+			.trim();
+		renderedSections.push(renderedDeps);
 	}
 
 	const sectionsContent = renderedSections.join("\n\n");
