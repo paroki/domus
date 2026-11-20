@@ -12,9 +12,8 @@ Sentry.init({
     Sentry.reactRouterTracingIntegration(),
     Sentry.replayIntegration(),
   ],
-  tracesSampleRate: Number(
-    import.meta.env.APP_SENTRY_TRACES_SAMPLE_RATE ?? 0.1,
-  ),
+  // ponytail: fixed 0.1 trace sample rate; read APP_SENTRY_TRACES_SAMPLE_RATE when tuning needed.
+  tracesSampleRate: 0.1,
   tracePropagationTargets: [/^\//],
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
