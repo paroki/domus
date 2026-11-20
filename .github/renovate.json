@@ -8,13 +8,33 @@
   ],
   "timezone": "Asia/Makassar",
   "schedule": ["before 6am on monday"],
+  "labels": ["dependencies"],
+  "prConcurrentLimit": 10,
+  "prHourlyLimit": 4,
+  "platformAutomerge": true,
+  "minimumReleaseAge": "3 days",
   "postUpdateOptions": ["gomodTidy"],
   "lockFileMaintenance": { "enabled": true, "automerge": true },
+  "mise": { "enabled": true },
   "packageRules": [
     {
       "description": "Automerge dev dependency minor/patch",
       "matchDepTypes": ["devDependencies"],
       "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true
+    },
+    {
+      "description": "Group and automerge non-major GitHub Actions updates",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "groupName": "github-actions non-major",
+      "automerge": true
+    },
+    {
+      "description": "Group and automerge non-major mise tool updates",
+      "matchManagers": ["mise"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "mise non-major",
       "automerge": true
     },
     {
