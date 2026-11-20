@@ -4,6 +4,7 @@ import (
 	"context"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
@@ -38,21 +39,42 @@ type RefValidator interface {
 	EnsureParishMember(ctx context.Context, parishID, userID uuid.UUID) error
 }
 
-// Service implements business logic for organizations, members, and facade helpers.
+// SessionSwitcher switches the active parish on an existing user session.
+type SessionSwitcher interface {
+	SwitchSessionParish(ctx context.Context, userID, sessionID, parishID uuid.UUID) error
+}
+
+// InviteConfig holds invite TTL configuration.
+type InviteConfig struct {
+	DefaultTTL time.Duration
+	MaxTTL     time.Duration
+}
+
+// Service implements business logic for organizations, members, invites, and facade helpers.
 type Service struct {
 	repo     *repo.Repository
 	enforcer *authz.Enforcer
 	users    UserEnsurer
 	refs     RefValidator
+	sessions SessionSwitcher
+	cfg      InviteConfig
 }
 
 // New constructs an org Service.
-func New(r *repo.Repository, enforcer *authz.Enforcer, users UserEnsurer, refs RefValidator) *Service {
+func New(r *repo.Repository, enforcer *authz.Enforcer, users UserEnsurer, refs RefValidator, sessions SessionSwitcher, cfg InviteConfig) *Service {
+	if cfg.DefaultTTL <= 0 {
+		cfg.DefaultTTL = 24 * time.Hour
+	}
+	if cfg.MaxTTL <= 0 {
+		cfg.MaxTTL = 168 * time.Hour
+	}
 	return &Service{
 		repo:     r,
 		enforcer: enforcer,
 		users:    users,
 		refs:     refs,
+		sessions: sessions,
+		cfg:      cfg,
 	}
 }
 

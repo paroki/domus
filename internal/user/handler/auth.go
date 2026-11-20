@@ -15,6 +15,7 @@ import (
 const (
 	oauthStateCookieName    = "domus_oauth_state"
 	oauthRedirectCookieName = "domus_oauth_redirect"
+	oauthInviteCookieName   = "domus_oauth_invite"
 	oauthCookieMaxAge       = 600 // 10 minutes
 )
 
@@ -54,7 +55,7 @@ func (h *Handler) RequestOTP(c fiber.Ctx) error {
 	if err := decodeStrictJSON(c, &req); err != nil {
 		return err
 	}
-	res, err := h.service.RequestOTP(c.Context(), req.Email)
+	res, err := h.service.RequestOTP(c.Context(), req)
 	if err != nil {
 		return err
 	}
@@ -82,7 +83,7 @@ func (h *Handler) VerifyOTP(c fiber.Ctx) error {
 	if err := decodeStrictJSON(c, &req); err != nil {
 		return err
 	}
-	rawToken, res, err := h.service.VerifyOTP(c.Context(), req.Email, req.Code, c.Get(fiber.HeaderUserAgent), c.IP())
+	rawToken, res, err := h.service.VerifyOTP(c.Context(), req, c.Get(fiber.HeaderUserAgent), c.IP())
 	if err != nil {
 		return err
 	}
@@ -115,6 +116,7 @@ func (h *Handler) Logout(c fiber.Ctx) error {
 //	@Tags			Auth
 //	@Param			provider	path	string	true	"OAuth2 provider (google, github)"
 //	@Param			redirect	query	string	false	"Relative post-login redirect path"
+//	@Param			inviteCode	query	string	false	"Optional organization invite code for guest onboarding"
 //	@Success		302
 //	@Failure		400	{object}	httpx.Envelope[any]
 //	@Router			/auth/{provider} [get]
@@ -148,6 +150,17 @@ func (h *Handler) OAuthRedirect(c fiber.Ctx) error {
 		SameSite: fiber.CookieSameSiteLaxMode,
 		MaxAge:   oauthCookieMaxAge,
 	})
+	if inviteCode := strings.TrimSpace(c.Query("inviteCode")); inviteCode != "" {
+		c.Cookie(&fiber.Cookie{
+			Name:     oauthInviteCookieName,
+			Value:    inviteCode,
+			Path:     "/",
+			HTTPOnly: true,
+			Secure:   h.cookieSecure,
+			SameSite: fiber.CookieSameSiteLaxMode,
+			MaxAge:   oauthCookieMaxAge,
+		})
+	}
 	return c.Redirect().Status(fiber.StatusFound).To(authURL)
 }
 
@@ -170,9 +183,11 @@ func (h *Handler) OAuthCallback(c fiber.Ctx) error {
 	stateParam := c.Query("state")
 	stateCookie := c.Cookies(oauthStateCookieName)
 	redirectTo := sanitizeRedirect(c.Cookies(oauthRedirectCookieName))
+	inviteCode := strings.TrimSpace(c.Cookies(oauthInviteCookieName))
 
 	h.clearCookie(c, oauthStateCookieName)
 	h.clearCookie(c, oauthRedirectCookieName)
+	h.clearCookie(c, oauthInviteCookieName)
 
 	if stateParam == "" || stateCookie == "" || subtle.ConstantTimeCompare([]byte(stateParam), []byte(stateCookie)) != 1 {
 		return domain.ErrOAuthStateInvalid
@@ -184,7 +199,7 @@ func (h *Handler) OAuthCallback(c fiber.Ctx) error {
 	}
 
 	callbackURI := c.BaseURL() + "/api/auth/" + provider + "/callback"
-	rawToken, _, err := h.service.OAuthCallback(c.Context(), provider, code, callbackURI, c.Get(fiber.HeaderUserAgent), c.IP())
+	rawToken, _, err := h.service.OAuthCallback(c.Context(), provider, code, callbackURI, inviteCode, c.Get(fiber.HeaderUserAgent), c.IP())
 	if err != nil {
 		return err
 	}

@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
+	"github.com/paroki/domus/ent/orginvite"
 	"github.com/paroki/domus/internal/org"
 	"github.com/paroki/domus/internal/org/domain"
 	"github.com/paroki/domus/internal/platform/authz"
@@ -69,6 +71,7 @@ func (s *OrgFeatureSuite) SetupTest() {
 	s.userFeature = user.New(s.client, s.enforcer, userCfg, slog.New(slog.DiscardHandler), user.WithOTPSender(s.sender))
 	s.refFeature = ref.New(s.client, s.enforcer, s.userFeature)
 	s.orgFeature = org.New(s.client, s.enforcer, s.userFeature, s.refFeature, orgCfg)
+	s.userFeature.SetInviteJoiner(s.orgFeature)
 
 	ctx := context.Background()
 	s.Require().NoError(authz.RegisterFeatures(ctx, s.enforcer, s.userFeature, s.refFeature, s.orgFeature))
@@ -407,4 +410,222 @@ func (s *OrgFeatureSuite) TestOrgFacadeHelpersAndRefDeleteGuards() {
 	s.Request(fmt.Sprintf("/api/ref/zones/%s", zoneID), http.MethodDelete, nil)
 	s.Conflict()
 	s.Equal("REF_IN_USE", s.GetErrorResponse().Error.Code)
+}
+
+type stubOAuthProvider struct {
+	info userdomain.OAuthUserInfo
+}
+
+func (p *stubOAuthProvider) Name() string { return "stub" }
+
+func (p *stubOAuthProvider) AuthCodeURL(state, redirectURI string) string {
+	return fmt.Sprintf("https://stub.example/auth?state=%s&redirect_uri=%s", url.QueryEscape(state), url.QueryEscape(redirectURI))
+}
+
+func (p *stubOAuthProvider) Exchange(_ context.Context, _, _ string) (userdomain.OAuthUserInfo, error) {
+	return p.info, nil
+}
+
+func (s *OrgFeatureSuite) TestOrgInvites_LifecycleRedeemAndGuestOnboarding() {
+	parishID, _, _, _, parishAdminID := s.seedParishWithAdmin("padmin@paroki.org")
+	s.SetHeader("X-Parish-Id", parishID.String())
+
+	// Create org with separate initial org:admin.
+	s.Request("/api/orgs", http.MethodPost, domain.CreateOrganizationRequest{
+		Kind:              "section",
+		Code:              "sek-omk",
+		Name:              "Seksi OMK",
+		InitialAdminEmail: "omkadmin@paroki.org",
+		InitialAdminName:  "OMK Admin",
+	})
+	s.Created()
+	orgRow := testutil.DecodeAs[domain.OrganizationResponse](s).Data
+
+	// Non-member ref:parish-admin CANNOT create, search, or revoke invites (403 ORG_FORBIDDEN).
+	s.Request(fmt.Sprintf("/api/orgs/%s/invites", orgRow.ID), http.MethodPost, domain.CreateOrgInviteRequest{})
+	s.Forbidden()
+	s.Equal("ORG_FORBIDDEN", s.GetErrorResponse().Error.Code)
+
+	s.Request(fmt.Sprintf("/api/orgs/%s/invites/search", orgRow.ID), http.MethodPost, domain.SearchOrgInvitesRequest{})
+	s.Forbidden()
+	s.Equal("ORG_FORBIDDEN", s.GetErrorResponse().Error.Code)
+
+	// Login as org:admin.
+	s.loginViaOTP("omkadmin@paroki.org")
+	s.SetHeader("X-Parish-Id", parishID.String())
+
+	// TTL exceeding InviteMaxTTL (168h) returns 422 VALIDATION_ERROR.
+	tooLongTTL := 169 * 3600
+	s.Request(fmt.Sprintf("/api/orgs/%s/invites", orgRow.ID), http.MethodPost, domain.CreateOrgInviteRequest{
+		TTLSeconds: &tooLongTTL,
+	})
+	s.UnprocessableEntity()
+	s.Equal("VALIDATION_ERROR", s.GetErrorResponse().Error.Code)
+
+	// Create single-use member invite.
+	maxOne := 1
+	pos := "Anggota"
+	s.Request(fmt.Sprintf("/api/orgs/%s/invites", orgRow.ID), http.MethodPost, domain.CreateOrgInviteRequest{
+		Role:            "member",
+		DefaultPosition: &pos,
+		MaxUses:         &maxOne,
+	})
+	s.Created()
+	inv1 := testutil.DecodeAs[domain.OrgInviteResponse](s).Data
+	s.Len(inv1.Code, 12)
+	s.Equal("member", inv1.Role)
+	s.Equal(0, inv1.UsedCount)
+
+	// Create revocable invite & revoke it.
+	s.Request(fmt.Sprintf("/api/orgs/%s/invites", orgRow.ID), http.MethodPost, domain.CreateOrgInviteRequest{})
+	s.Created()
+	invRevoked := testutil.DecodeAs[domain.OrgInviteResponse](s).Data
+	s.Request(fmt.Sprintf("/api/orgs/%s/invites/%s", orgRow.ID, invRevoked.ID), http.MethodDelete, nil)
+	s.NoContent()
+
+	// Search invites filtered by status.
+	s.Request(fmt.Sprintf("/api/orgs/%s/invites/search", orgRow.ID), http.MethodPost, domain.SearchOrgInvitesRequest{
+		Filter: &domain.OrgInviteSearchFilter{Status: "active"},
+	})
+	s.OK()
+	s.Len(testutil.DecodeAs[[]domain.OrgInviteResponse](s).Data, 1)
+
+	// Public preview works without auth for active and revoked invites.
+	s.ClearCookies()
+	s.SetHeader("X-Parish-Id", "")
+	s.Request(fmt.Sprintf("/api/orgs/invites/%s", invRevoked.Code), http.MethodGet, nil)
+	s.OK()
+	revPreview := testutil.DecodeAs[domain.OrgInvitePreviewResponse](s).Data
+	s.False(revPreview.Valid)
+	s.Equal("revoked", revPreview.Status)
+
+	s.Request(fmt.Sprintf("/api/orgs/invites/%s", inv1.Code), http.MethodGet, nil)
+	s.OK()
+	actPreview := testutil.DecodeAs[domain.OrgInvitePreviewResponse](s).Data
+	s.True(actPreview.Valid)
+	s.Equal("active", actPreview.Status)
+	s.Equal(orgRow.ID, actPreview.OrgID)
+	s.Equal(parishID, actPreview.ParishID)
+
+	// Unauthenticated guest OTP onboarding with inv1 (unregistered user).
+	s.Request("/api/auth/otp", http.MethodPost, userdomain.RequestOTPRequest{
+		Email:      "guest1@paroki.org",
+		InviteCode: inv1.Code,
+	})
+	s.OK()
+	s.Request("/api/auth/otp/verify", http.MethodPost, userdomain.VerifyOTPRequest{
+		Email:      "guest1@paroki.org",
+		Code:       s.sender.lastCode,
+		InviteCode: inv1.Code,
+		Name:       "Guest Satu",
+	})
+	s.OK()
+	otpSess := testutil.DecodeAs[userdomain.AuthSessionResponse](s).Data
+	s.Require().NotNil(otpSess.ActiveParishID)
+	s.Equal(parishID, *otpSess.ActiveParishID)
+	s.Cookies = s.HttpResponse.Cookies()
+
+	// Second user trying to redeem exhausted inv1 gets 409 ORG_INVITE_MAX_USES_REACHED.
+	s.loginViaOTP("padmin@paroki.org")
+	s.Request(fmt.Sprintf("/api/orgs/invites/%s/redeem", inv1.Code), http.MethodPost, nil)
+	s.Conflict()
+	s.Equal("ORG_INVITE_MAX_USES_REACHED", s.GetErrorResponse().Error.Code)
+
+	// Preview of inv1 now shows exhausted & valid=false.
+	s.ClearCookies()
+	s.Request(fmt.Sprintf("/api/orgs/invites/%s", inv1.Code), http.MethodGet, nil)
+	s.OK()
+	exhPreview := testutil.DecodeAs[domain.OrgInvitePreviewResponse](s).Data
+	s.False(exhPreview.Valid)
+	s.Equal("exhausted", exhPreview.Status)
+
+	// Idempotent redeem by an already-active member does NOT increment used_count.
+	s.loginViaOTP("omkadmin@paroki.org")
+	s.SetHeader("X-Parish-Id", parishID.String())
+	maxTwo := 2
+	s.Request(fmt.Sprintf("/api/orgs/%s/invites", orgRow.ID), http.MethodPost, domain.CreateOrgInviteRequest{
+		Role:    "member",
+		MaxUses: &maxTwo,
+	})
+	s.Created()
+	invMulti := testutil.DecodeAs[domain.OrgInviteResponse](s).Data
+
+	s.loginViaOTP("guest1@paroki.org")
+	s.Request(fmt.Sprintf("/api/orgs/invites/%s/redeem", invMulti.Code), http.MethodPost, nil)
+	s.OK()
+	redeemRes := testutil.DecodeAs[domain.RedeemOrgInviteResponse](s).Data
+	s.Equal(parishID, redeemRes.ParishID)
+	s.Equal("member", redeemRes.Membership.Role)
+
+	s.loginViaOTP("omkadmin@paroki.org")
+	s.SetHeader("X-Parish-Id", parishID.String())
+	s.Request(fmt.Sprintf("/api/orgs/%s/invites/search", orgRow.ID), http.MethodPost, domain.SearchOrgInvitesRequest{})
+	s.OK()
+	for _, it := range testutil.DecodeAs[[]domain.OrgInviteResponse](s).Data {
+		if it.ID == invMulti.ID {
+			s.Equal(0, it.UsedCount)
+		}
+	}
+
+	// Expired invite returns 410 ORG_INVITE_EXPIRED.
+	expiredInv, err := s.client.OrgInvite.Create().
+		SetParishID(parishID).
+		SetOrgID(orgRow.ID).
+		SetCode("EXPIRED12345").
+		SetRole(orginvite.RoleMember).
+		SetExpiresAt(time.Now().UTC().Add(-1 * time.Hour)).
+		SetCreatedBy(parishAdminID).
+		Save(context.Background())
+	s.Require().NoError(err)
+
+	s.Request("/api/auth/otp", http.MethodPost, userdomain.RequestOTPRequest{
+		Email:      "guest2@paroki.org",
+		InviteCode: expiredInv.Code,
+	})
+	s.Equal(http.StatusGone, s.HttpResponse.StatusCode)
+	s.Equal("ORG_INVITE_EXPIRED", s.GetErrorResponse().Error.Code)
+
+	// OAuth guest onboarding with inviteCode.
+	s.loginViaOTP("omkadmin@paroki.org")
+	s.SetHeader("X-Parish-Id", parishID.String())
+	s.Request(fmt.Sprintf("/api/orgs/%s/invites", orgRow.ID), http.MethodPost, domain.CreateOrgInviteRequest{
+		Role: "admin",
+	})
+	s.Created()
+	invOAuth := testutil.DecodeAs[domain.OrgInviteResponse](s).Data
+
+	s.userFeature.RegisterOAuthProvider(&stubOAuthProvider{
+		info: userdomain.OAuthUserInfo{
+			Subject:       "stub-sub-1",
+			Email:         "oauthguest@paroki.org",
+			EmailVerified: true,
+			Name:          "OAuth Guest",
+		},
+	})
+
+	s.ClearCookies()
+	s.SetHeader("X-Parish-Id", "")
+	s.Request(fmt.Sprintf("/api/auth/stub?redirect=/org/join/%s&inviteCode=%s", invOAuth.Code, invOAuth.Code), http.MethodGet, nil)
+	s.Equal(http.StatusFound, s.HttpResponse.StatusCode)
+	s.Cookies = s.HttpResponse.Cookies()
+
+	var stateVal string
+	for _, ck := range s.Cookies {
+		if ck.Name == "domus_oauth_state" {
+			stateVal = ck.Value
+		}
+	}
+	s.Require().NotEmpty(stateVal)
+
+	s.Request(fmt.Sprintf("/api/auth/stub/callback?code=authcode&state=%s", url.QueryEscape(stateVal)), http.MethodGet, nil)
+	s.Equal(http.StatusFound, s.HttpResponse.StatusCode)
+	s.Cookies = s.HttpResponse.Cookies()
+
+	// Verify oauthguest is now an active org:admin.
+	s.Request("/api/me", http.MethodGet, nil)
+	s.OK()
+	me := testutil.DecodeAs[userdomain.UserResponse](s).Data
+	isAdm, err := s.orgFeature.IsAdmin(context.Background(), orgRow.ID, me.ID)
+	s.Require().NoError(err)
+	s.True(isAdm)
 }

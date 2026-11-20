@@ -82,6 +82,12 @@ func (s *MailOTPSender) SendOTP(ctx context.Context, channel, target, code strin
 	})
 }
 
+// InviteJoiner validates and redeems organization invite codes during guest auth onboarding.
+type InviteJoiner interface {
+	ValidateInviteCode(ctx context.Context, code string) error
+	RedeemInviteForUser(ctx context.Context, code string, userID, sessionID uuid.UUID) (parishID uuid.UUID, err error)
+}
+
 // Service implements user identity, OTP, OAuth2, and session business logic.
 type Service struct {
 	cfg            Config
@@ -89,6 +95,12 @@ type Service struct {
 	enforcer       *authz.Enforcer
 	otpSender      domain.OTPSender
 	oauthProviders map[string]domain.OAuthProvider
+	inviteJoiner   InviteJoiner
+}
+
+// SetInviteJoiner wires the organization invite joiner into the auth service.
+func (s *Service) SetInviteJoiner(j InviteJoiner) {
+	s.inviteJoiner = j
 }
 
 // New constructs a Service with configured OAuth2 providers and OTP sender.
@@ -199,29 +211,38 @@ func (s *Service) EnsureUser(ctx context.Context, email, name, phone, provider, 
 	return out, nil
 }
 
-func (s *Service) createSession(ctx context.Context, r *repo.Repository, u *ent.User, userAgent, ipAddress string) (string, *domain.AuthSessionResponse, error) {
+func (s *Service) createSessionWithID(ctx context.Context, r *repo.Repository, u *ent.User, userAgent, ipAddress string) (string, uuid.UUID, *domain.AuthSessionResponse, error) {
 	rawToken, err := randomToken(32)
 	if err != nil {
-		return "", nil, err
+		return "", uuid.Nil, nil, err
 	}
 	expiresAt := time.Now().UTC().Add(s.cfg.SessionTTL)
-	if _, err := r.CreateSession(ctx, u.ID, sha256Hex(rawToken), userAgent, ipAddress, u.DefaultParishID, expiresAt); err != nil {
-		return "", nil, err
+	sess, err := r.CreateSession(ctx, u.ID, sha256Hex(rawToken), userAgent, ipAddress, u.DefaultParishID, expiresAt)
+	if err != nil {
+		return "", uuid.Nil, nil, err
 	}
+	resp, err := s.buildAuthSessionResponse(u, u.DefaultParishID, expiresAt)
+	if err != nil {
+		return "", uuid.Nil, nil, err
+	}
+	return rawToken, sess.ID, resp, nil
+}
+
+func (s *Service) buildAuthSessionResponse(u *ent.User, parishIDPtr *uuid.UUID, expiresAt time.Time) (*domain.AuthSessionResponse, error) {
 	userResp := toUserResponse(u)
 	var activeParishID uuid.UUID
-	if u.DefaultParishID != nil {
-		activeParishID = *u.DefaultParishID
+	if parishIDPtr != nil {
+		activeParishID = *parishIDPtr
 	}
 	roles, err := s.loadRoles(u.ID, activeParishID)
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 	userResp.Roles = roles
-	userResp.ActiveParishID = u.DefaultParishID
-	return rawToken, &domain.AuthSessionResponse{
+	userResp.ActiveParishID = parishIDPtr
+	return &domain.AuthSessionResponse{
 		User:           userResp,
-		ActiveParishID: u.DefaultParishID,
+		ActiveParishID: parishIDPtr,
 		ExpiresAt:      expiresAt,
 	}, nil
 }

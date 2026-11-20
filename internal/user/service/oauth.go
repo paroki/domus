@@ -8,8 +8,10 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/internal/user/domain"
 	"github.com/paroki/domus/internal/user/repo"
@@ -47,14 +49,21 @@ func (s *Service) OAuthAuthURL(providerName, state, redirectURI string) (string,
 	return p.AuthCodeURL(state, redirectURI), nil
 }
 
-// OAuthCallback exchanges the authorization code, verifies the user, and creates a session.
+// OAuthCallback exchanges the authorization code, verifies (or invite-onboards) the user, and creates a session.
 func (s *Service) OAuthCallback(
 	ctx context.Context,
-	providerName, code, redirectURI, userAgent, ipAddress string,
+	providerName, code, redirectURI, inviteCode, userAgent, ipAddress string,
 ) (string, *domain.AuthSessionResponse, error) {
 	p, ok := s.oauthProviders[providerName]
 	if !ok {
 		return "", nil, domain.ErrOAuthProviderUnknown
+	}
+
+	inviteCode = strings.TrimSpace(inviteCode)
+	if inviteCode != "" && s.inviteJoiner != nil {
+		if err := s.inviteJoiner.ValidateInviteCode(ctx, inviteCode); err != nil {
+			return "", nil, err
+		}
 	}
 
 	info, err := p.Exchange(ctx, code, redirectURI)
@@ -68,17 +77,48 @@ func (s *Service) OAuthCallback(
 
 	now := time.Now().UTC()
 	var rawToken string
+	var sessionID uuid.UUID
 	var resp *domain.AuthSessionResponse
+	var updatedUser *ent.User
+
+	var preEnsuredUserID uuid.UUID
+	if inviteCode != "" && s.inviteJoiner != nil {
+		acc, accErr := s.repo.FindAccountByProviderSubject(ctx, providerName, info.Subject)
+		switch {
+		case accErr == nil:
+			preEnsuredUserID = acc.UserID
+		case ent.IsNotFound(accErr):
+			existing, findErr := s.repo.FindUserByEmail(ctx, email)
+			switch {
+			case findErr == nil:
+				preEnsuredUserID = existing.ID
+			case ent.IsNotFound(findErr):
+				ensured, ensureErr := s.EnsureUser(ctx, email, info.Name, "", providerName, info.Subject)
+				if ensureErr != nil {
+					return "", nil, ensureErr
+				}
+				preEnsuredUserID = ensured.ID
+			default:
+				return "", nil, findErr
+			}
+		default:
+			return "", nil, accErr
+		}
+	}
 
 	err = s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
 		var u *ent.User
-		acc, accErr := txRepo.FindAccountByProviderSubject(ctx, providerName, info.Subject)
-		if accErr == nil {
-			u, err = guardActiveUser(txRepo.FindUserByID(ctx, acc.UserID))
-		} else if ent.IsNotFound(accErr) {
-			u, err = guardActiveUser(txRepo.FindUserByEmail(ctx, email))
+		if preEnsuredUserID != uuid.Nil {
+			u, err = guardActiveUser(txRepo.FindUserByID(ctx, preEnsuredUserID))
 		} else {
-			return accErr
+			acc, accErr := txRepo.FindAccountByProviderSubject(ctx, providerName, info.Subject)
+			if accErr == nil {
+				u, err = guardActiveUser(txRepo.FindUserByID(ctx, acc.UserID))
+			} else if ent.IsNotFound(accErr) {
+				u, err = guardActiveUser(txRepo.FindUserByEmail(ctx, email))
+			} else {
+				return accErr
+			}
 		}
 		if err != nil {
 			return err
@@ -96,15 +136,30 @@ func (s *Service) OAuthCallback(
 		if _, err := txRepo.UpsertAccount(ctx, u.ID, providerName, info.Subject, &email, displayName, avatarURL, now); err != nil {
 			return err
 		}
-		updatedUser, err := txRepo.UpdateUserLastLogin(ctx, u.ID, now)
+		updatedUser, err = txRepo.UpdateUserLastLogin(ctx, u.ID, now)
 		if err != nil {
 			return err
 		}
-		rawToken, resp, err = s.createSession(ctx, txRepo, updatedUser, userAgent, ipAddress)
+		rawToken, sessionID, resp, err = s.createSessionWithID(ctx, txRepo, updatedUser, userAgent, ipAddress)
 		return err
 	})
 	if err != nil {
 		return "", nil, err
+	}
+
+	if inviteCode != "" && s.inviteJoiner != nil {
+		parishID, err := s.inviteJoiner.RedeemInviteForUser(ctx, inviteCode, updatedUser.ID, sessionID)
+		if err != nil {
+			return "", nil, err
+		}
+		reloaded, err := s.repo.FindUserByID(ctx, updatedUser.ID)
+		if err == nil {
+			updatedUser = reloaded
+		}
+		resp, err = s.buildAuthSessionResponse(updatedUser, &parishID, resp.ExpiresAt)
+		if err != nil {
+			return "", nil, err
+		}
 	}
 	return rawToken, resp, nil
 }

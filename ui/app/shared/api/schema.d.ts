@@ -285,6 +285,46 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/orgs/invites/{code}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Preview organization invite
+     * @description Returns public metadata and validity status for an organization invite code.
+     */
+    get: operations["previewOrgInvite"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/orgs/invites/{code}/redeem": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Redeem organization invite
+     * @description Idempotently redeems an invite code, ensures parish/org membership, syncs Casbin, and switches active parish.
+     */
+    post: operations["redeemOrgInvite"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/orgs/search": {
     parameters: {
       query?: never;
@@ -331,6 +371,66 @@ export interface paths {
      * @description Updates an organization in the active parish (requires org:admin or ref:parish-admin).
      */
     patch: operations["updateOrganization"];
+    trace?: never;
+  };
+  "/orgs/{id}/invites": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create organization invite
+     * @description Creates an invite link for an organization (requires org:admin).
+     */
+    post: operations["createOrgInvite"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/orgs/{id}/invites/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Search organization invites
+     * @description Searches invite links for an organization (requires org:admin).
+     */
+    post: operations["searchOrgInvites"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/orgs/{id}/invites/{inviteId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Revoke organization invite
+     * @description Idempotently revokes an invite link for an organization (requires org:admin).
+     */
+    delete: operations["revokeOrgInvite"];
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
   "/orgs/{id}/members": {
@@ -1028,6 +1128,13 @@ export interface components {
       label: string;
       sortOrder?: number;
     };
+    "domain.CreateOrgInviteRequest": {
+      defaultPosition?: string;
+      maxUses?: number;
+      /** @enum {string} */
+      role?: "admin" | "member";
+      ttlSeconds?: number;
+    };
     "domain.CreateOrganizationRequest": {
       active?: boolean;
       code: string;
@@ -1120,6 +1227,40 @@ export interface components {
       category?: string;
       /** @enum {string} */
       scope?: "all" | "global" | "parish";
+    };
+    "domain.OrgInvitePreviewResponse": {
+      code?: string;
+      defaultPosition?: string;
+      expiresAt?: string;
+      orgCode?: string;
+      orgId?: string;
+      orgKind?: string;
+      orgName?: string;
+      parishCode?: string;
+      parishId?: string;
+      parishName?: string;
+      role?: string;
+      status?: string;
+      valid?: boolean;
+    };
+    "domain.OrgInviteResponse": {
+      code?: string;
+      createdAt?: string;
+      createdBy?: string;
+      defaultPosition?: string;
+      expiresAt?: string;
+      id?: string;
+      maxUses?: number;
+      orgId?: string;
+      parishId?: string;
+      revokedAt?: string;
+      role?: string;
+      updatedAt?: string;
+      usedCount?: number;
+    };
+    "domain.OrgInviteSearchFilter": {
+      /** @enum {string} */
+      status?: "active" | "expired" | "revoked" | "exhausted";
     };
     "domain.OrgMemberResponse": {
       createdAt?: string;
@@ -1231,8 +1372,14 @@ export interface components {
       /** @enum {string} */
       type?: "fiscal" | "liturgical";
     };
+    "domain.RedeemOrgInviteResponse": {
+      membership?: components["schemas"]["domain.OrgMemberResponse"];
+      organization?: components["schemas"]["domain.OrganizationResponse"];
+      parishId?: string;
+    };
     "domain.RequestOTPRequest": {
       email: string;
+      inviteCode?: string;
     };
     "domain.RequestOTPResponse": {
       expiresInSeconds?: number;
@@ -1253,6 +1400,11 @@ export interface components {
       filter?: components["schemas"]["domain.LookupSearchFilter"];
       limit?: number;
       q?: string;
+    };
+    "domain.SearchOrgInvitesRequest": {
+      cursor?: string;
+      filter?: components["schemas"]["domain.OrgInviteSearchFilter"];
+      limit?: number;
     };
     "domain.SearchOrgMembersRequest": {
       cursor?: string;
@@ -1458,6 +1610,9 @@ export interface components {
     "domain.VerifyOTPRequest": {
       code: string;
       email: string;
+      inviteCode?: string;
+      name?: string;
+      phone?: string;
     };
     "domain.WardResponse": {
       active?: boolean;
@@ -1510,6 +1665,11 @@ export interface components {
     };
     "httpx.Envelope-array_domain_LookupResponse": {
       data?: components["schemas"]["domain.LookupResponse"][];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-array_domain_OrgInviteResponse": {
+      data?: components["schemas"]["domain.OrgInviteResponse"][];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -1583,6 +1743,16 @@ export interface components {
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
+    "httpx.Envelope-domain_OrgInvitePreviewResponse": {
+      data?: components["schemas"]["domain.OrgInvitePreviewResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_OrgInviteResponse": {
+      data?: components["schemas"]["domain.OrgInviteResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
     "httpx.Envelope-domain_OrgMemberResponse": {
       data?: components["schemas"]["domain.OrgMemberResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
@@ -1605,6 +1775,11 @@ export interface components {
     };
     "httpx.Envelope-domain_PeriodResponse": {
       data?: components["schemas"]["domain.PeriodResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_RedeemOrgInviteResponse": {
+      data?: components["schemas"]["domain.RedeemOrgInviteResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -1837,6 +2012,8 @@ export interface operations {
       query?: {
         /** @description Relative post-login redirect path */
         redirect?: string;
+        /** @description Optional organization invite code for guest onboarding */
+        inviteCode?: string;
       };
       header?: never;
       path: {
@@ -2348,6 +2525,97 @@ export interface operations {
       };
     };
   };
+  previewOrgInvite: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Invite code */
+        code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_OrgInvitePreviewResponse"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  redeemOrgInvite: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Invite code */
+        code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_RedeemOrgInviteResponse"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Gone */
+      410: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
   searchOrganizations: {
     parameters: {
       query?: never;
@@ -2589,6 +2857,202 @@ export interface operations {
       };
       /** @description Unprocessable Entity */
       422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  createOrgInvite: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Organization UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Invite creation payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.CreateOrgInviteRequest"];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_OrgInviteResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  searchOrgInvites: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Organization UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Search parameters */
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["domain.SearchOrgInvitesRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_OrgInviteResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  revokeOrgInvite: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Organization UUID */
+        id: string;
+        /** @description Invite UUID */
+        inviteId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
         headers: {
           [name: string]: unknown;
         };

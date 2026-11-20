@@ -30,6 +30,11 @@ func (h *Handler) Register(
 	requireTenant fiber.Handler,
 	requireOrgRead fiber.Handler,
 ) {
+	orgsPublic := api.Group("/orgs", authMW)
+	// Static /invites routes MUST be registered before parameterized /:id routes.
+	orgsPublic.Get("/invites/:code", h.PreviewOrgInvite)
+	orgsPublic.Post("/invites/:code/redeem", requireAuth, h.RedeemOrgInvite)
+
 	orgs := api.Group("/orgs", authMW, requireAuth, requireTenant)
 	orgs.Post("/search", requireOrgRead, h.SearchOrganizations)
 	orgs.Get("/:id", requireOrgRead, h.GetOrganization)
@@ -41,6 +46,10 @@ func (h *Handler) Register(
 	orgs.Post("/:id/members", h.AddOrgMember)
 	orgs.Patch("/:id/members/:userId", h.UpdateOrgMember)
 	orgs.Delete("/:id/members/:userId", h.RemoveOrgMember)
+
+	orgs.Post("/:id/invites/search", h.SearchOrgInvites)
+	orgs.Post("/:id/invites", h.CreateOrgInvite)
+	orgs.Delete("/:id/invites/:inviteId", h.RevokeOrgInvite)
 }
 
 func decodeStrictJSON(c fiber.Ctx, dst any) error {

@@ -244,6 +244,22 @@ func (f *Feature) EnsureUser(ctx context.Context, email, name, phone, provider, 
 	return f.service.EnsureUser(ctx, email, name, phone, provider, subject)
 }
 
+// InviteJoiner validates and redeems organization invite codes during guest auth onboarding.
+type InviteJoiner = service.InviteJoiner
+
+// SetInviteJoiner wires the organization invite joiner into the user auth service.
+func (f *Feature) SetInviteJoiner(j InviteJoiner) {
+	f.service.SetInviteJoiner(j)
+}
+
+// SwitchSessionParish updates the active parish on sessionID for userID.
+func (f *Feature) SwitchSessionParish(ctx context.Context, userID, sessionID, parishID uuid.UUID) error {
+	return f.service.SwitchSessionParish(ctx, authx.Principal{
+		UserID:    userID,
+		SessionID: sessionID,
+	}, parishID)
+}
+
 func (f *Feature) extractSessionToken(c fiber.Ctx) string {
 	if cookie := c.Cookies(f.cookieName); cookie != "" {
 		return cookie

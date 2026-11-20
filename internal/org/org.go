@@ -48,6 +48,14 @@ type refValidatorAdapter struct {
 	refs *ref.Feature
 }
 
+type sessionSwitcherAdapter struct {
+	users *user.Feature
+}
+
+func (a sessionSwitcherAdapter) SwitchSessionParish(ctx context.Context, userID, sessionID, parishID uuid.UUID) error {
+	return a.users.SwitchSessionParish(ctx, userID, sessionID, parishID)
+}
+
 func (a refValidatorAdapter) ValidateZoneInParish(ctx context.Context, parishID, zoneID uuid.UUID) error {
 	_, err := a.refs.ValidateZoneInParish(ctx, parishID, zoneID)
 	return err
@@ -80,14 +88,19 @@ type Feature struct {
 func New(db *ent.Client, enforcer *authz.Enforcer, users *user.Feature, refs *ref.Feature, cfg Config) *Feature {
 	r := repo.New(db)
 	var ensurer service.UserEnsurer
+	var sessions service.SessionSwitcher
 	if users != nil {
 		ensurer = userEnsurerAdapter{users: users}
+		sessions = sessionSwitcherAdapter{users: users}
 	}
 	var refVal service.RefValidator
 	if refs != nil {
 		refVal = refValidatorAdapter{refs: refs}
 	}
-	svc := service.New(r, enforcer, ensurer, refVal)
+	svc := service.New(r, enforcer, ensurer, refVal, sessions, service.InviteConfig{
+		DefaultTTL: cfg.InviteDefaultTTL,
+		MaxTTL:     cfg.InviteMaxTTL,
+	})
 	h := handler.New(svc)
 	return &Feature{
 		service: svc,
@@ -156,6 +169,16 @@ func (f *Feature) IsAdmin(ctx context.Context, orgID, userID uuid.UUID) (bool, e
 // ListUserOrgs returns active, non-deleted Organizations in parishID where userID is an active member.
 func (f *Feature) ListUserOrgs(ctx context.Context, parishID, userID uuid.UUID) ([]Organization, error) {
 	return f.service.ListUserOrgs(ctx, parishID, userID)
+}
+
+// ValidateInviteCode verifies that code refers to an active, usable organization invite.
+func (f *Feature) ValidateInviteCode(ctx context.Context, code string) error {
+	return f.service.ValidateInviteCode(ctx, code)
+}
+
+// RedeemInviteForUser redeems an organization invite code for userID and updates sessionID's active parish.
+func (f *Feature) RedeemInviteForUser(ctx context.Context, code string, userID, sessionID uuid.UUID) (uuid.UUID, error) {
+	return f.service.RedeemInviteForUser(ctx, code, userID, sessionID)
 }
 
 func requireTenantMiddleware() fiber.Handler {

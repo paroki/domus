@@ -143,11 +143,44 @@ type OrgInviteResponse struct {
 
 // OrgInvitePreviewResponse is the public preview representation of an OrgInvite.
 type OrgInvitePreviewResponse struct {
+	Code            string    `json:"code"`
 	OrgID           uuid.UUID `json:"orgId"`
 	OrgCode         string    `json:"orgCode"`
 	OrgName         string    `json:"orgName"`
 	OrgKind         string    `json:"orgKind"`
+	ParishID        uuid.UUID `json:"parishId"`
+	ParishCode      string    `json:"parishCode"`
+	ParishName      string    `json:"parishName"`
 	Role            string    `json:"role"`
 	DefaultPosition *string   `json:"defaultPosition,omitempty"`
 	ExpiresAt       time.Time `json:"expiresAt"`
+	Status          string    `json:"status"`
+	Valid           bool      `json:"valid"`
+}
+
+// CreateOrgInviteRequest creates a new time-limited multi-use invite link for an Organization.
+type CreateOrgInviteRequest struct {
+	Role            string  `json:"role,omitempty" validate:"omitempty,oneof=admin member"`
+	DefaultPosition *string `json:"defaultPosition,omitempty"`
+	MaxUses         *int    `json:"maxUses,omitempty" validate:"omitempty,min=1"`
+	TTLSeconds      *int    `json:"ttlSeconds,omitempty"`
+}
+
+// OrgInviteSearchFilter filters organization invite search results.
+type OrgInviteSearchFilter struct {
+	Status string `json:"status,omitempty" validate:"omitempty,oneof=active expired revoked exhausted"`
+}
+
+// SearchOrgInvitesRequest searches invite links for an Organization.
+type SearchOrgInvitesRequest struct {
+	Filter *OrgInviteSearchFilter `json:"filter,omitempty"`
+	Cursor string                 `json:"cursor,omitempty"`
+	Limit  int                    `json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
+}
+
+// RedeemOrgInviteResponse is returned upon successful invite redemption.
+type RedeemOrgInviteResponse struct {
+	Organization OrganizationResponse `json:"organization"`
+	Membership   OrgMemberResponse    `json:"membership"`
+	ParishID     uuid.UUID            `json:"parishId"`
 }

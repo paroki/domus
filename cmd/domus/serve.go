@@ -69,6 +69,7 @@ func newServeCmd() *cobra.Command {
 				return err
 			}
 			orgFeature := org.New(db, enforcer, userFeature, refFeature, orgCfg)
+			userFeature.SetInviteJoiner(orgFeature)
 			if err := authz.RegisterFeatures(ctx, enforcer, userFeature, refFeature, orgFeature); err != nil {
 				return err
 			}

@@ -206,6 +206,28 @@
                 ],
                 "type": "object"
             },
+            "domain.CreateOrgInviteRequest": {
+                "properties": {
+                    "defaultPosition": {
+                        "type": "string"
+                    },
+                    "maxUses": {
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "role": {
+                        "enum": [
+                            "admin",
+                            "member"
+                        ],
+                        "type": "string"
+                    },
+                    "ttlSeconds": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
             "domain.CreateOrganizationRequest": {
                 "properties": {
                     "active": {
@@ -488,6 +510,108 @@
                             "all",
                             "global",
                             "parish"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.OrgInvitePreviewResponse": {
+                "properties": {
+                    "code": {
+                        "type": "string"
+                    },
+                    "defaultPosition": {
+                        "type": "string"
+                    },
+                    "expiresAt": {
+                        "type": "string"
+                    },
+                    "orgCode": {
+                        "type": "string"
+                    },
+                    "orgId": {
+                        "type": "string"
+                    },
+                    "orgKind": {
+                        "type": "string"
+                    },
+                    "orgName": {
+                        "type": "string"
+                    },
+                    "parishCode": {
+                        "type": "string"
+                    },
+                    "parishId": {
+                        "type": "string"
+                    },
+                    "parishName": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "valid": {
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.OrgInviteResponse": {
+                "properties": {
+                    "code": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "createdBy": {
+                        "type": "string"
+                    },
+                    "defaultPosition": {
+                        "type": "string"
+                    },
+                    "expiresAt": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "maxUses": {
+                        "type": "integer"
+                    },
+                    "orgId": {
+                        "type": "string"
+                    },
+                    "parishId": {
+                        "type": "string"
+                    },
+                    "revokedAt": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    },
+                    "usedCount": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.OrgInviteSearchFilter": {
+                "properties": {
+                    "status": {
+                        "enum": [
+                            "active",
+                            "expired",
+                            "revoked",
+                            "exhausted"
                         ],
                         "type": "string"
                     }
@@ -804,9 +928,26 @@
                 },
                 "type": "object"
             },
+            "domain.RedeemOrgInviteResponse": {
+                "properties": {
+                    "membership": {
+                        "$ref": "#/components/schemas/domain.OrgMemberResponse"
+                    },
+                    "organization": {
+                        "$ref": "#/components/schemas/domain.OrganizationResponse"
+                    },
+                    "parishId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.RequestOTPRequest": {
                 "properties": {
                     "email": {
+                        "type": "string"
+                    },
+                    "inviteCode": {
                         "type": "string"
                     }
                 },
@@ -873,6 +1014,22 @@
                     },
                     "q": {
                         "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.SearchOrgInvitesRequest": {
+                "properties": {
+                    "cursor": {
+                        "type": "string"
+                    },
+                    "filter": {
+                        "$ref": "#/components/schemas/domain.OrgInviteSearchFilter"
+                    },
+                    "limit": {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer"
                     }
                 },
                 "type": "object"
@@ -1490,6 +1647,15 @@
                     },
                     "email": {
                         "type": "string"
+                    },
+                    "inviteCode": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "phone": {
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -1646,6 +1812,24 @@
                     "data": {
                         "items": {
                             "$ref": "#/components/schemas/domain.LookupResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-array_domain_OrgInviteResponse": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.OrgInviteResponse"
                         },
                         "type": "array",
                         "uniqueItems": false
@@ -1895,6 +2079,34 @@
                 },
                 "type": "object"
             },
+            "httpx.Envelope-domain_OrgInvitePreviewResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.OrgInvitePreviewResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_OrgInviteResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.OrgInviteResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
             "httpx.Envelope-domain_OrgMemberResponse": {
                 "properties": {
                     "data": {
@@ -1955,6 +2167,20 @@
                 "properties": {
                     "data": {
                         "$ref": "#/components/schemas/domain.PeriodResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_RedeemOrgInviteResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.RedeemOrgInviteResponse"
                     },
                     "error": {
                         "$ref": "#/components/schemas/httpx.ErrorPayload"
@@ -2310,6 +2536,14 @@
                         "description": "Relative post-login redirect path",
                         "in": "query",
                         "name": "redirect",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Optional organization invite code for guest onboarding",
+                        "in": "query",
+                        "name": "inviteCode",
                         "schema": {
                             "type": "string"
                         }
@@ -2919,6 +3153,122 @@
                 ]
             }
         },
+        "/orgs/invites/{code}": {
+            "get": {
+                "description": "Returns public metadata and validity status for an organization invite code.",
+                "operationId": "previewOrgInvite",
+                "parameters": [
+                    {
+                        "description": "Invite code",
+                        "in": "path",
+                        "name": "code",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_OrgInvitePreviewResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Preview organization invite",
+                "tags": [
+                    "Org"
+                ]
+            }
+        },
+        "/orgs/invites/{code}/redeem": {
+            "post": {
+                "description": "Idempotently redeems an invite code, ensures parish/org membership, syncs Casbin, and switches active parish.",
+                "operationId": "redeemOrgInvite",
+                "parameters": [
+                    {
+                        "description": "Invite code",
+                        "in": "path",
+                        "name": "code",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_RedeemOrgInviteResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "410": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Gone"
+                    }
+                },
+                "summary": "Redeem organization invite",
+                "tags": [
+                    "Org"
+                ]
+            }
+        },
         "/orgs/search": {
             "post": {
                 "description": "Searches organizations within the active parish with optional filters and cursor pagination.",
@@ -3219,6 +3569,262 @@
                     }
                 },
                 "summary": "Update organization",
+                "tags": [
+                    "Org"
+                ]
+            }
+        },
+        "/orgs/{id}/invites": {
+            "post": {
+                "description": "Creates an invite link for an organization (requires org:admin).",
+                "operationId": "createOrgInvite",
+                "parameters": [
+                    {
+                        "description": "Organization UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.CreateOrgInviteRequest",
+                                "summary": "body",
+                                "description": "Invite creation payload"
+                            }
+                        }
+                    },
+                    "description": "Invite creation payload",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_OrgInviteResponse"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Create organization invite",
+                "tags": [
+                    "Org"
+                ]
+            }
+        },
+        "/orgs/{id}/invites/search": {
+            "post": {
+                "description": "Searches invite links for an organization (requires org:admin).",
+                "operationId": "searchOrgInvites",
+                "parameters": [
+                    {
+                        "description": "Organization UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.SearchOrgInvitesRequest",
+                                "summary": "body",
+                                "description": "Search parameters"
+                            }
+                        }
+                    },
+                    "description": "Search parameters"
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_OrgInviteResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Search organization invites",
+                "tags": [
+                    "Org"
+                ]
+            }
+        },
+        "/orgs/{id}/invites/{inviteId}": {
+            "delete": {
+                "description": "Idempotently revokes an invite link for an organization (requires org:admin).",
+                "operationId": "revokeOrgInvite",
+                "parameters": [
+                    {
+                        "description": "Organization UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Invite UUID",
+                        "in": "path",
+                        "name": "inviteId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Revoke organization invite",
                 "tags": [
                     "Org"
                 ]

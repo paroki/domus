@@ -13,7 +13,8 @@ type AuthProvidersResponse struct {
 
 // RequestOTPRequest requests a one-time passcode for passwordless email login.
 type RequestOTPRequest struct {
-	Email string `json:"email" validate:"required,email"`
+	Email      string `json:"email" validate:"required,email"`
+	InviteCode string `json:"inviteCode,omitempty"`
 }
 
 // RequestOTPResponse acknowledges OTP dispatch and its TTL in seconds.
@@ -24,8 +25,11 @@ type RequestOTPResponse struct {
 
 // VerifyOTPRequest verifies a 6-digit OTP code for an email address.
 type VerifyOTPRequest struct {
-	Email string `json:"email" validate:"required,email"`
-	Code  string `json:"code" validate:"required,len=6"`
+	Email      string  `json:"email" validate:"required,email"`
+	Code       string  `json:"code" validate:"required,len=6"`
+	InviteCode string  `json:"inviteCode,omitempty"`
+	Name       string  `json:"name,omitempty"`
+	Phone      *string `json:"phone,omitempty"`
 }
 
 // UserResponse is the public API representation of a User.
