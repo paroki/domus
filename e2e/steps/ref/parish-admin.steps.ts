@@ -103,7 +103,7 @@ Given(
     code: string,
     label: string,
   ) {
-    const superAdmin = loginAsSuperAdmin();
+    const superAdmin = await loginAsSuperAdmin();
     const adminClient = new TestClient();
     adminClient.setToken(superAdmin.rawToken);
     const res = await adminClient.post("/ref/lookups", {

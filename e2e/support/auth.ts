@@ -1,5 +1,5 @@
-import { Database } from "bun:sqlite";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
+import { SQL } from "bun";
 import { config } from "./config";
 import type { TestClient } from "./test-client";
 
@@ -22,74 +22,73 @@ function sha256Hex(value: string): string {
   return createHash("sha256").update(value).digest("hex");
 }
 
-function openDb(): Database {
-  return new Database(config.dbPath);
+function isPostgres(): boolean {
+  return (
+    config.appDbUrl.startsWith("postgres://") ||
+    config.appDbUrl.startsWith("postgresql://")
+  );
+}
+
+function openDb(): SQL {
+  return new SQL(isPostgres() ? config.appDbUrl : `sqlite://${config.dbPath}`);
 }
 
 function formatSqliteTime(d: Date): string {
   return d.toISOString().replace("T", " ").replace("Z", " +0000 UTC");
 }
 
-export function loginAsUser(options: {
+function formatDbTime(d: Date): string {
+  return isPostgres() ? d.toISOString() : formatSqliteTime(d);
+}
+
+export async function loginAsUser(options: {
   email: string;
   name?: string;
   onboarded?: boolean;
   activeParishId?: string;
-}): AuthSession {
+}): Promise<AuthSession> {
   const db = openDb();
   try {
-    const now = formatSqliteTime(new Date());
-    const expiresAt = formatSqliteTime(
-      new Date(Date.now() + 24 * 60 * 60 * 1000),
-    );
+    const now = formatDbTime(new Date());
+    const expiresAt = formatDbTime(new Date(Date.now() + 24 * 60 * 60 * 1000));
     const email = options.email.trim().toLowerCase();
     const name = options.name ?? email;
-    const onboarded = (options.onboarded ?? true) ? 1 : 0;
+    const onboarded = options.onboarded ?? true;
 
-    const existing = db
-      .query<{ id: string }, [string]>(
-        "SELECT id FROM users WHERE email = ? AND deleted_at IS NULL",
-      )
-      .get(email);
+    const existing = await db<{ id: string }[]>`
+      SELECT id FROM users WHERE email = ${email} AND deleted_at IS NULL
+    `;
 
     let userId: string;
-    if (existing) {
-      userId = existing.id;
-      db.query(
-        "UPDATE users SET status = 'active', onboarded = ?, updated_at = ? WHERE id = ?",
-      ).run(onboarded, now, userId);
+    if (existing.length > 0 && existing[0]) {
+      userId = existing[0].id;
+      await db`
+        UPDATE users SET status = 'active', onboarded = ${onboarded}, updated_at = ${now} WHERE id = ${userId}
+      `;
     } else {
       userId = randomUUID();
-      db.query(
-        "INSERT INTO users (id, created_at, updated_at, email, name, status, onboarded) VALUES (?, ?, ?, ?, ?, 'active', ?)",
-      ).run(userId, now, now, email, name, onboarded);
+      await db`
+        INSERT INTO users (id, created_at, updated_at, email, name, status, onboarded)
+        VALUES (${userId}, ${now}, ${now}, ${email}, ${name}, 'active', ${onboarded})
+      `;
     }
 
-    const account = db
-      .query<{ id: string }, [string, string]>(
-        "SELECT id FROM user_accounts WHERE provider = ? AND subject = ?",
-      )
-      .get("email", email);
+    const account = await db<{ id: string }[]>`
+      SELECT id FROM user_accounts WHERE provider = ${"email"} AND subject = ${email}
+    `;
 
-    if (!account) {
-      db.query(
-        "INSERT INTO user_accounts (id, created_at, updated_at, provider, subject, email, display_name, user_id) VALUES (?, ?, ?, 'email', ?, ?, ?, ?)",
-      ).run(randomUUID(), now, now, email, email, name, userId);
+    if (account.length === 0) {
+      await db`
+        INSERT INTO user_accounts (id, created_at, updated_at, provider, subject, email, display_name, user_id)
+        VALUES (${randomUUID()}, ${now}, ${now}, 'email', ${email}, ${email}, ${name}, ${userId})
+      `;
     }
 
     const rawToken = randomBytes(32).toString("base64url");
-    db.query(
-      "INSERT INTO user_sessions (id, created_at, updated_at, token_hash, user_agent, ip_address, active_parish_id, last_active_at, expires_at, user_id) VALUES (?, ?, ?, ?, 'Playwright E2E', '127.0.0.1', ?, ?, ?, ?)",
-    ).run(
-      randomUUID(),
-      now,
-      now,
-      sha256Hex(rawToken),
-      options.activeParishId ?? null,
-      now,
-      expiresAt,
-      userId,
-    );
+    await db`
+      INSERT INTO user_sessions (id, created_at, updated_at, token_hash, user_agent, ip_address, active_parish_id, last_active_at, expires_at, user_id)
+      VALUES (${randomUUID()}, ${now}, ${now}, ${sha256Hex(rawToken)}, 'Playwright E2E', '127.0.0.1', ${options.activeParishId ?? null}, ${now}, ${expiresAt}, ${userId})
+    `;
 
     return {
       userId,
@@ -106,16 +105,16 @@ export function loginAsUser(options: {
       ],
     };
   } finally {
-    db.close();
+    await db.close();
   }
 }
 
-export function loginAsSuperAdmin(options?: {
+export async function loginAsSuperAdmin(options?: {
   email?: string;
   name?: string;
   onboarded?: boolean;
   activeParishId?: string;
-}): AuthSession {
+}): Promise<AuthSession> {
   return loginAsUser({
     email: options?.email ?? config.superAdminEmail,
     name: options?.name ?? config.superAdminName,
@@ -143,7 +142,7 @@ export async function bootstrapParishAdminSession(
     options?.parishCodeSuffix ??
     `${Date.now().toString(36)}-${parishBootstrapCounter}`;
 
-  const superAdmin = loginAsSuperAdmin();
+  const superAdmin = await loginAsSuperAdmin();
   client.setToken(superAdmin.rawToken);
 
   const dioceseCode = `e2e-d-${suffix}`;
@@ -190,7 +189,7 @@ export async function bootstrapParishAdminSession(
     );
   }
 
-  const session = loginAsUser({
+  const session = await loginAsUser({
     email,
     name,
     onboarded: true,
@@ -284,7 +283,7 @@ export async function bootstrapOrgAdminSession(
     );
   }
 
-  const session = loginAsUser({
+  const session = await loginAsUser({
     email,
     name,
     onboarded: true,
@@ -369,7 +368,7 @@ export async function bootstrapOrgMemberSession(
     );
   }
 
-  const session = loginAsUser({
+  const session = await loginAsUser({
     email,
     name,
     onboarded: true,
@@ -387,25 +386,23 @@ export async function bootstrapOrgMemberSession(
   };
 }
 
-export function seedOtpCode(
+export async function seedOtpCode(
   email: string,
   code = "123456",
   channel = "email",
-): void {
+): Promise<void> {
   const db = openDb();
   try {
-    const now = formatSqliteTime(new Date());
-    const expiresAt = formatSqliteTime(new Date(Date.now() + 5 * 60 * 1000));
+    const now = formatDbTime(new Date());
+    const expiresAt = formatDbTime(new Date(Date.now() + 5 * 60 * 1000));
     const target = email.trim().toLowerCase();
 
-    db.query("DELETE FROM user_otps WHERE channel = ? AND target = ?").run(
-      channel,
-      target,
-    );
-    db.query(
-      "INSERT INTO user_otps (id, created_at, updated_at, channel, target, code_hash, attempts, expires_at) VALUES (?, ?, ?, ?, ?, ?, 0, ?)",
-    ).run(randomUUID(), now, now, channel, target, sha256Hex(code), expiresAt);
+    await db`DELETE FROM user_otps WHERE channel = ${channel} AND target = ${target}`;
+    await db`
+      INSERT INTO user_otps (id, created_at, updated_at, channel, target, code_hash, attempts, expires_at)
+      VALUES (${randomUUID()}, ${now}, ${now}, ${channel}, ${target}, ${sha256Hex(code)}, 0, ${expiresAt})
+    `;
   } finally {
-    db.close();
+    await db.close();
   }
 }

@@ -106,7 +106,7 @@ When(
 When(
   "a deterministic OTP {string} is seeded for {string}",
   async function (this: DomusWorld, code: string, email: string) {
-    seedOtpCode(email, code, "email");
+    await seedOtpCode(email, code, "email");
   },
 );
 
@@ -148,7 +148,7 @@ Then(
 Given(
   "a secondary session exists for {string}",
   async function (this: DomusWorld, email: string) {
-    loginAsUser({ email, name: "Regular User", onboarded: true });
+    await loginAsUser({ email, name: "Regular User", onboarded: true });
   },
 );
 

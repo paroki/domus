@@ -40,13 +40,13 @@ Before(async function (this: DomusWorld) {
 });
 
 Before({ tags: "@super-admin" }, async function (this: DomusWorld) {
-  const session = loginAsSuperAdmin();
+  const session = await loginAsSuperAdmin();
   await this.context.addCookies(session.cookies);
   this.client.setToken(session.rawToken);
 });
 
 Before({ tags: "@authenticated" }, async function (this: DomusWorld) {
-  const session = loginAsUser({
+  const session = await loginAsUser({
     email: "user@domus.test",
     name: "Regular User",
   });

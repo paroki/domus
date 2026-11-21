@@ -1,6 +1,7 @@
 import { type ChildProcess, spawn } from "node:child_process";
 import { createWriteStream, mkdirSync, rmSync } from "node:fs";
 import path from "node:path";
+import { SQL } from "bun";
 import { config } from "./config";
 
 interface ManagedProcess {
@@ -77,8 +78,21 @@ export async function startServers(): Promise<void> {
   rmSync(config.apiRawCoverageDir, { recursive: true, force: true });
   mkdirSync(config.apiRawCoverageDir, { recursive: true });
 
-  for (const suffix of ["", "-wal", "-shm"]) {
-    rmSync(`${config.dbPath}${suffix}`, { force: true });
+  if (
+    config.appDbUrl.startsWith("postgres://") ||
+    config.appDbUrl.startsWith("postgresql://")
+  ) {
+    const db = new SQL(config.appDbUrl);
+    try {
+      await db`DROP SCHEMA IF EXISTS public CASCADE`;
+      await db`CREATE SCHEMA public`;
+    } finally {
+      await db.close();
+    }
+  } else {
+    for (const suffix of ["", "-wal", "-shm"]) {
+      rmSync(`${config.dbPath}${suffix}`, { force: true });
+    }
   }
 
   const apiProc = spawnLogged(
