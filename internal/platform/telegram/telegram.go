@@ -214,7 +214,7 @@ func ParseStartToken(text string) (string, bool) {
 		return "", false
 	}
 	cmd := strings.ToLower(fields[0])
-	if cmd != "/start" && !(strings.HasPrefix(cmd, "/start@") && len(cmd) > len("/start@")) {
+	if cmd != "/start" && (!strings.HasPrefix(cmd, "/start@") || len(cmd) <= len("/start@")) {
 		return "", false
 	}
 	return fields[1], true
