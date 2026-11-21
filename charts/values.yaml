@@ -49,8 +49,8 @@ config:
     baseUrl: ""
     basicUser: ""
 
-# -- Existing Secret holding optional keys: db-url (APP_DB_URL), google-id,
-# google-secret, github-id, github-secret (AUTH_GOOGLE_*, AUTH_GITHUB_*),
+# -- Existing Secret holding keys: app-secret (APP_SECRET, required, min 32 bytes),
+# db-url (APP_DB_URL), google-id, google-secret, github-id, github-secret (AUTH_GOOGLE_*, AUTH_GITHUB_*),
 # smtp-pass (APP_SMTP_PASS), telegram-bot-token (APP_TELEGRAM_BOT_TOKEN),
 # telegram-webhook-secret (APP_TELEGRAM_WEBHOOK_SECRET),
 # gowa-basic-pass (APP_GOWA_BASIC_PASS).
