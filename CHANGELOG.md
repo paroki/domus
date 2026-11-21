@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.0.0-alpha.4](https://github.com/paroki/domus/compare/v1.0.0-alpha.3...v1.0.0-alpha.4) (2026-11-21)
+
+### ⚙️ API
+
+#### ✨ Features
+
+- add agent settings registration and model sync ([b52e9c0](https://github.com/paroki/domus/commit/b52e9c074414453ff18c097ac5161b83edad79fa))
+- add multi-provider llm and embedding drivers ([cc5df05](https://github.com/paroki/domus/commit/cc5df05cc9680d713491cce730b42f9454af87c8))
+- add embedded agent persona prompts ([f999620](https://github.com/paroki/domus/commit/f99962073bd5dfee5e359d6573d4119f6c2e821e))
+- encrypt secret settings and support defaults ([43721b6](https://github.com/paroki/domus/commit/43721b6504de62d8d4d79ce9eeb2ab8ebca07f88))
+- add agent domain contract and 3-tier memory repo ([c2ce72c](https://github.com/paroki/domus/commit/c2ce72c60924a15c0c4beedbc861e3c9489b52cf))
+- add errx KindUnavailable and httpx 503 mapping ([7d1d672](https://github.com/paroki/domus/commit/7d1d6725c06622ea6c52f7496a04dfceaf1c2c34))
+- add agent session, message, and memory schemas ([15db6cc](https://github.com/paroki/domus/commit/15db6cccdba72c5b82ba0200439698a735e8a2f4))
+- add gender and birthDate to user schema and me endpoint ([27cbfb0](https://github.com/paroki/domus/commit/27cbfb0666a6f074a0f9d369829a62d239df8995))
+
+### 🖥️ UI
+
+#### ✨ Features
+
+- add gender and birthDate fields to onboarding and profile ([0d192ff](https://github.com/paroki/domus/commit/0d192ff78bd970cf111112081f4bcb0db842e153))
+
 ## [v1.0.0-alpha.3](https://github.com/paroki/domus/compare/v1.0.0-alpha.2...v1.0.0-alpha.3) (2026-11-21)
 
 ### ⚙️ API
