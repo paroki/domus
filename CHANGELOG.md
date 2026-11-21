@@ -2,6 +2,49 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.0.0-alpha.3](https://github.com/paroki/domus/compare/v1.0.0-alpha.2...v1.0.0-alpha.3) (2026-11-21)
+
+### ⚙️ API
+
+#### ✨ Features
+
+- wire telegram and gowa settings hot-reload ([ea14e0b](https://github.com/paroki/domus/commit/ea14e0b667d3199c6aa47e517f976437106b47b3))
+- add platform setting store and api ([1f92516](https://github.com/paroki/domus/commit/1f92516927a90bf51cfa9aaeebf8d1e22637d680))
+- replace meta schema with setting ([f09f419](https://github.com/paroki/domus/commit/f09f419963eb6835b2c87186786348f2f544691c))
+- require APP_SECRET at startup and initialize cipher ([9cb65af](https://github.com/paroki/domus/commit/9cb65af37c8dff47b6fef03c4a27f44863594ed6))
+- add platform crypt package for AES-256-GCM and blind index ([db8ac32](https://github.com/paroki/domus/commit/db8ac329e4106d2b90453d8936555a997f22a674))
+- add role catalog, roleDetails, and org:admin resolution ([c824f1a](https://github.com/paroki/domus/commit/c824f1aba2833d1f9eb101ac49c45cf74fc35eb4))
+- add onboarding flag, linking, and Telegram webhook ([7951c2e](https://github.com/paroki/domus/commit/7951c2e024a4644fa0252ec51891090b73034dc4))
+- add multi-channel OTP auth and startup env validation ([896eea0](https://github.com/paroki/domus/commit/896eea010da1329dcd73ed82bea7e5b33d93bf70))
+- add GOWA WhatsApp REST client and JID normalizer ([560253c](https://github.com/paroki/domus/commit/560253c4080e4766c4b07a160ad695a993605a5a))
+- add Telegram Bot HTTP client and webhook verifier ([fcf5783](https://github.com/paroki/domus/commit/fcf5783a2ce62f2e133093547edf335cdd4bd1c7))
+
+#### 🐛 Bug Fixes
+
+- remove trailing punctuation in setting error strings ([3572409](https://github.com/paroki/domus/commit/35724099426410ccccb76da9cae3bd24fa272b85))
+- set user avatar from oauth when empty ([ae9138c](https://github.com/paroki/domus/commit/ae9138c1c967627b06c83c559899fd5e8d327a7b))
+- normalize timestamptz to timestamp for sqlite migrations ([8b9929f](https://github.com/paroki/domus/commit/8b9929ff3fcbe85e14a5854d8b1ec39f6262ec0c))
+
+### 🖥️ UI
+
+#### ✨ Features
+
+- add super admin settings page ([77e8714](https://github.com/paroki/domus/commit/77e8714a201f307aa95cff7ea68a67caf4128e8c))
+- centralize parish and org member management in users page ([51d4e95](https://github.com/paroki/domus/commit/51d4e95764bbd000786ece6cb9c7b556c78f21ac))
+- add 3-step onboarding wizard and RequireAuth gate ([bad514e](https://github.com/paroki/domus/commit/bad514e5edeacd524a00a8024e3f60a118d4e489))
+- support multi-channel OTP login and channel linking ([250cc42](https://github.com/paroki/domus/commit/250cc429a4297bfcdec3634683b75ee906aa4728))
+
+#### 🐛 Bug Fixes
+
+- restore Church import and format ([dbdb3ba](https://github.com/paroki/domus/commit/dbdb3ba0b6c2a2d2a34f61c4e4101fd894ad2ae4))
+- add shared unwrapVoid for 204 No Content mutations ([45d0b46](https://github.com/paroki/domus/commit/45d0b469a351346a9a38f57db1582a41f761b5ba))
+- sync verified WhatsApp phone in onboarding state ([da90606](https://github.com/paroki/domus/commit/da90606e0de0e3de63a7daabcd90619e331f0261))
+
+### 📦 Dependencies
+
+- **deps:** pin ui typescript to ~5.9.3 for openapi-typescript ([8a1bf68](https://github.com/paroki/domus/commit/8a1bf68899a047a297556787768a17d96649737b))
+- **deps:** add uqr for client-side Telegram QR SVG rendering ([e02abea](https://github.com/paroki/domus/commit/e02abea843a29eefe719aaac4eb734b7c8ce78ca))
+
 ## [v1.0.0-alpha.2](https://github.com/paroki/domus/compare/v1.0.0-alpha.1...v1.0.0-alpha.2) (2026-11-21)
 
 ### ⚙️ API
