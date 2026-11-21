@@ -32,15 +32,18 @@ export class OrgsPage extends BasePage {
     wardLabel?: string;
     description?: string;
   }): Promise<void> {
-    const submitBtn = this.page.getByRole("button", {
-      name: "Simpan Organisasi",
+    const createHeading = this.page.getByRole("heading", {
+      name: "Tambah Organisasi Baru",
     });
-    if ((await submitBtn.count()) === 0) {
+    if ((await createHeading.count()) === 0) {
       await this.page
         .getByRole("button", { name: "Tambah Organisasi" })
         .click();
-      await submitBtn.waitFor({ state: "visible", timeout: 10_000 });
+      await createHeading.waitFor({ state: "visible", timeout: 10_000 });
     }
+    const submitBtn = this.page.getByRole("button", {
+      name: "Simpan Organisasi",
+    });
 
     assert.equal(
       await this.page.getByText("Jadikan saya Admin Organisasi ini").count(),
@@ -85,8 +88,13 @@ export class OrgsPage extends BasePage {
         .fill(input.description);
     }
 
-    await submitBtn.click();
-    await submitBtn.waitFor({ state: "detached", timeout: 10_000 });
+    await Promise.all([
+      this.page.waitForResponse(
+        (r) => r.url().includes("/api/orgs") && r.request().method() === "POST",
+      ),
+      submitBtn.click(),
+    ]);
+    await createHeading.waitFor({ state: "detached", timeout: 10_000 });
   }
 
   async filterByKind(kindLabel: string): Promise<void> {

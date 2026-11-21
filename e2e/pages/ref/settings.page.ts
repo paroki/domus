@@ -48,4 +48,10 @@ export class SettingsPage extends BasePage {
       .getByText("Hanya Admin Paroki yang dapat mengubah profil paroki ini.")
       .waitFor({ state: "visible", timeout: 10_000 });
   }
+
+  async expectEmptySettings(): Promise<void> {
+    await this.page
+      .getByText("Tidak ada menu pengaturan yang tersedia.")
+      .waitFor({ state: "visible", timeout: 10_000 });
+  }
 }

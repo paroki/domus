@@ -35,6 +35,17 @@ export class UsersPage extends BasePage {
   }
 
   async expectVisibleScopes(labels: string[]): Promise<void> {
+    if (
+      labels.length === 1 &&
+      labels[0] === "Pengurus & Anggota Organisasi" &&
+      (await this.page.getByRole("tablist").count()) === 0
+    ) {
+      await this.expectLoaded();
+      await this.page
+        .getByLabel("Pilih organisasi")
+        .waitFor({ state: "visible", timeout: 10_000 });
+      return;
+    }
     for (const label of labels) {
       await this.page
         .getByRole("tab", { name: label })
@@ -235,6 +246,29 @@ export class UsersPage extends BasePage {
     await row
       .locator("span", { hasText: new RegExp(`^${roleLabel}$`) })
       .waitFor({ state: "visible", timeout: 10_000 });
+  }
+
+  async expectOrgMemberMetadata(name: string, text: string): Promise<void> {
+    const row = this.rowFor(name);
+    await row.waitFor({ state: "visible", timeout: 10_000 });
+    await row
+      .getByText(text, { exact: false })
+      .waitFor({ state: "visible", timeout: 10_000 });
+  }
+
+  async expectOrgMemberStatus(
+    name: string,
+    statusLabel: "Aktif" | "Nonaktif",
+  ): Promise<void> {
+    const row = this.rowFor(name);
+    await row.waitFor({ state: "visible", timeout: 10_000 });
+    await row
+      .locator("span", { hasText: new RegExp(`^${statusLabel}$`) })
+      .waitFor({ state: "visible", timeout: 10_000 });
+  }
+
+  async expectOrgMemberNotVisible(name: string): Promise<void> {
+    await this.rowFor(name).waitFor({ state: "detached", timeout: 10_000 });
   }
 
   async selectOrganization(orgName: string): Promise<void> {

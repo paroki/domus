@@ -205,6 +205,99 @@ export async function bootstrapParishAdminSession(
   };
 }
 
+export async function bootstrapOrgAdminSession(
+  client: TestClient,
+  options?: {
+    email?: string;
+    name?: string;
+    orgName?: string;
+    periodName?: string;
+  },
+): Promise<{
+  session: AuthSession;
+  parish: { id: string; code: string; name: string };
+  org: { id: string; code: string; name: string };
+  period: { id: string; name: string };
+}> {
+  const { parish } = await bootstrapParishAdminSession(client);
+  client.setParishId(parish.id);
+  const suffix = `${Date.now().toString(36)}-${parishBootstrapCounter}`;
+
+  const periodName = options?.periodName ?? "Periode 2025-2028";
+  const periodRes = await client.post<{
+    data?: { id?: string; name?: string };
+  }>("/ref/periods", {
+    type: "fiscal",
+    code: `fy-2025-2028-${suffix}`,
+    name: periodName,
+    startDate: "2025-01-01",
+    endDate: "2028-12-31",
+    isCurrent: true,
+  });
+  if (periodRes.status !== 201 || !periodRes.data?.data?.id) {
+    throw new Error(
+      `Failed to bootstrap period: ${periodRes.status} ${JSON.stringify(periodRes.data)}`,
+    );
+  }
+
+  const lookupRes = await client.post("/ref/lookups", {
+    category: "org_position",
+    code: `sekretaris-e2e-${suffix}`,
+    label: "Sekretaris E2E",
+    sortOrder: 0,
+    global: false,
+  });
+  if (lookupRes.status !== 201 && lookupRes.status !== 409) {
+    throw new Error(
+      `Failed to bootstrap lookup: ${lookupRes.status} ${JSON.stringify(lookupRes.data)}`,
+    );
+  }
+
+  const orgCode = `liturgi-e2e-${suffix}`;
+  const orgName = options?.orgName ?? "Seksi Liturgi E2E";
+  const orgRes = await client.post<{
+    data?: { id?: string; code?: string; name?: string };
+  }>("/orgs", {
+    kind: "section",
+    code: orgCode,
+    name: orgName,
+  });
+  if (orgRes.status !== 201 || !orgRes.data?.data?.id) {
+    throw new Error(
+      `Failed to bootstrap org: ${orgRes.status} ${JSON.stringify(orgRes.data)}`,
+    );
+  }
+  const orgId = orgRes.data.data.id;
+
+  const email = options?.email ?? "orgadmin.e2e@domus.test";
+  const name = options?.name ?? "Admin Organisasi E2E";
+  const memberRes = await client.post(`/orgs/${orgId}/members`, {
+    email,
+    name,
+    role: "admin",
+  });
+  if (memberRes.status !== 201 && memberRes.status !== 409) {
+    throw new Error(
+      `Failed to appoint org admin: ${memberRes.status} ${JSON.stringify(memberRes.data)}`,
+    );
+  }
+
+  const session = loginAsUser({
+    email,
+    name,
+    onboarded: true,
+    activeParishId: parish.id,
+  });
+  client.setToken(session.rawToken);
+
+  return {
+    session,
+    parish,
+    org: { id: orgId, code: orgCode, name: orgName },
+    period: { id: periodRes.data.data.id, name: periodName },
+  };
+}
+
 export function seedOtpCode(
   email: string,
   code = "123456",

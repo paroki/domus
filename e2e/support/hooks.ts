@@ -13,6 +13,7 @@ import reports from "istanbul-reports";
 import { type Browser, chromium } from "playwright";
 import { createPages } from "../pages";
 import {
+  bootstrapOrgAdminSession,
   bootstrapParishAdminSession,
   loginAsSuperAdmin,
   loginAsUser,
@@ -61,6 +62,20 @@ Before({ tags: "@parish-admin" }, async function (this: DomusWorld) {
   this.activeParishId = result.parish.id;
   this.activeParishName = result.parish.name;
   this.activeParishCode = result.parish.code;
+});
+
+Before({ tags: "@org-admin" }, async function (this: DomusWorld) {
+  const result = await bootstrapOrgAdminSession(this.client);
+  await this.context.addCookies(result.session.cookies);
+  this.client.setToken(result.session.rawToken);
+  this.client.setParishId(result.parish.id);
+  this.activeParishId = result.parish.id;
+  this.activeParishName = result.parish.name;
+  this.activeParishCode = result.parish.code;
+  this.activeOrgId = result.org.id;
+  this.activeOrgName = result.org.name;
+  this.activeOrgCode = result.org.code;
+  this.activePeriodName = result.period.name;
 });
 
 After(async function (this: DomusWorld) {

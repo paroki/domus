@@ -17,6 +17,9 @@ export class DomusWorld extends World {
   activeParishName?: string;
   activeParishCode?: string;
   activeOrgId?: string;
+  activeOrgName?: string;
+  activeOrgCode?: string;
+  activePeriodName?: string;
 
   constructor(options: IWorldOptions) {
     super(options);
