@@ -99,6 +99,12 @@ Environment variables from values.config.
 - name: ORG_INVITE_MAX_TTL
   value: {{ .inviteMaxTtl | quote }}
 {{- end }}
+{{- with .Values.config.event }}
+- name: EVENT_DEFAULT_VISIBILITY
+  value: {{ .defaultVisibility | quote }}
+- name: EVENT_RSVP_GRACE_PERIOD
+  value: {{ .rsvpGracePeriod | quote }}
+{{- end }}
 {{- with .Values.existingSecret }}
 {{- range $env, $key := dict "APP_DB_URL" "db-url" "AUTH_GOOGLE_ID" "google-id" "AUTH_GOOGLE_SECRET" "google-secret" "AUTH_GITHUB_ID" "github-id" "AUTH_GITHUB_SECRET" "github-secret" "APP_SMTP_PASS" "smtp-pass" }}
 - name: {{ $env }}
