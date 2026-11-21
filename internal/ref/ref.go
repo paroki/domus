@@ -123,6 +123,11 @@ func (f *Feature) GetParish(ctx context.Context, parishID uuid.UUID) (*Parish, e
 	return f.service.GetParish(ctx, parishID)
 }
 
+// GetParishByCode returns an active, non-deleted Parish by code.
+func (f *Feature) GetParishByCode(ctx context.Context, code string) (*Parish, error) {
+	return f.service.GetParishByCode(ctx, code)
+}
+
 // ValidateZoneInParish returns a non-deleted Zone if it belongs to parishID.
 func (f *Feature) ValidateZoneInParish(ctx context.Context, parishID, zoneID uuid.UUID) (*Zone, error) {
 	return f.service.ValidateZoneInParish(ctx, parishID, zoneID)

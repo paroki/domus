@@ -61,6 +61,19 @@ func (s *Service) GetParish(ctx context.Context, id uuid.UUID) (*domain.ParishRe
 	return &res, nil
 }
 
+// GetParishByCode returns an active, non-deleted Parish by code.
+func (s *Service) GetParishByCode(ctx context.Context, code string) (*domain.ParishResponse, error) {
+	row, err := s.repo.FindParishByCode(ctx, code)
+	if ent.IsNotFound(err) {
+		return nil, domain.ErrParishNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	res := toParishResponse(row)
+	return &res, nil
+}
+
 // CreateParish creates a Parish or reactivates a soft-deleted one with the same code.
 func (s *Service) CreateParish(ctx context.Context, req domain.CreateParishRequest) (domain.ParishResponse, error) {
 	code, err := normalizeCode(req.Code)

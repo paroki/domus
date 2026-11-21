@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log/slog"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gofiber/fiber/v3"
@@ -49,6 +50,8 @@ var (
 	SettingGowaBaseURL           = setting.Key("user", "gowa.base_url")
 	SettingGowaBasicUser         = setting.Key("user", "gowa.basic_user")
 	SettingGowaBasicPass         = setting.Key("user", "gowa.basic_pass")
+	SettingGowaDeviceID          = setting.Key("user", "gowa.device_id")
+	SettingGowaWebhookSecret     = setting.Key("user", "gowa.webhook_secret")
 )
 
 type options struct {
@@ -119,6 +122,9 @@ type Feature struct {
 	compositeSender *service.CompositeOTPSender
 	otpTTL          time.Duration
 	cookieName      string
+	clientMu        sync.RWMutex
+	tgClient        *telegram.Client
+	gowaClient      *gowa.Client
 }
 
 // New constructs the user Feature with Ent persistence, Casbin enforcer, config, and options.
@@ -192,6 +198,8 @@ func New(db *ent.Client, enforcer *authz.Enforcer, cfg Config, logger *slog.Logg
 		compositeSender: compositeSender,
 		otpTTL:          otpTTL,
 		cookieName:      cookieName,
+		tgClient:        opt.telegramClient,
+		gowaClient:      opt.gowaClient,
 	}
 }
 
@@ -245,6 +253,22 @@ func (f *Feature) RegisterSettings(s *setting.Store) {
 		Secret:      true,
 		Placeholder: "••••••••",
 	})
+	s.Register(setting.Descriptor{
+		Key:         SettingGowaDeviceID,
+		Group:       "GOWA (WhatsApp)",
+		Label:       "Device ID",
+		Description: "Opsional: ID perangkat GOWA (header X-Device-Id) untuk mode multi-device.",
+		Secret:      false,
+		Placeholder: "default",
+	})
+	s.Register(setting.Descriptor{
+		Key:         SettingGowaWebhookSecret,
+		Group:       "GOWA (WhatsApp)",
+		Label:       "Webhook Secret",
+		Description: "Secret HMAC-SHA256 untuk memverifikasi header X-Hub-Signature-256 dari webhook GOWA.",
+		Secret:      true,
+		Placeholder: "webhook-secret",
+	})
 
 	s.OnChange(func(_ context.Context, values map[string]string) error {
 		botToken := strings.TrimSpace(values[SettingTelegramBotToken])
@@ -278,25 +302,34 @@ func (f *Feature) RegisterSettings(s *setting.Store) {
 		baseURL := strings.TrimSpace(values[SettingGowaBaseURL])
 		basicUser := strings.TrimSpace(values[SettingGowaBasicUser])
 		basicPass := strings.TrimSpace(values[SettingGowaBasicPass])
+		deviceID := strings.TrimSpace(values[SettingGowaDeviceID])
+		gowaWebhookSecret := strings.TrimSpace(values[SettingGowaWebhookSecret])
 
 		var gowaClient *gowa.Client
-		if baseURL != "" || basicUser != "" || basicPass != "" {
+		if baseURL != "" || basicUser != "" || basicPass != "" || deviceID != "" || gowaWebhookSecret != "" {
 			if (basicUser != "") != (basicPass != "") {
 				return errors.New("konfigurasi GOWA Basic Auth harus mencakup Username dan Password")
 			}
-			if (basicUser != "" || basicPass != "") && baseURL == "" {
-				return errors.New("GOWA Base URL wajib diisi jika Basic Auth digunakan")
+			if baseURL == "" {
+				return errors.New("GOWA Base URL wajib diisi jika pengaturan GOWA digunakan")
 			}
 			c, err := gowa.New(gowa.Config{
-				BaseURL:   baseURL,
-				BasicUser: basicUser,
-				BasicPass: basicPass,
+				BaseURL:       baseURL,
+				BasicUser:     basicUser,
+				BasicPass:     basicPass,
+				DeviceID:      deviceID,
+				WebhookSecret: gowaWebhookSecret,
 			})
 			if err != nil {
 				return err
 			}
 			gowaClient = c
 		}
+
+		f.clientMu.Lock()
+		f.tgClient = tgClient
+		f.gowaClient = gowaClient
+		f.clientMu.Unlock()
 
 		if tgClient != nil {
 			f.compositeSender.SetSender(domain.ProviderTelegram, service.NewTelegramOTPSender(tgClient, f.otpTTL))
@@ -315,6 +348,20 @@ func (f *Feature) RegisterSettings(s *setting.Store) {
 		}
 		return nil
 	})
+}
+
+// TelegramClient returns the active hot-reloaded Telegram Bot client (or nil if unconfigured).
+func (f *Feature) TelegramClient() *telegram.Client {
+	f.clientMu.RLock()
+	defer f.clientMu.RUnlock()
+	return f.tgClient
+}
+
+// GowaClient returns the active hot-reloaded GOWA WhatsApp client (or nil if unconfigured).
+func (f *Feature) GowaClient() *gowa.Client {
+	f.clientMu.RLock()
+	defer f.clientMu.RUnlock()
+	return f.gowaClient
 }
 
 // Register mounts user and authentication routes under /api.

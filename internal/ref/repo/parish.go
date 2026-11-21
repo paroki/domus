@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -81,6 +82,17 @@ func (r *Repository) SearchParishes(
 func (r *Repository) FindParishByID(ctx context.Context, id uuid.UUID) (*ent.Parish, error) {
 	return r.client.Parish.Query().
 		Where(parish.IDEQ(id), parish.DeletedAtIsNil()).
+		Only(ctx)
+}
+
+// FindParishByCode returns an active, non-deleted Parish by normalized code.
+func (r *Repository) FindParishByCode(ctx context.Context, code string) (*ent.Parish, error) {
+	return r.client.Parish.Query().
+		Where(
+			parish.CodeEQ(strings.ToLower(strings.TrimSpace(code))),
+			parish.DeletedAtIsNil(),
+			parish.ActiveEQ(true),
+		).
 		Only(ctx)
 }
 
