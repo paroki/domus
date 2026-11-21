@@ -112,6 +112,11 @@ func New(
 	}
 }
 
+// SetMCPServer binds the in-process MCP server used by tool calls.
+func (s *Service) SetMCPServer(srv *mcp.Server) {
+	s.mcpServer = srv
+}
+
 // ChatTurnInput holds parameters for executing a single user turn.
 type ChatTurnInput struct {
 	Principal authx.Principal
@@ -121,11 +126,32 @@ type ChatTurnInput struct {
 	OnStep    StepCallback
 }
 
-// RunTurn executes a multi-step ReAct turn for Gabriel (and delegated specialists).
-func (s *Service) RunTurn(ctx context.Context, in ChatTurnInput) (*ent.AgentSession, string, error) {
+// PreparedTurn holds a validated, locked session ready to execute a ReAct turn.
+type PreparedTurn struct {
+	Principal authx.Principal
+	Channel   domain.Channel
+	Session   *ent.AgentSession
+	Message   string
+	Gabriel   domain.AgentConfig
+	locker    *sessionLocker
+	released  bool
+}
+
+// Release unlocks the per-session turn mutex if not already released.
+func (p *PreparedTurn) Release() {
+	if p == nil || p.locker == nil || p.released {
+		return
+	}
+	p.released = true
+	p.locker.unlock(p.Session.ID)
+}
+
+// PrepareTurn validates the message, session ownership, and provider availability,
+// and acquires the per-session turn mutex before any SSE headers are written.
+func (s *Service) PrepareTurn(ctx context.Context, in ChatTurnInput) (*PreparedTurn, error) {
 	msgText := strings.TrimSpace(in.Message)
 	if msgText == "" {
-		return nil, "", domain.ErrEmptyMessage
+		return nil, domain.ErrEmptyMessage
 	}
 	ch := in.Channel
 	if ch == "" {
@@ -134,30 +160,56 @@ func (s *Service) RunTurn(ctx context.Context, in ChatTurnInput) (*ent.AgentSess
 
 	sess, err := s.resolveSession(ctx, in.Principal, ch, in.SessionID, msgText)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
-	if !s.locker.tryLock(sess.ID) {
-		return nil, "", domain.ErrSessionBusy
-	}
-	defer s.locker.unlock(sess.ID)
 
 	gabrielCfg, ok := s.config.AgentConfig("gabriel")
-	if !ok {
-		return nil, "", domain.ErrProviderUnavailable
+	if !ok || strings.TrimSpace(gabrielCfg.Model.APIKey) == "" {
+		return nil, domain.ErrProviderUnavailable
 	}
 
+	if !s.locker.tryLock(sess.ID) {
+		return nil, domain.ErrSessionBusy
+	}
+
+	return &PreparedTurn{
+		Principal: in.Principal,
+		Channel:   ch,
+		Session:   sess,
+		Message:   msgText,
+		Gabriel:   gabrielCfg,
+		locker:    s.locker,
+	}, nil
+}
+
+// RunTurn executes a multi-step ReAct turn for Gabriel (and delegated specialists).
+func (s *Service) RunTurn(ctx context.Context, in ChatTurnInput) (*ent.AgentSession, string, error) {
+	prep, err := s.PrepareTurn(ctx, in)
+	if err != nil {
+		return nil, "", err
+	}
+	return s.RunPreparedTurn(ctx, prep, in.OnStep)
+}
+
+// RunPreparedTurn executes a turn that was already validated and locked via PrepareTurn.
+func (s *Service) RunPreparedTurn(ctx context.Context, prep *PreparedTurn, onStep StepCallback) (*ent.AgentSession, string, error) {
+	defer prep.Release()
+
+	sess := prep.Session
+	gabrielCfg := prep.Gabriel
+
 	if _, err := s.repo.AppendMessage(ctx, domain.CreateMessageInput{
-		ParishID:  in.Principal.ParishID,
-		UserID:    in.Principal.UserID,
+		ParishID:  prep.Principal.ParishID,
+		UserID:    prep.Principal.UserID,
 		SessionID: sess.ID,
 		AgentName: gabrielCfg.Name,
 		Role:      domain.RoleUser,
-		Content:   msgText,
+		Content:   prep.Message,
 	}); err != nil {
 		return nil, "", err
 	}
 
-	if err := emitStep(in.OnStep, domain.AgentSSEEvent{
+	if err := emitStep(onStep, domain.AgentSSEEvent{
 		Event:     "session",
 		SessionID: &sess.ID,
 		AgentName: gabrielCfg.Name,
@@ -165,8 +217,9 @@ func (s *Service) RunTurn(ctx context.Context, in ChatTurnInput) (*ent.AgentSess
 		return nil, "", err
 	}
 
-	turnCtx := authx.WithPrincipal(ctx, in.Principal)
+	turnCtx := authx.WithPrincipal(ctx, prep.Principal)
 	var mcpSession *mcp.ClientSession
+	var err error
 	if s.mcpServer != nil {
 		mcpSession, err = mcpx.ConnectInMemory(turnCtx, s.mcpServer)
 		if err != nil {
@@ -175,12 +228,12 @@ func (s *Service) RunTurn(ctx context.Context, in ChatTurnInput) (*ent.AgentSess
 		defer func() { _ = mcpSession.Close() }()
 	}
 
-	sysPrompt, err := s.buildPromptForTurn(turnCtx, in.Principal, ch, gabrielCfg.Instruction)
+	sysPrompt, err := s.buildPromptForTurn(turnCtx, prep.Principal, prep.Channel, gabrielCfg.Instruction)
 	if err != nil {
 		return nil, "", err
 	}
 
-	recentRows, err := s.repo.ListRecentMessages(turnCtx, in.Principal.ParishID, sess.ID, domain.HistoryWindow)
+	recentRows, err := s.repo.ListRecentMessages(turnCtx, prep.Principal.ParishID, sess.ID, domain.HistoryWindow)
 	if err != nil {
 		return nil, "", err
 	}
@@ -219,21 +272,21 @@ func (s *Service) RunTurn(ctx context.Context, in ChatTurnInput) (*ent.AgentSess
 
 	answer, err := s.runReActLoop(
 		turnCtx,
-		in.Principal,
-		ch,
+		prep.Principal,
+		prep.Channel,
 		sess.ID,
 		gabrielCfg,
 		sysPrompt,
 		history,
 		mcpSession,
-		in.OnStep,
+		onStep,
 		true,
 	)
 	if err != nil {
 		return nil, "", err
 	}
 
-	if err := emitStep(in.OnStep, domain.AgentSSEEvent{
+	if err := emitStep(onStep, domain.AgentSSEEvent{
 		Event:     "done",
 		SessionID: &sess.ID,
 		AgentName: gabrielCfg.Name,
@@ -527,6 +580,10 @@ func (s *Service) SearchSessions(ctx context.Context, in domain.SearchSessionsIn
 
 func (s *Service) CreateSession(ctx context.Context, in domain.CreateSessionInput) (*ent.AgentSession, error) {
 	return s.repo.CreateSession(ctx, in)
+}
+
+func (s *Service) GetSession(ctx context.Context, parishID, userID, sessionID uuid.UUID) (*ent.AgentSession, error) {
+	return s.repo.FindSessionByID(ctx, parishID, userID, sessionID)
 }
 
 func (s *Service) UpdateSessionTitle(ctx context.Context, parishID, userID, sessionID uuid.UUID, title string) (*ent.AgentSession, error) {

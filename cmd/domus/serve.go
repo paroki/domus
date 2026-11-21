@@ -3,6 +3,7 @@ package main
 import (
 	"strings"
 
+	"github.com/paroki/domus/internal/agent"
 	"github.com/paroki/domus/internal/app"
 	"github.com/paroki/domus/internal/event"
 	"github.com/paroki/domus/internal/org"
@@ -53,7 +54,7 @@ func newServeCmd() *cobra.Command {
 				return err
 			}
 
-			db, err := app.OpenDB(ctx, cfg)
+			db, sqlDB, dialectName, err := app.OpenDBPool(ctx, cfg)
 			if err != nil {
 				return err
 			}
@@ -91,11 +92,17 @@ func newServeCmd() *cobra.Command {
 				return err
 			}
 			eventFeature := event.New(db, enforcer, userFeature, orgFeature, eventCfg)
-			if err := authz.RegisterFeatures(ctx, enforcer, userFeature, refFeature, orgFeature, eventFeature); err != nil {
+			settingStore := setting.NewStore(db, setting.WithCipher(cipher))
+			agentFeature := agent.New(
+				nil,
+				logger,
+				agent.WithService(db, sqlDB, dialectName, enforcer, nil, userFeature, refFeature, orgFeature),
+				agent.WithSettings(settingStore),
+			)
+			if err := authz.RegisterFeatures(ctx, enforcer, userFeature, refFeature, orgFeature, eventFeature, agentFeature); err != nil {
 				return err
 			}
-			settingStore := setting.NewStore(db, setting.WithCipher(cipher))
-			setting.RegisterFeatures(settingStore, userFeature, refFeature, orgFeature, eventFeature)
+			setting.RegisterFeatures(settingStore, userFeature, refFeature, orgFeature, eventFeature, agentFeature)
 			if err := settingStore.Load(ctx); err != nil {
 				return err
 			}
@@ -110,7 +117,7 @@ func newServeCmd() *cobra.Command {
 				return err
 			}
 
-			fiberApp := app.GetFiber(cfg, logger, userFeature, refFeature, orgFeature, eventFeature, settingFeature)
+			fiberApp := app.GetFiber(cfg, logger, userFeature, refFeature, orgFeature, eventFeature, settingFeature, agentFeature)
 			return app.New(cfg, fiberApp, logger).Serve(ctx)
 		},
 	}

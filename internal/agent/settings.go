@@ -114,6 +114,13 @@ func (c *ConfigStore) ProviderModels(provider string) []domain.ProviderModelItem
 	return slices.Clone(c.providerModels[provider])
 }
 
+// SetProviderModels updates the in-memory discovered models cache for a provider.
+func (c *ConfigStore) SetProviderModels(provider string, models []domain.ProviderModelItem) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.providerModels[provider] = slices.Clone(models)
+}
+
 type providerDef struct {
 	name           string
 	label          string

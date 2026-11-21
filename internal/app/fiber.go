@@ -10,6 +10,7 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/recover"
 	"github.com/gofiber/fiber/v3/middleware/requestid"
 	"github.com/gofiber/fiber/v3/middleware/static"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/paroki/domus/internal/platform/httpx"
 	"github.com/paroki/domus/internal/platform/mcpx"
 	"github.com/paroki/domus/ui"
@@ -61,7 +62,13 @@ func GetFiber(_ Config, logger *slog.Logger, features ...Feature) *fiber.App {
 			}
 		}
 	}
-	mcpHandler := mcpx.NewHandler(mcpx.NewServer("domus", mcpArgs...), resolver)
+	mcpServer := mcpx.NewServer("domus", mcpArgs...)
+	for _, f := range features {
+		if binder, ok := f.(interface{ SetMCPServer(*mcp.Server) }); ok {
+			binder.SetMCPServer(mcpServer)
+		}
+	}
+	mcpHandler := mcpx.NewHandler(mcpServer, resolver)
 	app.All("/mcp", mcpHandler)
 	app.All("/mcp/*", mcpHandler)
 

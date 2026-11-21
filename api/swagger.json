@@ -150,6 +150,178 @@
                 },
                 "type": "object"
             },
+            "domain.AgentChatRequest": {
+                "properties": {
+                    "message": {
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "sessionId": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "message"
+                ],
+                "type": "object"
+            },
+            "domain.AgentMemoryResponse": {
+                "properties": {
+                    "category": {
+                        "type": "string"
+                    },
+                    "content": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "isPinned": {
+                        "type": "boolean"
+                    },
+                    "parishId": {
+                        "type": "string"
+                    },
+                    "scope": {
+                        "type": "string"
+                    },
+                    "sourceSessionId": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    },
+                    "userId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.AgentMemorySearchFilter": {
+                "properties": {
+                    "category": {
+                        "enum": [
+                            "profile",
+                            "preference",
+                            "ministry",
+                            "parish_faq"
+                        ],
+                        "type": "string"
+                    },
+                    "isPinned": {
+                        "type": "boolean"
+                    },
+                    "scope": {
+                        "enum": [
+                            "user",
+                            "parish"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.AgentMessageResponse": {
+                "properties": {
+                    "agentName": {
+                        "type": "string"
+                    },
+                    "content": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "type": "string"
+                    },
+                    "sessionId": {
+                        "type": "string"
+                    },
+                    "thinking": {
+                        "type": "string"
+                    },
+                    "toolCallId": {
+                        "type": "string"
+                    },
+                    "toolCalls": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.AgentToolCallDTO"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "toolName": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.AgentSessionResponse": {
+                "properties": {
+                    "channel": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "lastMessageAt": {
+                        "type": "string"
+                    },
+                    "parishId": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    },
+                    "userId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.AgentSessionSearchFilter": {
+                "properties": {
+                    "channel": {
+                        "enum": [
+                            "web",
+                            "telegram",
+                            "whatsapp"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.AgentToolCallDTO": {
+                "properties": {
+                    "agentName": {
+                        "type": "string"
+                    },
+                    "arguments": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.AuthProvidersResponse": {
                 "properties": {
                     "otpChannels": {
@@ -179,6 +351,53 @@
                     },
                     "user": {
                         "$ref": "#/components/schemas/domain.UserResponse"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.CreateAgentMemoryRequest": {
+                "properties": {
+                    "category": {
+                        "enum": [
+                            "profile",
+                            "preference",
+                            "ministry",
+                            "parish_faq"
+                        ],
+                        "type": "string"
+                    },
+                    "content": {
+                        "maxLength": 500,
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "isPinned": {
+                        "type": "boolean"
+                    },
+                    "scope": {
+                        "enum": [
+                            "user",
+                            "parish"
+                        ],
+                        "type": "string"
+                    },
+                    "supersedeId": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "category",
+                    "content",
+                    "scope"
+                ],
+                "type": "object"
+            },
+            "domain.CreateAgentSessionRequest": {
+                "properties": {
+                    "title": {
+                        "maxLength": 120,
+                        "minLength": 1,
+                        "type": "string"
                     }
                 },
                 "type": "object"
@@ -1211,6 +1430,24 @@
                 },
                 "type": "object"
             },
+            "domain.ProviderModelDTO": {
+                "properties": {
+                    "capabilities": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.RedeemOrgInviteResponse": {
                 "properties": {
                     "membership": {
@@ -1257,6 +1494,57 @@
                 "properties": {
                     "cursor": {
                         "type": "string"
+                    },
+                    "limit": {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.SearchAgentMemoriesRequest": {
+                "properties": {
+                    "cursor": {
+                        "type": "string"
+                    },
+                    "filter": {
+                        "$ref": "#/components/schemas/domain.AgentMemorySearchFilter"
+                    },
+                    "limit": {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "q": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.SearchAgentMessagesRequest": {
+                "properties": {
+                    "cursor": {
+                        "type": "string"
+                    },
+                    "limit": {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "q": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.SearchAgentSessionsRequest": {
+                "properties": {
+                    "cursor": {
+                        "type": "string"
+                    },
+                    "filter": {
+                        "$ref": "#/components/schemas/domain.AgentSessionSearchFilter"
                     },
                     "limit": {
                         "maximum": 100,
@@ -1534,6 +1822,21 @@
                 ],
                 "type": "object"
             },
+            "domain.SyncProviderModelsResponse": {
+                "properties": {
+                    "models": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.ProviderModelDTO"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "provider": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.TelegramLinkTokenResponse": {
                 "properties": {
                     "botUsername": {
@@ -1546,6 +1849,41 @@
                         "type": "integer"
                     }
                 },
+                "type": "object"
+            },
+            "domain.UpdateAgentMemoryRequest": {
+                "properties": {
+                    "category": {
+                        "enum": [
+                            "profile",
+                            "preference",
+                            "ministry",
+                            "parish_faq"
+                        ],
+                        "type": "string"
+                    },
+                    "content": {
+                        "maxLength": 500,
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "isPinned": {
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.UpdateAgentSessionRequest": {
+                "properties": {
+                    "title": {
+                        "maxLength": 120,
+                        "minLength": 1,
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "title"
+                ],
                 "type": "object"
             },
             "domain.UpdateDioceseRequest": {
@@ -2267,6 +2605,60 @@
                 },
                 "type": "object"
             },
+            "httpx.Envelope-array_domain_AgentMemoryResponse": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.AgentMemoryResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-array_domain_AgentMessageResponse": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.AgentMessageResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-array_domain_AgentSessionResponse": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.AgentSessionResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
             "httpx.Envelope-array_domain_DioceseResponse": {
                 "properties": {
                     "data": {
@@ -2555,6 +2947,34 @@
                 },
                 "type": "object"
             },
+            "httpx.Envelope-domain_AgentMemoryResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.AgentMemoryResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_AgentSessionResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.AgentSessionResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
             "httpx.Envelope-domain_AuthProvidersResponse": {
                 "properties": {
                     "data": {
@@ -2779,6 +3199,20 @@
                 },
                 "type": "object"
             },
+            "httpx.Envelope-domain_SyncProviderModelsResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.SyncProviderModelsResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
             "httpx.Envelope-domain_TelegramLinkTokenResponse": {
                 "properties": {
                     "data": {
@@ -2953,6 +3387,927 @@
         "url": ""
     },
     "paths": {
+        "/agent/chat": {
+            "post": {
+                "description": "Streams a multi-agent ReAct conversation turn over Server-Sent Events. Pre-stream validation and session lock errors return JSON envelopes.",
+                "operationId": "chatWithAgent",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.AgentChatRequest",
+                                "summary": "body",
+                                "description": "Chat request"
+                            }
+                        }
+                    },
+                    "description": "Chat request",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "text/event-stream": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "description": "Named SSE stream (session, thinking, tool_call, tool_result, delta, done, error)"
+                    },
+                    "400": {
+                        "content": {
+                            "text/event-stream": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "text/event-stream": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "text/event-stream": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "text/event-stream": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "text/event-stream": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "503": {
+                        "content": {
+                            "text/event-stream": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Service Unavailable"
+                    }
+                },
+                "summary": "Chat with AI agent (SSE)",
+                "tags": [
+                    "Agent"
+                ]
+            }
+        },
+        "/agent/memories": {
+            "post": {
+                "description": "Creates a new long-term agent memory fact. Parish-scoped memories require ref:parish-admin.",
+                "operationId": "createAgentMemory",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.CreateAgentMemoryRequest",
+                                "summary": "body",
+                                "description": "Create memory request"
+                            }
+                        }
+                    },
+                    "description": "Create memory request",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_AgentMemoryResponse"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Create agent memory",
+                "tags": [
+                    "Agent"
+                ]
+            }
+        },
+        "/agent/memories/search": {
+            "post": {
+                "description": "Searches personal and active parish long-term memories with optional filters and cursor pagination.",
+                "operationId": "searchAgentMemories",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.SearchAgentMemoriesRequest",
+                                "summary": "body",
+                                "description": "Search parameters"
+                            }
+                        }
+                    },
+                    "description": "Search parameters"
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_AgentMemoryResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    }
+                },
+                "summary": "Search agent memories",
+                "tags": [
+                    "Agent"
+                ]
+            }
+        },
+        "/agent/memories/{memoryId}": {
+            "delete": {
+                "description": "Soft-deletes an existing long-term memory fact. Parish-scoped memories require ref:parish-admin.",
+                "operationId": "deleteAgentMemory",
+                "parameters": [
+                    {
+                        "description": "Memory UUID",
+                        "in": "path",
+                        "name": "memoryId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Delete agent memory",
+                "tags": [
+                    "Agent"
+                ]
+            },
+            "patch": {
+                "description": "Updates an existing long-term memory fact. Parish-scoped memories require ref:parish-admin.",
+                "operationId": "updateAgentMemory",
+                "parameters": [
+                    {
+                        "description": "Memory UUID",
+                        "in": "path",
+                        "name": "memoryId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.UpdateAgentMemoryRequest",
+                                "summary": "body",
+                                "description": "Update memory request"
+                            }
+                        }
+                    },
+                    "description": "Update memory request",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_AgentMemoryResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Update agent memory",
+                "tags": [
+                    "Agent"
+                ]
+            }
+        },
+        "/agent/providers/{provider}/sync-models": {
+            "post": {
+                "description": "Discovers models from the configured upstream AI provider and persists the catalog.",
+                "operationId": "syncAgentProviderModels",
+                "parameters": [
+                    {
+                        "description": "AI provider name (gemini, anthropic, openai, openrouter)",
+                        "in": "path",
+                        "name": "provider",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_SyncProviderModelsResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "503": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Service Unavailable"
+                    }
+                },
+                "summary": "Sync provider models",
+                "tags": [
+                    "Agent"
+                ]
+            }
+        },
+        "/agent/sessions": {
+            "post": {
+                "description": "Creates a new web channel agent conversation session for the caller in the active parish.",
+                "operationId": "createAgentSession",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.CreateAgentSessionRequest",
+                                "summary": "body",
+                                "description": "Create session request"
+                            }
+                        }
+                    },
+                    "description": "Create session request"
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_AgentSessionResponse"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Create agent session",
+                "tags": [
+                    "Agent"
+                ]
+            }
+        },
+        "/agent/sessions/search": {
+            "post": {
+                "description": "Lists non-deleted agent conversation sessions owned by the caller with cursor pagination.",
+                "operationId": "searchAgentSessions",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.SearchAgentSessionsRequest",
+                                "summary": "body",
+                                "description": "Search parameters"
+                            }
+                        }
+                    },
+                    "description": "Search parameters"
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_AgentSessionResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    }
+                },
+                "summary": "Search agent sessions",
+                "tags": [
+                    "Agent"
+                ]
+            }
+        },
+        "/agent/sessions/{sessionId}": {
+            "delete": {
+                "description": "Soft-deletes an existing agent conversation session owned by the caller.",
+                "operationId": "deleteAgentSession",
+                "parameters": [
+                    {
+                        "description": "Session UUID",
+                        "in": "path",
+                        "name": "sessionId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Delete agent session",
+                "tags": [
+                    "Agent"
+                ]
+            },
+            "get": {
+                "description": "Returns a non-deleted agent conversation session owned by the caller in the active parish.",
+                "operationId": "getAgentSession",
+                "parameters": [
+                    {
+                        "description": "Session UUID",
+                        "in": "path",
+                        "name": "sessionId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_AgentSessionResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Get agent session",
+                "tags": [
+                    "Agent"
+                ]
+            },
+            "patch": {
+                "description": "Updates the title of an existing agent conversation session owned by the caller.",
+                "operationId": "updateAgentSession",
+                "parameters": [
+                    {
+                        "description": "Session UUID",
+                        "in": "path",
+                        "name": "sessionId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.UpdateAgentSessionRequest",
+                                "summary": "body",
+                                "description": "Update session request"
+                            }
+                        }
+                    },
+                    "description": "Update session request",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_AgentSessionResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Update agent session",
+                "tags": [
+                    "Agent"
+                ]
+            }
+        },
+        "/agent/sessions/{sessionId}/messages/search": {
+            "post": {
+                "description": "Lists messages in a caller-owned session with keyset pagination or BM25 full-text search.",
+                "operationId": "searchAgentSessionMessages",
+                "parameters": [
+                    {
+                        "description": "Session UUID",
+                        "in": "path",
+                        "name": "sessionId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.SearchAgentMessagesRequest",
+                                "summary": "body",
+                                "description": "Search parameters"
+                            }
+                        }
+                    },
+                    "description": "Search parameters"
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_AgentMessageResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Search agent session messages",
+                "tags": [
+                    "Agent"
+                ]
+            }
+        },
         "/auth/logout": {
             "post": {
                 "description": "Revokes the active session token and clears the session cookie.",
