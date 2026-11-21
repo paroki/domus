@@ -61,7 +61,7 @@ Container image reference.
 {{- printf "%s/%s:%s" .Values.global.imageRegistry .Values.image.repository $tag }}
 {{- else }}
 {{- printf "%s:%s" .Values.image.repository $tag }}
-{{- end }}
+{{- end }}{{- with .Values.image.digest }}@{{ . }}{{- end }}
 {{- end }}
 
 {{/*
@@ -78,8 +78,10 @@ Environment variables from values.config.
 - name: USER_SUPER_ADMIN_EMAIL
   value: {{ . | quote }}
 {{- end }}
+{{- with .superAdminName }}
 - name: USER_SUPER_ADMIN_NAME
-  value: {{ .superAdminName | quote }}
+  value: {{ . | quote }}
+{{- end }}
 {{- end }}
 {{- with .Values.existingSecret }}
 {{- range $env, $key := dict "APP_DB_URL" "db-url" "AUTH_GOOGLE_ID" "google-id" "AUTH_GOOGLE_SECRET" "google-secret" "AUTH_GITHUB_ID" "github-id" "AUTH_GITHUB_SECRET" "github-secret" "APP_SMTP_PASS" "smtp-pass" "APP_TELEGRAM_BOT_TOKEN" "telegram-bot-token" "APP_TELEGRAM_WEBHOOK_SECRET" "telegram-webhook-secret" "APP_GOWA_BASIC_PASS" "gowa-basic-pass" }}
@@ -102,8 +104,10 @@ Environment variables from values.config.
 - name: APP_SMTP_USER
   value: {{ . | quote }}
 {{- end }}
+{{- with .from }}
 - name: APP_SMTP_FROM
-  value: {{ .from | quote }}
+  value: {{ . | quote }}
+{{- end }}
 {{- end }}
 {{- with $c.telegram }}
 {{- with .botUsername }}

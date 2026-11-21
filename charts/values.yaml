@@ -17,6 +17,8 @@ image:
   repository: paroki/domus
   # -- Defaults to chart appVersion.
   tag: ""
+  # -- Optional image digest (e.g. sha256:...).
+  digest: ""
   pullPolicy: IfNotPresent
 
 port: 8080
