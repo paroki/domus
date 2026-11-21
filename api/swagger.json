@@ -180,6 +180,49 @@
                 ],
                 "type": "object"
             },
+            "domain.CreateEventRequest": {
+                "properties": {
+                    "description": {
+                        "type": "string"
+                    },
+                    "endAt": {
+                        "type": "string"
+                    },
+                    "location": {
+                        "type": "string"
+                    },
+                    "orgId": {
+                        "type": "string"
+                    },
+                    "rsvpDeadline": {
+                        "type": "string"
+                    },
+                    "rsvpEnabled": {
+                        "type": "boolean"
+                    },
+                    "startAt": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "visibility": {
+                        "enum": [
+                            "public",
+                            "private"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "endAt",
+                    "orgId",
+                    "startAt",
+                    "title"
+                ],
+                "type": "object"
+            },
             "domain.CreateLookupRequest": {
                 "properties": {
                     "category": {
@@ -461,6 +504,163 @@
                 "properties": {
                     "active": {
                         "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.EventRSVPResponse": {
+                "properties": {
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "eventId": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "note": {
+                        "type": "string"
+                    },
+                    "parishId": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    },
+                    "userEmail": {
+                        "type": "string"
+                    },
+                    "userId": {
+                        "type": "string"
+                    },
+                    "userName": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.EventRSVPSummaryResponse": {
+                "properties": {
+                    "eventId": {
+                        "type": "string"
+                    },
+                    "going": {
+                        "type": "integer"
+                    },
+                    "maybe": {
+                        "type": "integer"
+                    },
+                    "notGoing": {
+                        "type": "integer"
+                    },
+                    "total": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.EventResponse": {
+                "properties": {
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "createdBy": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "endAt": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "location": {
+                        "type": "string"
+                    },
+                    "myOrgRole": {
+                        "type": "string"
+                    },
+                    "myRsvp": {
+                        "$ref": "#/components/schemas/domain.EventRSVPResponse"
+                    },
+                    "orgCode": {
+                        "type": "string"
+                    },
+                    "orgId": {
+                        "type": "string"
+                    },
+                    "orgKind": {
+                        "type": "string"
+                    },
+                    "orgName": {
+                        "type": "string"
+                    },
+                    "parishId": {
+                        "type": "string"
+                    },
+                    "rsvpDeadline": {
+                        "type": "string"
+                    },
+                    "rsvpEnabled": {
+                        "type": "boolean"
+                    },
+                    "rsvpOpen": {
+                        "type": "boolean"
+                    },
+                    "rsvpSummary": {
+                        "$ref": "#/components/schemas/domain.EventRSVPSummaryResponse"
+                    },
+                    "startAt": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    },
+                    "visibility": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.EventSearchFilter": {
+                "properties": {
+                    "from": {
+                        "type": "string"
+                    },
+                    "myOrgsOnly": {
+                        "type": "boolean"
+                    },
+                    "orgId": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "enum": [
+                            "scheduled",
+                            "cancelled"
+                        ],
+                        "type": "string"
+                    },
+                    "to": {
+                        "type": "string"
+                    },
+                    "visibility": {
+                        "enum": [
+                            "public",
+                            "private"
+                        ],
+                        "type": "string"
                     }
                 },
                 "type": "object"
@@ -999,6 +1199,25 @@
                 },
                 "type": "object"
             },
+            "domain.SearchEventsRequest": {
+                "properties": {
+                    "cursor": {
+                        "type": "string"
+                    },
+                    "filter": {
+                        "$ref": "#/components/schemas/domain.EventSearchFilter"
+                    },
+                    "limit": {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "q": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.SearchLookupsRequest": {
                 "properties": {
                     "cursor": {
@@ -1235,6 +1454,50 @@
                         "type": "string"
                     },
                     "website": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.UpdateEventRequest": {
+                "properties": {
+                    "clearRsvpDeadline": {
+                        "type": "boolean"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "endAt": {
+                        "type": "string"
+                    },
+                    "location": {
+                        "type": "string"
+                    },
+                    "rsvpDeadline": {
+                        "type": "string"
+                    },
+                    "rsvpEnabled": {
+                        "type": "boolean"
+                    },
+                    "startAt": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "enum": [
+                            "scheduled",
+                            "cancelled"
+                        ],
+                        "type": "string"
+                    },
+                    "title": {
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "visibility": {
+                        "enum": [
+                            "public",
+                            "private"
+                        ],
                         "type": "string"
                     }
                 },
@@ -1807,6 +2070,24 @@
                 },
                 "type": "object"
             },
+            "httpx.Envelope-array_domain_EventResponse": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.EventResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
             "httpx.Envelope-array_domain_LookupResponse": {
                 "properties": {
                     "data": {
@@ -2055,6 +2336,20 @@
                 "properties": {
                     "data": {
                         "$ref": "#/components/schemas/domain.DioceseResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_EventResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.EventResponse"
                     },
                     "error": {
                         "$ref": "#/components/schemas/httpx.ErrorPayload"
@@ -2641,6 +2936,386 @@
                 "summary": "Complete OAuth2 login",
                 "tags": [
                     "Auth"
+                ]
+            }
+        },
+        "/events": {
+            "post": {
+                "description": "Creates an organization-owned event in the active parish (requires org:admin of the owning organization).",
+                "operationId": "createEvent",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.CreateEventRequest",
+                                "summary": "body",
+                                "description": "Event creation payload"
+                            }
+                        }
+                    },
+                    "description": "Event creation payload",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_EventResponse"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Create event",
+                "tags": [
+                    "Event"
+                ]
+            }
+        },
+        "/events/search": {
+            "post": {
+                "description": "Searches visible events (public parish events and private events for caller's organizations) with filters and cursor pagination.",
+                "operationId": "searchEvents",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.SearchEventsRequest",
+                                "summary": "body",
+                                "description": "Search parameters"
+                            }
+                        }
+                    },
+                    "description": "Search parameters"
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_EventResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    }
+                },
+                "summary": "Search events",
+                "tags": [
+                    "Event"
+                ]
+            }
+        },
+        "/events/{id}": {
+            "delete": {
+                "description": "Soft-deletes an event in the active parish (requires org:admin of the owning organization).",
+                "operationId": "deleteEvent",
+                "parameters": [
+                    {
+                        "description": "Event UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Delete event",
+                "tags": [
+                    "Event"
+                ]
+            },
+            "get": {
+                "description": "Returns a single non-deleted event in the active parish if visible to the caller.",
+                "operationId": "getEvent",
+                "parameters": [
+                    {
+                        "description": "Event UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_EventResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Get event",
+                "tags": [
+                    "Event"
+                ]
+            },
+            "patch": {
+                "description": "Updates or cancels an event in the active parish (requires org:admin of the owning organization).",
+                "operationId": "updateEvent",
+                "parameters": [
+                    {
+                        "description": "Event UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.UpdateEventRequest",
+                                "summary": "body",
+                                "description": "Event update payload"
+                            }
+                        }
+                    },
+                    "description": "Event update payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_EventResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Update event",
+                "tags": [
+                    "Event"
                 ]
             }
         },

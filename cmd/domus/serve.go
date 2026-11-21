@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/paroki/domus/internal/app"
+	"github.com/paroki/domus/internal/event"
 	"github.com/paroki/domus/internal/org"
 	"github.com/paroki/domus/internal/platform/authz"
 	"github.com/paroki/domus/internal/platform/mailx"
@@ -70,14 +71,19 @@ func newServeCmd() *cobra.Command {
 			}
 			orgFeature := org.New(db, enforcer, userFeature, refFeature, orgCfg)
 			userFeature.SetInviteJoiner(orgFeature)
-			if err := authz.RegisterFeatures(ctx, enforcer, userFeature, refFeature, orgFeature); err != nil {
+			eventCfg, err := event.GetConfig(ctx)
+			if err != nil {
+				return err
+			}
+			eventFeature := event.New(db, enforcer, userFeature, orgFeature, eventCfg)
+			if err := authz.RegisterFeatures(ctx, enforcer, userFeature, refFeature, orgFeature, eventFeature); err != nil {
 				return err
 			}
 			if err := userFeature.Bootstrap(ctx); err != nil {
 				return err
 			}
 
-			fiberApp := app.GetFiber(cfg, logger, userFeature, refFeature, orgFeature)
+			fiberApp := app.GetFiber(cfg, logger, userFeature, refFeature, orgFeature, eventFeature)
 			return app.New(cfg, fiberApp, logger).Serve(ctx)
 		},
 	}

@@ -124,6 +124,74 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/events": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create event
+     * @description Creates an organization-owned event in the active parish (requires org:admin of the owning organization).
+     */
+    post: operations["createEvent"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Search events
+     * @description Searches visible events (public parish events and private events for caller's organizations) with filters and cursor pagination.
+     */
+    post: operations["searchEvents"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get event
+     * @description Returns a single non-deleted event in the active parish if visible to the caller.
+     */
+    get: operations["getEvent"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete event
+     * @description Soft-deletes an event in the active parish (requires org:admin of the owning organization).
+     */
+    delete: operations["deleteEvent"];
+    options?: never;
+    head?: never;
+    /**
+     * Update event
+     * @description Updates or cancels an event in the active parish (requires org:admin of the owning organization).
+     */
+    patch: operations["updateEvent"];
+    trace?: never;
+  };
   "/health": {
     parameters: {
       query?: never;
@@ -1121,6 +1189,18 @@ export interface components {
       phone?: string;
       website?: string;
     };
+    "domain.CreateEventRequest": {
+      description?: string;
+      endAt: string;
+      location?: string;
+      orgId: string;
+      rsvpDeadline?: string;
+      rsvpEnabled?: boolean;
+      startAt: string;
+      title: string;
+      /** @enum {string} */
+      visibility?: "public" | "private";
+    };
     "domain.CreateLookupRequest": {
       category: string;
       code: string;
@@ -1210,6 +1290,59 @@ export interface components {
     };
     "domain.DioceseSearchFilter": {
       active?: boolean;
+    };
+    "domain.EventRSVPResponse": {
+      createdAt?: string;
+      eventId?: string;
+      id?: string;
+      note?: string;
+      parishId?: string;
+      status?: string;
+      updatedAt?: string;
+      userEmail?: string;
+      userId?: string;
+      userName?: string;
+    };
+    "domain.EventRSVPSummaryResponse": {
+      eventId?: string;
+      going?: number;
+      maybe?: number;
+      notGoing?: number;
+      total?: number;
+    };
+    "domain.EventResponse": {
+      createdAt?: string;
+      createdBy?: string;
+      description?: string;
+      endAt?: string;
+      id?: string;
+      location?: string;
+      myOrgRole?: string;
+      myRsvp?: components["schemas"]["domain.EventRSVPResponse"];
+      orgCode?: string;
+      orgId?: string;
+      orgKind?: string;
+      orgName?: string;
+      parishId?: string;
+      rsvpDeadline?: string;
+      rsvpEnabled?: boolean;
+      rsvpOpen?: boolean;
+      rsvpSummary?: components["schemas"]["domain.EventRSVPSummaryResponse"];
+      startAt?: string;
+      status?: string;
+      title?: string;
+      updatedAt?: string;
+      visibility?: string;
+    };
+    "domain.EventSearchFilter": {
+      from?: string;
+      myOrgsOnly?: boolean;
+      orgId?: string;
+      /** @enum {string} */
+      status?: "scheduled" | "cancelled";
+      to?: string;
+      /** @enum {string} */
+      visibility?: "public" | "private";
     };
     "domain.LookupResponse": {
       active?: boolean;
@@ -1395,6 +1528,12 @@ export interface components {
       limit?: number;
       q?: string;
     };
+    "domain.SearchEventsRequest": {
+      cursor?: string;
+      filter?: components["schemas"]["domain.EventSearchFilter"];
+      limit?: number;
+      q?: string;
+    };
     "domain.SearchLookupsRequest": {
       cursor?: string;
       filter?: components["schemas"]["domain.LookupSearchFilter"];
@@ -1470,6 +1609,20 @@ export interface components {
       name?: string;
       phone?: string;
       website?: string;
+    };
+    "domain.UpdateEventRequest": {
+      clearRsvpDeadline?: boolean;
+      description?: string;
+      endAt?: string;
+      location?: string;
+      rsvpDeadline?: string;
+      rsvpEnabled?: boolean;
+      startAt?: string;
+      /** @enum {string} */
+      status?: "scheduled" | "cancelled";
+      title?: string;
+      /** @enum {string} */
+      visibility?: "public" | "private";
     };
     "domain.UpdateLookupRequest": {
       active?: boolean;
@@ -1663,6 +1816,11 @@ export interface components {
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
+    "httpx.Envelope-array_domain_EventResponse": {
+      data?: components["schemas"]["domain.EventResponse"][];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
     "httpx.Envelope-array_domain_LookupResponse": {
       data?: components["schemas"]["domain.LookupResponse"][];
       error?: components["schemas"]["httpx.ErrorPayload"];
@@ -1735,6 +1893,11 @@ export interface components {
     };
     "httpx.Envelope-domain_DioceseResponse": {
       data?: components["schemas"]["domain.DioceseResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_EventResponse": {
+      data?: components["schemas"]["domain.EventResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -2086,6 +2249,317 @@ export interface operations {
       };
       /** @description Not Found */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  createEvent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Event creation payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.CreateEventRequest"];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_EventResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  searchEvents: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Search parameters */
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["domain.SearchEventsRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_EventResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  getEvent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Event UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_EventResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  deleteEvent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Event UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  updateEvent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Event UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Event update payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UpdateEventRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_EventResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
         headers: {
           [name: string]: unknown;
         };
