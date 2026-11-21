@@ -2,6 +2,7 @@ import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
 import { defineConfig } from "vite";
+import istanbul from "vite-plugin-istanbul";
 
 export default defineConfig({
   // Expose only APP_SENTRY_* (never APP_DB_URL etc.) to the client bundle.
@@ -10,6 +11,12 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     reactRouter(),
+    istanbul({
+      include: ["app/**"],
+      exclude: ["node_modules", "test/"],
+      extension: [".js", ".ts", ".tsx"],
+      requireEnv: true,
+    }),
     // Uploads source maps only when APP_SENTRY_AUTH_TOKEN is set (CI/release build).
     sentryVitePlugin({
       org: "doyolabs",
