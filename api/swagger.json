@@ -513,16 +513,31 @@
                     "createdAt": {
                         "type": "string"
                     },
+                    "email": {
+                        "type": "string"
+                    },
                     "eventId": {
                         "type": "string"
                     },
                     "id": {
                         "type": "string"
                     },
+                    "name": {
+                        "type": "string"
+                    },
                     "note": {
                         "type": "string"
                     },
+                    "orgPosition": {
+                        "type": "string"
+                    },
+                    "orgRole": {
+                        "type": "string"
+                    },
                     "parishId": {
+                        "type": "string"
+                    },
+                    "phone": {
                         "type": "string"
                     },
                     "status": {
@@ -531,13 +546,20 @@
                     "updatedAt": {
                         "type": "string"
                     },
-                    "userEmail": {
-                        "type": "string"
-                    },
                     "userId": {
                         "type": "string"
-                    },
-                    "userName": {
+                    }
+                },
+                "type": "object"
+            },
+            "domain.EventRSVPSearchFilter": {
+                "properties": {
+                    "status": {
+                        "enum": [
+                            "going",
+                            "maybe",
+                            "not_going"
+                        ],
                         "type": "string"
                     }
                 },
@@ -557,7 +579,13 @@
                     "notGoing": {
                         "type": "integer"
                     },
-                    "total": {
+                    "totalActiveMembers": {
+                        "type": "integer"
+                    },
+                    "totalResponded": {
+                        "type": "integer"
+                    },
+                    "unresponded": {
                         "type": "integer"
                     }
                 },
@@ -1199,6 +1227,25 @@
                 },
                 "type": "object"
             },
+            "domain.SearchEventRSVPsRequest": {
+                "properties": {
+                    "cursor": {
+                        "type": "string"
+                    },
+                    "filter": {
+                        "$ref": "#/components/schemas/domain.EventRSVPSearchFilter"
+                    },
+                    "limit": {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "q": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.SearchEventsRequest": {
                 "properties": {
                     "cursor": {
@@ -1785,6 +1832,25 @@
                 },
                 "type": "object"
             },
+            "domain.UpsertEventRSVPRequest": {
+                "properties": {
+                    "note": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "enum": [
+                            "going",
+                            "maybe",
+                            "not_going"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "status"
+                ],
+                "type": "object"
+            },
             "domain.UserAccountResponse": {
                 "properties": {
                     "activeParishId": {
@@ -2070,6 +2136,24 @@
                 },
                 "type": "object"
             },
+            "httpx.Envelope-array_domain_EventRSVPResponse": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.EventRSVPResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
             "httpx.Envelope-array_domain_EventResponse": {
                 "properties": {
                     "data": {
@@ -2336,6 +2420,34 @@
                 "properties": {
                     "data": {
                         "$ref": "#/components/schemas/domain.DioceseResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_EventRSVPResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.EventRSVPResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_EventRSVPSummaryResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.EventRSVPSummaryResponse"
                     },
                     "error": {
                         "$ref": "#/components/schemas/httpx.ErrorPayload"
@@ -3314,6 +3426,344 @@
                     }
                 },
                 "summary": "Update event",
+                "tags": [
+                    "Event"
+                ]
+            }
+        },
+        "/events/{id}/rsvp": {
+            "delete": {
+                "description": "Removes the authenticated organization member's RSVP for an event (idempotent).",
+                "operationId": "deleteEventRSVP",
+                "parameters": [
+                    {
+                        "description": "Event UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    }
+                },
+                "summary": "Delete event RSVP",
+                "tags": [
+                    "Event"
+                ]
+            },
+            "post": {
+                "description": "Creates or updates the authenticated organization member's RSVP for an event.",
+                "operationId": "upsertEventRSVP",
+                "parameters": [
+                    {
+                        "description": "Event UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.UpsertEventRSVPRequest",
+                                "summary": "body",
+                                "description": "RSVP payload"
+                            }
+                        }
+                    },
+                    "description": "RSVP payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_EventRSVPResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Upsert event RSVP",
+                "tags": [
+                    "Event"
+                ]
+            }
+        },
+        "/events/{id}/rsvps/search": {
+            "post": {
+                "description": "Searches attendee RSVPs for an event with filters and cursor pagination (requires owning org membership).",
+                "operationId": "searchEventRSVPs",
+                "parameters": [
+                    {
+                        "description": "Event UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.SearchEventRSVPsRequest",
+                                "summary": "body",
+                                "description": "Search parameters"
+                            }
+                        }
+                    },
+                    "description": "Search parameters"
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_EventRSVPResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Search event RSVPs",
+                "tags": [
+                    "Event"
+                ]
+            }
+        },
+        "/events/{id}/rsvps/summary": {
+            "get": {
+                "description": "Returns RSVP attendance counts and unresponded member count for an event (requires owning org membership).",
+                "operationId": "getEventRSVPSummary",
+                "parameters": [
+                    {
+                        "description": "Event UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_EventRSVPSummaryResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Get event RSVP summary",
                 "tags": [
                     "Event"
                 ]

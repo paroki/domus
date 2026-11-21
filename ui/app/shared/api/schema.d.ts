@@ -192,6 +192,70 @@ export interface paths {
     patch: operations["updateEvent"];
     trace?: never;
   };
+  "/events/{id}/rsvp": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upsert event RSVP
+     * @description Creates or updates the authenticated organization member's RSVP for an event.
+     */
+    post: operations["upsertEventRSVP"];
+    /**
+     * Delete event RSVP
+     * @description Removes the authenticated organization member's RSVP for an event (idempotent).
+     */
+    delete: operations["deleteEventRSVP"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{id}/rsvps/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Search event RSVPs
+     * @description Searches attendee RSVPs for an event with filters and cursor pagination (requires owning org membership).
+     */
+    post: operations["searchEventRSVPs"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{id}/rsvps/summary": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get event RSVP summary
+     * @description Returns RSVP attendance counts and unresponded member count for an event (requires owning org membership).
+     */
+    get: operations["getEventRSVPSummary"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/health": {
     parameters: {
       query?: never;
@@ -1293,22 +1357,31 @@ export interface components {
     };
     "domain.EventRSVPResponse": {
       createdAt?: string;
+      email?: string;
       eventId?: string;
       id?: string;
+      name?: string;
       note?: string;
+      orgPosition?: string;
+      orgRole?: string;
       parishId?: string;
+      phone?: string;
       status?: string;
       updatedAt?: string;
-      userEmail?: string;
       userId?: string;
-      userName?: string;
+    };
+    "domain.EventRSVPSearchFilter": {
+      /** @enum {string} */
+      status?: "going" | "maybe" | "not_going";
     };
     "domain.EventRSVPSummaryResponse": {
       eventId?: string;
       going?: number;
       maybe?: number;
       notGoing?: number;
-      total?: number;
+      totalActiveMembers?: number;
+      totalResponded?: number;
+      unresponded?: number;
     };
     "domain.EventResponse": {
       createdAt?: string;
@@ -1528,6 +1601,12 @@ export interface components {
       limit?: number;
       q?: string;
     };
+    "domain.SearchEventRSVPsRequest": {
+      cursor?: string;
+      filter?: components["schemas"]["domain.EventRSVPSearchFilter"];
+      limit?: number;
+      q?: string;
+    };
     "domain.SearchEventsRequest": {
       cursor?: string;
       filter?: components["schemas"]["domain.EventSearchFilter"];
@@ -1721,6 +1800,11 @@ export interface components {
       /** @enum {string} */
       type?: "zone" | "station";
     };
+    "domain.UpsertEventRSVPRequest": {
+      note?: string;
+      /** @enum {string} */
+      status: "going" | "maybe" | "not_going";
+    };
     "domain.UserAccountResponse": {
       activeParishId?: string;
       avatarUrl?: string;
@@ -1816,6 +1900,11 @@ export interface components {
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
+    "httpx.Envelope-array_domain_EventRSVPResponse": {
+      data?: components["schemas"]["domain.EventRSVPResponse"][];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
     "httpx.Envelope-array_domain_EventResponse": {
       data?: components["schemas"]["domain.EventResponse"][];
       error?: components["schemas"]["httpx.ErrorPayload"];
@@ -1893,6 +1982,16 @@ export interface components {
     };
     "httpx.Envelope-domain_DioceseResponse": {
       data?: components["schemas"]["domain.DioceseResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_EventRSVPResponse": {
+      data?: components["schemas"]["domain.EventRSVPResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_EventRSVPSummaryResponse": {
+      data?: components["schemas"]["domain.EventRSVPSummaryResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -2560,6 +2659,277 @@ export interface operations {
       };
       /** @description Unprocessable Entity */
       422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  upsertEventRSVP: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Event UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description RSVP payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UpsertEventRSVPRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_EventRSVPResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  deleteEventRSVP: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Event UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  searchEventRSVPs: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Event UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Search parameters */
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["domain.SearchEventRSVPsRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_EventRSVPResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  getEventRSVPSummary: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Event UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_EventRSVPSummaryResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
         headers: {
           [name: string]: unknown;
         };

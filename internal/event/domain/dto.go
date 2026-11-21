@@ -79,16 +79,19 @@ type UpdateEventRequest struct {
 
 // EventRSVPResponse is the public API representation of an EventRSVP.
 type EventRSVPResponse struct {
-	ID        uuid.UUID `json:"id"`
-	ParishID  uuid.UUID `json:"parishId"`
-	EventID   uuid.UUID `json:"eventId"`
-	UserID    uuid.UUID `json:"userId"`
-	UserName  string    `json:"userName,omitempty"`
-	UserEmail string    `json:"userEmail,omitempty"`
-	Status    string    `json:"status"`
-	Note      *string   `json:"note,omitempty"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	ID          uuid.UUID `json:"id"`
+	ParishID    uuid.UUID `json:"parishId"`
+	EventID     uuid.UUID `json:"eventId"`
+	UserID      uuid.UUID `json:"userId"`
+	Name        string    `json:"name"`
+	Email       string    `json:"email"`
+	Phone       *string   `json:"phone,omitempty"`
+	OrgRole     string    `json:"orgRole,omitempty"`
+	OrgPosition *string   `json:"orgPosition,omitempty"`
+	Status      string    `json:"status"`
+	Note        *string   `json:"note,omitempty"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
 // UpsertEventRSVPRequest creates or updates the caller's RSVP for an Event.
@@ -99,11 +102,13 @@ type UpsertEventRSVPRequest struct {
 
 // EventRSVPSummaryResponse summarizes RSVP counts for an Event.
 type EventRSVPSummaryResponse struct {
-	EventID  uuid.UUID `json:"eventId"`
-	Going    int       `json:"going"`
-	Maybe    int       `json:"maybe"`
-	NotGoing int       `json:"notGoing"`
-	Total    int       `json:"total"`
+	EventID            uuid.UUID `json:"eventId"`
+	Going              int       `json:"going"`
+	Maybe              int       `json:"maybe"`
+	NotGoing           int       `json:"notGoing"`
+	TotalResponded     int       `json:"totalResponded"`
+	TotalActiveMembers int       `json:"totalActiveMembers"`
+	Unresponded        int       `json:"unresponded"`
 }
 
 // EventRSVPSearchFilter filters event RSVP roster search results.

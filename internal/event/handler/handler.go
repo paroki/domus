@@ -36,6 +36,11 @@ func (h *Handler) Register(
 	events.Post("", h.CreateEvent)
 	events.Patch("/:id", h.UpdateEvent)
 	events.Delete("/:id", h.DeleteEvent)
+
+	events.Post("/:id/rsvp", h.UpsertEventRSVP)
+	events.Delete("/:id/rsvp", h.DeleteEventRSVP)
+	events.Get("/:id/rsvps/summary", h.GetEventRSVPSummary)
+	events.Post("/:id/rsvps/search", h.SearchEventRSVPs)
 }
 
 func decodeStrictJSON(c fiber.Ctx, dst any) error {
@@ -84,6 +89,6 @@ func parseCursorAndLimit(rawCursor string, rawLimit int) (*time.Time, *uuid.UUID
 	if err != nil {
 		return nil, nil, 0, httpx.InvalidCursor("Invalid pagination cursor.")
 	}
-	t := cur.CreatedAt
+	t := cur.CreatedAt.Local()
 	return &t, &id, limit, nil
 }

@@ -67,6 +67,8 @@ func (s *Service) SearchEvents(
 	now := time.Now().UTC()
 	out := make([]domain.EventResponse, 0, len(rows))
 	roleCache := make(map[uuid.UUID]*string)
+	memberEventOrgMap := make(map[uuid.UUID]uuid.UUID)
+	memberEventIDs := make([]uuid.UUID, 0, len(rows))
 
 	for _, row := range rows {
 		info, ok := orgMap[row.OrgID]
@@ -88,7 +90,52 @@ func (s *Service) SearchEvents(
 			roleCache[row.OrgID] = myRole
 		}
 
+		if myRole != nil {
+			memberEventOrgMap[row.ID] = row.OrgID
+			memberEventIDs = append(memberEventIDs, row.ID)
+		}
+
 		out = append(out, s.toEventResponse(row, info, myRole, now))
+	}
+
+	if len(memberEventIDs) > 0 {
+		myRSVPs, err := s.repo.FindUserRSVPsForEvents(ctx, memberEventIDs, p.UserID)
+		if err != nil {
+			return nil, false, err
+		}
+		summaries, err := s.repo.GetRSVPSummariesForEvents(ctx, memberEventOrgMap)
+		if err != nil {
+			return nil, false, err
+		}
+		// Load caller's User + OrgMember info per org for myRsvp enrichment.
+		orgIDsForCaller := make(map[uuid.UUID]struct{})
+		for _, orgID := range memberEventOrgMap {
+			orgIDsForCaller[orgID] = struct{}{}
+		}
+		callerUsers := make(map[uuid.UUID]*ent.User)
+		callerMembers := make(map[uuid.UUID]*ent.OrgMember)
+		for orgID := range orgIDsForCaller {
+			uMap, mMap, err := s.repo.LoadUsersAndOrgMembers(ctx, orgID, []uuid.UUID{p.UserID})
+			if err != nil {
+				return nil, false, err
+			}
+			callerUsers[orgID] = uMap[p.UserID]
+			callerMembers[orgID] = mMap[p.UserID]
+		}
+
+		for i := range out {
+			if out[i].MyOrgRole == nil {
+				continue
+			}
+			if rsvpRow, ok := myRSVPs[out[i].ID]; ok {
+				r := toRSVPResponse(rsvpRow, callerUsers[out[i].OrgID], callerMembers[out[i].OrgID])
+				out[i].MyRsvp = &r
+			}
+			if counts, ok := summaries[out[i].ID]; ok {
+				sum := toRSVPSummaryResponse(out[i].ID, counts)
+				out[i].RsvpSummary = &sum
+			}
+		}
 	}
 	return out, hasMore, nil
 }
@@ -116,7 +163,29 @@ func (s *Service) GetEvent(ctx context.Context, p authx.Principal, eventID uuid.
 		return domain.EventResponse{}, err
 	}
 
-	return s.toEventResponse(row, *info, myRole, time.Now().UTC()), nil
+	res := s.toEventResponse(row, *info, myRole, time.Now().UTC())
+	if myRole != nil {
+		counts, err := s.repo.GetRSVPSummary(ctx, row.ID, row.OrgID)
+		if err != nil {
+			return domain.EventResponse{}, err
+		}
+		sum := toRSVPSummaryResponse(row.ID, counts)
+		res.RsvpSummary = &sum
+
+		rsvpRow, err := s.repo.FindUserRSVP(ctx, row.ID, p.UserID)
+		if err != nil && !ent.IsNotFound(err) {
+			return domain.EventResponse{}, err
+		}
+		if rsvpRow != nil {
+			uMap, mMap, err := s.repo.LoadUsersAndOrgMembers(ctx, row.OrgID, []uuid.UUID{p.UserID})
+			if err != nil {
+				return domain.EventResponse{}, err
+			}
+			r := toRSVPResponse(rsvpRow, uMap[p.UserID], mMap[p.UserID])
+			res.MyRsvp = &r
+		}
+	}
+	return res, nil
 }
 
 // CreateEvent creates a new Event owned by req.OrgID (requires org:admin of req.OrgID).
@@ -354,8 +423,8 @@ func (s *Service) toEventResponse(row *ent.Event, info OrgInfo, myRole *string, 
 		Status:       string(row.Status),
 		RsvpOpen:     rsvpOpen,
 		MyOrgRole:    myRole,
-		CreatedAt:    row.CreatedAt.UTC(),
-		UpdatedAt:    row.UpdatedAt.UTC(),
+		CreatedAt:    row.CreatedAt,
+		UpdatedAt:    row.UpdatedAt,
 	}
 }
 

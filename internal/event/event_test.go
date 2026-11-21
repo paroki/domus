@@ -298,3 +298,227 @@ func (s *EventFeatureSuite) TestEventCRUD_VisibilityAndRBAC() {
 	s.NotFound()
 	s.Equal("EVENT_NOT_FOUND", s.GetErrorResponse().Error.Code)
 }
+
+func (s *EventFeatureSuite) TestEventRSVP_UpsertDeleteCutoffSummaryAndRoster() {
+	parishID, orgID := s.seedParishAndOrg()
+
+	// Add a 3rd active member so totalActiveMembers == 3.
+	s.loginViaOTP("orgadmin@paroki.org")
+	s.SetHeader("X-Parish-Id", parishID.String())
+	s.Request(fmt.Sprintf("/api/orgs/%s/members", orgID), http.MethodPost, orgdomain.AddOrgMemberRequest{
+		Email:    "member2@paroki.org",
+		Name:     "OMK Member 2",
+		Role:     "member",
+		Position: new("Sekretaris"),
+	})
+	s.Created()
+
+	startAt := time.Now().UTC().Add(48 * time.Hour).Truncate(time.Second)
+	endAt := startAt.Add(2 * time.Hour)
+
+	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
+		OrgID:   orgID,
+		Title:   "Latihan Koor",
+		StartAt: startAt,
+		EndAt:   endAt,
+	})
+	s.Created()
+	ev := testutil.DecodeAs[domain.EventResponse](s).Data
+
+	// Non-member (outsider & ref:parish-admin) cannot RSVP, delete RSVP, or view summary/roster -> 403 EVENT_FORBIDDEN.
+	for _, nonMember := range []string{"outsider@paroki.org", "padmin@paroki.org"} {
+		s.loginViaOTP(nonMember)
+		s.SetHeader("X-Parish-Id", parishID.String())
+		s.Request(fmt.Sprintf("/api/events/%s/rsvp", ev.ID), http.MethodPost, domain.UpsertEventRSVPRequest{Status: "going"})
+		s.Forbidden()
+		s.Equal("EVENT_FORBIDDEN", s.GetErrorResponse().Error.Code)
+
+		s.Request(fmt.Sprintf("/api/events/%s/rsvp", ev.ID), http.MethodDelete, nil)
+		s.Forbidden()
+
+		s.Request(fmt.Sprintf("/api/events/%s/rsvps/summary", ev.ID), http.MethodGet, nil)
+		s.Forbidden()
+
+		s.Request(fmt.Sprintf("/api/events/%s/rsvps/search", ev.ID), http.MethodPost, domain.SearchEventRSVPsRequest{})
+		s.Forbidden()
+	}
+
+	// org:member upserts RSVP with note, then updates status and clears note.
+	s.loginViaOTP("orgmember@paroki.org")
+	s.SetHeader("X-Parish-Id", parishID.String())
+	s.Request(fmt.Sprintf("/api/events/%s/rsvp", ev.ID), http.MethodPost, domain.UpsertEventRSVPRequest{
+		Status: "going",
+		Note:   new("  Hadir tepat waktu  "),
+	})
+	s.OK()
+	rsvp1 := testutil.DecodeAs[domain.EventRSVPResponse](s).Data
+	s.Equal("going", rsvp1.Status)
+	s.Require().NotNil(rsvp1.Note)
+	s.Equal("Hadir tepat waktu", *rsvp1.Note)
+	s.Equal("OMK Member", rsvp1.Name)
+	s.Equal("member", rsvp1.OrgRole)
+
+	// Idempotent update clears note when empty string.
+	s.Request(fmt.Sprintf("/api/events/%s/rsvp", ev.ID), http.MethodPost, domain.UpsertEventRSVPRequest{
+		Status: "maybe",
+		Note:   new(""),
+	})
+	s.OK()
+	rsvp1Updated := testutil.DecodeAs[domain.EventRSVPResponse](s).Data
+	s.Equal(rsvp1.ID, rsvp1Updated.ID)
+	s.Equal("maybe", rsvp1Updated.Status)
+	s.Nil(rsvp1Updated.Note)
+
+	// member2 RSVPs "going", orgadmin RSVPs "not_going".
+	s.loginViaOTP("member2@paroki.org")
+	s.SetHeader("X-Parish-Id", parishID.String())
+	s.Request(fmt.Sprintf("/api/events/%s/rsvp", ev.ID), http.MethodPost, domain.UpsertEventRSVPRequest{
+		Status: "going",
+		Note:   new("Bawa gitar"),
+	})
+	s.OK()
+	rsvp2 := testutil.DecodeAs[domain.EventRSVPResponse](s).Data
+	s.Require().NotNil(rsvp2.OrgPosition)
+	s.Equal("Sekretaris", *rsvp2.OrgPosition)
+
+	// Verify GET /api/events/{id} and POST /api/events/search populate myRsvp & rsvpSummary for org member.
+	s.Request(fmt.Sprintf("/api/events/%s", ev.ID), http.MethodGet, nil)
+	s.OK()
+	gotEv := testutil.DecodeAs[domain.EventResponse](s).Data
+	s.Require().NotNil(gotEv.MyRsvp)
+	s.Equal("going", gotEv.MyRsvp.Status)
+	s.Require().NotNil(gotEv.RsvpSummary)
+	s.Equal(1, gotEv.RsvpSummary.Going)
+	s.Equal(1, gotEv.RsvpSummary.Maybe)
+	s.Equal(0, gotEv.RsvpSummary.NotGoing)
+	s.Equal(2, gotEv.RsvpSummary.TotalResponded)
+	s.Equal(3, gotEv.RsvpSummary.TotalActiveMembers)
+	s.Equal(1, gotEv.RsvpSummary.Unresponded)
+
+	s.Request("/api/events/search", http.MethodPost, domain.SearchEventsRequest{})
+	s.OK()
+	searchedEvs := testutil.DecodeAs[[]domain.EventResponse](s).Data
+	s.Require().Len(searchedEvs, 1)
+	s.Require().NotNil(searchedEvs[0].MyRsvp)
+	s.Require().NotNil(searchedEvs[0].RsvpSummary)
+
+	// Verify GET /rsvps/summary and POST /rsvps/search filtering + cursor pagination.
+	s.Request(fmt.Sprintf("/api/events/%s/rsvps/summary", ev.ID), http.MethodGet, nil)
+	s.OK()
+	summary := testutil.DecodeAs[domain.EventRSVPSummaryResponse](s).Data
+	s.Equal(2, summary.TotalResponded)
+	s.Equal(3, summary.TotalActiveMembers)
+	s.Equal(1, summary.Unresponded)
+
+	s.Request(fmt.Sprintf("/api/events/%s/rsvps/search", ev.ID), http.MethodPost, domain.SearchEventRSVPsRequest{
+		Limit: 1,
+	})
+	s.OK()
+	page1 := testutil.DecodeAs[[]domain.EventRSVPResponse](s)
+	s.Len(page1.Data, 1)
+	s.True(page1.Meta.HasMore)
+	s.NotEmpty(page1.Meta.NextCursor)
+
+	s.Request(fmt.Sprintf("/api/events/%s/rsvps/search", ev.ID), http.MethodPost, domain.SearchEventRSVPsRequest{
+		Cursor: page1.Meta.NextCursor,
+		Limit:  1,
+	})
+	s.OK()
+	page2 := testutil.DecodeAs[[]domain.EventRSVPResponse](s)
+	s.Len(page2.Data, 1)
+	s.False(page2.Meta.HasMore)
+	s.NotEqual(page1.Data[0].ID, page2.Data[0].ID)
+
+	// Filter by status="going" and q="gitar".
+	s.Request(fmt.Sprintf("/api/events/%s/rsvps/search", ev.ID), http.MethodPost, domain.SearchEventRSVPsRequest{
+		Q:      "gitar",
+		Filter: &domain.EventRSVPSearchFilter{Status: "going"},
+	})
+	s.OK()
+	filtered := testutil.DecodeAs[[]domain.EventRSVPResponse](s).Data
+	s.Len(filtered, 1)
+	s.Equal(rsvp2.ID, filtered[0].ID)
+
+	// Hard delete RSVP + idempotent 204.
+	s.Request(fmt.Sprintf("/api/events/%s/rsvp", ev.ID), http.MethodDelete, nil)
+	s.NoContent()
+	s.Request(fmt.Sprintf("/api/events/%s/rsvp", ev.ID), http.MethodDelete, nil)
+	s.NoContent()
+
+	// Cutoff tests: within grace period (startAt 10m ago, grace 30m) -> allowed!
+	s.loginViaOTP("orgadmin@paroki.org")
+	s.SetHeader("X-Parish-Id", parishID.String())
+	graceStart := time.Now().UTC().Add(-10 * time.Minute)
+	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
+		OrgID:   orgID,
+		Title:   "Within Grace Period",
+		StartAt: graceStart,
+		EndAt:   graceStart.Add(2 * time.Hour),
+	})
+	s.Created()
+	graceEv := testutil.DecodeAs[domain.EventResponse](s).Data
+	s.True(graceEv.RsvpOpen)
+	s.Request(fmt.Sprintf("/api/events/%s/rsvp", graceEv.ID), http.MethodPost, domain.UpsertEventRSVPRequest{Status: "going"})
+	s.OK()
+
+	// Past grace period (startAt 45m ago) -> 409 EVENT_RSVP_CLOSED.
+	pastGraceStart := time.Now().UTC().Add(-45 * time.Minute)
+	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
+		OrgID:   orgID,
+		Title:   "Past Grace Period",
+		StartAt: pastGraceStart,
+		EndAt:   pastGraceStart.Add(2 * time.Hour),
+	})
+	s.Created()
+	pastGraceEv := testutil.DecodeAs[domain.EventResponse](s).Data
+	s.False(pastGraceEv.RsvpOpen)
+	s.Request(fmt.Sprintf("/api/events/%s/rsvp", pastGraceEv.ID), http.MethodPost, domain.UpsertEventRSVPRequest{Status: "going"})
+	s.Conflict()
+	s.Equal("EVENT_RSVP_CLOSED", s.GetErrorResponse().Error.Code)
+
+	// Past rsvpDeadline -> 409 EVENT_RSVP_CLOSED.
+	pastDL := time.Now().UTC().Add(-5 * time.Minute)
+	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
+		OrgID:        orgID,
+		Title:        "Past Deadline",
+		StartAt:      startAt,
+		EndAt:        endAt,
+		RsvpDeadline: &pastDL,
+	})
+	s.Created()
+	pastDLEv := testutil.DecodeAs[domain.EventResponse](s).Data
+	s.Request(fmt.Sprintf("/api/events/%s/rsvp", pastDLEv.ID), http.MethodPost, domain.UpsertEventRSVPRequest{Status: "going"})
+	s.Conflict()
+	s.Equal("EVENT_RSVP_CLOSED", s.GetErrorResponse().Error.Code)
+
+	// rsvpEnabled=false -> 409 EVENT_RSVP_CLOSED.
+	disabled := false
+	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
+		OrgID:       orgID,
+		Title:       "RSVP Disabled",
+		StartAt:     startAt,
+		EndAt:       endAt,
+		RsvpEnabled: &disabled,
+	})
+	s.Created()
+	disabledEv := testutil.DecodeAs[domain.EventResponse](s).Data
+	s.Request(fmt.Sprintf("/api/events/%s/rsvp", disabledEv.ID), http.MethodPost, domain.UpsertEventRSVPRequest{Status: "going"})
+	s.Conflict()
+	s.Equal("EVENT_RSVP_CLOSED", s.GetErrorResponse().Error.Code)
+
+	// Cancelled event -> 409 EVENT_RSVP_CLOSED on POST & DELETE, but summary/search still work!
+	cancelled := "cancelled"
+	s.Request(fmt.Sprintf("/api/events/%s", ev.ID), http.MethodPatch, domain.UpdateEventRequest{Status: &cancelled})
+	s.OK()
+	s.Request(fmt.Sprintf("/api/events/%s/rsvp", ev.ID), http.MethodPost, domain.UpsertEventRSVPRequest{Status: "going"})
+	s.Conflict()
+	s.Equal("EVENT_RSVP_CLOSED", s.GetErrorResponse().Error.Code)
+	s.Request(fmt.Sprintf("/api/events/%s/rsvp", ev.ID), http.MethodDelete, nil)
+	s.Conflict()
+	s.Equal("EVENT_RSVP_CLOSED", s.GetErrorResponse().Error.Code)
+
+	s.Request(fmt.Sprintf("/api/events/%s/rsvps/summary", ev.ID), http.MethodGet, nil)
+	s.OK()
+	s.Request(fmt.Sprintf("/api/events/%s/rsvps/search", ev.ID), http.MethodPost, domain.SearchEventRSVPsRequest{})
+	s.OK()
+}
