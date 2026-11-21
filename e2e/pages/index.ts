@@ -5,6 +5,7 @@ import { ParishesPage } from "./ref/parishes.page";
 import { SettingsPage } from "./ref/settings.page";
 import { HomePage } from "./shell/home.page";
 import { LoginPage } from "./user/login.page";
+import { UsersPage } from "./user/users.page";
 
 export function createPages(page: Page) {
   return {
@@ -19,6 +20,7 @@ export function createPages(page: Page) {
     },
     user: {
       login: new LoginPage(page),
+      users: new UsersPage(page),
     },
   };
 }
