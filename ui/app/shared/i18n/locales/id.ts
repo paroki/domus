@@ -273,6 +273,31 @@ const id = {
     invalidInviteTitle: "Tautan Undangan Tidak Berlaku",
     backHome: "Kembali ke Beranda",
   },
+  event: {
+    title: "Kegiatan",
+    subtitle: "Jadwal kegiatan paroki dan konfirmasi kehadiran organisasi.",
+    noParishTitle: "Pilih Paroki Aktif",
+    noParishDescription:
+      "Silakan pilih paroki aktif terlebih dahulu untuk melihat dan mengelola jadwal kegiatan.",
+    createEvent: "Buat Kegiatan",
+    allEvents: "Semua Kegiatan",
+    myOrgsOnly: "Organisasi Saya",
+    allOrgs: "Semua Organisasi",
+    allVisibility: "Semua Visibilitas",
+    allStatus: "Semua Status",
+    searchPlaceholder: "Cari judul, lokasi, atau deskripsi kegiatan…",
+    loadMore: "Muat Lebih Banyak",
+    backToList: "Daftar Kegiatan",
+    editEvent: "Ubah Kegiatan",
+    cancelEvent: "Batalkan Kegiatan",
+    rescheduleEvent: "Jadwalkan Kembali",
+    deleteEvent: "Hapus Kegiatan",
+    rsvpClosed: "Konfirmasi kehadiran (RSVP) telah ditutup",
+    removeRsvp: "Hapus RSVP",
+    rsvpSummaryTitle: "Ringkasan Kehadiran",
+    rsvpRosterTitle: "Daftar Kehadiran Anggota",
+    rsvpRestrictedTitle: "Khusus Anggota Organisasi",
+  },
 } as const;
 
 export default id;

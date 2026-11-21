@@ -6,6 +6,6 @@ export const app: AppDef = {
   id: "event",
   path: "/event",
   order: 2,
-  plate: 3,
+  plate: 2,
   icon: CalendarDays,
 };

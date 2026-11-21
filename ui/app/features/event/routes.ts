@@ -1,5 +1,6 @@
 import { type RouteConfig, route } from "@react-router/dev/routes";
 
 export default [
-  route("event", "./features/event/pages/EventPage.tsx"),
+  route("event", "./features/event/pages/EventsPage.tsx"),
+  route("event/:eventId", "./features/event/pages/EventDetailPage.tsx"),
 ] satisfies RouteConfig;
