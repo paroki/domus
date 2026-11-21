@@ -48,9 +48,9 @@ func TestRunMigrations_IdempotentSQLite(t *testing.T) {
 		t.Fatalf("expected %d applied migrations, got %d", len(sqlFiles), count)
 	}
 
-	var metaTable string
-	if err := db.QueryRowContext(ctx, "SELECT name FROM sqlite_master WHERE type='table' AND name='meta'").Scan(&metaTable); err != nil {
-		t.Fatalf("expected meta table to exist: %v", err)
+	var settingsTable string
+	if err := db.QueryRowContext(ctx, "SELECT name FROM sqlite_master WHERE type='table' AND name='settings'").Scan(&settingsTable); err != nil {
+		t.Fatalf("expected settings table to exist: %v", err)
 	}
 
 	client, err := OpenDB(ctx, cfg)
