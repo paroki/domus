@@ -22,6 +22,16 @@ func (s *Service) GetMe(ctx context.Context, p authx.Principal) (domain.UserResp
 	return s.enrichMeResponse(ctx, u, p)
 }
 
+// GetUser returns a non-deleted active user's profile by ID.
+func (s *Service) GetUser(ctx context.Context, userID uuid.UUID) (*domain.UserResponse, error) {
+	u, err := guardActiveUser(s.repo.FindUserByID(ctx, userID))
+	if err != nil {
+		return nil, err
+	}
+	res := toUserResponse(u)
+	return &res, nil
+}
+
 // UpdateMe updates the authenticated user's mutable profile fields.
 func (s *Service) UpdateMe(ctx context.Context, p authx.Principal, req domain.UpdateMeRequest) (domain.UserResponse, error) {
 	current, err := guardActiveUser(s.repo.FindUserByID(ctx, p.UserID))

@@ -168,3 +168,28 @@ func TestNewHandler_PrincipalContextPropagation(t *testing.T) {
 	assert.Contains(t, string(raw), "hello")
 	assert.Contains(t, string(raw), uid.String())
 }
+
+func TestConnectInMemory_PrincipalPropagation(t *testing.T) {
+	uid := uuid.New()
+	pid := uuid.New()
+	ctx := authx.WithPrincipal(context.Background(), authx.Principal{
+		UserID:   uid,
+		ParishID: pid,
+	})
+
+	srv := mcpx.NewServer("test-inmem")
+	sess, err := mcpx.ConnectInMemory(ctx, srv)
+	require.NoError(t, err)
+	defer func() { _ = sess.Close() }()
+
+	res, err := sess.CallTool(ctx, &mcp.CallToolParams{
+		Name:      "system_ping",
+		Arguments: map[string]any{},
+	})
+	require.NoError(t, err)
+	require.False(t, res.IsError)
+	require.NotEmpty(t, res.Content)
+	tc, ok := res.Content[0].(*mcp.TextContent)
+	require.True(t, ok)
+	assert.Contains(t, tc.Text, uid.String())
+}

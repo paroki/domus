@@ -484,6 +484,11 @@ func (f *Feature) SetTelegramMessageHandler(fn func(context.Context, telegram.Up
 	f.handler.SetTelegramMessageHandler(fn)
 }
 
+// GetUser returns an active user's profile by ID.
+func (f *Feature) GetUser(ctx context.Context, userID uuid.UUID) (*domain.UserResponse, error) {
+	return f.service.GetUser(ctx, userID)
+}
+
 func (f *Feature) extractSessionToken(c fiber.Ctx) string {
 	if cookie := c.Cookies(f.cookieName); cookie != "" {
 		return cookie

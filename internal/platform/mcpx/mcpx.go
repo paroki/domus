@@ -88,3 +88,23 @@ func NewHandler(server *mcp.Server, resolver PrincipalResolver) fiber.Handler {
 		return adapted(c)
 	}
 }
+
+// ConnectInMemory connects an in-process MCP client to server, binding ctx (and any authx.Principal)
+// as the parent context for every tool invocation.
+func ConnectInMemory(ctx context.Context, server *mcp.Server) (*mcp.ClientSession, error) {
+	clientTransport, serverTransport := mcp.NewInMemoryTransports()
+	serverSession, err := server.Connect(ctx, serverTransport, nil)
+	if err != nil {
+		return nil, err
+	}
+	client := mcp.NewClient(&mcp.Implementation{
+		Name:    "domus-agent",
+		Version: "0.1.0",
+	}, nil)
+	clientSession, err := client.Connect(ctx, clientTransport, nil)
+	if err != nil {
+		_ = serverSession.Close()
+		return nil, err
+	}
+	return clientSession, nil
+}

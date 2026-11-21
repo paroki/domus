@@ -571,3 +571,25 @@ func (s *UserFeatureSuite) TestRegisterSettings_HotReloadAndValidation() {
 	providers = testutil.DecodeAs[domain.AuthProvidersResponse](&s.ApiTestSuite).Data
 	s.Equal([]string{domain.ProviderEmail}, providers.OTPChannels)
 }
+
+func (s *UserFeatureSuite) TestGetUser_ReturnsActiveUserBiodata() {
+	ctx := context.Background()
+	u, err := s.feature.EnsureUser(ctx, "biodata@paroki.org", "Budi Santoso", "", "email", "biodata@paroki.org")
+	s.Require().NoError(err)
+
+	gender := "pria"
+	birthDate := "1990-05-15"
+	_, err = s.client.User.UpdateOneID(u.ID).SetGender(entuser.Gender(gender)).SetBirthDate(birthDate).Save(ctx)
+	s.Require().NoError(err)
+
+	got, err := s.feature.GetUser(ctx, u.ID)
+	s.Require().NoError(err)
+	s.Equal("Budi Santoso", got.Name)
+	s.Require().NotNil(got.Gender)
+	s.Equal("pria", *got.Gender)
+	s.Require().NotNil(got.BirthDate)
+	s.Equal("1990-05-15", *got.BirthDate)
+
+	_, err = s.feature.GetUser(ctx, uuid.New())
+	s.Require().Error(err)
+}
