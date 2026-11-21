@@ -48,6 +48,20 @@ jobs:
   go:
     name: Go
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: domus
+          POSTGRES_PASSWORD: domus
+          POSTGRES_DB: domus
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -90,6 +104,8 @@ jobs:
           go-package: ./...
 
       - name: Run Go tests
+        env:
+          TEST_DSN: postgres://domus:domus@localhost:5432/domus?sslmode=disable
         run: go test -v -race ./...
 
   helm:
@@ -111,6 +127,20 @@ jobs:
     name: E2E
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: domus
+          POSTGRES_PASSWORD: domus
+          POSTGRES_DB: domus
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -140,6 +170,8 @@ jobs:
         run: cd e2e && bunx playwright install --with-deps chromium
 
       - name: Run E2E tests
+        env:
+          APP_DB_URL: postgres://domus:domus@localhost:5432/domus?sslmode=disable
         run: bun run --cwd e2e e2e
 
       - name: Upload E2E report

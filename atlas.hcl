@@ -1,6 +1,6 @@
 variable "dev_url" {
   type    = string
-  default = getenv("ATLAS_DEV_URL") != "" ? getenv("ATLAS_DEV_URL") : "docker://postgres/16/dev?search_path=public"
+  default = getenv("ATLAS_DEV_URL") != "" ? getenv("ATLAS_DEV_URL") : "docker://postgres/18/dev?search_path=public"
 }
 
 env "local" {
