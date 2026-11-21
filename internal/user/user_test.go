@@ -24,6 +24,7 @@ import (
 	"github.com/paroki/domus/internal/platform/errx"
 	"github.com/paroki/domus/internal/platform/httpx"
 	"github.com/paroki/domus/internal/platform/mailx"
+	"github.com/paroki/domus/internal/platform/setting"
 	"github.com/paroki/domus/internal/user"
 	"github.com/paroki/domus/internal/user/domain"
 	"github.com/paroki/domus/testutil"
@@ -513,4 +514,60 @@ func (s *UserFeatureSuite) TestAuthRolesAndMeOrgAdminResolution() {
 	s.Contains(meActive.Roles, "org:admin")
 	s.Require().Len(meActive.RoleDetails, 2)
 	s.Equal("org:admin", meActive.RoleDetails[1].Code)
+}
+
+func (s *UserFeatureSuite) TestRegisterSettings_HotReloadAndValidation() {
+	ctx := context.Background()
+	store := setting.NewStore(s.client)
+	setting.RegisterFeatures(store, s.feature)
+	s.Require().NoError(store.Load(ctx))
+
+	// Initially only email OTP is enabled
+	s.Request("/api/auth/providers", http.MethodGet, nil)
+	s.OK()
+	providers := testutil.DecodeAs[domain.AuthProvidersResponse](&s.ApiTestSuite).Data
+	s.Equal([]string{domain.ProviderEmail}, providers.OTPChannels)
+
+	// Partial Telegram -> validation error
+	_, err := store.Update(ctx, map[string]string{
+		user.SettingTelegramBotToken: "123:tok",
+	})
+	s.Require().Error(err)
+	s.Contains(err.Error(), "Konfigurasi Telegram harus mencakup Bot Token, Bot Username, dan Webhook Secret.")
+
+	// Partial GOWA -> validation error
+	_, err = store.Update(ctx, map[string]string{
+		user.SettingGowaBaseURL:   "https://gowa.example.com",
+		user.SettingGowaBasicUser: "gowa",
+	})
+	s.Require().Error(err)
+
+	// Valid Telegram + GOWA -> hot-reloaded in /api/auth/providers
+	_, err = store.Update(ctx, map[string]string{
+		user.SettingTelegramBotToken:      "123:tok",
+		user.SettingTelegramBotUsername:   "domus_bot",
+		user.SettingTelegramWebhookSecret: "hook-secret",
+		user.SettingGowaBaseURL:           "https://gowa.example.com",
+	})
+	s.Require().NoError(err)
+
+	s.Request("/api/auth/providers", http.MethodGet, nil)
+	s.OK()
+	providers = testutil.DecodeAs[domain.AuthProvidersResponse](&s.ApiTestSuite).Data
+	s.Contains(providers.OTPChannels, domain.ProviderTelegram)
+	s.Contains(providers.OTPChannels, domain.ProviderWhatsApp)
+
+	// Clear Telegram + GOWA -> disabled again
+	_, err = store.Update(ctx, map[string]string{
+		user.SettingTelegramBotToken:      "",
+		user.SettingTelegramBotUsername:   "",
+		user.SettingTelegramWebhookSecret: "",
+		user.SettingGowaBaseURL:           "",
+	})
+	s.Require().NoError(err)
+
+	s.Request("/api/auth/providers", http.MethodGet, nil)
+	s.OK()
+	providers = testutil.DecodeAs[domain.AuthProvidersResponse](&s.ApiTestSuite).Data
+	s.Equal([]string{domain.ProviderEmail}, providers.OTPChannels)
 }

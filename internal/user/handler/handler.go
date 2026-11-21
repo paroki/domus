@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"sync"
 	"time"
 
 	"github.com/gofiber/fiber/v3"
@@ -19,6 +20,7 @@ type Handler struct {
 	service          *service.Service
 	cookieName       string
 	sessionTTL       time.Duration
+	tgMu             sync.RWMutex
 	telegramClient   *telegram.Client
 	telegramFallback func(context.Context, telegram.Update) error
 }
@@ -37,7 +39,15 @@ func New(svc *service.Service, cookieName string, sessionTTL time.Duration) *Han
 
 // SetTelegramClient sets the Telegram Bot client used for webhook verification and replies.
 func (h *Handler) SetTelegramClient(c *telegram.Client) {
+	h.tgMu.Lock()
+	defer h.tgMu.Unlock()
 	h.telegramClient = c
+}
+
+func (h *Handler) getTelegramClient() *telegram.Client {
+	h.tgMu.RLock()
+	defer h.tgMu.RUnlock()
+	return h.telegramClient
 }
 
 // SetTelegramMessageHandler sets a fallback handler for non-/start Telegram webhook messages.

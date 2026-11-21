@@ -16,6 +16,7 @@ import (
 	"github.com/paroki/domus/internal/platform/httpx"
 	"github.com/paroki/domus/internal/platform/mailx"
 	"github.com/paroki/domus/internal/platform/mcpx"
+	"github.com/paroki/domus/internal/platform/setting"
 	"github.com/paroki/domus/internal/platform/telegram"
 	"github.com/paroki/domus/internal/user/domain"
 	"github.com/paroki/domus/internal/user/handler"
@@ -38,6 +39,16 @@ var (
 	RoleSuperAdmin = authz.Role("user", "super-admin")
 	RoleUser       = authz.Role("user", "user")
 	PermUsers      = authz.Permission("user", "users")
+)
+
+// Feature-owned runtime setting keys.
+var (
+	SettingTelegramBotToken      = setting.Key("user", "telegram.bot_token")
+	SettingTelegramBotUsername   = setting.Key("user", "telegram.bot_username")
+	SettingTelegramWebhookSecret = setting.Key("user", "telegram.webhook_secret")
+	SettingGowaBaseURL           = setting.Key("user", "gowa.base_url")
+	SettingGowaBasicUser         = setting.Key("user", "gowa.basic_user")
+	SettingGowaBasicPass         = setting.Key("user", "gowa.basic_pass")
 )
 
 type options struct {
@@ -102,10 +113,12 @@ func WithOAuthProvider(p domain.OAuthProvider) Option {
 
 // Feature wires the user and authentication feature.
 type Feature struct {
-	service    *service.Service
-	handler    *handler.Handler
-	enforcer   *authz.Enforcer
-	cookieName string
+	service         *service.Service
+	handler         *handler.Handler
+	enforcer        *authz.Enforcer
+	compositeSender *service.CompositeOTPSender
+	otpTTL          time.Duration
+	cookieName      string
 }
 
 // New constructs the user Feature with Ent persistence, Casbin enforcer, config, and options.
@@ -173,11 +186,135 @@ func New(db *ent.Client, enforcer *authz.Enforcer, cfg Config, logger *slog.Logg
 		h.SetTelegramClient(opt.telegramClient)
 	}
 	return &Feature{
-		service:    svc,
-		handler:    h,
-		enforcer:   enforcer,
-		cookieName: cookieName,
+		service:         svc,
+		handler:         h,
+		enforcer:        enforcer,
+		compositeSender: compositeSender,
+		otpTTL:          otpTTL,
+		cookieName:      cookieName,
 	}
+}
+
+// RegisterSettings registers Telegram and GOWA descriptors and a hot-reload listener on s.
+func (f *Feature) RegisterSettings(s *setting.Store) {
+	s.Register(setting.Descriptor{
+		Key:         SettingTelegramBotToken,
+		Group:       "Telegram Bot",
+		Label:       "Bot Token",
+		Description: "Token bot dari @BotFather untuk mengirim OTP dan menangani webhook.",
+		Secret:      true,
+		Placeholder: "123456:ABC-DEF...",
+	})
+	s.Register(setting.Descriptor{
+		Key:         SettingTelegramBotUsername,
+		Group:       "Telegram Bot",
+		Label:       "Bot Username",
+		Description: "Username bot Telegram tanpa awalan @.",
+		Secret:      false,
+		Placeholder: "domus_bot",
+	})
+	s.Register(setting.Descriptor{
+		Key:         SettingTelegramWebhookSecret,
+		Group:       "Telegram Bot",
+		Label:       "Webhook Secret",
+		Description: "Secret token untuk memverifikasi header X-Telegram-Bot-Api-Secret-Token.",
+		Secret:      true,
+		Placeholder: "secret-token",
+	})
+	s.Register(setting.Descriptor{
+		Key:         SettingGowaBaseURL,
+		Group:       "GOWA (WhatsApp)",
+		Label:       "Base URL",
+		Description: "URL dasar layanan GOWA untuk pengiriman OTP WhatsApp.",
+		Secret:      false,
+		Placeholder: "https://gowa.example.com",
+	})
+	s.Register(setting.Descriptor{
+		Key:         SettingGowaBasicUser,
+		Group:       "GOWA (WhatsApp)",
+		Label:       "Basic Auth Username",
+		Description: "Opsional: username Basic Auth jika GOWA dilindungi autentikasi.",
+		Secret:      false,
+		Placeholder: "gowa-user",
+	})
+	s.Register(setting.Descriptor{
+		Key:         SettingGowaBasicPass,
+		Group:       "GOWA (WhatsApp)",
+		Label:       "Basic Auth Password",
+		Description: "Opsional: password Basic Auth jika GOWA dilindungi autentikasi.",
+		Secret:      true,
+		Placeholder: "••••••••",
+	})
+
+	s.OnChange(func(_ context.Context, values map[string]string) error {
+		botToken := strings.TrimSpace(values[SettingTelegramBotToken])
+		botUsername := strings.TrimSpace(values[SettingTelegramBotUsername])
+		webhookSecret := strings.TrimSpace(values[SettingTelegramWebhookSecret])
+
+		tgSetCount := 0
+		for _, v := range []string{botToken, botUsername, webhookSecret} {
+			if v != "" {
+				tgSetCount++
+			}
+		}
+
+		var tgClient *telegram.Client
+		switch tgSetCount {
+		case 0:
+		case 3:
+			c, err := telegram.New(telegram.Config{
+				BotToken:      botToken,
+				BotUsername:   botUsername,
+				WebhookSecret: webhookSecret,
+			})
+			if err != nil {
+				return err
+			}
+			tgClient = c
+		default:
+			return errors.New("Konfigurasi Telegram harus mencakup Bot Token, Bot Username, dan Webhook Secret.")
+		}
+
+		baseURL := strings.TrimSpace(values[SettingGowaBaseURL])
+		basicUser := strings.TrimSpace(values[SettingGowaBasicUser])
+		basicPass := strings.TrimSpace(values[SettingGowaBasicPass])
+
+		var gowaClient *gowa.Client
+		if baseURL != "" || basicUser != "" || basicPass != "" {
+			if (basicUser != "") != (basicPass != "") {
+				return errors.New("Konfigurasi GOWA Basic Auth harus mencakup Username dan Password.")
+			}
+			if (basicUser != "" || basicPass != "") && baseURL == "" {
+				return errors.New("GOWA Base URL wajib diisi jika Basic Auth digunakan.")
+			}
+			c, err := gowa.New(gowa.Config{
+				BaseURL:   baseURL,
+				BasicUser: basicUser,
+				BasicPass: basicPass,
+			})
+			if err != nil {
+				return err
+			}
+			gowaClient = c
+		}
+
+		if tgClient != nil {
+			f.compositeSender.SetSender(domain.ProviderTelegram, service.NewTelegramOTPSender(tgClient, f.otpTTL))
+			f.service.SetTelegramClient(tgClient)
+			f.handler.SetTelegramClient(tgClient)
+		} else {
+			f.compositeSender.RemoveSender(domain.ProviderTelegram)
+			f.service.SetTelegramClient(nil)
+			f.handler.SetTelegramClient(nil)
+		}
+
+		if gowaClient != nil {
+			f.compositeSender.SetSender(domain.ProviderWhatsApp, service.NewGowaOTPSender(gowaClient, f.otpTTL))
+		} else {
+			f.compositeSender.RemoveSender(domain.ProviderWhatsApp)
+		}
+		return nil
+	})
 }
 
 // Register mounts user and authentication routes under /api.

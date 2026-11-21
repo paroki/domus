@@ -107,7 +107,8 @@ func (s *Service) VerifyLinkAccount(ctx context.Context, p authx.Principal, req 
 
 // CreateTelegramLinkToken creates a single-use deep-link token for connecting Telegram via /start.
 func (s *Service) CreateTelegramLinkToken(ctx context.Context, p authx.Principal) (domain.TelegramLinkTokenResponse, error) {
-	if s.telegramClient == nil {
+	tgClient := s.getTelegramClient()
+	if tgClient == nil {
 		return domain.TelegramLinkTokenResponse{}, domain.ErrAuthChannelDisabled
 	}
 
@@ -126,8 +127,8 @@ func (s *Service) CreateTelegramLinkToken(ctx context.Context, p authx.Principal
 	}
 
 	return domain.TelegramLinkTokenResponse{
-		DeepLinkURL:      s.telegramClient.DeepLinkURL(token),
-		BotUsername:      s.telegramClient.BotUsername(),
+		DeepLinkURL:      tgClient.DeepLinkURL(token),
+		BotUsername:      tgClient.BotUsername(),
 		ExpiresInSeconds: int(s.cfg.OTPTTL.Seconds()),
 	}, nil
 }

@@ -27,7 +27,8 @@ import (
 //	@Failure		401								{object}	httpx.Envelope[any]
 //	@Router			/telegram/hooks [post]
 func (h *Handler) TelegramWebhook(c fiber.Ctx) error {
-	if h.telegramClient == nil || !h.telegramClient.VerifyWebhookSecret(c.Get(telegram.SecretTokenHeader)) {
+	tgClient := h.getTelegramClient()
+	if tgClient == nil || !tgClient.VerifyWebhookSecret(c.Get(telegram.SecretTokenHeader)) {
 		return httpx.Unauthorized("Invalid Telegram webhook secret.")
 	}
 
@@ -43,12 +44,12 @@ func (h *Handler) TelegramWebhook(c fiber.Ctx) error {
 				displayName := telegramDisplayName(update.Message.From)
 				err := h.service.CompleteTelegramLink(c.Context(), token, strconv.FormatInt(chatID, 10), displayName)
 				reply := telegramLinkReply(err)
-				_ = h.telegramClient.SendMessage(c.Context(), chatID, reply)
+				_ = tgClient.SendMessage(c.Context(), chatID, reply)
 			}
 		} else if h.telegramFallback != nil {
 			_ = h.telegramFallback(c.Context(), update)
 		} else if chatID != 0 {
-			_ = h.telegramClient.SendMessage(
+			_ = tgClient.SendMessage(
 				c.Context(),
 				chatID,
 				"Halo! Untuk menghubungkan akun Telegram dengan Domus, silakan buka halaman Profil (/me) di Domus dan buat tautan verifikasi Telegram.",

@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/paroki/domus/internal/platform/gowa"
@@ -87,6 +88,7 @@ func (s *TelegramOTPSender) SendOTP(ctx context.Context, channel, target, code s
 
 // CompositeOTPSender routes OTP dispatches across configured delivery channels.
 type CompositeOTPSender struct {
+	mu      sync.RWMutex
 	senders map[string]domain.OTPSender
 }
 
@@ -105,20 +107,37 @@ func (c *CompositeOTPSender) SetSender(channel string, sender domain.OTPSender) 
 	if ch == "" || sender == nil {
 		return
 	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	c.senders[ch] = sender
+}
+
+// RemoveSender unregisters the OTPSender for channel.
+func (c *CompositeOTPSender) RemoveSender(channel string) {
+	ch := strings.ToLower(strings.TrimSpace(channel))
+	if ch == "" {
+		return
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	delete(c.senders, ch)
 }
 
 // HasChannel reports whether channel has a configured sender.
 func (c *CompositeOTPSender) HasChannel(channel string) bool {
 	ch := strings.ToLower(strings.TrimSpace(channel))
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	return c.senders[ch] != nil
 }
 
 // EnabledChannels returns configured login OTP channels in deterministic order.
 func (c *CompositeOTPSender) EnabledChannels() []string {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	var channels []string
 	for _, ch := range []string{domain.ProviderEmail, domain.ProviderWhatsApp, domain.ProviderTelegram} {
-		if c.HasChannel(ch) {
+		if c.senders[ch] != nil {
 			channels = append(channels, ch)
 		}
 	}
@@ -135,7 +154,9 @@ func (c *CompositeOTPSender) SendOTP(ctx context.Context, channel, target, code 
 	if routeKey == channelWhatsAppLink {
 		routeKey = domain.ProviderWhatsApp
 	}
+	c.mu.RLock()
 	sender := c.senders[routeKey]
+	c.mu.RUnlock()
 	if sender == nil {
 		return domain.ErrAuthChannelDisabled
 	}

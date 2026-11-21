@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -95,6 +96,7 @@ type Service struct {
 	repo           *repo.Repository
 	enforcer       *authz.Enforcer
 	otpSender      *CompositeOTPSender
+	tgMu           sync.RWMutex
 	telegramClient *telegram.Client
 	oauthProviders map[string]domain.OAuthProvider
 	inviteJoiner   InviteJoiner
@@ -107,7 +109,15 @@ func (s *Service) SetInviteJoiner(j InviteJoiner) {
 
 // SetTelegramClient wires the optional Telegram Bot API client into the service.
 func (s *Service) SetTelegramClient(c *telegram.Client) {
+	s.tgMu.Lock()
+	defer s.tgMu.Unlock()
 	s.telegramClient = c
+}
+
+func (s *Service) getTelegramClient() *telegram.Client {
+	s.tgMu.RLock()
+	defer s.tgMu.RUnlock()
+	return s.telegramClient
 }
 
 // New constructs a Service with configured OAuth2 providers and OTP sender.
