@@ -8,6 +8,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
+	"github.com/paroki/domus/ent/organization"
+	"github.com/paroki/domus/ent/orgmember"
 	"github.com/paroki/domus/ent/parish"
 	"github.com/paroki/domus/ent/parishmember"
 	"github.com/paroki/domus/ent/user"
@@ -559,4 +561,24 @@ func (r *Repository) CountActiveUsersByIDs(ctx context.Context, ids []uuid.UUID)
 	return r.client.User.Query().
 		Where(user.IDIn(ids...), user.DeletedAtIsNil(), user.StatusEQ(user.StatusActive)).
 		Count(ctx)
+}
+
+// IsActiveOrgAdminInParish reports whether userID is an active org:admin in any active organization of parishID.
+func (r *Repository) IsActiveOrgAdminInParish(ctx context.Context, userID, parishID uuid.UUID) (bool, error) {
+	if userID == uuid.Nil || parishID == uuid.Nil {
+		return false, nil
+	}
+	return r.client.OrgMember.Query().
+		Where(
+			orgmember.UserIDEQ(userID),
+			orgmember.ParishIDEQ(parishID),
+			orgmember.RoleEQ(orgmember.RoleAdmin),
+			orgmember.StatusEQ(orgmember.StatusActive),
+			orgmember.HasOrganizationWith(
+				organization.ParishIDEQ(parishID),
+				organization.ActiveEQ(true),
+				organization.DeletedAtIsNil(),
+			),
+		).
+		Exist(ctx)
 }

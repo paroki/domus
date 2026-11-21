@@ -58,7 +58,7 @@ func (s *Service) UpdateMe(ctx context.Context, p authx.Principal, req domain.Up
 }
 
 func (s *Service) enrichMeResponse(ctx context.Context, u *ent.User, p authx.Principal) (domain.UserResponse, error) {
-	roles, err := s.loadRoles(u.ID, p.ParishID)
+	roles, err := s.loadRoles(ctx, u.ID, p.ParishID)
 	if err != nil {
 		return domain.UserResponse{}, err
 	}
@@ -68,6 +68,7 @@ func (s *Service) enrichMeResponse(ctx context.Context, u *ent.User, p authx.Pri
 	}
 	res := toUserResponse(u)
 	res.Roles = roles
+	res.RoleDetails = s.describeRoles(roles)
 	res.LinkedProviders = providers
 	if p.ParishID != uuid.Nil {
 		pid := p.ParishID

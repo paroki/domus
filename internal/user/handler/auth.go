@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/paroki/domus/internal/platform/authz"
 	"github.com/paroki/domus/internal/platform/httpx"
 	"github.com/paroki/domus/internal/user/domain"
 )
@@ -33,6 +34,20 @@ func (h *Handler) GetProviders(c fiber.Ctx) error {
 		Providers:   h.service.EnabledProviders(),
 		OTPChannels: h.service.EnabledOTPChannels(),
 	})
+}
+
+// GetRoles lists registered application roles with their scopes and descriptions.
+//
+//	@Summary		List registered application roles
+//	@Description	Returns self-registered application roles with human-readable names, scopes, and descriptions.
+//	@ID				getAuthRoles
+//	@Tags			Auth
+//	@Produce		json
+//	@Success		200	{object}	httpx.Envelope[[]authz.RoleDescriptor]
+//	@Router			/auth/roles [get]
+func (h *Handler) GetRoles(c fiber.Ctx) error {
+	var _ authz.RoleDescriptor
+	return httpx.OK(c, h.service.ListRoles())
 }
 
 // RequestOTP dispatches a 6-digit passwordless login code via email, WhatsApp, or Telegram.

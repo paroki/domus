@@ -16,6 +16,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
+	"github.com/paroki/domus/ent/orgmember"
 	entuser "github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/usersession"
 	"github.com/paroki/domus/internal/platform/authx"
@@ -416,4 +417,100 @@ func (s *UserFeatureSuite) TestMailOTPSender_AndLogFallback() {
 	case <-time.After(5 * time.Second):
 		s.FailNow("timed out waiting for SMTP OTP delivery")
 	}
+}
+
+func (s *UserFeatureSuite) TestAuthRolesAndMeOrgAdminResolution() {
+	ctx := context.Background()
+	s.enforcer.RegisterRole(authz.RoleDescriptor{
+		Code:        "org:admin",
+		Name:        "Admin Organisasi",
+		Scope:       authz.RoleScopeOrg,
+		Description: "Org admin",
+	})
+
+	// 1. GET /api/auth/roles returns registered descriptors
+	s.Request("/api/auth/roles", http.MethodGet, nil)
+	s.OK()
+	catalog := testutil.DecodeAs[[]authz.RoleDescriptor](&s.ApiTestSuite).Data
+	s.Require().Len(catalog, 3)
+	s.Equal(user.RoleSuperAdmin, catalog[0].Code)
+	s.Equal(user.RoleUser, catalog[1].Code)
+	s.Equal("org:admin", catalog[2].Code)
+
+	// 2. Create user + parish + active org membership as admin
+	uResp, err := s.feature.EnsureUser(ctx, "orgadmin@paroki.org", "Org Admin", "", "email", "orgadmin@paroki.org")
+	s.Require().NoError(err)
+
+	diocese, err := s.client.Diocese.Create().
+		SetCode("KAJ").
+		SetName("Keuskupan Agung Jakarta").
+		Save(ctx)
+	s.Require().NoError(err)
+	parish1, err := s.client.Parish.Create().
+		SetDioceseID(diocese.ID).
+		SetCode("P1").
+		SetName("Paroki 1").
+		Save(ctx)
+	s.Require().NoError(err)
+	parish2, err := s.client.Parish.Create().
+		SetDioceseID(diocese.ID).
+		SetCode("P2").
+		SetName("Paroki 2").
+		Save(ctx)
+	s.Require().NoError(err)
+	parishID := parish1.ID
+	otherParishID := parish2.ID
+	for _, pid := range []uuid.UUID{parishID, otherParishID} {
+		_, err = s.client.ParishMember.Create().
+			SetParishID(pid).
+			SetUserID(uResp.ID).
+			SetRole("member").
+			Save(ctx)
+		s.Require().NoError(err)
+	}
+	org, err := s.client.Organization.Create().
+		SetParishID(parishID).
+		SetKind("section").
+		SetCode("OMK").
+		SetName("Orang Muda Katolik").
+		SetActive(true).
+		Save(ctx)
+	s.Require().NoError(err)
+
+	_, err = s.client.OrgMember.Create().
+		SetParishID(parishID).
+		SetOrgID(org.ID).
+		SetUserID(uResp.ID).
+		SetRole(orgmember.RoleAdmin).
+		SetStatus(orgmember.StatusActive).
+		Save(ctx)
+	s.Require().NoError(err)
+
+	cookie := s.issueSessionFor("orgadmin@paroki.org")
+	s.SetCookie(cookie)
+
+	// Without active parish -> only user:user
+	s.Request("/api/me", http.MethodGet, nil)
+	s.OK()
+	meNoParish := testutil.DecodeAs[domain.UserResponse](&s.ApiTestSuite).Data
+	s.Equal([]string{user.RoleUser}, meNoParish.Roles)
+	s.Require().Len(meNoParish.RoleDetails, 1)
+	s.Equal(user.RoleUser, meNoParish.RoleDetails[0].Code)
+
+	// With other parish -> no org:admin
+	s.SetHeader("X-Parish-Id", otherParishID.String())
+	s.Request("/api/me", http.MethodGet, nil)
+	s.OK()
+	meOther := testutil.DecodeAs[domain.UserResponse](&s.ApiTestSuite).Data
+	s.NotContains(meOther.Roles, "org:admin")
+
+	// With active parish where user is active org:admin -> includes org:admin in roles & roleDetails
+	s.SetHeader("X-Parish-Id", parishID.String())
+	s.Request("/api/me", http.MethodGet, nil)
+	s.OK()
+	meActive := testutil.DecodeAs[domain.UserResponse](&s.ApiTestSuite).Data
+	s.Contains(meActive.Roles, user.RoleUser)
+	s.Contains(meActive.Roles, "org:admin")
+	s.Require().Len(meActive.RoleDetails, 2)
+	s.Equal("org:admin", meActive.RoleDetails[1].Code)
 }

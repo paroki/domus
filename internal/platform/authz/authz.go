@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"fmt"
 	"regexp"
+	"sync"
 
 	"github.com/casbin/casbin/v3"
 	"github.com/casbin/casbin/v3/model"
@@ -38,6 +39,26 @@ var (
 	resourceRe = regexp.MustCompile(`^[a-z][a-z0-9_-]*$`)
 )
 
+// RoleScope identifies the domain level where a role applies.
+type RoleScope string
+
+const (
+	// RoleScopeGlobal applies across the entire application.
+	RoleScopeGlobal RoleScope = "global"
+	// RoleScopeParish applies within a specific parish tenant.
+	RoleScopeParish RoleScope = "parish"
+	// RoleScopeOrg applies within a specific organization.
+	RoleScopeOrg RoleScope = "org"
+)
+
+// RoleDescriptor describes a self-registered application role for API and UI discovery.
+type RoleDescriptor struct {
+	Code        string    `json:"code"`
+	Name        string    `json:"name"`
+	Scope       RoleScope `json:"scope"`
+	Description string    `json:"description"`
+}
+
 // PermissionFeature is implemented by feature facades that register their own Casbin permissions.
 type PermissionFeature interface {
 	RegisterPermissions(ctx context.Context, e *Enforcer) error
@@ -45,7 +66,10 @@ type PermissionFeature interface {
 
 // Enforcer wraps Casbin with Domus domain-hierarchy helpers.
 type Enforcer struct {
-	inner *casbin.Enforcer
+	inner     *casbin.Enforcer
+	mu        sync.RWMutex
+	roles     []RoleDescriptor
+	roleIndex map[string]int
 }
 
 // UserSubject formats a user UUID as a Casbin subject ("user:<uuid>").
@@ -89,7 +113,7 @@ func NewEnforcer(client *ent.Client) (*Enforcer, error) {
 	if err != nil {
 		return nil, fmt.Errorf("create casbin enforcer: %w", err)
 	}
-	return &Enforcer{inner: e}, nil
+	return &Enforcer{inner: e, roleIndex: make(map[string]int)}, nil
 }
 
 // NewMemoryEnforcer creates an in-memory Casbin enforcer for unit tests.
@@ -102,7 +126,55 @@ func NewMemoryEnforcer() (*Enforcer, error) {
 	if err != nil {
 		return nil, fmt.Errorf("create memory casbin enforcer: %w", err)
 	}
-	return &Enforcer{inner: e}, nil
+	return &Enforcer{inner: e, roleIndex: make(map[string]int)}, nil
+}
+
+// RegisterRole records a RoleDescriptor in registration order, deduplicated by Code.
+func (e *Enforcer) RegisterRole(desc RoleDescriptor) {
+	if desc.Code == "" {
+		return
+	}
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	if e.roleIndex == nil {
+		e.roleIndex = make(map[string]int)
+	}
+	if idx, exists := e.roleIndex[desc.Code]; exists {
+		e.roles[idx] = desc
+		return
+	}
+	e.roleIndex[desc.Code] = len(e.roles)
+	e.roles = append(e.roles, desc)
+}
+
+// Roles returns all registered RoleDescriptors in registration order.
+func (e *Enforcer) Roles() []RoleDescriptor {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+	out := make([]RoleDescriptor, len(e.roles))
+	copy(out, e.roles)
+	return out
+}
+
+// DescribeRoles resolves a list of role codes to their registered RoleDescriptors.
+func (e *Enforcer) DescribeRoles(codes []string) []RoleDescriptor {
+	if len(codes) == 0 {
+		return nil
+	}
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+	out := make([]RoleDescriptor, 0, len(codes))
+	seen := make(map[string]struct{}, len(codes))
+	for _, code := range codes {
+		if _, dup := seen[code]; dup {
+			continue
+		}
+		seen[code] = struct{}{}
+		if idx, ok := e.roleIndex[code]; ok {
+			out = append(out, e.roles[idx])
+		}
+	}
+	return out
 }
 
 // RegisterFeatures calls RegisterPermissions on every feature implementing PermissionFeature.

@@ -126,6 +126,18 @@ func (f *Feature) RegisterPermissions(ctx context.Context, e *authz.Enforcer) er
 	if e == nil {
 		return nil
 	}
+	e.RegisterRole(authz.RoleDescriptor{
+		Code:        RoleAdmin,
+		Name:        "Admin Organisasi",
+		Scope:       authz.RoleScopeOrg,
+		Description: "Mengelola profil organisasi, pengurus & anggota, tautan undangan, dan kegiatan organisasi.",
+	})
+	e.RegisterRole(authz.RoleDescriptor{
+		Code:        RoleMember,
+		Name:        "Anggota Organisasi",
+		Scope:       authz.RoleScopeOrg,
+		Description: "Melihat direktori internal organisasi, kegiatan internal, dan konfirmasi kehadiran (RSVP).",
+	})
 	policies := []struct {
 		role string
 		perm string

@@ -35,6 +35,7 @@ func (s *Service) SearchUsers(
 		res := toUserResponse(row)
 		if roles, err := s.loadGlobalRoles(row.ID); err == nil {
 			res.Roles = roles
+			res.RoleDetails = s.describeRoles(roles)
 		}
 		items = append(items, res)
 	}
@@ -100,6 +101,7 @@ func (s *Service) AdminCreateUser(ctx context.Context, req domain.AdminCreateUse
 	res := toUserResponse(created)
 	if roles, err := s.loadGlobalRoles(created.ID); err == nil {
 		res.Roles = roles
+		res.RoleDetails = s.describeRoles(roles)
 	}
 	return res, nil
 }
@@ -116,6 +118,7 @@ func (s *Service) AdminGetUser(ctx context.Context, id uuid.UUID) (domain.UserRe
 	res := toUserResponse(u)
 	if roles, err := s.loadGlobalRoles(u.ID); err == nil {
 		res.Roles = roles
+		res.RoleDetails = s.describeRoles(roles)
 	}
 	return res, nil
 }
@@ -194,6 +197,7 @@ func (s *Service) AdminUpdateUser(ctx context.Context, id uuid.UUID, req domain.
 	res := toUserResponse(updated)
 	if roles, err := s.loadGlobalRoles(updated.ID); err == nil {
 		res.Roles = roles
+		res.RoleDetails = s.describeRoles(roles)
 	}
 	return res, nil
 }

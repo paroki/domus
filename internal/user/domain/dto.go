@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/paroki/domus/internal/platform/authz"
 )
 
 // AuthProvidersResponse lists enabled OAuth2 provider names and OTP channels.
@@ -39,20 +40,21 @@ type VerifyOTPRequest struct {
 
 // UserResponse is the public API representation of a User.
 type UserResponse struct {
-	ID              uuid.UUID  `json:"id"`
-	Email           string     `json:"email"`
-	Name            string     `json:"name"`
-	Phone           *string    `json:"phone,omitempty"`
-	AvatarURL       *string    `json:"avatarUrl,omitempty"`
-	Status          string     `json:"status"`
-	Onboarded       bool       `json:"onboarded"`
-	LinkedProviders []string   `json:"linkedProviders,omitempty"`
-	ActiveParishID  *uuid.UUID `json:"activeParishId,omitempty"`
-	DefaultParishID *uuid.UUID `json:"defaultParishId,omitempty"`
-	Roles           []string   `json:"roles,omitempty"`
-	LastLoginAt     *time.Time `json:"lastLoginAt,omitempty"`
-	CreatedAt       time.Time  `json:"createdAt"`
-	UpdatedAt       time.Time  `json:"updatedAt"`
+	ID              uuid.UUID              `json:"id"`
+	Email           string                 `json:"email"`
+	Name            string                 `json:"name"`
+	Phone           *string                `json:"phone,omitempty"`
+	AvatarURL       *string                `json:"avatarUrl,omitempty"`
+	Status          string                 `json:"status"`
+	Onboarded       bool                   `json:"onboarded"`
+	LinkedProviders []string               `json:"linkedProviders,omitempty"`
+	ActiveParishID  *uuid.UUID             `json:"activeParishId,omitempty"`
+	DefaultParishID *uuid.UUID             `json:"defaultParishId,omitempty"`
+	Roles           []string               `json:"roles,omitempty"`
+	RoleDetails     []authz.RoleDescriptor `json:"roleDetails,omitempty"`
+	LastLoginAt     *time.Time             `json:"lastLoginAt,omitempty"`
+	CreatedAt       time.Time              `json:"createdAt"`
+	UpdatedAt       time.Time              `json:"updatedAt"`
 }
 
 // AuthSessionResponse is returned upon successful OTP verification.

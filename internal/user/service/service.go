@@ -252,7 +252,7 @@ func (s *Service) buildAuthSessionResponse(ctx context.Context, r *repo.Reposito
 	if parishIDPtr != nil {
 		activeParishID = *parishIDPtr
 	}
-	roles, err := s.loadRoles(u.ID, activeParishID)
+	roles, err := s.loadRoles(ctx, u.ID, activeParishID)
 	if err != nil {
 		return nil, err
 	}
@@ -261,6 +261,7 @@ func (s *Service) buildAuthSessionResponse(ctx context.Context, r *repo.Reposito
 		return nil, err
 	}
 	userResp.Roles = roles
+	userResp.RoleDetails = s.describeRoles(roles)
 	userResp.LinkedProviders = providers
 	userResp.ActiveParishID = parishIDPtr
 	return &domain.AuthSessionResponse{
@@ -298,6 +299,21 @@ func randomToken(numBytes int) (string, error) {
 		return "", err
 	}
 	return base64.RawURLEncoding.EncodeToString(buf), nil
+}
+
+// ListRoles returns all registered application role descriptors.
+func (s *Service) ListRoles() []authz.RoleDescriptor {
+	if s.enforcer == nil {
+		return []authz.RoleDescriptor{}
+	}
+	return s.enforcer.Roles()
+}
+
+func (s *Service) describeRoles(roles []string) []authz.RoleDescriptor {
+	if s.enforcer == nil || len(roles) == 0 {
+		return nil
+	}
+	return s.enforcer.DescribeRoles(roles)
 }
 
 func toUserResponse(u *ent.User) domain.UserResponse {

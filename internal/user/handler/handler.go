@@ -56,6 +56,7 @@ func (h *Handler) Register(
 	auth := api.Group("/auth")
 	// Static routes MUST be registered before parameterized /:provider routes.
 	auth.Get("/providers", h.GetProviders)
+	auth.Get("/roles", h.GetRoles)
 	auth.Post("/otp", h.RequestOTP)
 	auth.Post("/otp/verify", h.VerifyOTP)
 	auth.Post("/logout", h.Logout)

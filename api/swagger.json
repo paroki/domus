@@ -9,6 +9,36 @@
                 },
                 "type": "object"
             },
+            "authz.RoleDescriptor": {
+                "properties": {
+                    "code": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "scope": {
+                        "$ref": "#/components/schemas/authz.RoleScope"
+                    }
+                },
+                "type": "object"
+            },
+            "authz.RoleScope": {
+                "enum": [
+                    "global",
+                    "parish",
+                    "org"
+                ],
+                "type": "string",
+                "x-enum-varnames": [
+                    "RoleScopeGlobal",
+                    "RoleScopeParish",
+                    "RoleScopeOrg"
+                ]
+            },
             "domain.AddOrgMemberRequest": {
                 "properties": {
                     "email": {
@@ -1967,6 +1997,13 @@
                     "phone": {
                         "type": "string"
                     },
+                    "roleDetails": {
+                        "items": {
+                            "$ref": "#/components/schemas/authz.RoleDescriptor"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
                     "roles": {
                         "items": {
                             "type": "string"
@@ -2190,6 +2227,24 @@
                 "properties": {
                     "data": {
                         "$ref": "#/components/schemas/app.healthStatus"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-array_authz_RoleDescriptor": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/authz.RoleDescriptor"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
                     },
                     "error": {
                         "$ref": "#/components/schemas/httpx.ErrorPayload"
@@ -3030,6 +3085,28 @@
                     }
                 },
                 "summary": "List enabled auth providers",
+                "tags": [
+                    "Auth"
+                ]
+            }
+        },
+        "/auth/roles": {
+            "get": {
+                "description": "Returns self-registered application roles with human-readable names, scopes, and descriptions.",
+                "operationId": "getAuthRoles",
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_authz_RoleDescriptor"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    }
+                },
+                "summary": "List registered application roles",
                 "tags": [
                     "Auth"
                 ]

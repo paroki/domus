@@ -196,6 +196,18 @@ func (f *Feature) RegisterPermissions(ctx context.Context, e *authz.Enforcer) er
 	if e == nil {
 		return nil
 	}
+	e.RegisterRole(authz.RoleDescriptor{
+		Code:        RoleSuperAdmin,
+		Name:        "Super Admin",
+		Scope:       authz.RoleScopeGlobal,
+		Description: "Mengelola pengguna global, keuskupan, tenant paroki, dan kamus referensi global.",
+	})
+	e.RegisterRole(authz.RoleDescriptor{
+		Code:        RoleUser,
+		Name:        "Pengguna",
+		Scope:       authz.RoleScopeGlobal,
+		Description: "Pengguna terdaftar aplikasi yang dapat bergabung ke paroki dan organisasi.",
+	})
 	if err := e.AddPermissionForRole(ctx, RoleSuperAdmin, authz.DomainGlobal, PermUsers, authz.ActionRead); err != nil {
 		return err
 	}

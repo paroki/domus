@@ -89,6 +89,12 @@ func (f *Feature) RegisterPermissions(ctx context.Context, e *authz.Enforcer) er
 	if e == nil {
 		return nil
 	}
+	e.RegisterRole(authz.RoleDescriptor{
+		Code:        RoleParishAdmin,
+		Name:        "Admin Paroki",
+		Scope:       authz.RoleScopeParish,
+		Description: "Mengelola profil paroki, wilayah & lingkungan, kamus referensi, periode, dan organisasi paroki.",
+	})
 	policies := []struct {
 		role string
 		perm string

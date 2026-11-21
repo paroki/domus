@@ -61,7 +61,7 @@ func (s *Service) ResolveSession(ctx context.Context, rawToken string, headerPar
 		return authx.Principal{}, err
 	}
 
-	roles, err := s.loadRoles(u.ID, parishID)
+	roles, err := s.loadRoles(ctx, u.ID, parishID)
 	if err != nil {
 		return authx.Principal{}, err
 	}
@@ -102,7 +102,7 @@ func (s *Service) ResolveByChannel(ctx context.Context, provider, subject string
 	}
 
 	parishID := resolveParishID(overrideParishID, acc.ActiveParishID, u.DefaultParishID)
-	roles, err := s.loadRoles(u.ID, parishID)
+	roles, err := s.loadRoles(ctx, u.ID, parishID)
 	if err != nil {
 		return authx.Principal{}, err
 	}
@@ -223,7 +223,7 @@ func (s *Service) loadGlobalRoles(userID uuid.UUID) ([]string, error) {
 	return s.enforcer.RolesForUserInDomain(authz.UserSubject(userID), authz.DomainGlobal)
 }
 
-func (s *Service) loadRoles(userID, parishID uuid.UUID) ([]string, error) {
+func (s *Service) loadRoles(ctx context.Context, userID, parishID uuid.UUID) ([]string, error) {
 	globalRoles, err := s.loadGlobalRoles(userID)
 	if err != nil {
 		return nil, err
@@ -235,19 +235,26 @@ func (s *Service) loadRoles(userID, parishID uuid.UUID) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	seen := make(map[string]struct{}, len(globalRoles)+len(parishRoles))
-	merged := make([]string, 0, len(globalRoles)+len(parishRoles))
-	for _, r := range globalRoles {
+	isOrgAdmin, err := s.repo.IsActiveOrgAdminInParish(ctx, userID, parishID)
+	if err != nil {
+		return nil, err
+	}
+	seen := make(map[string]struct{}, len(globalRoles)+len(parishRoles)+1)
+	merged := make([]string, 0, len(globalRoles)+len(parishRoles)+1)
+	appendRole := func(r string) {
 		if _, ok := seen[r]; !ok {
 			seen[r] = struct{}{}
 			merged = append(merged, r)
 		}
 	}
+	for _, r := range globalRoles {
+		appendRole(r)
+	}
 	for _, r := range parishRoles {
-		if _, ok := seen[r]; !ok {
-			seen[r] = struct{}{}
-			merged = append(merged, r)
-		}
+		appendRole(r)
+	}
+	if isOrgAdmin {
+		appendRole(authz.Role("org", "admin"))
 	}
 	return merged, nil
 }

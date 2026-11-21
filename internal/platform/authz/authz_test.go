@@ -256,3 +256,40 @@ func TestRequireMiddleware(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
 }
+
+func TestRoleCatalog(t *testing.T) {
+	e, err := authz.NewMemoryEnforcer()
+	require.NoError(t, err)
+
+	e.RegisterRole(authz.RoleDescriptor{
+		Code:        "user:super-admin",
+		Name:        "Super Admin",
+		Scope:       authz.RoleScopeGlobal,
+		Description: "Global admin",
+	})
+	e.RegisterRole(authz.RoleDescriptor{
+		Code:        "org:admin",
+		Name:        "Org Admin",
+		Scope:       authz.RoleScopeOrg,
+		Description: "Org admin",
+	})
+	// Duplicate code updates in place without duplicating.
+	e.RegisterRole(authz.RoleDescriptor{
+		Code:        "org:admin",
+		Name:        "Admin Organisasi",
+		Scope:       authz.RoleScopeOrg,
+		Description: "Updated",
+	})
+	e.RegisterRole(authz.RoleDescriptor{Code: ""})
+
+	roles := e.Roles()
+	require.Len(t, roles, 2)
+	assert.Equal(t, "user:super-admin", roles[0].Code)
+	assert.Equal(t, "org:admin", roles[1].Code)
+	assert.Equal(t, "Admin Organisasi", roles[1].Name)
+
+	described := e.DescribeRoles([]string{"org:admin", "unknown:role", "org:admin", "user:super-admin"})
+	require.Len(t, described, 2)
+	assert.Equal(t, "org:admin", described[0].Code)
+	assert.Equal(t, "user:super-admin", described[1].Code)
+}
