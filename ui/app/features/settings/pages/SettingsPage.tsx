@@ -1,14 +1,19 @@
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router";
 import { ApiError } from "~/shared/api/client";
 import { useMe } from "~/shared/api/session";
 import { useUpdateSettings } from "../api/actions";
 import { useSettings } from "../api/queries";
+import type { SettingResponse } from "../api/types";
+import { AgentConfigSection } from "../components/AgentConfigSection";
+import { LLMProvidersSection } from "../components/LLMProvidersSection";
 import {
   buildClearValues,
-  groupSettings,
+  groupChannelSettings,
   isSuperAdmin,
   type SettingGroup,
+  type SettingsTab,
 } from "../model";
 
 export function meta() {
@@ -88,8 +93,18 @@ function SettingGroupCard({
   );
 }
 
+function normalizeTab(raw: string | null): SettingsTab {
+  if (raw === "providers" || raw === "agents") {
+    return raw;
+  }
+  return "channels";
+}
+
 export default function SettingsPage() {
   const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = normalizeTab(searchParams.get("tab"));
+
   const { data: me, isLoading: meLoading } = useMe();
   const canManage = isSuperAdmin(me?.roles);
   const { data: items, isLoading: settingsLoading } = useSettings(canManage);
@@ -110,14 +125,38 @@ export default function SettingsPage() {
     setDraft(next);
   }, [items]);
 
-  const groups = groupSettings(items ?? []);
+  const itemsByKey = useMemo(() => {
+    const map: Record<string, SettingResponse> = {};
+    for (const item of items ?? []) {
+      if (item.key) {
+        map[item.key] = item;
+      }
+    }
+    return map;
+  }, [items]);
 
-  async function handleSubmit(e: FormEvent) {
+  const channelGroups = groupChannelSettings(items ?? []);
+
+  function selectTab(tab: SettingsTab) {
+    setSavedMsg(null);
+    setErrorMsg(null);
+    setSearchParams({ tab }, { replace: true });
+  }
+
+  async function handleChannelSubmit(e: FormEvent) {
     e.preventDefault();
     setSavedMsg(null);
     setErrorMsg(null);
+    const values: Record<string, string> = {};
+    for (const g of channelGroups) {
+      for (const item of g.items) {
+        if (item.key) {
+          values[item.key] = draft[item.key] ?? "";
+        }
+      }
+    }
     try {
-      await updateSettings.mutateAsync({ values: draft });
+      await updateSettings.mutateAsync({ values });
       setSavedMsg(t("settings.saved"));
     } catch (err) {
       setErrorMsg(
@@ -145,6 +184,12 @@ export default function SettingsPage() {
     }
   }
 
+  const tabs: { id: SettingsTab; label: string }[] = [
+    { id: "channels", label: t("settings.tabs.channels") },
+    { id: "providers", label: t("settings.tabs.providers") },
+    { id: "agents", label: t("settings.tabs.agents") },
+  ];
+
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-8">
       <div className="flex flex-col gap-1">
@@ -165,12 +210,38 @@ export default function SettingsPage() {
         <p className="text-sm text-muted">{t("common.loading")}</p>
       ) : null}
 
-      {canManage && !settingsLoading && groups.length === 0 ? (
+      {canManage && !settingsLoading && (items ?? []).length === 0 ? (
         <p className="text-sm text-muted">{t("settings.empty")}</p>
       ) : null}
 
-      {canManage && groups.length > 0 ? (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      {canManage && (items ?? []).length > 0 ? (
+        <div className="flex flex-col gap-5">
+          <div
+            role="tablist"
+            aria-label={t("settings.title")}
+            className="flex flex-wrap gap-1 border-b border-line pb-2"
+          >
+            {tabs.map((tab) => {
+              const selected = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  onClick={() => selectTab(tab.id)}
+                  className={`rounded-lg px-3.5 py-2 text-sm font-medium transition ${
+                    selected
+                      ? "bg-fg text-bg"
+                      : "text-muted hover:bg-fg/6 hover:text-fg"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+
           {errorMsg ? (
             <div
               role="alert"
@@ -189,31 +260,66 @@ export default function SettingsPage() {
             </div>
           ) : null}
 
-          {groups.map((group) => (
-            <SettingGroupCard
-              key={group.name}
-              group={group}
+          {activeTab === "channels" ? (
+            <form
+              onSubmit={handleChannelSubmit}
+              className="flex flex-col gap-5"
+            >
+              {channelGroups.map((group) => (
+                <SettingGroupCard
+                  key={group.name}
+                  group={group}
+                  draft={draft}
+                  busy={updateSettings.isPending}
+                  onChange={(key, value) =>
+                    setDraft((prev) => ({ ...prev, [key]: value }))
+                  }
+                  onClear={handleClearGroup}
+                />
+              ))}
+
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  disabled={updateSettings.isPending}
+                  className="h-10 rounded-lg bg-fg px-5 text-sm font-semibold text-bg transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {updateSettings.isPending
+                    ? t("settings.saving")
+                    : t("settings.save")}
+                </button>
+              </div>
+            </form>
+          ) : null}
+
+          {activeTab === "providers" ? (
+            <LLMProvidersSection
+              itemsByKey={itemsByKey}
               draft={draft}
-              busy={updateSettings.isPending}
               onChange={(key, value) =>
                 setDraft((prev) => ({ ...prev, [key]: value }))
               }
-              onClear={handleClearGroup}
+              onStatus={(msg, err) => {
+                setSavedMsg(msg);
+                setErrorMsg(err);
+              }}
             />
-          ))}
+          ) : null}
 
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              disabled={updateSettings.isPending}
-              className="h-10 rounded-lg bg-fg px-5 text-sm font-semibold text-bg transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {updateSettings.isPending
-                ? t("settings.saving")
-                : t("settings.save")}
-            </button>
-          </div>
-        </form>
+          {activeTab === "agents" ? (
+            <AgentConfigSection
+              itemsByKey={itemsByKey}
+              draft={draft}
+              onChange={(key, value) =>
+                setDraft((prev) => ({ ...prev, [key]: value }))
+              }
+              onStatus={(msg, err) => {
+                setSavedMsg(msg);
+                setErrorMsg(err);
+              }}
+            />
+          ) : null}
+        </div>
       ) : null}
     </div>
   );

@@ -402,7 +402,7 @@ const id = {
   },
   settings: {
     title: "Pengaturan",
-    subtitle: "Konfigurasi integrasi sistem dan kanal komunikasi Domus.",
+    subtitle: "Konfigurasi integrasi sistem, penyedia LLM, dan agen AI Domus.",
     forbiddenSuperAdmin:
       "Hanya Super Admin yang dapat melihat dan mengubah pengaturan sistem.",
     save: "Simpan Pengaturan",
@@ -412,6 +412,37 @@ const id = {
     active: "Aktif",
     unconfigured: "Belum Dikonfigurasi",
     empty: "Belum ada pengaturan yang terdaftar.",
+    tabs: {
+      channels: "Kanal Komunikasi",
+      providers: "Penyedia LLM",
+      agents: "Agen & Embedding",
+    },
+    providers: {
+      save: "Simpan Penyedia",
+      sync: "Sinkronkan Model",
+      syncing: "Menyinkronkan…",
+      synced: "Katalog model {{provider}} berhasil disinkronkan.",
+      clear: "Kosongkan",
+      apiKey: "API Key",
+      baseUrl: "Base URL",
+      catalogToggle: "Lihat Katalog Model ({{count}})",
+      catalogEmpty: "Belum ada katalog model yang disinkronkan.",
+      modelCount: "{{count}} model",
+    },
+    agents: {
+      save: "Simpan Konfigurasi Agen",
+      provider: "Penyedia LLM",
+      model: "Model",
+      customModel: "Gunakan ID model kustom",
+      selectModel: "Pilih dari katalog",
+      effort: "Tingkat Penalaran",
+      instruction: "Instruksi Persona",
+      resetInstruction: "Reset Instruksi Bawaan",
+      resetDone: "Instruksi bawaan {{name}} berhasil dikembalikan.",
+      embeddingTitle: "Konfigurasi Embedding Memori",
+      embeddingNote:
+        "Vektor dinormalisasi ke 768-dimensi (halfvec(768)). Jika dipilih Nonaktif atau API Key penyedia kosong, pencarian memori otomatis menggunakan BM25 saja.",
+    },
   },
 } as const;
 

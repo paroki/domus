@@ -1,6 +1,16 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildClearValues, groupSettings, isSuperAdmin } from "./model";
+import {
+  buildClearValues,
+  buildProviderOptionList,
+  filterModelsByCapability,
+  groupChannelSettings,
+  groupSettings,
+  isAgentSettingKey,
+  isProviderConfigured,
+  isSuperAdmin,
+  parseProviderModels,
+} from "./model";
 
 test("isSuperAdmin checks user:super-admin role", () => {
   assert.equal(isSuperAdmin(["user:super-admin"]), true);
@@ -8,22 +18,14 @@ test("isSuperAdmin checks user:super-admin role", () => {
   assert.equal(isSuperAdmin(undefined), false);
 });
 
-test("groupSettings groups items in order and computes configured status", () => {
-  const groups = groupSettings([
+test("groupSettings and groupChannelSettings separate agent keys", () => {
+  const items = [
     {
       key: "user.telegram.bot_token",
       group: "Telegram Bot",
       label: "Bot Token",
       secret: true,
       value: "••••••••",
-      configured: true,
-    },
-    {
-      key: "user.telegram.bot_username",
-      group: "Telegram Bot",
-      label: "Bot Username",
-      secret: false,
-      value: "domus_bot",
       configured: true,
     },
     {
@@ -34,14 +36,26 @@ test("groupSettings groups items in order and computes configured status", () =>
       value: "",
       configured: false,
     },
-  ]);
+    {
+      key: "agent.provider.gemini.api_key",
+      group: "AI Provider: Gemini",
+      label: "Gemini API Key",
+      secret: true,
+      value: "",
+      configured: false,
+    },
+  ];
 
-  assert.equal(groups.length, 2);
-  assert.equal(groups[0]?.name, "Telegram Bot");
-  assert.equal(groups[0]?.items.length, 2);
-  assert.equal(groups[0]?.configured, true);
-  assert.equal(groups[1]?.name, "GOWA (WhatsApp)");
-  assert.equal(groups[1]?.configured, false);
+  assert.equal(isAgentSettingKey("agent.gabriel.model"), true);
+  assert.equal(isAgentSettingKey("user.telegram.bot_token"), false);
+  assert.equal(groupSettings(items).length, 3);
+
+  const channelGroups = groupChannelSettings(items);
+  assert.equal(channelGroups.length, 2);
+  assert.equal(channelGroups[0]?.name, "Telegram Bot");
+  assert.equal(channelGroups[0]?.configured, true);
+  assert.equal(channelGroups[1]?.name, "GOWA (WhatsApp)");
+  assert.equal(channelGroups[1]?.configured, false);
 });
 
 test("buildClearValues maps every item key to empty string", () => {
@@ -55,18 +69,71 @@ test("buildClearValues maps every item key to empty string", () => {
         value: "••••••••",
         configured: true,
       },
-      {
-        key: "user.telegram.bot_username",
-        group: "Telegram Bot",
-        label: "Bot Username",
-        secret: false,
-        value: "domus_bot",
-        configured: true,
-      },
     ]),
-    {
-      "user.telegram.bot_token": "",
-      "user.telegram.bot_username": "",
-    },
+    { "user.telegram.bot_token": "" },
   );
+});
+
+test("parseProviderModels and filterModelsByCapability handle valid and malformed JSON", () => {
+  assert.deepEqual(parseProviderModels(undefined), []);
+  assert.deepEqual(parseProviderModels("{invalid"), []);
+  assert.deepEqual(parseProviderModels('{"not":"array"}'), []);
+
+  const parsed = parseProviderModels(
+    JSON.stringify([
+      {
+        id: "gemini-2.5-flash",
+        name: "Gemini 2.5 Flash",
+        capabilities: ["chat"],
+      },
+      {
+        id: "text-embedding-004",
+        name: "Embedding 004",
+        capabilities: ["embedding"],
+      },
+      { id: "legacy-chat", name: "Legacy Chat" },
+    ]),
+  );
+  assert.equal(parsed.length, 3);
+
+  const chatModels = filterModelsByCapability(parsed, "chat");
+  assert.deepEqual(
+    chatModels.map((m) => m.id),
+    ["gemini-2.5-flash", "legacy-chat"],
+  );
+
+  const embModels = filterModelsByCapability(parsed, "embedding");
+  assert.deepEqual(
+    embModels.map((m) => m.id),
+    ["text-embedding-004"],
+  );
+});
+
+test("isProviderConfigured and buildProviderOptionList reflect persisted and draft state", () => {
+  const itemsByKey = {
+    "agent.provider.gemini.api_key": {
+      key: "agent.provider.gemini.api_key",
+      configured: true,
+      value: "••••••••",
+    },
+    "agent.provider.openai.api_key": {
+      key: "agent.provider.openai.api_key",
+      configured: false,
+      value: "",
+    },
+  };
+  const draft = {
+    "agent.provider.openai.api_key": "sk-new-draft",
+  };
+
+  assert.equal(isProviderConfigured(itemsByKey, {}, "gemini"), true);
+  assert.equal(isProviderConfigured(itemsByKey, {}, "openai"), false);
+  assert.equal(isProviderConfigured(itemsByKey, draft, "openai"), true);
+
+  const opts = buildProviderOptionList(itemsByKey, draft, true);
+  assert.equal(opts.length, 4);
+  assert.equal(opts[0]?.configured, true);
+  assert.equal(opts[1]?.configured, true);
+  assert.equal(opts[2]?.configured, false);
+  assert.equal(opts[3]?.id, "none");
 });

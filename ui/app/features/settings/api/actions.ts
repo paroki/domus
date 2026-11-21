@@ -15,3 +15,19 @@ export function useUpdateSettings() {
     },
   });
 }
+
+export function useSyncProviderModels() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (provider: string) =>
+      unwrap(
+        api.POST("/agent/providers/{provider}/sync-models", {
+          params: { path: { provider } },
+        }),
+        SETTING_ERRORS,
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: settingsKeys.all });
+    },
+  });
+}
