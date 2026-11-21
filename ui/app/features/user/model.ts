@@ -49,3 +49,23 @@ export function sanitizeRedirect(raw: string | null): string {
   }
   return raw;
 }
+
+export type OnboardingStep = "biodata" | "whatsapp" | "telegram";
+
+export function buildOnboardingSteps(otpChannels: string[]): OnboardingStep[] {
+  const steps: OnboardingStep[] = ["biodata"];
+  if (otpChannels.includes("whatsapp")) {
+    steps.push("whatsapp");
+  }
+  if (otpChannels.includes("telegram")) {
+    steps.push("telegram");
+  }
+  return steps;
+}
+
+export function shouldRedirectToOnboarding(
+  onboarded: boolean | undefined,
+  pathname: string,
+): boolean {
+  return onboarded === false && pathname !== "/onboarding";
+}

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Navigate, Outlet, useLocation } from "react-router";
 import { ApiError, setActiveParish } from "~/shared/api/client";
 import { useMe } from "../api/queries";
+import { shouldRedirectToOnboarding } from "../model";
 
 export default function RequireAuth() {
   const { t } = useTranslation();
@@ -34,6 +35,13 @@ export default function RequireAuth() {
       `${location.pathname}${location.search}`,
     );
     return <Navigate to={`/login?redirect=${redirectTarget}`} replace />;
+  }
+
+  if (shouldRedirectToOnboarding(me.onboarded, location.pathname)) {
+    const nextTarget = encodeURIComponent(
+      `${location.pathname}${location.search}`,
+    );
+    return <Navigate to={`/onboarding?next=${nextTarget}`} replace />;
   }
 
   return <Outlet />;

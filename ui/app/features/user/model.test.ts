@@ -2,11 +2,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { User } from "./api/types";
 import {
+  buildOnboardingSteps,
   formatUserAgent,
   isSuperAdmin,
   providerLabel,
   ROLE_SUPER_ADMIN,
   sanitizeRedirect,
+  shouldRedirectToOnboarding,
 } from "./model";
 
 test("formatUserAgent detects common browsers and OS", () => {
@@ -48,4 +50,31 @@ test("sanitizeRedirect rejects protocol-relative and external URLs", () => {
   assert.equal(sanitizeRedirect("//evil.example.com"), "/");
   assert.equal(sanitizeRedirect("https://evil.example.com"), "/");
   assert.equal(sanitizeRedirect(null), "/");
+});
+
+test("buildOnboardingSteps builds dynamic steps from otpChannels", () => {
+  assert.deepEqual(buildOnboardingSteps(["email"]), ["biodata"]);
+  assert.deepEqual(buildOnboardingSteps(["email", "whatsapp"]), [
+    "biodata",
+    "whatsapp",
+  ]);
+  assert.deepEqual(buildOnboardingSteps(["email", "telegram"]), [
+    "biodata",
+    "telegram",
+  ]);
+  assert.deepEqual(buildOnboardingSteps(["email", "whatsapp", "telegram"]), [
+    "biodata",
+    "whatsapp",
+    "telegram",
+  ]);
+});
+
+test("shouldRedirectToOnboarding avoids /onboarding loop and handles states", () => {
+  assert.equal(shouldRedirectToOnboarding(false, "/onboarding"), false);
+  assert.equal(shouldRedirectToOnboarding(false, "/"), true);
+  assert.equal(shouldRedirectToOnboarding(false, "/me"), true);
+  assert.equal(shouldRedirectToOnboarding(true, "/"), false);
+  assert.equal(shouldRedirectToOnboarding(true, "/me"), false);
+  assert.equal(shouldRedirectToOnboarding(undefined, "/"), false);
+  assert.equal(shouldRedirectToOnboarding(undefined, "/me"), false);
 });
