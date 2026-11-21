@@ -12,68 +12,68 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/paroki/domus/ent/meta"
 	"github.com/paroki/domus/ent/predicate"
+	"github.com/paroki/domus/ent/setting"
 )
 
-// MetaQuery is the builder for querying Meta entities.
-type MetaQuery struct {
+// SettingQuery is the builder for querying Setting entities.
+type SettingQuery struct {
 	config
 	ctx        *QueryContext
-	order      []meta.OrderOption
+	order      []setting.OrderOption
 	inters     []Interceptor
-	predicates []predicate.Meta
+	predicates []predicate.Setting
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
 }
 
-// Where adds a new predicate for the MetaQuery builder.
-func (_q *MetaQuery) Where(ps ...predicate.Meta) *MetaQuery {
+// Where adds a new predicate for the SettingQuery builder.
+func (_q *SettingQuery) Where(ps ...predicate.Setting) *SettingQuery {
 	_q.predicates = append(_q.predicates, ps...)
 	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (_q *MetaQuery) Limit(limit int) *MetaQuery {
+func (_q *SettingQuery) Limit(limit int) *SettingQuery {
 	_q.ctx.Limit = &limit
 	return _q
 }
 
 // Offset to start from.
-func (_q *MetaQuery) Offset(offset int) *MetaQuery {
+func (_q *SettingQuery) Offset(offset int) *SettingQuery {
 	_q.ctx.Offset = &offset
 	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (_q *MetaQuery) Unique(unique bool) *MetaQuery {
+func (_q *SettingQuery) Unique(unique bool) *SettingQuery {
 	_q.ctx.Unique = &unique
 	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (_q *MetaQuery) Order(o ...meta.OrderOption) *MetaQuery {
+func (_q *SettingQuery) Order(o ...setting.OrderOption) *SettingQuery {
 	_q.order = append(_q.order, o...)
 	return _q
 }
 
-// First returns the first Meta entity from the query.
-// Returns a *NotFoundError when no Meta was found.
-func (_q *MetaQuery) First(ctx context.Context) (*Meta, error) {
+// First returns the first Setting entity from the query.
+// Returns a *NotFoundError when no Setting was found.
+func (_q *SettingQuery) First(ctx context.Context) (*Setting, error) {
 	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
-		return nil, &NotFoundError{meta.Label}
+		return nil, &NotFoundError{setting.Label}
 	}
 	return nodes[0], nil
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (_q *MetaQuery) FirstX(ctx context.Context) *Meta {
+func (_q *SettingQuery) FirstX(ctx context.Context) *Setting {
 	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -81,22 +81,22 @@ func (_q *MetaQuery) FirstX(ctx context.Context) *Meta {
 	return node
 }
 
-// FirstID returns the first Meta ID from the query.
-// Returns a *NotFoundError when no Meta ID was found.
-func (_q *MetaQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+// FirstID returns the first Setting ID from the query.
+// Returns a *NotFoundError when no Setting ID was found.
+func (_q *SettingQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
 	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
-		err = &NotFoundError{meta.Label}
+		err = &NotFoundError{setting.Label}
 		return
 	}
 	return ids[0], nil
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (_q *MetaQuery) FirstIDX(ctx context.Context) uuid.UUID {
+func (_q *SettingQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -104,10 +104,10 @@ func (_q *MetaQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	return id
 }
 
-// Only returns a single Meta entity found by the query, ensuring it only returns one.
-// Returns a *NotSingularError when more than one Meta entity is found.
-// Returns a *NotFoundError when no Meta entities are found.
-func (_q *MetaQuery) Only(ctx context.Context) (*Meta, error) {
+// Only returns a single Setting entity found by the query, ensuring it only returns one.
+// Returns a *NotSingularError when more than one Setting entity is found.
+// Returns a *NotFoundError when no Setting entities are found.
+func (_q *SettingQuery) Only(ctx context.Context) (*Setting, error) {
 	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
@@ -116,14 +116,14 @@ func (_q *MetaQuery) Only(ctx context.Context) (*Meta, error) {
 	case 1:
 		return nodes[0], nil
 	case 0:
-		return nil, &NotFoundError{meta.Label}
+		return nil, &NotFoundError{setting.Label}
 	default:
-		return nil, &NotSingularError{meta.Label}
+		return nil, &NotSingularError{setting.Label}
 	}
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (_q *MetaQuery) OnlyX(ctx context.Context) *Meta {
+func (_q *SettingQuery) OnlyX(ctx context.Context) *Setting {
 	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
@@ -131,10 +131,10 @@ func (_q *MetaQuery) OnlyX(ctx context.Context) *Meta {
 	return node
 }
 
-// OnlyID is like Only, but returns the only Meta ID in the query.
-// Returns a *NotSingularError when more than one Meta ID is found.
+// OnlyID is like Only, but returns the only Setting ID in the query.
+// Returns a *NotSingularError when more than one Setting ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (_q *MetaQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+func (_q *SettingQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
 	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
@@ -143,15 +143,15 @@ func (_q *MetaQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	case 1:
 		id = ids[0]
 	case 0:
-		err = &NotFoundError{meta.Label}
+		err = &NotFoundError{setting.Label}
 	default:
-		err = &NotSingularError{meta.Label}
+		err = &NotSingularError{setting.Label}
 	}
 	return
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (_q *MetaQuery) OnlyIDX(ctx context.Context) uuid.UUID {
+func (_q *SettingQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -159,18 +159,18 @@ func (_q *MetaQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	return id
 }
 
-// All executes the query and returns a list of MetaSlice.
-func (_q *MetaQuery) All(ctx context.Context) ([]*Meta, error) {
+// All executes the query and returns a list of Settings.
+func (_q *SettingQuery) All(ctx context.Context) ([]*Setting, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
-	qr := querierAll[[]*Meta, *MetaQuery]()
-	return withInterceptors[[]*Meta](ctx, _q, qr, _q.inters)
+	qr := querierAll[[]*Setting, *SettingQuery]()
+	return withInterceptors[[]*Setting](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (_q *MetaQuery) AllX(ctx context.Context) []*Meta {
+func (_q *SettingQuery) AllX(ctx context.Context) []*Setting {
 	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
@@ -178,20 +178,20 @@ func (_q *MetaQuery) AllX(ctx context.Context) []*Meta {
 	return nodes
 }
 
-// IDs executes the query and returns a list of Meta IDs.
-func (_q *MetaQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
+// IDs executes the query and returns a list of Setting IDs.
+func (_q *SettingQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 	if _q.ctx.Unique == nil && _q.path != nil {
 		_q.Unique(true)
 	}
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
-	if err = _q.Select(meta.FieldID).Scan(ctx, &ids); err != nil {
+	if err = _q.Select(setting.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (_q *MetaQuery) IDsX(ctx context.Context) []uuid.UUID {
+func (_q *SettingQuery) IDsX(ctx context.Context) []uuid.UUID {
 	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -200,16 +200,16 @@ func (_q *MetaQuery) IDsX(ctx context.Context) []uuid.UUID {
 }
 
 // Count returns the count of the given query.
-func (_q *MetaQuery) Count(ctx context.Context) (int, error) {
+func (_q *SettingQuery) Count(ctx context.Context) (int, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, _q, querierCount[*MetaQuery](), _q.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*SettingQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (_q *MetaQuery) CountX(ctx context.Context) int {
+func (_q *SettingQuery) CountX(ctx context.Context) int {
 	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
@@ -218,7 +218,7 @@ func (_q *MetaQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (_q *MetaQuery) Exist(ctx context.Context) (bool, error) {
+func (_q *SettingQuery) Exist(ctx context.Context) (bool, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
 	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
@@ -231,7 +231,7 @@ func (_q *MetaQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (_q *MetaQuery) ExistX(ctx context.Context) bool {
+func (_q *SettingQuery) ExistX(ctx context.Context) bool {
 	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
@@ -239,18 +239,18 @@ func (_q *MetaQuery) ExistX(ctx context.Context) bool {
 	return exist
 }
 
-// Clone returns a duplicate of the MetaQuery builder, including all associated steps. It can be
+// Clone returns a duplicate of the SettingQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (_q *MetaQuery) Clone() *MetaQuery {
+func (_q *SettingQuery) Clone() *SettingQuery {
 	if _q == nil {
 		return nil
 	}
-	return &MetaQuery{
+	return &SettingQuery{
 		config:     _q.config,
 		ctx:        _q.ctx.Clone(),
-		order:      append([]meta.OrderOption{}, _q.order...),
+		order:      append([]setting.OrderOption{}, _q.order...),
 		inters:     append([]Interceptor{}, _q.inters...),
-		predicates: append([]predicate.Meta{}, _q.predicates...),
+		predicates: append([]predicate.Setting{}, _q.predicates...),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -267,15 +267,15 @@ func (_q *MetaQuery) Clone() *MetaQuery {
 //		Count int `json:"count,omitempty"`
 //	}
 //
-//	client.Meta.Query().
-//		GroupBy(meta.FieldCreatedAt).
+//	client.Setting.Query().
+//		GroupBy(setting.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (_q *MetaQuery) GroupBy(field string, fields ...string) *MetaGroupBy {
+func (_q *SettingQuery) GroupBy(field string, fields ...string) *SettingGroupBy {
 	_q.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &MetaGroupBy{build: _q}
+	grbuild := &SettingGroupBy{build: _q}
 	grbuild.flds = &_q.ctx.Fields
-	grbuild.label = meta.Label
+	grbuild.label = setting.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
 }
@@ -289,23 +289,23 @@ func (_q *MetaQuery) GroupBy(field string, fields ...string) *MetaGroupBy {
 //		CreatedAt time.Time `json:"created_at,omitempty"`
 //	}
 //
-//	client.Meta.Query().
-//		Select(meta.FieldCreatedAt).
+//	client.Setting.Query().
+//		Select(setting.FieldCreatedAt).
 //		Scan(ctx, &v)
-func (_q *MetaQuery) Select(fields ...string) *MetaSelect {
+func (_q *SettingQuery) Select(fields ...string) *SettingSelect {
 	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
-	sbuild := &MetaSelect{MetaQuery: _q}
-	sbuild.label = meta.Label
+	sbuild := &SettingSelect{SettingQuery: _q}
+	sbuild.label = setting.Label
 	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
-// Aggregate returns a MetaSelect configured with the given aggregations.
-func (_q *MetaQuery) Aggregate(fns ...AggregateFunc) *MetaSelect {
+// Aggregate returns a SettingSelect configured with the given aggregations.
+func (_q *SettingQuery) Aggregate(fns ...AggregateFunc) *SettingSelect {
 	return _q.Select().Aggregate(fns...)
 }
 
-func (_q *MetaQuery) prepareQuery(ctx context.Context) error {
+func (_q *SettingQuery) prepareQuery(ctx context.Context) error {
 	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
@@ -317,7 +317,7 @@ func (_q *MetaQuery) prepareQuery(ctx context.Context) error {
 		}
 	}
 	for _, f := range _q.ctx.Fields {
-		if !meta.ValidColumn(f) {
+		if !setting.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
@@ -331,16 +331,16 @@ func (_q *MetaQuery) prepareQuery(ctx context.Context) error {
 	return nil
 }
 
-func (_q *MetaQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Meta, error) {
+func (_q *SettingQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Setting, error) {
 	var (
-		nodes = []*Meta{}
+		nodes = []*Setting{}
 		_spec = _q.querySpec()
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
-		return (*Meta).scanValues(nil, columns)
+		return (*Setting).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &Meta{config: _q.config}
+		node := &Setting{config: _q.config}
 		nodes = append(nodes, node)
 		return node.assignValues(columns, values)
 	}
@@ -356,7 +356,7 @@ func (_q *MetaQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Meta, e
 	return nodes, nil
 }
 
-func (_q *MetaQuery) sqlCount(ctx context.Context) (int, error) {
+func (_q *SettingQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
 	_spec.Node.Columns = _q.ctx.Fields
 	if len(_q.ctx.Fields) > 0 {
@@ -365,8 +365,8 @@ func (_q *MetaQuery) sqlCount(ctx context.Context) (int, error) {
 	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (_q *MetaQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(meta.Table, meta.Columns, sqlgraph.NewFieldSpec(meta.FieldID, field.TypeUUID))
+func (_q *SettingQuery) querySpec() *sqlgraph.QuerySpec {
+	_spec := sqlgraph.NewQuerySpec(setting.Table, setting.Columns, sqlgraph.NewFieldSpec(setting.FieldID, field.TypeUUID))
 	_spec.From = _q.sql
 	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
@@ -375,9 +375,9 @@ func (_q *MetaQuery) querySpec() *sqlgraph.QuerySpec {
 	}
 	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
-		_spec.Node.Columns = append(_spec.Node.Columns, meta.FieldID)
+		_spec.Node.Columns = append(_spec.Node.Columns, setting.FieldID)
 		for i := range fields {
-			if fields[i] != meta.FieldID {
+			if fields[i] != setting.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
@@ -405,12 +405,12 @@ func (_q *MetaQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (_q *MetaQuery) sqlQuery(ctx context.Context) *sql.Selector {
+func (_q *SettingQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(_q.driver.Dialect())
-	t1 := builder.Table(meta.Table)
+	t1 := builder.Table(setting.Table)
 	columns := _q.ctx.Fields
 	if len(columns) == 0 {
-		columns = meta.Columns
+		columns = setting.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
 	if _q.sql != nil {
@@ -437,28 +437,28 @@ func (_q *MetaQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	return selector
 }
 
-// MetaGroupBy is the group-by builder for Meta entities.
-type MetaGroupBy struct {
+// SettingGroupBy is the group-by builder for Setting entities.
+type SettingGroupBy struct {
 	selector
-	build *MetaQuery
+	build *SettingQuery
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (_g *MetaGroupBy) Aggregate(fns ...AggregateFunc) *MetaGroupBy {
+func (_g *SettingGroupBy) Aggregate(fns ...AggregateFunc) *SettingGroupBy {
 	_g.fns = append(_g.fns, fns...)
 	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_g *MetaGroupBy) Scan(ctx context.Context, v any) error {
+func (_g *SettingGroupBy) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
 	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*MetaQuery, *MetaGroupBy](ctx, _g.build, _g, _g.build.inters, v)
+	return scanWithInterceptors[*SettingQuery, *SettingGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (_g *MetaGroupBy) sqlScan(ctx context.Context, root *MetaQuery, v any) error {
+func (_g *SettingGroupBy) sqlScan(ctx context.Context, root *SettingQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
 	aggregation := make([]string, 0, len(_g.fns))
 	for _, fn := range _g.fns {
@@ -485,28 +485,28 @@ func (_g *MetaGroupBy) sqlScan(ctx context.Context, root *MetaQuery, v any) erro
 	return sql.ScanSlice(rows, v)
 }
 
-// MetaSelect is the builder for selecting fields of Meta entities.
-type MetaSelect struct {
-	*MetaQuery
+// SettingSelect is the builder for selecting fields of Setting entities.
+type SettingSelect struct {
+	*SettingQuery
 	selector
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (_s *MetaSelect) Aggregate(fns ...AggregateFunc) *MetaSelect {
+func (_s *SettingSelect) Aggregate(fns ...AggregateFunc) *SettingSelect {
 	_s.fns = append(_s.fns, fns...)
 	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_s *MetaSelect) Scan(ctx context.Context, v any) error {
+func (_s *SettingSelect) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
 	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*MetaQuery, *MetaSelect](ctx, _s.MetaQuery, _s, _s.inters, v)
+	return scanWithInterceptors[*SettingQuery, *SettingSelect](ctx, _s.SettingQuery, _s, _s.inters, v)
 }
 
-func (_s *MetaSelect) sqlScan(ctx context.Context, root *MetaQuery, v any) error {
+func (_s *SettingSelect) sqlScan(ctx context.Context, root *SettingQuery, v any) error {
 	selector := root.sqlQuery(ctx)
 	aggregation := make([]string, 0, len(_s.fns))
 	for _, fn := range _s.fns {

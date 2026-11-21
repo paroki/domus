@@ -11,7 +11,6 @@ import (
 	"github.com/paroki/domus/ent/event"
 	"github.com/paroki/domus/ent/eventrsvp"
 	"github.com/paroki/domus/ent/lookup"
-	"github.com/paroki/domus/ent/meta"
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orginvite"
 	"github.com/paroki/domus/ent/orgmember"
@@ -19,6 +18,7 @@ import (
 	"github.com/paroki/domus/ent/parishmember"
 	"github.com/paroki/domus/ent/period"
 	"github.com/paroki/domus/ent/schema"
+	"github.com/paroki/domus/ent/setting"
 	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/useraccount"
 	"github.com/paroki/domus/ent/userotp"
@@ -192,31 +192,6 @@ func init() {
 	lookupDescID := lookupMixinFields0[0].Descriptor()
 	// lookup.DefaultID holds the default value on creation for the id field.
 	lookup.DefaultID = lookupDescID.Default.(func() uuid.UUID)
-	metaMixin := schema.Meta{}.Mixin()
-	metaMixinFields0 := metaMixin[0].Fields()
-	_ = metaMixinFields0
-	metaMixinFields1 := metaMixin[1].Fields()
-	_ = metaMixinFields1
-	metaFields := schema.Meta{}.Fields()
-	_ = metaFields
-	// metaDescCreatedAt is the schema descriptor for created_at field.
-	metaDescCreatedAt := metaMixinFields1[0].Descriptor()
-	// meta.DefaultCreatedAt holds the default value on creation for the created_at field.
-	meta.DefaultCreatedAt = metaDescCreatedAt.Default.(func() time.Time)
-	// metaDescUpdatedAt is the schema descriptor for updated_at field.
-	metaDescUpdatedAt := metaMixinFields1[1].Descriptor()
-	// meta.DefaultUpdatedAt holds the default value on creation for the updated_at field.
-	meta.DefaultUpdatedAt = metaDescUpdatedAt.Default.(func() time.Time)
-	// meta.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
-	meta.UpdateDefaultUpdatedAt = metaDescUpdatedAt.UpdateDefault.(func() time.Time)
-	// metaDescKey is the schema descriptor for key field.
-	metaDescKey := metaFields[0].Descriptor()
-	// meta.KeyValidator is a validator for the "key" field. It is called by the builders before save.
-	meta.KeyValidator = metaDescKey.Validators[0].(func(string) error)
-	// metaDescID is the schema descriptor for id field.
-	metaDescID := metaMixinFields0[0].Descriptor()
-	// meta.DefaultID holds the default value on creation for the id field.
-	meta.DefaultID = metaDescID.Default.(func() uuid.UUID)
 	orginviteMixin := schema.OrgInvite{}.Mixin()
 	orginviteMixinFields0 := orginviteMixin[0].Fields()
 	_ = orginviteMixinFields0
@@ -395,6 +370,35 @@ func init() {
 	periodDescID := periodMixinFields0[0].Descriptor()
 	// period.DefaultID holds the default value on creation for the id field.
 	period.DefaultID = periodDescID.Default.(func() uuid.UUID)
+	settingMixin := schema.Setting{}.Mixin()
+	settingMixinFields0 := settingMixin[0].Fields()
+	_ = settingMixinFields0
+	settingMixinFields1 := settingMixin[1].Fields()
+	_ = settingMixinFields1
+	settingFields := schema.Setting{}.Fields()
+	_ = settingFields
+	// settingDescCreatedAt is the schema descriptor for created_at field.
+	settingDescCreatedAt := settingMixinFields1[0].Descriptor()
+	// setting.DefaultCreatedAt holds the default value on creation for the created_at field.
+	setting.DefaultCreatedAt = settingDescCreatedAt.Default.(func() time.Time)
+	// settingDescUpdatedAt is the schema descriptor for updated_at field.
+	settingDescUpdatedAt := settingMixinFields1[1].Descriptor()
+	// setting.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	setting.DefaultUpdatedAt = settingDescUpdatedAt.Default.(func() time.Time)
+	// setting.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	setting.UpdateDefaultUpdatedAt = settingDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// settingDescKey is the schema descriptor for key field.
+	settingDescKey := settingFields[0].Descriptor()
+	// setting.KeyValidator is a validator for the "key" field. It is called by the builders before save.
+	setting.KeyValidator = settingDescKey.Validators[0].(func(string) error)
+	// settingDescValue is the schema descriptor for value field.
+	settingDescValue := settingFields[1].Descriptor()
+	// setting.DefaultValue holds the default value on creation for the value field.
+	setting.DefaultValue = settingDescValue.Default.(string)
+	// settingDescID is the schema descriptor for id field.
+	settingDescID := settingMixinFields0[0].Descriptor()
+	// setting.DefaultID holds the default value on creation for the id field.
+	setting.DefaultID = settingDescID.Default.(func() uuid.UUID)
 	userMixin := schema.User{}.Mixin()
 	userMixinFields0 := userMixin[0].Fields()
 	_ = userMixinFields0

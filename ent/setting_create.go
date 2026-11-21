@@ -11,24 +11,24 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/paroki/domus/ent/meta"
+	"github.com/paroki/domus/ent/setting"
 )
 
-// MetaCreate is the builder for creating a Meta entity.
-type MetaCreate struct {
+// SettingCreate is the builder for creating a Setting entity.
+type SettingCreate struct {
 	config
-	mutation *MetaMutation
+	mutation *SettingMutation
 	hooks    []Hook
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (_c *MetaCreate) SetCreatedAt(v time.Time) *MetaCreate {
+func (_c *SettingCreate) SetCreatedAt(v time.Time) *SettingCreate {
 	_c.mutation.SetCreatedAt(v)
 	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (_c *MetaCreate) SetNillableCreatedAt(v *time.Time) *MetaCreate {
+func (_c *SettingCreate) SetNillableCreatedAt(v *time.Time) *SettingCreate {
 	if v != nil {
 		_c.SetCreatedAt(*v)
 	}
@@ -36,13 +36,13 @@ func (_c *MetaCreate) SetNillableCreatedAt(v *time.Time) *MetaCreate {
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (_c *MetaCreate) SetUpdatedAt(v time.Time) *MetaCreate {
+func (_c *SettingCreate) SetUpdatedAt(v time.Time) *SettingCreate {
 	_c.mutation.SetUpdatedAt(v)
 	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (_c *MetaCreate) SetNillableUpdatedAt(v *time.Time) *MetaCreate {
+func (_c *SettingCreate) SetNillableUpdatedAt(v *time.Time) *SettingCreate {
 	if v != nil {
 		_c.SetUpdatedAt(*v)
 	}
@@ -50,44 +50,52 @@ func (_c *MetaCreate) SetNillableUpdatedAt(v *time.Time) *MetaCreate {
 }
 
 // SetKey sets the "key" field.
-func (_c *MetaCreate) SetKey(v string) *MetaCreate {
+func (_c *SettingCreate) SetKey(v string) *SettingCreate {
 	_c.mutation.SetKey(v)
 	return _c
 }
 
 // SetValue sets the "value" field.
-func (_c *MetaCreate) SetValue(v string) *MetaCreate {
+func (_c *SettingCreate) SetValue(v string) *SettingCreate {
 	_c.mutation.SetValue(v)
 	return _c
 }
 
+// SetNillableValue sets the "value" field if the given value is not nil.
+func (_c *SettingCreate) SetNillableValue(v *string) *SettingCreate {
+	if v != nil {
+		_c.SetValue(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
-func (_c *MetaCreate) SetID(v uuid.UUID) *MetaCreate {
+func (_c *SettingCreate) SetID(v uuid.UUID) *SettingCreate {
 	_c.mutation.SetID(v)
 	return _c
 }
 
 // SetNillableID sets the "id" field if the given value is not nil.
-func (_c *MetaCreate) SetNillableID(v *uuid.UUID) *MetaCreate {
+func (_c *SettingCreate) SetNillableID(v *uuid.UUID) *SettingCreate {
 	if v != nil {
 		_c.SetID(*v)
 	}
 	return _c
 }
 
-// Mutation returns the MetaMutation object of the builder.
-func (_c *MetaCreate) Mutation() *MetaMutation {
+// Mutation returns the SettingMutation object of the builder.
+func (_c *SettingCreate) Mutation() *SettingMutation {
 	return _c.mutation
 }
 
-// Save creates the Meta in the database.
-func (_c *MetaCreate) Save(ctx context.Context) (*Meta, error) {
+// Save creates the Setting in the database.
+func (_c *SettingCreate) Save(ctx context.Context) (*Setting, error) {
 	_c.defaults()
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (_c *MetaCreate) SaveX(ctx context.Context) *Meta {
+func (_c *SettingCreate) SaveX(ctx context.Context) *Setting {
 	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
@@ -96,57 +104,61 @@ func (_c *MetaCreate) SaveX(ctx context.Context) *Meta {
 }
 
 // Exec executes the query.
-func (_c *MetaCreate) Exec(ctx context.Context) error {
+func (_c *SettingCreate) Exec(ctx context.Context) error {
 	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_c *MetaCreate) ExecX(ctx context.Context) {
+func (_c *SettingCreate) ExecX(ctx context.Context) {
 	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (_c *MetaCreate) defaults() {
+func (_c *SettingCreate) defaults() {
 	if _, ok := _c.mutation.CreatedAt(); !ok {
-		v := meta.DefaultCreatedAt()
+		v := setting.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
 	}
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
-		v := meta.DefaultUpdatedAt()
+		v := setting.DefaultUpdatedAt()
 		_c.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := _c.mutation.Value(); !ok {
+		v := setting.DefaultValue
+		_c.mutation.SetValue(v)
+	}
 	if _, ok := _c.mutation.ID(); !ok {
-		v := meta.DefaultID()
+		v := setting.DefaultID()
 		_c.mutation.SetID(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (_c *MetaCreate) check() error {
+func (_c *SettingCreate) check() error {
 	if _, ok := _c.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Meta.created_at"`)}
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Setting.created_at"`)}
 	}
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
-		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Meta.updated_at"`)}
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Setting.updated_at"`)}
 	}
 	if _, ok := _c.mutation.Key(); !ok {
-		return &ValidationError{Name: "key", err: errors.New(`ent: missing required field "Meta.key"`)}
+		return &ValidationError{Name: "key", err: errors.New(`ent: missing required field "Setting.key"`)}
 	}
 	if v, ok := _c.mutation.Key(); ok {
-		if err := meta.KeyValidator(v); err != nil {
-			return &ValidationError{Name: "key", err: fmt.Errorf(`ent: validator failed for field "Meta.key": %w`, err)}
+		if err := setting.KeyValidator(v); err != nil {
+			return &ValidationError{Name: "key", err: fmt.Errorf(`ent: validator failed for field "Setting.key": %w`, err)}
 		}
 	}
 	if _, ok := _c.mutation.Value(); !ok {
-		return &ValidationError{Name: "value", err: errors.New(`ent: missing required field "Meta.value"`)}
+		return &ValidationError{Name: "value", err: errors.New(`ent: missing required field "Setting.value"`)}
 	}
 	return nil
 }
 
-func (_c *MetaCreate) sqlSave(ctx context.Context) (*Meta, error) {
+func (_c *SettingCreate) sqlSave(ctx context.Context) (*Setting, error) {
 	if err := _c.check(); err != nil {
 		return nil, err
 	}
@@ -169,55 +181,55 @@ func (_c *MetaCreate) sqlSave(ctx context.Context) (*Meta, error) {
 	return _node, nil
 }
 
-func (_c *MetaCreate) createSpec() (*Meta, *sqlgraph.CreateSpec) {
+func (_c *SettingCreate) createSpec() (*Setting, *sqlgraph.CreateSpec) {
 	var (
-		_node = &Meta{config: _c.config}
-		_spec = sqlgraph.NewCreateSpec(meta.Table, sqlgraph.NewFieldSpec(meta.FieldID, field.TypeUUID))
+		_node = &Setting{config: _c.config}
+		_spec = sqlgraph.NewCreateSpec(setting.Table, sqlgraph.NewFieldSpec(setting.FieldID, field.TypeUUID))
 	)
 	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
-		_spec.SetField(meta.FieldCreatedAt, field.TypeTime, value)
+		_spec.SetField(setting.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
 	if value, ok := _c.mutation.UpdatedAt(); ok {
-		_spec.SetField(meta.FieldUpdatedAt, field.TypeTime, value)
+		_spec.SetField(setting.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
 	if value, ok := _c.mutation.Key(); ok {
-		_spec.SetField(meta.FieldKey, field.TypeString, value)
+		_spec.SetField(setting.FieldKey, field.TypeString, value)
 		_node.Key = value
 	}
 	if value, ok := _c.mutation.Value(); ok {
-		_spec.SetField(meta.FieldValue, field.TypeString, value)
+		_spec.SetField(setting.FieldValue, field.TypeString, value)
 		_node.Value = value
 	}
 	return _node, _spec
 }
 
-// MetaCreateBulk is the builder for creating many Meta entities in bulk.
-type MetaCreateBulk struct {
+// SettingCreateBulk is the builder for creating many Setting entities in bulk.
+type SettingCreateBulk struct {
 	config
 	err      error
-	builders []*MetaCreate
+	builders []*SettingCreate
 }
 
-// Save creates the Meta entities in the database.
-func (_c *MetaCreateBulk) Save(ctx context.Context) ([]*Meta, error) {
+// Save creates the Setting entities in the database.
+func (_c *SettingCreateBulk) Save(ctx context.Context) ([]*Setting, error) {
 	if _c.err != nil {
 		return nil, _c.err
 	}
 	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
-	nodes := make([]*Meta, len(_c.builders))
+	nodes := make([]*Setting, len(_c.builders))
 	mutators := make([]Mutator, len(_c.builders))
 	for i := range _c.builders {
 		func(i int, root context.Context) {
 			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
-				mutation, ok := m.(*MetaMutation)
+				mutation, ok := m.(*SettingMutation)
 				if !ok {
 					return nil, fmt.Errorf("unexpected mutation type %T", m)
 				}
@@ -260,7 +272,7 @@ func (_c *MetaCreateBulk) Save(ctx context.Context) ([]*Meta, error) {
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (_c *MetaCreateBulk) SaveX(ctx context.Context) []*Meta {
+func (_c *SettingCreateBulk) SaveX(ctx context.Context) []*Setting {
 	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
@@ -269,13 +281,13 @@ func (_c *MetaCreateBulk) SaveX(ctx context.Context) []*Meta {
 }
 
 // Exec executes the query.
-func (_c *MetaCreateBulk) Exec(ctx context.Context) error {
+func (_c *SettingCreateBulk) Exec(ctx context.Context) error {
 	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_c *MetaCreateBulk) ExecX(ctx context.Context) {
+func (_c *SettingCreateBulk) ExecX(ctx context.Context) {
 	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}

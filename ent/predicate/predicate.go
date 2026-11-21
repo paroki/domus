@@ -21,9 +21,6 @@ type EventRSVP func(*sql.Selector)
 // Lookup is the predicate function for lookup builders.
 type Lookup func(*sql.Selector)
 
-// Meta is the predicate function for meta builders.
-type Meta func(*sql.Selector)
-
 // OrgInvite is the predicate function for orginvite builders.
 type OrgInvite func(*sql.Selector)
 
@@ -41,6 +38,9 @@ type ParishMember func(*sql.Selector)
 
 // Period is the predicate function for period builders.
 type Period func(*sql.Selector)
+
+// Setting is the predicate function for setting builders.
+type Setting func(*sql.Selector)
 
 // User is the predicate function for user builders.
 type User func(*sql.Selector)

@@ -22,8 +22,6 @@ type Tx struct {
 	EventRSVP *EventRSVPClient
 	// Lookup is the client for interacting with the Lookup builders.
 	Lookup *LookupClient
-	// Meta is the client for interacting with the Meta builders.
-	Meta *MetaClient
 	// OrgInvite is the client for interacting with the OrgInvite builders.
 	OrgInvite *OrgInviteClient
 	// OrgMember is the client for interacting with the OrgMember builders.
@@ -36,6 +34,8 @@ type Tx struct {
 	ParishMember *ParishMemberClient
 	// Period is the client for interacting with the Period builders.
 	Period *PeriodClient
+	// Setting is the client for interacting with the Setting builders.
+	Setting *SettingClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// UserAccount is the client for interacting with the UserAccount builders.
@@ -184,13 +184,13 @@ func (tx *Tx) init() {
 	tx.Event = NewEventClient(tx.config)
 	tx.EventRSVP = NewEventRSVPClient(tx.config)
 	tx.Lookup = NewLookupClient(tx.config)
-	tx.Meta = NewMetaClient(tx.config)
 	tx.OrgInvite = NewOrgInviteClient(tx.config)
 	tx.OrgMember = NewOrgMemberClient(tx.config)
 	tx.Organization = NewOrganizationClient(tx.config)
 	tx.Parish = NewParishClient(tx.config)
 	tx.ParishMember = NewParishMemberClient(tx.config)
 	tx.Period = NewPeriodClient(tx.config)
+	tx.Setting = NewSettingClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.UserAccount = NewUserAccountClient(tx.config)
 	tx.UserOTP = NewUserOTPClient(tx.config)

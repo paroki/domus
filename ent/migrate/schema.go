@@ -202,20 +202,6 @@ var (
 			},
 		},
 	}
-	// MetaColumns holds the columns for the "meta" table.
-	MetaColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeUUID},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "key", Type: field.TypeString, Unique: true},
-		{Name: "value", Type: field.TypeString},
-	}
-	// MetaTable holds the schema information for the "meta" table.
-	MetaTable = &schema.Table{
-		Name:       "meta",
-		Columns:    MetaColumns,
-		PrimaryKey: []*schema.Column{MetaColumns[0]},
-	}
 	// OrgInvitesColumns holds the columns for the "org_invites" table.
 	OrgInvitesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -487,6 +473,20 @@ var (
 			},
 		},
 	}
+	// SettingsColumns holds the columns for the "settings" table.
+	SettingsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "key", Type: field.TypeString, Unique: true},
+		{Name: "value", Type: field.TypeString, Default: ""},
+	}
+	// SettingsTable holds the schema information for the "settings" table.
+	SettingsTable = &schema.Table{
+		Name:       "settings",
+		Columns:    SettingsColumns,
+		PrimaryKey: []*schema.Column{SettingsColumns[0]},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -727,13 +727,13 @@ var (
 		EventsTable,
 		EventRsvpsTable,
 		LookupsTable,
-		MetaTable,
 		OrgInvitesTable,
 		OrgMembersTable,
 		OrganizationsTable,
 		ParishesTable,
 		ParishMembersTable,
 		PeriodsTable,
+		SettingsTable,
 		UsersTable,
 		UserAccountsTable,
 		UserOtpsTable,

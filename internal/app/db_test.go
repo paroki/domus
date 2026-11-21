@@ -17,9 +17,9 @@ func TestOpenDB_SQLite(t *testing.T) {
 			_ = client.Close()
 			t.Fatalf("Schema.Create(%q) failed: %v", dsn, err)
 		}
-		if _, err := client.Meta.Create().SetKey("k1").SetValue("v1").Save(ctx); err != nil {
+		if _, err := client.Setting.Create().SetKey("k1").SetValue("v1").Save(ctx); err != nil {
 			_ = client.Close()
-			t.Fatalf("Meta.Create(%q) failed: %v", dsn, err)
+			t.Fatalf("Setting.Create(%q) failed: %v", dsn, err)
 		}
 		_ = client.Close()
 	}

@@ -1,4 +1,4 @@
-h1:s7YW6nHmobrMLzgyAxAu1FgLpT5qKHtJ56BANLpuaOc=
+h1:ktx+RAxEfO1q0QZ7p4AtGC55625W7pR0+/4p00nMf3M=
 20261119000000_initial.sql h1:EF1fP5G2/R/AI+UunhN3fHJlspWQ3WN6vJryMx6PtgI=
 20261119000001_user_schemas.sql h1:TrG94x+GRGwfG1pwiY3Rk8+wSpZ5sna9ZDBJB4QoUpU=
 20261120000001_ref_schemas.sql h1:pM2b2hefLbOR9NQ8RZM1V7ZYvP6epPGn/G1AOci4pN0=
@@ -6,3 +6,4 @@ h1:s7YW6nHmobrMLzgyAxAu1FgLpT5qKHtJ56BANLpuaOc=
 20261120085516_org_schemas.sql h1:EVCLaif5xpx+XVv9bOhDx9Klo2flAcYz6XzI+ZPecPo=
 20261120235123_event_schemas.sql h1:lPZhdYlf13w3Z+U9pZHF7xiNZrLEguICh5/5ewhjDiY=
 20261121031539_phase5_onboarding_and_otp_index.sql h1:GmPayQFph+bXurPo3OiqetaM3XQJ7YyAWyB7zlQrgCk=
+20261121111749_setting_schema.sql h1:5ESGX5JWzhp1ihjBKSe9rEADe+xdIG7BWTGvm7ZB30w=

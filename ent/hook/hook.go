@@ -69,18 +69,6 @@ func (f LookupFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, erro
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LookupMutation", m)
 }
 
-// The MetaFunc type is an adapter to allow the use of ordinary
-// function as Meta mutator.
-type MetaFunc func(context.Context, *ent.MetaMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f MetaFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.MetaMutation); ok {
-		return f(ctx, mv)
-	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MetaMutation", m)
-}
-
 // The OrgInviteFunc type is an adapter to allow the use of ordinary
 // function as OrgInvite mutator.
 type OrgInviteFunc func(context.Context, *ent.OrgInviteMutation) (ent.Value, error)
@@ -151,6 +139,18 @@ func (f PeriodFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, erro
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PeriodMutation", m)
+}
+
+// The SettingFunc type is an adapter to allow the use of ordinary
+// function as Setting mutator.
+type SettingFunc func(context.Context, *ent.SettingMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SettingFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SettingMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SettingMutation", m)
 }
 
 // The UserFunc type is an adapter to allow the use of ordinary

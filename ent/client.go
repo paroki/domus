@@ -21,13 +21,13 @@ import (
 	"github.com/paroki/domus/ent/event"
 	"github.com/paroki/domus/ent/eventrsvp"
 	"github.com/paroki/domus/ent/lookup"
-	"github.com/paroki/domus/ent/meta"
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orginvite"
 	"github.com/paroki/domus/ent/orgmember"
 	"github.com/paroki/domus/ent/parish"
 	"github.com/paroki/domus/ent/parishmember"
 	"github.com/paroki/domus/ent/period"
+	"github.com/paroki/domus/ent/setting"
 	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/useraccount"
 	"github.com/paroki/domus/ent/userotp"
@@ -51,8 +51,6 @@ type Client struct {
 	EventRSVP *EventRSVPClient
 	// Lookup is the client for interacting with the Lookup builders.
 	Lookup *LookupClient
-	// Meta is the client for interacting with the Meta builders.
-	Meta *MetaClient
 	// OrgInvite is the client for interacting with the OrgInvite builders.
 	OrgInvite *OrgInviteClient
 	// OrgMember is the client for interacting with the OrgMember builders.
@@ -65,6 +63,8 @@ type Client struct {
 	ParishMember *ParishMemberClient
 	// Period is the client for interacting with the Period builders.
 	Period *PeriodClient
+	// Setting is the client for interacting with the Setting builders.
+	Setting *SettingClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// UserAccount is the client for interacting with the UserAccount builders.
@@ -93,13 +93,13 @@ func (c *Client) init() {
 	c.Event = NewEventClient(c.config)
 	c.EventRSVP = NewEventRSVPClient(c.config)
 	c.Lookup = NewLookupClient(c.config)
-	c.Meta = NewMetaClient(c.config)
 	c.OrgInvite = NewOrgInviteClient(c.config)
 	c.OrgMember = NewOrgMemberClient(c.config)
 	c.Organization = NewOrganizationClient(c.config)
 	c.Parish = NewParishClient(c.config)
 	c.ParishMember = NewParishMemberClient(c.config)
 	c.Period = NewPeriodClient(c.config)
+	c.Setting = NewSettingClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.UserAccount = NewUserAccountClient(c.config)
 	c.UserOTP = NewUserOTPClient(c.config)
@@ -203,13 +203,13 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Event:        NewEventClient(cfg),
 		EventRSVP:    NewEventRSVPClient(cfg),
 		Lookup:       NewLookupClient(cfg),
-		Meta:         NewMetaClient(cfg),
 		OrgInvite:    NewOrgInviteClient(cfg),
 		OrgMember:    NewOrgMemberClient(cfg),
 		Organization: NewOrganizationClient(cfg),
 		Parish:       NewParishClient(cfg),
 		ParishMember: NewParishMemberClient(cfg),
 		Period:       NewPeriodClient(cfg),
+		Setting:      NewSettingClient(cfg),
 		User:         NewUserClient(cfg),
 		UserAccount:  NewUserAccountClient(cfg),
 		UserOTP:      NewUserOTPClient(cfg),
@@ -240,13 +240,13 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Event:        NewEventClient(cfg),
 		EventRSVP:    NewEventRSVPClient(cfg),
 		Lookup:       NewLookupClient(cfg),
-		Meta:         NewMetaClient(cfg),
 		OrgInvite:    NewOrgInviteClient(cfg),
 		OrgMember:    NewOrgMemberClient(cfg),
 		Organization: NewOrganizationClient(cfg),
 		Parish:       NewParishClient(cfg),
 		ParishMember: NewParishMemberClient(cfg),
 		Period:       NewPeriodClient(cfg),
+		Setting:      NewSettingClient(cfg),
 		User:         NewUserClient(cfg),
 		UserAccount:  NewUserAccountClient(cfg),
 		UserOTP:      NewUserOTPClient(cfg),
@@ -282,9 +282,9 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.CasbinRule, c.Diocese, c.Event, c.EventRSVP, c.Lookup, c.Meta, c.OrgInvite,
-		c.OrgMember, c.Organization, c.Parish, c.ParishMember, c.Period, c.User,
-		c.UserAccount, c.UserOTP, c.UserSession, c.Ward, c.Zone,
+		c.CasbinRule, c.Diocese, c.Event, c.EventRSVP, c.Lookup, c.OrgInvite,
+		c.OrgMember, c.Organization, c.Parish, c.ParishMember, c.Period, c.Setting,
+		c.User, c.UserAccount, c.UserOTP, c.UserSession, c.Ward, c.Zone,
 	} {
 		n.Use(hooks...)
 	}
@@ -294,9 +294,9 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.CasbinRule, c.Diocese, c.Event, c.EventRSVP, c.Lookup, c.Meta, c.OrgInvite,
-		c.OrgMember, c.Organization, c.Parish, c.ParishMember, c.Period, c.User,
-		c.UserAccount, c.UserOTP, c.UserSession, c.Ward, c.Zone,
+		c.CasbinRule, c.Diocese, c.Event, c.EventRSVP, c.Lookup, c.OrgInvite,
+		c.OrgMember, c.Organization, c.Parish, c.ParishMember, c.Period, c.Setting,
+		c.User, c.UserAccount, c.UserOTP, c.UserSession, c.Ward, c.Zone,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -315,8 +315,6 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.EventRSVP.mutate(ctx, m)
 	case *LookupMutation:
 		return c.Lookup.mutate(ctx, m)
-	case *MetaMutation:
-		return c.Meta.mutate(ctx, m)
 	case *OrgInviteMutation:
 		return c.OrgInvite.mutate(ctx, m)
 	case *OrgMemberMutation:
@@ -329,6 +327,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ParishMember.mutate(ctx, m)
 	case *PeriodMutation:
 		return c.Period.mutate(ctx, m)
+	case *SettingMutation:
+		return c.Setting.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
 	case *UserAccountMutation:
@@ -1072,139 +1072,6 @@ func (c *LookupClient) mutate(ctx context.Context, m *LookupMutation) (Value, er
 		return (&LookupDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Lookup mutation op: %q", m.Op())
-	}
-}
-
-// MetaClient is a client for the Meta schema.
-type MetaClient struct {
-	config
-}
-
-// NewMetaClient returns a client for the Meta from the given config.
-func NewMetaClient(c config) *MetaClient {
-	return &MetaClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `meta.Hooks(f(g(h())))`.
-func (c *MetaClient) Use(hooks ...Hook) {
-	c.hooks.Meta = append(c.hooks.Meta, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `meta.Intercept(f(g(h())))`.
-func (c *MetaClient) Intercept(interceptors ...Interceptor) {
-	c.inters.Meta = append(c.inters.Meta, interceptors...)
-}
-
-// Create returns a builder for creating a Meta entity.
-func (c *MetaClient) Create() *MetaCreate {
-	mutation := newMetaMutation(c.config, OpCreate)
-	return &MetaCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of Meta entities.
-func (c *MetaClient) CreateBulk(builders ...*MetaCreate) *MetaCreateBulk {
-	return &MetaCreateBulk{config: c.config, builders: builders}
-}
-
-// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
-// a builder and applies setFunc on it.
-func (c *MetaClient) MapCreateBulk(slice any, setFunc func(*MetaCreate, int)) *MetaCreateBulk {
-	rv := reflect.ValueOf(slice)
-	if rv.Kind() != reflect.Slice {
-		return &MetaCreateBulk{err: fmt.Errorf("calling to MetaClient.MapCreateBulk with wrong type %T, need slice", slice)}
-	}
-	builders := make([]*MetaCreate, rv.Len())
-	for i := 0; i < rv.Len(); i++ {
-		builders[i] = c.Create()
-		setFunc(builders[i], i)
-	}
-	return &MetaCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for Meta.
-func (c *MetaClient) Update() *MetaUpdate {
-	mutation := newMetaMutation(c.config, OpUpdate)
-	return &MetaUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *MetaClient) UpdateOne(_m *Meta) *MetaUpdateOne {
-	mutation := newMetaMutation(c.config, OpUpdateOne, withMeta(_m))
-	return &MetaUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *MetaClient) UpdateOneID(id uuid.UUID) *MetaUpdateOne {
-	mutation := newMetaMutation(c.config, OpUpdateOne, withMetaID(id))
-	return &MetaUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for Meta.
-func (c *MetaClient) Delete() *MetaDelete {
-	mutation := newMetaMutation(c.config, OpDelete)
-	return &MetaDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *MetaClient) DeleteOne(_m *Meta) *MetaDeleteOne {
-	return c.DeleteOneID(_m.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *MetaClient) DeleteOneID(id uuid.UUID) *MetaDeleteOne {
-	builder := c.Delete().Where(meta.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &MetaDeleteOne{builder}
-}
-
-// Query returns a query builder for Meta.
-func (c *MetaClient) Query() *MetaQuery {
-	return &MetaQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypeMeta},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a Meta entity by its id.
-func (c *MetaClient) Get(ctx context.Context, id uuid.UUID) (*Meta, error) {
-	return c.Query().Where(meta.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *MetaClient) GetX(ctx context.Context, id uuid.UUID) *Meta {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// Hooks returns the client hooks.
-func (c *MetaClient) Hooks() []Hook {
-	return c.hooks.Meta
-}
-
-// Interceptors returns the client interceptors.
-func (c *MetaClient) Interceptors() []Interceptor {
-	return c.inters.Meta
-}
-
-func (c *MetaClient) mutate(ctx context.Context, m *MetaMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&MetaCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&MetaUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&MetaUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&MetaDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown Meta mutation op: %q", m.Op())
 	}
 }
 
@@ -2230,6 +2097,139 @@ func (c *PeriodClient) mutate(ctx context.Context, m *PeriodMutation) (Value, er
 	}
 }
 
+// SettingClient is a client for the Setting schema.
+type SettingClient struct {
+	config
+}
+
+// NewSettingClient returns a client for the Setting from the given config.
+func NewSettingClient(c config) *SettingClient {
+	return &SettingClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `setting.Hooks(f(g(h())))`.
+func (c *SettingClient) Use(hooks ...Hook) {
+	c.hooks.Setting = append(c.hooks.Setting, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `setting.Intercept(f(g(h())))`.
+func (c *SettingClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Setting = append(c.inters.Setting, interceptors...)
+}
+
+// Create returns a builder for creating a Setting entity.
+func (c *SettingClient) Create() *SettingCreate {
+	mutation := newSettingMutation(c.config, OpCreate)
+	return &SettingCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Setting entities.
+func (c *SettingClient) CreateBulk(builders ...*SettingCreate) *SettingCreateBulk {
+	return &SettingCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SettingClient) MapCreateBulk(slice any, setFunc func(*SettingCreate, int)) *SettingCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SettingCreateBulk{err: fmt.Errorf("calling to SettingClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SettingCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SettingCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Setting.
+func (c *SettingClient) Update() *SettingUpdate {
+	mutation := newSettingMutation(c.config, OpUpdate)
+	return &SettingUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SettingClient) UpdateOne(_m *Setting) *SettingUpdateOne {
+	mutation := newSettingMutation(c.config, OpUpdateOne, withSetting(_m))
+	return &SettingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SettingClient) UpdateOneID(id uuid.UUID) *SettingUpdateOne {
+	mutation := newSettingMutation(c.config, OpUpdateOne, withSettingID(id))
+	return &SettingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Setting.
+func (c *SettingClient) Delete() *SettingDelete {
+	mutation := newSettingMutation(c.config, OpDelete)
+	return &SettingDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SettingClient) DeleteOne(_m *Setting) *SettingDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SettingClient) DeleteOneID(id uuid.UUID) *SettingDeleteOne {
+	builder := c.Delete().Where(setting.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SettingDeleteOne{builder}
+}
+
+// Query returns a query builder for Setting.
+func (c *SettingClient) Query() *SettingQuery {
+	return &SettingQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSetting},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Setting entity by its id.
+func (c *SettingClient) Get(ctx context.Context, id uuid.UUID) (*Setting, error) {
+	return c.Query().Where(setting.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SettingClient) GetX(ctx context.Context, id uuid.UUID) *Setting {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SettingClient) Hooks() []Hook {
+	return c.hooks.Setting
+}
+
+// Interceptors returns the client interceptors.
+func (c *SettingClient) Interceptors() []Interceptor {
+	return c.inters.Setting
+}
+
+func (c *SettingClient) mutate(ctx context.Context, m *SettingMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SettingCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SettingUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SettingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SettingDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Setting mutation op: %q", m.Op())
+	}
+}
+
 // UserClient is a client for the User schema.
 type UserClient struct {
 	config
@@ -3159,13 +3159,13 @@ func (c *ZoneClient) mutate(ctx context.Context, m *ZoneMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		CasbinRule, Diocese, Event, EventRSVP, Lookup, Meta, OrgInvite, OrgMember,
-		Organization, Parish, ParishMember, Period, User, UserAccount, UserOTP,
-		UserSession, Ward, Zone []ent.Hook
+		CasbinRule, Diocese, Event, EventRSVP, Lookup, OrgInvite, OrgMember,
+		Organization, Parish, ParishMember, Period, Setting, User, UserAccount,
+		UserOTP, UserSession, Ward, Zone []ent.Hook
 	}
 	inters struct {
-		CasbinRule, Diocese, Event, EventRSVP, Lookup, Meta, OrgInvite, OrgMember,
-		Organization, Parish, ParishMember, Period, User, UserAccount, UserOTP,
-		UserSession, Ward, Zone []ent.Interceptor
+		CasbinRule, Diocese, Event, EventRSVP, Lookup, OrgInvite, OrgMember,
+		Organization, Parish, ParishMember, Period, Setting, User, UserAccount,
+		UserOTP, UserSession, Ward, Zone []ent.Interceptor
 	}
 )

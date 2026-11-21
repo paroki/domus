@@ -11,37 +11,37 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/paroki/domus/ent/meta"
 	"github.com/paroki/domus/ent/predicate"
+	"github.com/paroki/domus/ent/setting"
 )
 
-// MetaUpdate is the builder for updating Meta entities.
-type MetaUpdate struct {
+// SettingUpdate is the builder for updating Setting entities.
+type SettingUpdate struct {
 	config
 	hooks    []Hook
-	mutation *MetaMutation
+	mutation *SettingMutation
 }
 
-// Where appends a list predicates to the MetaUpdate builder.
-func (_u *MetaUpdate) Where(ps ...predicate.Meta) *MetaUpdate {
+// Where appends a list predicates to the SettingUpdate builder.
+func (_u *SettingUpdate) Where(ps ...predicate.Setting) *SettingUpdate {
 	_u.mutation.Where(ps...)
 	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (_u *MetaUpdate) SetUpdatedAt(v time.Time) *MetaUpdate {
+func (_u *SettingUpdate) SetUpdatedAt(v time.Time) *SettingUpdate {
 	_u.mutation.SetUpdatedAt(v)
 	return _u
 }
 
 // SetKey sets the "key" field.
-func (_u *MetaUpdate) SetKey(v string) *MetaUpdate {
+func (_u *SettingUpdate) SetKey(v string) *SettingUpdate {
 	_u.mutation.SetKey(v)
 	return _u
 }
 
 // SetNillableKey sets the "key" field if the given value is not nil.
-func (_u *MetaUpdate) SetNillableKey(v *string) *MetaUpdate {
+func (_u *SettingUpdate) SetNillableKey(v *string) *SettingUpdate {
 	if v != nil {
 		_u.SetKey(*v)
 	}
@@ -49,32 +49,32 @@ func (_u *MetaUpdate) SetNillableKey(v *string) *MetaUpdate {
 }
 
 // SetValue sets the "value" field.
-func (_u *MetaUpdate) SetValue(v string) *MetaUpdate {
+func (_u *SettingUpdate) SetValue(v string) *SettingUpdate {
 	_u.mutation.SetValue(v)
 	return _u
 }
 
 // SetNillableValue sets the "value" field if the given value is not nil.
-func (_u *MetaUpdate) SetNillableValue(v *string) *MetaUpdate {
+func (_u *SettingUpdate) SetNillableValue(v *string) *SettingUpdate {
 	if v != nil {
 		_u.SetValue(*v)
 	}
 	return _u
 }
 
-// Mutation returns the MetaMutation object of the builder.
-func (_u *MetaUpdate) Mutation() *MetaMutation {
+// Mutation returns the SettingMutation object of the builder.
+func (_u *SettingUpdate) Mutation() *SettingMutation {
 	return _u.mutation
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (_u *MetaUpdate) Save(ctx context.Context) (int, error) {
+func (_u *SettingUpdate) Save(ctx context.Context) (int, error) {
 	_u.defaults()
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (_u *MetaUpdate) SaveX(ctx context.Context) int {
+func (_u *SettingUpdate) SaveX(ctx context.Context) int {
 	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
@@ -83,41 +83,41 @@ func (_u *MetaUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (_u *MetaUpdate) Exec(ctx context.Context) error {
+func (_u *SettingUpdate) Exec(ctx context.Context) error {
 	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_u *MetaUpdate) ExecX(ctx context.Context) {
+func (_u *SettingUpdate) ExecX(ctx context.Context) {
 	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (_u *MetaUpdate) defaults() {
+func (_u *SettingUpdate) defaults() {
 	if _, ok := _u.mutation.UpdatedAt(); !ok {
-		v := meta.UpdateDefaultUpdatedAt()
+		v := setting.UpdateDefaultUpdatedAt()
 		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (_u *MetaUpdate) check() error {
+func (_u *SettingUpdate) check() error {
 	if v, ok := _u.mutation.Key(); ok {
-		if err := meta.KeyValidator(v); err != nil {
-			return &ValidationError{Name: "key", err: fmt.Errorf(`ent: validator failed for field "Meta.key": %w`, err)}
+		if err := setting.KeyValidator(v); err != nil {
+			return &ValidationError{Name: "key", err: fmt.Errorf(`ent: validator failed for field "Setting.key": %w`, err)}
 		}
 	}
 	return nil
 }
 
-func (_u *MetaUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+func (_u *SettingUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if err := _u.check(); err != nil {
 		return _node, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(meta.Table, meta.Columns, sqlgraph.NewFieldSpec(meta.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewUpdateSpec(setting.Table, setting.Columns, sqlgraph.NewFieldSpec(setting.FieldID, field.TypeUUID))
 	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -126,17 +126,17 @@ func (_u *MetaUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
-		_spec.SetField(meta.FieldUpdatedAt, field.TypeTime, value)
+		_spec.SetField(setting.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if value, ok := _u.mutation.Key(); ok {
-		_spec.SetField(meta.FieldKey, field.TypeString, value)
+		_spec.SetField(setting.FieldKey, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.Value(); ok {
-		_spec.SetField(meta.FieldValue, field.TypeString, value)
+		_spec.SetField(setting.FieldValue, field.TypeString, value)
 	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
-			err = &NotFoundError{meta.Label}
+			err = &NotFoundError{setting.Label}
 		} else if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -146,28 +146,28 @@ func (_u *MetaUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	return _node, nil
 }
 
-// MetaUpdateOne is the builder for updating a single Meta entity.
-type MetaUpdateOne struct {
+// SettingUpdateOne is the builder for updating a single Setting entity.
+type SettingUpdateOne struct {
 	config
 	fields   []string
 	hooks    []Hook
-	mutation *MetaMutation
+	mutation *SettingMutation
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (_u *MetaUpdateOne) SetUpdatedAt(v time.Time) *MetaUpdateOne {
+func (_u *SettingUpdateOne) SetUpdatedAt(v time.Time) *SettingUpdateOne {
 	_u.mutation.SetUpdatedAt(v)
 	return _u
 }
 
 // SetKey sets the "key" field.
-func (_u *MetaUpdateOne) SetKey(v string) *MetaUpdateOne {
+func (_u *SettingUpdateOne) SetKey(v string) *SettingUpdateOne {
 	_u.mutation.SetKey(v)
 	return _u
 }
 
 // SetNillableKey sets the "key" field if the given value is not nil.
-func (_u *MetaUpdateOne) SetNillableKey(v *string) *MetaUpdateOne {
+func (_u *SettingUpdateOne) SetNillableKey(v *string) *SettingUpdateOne {
 	if v != nil {
 		_u.SetKey(*v)
 	}
@@ -175,45 +175,45 @@ func (_u *MetaUpdateOne) SetNillableKey(v *string) *MetaUpdateOne {
 }
 
 // SetValue sets the "value" field.
-func (_u *MetaUpdateOne) SetValue(v string) *MetaUpdateOne {
+func (_u *SettingUpdateOne) SetValue(v string) *SettingUpdateOne {
 	_u.mutation.SetValue(v)
 	return _u
 }
 
 // SetNillableValue sets the "value" field if the given value is not nil.
-func (_u *MetaUpdateOne) SetNillableValue(v *string) *MetaUpdateOne {
+func (_u *SettingUpdateOne) SetNillableValue(v *string) *SettingUpdateOne {
 	if v != nil {
 		_u.SetValue(*v)
 	}
 	return _u
 }
 
-// Mutation returns the MetaMutation object of the builder.
-func (_u *MetaUpdateOne) Mutation() *MetaMutation {
+// Mutation returns the SettingMutation object of the builder.
+func (_u *SettingUpdateOne) Mutation() *SettingMutation {
 	return _u.mutation
 }
 
-// Where appends a list predicates to the MetaUpdate builder.
-func (_u *MetaUpdateOne) Where(ps ...predicate.Meta) *MetaUpdateOne {
+// Where appends a list predicates to the SettingUpdate builder.
+func (_u *SettingUpdateOne) Where(ps ...predicate.Setting) *SettingUpdateOne {
 	_u.mutation.Where(ps...)
 	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (_u *MetaUpdateOne) Select(field string, fields ...string) *MetaUpdateOne {
+func (_u *SettingUpdateOne) Select(field string, fields ...string) *SettingUpdateOne {
 	_u.fields = append([]string{field}, fields...)
 	return _u
 }
 
-// Save executes the query and returns the updated Meta entity.
-func (_u *MetaUpdateOne) Save(ctx context.Context) (*Meta, error) {
+// Save executes the query and returns the updated Setting entity.
+func (_u *SettingUpdateOne) Save(ctx context.Context) (*Setting, error) {
 	_u.defaults()
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (_u *MetaUpdateOne) SaveX(ctx context.Context) *Meta {
+func (_u *SettingUpdateOne) SaveX(ctx context.Context) *Setting {
 	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
@@ -222,54 +222,54 @@ func (_u *MetaUpdateOne) SaveX(ctx context.Context) *Meta {
 }
 
 // Exec executes the query on the entity.
-func (_u *MetaUpdateOne) Exec(ctx context.Context) error {
+func (_u *SettingUpdateOne) Exec(ctx context.Context) error {
 	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_u *MetaUpdateOne) ExecX(ctx context.Context) {
+func (_u *SettingUpdateOne) ExecX(ctx context.Context) {
 	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (_u *MetaUpdateOne) defaults() {
+func (_u *SettingUpdateOne) defaults() {
 	if _, ok := _u.mutation.UpdatedAt(); !ok {
-		v := meta.UpdateDefaultUpdatedAt()
+		v := setting.UpdateDefaultUpdatedAt()
 		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (_u *MetaUpdateOne) check() error {
+func (_u *SettingUpdateOne) check() error {
 	if v, ok := _u.mutation.Key(); ok {
-		if err := meta.KeyValidator(v); err != nil {
-			return &ValidationError{Name: "key", err: fmt.Errorf(`ent: validator failed for field "Meta.key": %w`, err)}
+		if err := setting.KeyValidator(v); err != nil {
+			return &ValidationError{Name: "key", err: fmt.Errorf(`ent: validator failed for field "Setting.key": %w`, err)}
 		}
 	}
 	return nil
 }
 
-func (_u *MetaUpdateOne) sqlSave(ctx context.Context) (_node *Meta, err error) {
+func (_u *SettingUpdateOne) sqlSave(ctx context.Context) (_node *Setting, err error) {
 	if err := _u.check(); err != nil {
 		return _node, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(meta.Table, meta.Columns, sqlgraph.NewFieldSpec(meta.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewUpdateSpec(setting.Table, setting.Columns, sqlgraph.NewFieldSpec(setting.FieldID, field.TypeUUID))
 	id, ok := _u.mutation.ID()
 	if !ok {
-		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Meta.id" for update`)}
+		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Setting.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
 	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
-		_spec.Node.Columns = append(_spec.Node.Columns, meta.FieldID)
+		_spec.Node.Columns = append(_spec.Node.Columns, setting.FieldID)
 		for _, f := range fields {
-			if !meta.ValidColumn(f) {
+			if !setting.ValidColumn(f) {
 				return nil, &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 			}
-			if f != meta.FieldID {
+			if f != setting.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, f)
 			}
 		}
@@ -282,20 +282,20 @@ func (_u *MetaUpdateOne) sqlSave(ctx context.Context) (_node *Meta, err error) {
 		}
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
-		_spec.SetField(meta.FieldUpdatedAt, field.TypeTime, value)
+		_spec.SetField(setting.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if value, ok := _u.mutation.Key(); ok {
-		_spec.SetField(meta.FieldKey, field.TypeString, value)
+		_spec.SetField(setting.FieldKey, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.Value(); ok {
-		_spec.SetField(meta.FieldValue, field.TypeString, value)
+		_spec.SetField(setting.FieldValue, field.TypeString, value)
 	}
-	_node = &Meta{config: _u.config}
+	_node = &Setting{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
 	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
-			err = &NotFoundError{meta.Label}
+			err = &NotFoundError{setting.Label}
 		} else if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}

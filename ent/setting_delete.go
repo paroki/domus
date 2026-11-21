@@ -8,30 +8,30 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/paroki/domus/ent/meta"
 	"github.com/paroki/domus/ent/predicate"
+	"github.com/paroki/domus/ent/setting"
 )
 
-// MetaDelete is the builder for deleting a Meta entity.
-type MetaDelete struct {
+// SettingDelete is the builder for deleting a Setting entity.
+type SettingDelete struct {
 	config
 	hooks    []Hook
-	mutation *MetaMutation
+	mutation *SettingMutation
 }
 
-// Where appends a list predicates to the MetaDelete builder.
-func (_d *MetaDelete) Where(ps ...predicate.Meta) *MetaDelete {
+// Where appends a list predicates to the SettingDelete builder.
+func (_d *SettingDelete) Where(ps ...predicate.Setting) *SettingDelete {
 	_d.mutation.Where(ps...)
 	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (_d *MetaDelete) Exec(ctx context.Context) (int, error) {
+func (_d *SettingDelete) Exec(ctx context.Context) (int, error) {
 	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_d *MetaDelete) ExecX(ctx context.Context) int {
+func (_d *SettingDelete) ExecX(ctx context.Context) int {
 	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
@@ -39,8 +39,8 @@ func (_d *MetaDelete) ExecX(ctx context.Context) int {
 	return n
 }
 
-func (_d *MetaDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := sqlgraph.NewDeleteSpec(meta.Table, sqlgraph.NewFieldSpec(meta.FieldID, field.TypeUUID))
+func (_d *SettingDelete) sqlExec(ctx context.Context) (int, error) {
+	_spec := sqlgraph.NewDeleteSpec(setting.Table, sqlgraph.NewFieldSpec(setting.FieldID, field.TypeUUID))
 	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -56,32 +56,32 @@ func (_d *MetaDelete) sqlExec(ctx context.Context) (int, error) {
 	return affected, err
 }
 
-// MetaDeleteOne is the builder for deleting a single Meta entity.
-type MetaDeleteOne struct {
-	_d *MetaDelete
+// SettingDeleteOne is the builder for deleting a single Setting entity.
+type SettingDeleteOne struct {
+	_d *SettingDelete
 }
 
-// Where appends a list predicates to the MetaDelete builder.
-func (_d *MetaDeleteOne) Where(ps ...predicate.Meta) *MetaDeleteOne {
+// Where appends a list predicates to the SettingDelete builder.
+func (_d *SettingDeleteOne) Where(ps ...predicate.Setting) *SettingDeleteOne {
 	_d._d.mutation.Where(ps...)
 	return _d
 }
 
 // Exec executes the deletion query.
-func (_d *MetaDeleteOne) Exec(ctx context.Context) error {
+func (_d *SettingDeleteOne) Exec(ctx context.Context) error {
 	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
 	case n == 0:
-		return &NotFoundError{meta.Label}
+		return &NotFoundError{setting.Label}
 	default:
 		return nil
 	}
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_d *MetaDeleteOne) ExecX(ctx context.Context) {
+func (_d *SettingDeleteOne) ExecX(ctx context.Context) {
 	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}

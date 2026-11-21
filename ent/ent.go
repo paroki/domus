@@ -17,13 +17,13 @@ import (
 	"github.com/paroki/domus/ent/event"
 	"github.com/paroki/domus/ent/eventrsvp"
 	"github.com/paroki/domus/ent/lookup"
-	"github.com/paroki/domus/ent/meta"
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orginvite"
 	"github.com/paroki/domus/ent/orgmember"
 	"github.com/paroki/domus/ent/parish"
 	"github.com/paroki/domus/ent/parishmember"
 	"github.com/paroki/domus/ent/period"
+	"github.com/paroki/domus/ent/setting"
 	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/useraccount"
 	"github.com/paroki/domus/ent/userotp"
@@ -95,13 +95,13 @@ func checkColumn(t, c string) error {
 			event.Table:        event.ValidColumn,
 			eventrsvp.Table:    eventrsvp.ValidColumn,
 			lookup.Table:       lookup.ValidColumn,
-			meta.Table:         meta.ValidColumn,
 			orginvite.Table:    orginvite.ValidColumn,
 			orgmember.Table:    orgmember.ValidColumn,
 			organization.Table: organization.ValidColumn,
 			parish.Table:       parish.ValidColumn,
 			parishmember.Table: parishmember.ValidColumn,
 			period.Table:       period.ValidColumn,
+			setting.Table:      setting.ValidColumn,
 			user.Table:         user.ValidColumn,
 			useraccount.Table:  useraccount.ValidColumn,
 			userotp.Table:      userotp.ValidColumn,

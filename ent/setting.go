@@ -10,11 +10,11 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
-	"github.com/paroki/domus/ent/meta"
+	"github.com/paroki/domus/ent/setting"
 )
 
-// Meta is the model entity for the Meta schema.
-type Meta struct {
+// Setting is the model entity for the Setting schema.
+type Setting struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
@@ -30,15 +30,15 @@ type Meta struct {
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
-func (*Meta) scanValues(columns []string) ([]any, error) {
+func (*Setting) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case meta.FieldKey, meta.FieldValue:
+		case setting.FieldKey, setting.FieldValue:
 			values[i] = new(sql.NullString)
-		case meta.FieldCreatedAt, meta.FieldUpdatedAt:
+		case setting.FieldCreatedAt, setting.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case meta.FieldID:
+		case setting.FieldID:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -48,38 +48,38 @@ func (*Meta) scanValues(columns []string) ([]any, error) {
 }
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
-// to the Meta fields.
-func (_m *Meta) assignValues(columns []string, values []any) error {
+// to the Setting fields.
+func (_m *Setting) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
 	for i := range columns {
 		switch columns[i] {
-		case meta.FieldID:
+		case setting.FieldID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value != nil {
 				_m.ID = *value
 			}
-		case meta.FieldCreatedAt:
+		case setting.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
 				_m.CreatedAt = value.Time
 			}
-		case meta.FieldUpdatedAt:
+		case setting.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				_m.UpdatedAt = value.Time
 			}
-		case meta.FieldKey:
+		case setting.FieldKey:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field key", values[i])
 			} else if value.Valid {
 				_m.Key = value.String
 			}
-		case meta.FieldValue:
+		case setting.FieldValue:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field value", values[i])
 			} else if value.Valid {
@@ -92,34 +92,34 @@ func (_m *Meta) assignValues(columns []string, values []any) error {
 	return nil
 }
 
-// GetValue returns the ent.Value that was dynamically selected and assigned to the Meta.
+// GetValue returns the ent.Value that was dynamically selected and assigned to the Setting.
 // This includes values selected through modifiers, order, etc.
-func (_m *Meta) GetValue(name string) (ent.Value, error) {
+func (_m *Setting) GetValue(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
 }
 
-// Update returns a builder for updating this Meta.
-// Note that you need to call Meta.Unwrap() before calling this method if this Meta
+// Update returns a builder for updating this Setting.
+// Note that you need to call Setting.Unwrap() before calling this method if this Setting
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (_m *Meta) Update() *MetaUpdateOne {
-	return NewMetaClient(_m.config).UpdateOne(_m)
+func (_m *Setting) Update() *SettingUpdateOne {
+	return NewSettingClient(_m.config).UpdateOne(_m)
 }
 
-// Unwrap unwraps the Meta entity that was returned from a transaction after it was closed,
+// Unwrap unwraps the Setting entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (_m *Meta) Unwrap() *Meta {
+func (_m *Setting) Unwrap() *Setting {
 	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
-		panic("ent: Meta is not a transactional entity")
+		panic("ent: Setting is not a transactional entity")
 	}
 	_m.config.driver = _tx.drv
 	return _m
 }
 
 // String implements the fmt.Stringer.
-func (_m *Meta) String() string {
+func (_m *Setting) String() string {
 	var builder strings.Builder
-	builder.WriteString("Meta(")
+	builder.WriteString("Setting(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
@@ -136,5 +136,5 @@ func (_m *Meta) String() string {
 	return builder.String()
 }
 
-// MetaSlice is a parsable slice of Meta.
-type MetaSlice []*Meta
+// Settings is a parsable slice of Setting.
+type Settings []*Setting
