@@ -27,6 +27,7 @@ export const config = {
   appDbUrl:
     process.env.APP_DB_URL ??
     `sqlite://${dbPath}?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)&_pragma=foreign_keys(1)`,
+  appSecret: process.env.APP_SECRET ?? "domus-e2e-test-secret-key-min-32-bytes",
   superAdminEmail:
     process.env.USER_SUPER_ADMIN_EMAIL ?? "superadmin@domus.test",
   superAdminName: process.env.USER_SUPER_ADMIN_NAME ?? "Super Admin",

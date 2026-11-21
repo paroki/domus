@@ -95,6 +95,7 @@ export async function startServers(): Promise<void> {
     {
       APP_PORT: String(config.appPort),
       APP_DB_URL: config.appDbUrl,
+      APP_SECRET: config.appSecret,
       GOCOVERDIR: config.apiRawCoverageDir,
       USER_SUPER_ADMIN_EMAIL: config.superAdminEmail,
       USER_SUPER_ADMIN_NAME: config.superAdminName,
