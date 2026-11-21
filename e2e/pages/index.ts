@@ -1,5 +1,7 @@
 import type { Page } from "playwright";
 import { BasePage } from "./base.page";
+import { EventDetailPage } from "./event/event-detail.page";
+import { EventsPage } from "./event/events.page";
 import { OrgDetailPage } from "./org/org-detail.page";
 import { OrgsPage } from "./org/orgs.page";
 import { LookupsPage } from "./ref/lookups.page";
@@ -15,6 +17,10 @@ import { UsersPage } from "./user/users.page";
 export function createPages(page: Page) {
   return {
     base: new BasePage(page),
+    event: {
+      events: new EventsPage(page),
+      detail: new EventDetailPage(page),
+    },
     org: {
       orgs: new OrgsPage(page),
       detail: new OrgDetailPage(page),
