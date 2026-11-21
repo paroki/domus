@@ -41,19 +41,10 @@ config:
     port: 587
     user: ""
     from: "Domus <no-reply@example.com>"
-  telegram:
-    # -- Telegram bot username without @ (APP_TELEGRAM_BOT_USERNAME).
-    botUsername: ""
-  gowa:
-    # -- GOWA base URL (APP_GOWA_BASE_URL). Empty disables WhatsApp channel.
-    baseUrl: ""
-    basicUser: ""
 
 # -- Existing Secret holding keys: app-secret (APP_SECRET, required, min 32 bytes),
 # db-url (APP_DB_URL), google-id, google-secret, github-id, github-secret (AUTH_GOOGLE_*, AUTH_GITHUB_*),
-# smtp-pass (APP_SMTP_PASS), telegram-bot-token (APP_TELEGRAM_BOT_TOKEN),
-# telegram-webhook-secret (APP_TELEGRAM_WEBHOOK_SECRET),
-# gowa-basic-pass (APP_GOWA_BASIC_PASS).
+# smtp-pass (APP_SMTP_PASS).
 existingSecret: ""
 
 # -- Extra environment variables for container.

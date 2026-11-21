@@ -84,7 +84,7 @@ Environment variables from values.config.
 {{- end }}
 {{- end }}
 {{- with .Values.existingSecret }}
-{{- range $env, $key := dict "APP_SECRET" "app-secret" "APP_DB_URL" "db-url" "AUTH_GOOGLE_ID" "google-id" "AUTH_GOOGLE_SECRET" "google-secret" "AUTH_GITHUB_ID" "github-id" "AUTH_GITHUB_SECRET" "github-secret" "APP_SMTP_PASS" "smtp-pass" "APP_TELEGRAM_BOT_TOKEN" "telegram-bot-token" "APP_TELEGRAM_WEBHOOK_SECRET" "telegram-webhook-secret" "APP_GOWA_BASIC_PASS" "gowa-basic-pass" }}
+{{- range $env, $key := dict "APP_SECRET" "app-secret" "APP_DB_URL" "db-url" "AUTH_GOOGLE_ID" "google-id" "AUTH_GOOGLE_SECRET" "google-secret" "AUTH_GITHUB_ID" "github-id" "AUTH_GITHUB_SECRET" "github-secret" "APP_SMTP_PASS" "smtp-pass" }}
 - name: {{ $env }}
   valueFrom:
     secretKeyRef:
@@ -106,22 +106,6 @@ Environment variables from values.config.
 {{- end }}
 {{- with .from }}
 - name: APP_SMTP_FROM
-  value: {{ . | quote }}
-{{- end }}
-{{- end }}
-{{- with $c.telegram }}
-{{- with .botUsername }}
-- name: APP_TELEGRAM_BOT_USERNAME
-  value: {{ . | quote }}
-{{- end }}
-{{- end }}
-{{- with $c.gowa }}
-{{- with .baseUrl }}
-- name: APP_GOWA_BASE_URL
-  value: {{ . | quote }}
-{{- end }}
-{{- with .basicUser }}
-- name: APP_GOWA_BASIC_USER
   value: {{ . | quote }}
 {{- end }}
 {{- end }}
