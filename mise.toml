@@ -24,7 +24,7 @@ depends = ["dev:api", "dev:ui"]
 # --- Codegen ---
 [tasks."api:spec"]
 description = "Generate OpenAPI 3.1 spec via swag"
-run = "swag init --v3.1 -d cmd/domus,internal/app,internal/platform/httpx,internal/user/handler,internal/user/domain,internal/ref/handler,internal/ref/domain,internal/org/handler,internal/org/domain -g main.go --parseInternal --outputTypes json -o api"
+run = "swag init --v3.1 -d cmd/domus,internal/app,internal/platform/httpx,internal/user/handler,internal/user/domain,internal/ref/handler,internal/ref/domain,internal/org/handler,internal/org/domain,internal/event/handler,internal/event/domain -g main.go --parseInternal --outputTypes json -o api"
 
 [tasks."api:types"]
 description = "Generate TypeScript API schema from OpenAPI spec"
