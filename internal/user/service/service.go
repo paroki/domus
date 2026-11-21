@@ -16,6 +16,7 @@ import (
 	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/internal/platform/authz"
 	"github.com/paroki/domus/internal/platform/mailx"
+	"github.com/paroki/domus/internal/platform/telegram"
 	"github.com/paroki/domus/internal/user/domain"
 	"github.com/paroki/domus/internal/user/repo"
 )
@@ -93,7 +94,8 @@ type Service struct {
 	cfg            Config
 	repo           *repo.Repository
 	enforcer       *authz.Enforcer
-	otpSender      domain.OTPSender
+	otpSender      *CompositeOTPSender
+	telegramClient *telegram.Client
 	oauthProviders map[string]domain.OAuthProvider
 	inviteJoiner   InviteJoiner
 }
@@ -103,10 +105,21 @@ func (s *Service) SetInviteJoiner(j InviteJoiner) {
 	s.inviteJoiner = j
 }
 
+// SetTelegramClient wires the optional Telegram Bot API client into the service.
+func (s *Service) SetTelegramClient(c *telegram.Client) {
+	s.telegramClient = c
+}
+
 // New constructs a Service with configured OAuth2 providers and OTP sender.
 func New(cfg Config, r *repo.Repository, enforcer *authz.Enforcer, otpSender domain.OTPSender, logger *slog.Logger) *Service {
-	if otpSender == nil {
-		otpSender = NewLogOTPSender(logger)
+	var composite *CompositeOTPSender
+	if c, ok := otpSender.(*CompositeOTPSender); ok && c != nil {
+		composite = c
+	} else {
+		composite = NewCompositeOTPSender(logger)
+		if otpSender != nil {
+			composite.SetSender(domain.ProviderEmail, otpSender)
+		}
 	}
 	providers := make(map[string]domain.OAuthProvider)
 	if cfg.GoogleID != "" && cfg.GoogleSecret != "" {
@@ -119,9 +132,14 @@ func New(cfg Config, r *repo.Repository, enforcer *authz.Enforcer, otpSender dom
 		cfg:            cfg,
 		repo:           r,
 		enforcer:       enforcer,
-		otpSender:      otpSender,
+		otpSender:      composite,
 		oauthProviders: providers,
 	}
+}
+
+// EnabledOTPChannels returns enabled login OTP channel names in deterministic order.
+func (s *Service) EnabledOTPChannels() []string {
+	return s.otpSender.EnabledChannels()
 }
 
 // RegisterOAuthProvider registers or overrides an OAuth2 provider driver (useful for tests/extensions).

@@ -6,14 +6,17 @@ import (
 	"github.com/google/uuid"
 )
 
-// AuthProvidersResponse lists enabled OAuth2 provider names.
+// AuthProvidersResponse lists enabled OAuth2 provider names and OTP channels.
 type AuthProvidersResponse struct {
-	Providers []string `json:"providers"`
+	Providers   []string `json:"providers"`
+	OTPChannels []string `json:"otpChannels"`
 }
 
-// RequestOTPRequest requests a one-time passcode for passwordless email login.
+// RequestOTPRequest requests a one-time passcode for passwordless login over email, WhatsApp, or Telegram.
 type RequestOTPRequest struct {
-	Email      string `json:"email" validate:"required,email"`
+	Channel    string `json:"channel,omitempty"`
+	Target     string `json:"target,omitempty"`
+	Email      string `json:"email,omitempty"`
 	InviteCode string `json:"inviteCode,omitempty"`
 }
 
@@ -23,9 +26,11 @@ type RequestOTPResponse struct {
 	ExpiresInSeconds int    `json:"expiresInSeconds"`
 }
 
-// VerifyOTPRequest verifies a 6-digit OTP code for an email address.
+// VerifyOTPRequest verifies a 6-digit OTP code for email, WhatsApp, or Telegram login.
 type VerifyOTPRequest struct {
-	Email      string  `json:"email" validate:"required,email"`
+	Channel    string  `json:"channel,omitempty"`
+	Target     string  `json:"target,omitempty"`
+	Email      string  `json:"email,omitempty"`
 	Code       string  `json:"code" validate:"required,len=6"`
 	InviteCode string  `json:"inviteCode,omitempty"`
 	Name       string  `json:"name,omitempty"`

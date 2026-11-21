@@ -12,9 +12,11 @@ import (
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/internal/platform/authx"
 	"github.com/paroki/domus/internal/platform/authz"
+	"github.com/paroki/domus/internal/platform/gowa"
 	"github.com/paroki/domus/internal/platform/httpx"
 	"github.com/paroki/domus/internal/platform/mailx"
 	"github.com/paroki/domus/internal/platform/mcpx"
+	"github.com/paroki/domus/internal/platform/telegram"
 	"github.com/paroki/domus/internal/user/domain"
 	"github.com/paroki/domus/internal/user/handler"
 	"github.com/paroki/domus/internal/user/repo"
@@ -39,17 +41,48 @@ var (
 )
 
 type options struct {
-	otpSender      domain.OTPSender
-	oauthProviders []domain.OAuthProvider
+	otpSender         domain.OTPSender
+	channelOTPSenders map[string]domain.OTPSender
+	gowaClient        *gowa.Client
+	telegramClient    *telegram.Client
+	oauthProviders    []domain.OAuthProvider
 }
 
 // Option customizes user Feature initialization.
 type Option func(*options)
 
-// WithOTPSender overrides the default slog OTPSender.
+// WithOTPSender overrides the default email slog OTPSender.
 func WithOTPSender(sender domain.OTPSender) Option {
 	return func(o *options) {
 		o.otpSender = sender
+	}
+}
+
+// WithGowaClient configures WhatsApp OTP delivery via GOWA.
+func WithGowaClient(client *gowa.Client) Option {
+	return func(o *options) {
+		o.gowaClient = client
+	}
+}
+
+// WithTelegramClient configures Telegram OTP delivery and bot webhook linking.
+func WithTelegramClient(client *telegram.Client) Option {
+	return func(o *options) {
+		o.telegramClient = client
+	}
+}
+
+// WithChannelOTPSender registers a custom or test OTPSender for a specific channel.
+func WithChannelOTPSender(channel string, sender domain.OTPSender) Option {
+	return func(o *options) {
+		ch := strings.ToLower(strings.TrimSpace(channel))
+		if ch == "" || sender == nil {
+			return
+		}
+		if o.channelOTPSenders == nil {
+			o.channelOTPSenders = make(map[string]domain.OTPSender)
+		}
+		o.channelOTPSenders[ch] = sender
 	}
 }
 
@@ -102,6 +135,20 @@ func New(db *ent.Client, enforcer *authz.Enforcer, cfg Config, logger *slog.Logg
 	}
 
 	r := repo.New(db)
+	compositeSender := service.NewCompositeOTPSender(logger)
+	if opt.otpSender != nil {
+		compositeSender.SetSender(domain.ProviderEmail, opt.otpSender)
+	}
+	if opt.gowaClient != nil {
+		compositeSender.SetSender(domain.ProviderWhatsApp, service.NewGowaOTPSender(opt.gowaClient, otpTTL))
+	}
+	if opt.telegramClient != nil {
+		compositeSender.SetSender(domain.ProviderTelegram, service.NewTelegramOTPSender(opt.telegramClient, otpTTL))
+	}
+	for ch, sender := range opt.channelOTPSenders {
+		compositeSender.SetSender(ch, sender)
+	}
+
 	svcCfg := service.Config{
 		SuperAdminEmail: cfg.SuperAdminEmail,
 		SuperAdminName:  cfg.SuperAdminName,
@@ -114,7 +161,10 @@ func New(db *ent.Client, enforcer *authz.Enforcer, cfg Config, logger *slog.Logg
 		GitHubID:        cfg.GitHubID,
 		GitHubSecret:    cfg.GitHubSecret,
 	}
-	svc := service.New(svcCfg, r, enforcer, opt.otpSender, logger)
+	svc := service.New(svcCfg, r, enforcer, compositeSender, logger)
+	if opt.telegramClient != nil {
+		svc.SetTelegramClient(opt.telegramClient)
+	}
 	for _, p := range opt.oauthProviders {
 		svc.RegisterOAuthProvider(p)
 	}

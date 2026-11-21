@@ -104,6 +104,14 @@ func (r *Repository) FindAccountByProviderSubject(ctx context.Context, provider,
 		Only(ctx)
 }
 
+// FindUserAccountByUserAndProvider returns the UserAccount matching (userID, provider) if present.
+func (r *Repository) FindUserAccountByUserAndProvider(ctx context.Context, userID uuid.UUID, provider string) (*ent.UserAccount, error) {
+	return r.client.UserAccount.Query().
+		Where(useraccount.UserIDEQ(userID), useraccount.ProviderEQ(provider)).
+		Order(ent.Desc(useraccount.FieldCreatedAt)).
+		First(ctx)
+}
+
 // UpsertAccount creates or updates a UserAccount keyed by (provider, subject).
 func (r *Repository) UpsertAccount(
 	ctx context.Context,

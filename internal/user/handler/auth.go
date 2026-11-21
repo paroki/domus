@@ -19,10 +19,10 @@ const (
 	oauthCookieMaxAge       = 600 // 10 minutes
 )
 
-// GetProviders lists enabled OAuth2 providers.
+// GetProviders lists enabled OAuth2 providers and OTP channels.
 //
 //	@Summary		List enabled auth providers
-//	@Description	Returns enabled OAuth2 provider names in deterministic order.
+//	@Description	Returns enabled OAuth2 provider names and OTP channels in deterministic order.
 //	@ID				getAuthProviders
 //	@Tags			Auth
 //	@Produce		json
@@ -30,19 +30,20 @@ const (
 //	@Router			/auth/providers [get]
 func (h *Handler) GetProviders(c fiber.Ctx) error {
 	return httpx.OK(c, domain.AuthProvidersResponse{
-		Providers: h.service.EnabledProviders(),
+		Providers:   h.service.EnabledProviders(),
+		OTPChannels: h.service.EnabledOTPChannels(),
 	})
 }
 
-// RequestOTP dispatches a 6-digit passwordless login code via email.
+// RequestOTP dispatches a 6-digit passwordless login code via email, WhatsApp, or Telegram.
 //
-//	@Summary		Request email OTP
-//	@Description	Sends a 6-digit one-time passcode to an existing active user's email.
+//	@Summary		Request login OTP
+//	@Description	Sends a 6-digit one-time passcode to an active user via email, WhatsApp, or Telegram.
 //	@ID				requestAuthOTP
 //	@Tags			Auth
 //	@Accept			json
 //	@Produce		json
-//	@Param			body	body		domain.RequestOTPRequest	true	"Email address"
+//	@Param			body	body		domain.RequestOTPRequest	true	"OTP request payload"
 //	@Success		200		{object}	httpx.Envelope[domain.RequestOTPResponse]
 //	@Failure		400		{object}	httpx.Envelope[any]
 //	@Failure		403		{object}	httpx.Envelope[any]
@@ -62,10 +63,10 @@ func (h *Handler) RequestOTP(c fiber.Ctx) error {
 	return httpx.OK(c, res)
 }
 
-// VerifyOTP validates a 6-digit email OTP and sets the session cookie.
+// VerifyOTP validates a 6-digit OTP and sets the session cookie.
 //
-//	@Summary		Verify email OTP
-//	@Description	Verifies a 6-digit OTP code and establishes an authenticated session cookie.
+//	@Summary		Verify login OTP
+//	@Description	Verifies a 6-digit OTP code across email, WhatsApp, or Telegram and sets an authenticated session cookie.
 //	@ID				verifyAuthOTP
 //	@Tags			Auth
 //	@Accept			json

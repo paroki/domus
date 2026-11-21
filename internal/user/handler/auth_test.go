@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"testing"
 	"time"
@@ -21,6 +22,8 @@ import (
 	"github.com/paroki/domus/ent/userotp"
 	"github.com/paroki/domus/ent/usersession"
 	"github.com/paroki/domus/internal/platform/authz"
+	"github.com/paroki/domus/internal/platform/gowa"
+	"github.com/paroki/domus/internal/platform/telegram"
 	"github.com/paroki/domus/internal/user"
 	"github.com/paroki/domus/internal/user/domain"
 	"github.com/paroki/domus/testutil"
@@ -110,6 +113,281 @@ func (s *AuthHandlerSuite) TestGetProviders_DeterministicOrder() {
 
 	res := testutil.DecodeAs[domain.AuthProvidersResponse](&s.ApiTestSuite)
 	s.Equal([]string{"google", "github"}, res.Data.Providers)
+	s.Equal([]string{"email"}, res.Data.OTPChannels)
+}
+
+func (s *AuthHandlerSuite) TestMultiChannelOTP_DiscoveryValidationAndDisabled() {
+	// Disabled whatsapp/telegram channels return 400 AUTH_CHANNEL_DISABLED.
+	s.Request("/api/auth/otp", http.MethodPost, domain.RequestOTPRequest{
+		Channel: "whatsapp",
+		Target:  "+6281234567890",
+	})
+	s.BadRequest()
+	s.Equal("AUTH_CHANNEL_DISABLED", s.GetErrorResponse().Error.Code)
+
+	s.Request("/api/auth/otp", http.MethodPost, domain.RequestOTPRequest{
+		Channel: "telegram",
+		Target:  "alice@paroki.org",
+	})
+	s.BadRequest()
+	s.Equal("AUTH_CHANNEL_DISABLED", s.GetErrorResponse().Error.Code)
+
+	// Invalid channel -> 422 VALIDATION_ERROR on "channel".
+	s.Request("/api/auth/otp", http.MethodPost, domain.RequestOTPRequest{
+		Channel: "sms",
+		Target:  "+6281234567890",
+	})
+	s.UnprocessableEntity()
+	s.Equal("VALIDATION_ERROR", s.GetErrorResponse().Error.Code)
+	s.Require().NotEmpty(s.GetErrorResponse().Error.Details)
+	s.Equal("channel", s.GetErrorResponse().Error.Details[0].Field)
+
+	// Missing both target and email -> 422 VALIDATION_ERROR REQUIRED.
+	s.Request("/api/auth/otp", http.MethodPost, domain.RequestOTPRequest{})
+	s.UnprocessableEntity()
+	s.Equal("REQUIRED", s.GetErrorResponse().Error.Details[0].Code)
+
+	// Differing target and email -> 422 VALIDATION_ERROR on "target".
+	s.Request("/api/auth/otp", http.MethodPost, domain.RequestOTPRequest{
+		Target: "a@paroki.org",
+		Email:  "b@paroki.org",
+	})
+	s.UnprocessableEntity()
+	s.Equal("target", s.GetErrorResponse().Error.Details[0].Field)
+
+	// Invalid email syntax -> 422 VALIDATION_ERROR EMAIL.
+	s.Request("/api/auth/otp", http.MethodPost, domain.RequestOTPRequest{
+		Email: "not-an-email",
+	})
+	s.UnprocessableEntity()
+	s.Equal("EMAIL", s.GetErrorResponse().Error.Details[0].Code)
+
+	// Reconfigure feature with WhatsApp + Telegram channels enabled.
+	waSender := &stubOTPSender{}
+	tgSender := &stubOTPSender{}
+	multiCfg := s.cfg
+	multiCfg.OTPCooldown = 0
+	multiFeature := user.New(
+		s.client,
+		s.enforcer,
+		multiCfg,
+		slog.New(slog.DiscardHandler),
+		user.WithOTPSender(s.otpSender),
+		user.WithChannelOTPSender("telegram", tgSender),
+		user.WithChannelOTPSender("whatsapp", waSender),
+	)
+	s.WithFeatures(multiFeature)
+
+	s.Request("/api/auth/providers", http.MethodGet, nil)
+	s.OK()
+	res := testutil.DecodeAs[domain.AuthProvidersResponse](&s.ApiTestSuite)
+	s.Equal([]string{"email", "whatsapp", "telegram"}, res.Data.OTPChannels)
+
+	// inviteCode rejected on non-email channel -> 422 on "channel".
+	s.Request("/api/auth/otp", http.MethodPost, domain.RequestOTPRequest{
+		Channel:    "whatsapp",
+		Target:     "+6281234567890",
+		InviteCode: "INV-123",
+	})
+	s.UnprocessableEntity()
+	s.Equal("channel", s.GetErrorResponse().Error.Details[0].Field)
+}
+
+func (s *AuthHandlerSuite) TestMultiChannelOTP_WhatsAppAndTelegramLogin() {
+	ctx := context.Background()
+	var gotGowaBody map[string]string
+	gowaSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		s.Require().NoError(json.NewDecoder(r.Body).Decode(&gotGowaBody))
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"code":"SUCCESS"}`))
+	}))
+	defer gowaSrv.Close()
+
+	var gotTgPayload map[string]any
+	tgSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		s.Require().NoError(json.NewDecoder(r.Body).Decode(&gotTgPayload))
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"ok":true,"result":{}}`))
+	}))
+	defer tgSrv.Close()
+
+	gowaClient, err := gowa.New(gowa.Config{BaseURL: gowaSrv.URL})
+	s.Require().NoError(err)
+	tgClient, err := telegram.New(telegram.Config{
+		BotToken:      "123:SECRET",
+		BotUsername:   "domus_test_bot",
+		WebhookSecret: "hook-secret",
+		BaseURL:       tgSrv.URL,
+	})
+	s.Require().NoError(err)
+
+	cfg := s.cfg
+	cfg.OTPCooldown = 0
+	multiFeature := user.New(
+		s.client,
+		s.enforcer,
+		cfg,
+		slog.New(slog.DiscardHandler),
+		user.WithOTPSender(s.otpSender),
+		user.WithGowaClient(gowaClient),
+		user.WithTelegramClient(tgClient),
+	)
+	s.WithFeatures(multiFeature)
+
+	// User with ONLY unverified User.phone (no whatsapp UserAccount) -> rejected with 404.
+	unverifiedPhone := "+628111111111"
+	unverifiedUser, err := s.client.User.Create().
+		SetEmail("unverified@paroki.org").
+		SetName("Unverified Phone").
+		SetPhone(unverifiedPhone).
+		SetStatus(entuser.StatusActive).
+		Save(ctx)
+	s.Require().NoError(err)
+
+	s.Request("/api/auth/otp", http.MethodPost, domain.RequestOTPRequest{
+		Channel: "whatsapp",
+		Target:  "08111111111",
+	})
+	s.NotFound()
+	s.Equal("USER_NOT_FOUND", s.GetErrorResponse().Error.Code)
+
+	// Linking Telegram without verified WhatsApp still fails WhatsApp lookup -> 404.
+	_, err = s.client.UserAccount.Create().
+		SetUserID(unverifiedUser.ID).
+		SetProvider(domain.ProviderTelegram).
+		SetSubject("5550001").
+		Save(ctx)
+	s.Require().NoError(err)
+	s.Request("/api/auth/otp", http.MethodPost, domain.RequestOTPRequest{
+		Channel: "telegram",
+		Target:  unverifiedPhone,
+	})
+	s.NotFound()
+	s.Equal("USER_NOT_FOUND", s.GetErrorResponse().Error.Code)
+
+	// Invalid phone format -> 422 VALIDATION_ERROR on "target".
+	s.Request("/api/auth/otp", http.MethodPost, domain.RequestOTPRequest{
+		Channel: "whatsapp",
+		Target:  "abc",
+	})
+	s.UnprocessableEntity()
+	s.Equal("target", s.GetErrorResponse().Error.Details[0].Field)
+
+	// Verified WhatsApp & Telegram accounts on active user.
+	verifiedUser := s.createTestUser("multi-otp@paroki.org", "Multi OTP", entuser.StatusActive)
+	waAcc, err := s.client.UserAccount.Create().
+		SetUserID(verifiedUser.ID).
+		SetProvider(domain.ProviderWhatsApp).
+		SetSubject("+6281234567890").
+		Save(ctx)
+	s.Require().NoError(err)
+	tgAcc, err := s.client.UserAccount.Create().
+		SetUserID(verifiedUser.ID).
+		SetProvider(domain.ProviderTelegram).
+		SetSubject("987654321").
+		Save(ctx)
+	s.Require().NoError(err)
+
+	// 1) WhatsApp OTP login via local 08... target.
+	s.Request("/api/auth/otp", http.MethodPost, domain.RequestOTPRequest{
+		Channel: "whatsapp",
+		Target:  "0812-3456-7890",
+	})
+	s.OK()
+	s.Equal("6281234567890@s.whatsapp.net", gotGowaBody["phone"])
+	s.Contains(gotGowaBody["message"], "Kode OTP login Domus")
+
+	// Extract 6-digit code from Indonesian message.
+	var waCode string
+	for _, field := range bytes.Fields([]byte(gotGowaBody["message"])) {
+		if len(field) == 6 {
+			waCode = string(field)
+			break
+		}
+	}
+	s.Require().Len(waCode, 6)
+
+	s.Request("/api/auth/otp/verify", http.MethodPost, domain.VerifyOTPRequest{
+		Channel: "whatsapp",
+		Target:  "+6281234567890",
+		Code:    waCode,
+	})
+	s.OK()
+	waSess := testutil.DecodeAs[domain.AuthSessionResponse](&s.ApiTestSuite).Data
+	s.Equal(verifiedUser.ID, waSess.User.ID)
+
+	// Verify email account was NOT created and WhatsApp LastUsedAt was updated.
+	emailAccCount, err := s.client.UserAccount.Query().
+		Where(useraccount.UserIDEQ(verifiedUser.ID), useraccount.ProviderEQ(domain.ProviderEmail)).
+		Count(ctx)
+	s.Require().NoError(err)
+	s.Equal(0, emailAccCount)
+	updatedWA, err := s.client.UserAccount.Get(ctx, waAcc.ID)
+	s.Require().NoError(err)
+	s.NotNil(updatedWA.LastUsedAt)
+
+	// 2) Telegram OTP login via email lookup.
+	s.Request("/api/auth/otp", http.MethodPost, domain.RequestOTPRequest{
+		Channel: "telegram",
+		Target:  "MULTI-OTP@paroki.org",
+	})
+	s.OK()
+	s.Equal(float64(987654321), gotTgPayload["chat_id"])
+	tgMsg, _ := gotTgPayload["text"].(string)
+	s.Contains(tgMsg, "Kode OTP login Domus")
+
+	var tgCode1 string
+	for _, field := range bytes.Fields([]byte(tgMsg)) {
+		if len(field) == 6 {
+			tgCode1 = string(field)
+			break
+		}
+	}
+	s.Require().Len(tgCode1, 6)
+
+	s.Request("/api/auth/otp/verify", http.MethodPost, domain.VerifyOTPRequest{
+		Channel: "telegram",
+		Target:  "multi-otp@paroki.org",
+		Code:    tgCode1,
+	})
+	s.OK()
+
+	// 3) Telegram OTP login via verified WhatsApp phone lookup.
+	gotTgPayload = nil
+	s.Request("/api/auth/otp", http.MethodPost, domain.RequestOTPRequest{
+		Channel: "telegram",
+		Target:  "081234567890",
+	})
+	s.OK()
+	tgMsg2, _ := gotTgPayload["text"].(string)
+	var tgCode2 string
+	for _, field := range bytes.Fields([]byte(tgMsg2)) {
+		if len(field) == 6 {
+			tgCode2 = string(field)
+			break
+		}
+	}
+	s.Require().Len(tgCode2, 6)
+
+	s.Request("/api/auth/otp/verify", http.MethodPost, domain.VerifyOTPRequest{
+		Channel: "telegram",
+		Target:  "+6281234567890",
+		Code:    tgCode2,
+	})
+	s.OK()
+
+	updatedTG, err := s.client.UserAccount.Get(ctx, tgAcc.ID)
+	s.Require().NoError(err)
+	s.NotNil(updatedTG.LastUsedAt)
+
+	// Active user without telegram account -> 404 USER_NOT_FOUND.
+	s.createTestUser("notg@paroki.org", "No TG", entuser.StatusActive)
+	s.Request("/api/auth/otp", http.MethodPost, domain.RequestOTPRequest{
+		Channel: "telegram",
+		Target:  "notg@paroki.org",
+	})
+	s.NotFound()
+	s.Equal("USER_NOT_FOUND", s.GetErrorResponse().Error.Code)
 }
 
 func (s *AuthHandlerSuite) TestOTP_RequestVerifyAndLogoutFlow() {
