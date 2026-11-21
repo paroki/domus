@@ -5,7 +5,7 @@ import { useCurrentIdentity } from "../api/queries";
 import { getVisibleSettingsItems } from "../model";
 
 export function meta() {
-  return [{ title: "Pengaturan Paroki — Domus" }];
+  return [{ title: "Referensi — Domus" }];
 }
 
 export default function SettingsPage() {

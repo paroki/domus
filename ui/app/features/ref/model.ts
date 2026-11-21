@@ -55,7 +55,7 @@ export interface SettingsItem {
 export const SETTINGS_ITEMS: SettingsItem[] = [
   {
     id: "profile",
-    path: "/settings/profile",
+    path: "/ref/profile",
     label: "Profil Paroki",
     description: "Identitas paroki aktif dan daftar admin atau anggota paroki.",
     icon: Church,
@@ -64,7 +64,7 @@ export const SETTINGS_ITEMS: SettingsItem[] = [
   },
   {
     id: "territory",
-    path: "/settings/territory",
+    path: "/ref/territory",
     label: "Wilayah & Lingkungan",
     description: "Kelola wilayah, stasi, dan lingkungan paroki.",
     icon: MapPin,
@@ -73,7 +73,7 @@ export const SETTINGS_ITEMS: SettingsItem[] = [
   },
   {
     id: "lookups",
-    path: "/settings/lookups",
+    path: "/ref/lookups",
     label: "Kamus Referensi",
     description: "Daftar nilai referensi global maupun khusus paroki.",
     icon: BookOpen,
@@ -82,7 +82,7 @@ export const SETTINGS_ITEMS: SettingsItem[] = [
   },
   {
     id: "periods",
-    path: "/settings/periods",
+    path: "/ref/periods",
     label: "Periode",
     description: "Periode tahun buku dan tahun liturgi paroki.",
     icon: CalendarRange,
@@ -91,7 +91,7 @@ export const SETTINGS_ITEMS: SettingsItem[] = [
   },
   {
     id: "parishes",
-    path: "/settings/parishes",
+    path: "/ref/parishes",
     label: "Keuskupan & Paroki",
     description: "Kelola keuskupan, tenant paroki, dan admin paroki.",
     icon: Building2,

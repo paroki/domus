@@ -42,8 +42,13 @@ const id = {
       description: "Akun dan hak akses pengguna aplikasi.",
     },
     ref: {
-      name: "Pengaturan Paroki",
+      name: "Referensi",
       description: "Keuskupan, paroki, wilayah, kamus referensi, dan periode.",
+    },
+    settings: {
+      name: "Pengaturan",
+      description:
+        "Konfigurasi integrasi sistem, Telegram Bot, dan WhatsApp (GOWA).",
     },
   },
   auth: {
@@ -204,12 +209,12 @@ const id = {
     confirmDelete: "Hapus pengguna {{name}}?",
   },
   ref: {
-    settingsTitle: "Pengaturan Paroki",
+    settingsTitle: "Referensi",
     settingsSubtitle:
       "Kelola profil paroki, struktur wilayah, kamus, dan periode.",
-    settingsEmpty: "Tidak ada menu pengaturan yang tersedia.",
-    searchPlaceholder: "Cari pengaturan…",
-    backToSettings: "Pengaturan Paroki",
+    settingsEmpty: "Tidak ada menu referensi yang tersedia.",
+    searchPlaceholder: "Cari referensi…",
+    backToSettings: "Referensi",
     profileTitle: "Profil Paroki",
     profileSubtitle:
       "Perbarui identitas paroki aktif dan kelola admin/anggota.",
@@ -384,6 +389,19 @@ const id = {
     rsvpSummaryTitle: "Ringkasan Kehadiran",
     rsvpRosterTitle: "Daftar Kehadiran Anggota",
     rsvpRestrictedTitle: "Khusus Anggota Organisasi",
+  },
+  settings: {
+    title: "Pengaturan",
+    subtitle: "Konfigurasi integrasi sistem dan kanal komunikasi Domus.",
+    forbiddenSuperAdmin:
+      "Hanya Super Admin yang dapat melihat dan mengubah pengaturan sistem.",
+    save: "Simpan Pengaturan",
+    saving: "Menyimpan…",
+    saved: "Pengaturan berhasil disimpan.",
+    clearGroup: "Kosongkan / Nonaktifkan",
+    active: "Aktif",
+    unconfigured: "Belum Dikonfigurasi",
+    empty: "Belum ada pengaturan yang terdaftar.",
   },
 } as const;
 

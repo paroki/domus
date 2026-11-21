@@ -94,7 +94,7 @@ export default function ParishesPage() {
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-8 sm:px-6">
       <div>
         <Link
-          to="/settings"
+          to="/ref"
           className="inline-flex items-center gap-1.5 text-sm font-medium text-muted no-underline hover:text-fg"
         >
           <ArrowLeft aria-hidden className="size-4" />
