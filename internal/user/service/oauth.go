@@ -140,6 +140,12 @@ func (s *Service) OAuthCallback(
 		if err != nil {
 			return err
 		}
+		if avatarURL != nil && (updatedUser.AvatarURL == nil || *updatedUser.AvatarURL == "") {
+			updatedUser, err = txRepo.UpdateUser(ctx, u.ID, nil, nil, avatarURL, nil, nil, nil)
+			if err != nil {
+				return err
+			}
+		}
 		rawToken, sessionID, resp, err = s.createSessionWithID(ctx, txRepo, updatedUser, userAgent, ipAddress)
 		return err
 	})
