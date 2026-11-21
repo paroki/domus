@@ -3,7 +3,7 @@ Feature: Organization Member Menu Visibility, Read-Only Directory, Event Visibil
 
   Scenario: Organization member sees scoped menu, read-only roster, restricted sibling roster, and can self-leave
     When I open "/"
-    Then I see launcher tiles "Organisasi, Kegiatan"
+    Then I see launcher tiles "Organisasi, Kegiatan, Asisten AI"
     And I do not see launcher tiles "Referensi, Pengguna, Pengaturan"
     When I open "/users"
     Then I see the users forbidden banner

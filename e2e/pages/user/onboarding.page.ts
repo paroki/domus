@@ -1,4 +1,11 @@
+import assert from "node:assert/strict";
 import { BasePage } from "../base.page";
+
+function isoYearsAgo(years: number): string {
+  const d = new Date();
+  d.setUTCFullYear(d.getUTCFullYear() - years);
+  return d.toISOString().slice(0, 10);
+}
 
 export class OnboardingPage extends BasePage {
   async expectLoaded(): Promise<void> {
@@ -8,6 +15,14 @@ export class OnboardingPage extends BasePage {
     await this.page
       .getByRole("heading", { name: "Data Diri" })
       .waitFor({ state: "visible", timeout: 10_000 });
+  }
+
+  async expectBirthDateBounds(): Promise<void> {
+    const input = this.page.getByLabel("Tanggal lahir");
+    const min = await input.getAttribute("min");
+    const max = await input.getAttribute("max");
+    assert.equal(min, isoYearsAgo(120));
+    assert.equal(max, isoYearsAgo(13));
   }
 
   async completeBiodataAndFinish(input: {

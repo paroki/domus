@@ -14,9 +14,16 @@ Feature: Invite-only login guard, guest invite sign-up, onboarding, and profile 
     And a deterministic OTP "123456" is seeded for "tamu.undangan.e2e@domus.test"
     And I verify guest OTP "123456" for "Paduan Suara E2E"
     Then I am redirected to onboarding
+    And I see onboarding birth date bounds
     When I complete onboarding with name "Tamu Undangan Terverifikasi", phone "+6281298765432", gender "wanita", and birth date "1996-08-17"
     Then I am on the invited organization detail page "Paduan Suara E2E"
     And I see read-only org roster with member "Tamu Undangan Terverifikasi"
+    When I open "/me"
+    Then I see the profile and security page
+    And I see my profile shows gender "wanita" and birth date "1996-08-17"
+    When I update my profile to name "Tamu Undangan Terverifikasi", phone "+6281298765432", gender "pria", and birth date "1988-04-12"
+    Then I see profile saved message
+    And I see my profile shows gender "pria" and birth date "1988-04-12"
 
   Scenario: Revoked invite link is rejected on /org/join/:code
     Given an organization "Paduan Suara Revoked E2E" has a revoked invite

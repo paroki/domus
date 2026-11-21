@@ -20,20 +20,24 @@ import {
   loginAsUser,
 } from "./auth";
 import { config } from "./config";
+import { startMockLLMServer, stopMockLLMServer } from "./mock-llm";
 import { startServers, stopServers } from "./servers";
 import type { DomusWorld } from "./world";
 
 setDefaultTimeout(30_000);
 
 let browser: Browser;
+let mockLlmBaseUrl = "";
 const coverageMap = libCoverage.createCoverageMap({});
 
 BeforeAll({ timeout: 90_000 }, async () => {
+  mockLlmBaseUrl = await startMockLLMServer();
   await startServers();
   browser = await chromium.launch();
 });
 
 Before(async function (this: DomusWorld) {
+  this.mockLlmBaseUrl = mockLlmBaseUrl;
   this.context = await browser.newContext({ baseURL: config.uiBaseUrl });
   this.page = await this.context.newPage();
   this.pages = createPages(this.page);
@@ -114,6 +118,7 @@ After(async function (this: DomusWorld) {
 AfterAll(async () => {
   await browser?.close();
   await stopServers();
+  await stopMockLLMServer();
 
   if (Object.keys(coverageMap.data).length > 0) {
     mkdirSync(config.coverageDir, { recursive: true });

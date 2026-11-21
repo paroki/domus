@@ -1,4 +1,5 @@
 import type { Page } from "playwright";
+import { AgentWorkspacePage } from "./agent/agent.page";
 import { BasePage } from "./base.page";
 import { EventDetailPage } from "./event/event-detail.page";
 import { EventsPage } from "./event/events.page";
@@ -11,6 +12,7 @@ import { PeriodsPage } from "./ref/periods.page";
 import { ParishProfilePage } from "./ref/profile.page";
 import { SettingsPage } from "./ref/settings.page";
 import { TerritoryPage } from "./ref/territory.page";
+import { SystemSettingsPage } from "./settings/system-settings.page";
 import { HomePage } from "./shell/home.page";
 import { LoginPage } from "./user/login.page";
 import { MePage } from "./user/me.page";
@@ -20,6 +22,7 @@ import { UsersPage } from "./user/users.page";
 export function createPages(page: Page) {
   return {
     base: new BasePage(page),
+    agent: new AgentWorkspacePage(page),
     event: {
       events: new EventsPage(page),
       detail: new EventDetailPage(page),
@@ -40,6 +43,7 @@ export function createPages(page: Page) {
     shell: {
       home: new HomePage(page),
     },
+    settings: new SystemSettingsPage(page),
     user: {
       login: new LoginPage(page),
       users: new UsersPage(page),

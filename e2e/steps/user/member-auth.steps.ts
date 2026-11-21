@@ -122,6 +122,10 @@ Then("I am redirected to onboarding", async function (this: DomusWorld) {
   await this.pages.user.onboarding.expectLoaded();
 });
 
+Then("I see onboarding birth date bounds", async function (this: DomusWorld) {
+  await this.pages.user.onboarding.expectBirthDateBounds();
+});
+
 When(
   "I complete onboarding with name {string}, phone {string}, gender {string}, and birth date {string}",
   async function (
