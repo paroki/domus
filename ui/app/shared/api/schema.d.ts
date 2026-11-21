@@ -1205,6 +1205,30 @@ export interface paths {
     patch: operations["updateZone"];
     trace?: never;
   };
+  "/settings": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List application settings
+     * @description Returns all registered application settings with secret values masked.
+     */
+    get: operations["listSettings"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Update application settings
+     * @description Updates application settings, validates configuration listeners, and hot-reloads active clients.
+     */
+    patch: operations["updateSettings"];
+    trace?: never;
+  };
   "/telegram/hooks": {
     parameters: {
       query?: never;
@@ -2108,6 +2132,11 @@ export interface components {
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
+    "httpx.Envelope-array_setting_SettingResponse": {
+      data?: components["schemas"]["setting.SettingResponse"][];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
     "httpx.Envelope-domain_AuthProvidersResponse": {
       data?: components["schemas"]["domain.AuthProvidersResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
@@ -2229,6 +2258,21 @@ export interface components {
       limit?: number;
       nextCursor?: string;
       total?: number;
+    };
+    "setting.SettingResponse": {
+      configured?: boolean;
+      description?: string;
+      group?: string;
+      key?: string;
+      label?: string;
+      placeholder?: string;
+      secret?: boolean;
+      value?: string;
+    };
+    "setting.UpdateSettingsRequest": {
+      values?: {
+        [key: string]: string;
+      };
     };
   };
   responses: never;
@@ -6849,6 +6893,105 @@ export interface operations {
       };
       /** @description Conflict */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  listSettings: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-array_setting_SettingResponse"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  updateSettings: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Setting key-value updates */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["setting.UpdateSettingsRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-array_setting_SettingResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
         headers: {
           [name: string]: unknown;
         };
