@@ -282,7 +282,10 @@ export default function OnboardingPage() {
                   ) : (
                     <WhatsAppLinkForm
                       initialPhone={phone || me?.phone || ""}
-                      onLinked={advanceOrFinish}
+                      onLinked={(acc) => {
+                        if (acc.subject) setPhone(acc.subject);
+                        advanceOrFinish();
+                      }}
                     />
                   )}
 
