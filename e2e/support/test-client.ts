@@ -2,11 +2,16 @@ import { config } from "./config";
 
 export class TestClient {
   private token: string | null = null;
+  private parishId: string | null = null;
 
   constructor(private readonly baseUrl = config.apiBaseUrl) {}
 
   setToken(token: string | null): void {
     this.token = token;
+  }
+
+  setParishId(parishId: string | null): void {
+    this.parishId = parishId;
   }
 
   async request<T = unknown>(
@@ -17,6 +22,9 @@ export class TestClient {
     const headers: Record<string, string> = {};
     if (this.token) {
       headers.Authorization = `Bearer ${this.token}`;
+    }
+    if (this.parishId) {
+      headers["X-Parish-Id"] = this.parishId;
     }
     if (body !== undefined) {
       headers["Content-Type"] = "application/json";

@@ -1,5 +1,6 @@
 import type { Page } from "playwright";
 import { BasePage } from "./base.page";
+import { OrgsPage } from "./org/orgs.page";
 import { LookupsPage } from "./ref/lookups.page";
 import { ParishesPage } from "./ref/parishes.page";
 import { PeriodsPage } from "./ref/periods.page";
@@ -13,6 +14,9 @@ import { UsersPage } from "./user/users.page";
 export function createPages(page: Page) {
   return {
     base: new BasePage(page),
+    org: {
+      orgs: new OrgsPage(page),
+    },
     ref: {
       settings: new SettingsPage(page),
       parishes: new ParishesPage(page),

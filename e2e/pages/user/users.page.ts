@@ -34,6 +34,28 @@ export class UsersPage extends BasePage {
     await this.page.getByRole("tab", { name: scopeLabel }).click();
   }
 
+  async expectVisibleScopes(labels: string[]): Promise<void> {
+    for (const label of labels) {
+      await this.page
+        .getByRole("tab", { name: label })
+        .waitFor({ state: "visible", timeout: 10_000 });
+    }
+  }
+
+  async expectHiddenScopes(labels: string[]): Promise<void> {
+    for (const label of labels) {
+      const count = await this.page.getByRole("tab", { name: label }).count();
+      assert.equal(count, 0, `Expected scope tab "${label}" to be hidden`);
+    }
+  }
+
+  async expectErrorAlert(message: string): Promise<void> {
+    await this.page
+      .getByRole("alert")
+      .filter({ hasText: message })
+      .waitFor({ state: "visible", timeout: 10_000 });
+  }
+
   async createGlobalUser(input: {
     email: string;
     name: string;
@@ -198,6 +220,21 @@ export class UsersPage extends BasePage {
   async removeParishMember(name: string): Promise<void> {
     this.page.once("dialog", (dialog) => dialog.accept());
     await this.page.getByRole("button", { name: `Hapus ${name}` }).click();
+  }
+
+  async expectParishMemberNotVisible(name: string): Promise<void> {
+    await this.rowFor(name).waitFor({ state: "detached", timeout: 10_000 });
+  }
+
+  async expectOrgMemberVisible(
+    name: string,
+    roleLabel: "Admin Organisasi" | "Anggota",
+  ): Promise<void> {
+    const row = this.rowFor(name);
+    await row.waitFor({ state: "visible", timeout: 10_000 });
+    await row
+      .locator("span", { hasText: new RegExp(`^${roleLabel}$`) })
+      .waitFor({ state: "visible", timeout: 10_000 });
   }
 
   async selectOrganization(orgName: string): Promise<void> {

@@ -56,6 +56,7 @@ Before({ tags: "@parish-admin" }, async function (this: DomusWorld) {
   const result = await bootstrapParishAdminSession(this.client);
   await this.context.addCookies(result.session.cookies);
   this.client.setToken(result.session.rawToken);
+  this.client.setParishId(result.parish.id);
   this.activeDioceseId = result.diocese.id;
   this.activeParishId = result.parish.id;
   this.activeParishName = result.parish.name;
