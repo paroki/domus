@@ -7,6 +7,7 @@ import (
 	"github.com/paroki/domus/internal/event"
 	"github.com/paroki/domus/internal/org"
 	"github.com/paroki/domus/internal/platform/authz"
+	"github.com/paroki/domus/internal/platform/crypt"
 	"github.com/paroki/domus/internal/platform/gowa"
 	"github.com/paroki/domus/internal/platform/mailx"
 	"github.com/paroki/domus/internal/platform/telegram"
@@ -36,6 +37,10 @@ func newServeCmd() *cobra.Command {
 				GitHubID:     userCfg.GitHubID,
 				GitHubSecret: userCfg.GitHubSecret,
 			}, logger); err != nil {
+				return err
+			}
+			// ponytail: cipher constructed at startup to fail fast; wire into features when encrypted columns land.
+			if _, err = crypt.New(cfg.Secret); err != nil {
 				return err
 			}
 

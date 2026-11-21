@@ -11,11 +11,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const testAppSecret = "0123456789abcdef0123456789abcdef"
+
 func TestValidateStartupEnv_AllEmptyLogsWarningsAndSucceeds(t *testing.T) {
 	var buf bytes.Buffer
 	logger := slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelWarn}))
 
-	err := ValidateStartupEnv(Config{}, StartupOAuthConfig{}, logger)
+	err := ValidateStartupEnv(Config{Secret: testAppSecret}, StartupOAuthConfig{}, logger)
 	require.NoError(t, err)
 
 	lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
@@ -43,6 +45,7 @@ func TestValidateStartupEnv_FullyConfiguredNoErrorOrWarnings(t *testing.T) {
 	logger := slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelWarn}))
 
 	cfg := Config{
+		Secret:                testAppSecret,
 		SMTPHost:              "smtp.example.com",
 		SMTPUser:              "mailer",
 		SMTPPass:              "smtp-pass",
@@ -83,47 +86,59 @@ func TestValidateStartupEnv_PartialErrors(t *testing.T) {
 		contains []string
 	}{
 		{
+			name:     "secret empty",
+			cfg:      Config{},
+			contains: []string{"APP_SECRET"},
+		},
+		{
+			name:     "secret too short",
+			cfg:      Config{Secret: "short-secret"},
+			contains: []string{"APP_SECRET"},
+		},
+		{
 			name:     "telegram missing username and secret",
-			cfg:      Config{TelegramBotToken: "123:abc"},
+			cfg:      Config{Secret: testAppSecret, TelegramBotToken: "123:abc"},
 			contains: []string{"APP_TELEGRAM_BOT_USERNAME", "APP_TELEGRAM_WEBHOOK_SECRET"},
 		},
 		{
 			name:     "telegram missing token",
-			cfg:      Config{TelegramBotUsername: "domus_bot", TelegramWebhookSecret: "sec"},
+			cfg:      Config{Secret: testAppSecret, TelegramBotUsername: "domus_bot", TelegramWebhookSecret: "sec"},
 			contains: []string{"APP_TELEGRAM_BOT_TOKEN"},
 		},
 		{
 			name:     "gowa user without pass",
-			cfg:      Config{GowaBaseURL: "https://gowa.example.com", GowaBasicUser: "user"},
+			cfg:      Config{Secret: testAppSecret, GowaBaseURL: "https://gowa.example.com", GowaBasicUser: "user"},
 			contains: []string{"APP_GOWA_BASIC_USER", "APP_GOWA_BASIC_PASS"},
 		},
 		{
 			name:     "gowa pass without user or base url",
-			cfg:      Config{GowaBasicPass: "pass"},
+			cfg:      Config{Secret: testAppSecret, GowaBasicPass: "pass"},
 			contains: []string{"APP_GOWA_BASIC_USER", "APP_GOWA_BASIC_PASS", "APP_GOWA_BASE_URL"},
 		},
 		{
 			name:     "gowa auth without base url",
-			cfg:      Config{GowaBasicUser: "user", GowaBasicPass: "pass"},
+			cfg:      Config{Secret: testAppSecret, GowaBasicUser: "user", GowaBasicPass: "pass"},
 			contains: []string{"APP_GOWA_BASE_URL"},
 		},
 		{
 			name:     "smtp user without pass",
-			cfg:      Config{SMTPHost: "smtp.example.com", SMTPUser: "user"},
+			cfg:      Config{Secret: testAppSecret, SMTPHost: "smtp.example.com", SMTPUser: "user"},
 			contains: []string{"APP_SMTP_USER", "APP_SMTP_PASS"},
 		},
 		{
 			name:     "smtp auth without host",
-			cfg:      Config{SMTPUser: "user", SMTPPass: "pass"},
+			cfg:      Config{Secret: testAppSecret, SMTPUser: "user", SMTPPass: "pass"},
 			contains: []string{"APP_SMTP_HOST"},
 		},
 		{
 			name:     "oauth google missing secret",
+			cfg:      Config{Secret: testAppSecret},
 			oauth:    StartupOAuthConfig{GoogleID: "g-id"},
 			contains: []string{"AUTH_GOOGLE_ID", "AUTH_GOOGLE_SECRET"},
 		},
 		{
 			name:     "oauth github missing id",
+			cfg:      Config{Secret: testAppSecret},
 			oauth:    StartupOAuthConfig{GitHubSecret: "gh-secret"},
 			contains: []string{"AUTH_GITHUB_ID", "AUTH_GITHUB_SECRET"},
 		},
@@ -156,6 +171,7 @@ func TestValidateStartupEnv_CollectsAllErrorsAndHandlesNilLogger(t *testing.T) {
 	require.Error(t, err)
 	msg := err.Error()
 	for _, envVar := range []string{
+		"APP_SECRET",
 		"APP_TELEGRAM_BOT_USERNAME",
 		"APP_TELEGRAM_WEBHOOK_SECRET",
 		"APP_GOWA_BASIC_USER",

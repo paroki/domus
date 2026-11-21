@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/paroki/domus/internal/platform/crypt"
 	"github.com/sethvargo/go-envconfig/v2"
 )
 
@@ -14,6 +15,7 @@ type Config struct {
 	Port        string     `env:"APP_PORT, default=8080"`
 	LogLevel    slog.Level `env:"APP_LOG_LEVEL, default=info"`
 	DatabaseURL string     `env:"APP_DB_URL, default=postgres://domus:domus@localhost:5432/domus?sslmode=disable"`
+	Secret      string     `env:"APP_SECRET"`
 
 	// Sentry is disabled when APP_SENTRY_DSN is empty.
 	SentryDSN         string `env:"APP_SENTRY_DSN"`
@@ -53,6 +55,10 @@ func ValidateStartupEnv(cfg Config, oauth StartupOAuthConfig, logger *slog.Logge
 	}
 
 	var errs []error
+
+	if _, err := crypt.New(cfg.Secret); err != nil {
+		errs = append(errs, fmt.Errorf("invalid APP_SECRET: %w", err))
+	}
 
 	// Telegram requires all 3 vars when any is set.
 	var tgMissing []string
@@ -112,6 +118,7 @@ func validateHostWithOptionalAuth(
 	hasPass := strings.TrimSpace(passVal) != ""
 
 	var errs []error
+
 	if hasUser != hasPass {
 		errs = append(errs, fmt.Errorf("partial %s configuration: both %s and %s must be set together", integration, userEnv, passEnv))
 	}
