@@ -8,12 +8,35 @@ export class MePage extends BasePage {
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
-  async updateProfile(input: { name: string; phone?: string }): Promise<void> {
+  async updateProfile(input: {
+    name: string;
+    phone?: string;
+    gender?: "pria" | "wanita";
+    birthDate?: string;
+  }): Promise<void> {
     await this.page.getByLabel("Nama lengkap").fill(input.name);
     if (input.phone !== undefined) {
       await this.page.getByLabel("Nomor telepon (WhatsApp)").fill(input.phone);
     }
+    await this.page
+      .getByLabel("Jenis kelamin")
+      .selectOption(input.gender ?? "pria");
+    await this.page
+      .getByLabel("Tanggal lahir")
+      .fill(input.birthDate ?? "1995-05-10");
     await this.page.getByRole("button", { name: "Simpan Profil" }).click();
+  }
+
+  async expectProfileValues(input: {
+    gender: string;
+    birthDate: string;
+  }): Promise<void> {
+    const genderVal = await this.page.getByLabel("Jenis kelamin").inputValue();
+    const birthDateVal = await this.page
+      .getByLabel("Tanggal lahir")
+      .inputValue();
+    assert.equal(genderVal, input.gender);
+    assert.equal(birthDateVal, input.birthDate);
   }
 
   async expectProfileSaved(): Promise<void> {

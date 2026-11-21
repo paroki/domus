@@ -13,11 +13,19 @@ export class OnboardingPage extends BasePage {
   async completeBiodataAndFinish(input: {
     name: string;
     phone?: string;
+    gender?: "pria" | "wanita";
+    birthDate?: string;
   }): Promise<void> {
     await this.page.getByLabel("Nama lengkap").fill(input.name);
     if (input.phone !== undefined) {
       await this.page.getByLabel("Nomor telepon (opsional)").fill(input.phone);
     }
+    await this.page
+      .getByLabel("Jenis kelamin")
+      .selectOption(input.gender ?? "pria");
+    await this.page
+      .getByLabel("Tanggal lahir")
+      .fill(input.birthDate ?? "1995-05-10");
 
     const finishBtn = this.page.getByRole("button", {
       name: "Simpan & Selesai",

@@ -123,9 +123,20 @@ Then("I am redirected to onboarding", async function (this: DomusWorld) {
 });
 
 When(
-  "I complete onboarding with name {string} and phone {string}",
-  async function (this: DomusWorld, name: string, phone: string) {
-    await this.pages.user.onboarding.completeBiodataAndFinish({ name, phone });
+  "I complete onboarding with name {string}, phone {string}, gender {string}, and birth date {string}",
+  async function (
+    this: DomusWorld,
+    name: string,
+    phone: string,
+    gender: string,
+    birthDate: string,
+  ) {
+    await this.pages.user.onboarding.completeBiodataAndFinish({
+      name,
+      phone,
+      gender: gender as "pria" | "wanita",
+      birthDate,
+    });
   },
 );
 
@@ -157,9 +168,27 @@ Then("I see the profile and security page", async function (this: DomusWorld) {
 });
 
 When(
-  "I update my profile to name {string} and phone {string}",
-  async function (this: DomusWorld, name: string, phone: string) {
-    await this.pages.user.me.updateProfile({ name, phone });
+  "I update my profile to name {string}, phone {string}, gender {string}, and birth date {string}",
+  async function (
+    this: DomusWorld,
+    name: string,
+    phone: string,
+    gender: string,
+    birthDate: string,
+  ) {
+    await this.pages.user.me.updateProfile({
+      name,
+      phone,
+      gender: gender as "pria" | "wanita",
+      birthDate,
+    });
+  },
+);
+
+Then(
+  "I see my profile shows gender {string} and birth date {string}",
+  async function (this: DomusWorld, gender: string, birthDate: string) {
+    await this.pages.user.me.expectProfileValues({ gender, birthDate });
   },
 );
 
