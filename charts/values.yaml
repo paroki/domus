@@ -27,19 +27,6 @@ config:
     # -- Bootstrap super admin email (USER_SUPER_ADMIN_EMAIL).
     superAdminEmail: ""
     superAdminName: Super Admin
-    otpTtl: 5m
-    otpMaxAttempts: 5
-    otpCooldown: 60s
-    sessionTtl: 720h
-    cookieName: domus_session
-    # -- Set true when served over HTTPS.
-    cookieSecure: true
-  org:
-    inviteDefaultTtl: 24h
-    inviteMaxTtl: 168h
-  event:
-    defaultVisibility: public
-    rsvpGracePeriod: 30m
   sentry:
     # -- domus-api DSN (public). Empty disables Sentry.
     dsn: ""

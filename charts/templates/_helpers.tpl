@@ -80,30 +80,6 @@ Environment variables from values.config.
 {{- end }}
 - name: USER_SUPER_ADMIN_NAME
   value: {{ .superAdminName | quote }}
-- name: AUTH_OTP_TTL
-  value: {{ .otpTtl | quote }}
-- name: AUTH_OTP_MAX_ATTEMPTS
-  value: {{ .otpMaxAttempts | quote }}
-- name: AUTH_OTP_COOLDOWN
-  value: {{ .otpCooldown | quote }}
-- name: AUTH_SESSION_TTL
-  value: {{ .sessionTtl | quote }}
-- name: AUTH_SESSION_COOKIE_NAME
-  value: {{ .cookieName | quote }}
-- name: AUTH_SESSION_COOKIE_SECURE
-  value: {{ .cookieSecure | quote }}
-{{- end }}
-{{- with .Values.config.org }}
-- name: ORG_INVITE_DEFAULT_TTL
-  value: {{ .inviteDefaultTtl | quote }}
-- name: ORG_INVITE_MAX_TTL
-  value: {{ .inviteMaxTtl | quote }}
-{{- end }}
-{{- with .Values.config.event }}
-- name: EVENT_DEFAULT_VISIBILITY
-  value: {{ .defaultVisibility | quote }}
-- name: EVENT_RSVP_GRACE_PERIOD
-  value: {{ .rsvpGracePeriod | quote }}
 {{- end }}
 {{- with .Values.existingSecret }}
 {{- range $env, $key := dict "APP_DB_URL" "db-url" "AUTH_GOOGLE_ID" "google-id" "AUTH_GOOGLE_SECRET" "google-secret" "AUTH_GITHUB_ID" "github-id" "AUTH_GITHUB_SECRET" "github-secret" "APP_SMTP_PASS" "smtp-pass" }}
