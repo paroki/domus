@@ -92,7 +92,7 @@ type AgentConfig struct {
 
 // ProviderModelItem describes a discovered model from an upstream LLM provider.
 type ProviderModelItem struct {
-	ID           string
-	Name         string
-	Capabilities []string
+	ID           string   `json:"id"`
+	Name         string   `json:"name"`
+	Capabilities []string `json:"capabilities,omitempty"`
 }
