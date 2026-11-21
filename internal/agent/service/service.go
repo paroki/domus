@@ -18,6 +18,7 @@ import (
 	"github.com/paroki/domus/internal/platform/authx"
 	"github.com/paroki/domus/internal/platform/authz"
 	"github.com/paroki/domus/internal/platform/errx"
+	"github.com/paroki/domus/internal/platform/gowa"
 	"github.com/paroki/domus/internal/platform/mcpx"
 )
 
@@ -66,17 +67,18 @@ func (l *sessionLocker) unlock(id uuid.UUID) {
 
 // Service orchestrates AI agent conversations, 3-tier memory, and MCP tool execution.
 type Service struct {
-	repo      *repo.Repository
-	config    ConfigProvider
-	drivers   *driver.Registry
-	enforcer  *authz.Enforcer
-	mcpServer *mcp.Server
-	users     UserReader
-	parishes  ParishReader
-	orgs      OrgReader
-	locker    *sessionLocker
-	logger    *slog.Logger
-	nowFn     func() time.Time
+	repo            *repo.Repository
+	config          ConfigProvider
+	drivers         *driver.Registry
+	enforcer        *authz.Enforcer
+	mcpServer       *mcp.Server
+	users           UserReader
+	parishes        ParishReader
+	orgs            OrgReader
+	channelResolver ChannelUserResolver
+	locker          *sessionLocker
+	logger          *slog.Logger
+	nowFn           func() time.Time
 }
 
 // New constructs an agent Service.
@@ -115,6 +117,19 @@ func New(
 // SetMCPServer binds the in-process MCP server used by tool calls.
 func (s *Service) SetMCPServer(srv *mcp.Server) {
 	s.mcpServer = srv
+}
+
+// SetChannelResolver binds the user channel resolver and messaging clients.
+func (s *Service) SetChannelResolver(r ChannelUserResolver) {
+	s.channelResolver = r
+}
+
+// GowaClient returns the active hot-reloaded GOWA WhatsApp client (or nil).
+func (s *Service) GowaClient() *gowa.Client {
+	if s.channelResolver == nil {
+		return nil
+	}
+	return s.channelResolver.GowaClient()
 }
 
 // ChatTurnInput holds parameters for executing a single user turn.

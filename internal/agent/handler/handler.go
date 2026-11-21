@@ -43,10 +43,13 @@ func (h *Handler) Register(
 	requireMemoriesRead fiber.Handler,
 	requireMemoriesWrite fiber.Handler,
 ) {
-	agentGroup := api.Group("/agent", authMW, requireAuth)
-	agentGroup.Post("/providers/:provider/sync-models", requireAdminWrite, h.SyncProviderModels)
+	agentGroup := api.Group("/agent")
+	agentGroup.Post("/webhooks/whatsapp", h.WhatsAppWebhook)
 
-	tenant := agentGroup.Group("", requireTenant)
+	authed := agentGroup.Group("", authMW, requireAuth)
+	authed.Post("/providers/:provider/sync-models", requireAdminWrite, h.SyncProviderModels)
+
+	tenant := authed.Group("", requireTenant)
 	tenant.Post("/sessions/search", requireSessionsRead, h.SearchSessions)
 	tenant.Post("/sessions", requireSessionsWrite, h.CreateSession)
 	tenant.Get("/sessions/:sessionId", requireSessionsRead, h.GetSession)

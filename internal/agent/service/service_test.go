@@ -54,6 +54,10 @@ func (s stubParishReader) GetParish(_ context.Context, _ uuid.UUID) (*ParishInfo
 	return s.info, nil
 }
 
+func (s stubParishReader) GetParishByCode(_ context.Context, _ string) (*ParishInfo, error) {
+	return s.info, nil
+}
+
 type stubOrgReader struct{ orgs []OrgInfo }
 
 func (s stubOrgReader) ListUserOrgs(_ context.Context, _, _ uuid.UUID) ([]OrgInfo, error) {

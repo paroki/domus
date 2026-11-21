@@ -17,9 +17,12 @@ import (
 	"github.com/paroki/domus/internal/agent/repo"
 	"github.com/paroki/domus/internal/agent/service"
 	"github.com/paroki/domus/internal/org"
+	"github.com/paroki/domus/internal/platform/authx"
 	"github.com/paroki/domus/internal/platform/authz"
+	"github.com/paroki/domus/internal/platform/gowa"
 	"github.com/paroki/domus/internal/platform/httpx"
 	"github.com/paroki/domus/internal/platform/setting"
+	"github.com/paroki/domus/internal/platform/telegram"
 	"github.com/paroki/domus/internal/ref"
 	"github.com/paroki/domus/internal/user"
 )
@@ -95,6 +98,38 @@ func (a parishReaderAdapter) GetParish(ctx context.Context, parishID uuid.UUID) 
 	}, nil
 }
 
+func (a parishReaderAdapter) GetParishByCode(ctx context.Context, code string) (*service.ParishInfo, error) {
+	p, err := a.refs.GetParishByCode(ctx, code)
+	if err != nil {
+		return nil, err
+	}
+	return &service.ParishInfo{
+		ID:   p.ID,
+		Code: p.Code,
+		Name: p.Name,
+	}, nil
+}
+
+type channelResolverAdapter struct {
+	users *user.Feature
+}
+
+func (a channelResolverAdapter) ResolveByChannel(ctx context.Context, provider, subject string, overrideParishID uuid.UUID) (authx.Principal, error) {
+	return a.users.ResolveByChannel(ctx, provider, subject, overrideParishID)
+}
+
+func (a channelResolverAdapter) SwitchChannelParish(ctx context.Context, provider, subject string, parishID uuid.UUID) error {
+	return a.users.SwitchChannelParish(ctx, provider, subject, parishID)
+}
+
+func (a channelResolverAdapter) TelegramClient() *telegram.Client {
+	return a.users.TelegramClient()
+}
+
+func (a channelResolverAdapter) GowaClient() *gowa.Client {
+	return a.users.GowaClient()
+}
+
 type orgReaderAdapter struct {
 	orgs *org.Feature
 }
@@ -154,6 +189,10 @@ func New(
 		}
 		r := repo.New(cfgOpts.db, cfgOpts.sqlDB, cfgOpts.dialect)
 		f.service = service.New(r, configAdapter{store: cfg}, drivers, cfgOpts.enforcer, cfgOpts.mcpServer, ur, pr, or, logger)
+		if cfgOpts.users != nil {
+			f.service.SetChannelResolver(channelResolverAdapter{users: cfgOpts.users})
+			cfgOpts.users.SetTelegramMessageHandler(f.HandleTelegramUpdate)
+		}
 		f.handler = handler.New(f.service, f)
 	}
 	return f
@@ -224,6 +263,14 @@ func (f *Feature) SetMCPServer(s *mcp.Server) {
 	if f.service != nil {
 		f.service.SetMCPServer(s)
 	}
+}
+
+// HandleTelegramUpdate processes non-/start Telegram bot updates via the AI agent.
+func (f *Feature) HandleTelegramUpdate(ctx context.Context, update telegram.Update) error {
+	if f.service == nil {
+		return nil
+	}
+	return f.service.HandleTelegramUpdate(ctx, update)
 }
 
 // RegisterSettings registers all AI agent settings descriptors and hot-reload listeners on s.

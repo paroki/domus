@@ -196,6 +196,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/agent/webhooks/whatsapp": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * GOWA WhatsApp agent webhook
+     * @description Verifies X-Hub-Signature-256 and routes inbound WhatsApp messages to the AI agent.
+     */
+    post: operations["whatsAppAgentWebhook"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/auth/logout": {
     parameters: {
       query?: never;
@@ -3348,6 +3368,53 @@ export interface operations {
       };
       /** @description Not Found */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  whatsAppAgentWebhook: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description GOWA HMAC-SHA256 signature */
+        "X-Hub-Signature-256": string;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    /** @description GOWA webhook payload */
+    requestBody: {
+      content: {
+        "application/json": Record<string, never>;
+        "text/plain": Record<string, never>;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
         headers: {
           [name: string]: unknown;
         };

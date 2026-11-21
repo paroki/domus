@@ -4308,6 +4308,76 @@
                 ]
             }
         },
+        "/agent/webhooks/whatsapp": {
+            "post": {
+                "description": "Verifies X-Hub-Signature-256 and routes inbound WhatsApp messages to the AI agent.",
+                "operationId": "whatsAppAgentWebhook",
+                "parameters": [
+                    {
+                        "description": "GOWA HMAC-SHA256 signature",
+                        "in": "header",
+                        "name": "X-Hub-Signature-256",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        },
+                        "text/plain": {
+                            "schema": {
+                                "title": "body",
+                                "type": "object"
+                            }
+                        }
+                    },
+                    "description": "GOWA webhook payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    }
+                },
+                "summary": "GOWA WhatsApp agent webhook",
+                "tags": [
+                    "Agent"
+                ]
+            }
+        },
         "/auth/logout": {
             "post": {
                 "description": "Revokes the active session token and clears the session cookie.",

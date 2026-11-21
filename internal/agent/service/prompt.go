@@ -43,6 +43,7 @@ type UserReader interface {
 // ParishReader reads parish metadata without coupling to internal/ref.
 type ParishReader interface {
 	GetParish(ctx context.Context, parishID uuid.UUID) (*ParishInfo, error)
+	GetParishByCode(ctx context.Context, code string) (*ParishInfo, error)
 }
 
 // OrgReader reads a user's organization memberships without coupling to internal/org.
