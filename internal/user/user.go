@@ -169,6 +169,9 @@ func New(db *ent.Client, enforcer *authz.Enforcer, cfg Config, logger *slog.Logg
 		svc.RegisterOAuthProvider(p)
 	}
 	h := handler.New(svc, cookieName, sessionTTL)
+	if opt.telegramClient != nil {
+		h.SetTelegramClient(opt.telegramClient)
+	}
 	return &Feature{
 		service:    svc,
 		handler:    h,
@@ -320,6 +323,16 @@ func (f *Feature) SwitchSessionParish(ctx context.Context, userID, sessionID, pa
 		UserID:    userID,
 		SessionID: sessionID,
 	}, parishID)
+}
+
+// CompleteTelegramLink consumes a Telegram deep-link token and links chatID to the owning user.
+func (f *Feature) CompleteTelegramLink(ctx context.Context, token, chatID, displayName string) error {
+	return f.service.CompleteTelegramLink(ctx, token, chatID, displayName)
+}
+
+// SetTelegramMessageHandler sets a fallback handler for non-/start Telegram webhook messages.
+func (f *Feature) SetTelegramMessageHandler(fn func(context.Context, telegram.Update) error) {
+	f.handler.SetTelegramMessageHandler(fn)
 }
 
 func (f *Feature) extractSessionToken(c fiber.Ctx) string {

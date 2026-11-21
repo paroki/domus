@@ -43,6 +43,7 @@ func (UserOTP) Fields() []ent.Field {
 func (UserOTP) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("channel", "target"),
+		index.Fields("channel", "code_hash"),
 		index.Fields("expires_at"),
 	}
 }

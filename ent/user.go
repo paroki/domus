@@ -34,6 +34,8 @@ type User struct {
 	AvatarURL *string `json:"avatar_url,omitempty"`
 	// Status holds the value of the "status" field.
 	Status user.Status `json:"status,omitempty"`
+	// Onboarded holds the value of the "onboarded" field.
+	Onboarded bool `json:"onboarded,omitempty"`
 	// DefaultParishID holds the value of the "default_parish_id" field.
 	DefaultParishID *uuid.UUID `json:"default_parish_id,omitempty"`
 	// LastLoginAt holds the value of the "last_login_at" field.
@@ -80,6 +82,8 @@ func (*User) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case user.FieldDefaultParishID:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
+		case user.FieldOnboarded:
+			values[i] = new(sql.NullBool)
 		case user.FieldEmail, user.FieldName, user.FieldPhone, user.FieldAvatarURL, user.FieldStatus:
 			values[i] = new(sql.NullString)
 		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldDeletedAt, user.FieldLastLoginAt:
@@ -157,6 +161,12 @@ func (_m *User) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
 				_m.Status = user.Status(value.String)
+			}
+		case user.FieldOnboarded:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field onboarded", values[i])
+			} else if value.Valid {
+				_m.Onboarded = value.Bool
 			}
 		case user.FieldDefaultParishID:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
@@ -247,6 +257,9 @@ func (_m *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Status))
+	builder.WriteString(", ")
+	builder.WriteString("onboarded=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Onboarded))
 	builder.WriteString(", ")
 	if v := _m.DefaultParishID; v != nil {
 		builder.WriteString("default_parish_id=")

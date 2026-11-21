@@ -420,6 +420,10 @@ func init() {
 	userDescName := userFields[1].Descriptor()
 	// user.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	user.NameValidator = userDescName.Validators[0].(func(string) error)
+	// userDescOnboarded is the schema descriptor for onboarded field.
+	userDescOnboarded := userFields[5].Descriptor()
+	// user.DefaultOnboarded holds the default value on creation for the onboarded field.
+	user.DefaultOnboarded = userDescOnboarded.Default.(bool)
 	// userDescID is the schema descriptor for id field.
 	userDescID := userMixinFields0[0].Descriptor()
 	// user.DefaultID holds the default value on creation for the id field.

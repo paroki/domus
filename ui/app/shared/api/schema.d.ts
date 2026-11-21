@@ -34,8 +34,8 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Request email OTP
-     * @description Sends a 6-digit one-time passcode to an existing active user's email.
+     * Request login OTP
+     * @description Sends a 6-digit one-time passcode to an active user via email, WhatsApp, or Telegram.
      */
     post: operations["requestAuthOTP"];
     delete?: never;
@@ -54,8 +54,8 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Verify email OTP
-     * @description Verifies a 6-digit OTP code and establishes an authenticated session cookie.
+     * Verify login OTP
+     * @description Verifies a 6-digit OTP code across email, WhatsApp, or Telegram and sets an authenticated session cookie.
      */
     post: operations["verifyAuthOTP"];
     delete?: never;
@@ -73,7 +73,7 @@ export interface paths {
     };
     /**
      * List enabled auth providers
-     * @description Returns enabled OAuth2 provider names in deterministic order.
+     * @description Returns enabled OAuth2 provider names and OTP channels in deterministic order.
      */
     get: operations["getAuthProviders"];
     put?: never;
@@ -292,9 +292,29 @@ export interface paths {
     head?: never;
     /**
      * Update current user profile
-     * @description Updates name, phone (normalized to E.164), avatarUrl, or defaultParishId.
+     * @description Updates name, phone (normalized to E.164), avatarUrl, defaultParishId, or onboarded status.
      */
     patch: operations["updateMe"];
+    trace?: never;
+  };
+  "/me/accounts/otp": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Request account linking OTP
+     * @description Sends a 6-digit verification OTP to link a WhatsApp number to the current user.
+     */
+    post: operations["requestMeAccountOTP"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
   "/me/accounts/search": {
@@ -311,6 +331,46 @@ export interface paths {
      * @description Lists linked OAuth2, email, and channel accounts for the current user.
      */
     post: operations["searchMeAccounts"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/me/accounts/telegram/token": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create Telegram link token
+     * @description Generates a single-use t.me deep-link token to connect Telegram to the current user.
+     */
+    post: operations["createMeTelegramLinkToken"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/me/accounts/verify": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Verify account linking OTP
+     * @description Verifies a 6-digit OTP and links the verified WhatsApp account to the current user.
+     */
+    post: operations["verifyMeAccount"];
     delete?: never;
     options?: never;
     head?: never;
@@ -1125,6 +1185,26 @@ export interface paths {
     patch: operations["updateZone"];
     trace?: never;
   };
+  "/telegram/hooks": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Telegram bot webhook
+     * @description Receives Telegram Bot API updates and processes /start account linking tokens.
+     */
+    post: operations["telegramWebhook"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/users": {
     parameters: {
       query?: never;
@@ -1236,6 +1316,7 @@ export interface components {
       status?: "active" | "disabled";
     };
     "domain.AuthProvidersResponse": {
+      otpChannels?: string[];
       providers?: string[];
     };
     "domain.AuthSessionResponse": {
@@ -1417,6 +1498,11 @@ export interface components {
       /** @enum {string} */
       visibility?: "public" | "private";
     };
+    "domain.LinkAccountOTPRequest": {
+      /** @enum {string} */
+      channel: "whatsapp";
+      target: string;
+    };
     "domain.LookupResponse": {
       active?: boolean;
       category?: string;
@@ -1584,8 +1670,10 @@ export interface components {
       parishId?: string;
     };
     "domain.RequestOTPRequest": {
-      email: string;
+      channel?: string;
+      email?: string;
       inviteCode?: string;
+      target?: string;
     };
     "domain.RequestOTPResponse": {
       expiresInSeconds?: number;
@@ -1679,6 +1767,11 @@ export interface components {
     "domain.SwitchSessionParishRequest": {
       activeParishId: string;
     };
+    "domain.TelegramLinkTokenResponse": {
+      botUsername?: string;
+      deepLinkUrl?: string;
+      expiresInSeconds?: number;
+    };
     "domain.UpdateDioceseRequest": {
       active?: boolean;
       address?: string;
@@ -1714,6 +1807,7 @@ export interface components {
       avatarUrl?: string;
       defaultParishId?: string;
       name?: string;
+      onboarded?: boolean;
       phone?: string;
     };
     "domain.UpdateOrgMemberRequest": {
@@ -1824,7 +1918,9 @@ export interface components {
       email?: string;
       id?: string;
       lastLoginAt?: string;
+      linkedProviders?: string[];
       name?: string;
+      onboarded?: boolean;
       phone?: string;
       roles?: string[];
       status?: string;
@@ -1844,12 +1940,20 @@ export interface components {
       lastActiveAt?: string;
       userAgent?: string;
     };
-    "domain.VerifyOTPRequest": {
+    "domain.VerifyLinkAccountRequest": {
+      /** @enum {string} */
+      channel: "whatsapp";
       code: string;
-      email: string;
+      target: string;
+    };
+    "domain.VerifyOTPRequest": {
+      channel?: string;
+      code: string;
+      email?: string;
       inviteCode?: string;
       name?: string;
       phone?: string;
+      target?: string;
     };
     "domain.WardResponse": {
       active?: boolean;
@@ -2050,6 +2154,16 @@ export interface components {
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
+    "httpx.Envelope-domain_TelegramLinkTokenResponse": {
+      data?: components["schemas"]["domain.TelegramLinkTokenResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_UserAccountResponse": {
+      data?: components["schemas"]["domain.UserAccountResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
     "httpx.Envelope-domain_UserResponse": {
       data?: components["schemas"]["domain.UserResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
@@ -2116,7 +2230,7 @@ export interface operations {
       path?: never;
       cookie?: never;
     };
-    /** @description Email address */
+    /** @description OTP request payload */
     requestBody: {
       content: {
         "application/json": components["schemas"]["domain.RequestOTPRequest"];
@@ -3040,6 +3154,76 @@ export interface operations {
       };
     };
   };
+  requestMeAccountOTP: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Account link OTP request */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.LinkAccountOTPRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_RequestOTPResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
   searchMeAccounts: {
     parameters: {
       query?: never;
@@ -3074,6 +3258,105 @@ export interface operations {
       };
       /** @description Unauthorized */
       401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  createMeTelegramLinkToken: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_TelegramLinkTokenResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  verifyMeAccount: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Account link verification payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.VerifyLinkAccountRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_UserAccountResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
         headers: {
           [name: string]: unknown;
         };
@@ -6521,6 +6804,53 @@ export interface operations {
       };
       /** @description Unprocessable Entity */
       422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  telegramWebhook: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Telegram webhook secret token */
+        "X-Telegram-Bot-Api-Secret-Token": string;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Telegram update payload */
+    requestBody: {
+      content: {
+        "application/json": Record<string, never>;
+        "text/plain": Record<string, never>;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
         headers: {
           [name: string]: unknown;
         };

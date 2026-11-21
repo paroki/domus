@@ -45,6 +45,8 @@ type UserResponse struct {
 	Phone           *string    `json:"phone,omitempty"`
 	AvatarURL       *string    `json:"avatarUrl,omitempty"`
 	Status          string     `json:"status"`
+	Onboarded       bool       `json:"onboarded"`
+	LinkedProviders []string   `json:"linkedProviders,omitempty"`
 	ActiveParishID  *uuid.UUID `json:"activeParishId,omitempty"`
 	DefaultParishID *uuid.UUID `json:"defaultParishId,omitempty"`
 	Roles           []string   `json:"roles,omitempty"`
@@ -66,6 +68,27 @@ type UpdateMeRequest struct {
 	Phone           *string    `json:"phone,omitempty"`
 	AvatarURL       *string    `json:"avatarUrl,omitempty" validate:"omitempty,url"`
 	DefaultParishID *uuid.UUID `json:"defaultParishId,omitempty"`
+	Onboarded       *bool      `json:"onboarded,omitempty"`
+}
+
+// LinkAccountOTPRequest requests a 6-digit OTP to link a WhatsApp account to the current user.
+type LinkAccountOTPRequest struct {
+	Channel string `json:"channel" validate:"required,oneof=whatsapp"`
+	Target  string `json:"target" validate:"required"`
+}
+
+// VerifyLinkAccountRequest verifies a 6-digit OTP to link a WhatsApp account to the current user.
+type VerifyLinkAccountRequest struct {
+	Channel string `json:"channel" validate:"required,oneof=whatsapp"`
+	Target  string `json:"target" validate:"required"`
+	Code    string `json:"code" validate:"required,len=6"`
+}
+
+// TelegramLinkTokenResponse returns a single-use deep link to connect Telegram to the current user.
+type TelegramLinkTokenResponse struct {
+	DeepLinkURL      string `json:"deepLinkUrl"`
+	BotUsername      string `json:"botUsername"`
+	ExpiresInSeconds int    `json:"expiresInSeconds"`
 }
 
 // SwitchSessionParishRequest updates the active parish on the current web session.

@@ -18,17 +18,7 @@ func (s *Service) GetMe(ctx context.Context, p authx.Principal) (domain.UserResp
 	if err != nil {
 		return domain.UserResponse{}, err
 	}
-	roles, err := s.loadRoles(u.ID, p.ParishID)
-	if err != nil {
-		return domain.UserResponse{}, err
-	}
-	res := toUserResponse(u)
-	res.Roles = roles
-	if p.ParishID != uuid.Nil {
-		pid := p.ParishID
-		res.ActiveParishID = &pid
-	}
-	return res, nil
+	return s.enrichMeResponse(ctx, u, p)
 }
 
 // UpdateMe updates the authenticated user's mutable profile fields.
@@ -57,20 +47,28 @@ func (s *Service) UpdateMe(ctx context.Context, p authx.Principal, req domain.Up
 		avatarPtr = &trimmed
 	}
 
-	u, err := s.repo.UpdateUser(ctx, p.UserID, namePtr, phonePtr, avatarPtr, req.DefaultParishID, nil)
+	u, err := s.repo.UpdateUser(ctx, p.UserID, namePtr, phonePtr, avatarPtr, req.DefaultParishID, nil, req.Onboarded)
 	if ent.IsNotFound(err) {
 		return domain.UserResponse{}, domain.ErrUserNotFound
 	}
 	if err != nil {
 		return domain.UserResponse{}, err
 	}
+	return s.enrichMeResponse(ctx, u, p)
+}
 
+func (s *Service) enrichMeResponse(ctx context.Context, u *ent.User, p authx.Principal) (domain.UserResponse, error) {
 	roles, err := s.loadRoles(u.ID, p.ParishID)
+	if err != nil {
+		return domain.UserResponse{}, err
+	}
+	providers, err := s.repo.ListAccountProvidersByUserID(ctx, u.ID)
 	if err != nil {
 		return domain.UserResponse{}, err
 	}
 	res := toUserResponse(u)
 	res.Roles = roles
+	res.LinkedProviders = providers
 	if p.ParishID != uuid.Nil {
 		pid := p.ParishID
 		res.ActiveParishID = &pid
@@ -159,19 +157,23 @@ func (s *Service) SearchMyAccounts(
 	}
 	items := make([]domain.UserAccountResponse, 0, len(rows))
 	for _, row := range rows {
-		items = append(items, domain.UserAccountResponse{
-			ID:             row.ID,
-			Provider:       row.Provider,
-			Subject:        row.Subject,
-			Email:          row.Email,
-			DisplayName:    row.DisplayName,
-			AvatarURL:      row.AvatarURL,
-			ActiveParishID: row.ActiveParishID,
-			LastUsedAt:     row.LastUsedAt,
-			CreatedAt:      row.CreatedAt,
-		})
+		items = append(items, toUserAccountResponse(row))
 	}
 	return items, hasMore, nil
+}
+
+func toUserAccountResponse(row *ent.UserAccount) domain.UserAccountResponse {
+	return domain.UserAccountResponse{
+		ID:             row.ID,
+		Provider:       row.Provider,
+		Subject:        row.Subject,
+		Email:          row.Email,
+		DisplayName:    row.DisplayName,
+		AvatarURL:      row.AvatarURL,
+		ActiveParishID: row.ActiveParishID,
+		LastUsedAt:     row.LastUsedAt,
+		CreatedAt:      row.CreatedAt,
+	}
 }
 
 // UnlinkMyAccount removes a linked provider account unless it is the user's last remaining account.

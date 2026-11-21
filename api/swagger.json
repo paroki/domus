@@ -122,6 +122,13 @@
             },
             "domain.AuthProvidersResponse": {
                 "properties": {
+                    "otpChannels": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
                     "providers": {
                         "items": {
                             "type": "string"
@@ -693,6 +700,24 @@
                 },
                 "type": "object"
             },
+            "domain.LinkAccountOTPRequest": {
+                "properties": {
+                    "channel": {
+                        "enum": [
+                            "whatsapp"
+                        ],
+                        "type": "string"
+                    },
+                    "target": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "channel",
+                    "target"
+                ],
+                "type": "object"
+            },
             "domain.LookupResponse": {
                 "properties": {
                     "active": {
@@ -1172,16 +1197,19 @@
             },
             "domain.RequestOTPRequest": {
                 "properties": {
+                    "channel": {
+                        "type": "string"
+                    },
                     "email": {
                         "type": "string"
                     },
                     "inviteCode": {
                         "type": "string"
+                    },
+                    "target": {
+                        "type": "string"
                     }
                 },
-                "required": [
-                    "email"
-                ],
                 "type": "object"
             },
             "domain.RequestOTPResponse": {
@@ -1476,6 +1504,20 @@
                 ],
                 "type": "object"
             },
+            "domain.TelegramLinkTokenResponse": {
+                "properties": {
+                    "botUsername": {
+                        "type": "string"
+                    },
+                    "deepLinkUrl": {
+                        "type": "string"
+                    },
+                    "expiresInSeconds": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
             "domain.UpdateDioceseRequest": {
                 "properties": {
                     "active": {
@@ -1582,6 +1624,9 @@
                     "name": {
                         "minLength": 1,
                         "type": "string"
+                    },
+                    "onboarded": {
+                        "type": "boolean"
                     },
                     "phone": {
                         "type": "string"
@@ -1906,8 +1951,18 @@
                     "lastLoginAt": {
                         "type": "string"
                     },
+                    "linkedProviders": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
                     "name": {
                         "type": "string"
+                    },
+                    "onboarded": {
+                        "type": "boolean"
                     },
                     "phone": {
                         "type": "string"
@@ -1969,8 +2024,33 @@
                 },
                 "type": "object"
             },
+            "domain.VerifyLinkAccountRequest": {
+                "properties": {
+                    "channel": {
+                        "enum": [
+                            "whatsapp"
+                        ],
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "target": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "channel",
+                    "code",
+                    "target"
+                ],
+                "type": "object"
+            },
             "domain.VerifyOTPRequest": {
                 "properties": {
+                    "channel": {
+                        "type": "string"
+                    },
                     "code": {
                         "type": "string"
                     },
@@ -1985,11 +2065,13 @@
                     },
                     "phone": {
                         "type": "string"
+                    },
+                    "target": {
+                        "type": "string"
                     }
                 },
                 "required": [
-                    "code",
-                    "email"
+                    "code"
                 ],
                 "type": "object"
             },
@@ -2612,6 +2694,34 @@
                 },
                 "type": "object"
             },
+            "httpx.Envelope-domain_TelegramLinkTokenResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.TelegramLinkTokenResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_UserAccountResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.UserAccountResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
             "httpx.Envelope-domain_UserResponse": {
                 "properties": {
                     "data": {
@@ -2735,7 +2845,7 @@
         },
         "/auth/otp": {
             "post": {
-                "description": "Sends a 6-digit one-time passcode to an existing active user's email.",
+                "description": "Sends a 6-digit one-time passcode to an active user via email, WhatsApp, or Telegram.",
                 "operationId": "requestAuthOTP",
                 "requestBody": {
                     "content": {
@@ -2743,11 +2853,11 @@
                             "schema": {
                                 "$ref": "#/components/schemas/domain.RequestOTPRequest",
                                 "summary": "body",
-                                "description": "Email address"
+                                "description": "OTP request payload"
                             }
                         }
                     },
-                    "description": "Email address",
+                    "description": "OTP request payload",
                     "required": true
                 },
                 "responses": {
@@ -2812,7 +2922,7 @@
                         "description": "Too Many Requests"
                     }
                 },
-                "summary": "Request email OTP",
+                "summary": "Request login OTP",
                 "tags": [
                     "Auth"
                 ]
@@ -2820,7 +2930,7 @@
         },
         "/auth/otp/verify": {
             "post": {
-                "description": "Verifies a 6-digit OTP code and establishes an authenticated session cookie.",
+                "description": "Verifies a 6-digit OTP code across email, WhatsApp, or Telegram and sets an authenticated session cookie.",
                 "operationId": "verifyAuthOTP",
                 "requestBody": {
                     "content": {
@@ -2897,7 +3007,7 @@
                         "description": "Unprocessable Entity"
                     }
                 },
-                "summary": "Verify email OTP",
+                "summary": "Verify login OTP",
                 "tags": [
                     "Auth"
                 ]
@@ -2905,7 +3015,7 @@
         },
         "/auth/providers": {
             "get": {
-                "description": "Returns enabled OAuth2 provider names in deterministic order.",
+                "description": "Returns enabled OAuth2 provider names and OTP channels in deterministic order.",
                 "operationId": "getAuthProviders",
                 "responses": {
                     "200": {
@@ -3822,7 +3932,7 @@
                 ]
             },
             "patch": {
-                "description": "Updates name, phone (normalized to E.164), avatarUrl, or defaultParishId.",
+                "description": "Updates name, phone (normalized to E.164), avatarUrl, defaultParishId, or onboarded status.",
                 "operationId": "updateMe",
                 "requestBody": {
                     "content": {
@@ -3885,6 +3995,91 @@
                 ]
             }
         },
+        "/me/accounts/otp": {
+            "post": {
+                "description": "Sends a 6-digit verification OTP to link a WhatsApp number to the current user.",
+                "operationId": "requestMeAccountOTP",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.LinkAccountOTPRequest",
+                                "summary": "body",
+                                "description": "Account link OTP request"
+                            }
+                        }
+                    },
+                    "description": "Account link OTP request",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_RequestOTPResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    },
+                    "429": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Too Many Requests"
+                    }
+                },
+                "summary": "Request account linking OTP",
+                "tags": [
+                    "Me"
+                ]
+            }
+        },
         "/me/accounts/search": {
             "post": {
                 "description": "Lists linked OAuth2, email, and channel accounts for the current user.",
@@ -3934,6 +4129,123 @@
                     }
                 },
                 "summary": "Search my linked accounts",
+                "tags": [
+                    "Me"
+                ]
+            }
+        },
+        "/me/accounts/telegram/token": {
+            "post": {
+                "description": "Generates a single-use t.me deep-link token to connect Telegram to the current user.",
+                "operationId": "createMeTelegramLinkToken",
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_TelegramLinkTokenResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    }
+                },
+                "summary": "Create Telegram link token",
+                "tags": [
+                    "Me"
+                ]
+            }
+        },
+        "/me/accounts/verify": {
+            "post": {
+                "description": "Verifies a 6-digit OTP and links the verified WhatsApp account to the current user.",
+                "operationId": "verifyMeAccount",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.VerifyLinkAccountRequest",
+                                "summary": "body",
+                                "description": "Account link verification payload"
+                            }
+                        }
+                    },
+                    "description": "Account link verification payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_UserAccountResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Verify account linking OTP",
                 "tags": [
                     "Me"
                 ]
@@ -8195,6 +8507,76 @@
                 "summary": "Update zone",
                 "tags": [
                     "Ref"
+                ]
+            }
+        },
+        "/telegram/hooks": {
+            "post": {
+                "description": "Receives Telegram Bot API updates and processes /start account linking tokens.",
+                "operationId": "telegramWebhook",
+                "parameters": [
+                    {
+                        "description": "Telegram webhook secret token",
+                        "in": "header",
+                        "name": "X-Telegram-Bot-Api-Secret-Token",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        },
+                        "text/plain": {
+                            "schema": {
+                                "title": "body",
+                                "type": "object"
+                            }
+                        }
+                    },
+                    "description": "Telegram update payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    }
+                },
+                "summary": "Telegram bot webhook",
+                "tags": [
+                    "Telegram"
                 ]
             }
         },

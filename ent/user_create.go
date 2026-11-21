@@ -119,6 +119,20 @@ func (_c *UserCreate) SetNillableStatus(v *user.Status) *UserCreate {
 	return _c
 }
 
+// SetOnboarded sets the "onboarded" field.
+func (_c *UserCreate) SetOnboarded(v bool) *UserCreate {
+	_c.mutation.SetOnboarded(v)
+	return _c
+}
+
+// SetNillableOnboarded sets the "onboarded" field if the given value is not nil.
+func (_c *UserCreate) SetNillableOnboarded(v *bool) *UserCreate {
+	if v != nil {
+		_c.SetOnboarded(*v)
+	}
+	return _c
+}
+
 // SetDefaultParishID sets the "default_parish_id" field.
 func (_c *UserCreate) SetDefaultParishID(v uuid.UUID) *UserCreate {
 	_c.mutation.SetDefaultParishID(v)
@@ -238,6 +252,10 @@ func (_c *UserCreate) defaults() {
 		v := user.DefaultStatus
 		_c.mutation.SetStatus(v)
 	}
+	if _, ok := _c.mutation.Onboarded(); !ok {
+		v := user.DefaultOnboarded
+		_c.mutation.SetOnboarded(v)
+	}
 	if _, ok := _c.mutation.ID(); !ok {
 		v := user.DefaultID()
 		_c.mutation.SetID(v)
@@ -275,6 +293,9 @@ func (_c *UserCreate) check() error {
 		if err := user.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "User.status": %w`, err)}
 		}
+	}
+	if _, ok := _c.mutation.Onboarded(); !ok {
+		return &ValidationError{Name: "onboarded", err: errors.New(`ent: missing required field "User.onboarded"`)}
 	}
 	return nil
 }
@@ -342,6 +363,10 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(user.FieldStatus, field.TypeEnum, value)
 		_node.Status = value
+	}
+	if value, ok := _c.mutation.Onboarded(); ok {
+		_spec.SetField(user.FieldOnboarded, field.TypeBool, value)
+		_node.Onboarded = value
 	}
 	if value, ok := _c.mutation.DefaultParishID(); ok {
 		_spec.SetField(user.FieldDefaultParishID, field.TypeUUID, value)

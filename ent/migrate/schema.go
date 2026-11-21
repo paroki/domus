@@ -498,6 +498,7 @@ var (
 		{Name: "phone", Type: field.TypeString, Nullable: true},
 		{Name: "avatar_url", Type: field.TypeString, Nullable: true},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "disabled"}, Default: "active"},
+		{Name: "onboarded", Type: field.TypeBool, Default: false},
 		{Name: "default_parish_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "last_login_at", Type: field.TypeTime, Nullable: true},
 	}
@@ -580,6 +581,11 @@ var (
 				Name:    "userotp_channel_target",
 				Unique:  false,
 				Columns: []*schema.Column{UserOtpsColumns[3], UserOtpsColumns[4]},
+			},
+			{
+				Name:    "userotp_channel_code_hash",
+				Unique:  false,
+				Columns: []*schema.Column{UserOtpsColumns[3], UserOtpsColumns[5]},
 			},
 			{
 				Name:    "userotp_expires_at",

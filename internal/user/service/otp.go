@@ -98,29 +98,12 @@ func (s *Service) VerifyOTP(ctx context.Context, req domain.VerifyOTPRequest, us
 		return "", nil, err
 	}
 
-	otpRow, err := s.repo.FindLatestOTP(ctx, channel, otpTarget)
-	if ent.IsNotFound(err) {
-		return "", nil, domain.ErrOTPInvalid
-	}
+	otpRow, err := s.verifyStoredOTP(ctx, channel, otpTarget, req.Code)
 	if err != nil {
 		return "", nil, err
 	}
 
 	now := time.Now().UTC()
-	if now.After(otpRow.ExpiresAt) {
-		_ = s.repo.DeleteOTP(ctx, otpRow.ID)
-		return "", nil, domain.ErrOTPExpired
-	}
-
-	candidateHash := sha256Hex(req.Code)
-	if subtle.ConstantTimeCompare([]byte(candidateHash), []byte(otpRow.CodeHash)) != 1 {
-		updated, incErr := s.repo.IncrementOTPAttempts(ctx, otpRow.ID)
-		if incErr == nil && updated.Attempts >= s.cfg.OTPMaxAttempts {
-			_ = s.repo.DeleteOTP(ctx, otpRow.ID)
-		}
-		return "", nil, domain.ErrOTPInvalid
-	}
-
 	if allowMissingEmail {
 		var phoneStr string
 		if req.Phone != nil {
@@ -178,7 +161,7 @@ func (s *Service) VerifyOTP(ctx context.Context, req domain.VerifyOTPRequest, us
 		if err == nil {
 			updatedUser = reloaded
 		}
-		resp, err = s.buildAuthSessionResponse(updatedUser, &parishID, resp.ExpiresAt)
+		resp, err = s.buildAuthSessionResponse(ctx, s.repo, updatedUser, &parishID, resp.ExpiresAt)
 		if err != nil {
 			return "", nil, err
 		}
@@ -301,6 +284,32 @@ func normalizePhoneTarget(raw string) (string, error) {
 		return "", domain.ValidationError("target", "INVALID_PHONE", "Phone number must be a valid E.164 number.")
 	}
 	return e164, nil
+}
+
+func (s *Service) verifyStoredOTP(ctx context.Context, channel, target, rawCode string) (*ent.UserOTP, error) {
+	otpRow, err := s.repo.FindLatestOTP(ctx, channel, target)
+	if ent.IsNotFound(err) {
+		return nil, domain.ErrOTPInvalid
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	now := time.Now().UTC()
+	if now.After(otpRow.ExpiresAt) {
+		_ = s.repo.DeleteOTP(ctx, otpRow.ID)
+		return nil, domain.ErrOTPExpired
+	}
+
+	candidateHash := sha256Hex(rawCode)
+	if subtle.ConstantTimeCompare([]byte(candidateHash), []byte(otpRow.CodeHash)) != 1 {
+		updated, incErr := s.repo.IncrementOTPAttempts(ctx, otpRow.ID)
+		if incErr == nil && updated.Attempts >= s.cfg.OTPMaxAttempts {
+			_ = s.repo.DeleteOTP(ctx, otpRow.ID)
+		}
+		return nil, domain.ErrOTPInvalid
+	}
+	return otpRow, nil
 }
 
 func generateOTPCode() (string, error) {

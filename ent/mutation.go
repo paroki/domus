@@ -11948,6 +11948,7 @@ type UserMutation struct {
 	phone             *string
 	avatar_url        *string
 	status            *user.Status
+	onboarded         *bool
 	default_parish_id *uuid.UUID
 	last_login_at     *time.Time
 	clearedFields     map[string]struct{}
@@ -12393,6 +12394,42 @@ func (m *UserMutation) ResetStatus() {
 	m.status = nil
 }
 
+// SetOnboarded sets the "onboarded" field.
+func (m *UserMutation) SetOnboarded(b bool) {
+	m.onboarded = &b
+}
+
+// Onboarded returns the value of the "onboarded" field in the mutation.
+func (m *UserMutation) Onboarded() (r bool, exists bool) {
+	v := m.onboarded
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOnboarded returns the old "onboarded" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldOnboarded(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOnboarded is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOnboarded requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOnboarded: %w", err)
+	}
+	return oldValue.Onboarded, nil
+}
+
+// ResetOnboarded resets all changes to the "onboarded" field.
+func (m *UserMutation) ResetOnboarded() {
+	m.onboarded = nil
+}
+
 // SetDefaultParishID sets the "default_parish_id" field.
 func (m *UserMutation) SetDefaultParishID(u uuid.UUID) {
 	m.default_parish_id = &u
@@ -12633,7 +12670,7 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 10)
+	fields := make([]string, 0, 11)
 	if m.created_at != nil {
 		fields = append(fields, user.FieldCreatedAt)
 	}
@@ -12657,6 +12694,9 @@ func (m *UserMutation) Fields() []string {
 	}
 	if m.status != nil {
 		fields = append(fields, user.FieldStatus)
+	}
+	if m.onboarded != nil {
+		fields = append(fields, user.FieldOnboarded)
 	}
 	if m.default_parish_id != nil {
 		fields = append(fields, user.FieldDefaultParishID)
@@ -12688,6 +12728,8 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.AvatarURL()
 	case user.FieldStatus:
 		return m.Status()
+	case user.FieldOnboarded:
+		return m.Onboarded()
 	case user.FieldDefaultParishID:
 		return m.DefaultParishID()
 	case user.FieldLastLoginAt:
@@ -12717,6 +12759,8 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldAvatarURL(ctx)
 	case user.FieldStatus:
 		return m.OldStatus(ctx)
+	case user.FieldOnboarded:
+		return m.OldOnboarded(ctx)
 	case user.FieldDefaultParishID:
 		return m.OldDefaultParishID(ctx)
 	case user.FieldLastLoginAt:
@@ -12785,6 +12829,13 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetStatus(v)
+		return nil
+	case user.FieldOnboarded:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOnboarded(v)
 		return nil
 	case user.FieldDefaultParishID:
 		v, ok := value.(uuid.UUID)
@@ -12905,6 +12956,9 @@ func (m *UserMutation) ResetField(name string) error {
 		return nil
 	case user.FieldStatus:
 		m.ResetStatus()
+		return nil
+	case user.FieldOnboarded:
+		m.ResetOnboarded()
 		return nil
 	case user.FieldDefaultParishID:
 		m.ResetDefaultParishID()

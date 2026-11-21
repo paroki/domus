@@ -2,8 +2,11 @@ package handler_test
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 	"net/http"
+	"net/http/httptest"
+	"regexp"
 	"testing"
 	"time"
 
@@ -11,7 +14,11 @@ import (
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/ent/parishmember"
 	entuser "github.com/paroki/domus/ent/user"
+	"github.com/paroki/domus/ent/useraccount"
+	"github.com/paroki/domus/ent/userotp"
 	"github.com/paroki/domus/internal/platform/authz"
+	"github.com/paroki/domus/internal/platform/gowa"
+	"github.com/paroki/domus/internal/platform/telegram"
 	"github.com/paroki/domus/internal/user"
 	"github.com/paroki/domus/internal/user/domain"
 	"github.com/paroki/domus/testutil"
@@ -255,4 +262,216 @@ func (s *MeHandlerSuite) TestParishMembershipEnforcement_SwitchAndHeader() {
 	s.SetCookie(adminCookie)
 	s.Request("/api/me/session", http.MethodPatch, domain.SwitchSessionParishRequest{ActiveParishID: otherParish.ID})
 	s.NoContent()
+}
+
+func (s *MeHandlerSuite) TestOnboardedFlag_UpdateAndReactivateReset() {
+	ctx := context.Background()
+	u, cookie := s.loginUser("onboard@paroki.org", "Onboard User", "Browser/1")
+	s.SetCookie(cookie)
+
+	s.Request("/api/me", http.MethodGet, nil)
+	s.OK()
+	me := testutil.DecodeAs[domain.UserResponse](&s.ApiTestSuite).Data
+	s.False(me.Onboarded)
+	s.Equal([]string{"email"}, me.LinkedProviders)
+
+	onboardedTrue := true
+	s.Request("/api/me", http.MethodPatch, domain.UpdateMeRequest{Onboarded: &onboardedTrue})
+	s.OK()
+	updated := testutil.DecodeAs[domain.UserResponse](&s.ApiTestSuite).Data
+	s.True(updated.Onboarded)
+	s.Equal([]string{"email"}, updated.LinkedProviders)
+
+	// Soft-deleted user reactivated via EnsureUser resets onboarded back to false.
+	_, err := s.client.User.UpdateOneID(u.ID).SetDeletedAt(time.Now().UTC()).Save(ctx)
+	s.Require().NoError(err)
+	reactivated, err := s.feature.EnsureUser(ctx, "onboard@paroki.org", "Onboard User", "", "email", "onboard@paroki.org")
+	s.Require().NoError(err)
+	s.False(reactivated.Onboarded)
+}
+
+func (s *MeHandlerSuite) TestLinkWhatsAppAndTelegramToken() {
+	ctx := context.Background()
+
+	// Before configuring Gowa/Telegram, linking endpoints return 400 AUTH_CHANNEL_DISABLED.
+	_, disabledCookie := s.loginUser("disabledlink@paroki.org", "Disabled Link", "Browser/1")
+	s.SetCookie(disabledCookie)
+	s.Request("/api/me/accounts/otp", http.MethodPost, domain.LinkAccountOTPRequest{
+		Channel: "whatsapp",
+		Target:  "081234567890",
+	})
+	s.BadRequest()
+	s.Equal("AUTH_CHANNEL_DISABLED", s.GetErrorResponse().Error.Code)
+
+	s.Request("/api/me/accounts/telegram/token", http.MethodPost, nil)
+	s.BadRequest()
+	s.Equal("AUTH_CHANNEL_DISABLED", s.GetErrorResponse().Error.Code)
+
+	// Configure GOWA + Telegram clients and cooldown for linking tests.
+	var lastGowaMsg map[string]string
+	gowaSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		s.Require().NoError(json.NewDecoder(r.Body).Decode(&lastGowaMsg))
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"code":"SUCCESS"}`))
+	}))
+	defer gowaSrv.Close()
+
+	gowaClient, err := gowa.New(gowa.Config{BaseURL: gowaSrv.URL})
+	s.Require().NoError(err)
+	tgClient, err := telegram.New(telegram.Config{
+		BotToken:      "123:SECRET",
+		BotUsername:   "domus_link_bot",
+		WebhookSecret: "hook-secret",
+		BaseURL:       gowaSrv.URL,
+	})
+	s.Require().NoError(err)
+
+	linkCfg := s.cfg
+	linkCfg.OTPCooldown = 60 * time.Second
+	linkFeature := user.New(
+		s.client,
+		s.enforcer,
+		linkCfg,
+		slog.New(slog.DiscardHandler),
+		user.WithOTPSender(s.otpSender),
+		user.WithGowaClient(gowaClient),
+		user.WithTelegramClient(tgClient),
+	)
+	s.WithFeatures(linkFeature)
+
+	s.ClearCookies()
+	user1, cookie1 := s.loginUser("wa1@paroki.org", "WA One", "Browser/1")
+	s.ClearCookies()
+	_, cookie2 := s.loginUser("wa2@paroki.org", "WA Two", "Browser/1")
+
+	// User 1 validates strict JSON, channel enum, and invalid phone.
+	s.SetCookie(cookie1)
+	s.Request("/api/me/accounts/otp", http.MethodPost, `{"channel":"whatsapp","target":"081234567890","extra":1}`)
+	s.BadRequest()
+	s.Equal("BAD_REQUEST", s.GetErrorResponse().Error.Code)
+
+	s.Request("/api/me/accounts/otp", http.MethodPost, domain.LinkAccountOTPRequest{
+		Channel: "email",
+		Target:  "wa1@paroki.org",
+	})
+	s.UnprocessableEntity()
+	s.Equal("channel", s.GetErrorResponse().Error.Details[0].Field)
+
+	s.Request("/api/me/accounts/otp", http.MethodPost, domain.LinkAccountOTPRequest{
+		Channel: "whatsapp",
+		Target:  "not-a-phone",
+	})
+	s.UnprocessableEntity()
+	s.Equal("target", s.GetErrorResponse().Error.Details[0].Field)
+
+	// User 1 requests WhatsApp verification OTP.
+	s.Request("/api/me/accounts/otp", http.MethodPost, domain.LinkAccountOTPRequest{
+		Channel: "whatsapp",
+		Target:  "0812-3456-7890",
+	})
+	s.OK()
+	s.Equal("6281234567890@s.whatsapp.net", lastGowaMsg["phone"])
+	s.Contains(lastGowaMsg["message"], "Kode verifikasi WhatsApp Domus")
+
+	// Cooldown blocks immediate second OTP request for same number.
+	s.Request("/api/me/accounts/otp", http.MethodPost, domain.LinkAccountOTPRequest{
+		Channel: "whatsapp",
+		Target:  "+6281234567890",
+	})
+	s.Equal(http.StatusTooManyRequests, s.GetHttpResponse().StatusCode)
+	s.Equal("AUTH_OTP_RATE_LIMITED", s.GetErrorResponse().Error.Code)
+
+	otpRe := regexp.MustCompile(`\b[0-9]{6}\b`)
+	code1 := otpRe.FindString(lastGowaMsg["message"])
+	s.Require().Len(code1, 6)
+
+	// Wrong code -> 401 AUTH_OTP_INVALID.
+	s.Request("/api/me/accounts/verify", http.MethodPost, domain.VerifyLinkAccountRequest{
+		Channel: "whatsapp",
+		Target:  "+6281234567890",
+		Code:    "000000",
+	})
+	s.Unauthorized()
+	s.Equal("AUTH_OTP_INVALID", s.GetErrorResponse().Error.Code)
+
+	// Valid code -> links WhatsApp account, updates User.phone, updates linkedProviders.
+	s.Request("/api/me/accounts/verify", http.MethodPost, domain.VerifyLinkAccountRequest{
+		Channel: "whatsapp",
+		Target:  "081234567890",
+		Code:    code1,
+	})
+	s.OK()
+	waAcc := testutil.DecodeAs[domain.UserAccountResponse](&s.ApiTestSuite).Data
+	s.Equal("whatsapp", waAcc.Provider)
+	s.Equal("+6281234567890", waAcc.Subject)
+
+	s.Request("/api/me", http.MethodGet, nil)
+	s.OK()
+	me1 := testutil.DecodeAs[domain.UserResponse](&s.ApiTestSuite).Data
+	s.Require().NotNil(me1.Phone)
+	s.Equal("+6281234567890", *me1.Phone)
+	s.Equal([]string{"email", "whatsapp"}, me1.LinkedProviders)
+
+	// User 2 cannot request OTP for a number already linked to User 1 -> 409 USER_ACCOUNT_CONFLICT.
+	s.ClearCookies()
+	s.SetCookie(cookie2)
+	s.Request("/api/me/accounts/otp", http.MethodPost, domain.LinkAccountOTPRequest{
+		Channel: "whatsapp",
+		Target:  "081234567890",
+	})
+	s.Conflict()
+	s.Equal("USER_ACCOUNT_CONFLICT", s.GetErrorResponse().Error.Code)
+
+	// User 1 can replace their own WhatsApp number with a new one.
+	s.ClearCookies()
+	s.SetCookie(cookie1)
+	s.Request("/api/me/accounts/otp", http.MethodPost, domain.LinkAccountOTPRequest{
+		Channel: "whatsapp",
+		Target:  "081999888777",
+	})
+	s.OK()
+	code2 := otpRe.FindString(lastGowaMsg["message"])
+	s.Require().Len(code2, 6)
+
+	s.Request("/api/me/accounts/verify", http.MethodPost, domain.VerifyLinkAccountRequest{
+		Channel: "whatsapp",
+		Target:  "+6281999888777",
+		Code:    code2,
+	})
+	s.OK()
+	waAcc2 := testutil.DecodeAs[domain.UserAccountResponse](&s.ApiTestSuite).Data
+	s.Equal("+6281999888777", waAcc2.Subject)
+
+	waCount, err := s.client.UserAccount.Query().
+		Where(useraccount.UserIDEQ(user1.ID), useraccount.ProviderEQ(domain.ProviderWhatsApp)).
+		Count(ctx)
+	s.Require().NoError(err)
+	s.Equal(1, waCount)
+
+	// Unlinking WhatsApp account leaves User.phone untouched.
+	s.Request("/api/me/accounts/"+waAcc2.ID.String(), http.MethodDelete, nil)
+	s.NoContent()
+	entU1, err := s.client.User.Get(ctx, user1.ID)
+	s.Require().NoError(err)
+	s.Require().NotNil(entU1.Phone)
+	s.Equal("+6281999888777", *entU1.Phone)
+
+	// Telegram token endpoint works without cooldown even when OTPCooldown is 60s.
+	s.Request("/api/me/accounts/telegram/token", http.MethodPost, nil)
+	s.OK()
+	tg1 := testutil.DecodeAs[domain.TelegramLinkTokenResponse](&s.ApiTestSuite).Data
+	s.Equal("domus_link_bot", tg1.BotUsername)
+	s.Contains(tg1.DeepLinkURL, "https://t.me/domus_link_bot?start=")
+	s.Equal(300, tg1.ExpiresInSeconds)
+
+	s.Request("/api/me/accounts/telegram/token", http.MethodPost, nil)
+	s.OK()
+	tg2 := testutil.DecodeAs[domain.TelegramLinkTokenResponse](&s.ApiTestSuite).Data
+	s.NotEqual(tg1.DeepLinkURL, tg2.DeepLinkURL)
+
+	tgRows, err := s.client.UserOTP.Query().
+		Where(userotp.ChannelEQ(domain.ProviderTelegram), userotp.TargetEQ(user1.ID.String())).
+		Count(ctx)
+	s.Require().NoError(err)
+	s.Equal(1, tgRows)
 }

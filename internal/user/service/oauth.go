@@ -156,7 +156,7 @@ func (s *Service) OAuthCallback(
 		if err == nil {
 			updatedUser = reloaded
 		}
-		resp, err = s.buildAuthSessionResponse(updatedUser, &parishID, resp.ExpiresAt)
+		resp, err = s.buildAuthSessionResponse(ctx, s.repo, updatedUser, &parishID, resp.ExpiresAt)
 		if err != nil {
 			return "", nil, err
 		}

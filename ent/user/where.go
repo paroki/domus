@@ -91,6 +91,11 @@ func AvatarURL(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldAvatarURL, v))
 }
 
+// Onboarded applies equality check predicate on the "onboarded" field. It's identical to OnboardedEQ.
+func Onboarded(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldOnboarded, v))
+}
+
 // DefaultParishID applies equality check predicate on the "default_parish_id" field. It's identical to DefaultParishIDEQ.
 func DefaultParishID(v uuid.UUID) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldDefaultParishID, v))
@@ -529,6 +534,16 @@ func StatusIn(vs ...Status) predicate.User {
 // StatusNotIn applies the NotIn predicate on the "status" field.
 func StatusNotIn(vs ...Status) predicate.User {
 	return predicate.User(sql.FieldNotIn(FieldStatus, vs...))
+}
+
+// OnboardedEQ applies the EQ predicate on the "onboarded" field.
+func OnboardedEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldOnboarded, v))
+}
+
+// OnboardedNEQ applies the NEQ predicate on the "onboarded" field.
+func OnboardedNEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldOnboarded, v))
 }
 
 // DefaultParishIDEQ applies the EQ predicate on the "default_parish_id" field.

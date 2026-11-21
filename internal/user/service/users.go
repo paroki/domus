@@ -165,7 +165,7 @@ func (s *Service) AdminUpdateUser(ctx context.Context, id uuid.UUID, req domain.
 	var updated *ent.User
 	err = s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
 		var txErr error
-		updated, txErr = txRepo.UpdateUser(ctx, id, namePtr, phonePtr, nil, nil, statusPtr)
+		updated, txErr = txRepo.UpdateUser(ctx, id, namePtr, phonePtr, nil, nil, statusPtr, nil)
 		if txErr != nil {
 			return txErr
 		}

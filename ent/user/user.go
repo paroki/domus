@@ -32,6 +32,8 @@ const (
 	FieldAvatarURL = "avatar_url"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
+	// FieldOnboarded holds the string denoting the onboarded field in the database.
+	FieldOnboarded = "onboarded"
 	// FieldDefaultParishID holds the string denoting the default_parish_id field in the database.
 	FieldDefaultParishID = "default_parish_id"
 	// FieldLastLoginAt holds the string denoting the last_login_at field in the database.
@@ -69,6 +71,7 @@ var Columns = []string{
 	FieldPhone,
 	FieldAvatarURL,
 	FieldStatus,
+	FieldOnboarded,
 	FieldDefaultParishID,
 	FieldLastLoginAt,
 }
@@ -94,6 +97,8 @@ var (
 	EmailValidator func(string) error
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
+	// DefaultOnboarded holds the default value on creation for the "onboarded" field.
+	DefaultOnboarded bool
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -170,6 +175,11 @@ func ByAvatarURL(opts ...sql.OrderTermOption) OrderOption {
 // ByStatus orders the results by the status field.
 func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStatus, opts...).ToFunc()
+}
+
+// ByOnboarded orders the results by the onboarded field.
+func ByOnboarded(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOnboarded, opts...).ToFunc()
 }
 
 // ByDefaultParishID orders the results by the default_parish_id field.

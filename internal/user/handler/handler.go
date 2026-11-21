@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"time"
@@ -9,14 +10,17 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 	"github.com/paroki/domus/internal/platform/httpx"
+	"github.com/paroki/domus/internal/platform/telegram"
 	"github.com/paroki/domus/internal/user/service"
 )
 
 // Handler exposes HTTP endpoints for authentication and user operations.
 type Handler struct {
-	service    *service.Service
-	cookieName string
-	sessionTTL time.Duration
+	service          *service.Service
+	cookieName       string
+	sessionTTL       time.Duration
+	telegramClient   *telegram.Client
+	telegramFallback func(context.Context, telegram.Update) error
 }
 
 // New constructs a Handler backed by svc and session cookie configuration.
@@ -29,6 +33,16 @@ func New(svc *service.Service, cookieName string, sessionTTL time.Duration) *Han
 		cookieName: cookieName,
 		sessionTTL: sessionTTL,
 	}
+}
+
+// SetTelegramClient sets the Telegram Bot client used for webhook verification and replies.
+func (h *Handler) SetTelegramClient(c *telegram.Client) {
+	h.telegramClient = c
+}
+
+// SetTelegramMessageHandler sets a fallback handler for non-/start Telegram webhook messages.
+func (h *Handler) SetTelegramMessageHandler(fn func(context.Context, telegram.Update) error) {
+	h.telegramFallback = fn
 }
 
 // Register mounts /auth, /me, and /users routes onto api (/api).
@@ -55,7 +69,12 @@ func (h *Handler) Register(
 	me.Post("/sessions/search", h.SearchMySessions)
 	me.Delete("/sessions/:id", h.RevokeMySession)
 	me.Post("/accounts/search", h.SearchMyAccounts)
+	me.Post("/accounts/otp", h.RequestLinkAccountOTP)
+	me.Post("/accounts/verify", h.VerifyLinkAccount)
+	me.Post("/accounts/telegram/token", h.CreateTelegramLinkToken)
 	me.Delete("/accounts/:id", h.UnlinkMyAccount)
+
+	api.Post("/telegram/hooks", h.TelegramWebhook)
 
 	users := api.Group("/users", authMW, requireAuth)
 	users.Post("/search", requireUsersRead, h.SearchUsers)

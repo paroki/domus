@@ -139,6 +139,20 @@ func (_u *UserUpdate) SetNillableStatus(v *user.Status) *UserUpdate {
 	return _u
 }
 
+// SetOnboarded sets the "onboarded" field.
+func (_u *UserUpdate) SetOnboarded(v bool) *UserUpdate {
+	_u.mutation.SetOnboarded(v)
+	return _u
+}
+
+// SetNillableOnboarded sets the "onboarded" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableOnboarded(v *bool) *UserUpdate {
+	if v != nil {
+		_u.SetOnboarded(*v)
+	}
+	return _u
+}
+
 // SetDefaultParishID sets the "default_parish_id" field.
 func (_u *UserUpdate) SetDefaultParishID(v uuid.UUID) *UserUpdate {
 	_u.mutation.SetDefaultParishID(v)
@@ -353,6 +367,9 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(user.FieldStatus, field.TypeEnum, value)
+	}
+	if value, ok := _u.mutation.Onboarded(); ok {
+		_spec.SetField(user.FieldOnboarded, field.TypeBool, value)
 	}
 	if value, ok := _u.mutation.DefaultParishID(); ok {
 		_spec.SetField(user.FieldDefaultParishID, field.TypeUUID, value)
@@ -580,6 +597,20 @@ func (_u *UserUpdateOne) SetStatus(v user.Status) *UserUpdateOne {
 func (_u *UserUpdateOne) SetNillableStatus(v *user.Status) *UserUpdateOne {
 	if v != nil {
 		_u.SetStatus(*v)
+	}
+	return _u
+}
+
+// SetOnboarded sets the "onboarded" field.
+func (_u *UserUpdateOne) SetOnboarded(v bool) *UserUpdateOne {
+	_u.mutation.SetOnboarded(v)
+	return _u
+}
+
+// SetNillableOnboarded sets the "onboarded" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableOnboarded(v *bool) *UserUpdateOne {
+	if v != nil {
+		_u.SetOnboarded(*v)
 	}
 	return _u
 }
@@ -828,6 +859,9 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(user.FieldStatus, field.TypeEnum, value)
+	}
+	if value, ok := _u.mutation.Onboarded(); ok {
+		_spec.SetField(user.FieldOnboarded, field.TypeBool, value)
 	}
 	if value, ok := _u.mutation.DefaultParishID(); ok {
 		_spec.SetField(user.FieldDefaultParishID, field.TypeUUID, value)

@@ -33,7 +33,7 @@ func (h *Handler) GetMe(c fiber.Ctx) error {
 // UpdateMe updates the authenticated user's profile fields.
 //
 //	@Summary		Update current user profile
-//	@Description	Updates name, phone (normalized to E.164), avatarUrl, or defaultParishId.
+//	@Description	Updates name, phone (normalized to E.164), avatarUrl, defaultParishId, or onboarded status.
 //	@ID				updateMe
 //	@Tags			Me
 //	@Accept			json
@@ -231,4 +231,90 @@ func (h *Handler) UnlinkMyAccount(c fiber.Ctx) error {
 		return err
 	}
 	return httpx.NoContent(c)
+}
+
+// RequestLinkAccountOTP dispatches a verification OTP to link a WhatsApp number.
+//
+//	@Summary		Request account linking OTP
+//	@Description	Sends a 6-digit verification OTP to link a WhatsApp number to the current user.
+//	@ID				requestMeAccountOTP
+//	@Tags			Me
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		domain.LinkAccountOTPRequest	true	"Account link OTP request"
+//	@Success		200		{object}	httpx.Envelope[domain.RequestOTPResponse]
+//	@Failure		400		{object}	httpx.Envelope[any]
+//	@Failure		401		{object}	httpx.Envelope[any]
+//	@Failure		409		{object}	httpx.Envelope[any]
+//	@Failure		422		{object}	httpx.Envelope[any]
+//	@Failure		429		{object}	httpx.Envelope[any]
+//	@Router			/me/accounts/otp [post]
+func (h *Handler) RequestLinkAccountOTP(c fiber.Ctx) error {
+	p, ok := authx.FromContext(c.Context())
+	if !ok {
+		return httpx.Unauthorized("Authentication is required.")
+	}
+	var req domain.LinkAccountOTPRequest
+	if err := decodeStrictJSON(c, &req); err != nil {
+		return err
+	}
+	res, err := h.service.RequestLinkAccountOTP(c.Context(), p, req)
+	if err != nil {
+		return err
+	}
+	return httpx.OK(c, res)
+}
+
+// VerifyLinkAccount verifies an OTP and links a WhatsApp account to the current user.
+//
+//	@Summary		Verify account linking OTP
+//	@Description	Verifies a 6-digit OTP and links the verified WhatsApp account to the current user.
+//	@ID				verifyMeAccount
+//	@Tags			Me
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		domain.VerifyLinkAccountRequest	true	"Account link verification payload"
+//	@Success		200		{object}	httpx.Envelope[domain.UserAccountResponse]
+//	@Failure		400		{object}	httpx.Envelope[any]
+//	@Failure		401		{object}	httpx.Envelope[any]
+//	@Failure		409		{object}	httpx.Envelope[any]
+//	@Failure		422		{object}	httpx.Envelope[any]
+//	@Router			/me/accounts/verify [post]
+func (h *Handler) VerifyLinkAccount(c fiber.Ctx) error {
+	p, ok := authx.FromContext(c.Context())
+	if !ok {
+		return httpx.Unauthorized("Authentication is required.")
+	}
+	var req domain.VerifyLinkAccountRequest
+	if err := decodeStrictJSON(c, &req); err != nil {
+		return err
+	}
+	res, err := h.service.VerifyLinkAccount(c.Context(), p, req)
+	if err != nil {
+		return err
+	}
+	return httpx.OK(c, res)
+}
+
+// CreateTelegramLinkToken generates a single-use deep link to connect Telegram.
+//
+//	@Summary		Create Telegram link token
+//	@Description	Generates a single-use t.me deep-link token to connect Telegram to the current user.
+//	@ID				createMeTelegramLinkToken
+//	@Tags			Me
+//	@Produce		json
+//	@Success		200	{object}	httpx.Envelope[domain.TelegramLinkTokenResponse]
+//	@Failure		400	{object}	httpx.Envelope[any]
+//	@Failure		401	{object}	httpx.Envelope[any]
+//	@Router			/me/accounts/telegram/token [post]
+func (h *Handler) CreateTelegramLinkToken(c fiber.Ctx) error {
+	p, ok := authx.FromContext(c.Context())
+	if !ok {
+		return httpx.Unauthorized("Authentication is required.")
+	}
+	res, err := h.service.CreateTelegramLinkToken(c.Context(), p)
+	if err != nil {
+		return err
+	}
+	return httpx.OK(c, res)
 }

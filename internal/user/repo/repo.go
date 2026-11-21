@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/google/uuid"
@@ -60,6 +61,7 @@ func (r *Repository) ReactivateUser(ctx context.Context, id uuid.UUID, name stri
 	upd := r.client.User.UpdateOneID(id).
 		ClearDeletedAt().
 		SetStatus(user.StatusActive).
+		SetOnboarded(false).
 		SetName(name).
 		ClearAvatarURL().
 		ClearDefaultParishID().
@@ -171,6 +173,14 @@ func (r *Repository) CreateOTP(ctx context.Context, channel, target, codeHash st
 func (r *Repository) FindLatestOTP(ctx context.Context, channel, target string) (*ent.UserOTP, error) {
 	return r.client.UserOTP.Query().
 		Where(userotp.ChannelEQ(channel), userotp.TargetEQ(target)).
+		Order(ent.Desc(userotp.FieldCreatedAt)).
+		First(ctx)
+}
+
+// FindOTPByChannelAndHash returns the UserOTP matching (channel, codeHash).
+func (r *Repository) FindOTPByChannelAndHash(ctx context.Context, channel, codeHash string) (*ent.UserOTP, error) {
+	return r.client.UserOTP.Query().
+		Where(userotp.ChannelEQ(channel), userotp.CodeHashEQ(codeHash)).
 		Order(ent.Desc(userotp.FieldCreatedAt)).
 		First(ctx)
 }
@@ -313,6 +323,58 @@ func (r *Repository) IsActiveParishMember(ctx context.Context, userID, parishID 
 		Exist(ctx)
 }
 
+// SetUserPhone updates phone on a User.
+func (r *Repository) SetUserPhone(ctx context.Context, userID uuid.UUID, phone string) error {
+	return r.client.User.UpdateOneID(userID).
+		SetPhone(phone).
+		Exec(ctx)
+}
+
+// ListAccountProvidersByUserID returns distinct sorted provider names linked to userID.
+func (r *Repository) ListAccountProvidersByUserID(ctx context.Context, userID uuid.UUID) ([]string, error) {
+	raw, err := r.client.UserAccount.Query().
+		Where(useraccount.UserIDEQ(userID)).
+		Select(useraccount.FieldProvider).
+		Strings(ctx)
+	if err != nil {
+		return nil, err
+	}
+	seen := make(map[string]struct{}, len(raw))
+	providers := make([]string, 0, len(raw))
+	for _, p := range raw {
+		if _, ok := seen[p]; !ok {
+			seen[p] = struct{}{}
+			providers = append(providers, p)
+		}
+	}
+	slices.Sort(providers)
+	return providers, nil
+}
+
+// ReplaceChannelAccount deletes any existing accounts for (userID, provider) and creates a new UserAccount.
+func (r *Repository) ReplaceChannelAccount(
+	ctx context.Context,
+	userID uuid.UUID,
+	provider, subject string,
+	displayName *string,
+	lastUsedAt time.Time,
+) (*ent.UserAccount, error) {
+	if _, err := r.client.UserAccount.Delete().
+		Where(useraccount.UserIDEQ(userID), useraccount.ProviderEQ(provider)).
+		Exec(ctx); err != nil {
+		return nil, err
+	}
+	cre := r.client.UserAccount.Create().
+		SetUserID(userID).
+		SetProvider(provider).
+		SetSubject(subject).
+		SetLastUsedAt(lastUsedAt)
+	if displayName != nil && *displayName != "" {
+		cre.SetDisplayName(*displayName)
+	}
+	return cre.Save(ctx)
+}
+
 // UpdateUser updates mutable fields on a non-deleted User.
 func (r *Repository) UpdateUser(
 	ctx context.Context,
@@ -322,6 +384,7 @@ func (r *Repository) UpdateUser(
 	avatarURL *string,
 	defaultParishID *uuid.UUID,
 	status *user.Status,
+	onboarded *bool,
 ) (*ent.User, error) {
 	upd := r.client.User.UpdateOneID(id)
 	if name != nil {
@@ -350,6 +413,9 @@ func (r *Repository) UpdateUser(
 	}
 	if status != nil {
 		upd.SetStatus(*status)
+	}
+	if onboarded != nil {
+		upd.SetOnboarded(*onboarded)
 	}
 	return upd.Save(ctx)
 }

@@ -239,14 +239,14 @@ func (s *Service) createSessionWithID(ctx context.Context, r *repo.Repository, u
 	if err != nil {
 		return "", uuid.Nil, nil, err
 	}
-	resp, err := s.buildAuthSessionResponse(u, u.DefaultParishID, expiresAt)
+	resp, err := s.buildAuthSessionResponse(ctx, r, u, u.DefaultParishID, expiresAt)
 	if err != nil {
 		return "", uuid.Nil, nil, err
 	}
 	return rawToken, sess.ID, resp, nil
 }
 
-func (s *Service) buildAuthSessionResponse(u *ent.User, parishIDPtr *uuid.UUID, expiresAt time.Time) (*domain.AuthSessionResponse, error) {
+func (s *Service) buildAuthSessionResponse(ctx context.Context, r *repo.Repository, u *ent.User, parishIDPtr *uuid.UUID, expiresAt time.Time) (*domain.AuthSessionResponse, error) {
 	userResp := toUserResponse(u)
 	var activeParishID uuid.UUID
 	if parishIDPtr != nil {
@@ -256,7 +256,12 @@ func (s *Service) buildAuthSessionResponse(u *ent.User, parishIDPtr *uuid.UUID, 
 	if err != nil {
 		return nil, err
 	}
+	providers, err := r.ListAccountProvidersByUserID(ctx, u.ID)
+	if err != nil {
+		return nil, err
+	}
 	userResp.Roles = roles
+	userResp.LinkedProviders = providers
 	userResp.ActiveParishID = parishIDPtr
 	return &domain.AuthSessionResponse{
 		User:           userResp,
@@ -303,6 +308,7 @@ func toUserResponse(u *ent.User) domain.UserResponse {
 		Phone:           u.Phone,
 		AvatarURL:       u.AvatarURL,
 		Status:          string(u.Status),
+		Onboarded:       u.Onboarded,
 		DefaultParishID: u.DefaultParishID,
 		LastLoginAt:     u.LastLoginAt,
 		CreatedAt:       u.CreatedAt,
