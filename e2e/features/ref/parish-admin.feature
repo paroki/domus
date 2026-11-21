@@ -2,16 +2,16 @@ Feature: Parish Admin parish settings, profile, territory, lookups, and periods
 
   @parish-admin
   Scenario: Parish Admin sees parish settings tiles and is denied super-admin parishes route
-    When I open "/settings"
+    When I open "/ref"
     Then I see the settings page
     And I see settings tiles "Profil Paroki, Wilayah & Lingkungan, Kamus Referensi, Periode"
     And I do not see settings tiles "Keuskupan & Paroki"
-    When I open "/settings/parishes"
+    When I open "/ref/parishes"
     Then I see the super admin restriction banner on parishes page
 
   @parish-admin
   Scenario: Parish Admin updates parish profile and changes persist across reload
-    When I open "/settings/profile"
+    When I open "/ref/profile"
     Then I see the parish profile page
     When I update the parish profile with:
       | name        | Paroki St. Yohanes E2E |
@@ -22,7 +22,7 @@ Feature: Parish Admin parish settings, profile, territory, lookups, and periods
       | website     | https://e2e.paroki.org |
       | address     | Jl. Gereja No. 1       |
     Then I see the profile saved banner
-    When I open "/settings/profile"
+    When I open "/ref/profile"
     Then I see the parish profile fields match:
       | name        | Paroki St. Yohanes E2E |
       | patronSaint | St. Yohanes Rasul      |
@@ -34,7 +34,7 @@ Feature: Parish Admin parish settings, profile, territory, lookups, and periods
 
   @parish-admin
   Scenario: Parish Admin manages zones and wards with REF_IN_USE delete guard
-    When I open "/settings/territory"
+    When I open "/ref/territory"
     Then I see the territory page
     When I create a zone with code "wil-e2e-1" and name "Wilayah E2E 1"
     Then I see zone "Wilayah E2E 1" with code "wil-e2e-1"
@@ -50,7 +50,7 @@ Feature: Parish Admin parish settings, profile, territory, lookups, and periods
   @parish-admin
   Scenario: Parish Admin views read-only global lookups and manages parish-scoped lookups
     Given a global lookup exists in category "sacrament" with code "global-ro-e2e" and label "Sakramen Global E2E"
-    When I open "/settings/lookups"
+    When I open "/ref/lookups"
     Then I see the lookups page
     And I see lookup "Sakramen Global E2E" with scope "Global"
     And lookup "Sakramen Global E2E" is read-only
@@ -64,7 +64,7 @@ Feature: Parish Admin parish settings, profile, territory, lookups, and periods
 
   @parish-admin
   Scenario: Parish Admin manages fiscal periods with overlap guard and active rotation
-    When I open "/settings/periods"
+    When I open "/ref/periods"
     Then I see the periods page
     When I create a fiscal period with code "fy-2025-e2e" name "Tahun Buku 2025 E2E" from "2025-01-01" to "2025-12-31" as current
     Then I see period "Tahun Buku 2025 E2E" with status "Terbuka" and current badge

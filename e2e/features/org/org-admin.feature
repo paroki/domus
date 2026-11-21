@@ -4,12 +4,12 @@ Feature: Organization Admin menu visibility, /users roster CRUD, profile, and in
   Scenario: Org Admin sees restricted launcher, settings, /users scope, and /org create button hidden
     When I open "/"
     Then I see launcher tiles "Organisasi, Kegiatan, Pengguna"
-    And I do not see launcher tiles "Pengaturan Paroki"
-    When I open "/settings"
+    And I do not see launcher tiles "Referensi, Pengaturan"
+    When I open "/ref"
     Then I see empty settings message
-    When I open "/settings/parishes"
+    When I open "/ref/parishes"
     Then I see the super admin restriction banner on parishes page
-    When I open "/settings/profile"
+    When I open "/ref/profile"
     Then I see the parish admin restriction banner
     When I open "/users"
     Then I see users directory scopes "Pengurus & Anggota Organisasi"

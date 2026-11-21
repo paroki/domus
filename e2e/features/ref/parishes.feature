@@ -2,28 +2,28 @@ Feature: Super Admin parish settings, dioceses, parishes, and global lookups
 
   @super-admin
   Scenario: Super Admin sees only global settings tiles and is restricted from parish-admin routes
-    When I open "/settings"
+    When I open "/ref"
     Then I see the settings page
     And I see settings tiles "Keuskupan & Paroki, Kamus Referensi"
     And I do not see settings tiles "Profil Paroki, Wilayah & Lingkungan, Periode"
-    When I open "/settings/parishes"
+    When I open "/ref/parishes"
     And I create a diocese with code "e2e-kaj-1" and name "Keuskupan E2E 1"
     And I create a parish under diocese "Keuskupan E2E 1" with code "e2e-p-1" and name "Paroki E2E 1"
-    And I open "/settings/profile"
+    And I open "/ref/profile"
     Then I see the parish admin restriction banner
-    When I open "/settings/territory"
+    When I open "/ref/territory"
     Then I see the parish admin restriction banner
-    When I open "/settings/periods"
+    When I open "/ref/periods"
     Then I see the parish admin restriction banner
 
   @authenticated
   Scenario: Regular user is denied access to dioceses and parishes management
-    When I open "/settings/parishes"
+    When I open "/ref/parishes"
     Then I see the super admin restriction banner on parishes page
 
   @super-admin
   Scenario: Super Admin manages diocese and parish tenant lifecycle
-    When I open "/settings/parishes"
+    When I open "/ref/parishes"
     Then I see the parishes page
     When I create a diocese with code "e2e-dioc-del" and name "Keuskupan Hapus E2E"
     Then I see diocese "Keuskupan Hapus E2E" with code "e2e-dioc-del"
@@ -36,7 +36,7 @@ Feature: Super Admin parish settings, dioceses, parishes, and global lookups
 
   @super-admin
   Scenario: Super Admin performs global reference lookups CRUD
-    When I open "/settings/lookups"
+    When I open "/ref/lookups"
     Then I see the lookups page
     When I create a global lookup in category "sacrament" with code "e2e-baptis" and label "Baptis E2E"
     Then I see lookup "Baptis E2E" with scope "Global"
