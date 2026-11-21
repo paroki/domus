@@ -1,4 +1,4 @@
-import { ArrowLeft, CheckCircle2, Church, LogOut } from "lucide-react";
+import { ArrowLeft, CheckCircle2, LogOut } from "lucide-react";
 import {
   type FormEvent,
   useCallback,
@@ -134,9 +134,7 @@ export default function OnboardingPage() {
       <header className="border-b border-line bg-surface">
         <div className="mx-auto flex h-16 max-w-2xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-2.5">
-            <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-on-primary">
-              <Church aria-hidden className="size-5" />
-            </span>
+            <img src="/logo.svg" alt="" aria-hidden className="size-9 rounded-lg" />
             <span className="text-lg font-bold tracking-tight text-fg">
               Domus
             </span>

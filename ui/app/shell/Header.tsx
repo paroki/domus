@@ -1,6 +1,5 @@
 import {
   ChevronDown,
-  Church,
   LogOut,
   Search,
   Shield,
@@ -89,9 +88,7 @@ export function Header() {
         aria-label={t("header.homeLabel")}
         className="flex items-center gap-2.5 text-lg font-bold text-fg no-underline"
       >
-        <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-on-primary">
-          <Church aria-hidden className="size-5" />
-        </span>
+        <img src="/logo.svg" alt="" aria-hidden className="size-8 rounded-lg" />
         Domus
       </Link>
 

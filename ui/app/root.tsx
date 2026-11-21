@@ -16,6 +16,9 @@ import { createQueryClient } from "~/shared/api/query-client";
 import { ThemeProvider, themeInitScript } from "~/shared/theme/theme";
 
 export const links: Route.LinksFunction = () => [
+  { rel: "icon", type: "image/svg+xml", href: "/logo.svg" },
+  { rel: "icon", type: "image/png", sizes: "192x192", href: "/logo-192.png" },
+  { rel: "apple-touch-icon", href: "/logo-192.png" },
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
     rel: "preconnect",
