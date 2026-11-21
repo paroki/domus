@@ -533,7 +533,7 @@ func (s *UserFeatureSuite) TestRegisterSettings_HotReloadAndValidation() {
 		user.SettingTelegramBotToken: "123:tok",
 	})
 	s.Require().Error(err)
-	s.Contains(err.Error(), "Konfigurasi Telegram harus mencakup Bot Token, Bot Username, dan Webhook Secret.")
+	s.Contains(err.Error(), "konfigurasi Telegram harus mencakup Bot Token, Bot Username, dan Webhook Secret")
 
 	// Partial GOWA -> validation error
 	_, err = store.Update(ctx, map[string]string{

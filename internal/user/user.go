@@ -272,7 +272,7 @@ func (f *Feature) RegisterSettings(s *setting.Store) {
 			}
 			tgClient = c
 		default:
-			return errors.New("Konfigurasi Telegram harus mencakup Bot Token, Bot Username, dan Webhook Secret.")
+			return errors.New("konfigurasi Telegram harus mencakup Bot Token, Bot Username, dan Webhook Secret")
 		}
 
 		baseURL := strings.TrimSpace(values[SettingGowaBaseURL])
@@ -282,10 +282,10 @@ func (f *Feature) RegisterSettings(s *setting.Store) {
 		var gowaClient *gowa.Client
 		if baseURL != "" || basicUser != "" || basicPass != "" {
 			if (basicUser != "") != (basicPass != "") {
-				return errors.New("Konfigurasi GOWA Basic Auth harus mencakup Username dan Password.")
+				return errors.New("konfigurasi GOWA Basic Auth harus mencakup Username dan Password")
 			}
 			if (basicUser != "" || basicPass != "") && baseURL == "" {
-				return errors.New("GOWA Base URL wajib diisi jika Basic Auth digunakan.")
+				return errors.New("GOWA Base URL wajib diisi jika Basic Auth digunakan")
 			}
 			c, err := gowa.New(gowa.Config{
 				BaseURL:   baseURL,
