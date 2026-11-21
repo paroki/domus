@@ -132,12 +132,13 @@ func (h *Handler) OAuthRedirect(c fiber.Ctx) error {
 		return err
 	}
 
+	secure := isSecureRequest(c)
 	c.Cookie(&fiber.Cookie{
 		Name:     oauthStateCookieName,
 		Value:    state,
 		Path:     "/",
 		HTTPOnly: true,
-		Secure:   h.cookieSecure,
+		Secure:   secure,
 		SameSite: fiber.CookieSameSiteLaxMode,
 		MaxAge:   oauthCookieMaxAge,
 	})
@@ -146,7 +147,7 @@ func (h *Handler) OAuthRedirect(c fiber.Ctx) error {
 		Value:    sanitizeRedirect(c.Query("redirect")),
 		Path:     "/",
 		HTTPOnly: true,
-		Secure:   h.cookieSecure,
+		Secure:   secure,
 		SameSite: fiber.CookieSameSiteLaxMode,
 		MaxAge:   oauthCookieMaxAge,
 	})
@@ -156,7 +157,7 @@ func (h *Handler) OAuthRedirect(c fiber.Ctx) error {
 			Value:    inviteCode,
 			Path:     "/",
 			HTTPOnly: true,
-			Secure:   h.cookieSecure,
+			Secure:   secure,
 			SameSite: fiber.CookieSameSiteLaxMode,
 			MaxAge:   oauthCookieMaxAge,
 		})
@@ -208,13 +209,18 @@ func (h *Handler) OAuthCallback(c fiber.Ctx) error {
 	return c.Redirect().Status(fiber.StatusFound).To(redirectTo)
 }
 
+// ponytail: auto-detect HTTPS via Fiber TrustProxy (X-Forwarded-Proto); add env override only if proxy strips proto header.
+func isSecureRequest(c fiber.Ctx) bool {
+	return strings.EqualFold(c.Scheme(), "https")
+}
+
 func (h *Handler) setSessionCookie(c fiber.Ctx, rawToken string) {
 	c.Cookie(&fiber.Cookie{
 		Name:     h.cookieName,
 		Value:    rawToken,
 		Path:     "/",
 		HTTPOnly: true,
-		Secure:   h.cookieSecure,
+		Secure:   isSecureRequest(c),
 		SameSite: fiber.CookieSameSiteLaxMode,
 		MaxAge:   int(h.sessionTTL.Seconds()),
 	})
@@ -226,7 +232,7 @@ func (h *Handler) clearCookie(c fiber.Ctx, name string) {
 		Value:    "",
 		Path:     "/",
 		HTTPOnly: true,
-		Secure:   h.cookieSecure,
+		Secure:   isSecureRequest(c),
 		SameSite: fiber.CookieSameSiteLaxMode,
 		MaxAge:   -1,
 		Expires:  time.Unix(0, 0),

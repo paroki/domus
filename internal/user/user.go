@@ -88,15 +88,27 @@ func New(db *ent.Client, enforcer *authz.Enforcer, cfg Config, logger *slog.Logg
 	if cookieName == "" {
 		cookieName = "domus_session"
 	}
+	otpTTL := cfg.OTPTTL
+	if otpTTL <= 0 {
+		otpTTL = 5 * time.Minute
+	}
+	otpMaxAttempts := cfg.OTPMaxAttempts
+	if otpMaxAttempts <= 0 {
+		otpMaxAttempts = 5
+	}
+	sessionTTL := cfg.SessionTTL
+	if sessionTTL <= 0 {
+		sessionTTL = 720 * time.Hour
+	}
 
 	r := repo.New(db)
 	svcCfg := service.Config{
 		SuperAdminEmail: cfg.SuperAdminEmail,
 		SuperAdminName:  cfg.SuperAdminName,
-		OTPTTL:          cfg.OTPTTL,
-		OTPMaxAttempts:  cfg.OTPMaxAttempts,
+		OTPTTL:          otpTTL,
+		OTPMaxAttempts:  otpMaxAttempts,
 		OTPCooldown:     cfg.OTPCooldown,
-		SessionTTL:      cfg.SessionTTL,
+		SessionTTL:      sessionTTL,
 		GoogleID:        cfg.GoogleID,
 		GoogleSecret:    cfg.GoogleSecret,
 		GitHubID:        cfg.GitHubID,
@@ -106,7 +118,7 @@ func New(db *ent.Client, enforcer *authz.Enforcer, cfg Config, logger *slog.Logg
 	for _, p := range opt.oauthProviders {
 		svc.RegisterOAuthProvider(p)
 	}
-	h := handler.New(svc, cookieName, cfg.CookieSecure, cfg.SessionTTL)
+	h := handler.New(svc, cookieName, sessionTTL)
 	return &Feature{
 		service:    svc,
 		handler:    h,

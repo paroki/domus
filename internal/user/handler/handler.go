@@ -14,22 +14,20 @@ import (
 
 // Handler exposes HTTP endpoints for authentication and user operations.
 type Handler struct {
-	service      *service.Service
-	cookieName   string
-	cookieSecure bool
-	sessionTTL   time.Duration
+	service    *service.Service
+	cookieName string
+	sessionTTL time.Duration
 }
 
 // New constructs a Handler backed by svc and session cookie configuration.
-func New(svc *service.Service, cookieName string, cookieSecure bool, sessionTTL time.Duration) *Handler {
+func New(svc *service.Service, cookieName string, sessionTTL time.Duration) *Handler {
 	if cookieName == "" {
 		cookieName = "domus_session"
 	}
 	return &Handler{
-		service:      svc,
-		cookieName:   cookieName,
-		cookieSecure: cookieSecure,
-		sessionTTL:   sessionTTL,
+		service:    svc,
+		cookieName: cookieName,
+		sessionTTL: sessionTTL,
 	}
 }
 

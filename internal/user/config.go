@@ -9,23 +9,30 @@ import (
 
 // Config holds configuration for the user and authentication feature.
 type Config struct {
-	SuperAdminEmail string        `env:"USER_SUPER_ADMIN_EMAIL"`
-	SuperAdminName  string        `env:"USER_SUPER_ADMIN_NAME, default=Super Admin"`
-	OTPTTL          time.Duration `env:"AUTH_OTP_TTL, default=5m"`
-	OTPMaxAttempts  int           `env:"AUTH_OTP_MAX_ATTEMPTS, default=5"`
-	OTPCooldown     time.Duration `env:"AUTH_OTP_COOLDOWN, default=60s"`
-	SessionTTL      time.Duration `env:"AUTH_SESSION_TTL, default=720h"`
-	CookieName      string        `env:"AUTH_SESSION_COOKIE_NAME, default=domus_session"`
-	CookieSecure    bool          `env:"AUTH_SESSION_COOKIE_SECURE, default=false"`
-	GoogleID        string        `env:"AUTH_GOOGLE_ID"`
-	GoogleSecret    string        `env:"AUTH_GOOGLE_SECRET"`
-	GitHubID        string        `env:"AUTH_GITHUB_ID"`
-	GitHubSecret    string        `env:"AUTH_GITHUB_SECRET"`
+	SuperAdminEmail string `env:"USER_SUPER_ADMIN_EMAIL"`
+	SuperAdminName  string `env:"USER_SUPER_ADMIN_NAME, default=Super Admin"`
+	GoogleID        string `env:"AUTH_GOOGLE_ID"`
+	GoogleSecret    string `env:"AUTH_GOOGLE_SECRET"`
+	GitHubID        string `env:"AUTH_GITHUB_ID"`
+	GitHubSecret    string `env:"AUTH_GITHUB_SECRET"`
+
+	// ponytail: constant auth defaults kept in code (not env vars); promote to env if per-deployment tuning is needed.
+	OTPTTL         time.Duration
+	OTPMaxAttempts int
+	OTPCooldown    time.Duration
+	SessionTTL     time.Duration
+	CookieName     string
 }
 
 // GetConfig loads user feature configuration from environment variables.
 func GetConfig(ctx context.Context) (Config, error) {
-	var cfg Config
+	cfg := Config{
+		OTPTTL:         5 * time.Minute,
+		OTPMaxAttempts: 5,
+		OTPCooldown:    60 * time.Second,
+		SessionTTL:     720 * time.Hour,
+		CookieName:     "domus_session",
+	}
 	err := envconfig.Process(ctx, &cfg)
 	return cfg, err
 }

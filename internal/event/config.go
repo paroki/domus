@@ -3,19 +3,19 @@ package event
 import (
 	"context"
 	"time"
-
-	"github.com/sethvargo/go-envconfig/v2"
 )
 
 // Config holds configuration for the event feature.
 type Config struct {
-	DefaultVisibility string        `env:"EVENT_DEFAULT_VISIBILITY, default=public"`
-	RSVPGracePeriod   time.Duration `env:"EVENT_RSVP_GRACE_PERIOD, default=30m"`
+	// ponytail: fixed event defaults; add env tags when per-deployment tuning needed.
+	DefaultVisibility string
+	RSVPGracePeriod   time.Duration
 }
 
-// GetConfig loads event feature configuration from environment variables.
-func GetConfig(ctx context.Context) (Config, error) {
-	var cfg Config
-	err := envconfig.Process(ctx, &cfg)
-	return cfg, err
+// GetConfig returns the default event feature configuration.
+func GetConfig(_ context.Context) (Config, error) {
+	return Config{
+		DefaultVisibility: "public",
+		RSVPGracePeriod:   30 * time.Minute,
+	}, nil
 }

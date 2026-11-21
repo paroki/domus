@@ -3,19 +3,19 @@ package org
 import (
 	"context"
 	"time"
-
-	"github.com/sethvargo/go-envconfig/v2"
 )
 
 // Config holds configuration for the org feature.
 type Config struct {
-	InviteDefaultTTL time.Duration `env:"ORG_INVITE_DEFAULT_TTL, default=24h"`
-	InviteMaxTTL     time.Duration `env:"ORG_INVITE_MAX_TTL, default=168h"`
+	// ponytail: fixed invite TTL defaults; add env tags when per-deployment tuning needed.
+	InviteDefaultTTL time.Duration
+	InviteMaxTTL     time.Duration
 }
 
-// GetConfig loads org feature configuration from environment variables.
-func GetConfig(ctx context.Context) (Config, error) {
-	var cfg Config
-	err := envconfig.Process(ctx, &cfg)
-	return cfg, err
+// GetConfig returns the default org feature configuration.
+func GetConfig(_ context.Context) (Config, error) {
+	return Config{
+		InviteDefaultTTL: 24 * time.Hour,
+		InviteMaxTTL:     168 * time.Hour,
+	}, nil
 }

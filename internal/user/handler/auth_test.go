@@ -1,15 +1,19 @@
 package handler_test
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"log/slog"
+	"net"
 	"net/http"
 	"net/url"
 	"testing"
 	"time"
 
+	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
 	entuser "github.com/paroki/domus/ent/user"
@@ -81,7 +85,6 @@ func (s *AuthHandlerSuite) SetupTest() {
 		OTPCooldown:    60 * time.Second,
 		SessionTTL:     24 * time.Hour,
 		CookieName:     "domus_session",
-		CookieSecure:   false,
 		GoogleID:       "google-id",
 		GoogleSecret:   "google-secret",
 		GitHubID:       "github-id",
@@ -193,6 +196,7 @@ func (s *AuthHandlerSuite) TestOTP_RequestVerifyAndLogoutFlow() {
 	}
 	s.Require().NotNil(sessionCookie)
 	s.True(sessionCookie.HttpOnly)
+	s.False(sessionCookie.Secure)
 	s.Equal(http.SameSiteLaxMode, sessionCookie.SameSite)
 	s.Equal("/", sessionCookie.Path)
 
@@ -354,4 +358,48 @@ func (s *AuthHandlerSuite) TestEnsureUser_CreatesAndLinksIdempotently() {
 	u2, err := s.feature.EnsureUser(ctx, "invite@paroki.org", "Invited User", "", "whatsapp", "08123456789")
 	s.Require().NoError(err)
 	s.Equal(u1.ID, u2.ID)
+}
+
+func (s *AuthHandlerSuite) TestCookieSecure_AutoDetectsHTTPS() {
+	s.createTestUser("https@paroki.org", "HTTPS User", entuser.StatusActive)
+
+	s.Request("/api/auth/otp", http.MethodPost, domain.RequestOTPRequest{Email: "https@paroki.org"})
+	s.OK()
+
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	s.Require().NoError(err)
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- s.App.Listener(ln, fiber.ListenConfig{DisableStartupMessage: true})
+	}()
+	s.T().Cleanup(func() {
+		_ = s.App.Shutdown()
+		s.NoError(<-errCh)
+	})
+
+	payload, err := json.Marshal(domain.VerifyOTPRequest{
+		Email: "https@paroki.org",
+		Code:  s.otpSender.lastCode,
+	})
+	s.Require().NoError(err)
+
+	req, err := http.NewRequest(http.MethodPost, "http://"+ln.Addr().String()+"/api/auth/otp/verify", bytes.NewReader(payload))
+	s.Require().NoError(err)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Forwarded-Proto", "https")
+
+	resp, err := http.DefaultClient.Do(req)
+	s.Require().NoError(err)
+	defer func() { _ = resp.Body.Close() }()
+	s.Equal(http.StatusOK, resp.StatusCode)
+
+	var sessionCookie *http.Cookie
+	for _, c := range resp.Cookies() {
+		if c.Name == s.cfg.CookieName {
+			sessionCookie = c
+			break
+		}
+	}
+	s.Require().NotNil(sessionCookie)
+	s.True(sessionCookie.Secure)
 }
