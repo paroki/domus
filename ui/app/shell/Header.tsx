@@ -1,5 +1,6 @@
 import {
   ChevronDown,
+  Church,
   LogOut,
   Search,
   Shield,

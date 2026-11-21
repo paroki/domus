@@ -140,7 +140,12 @@ export default function LoginPage() {
     <main className="flex min-h-dvh items-center justify-center bg-canvas px-4 py-10">
       <Card className="w-full max-w-md p-6 sm:p-8">
         <div className="mb-6 flex flex-col items-center gap-2 text-center">
-          <img src="/logo.svg" alt="" aria-hidden className="size-12 rounded-lg" />
+          <img
+            src="/logo.svg"
+            alt=""
+            aria-hidden
+            className="size-12 rounded-lg"
+          />
           <h1 className="text-2xl font-bold text-fg">{t("auth.title")}</h1>
           <p className="text-sm text-muted">{t("auth.subtitle")}</p>
         </div>
