@@ -134,3 +134,23 @@ func TestSendMessage_ErrorsNeverLeakToken(t *testing.T) {
 	require.Error(t, err)
 	assert.NotContains(t, err.Error(), token)
 }
+
+func TestMessageHasMedia_AndEntities(t *testing.T) {
+	var msg telegram.Message
+	assert.False(t, msg.HasMedia())
+
+	var nilMsg *telegram.Message
+	assert.False(t, nilMsg.HasMedia())
+
+	raw := `{
+		"message_id": 10,
+		"chat": {"id": -100123, "type": "supergroup"},
+		"caption": "@domus_bot info",
+		"caption_entities": [{"type": "mention", "offset": 0, "length": 10}],
+		"photo": [{"file_id": "abc"}]
+	}`
+	require.NoError(t, json.Unmarshal([]byte(raw), &msg))
+	assert.True(t, msg.HasMedia())
+	require.Len(t, msg.CaptionEntities, 1)
+	assert.Equal(t, "mention", msg.CaptionEntities[0].Type)
+}

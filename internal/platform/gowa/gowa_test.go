@@ -131,3 +131,54 @@ func TestSendMessage_UpstreamFailureDoesNotLeakPass(t *testing.T) {
 	assert.Contains(t, err.Error(), "401")
 	assert.NotContains(t, err.Error(), pass)
 }
+
+func TestFormatTargetJID_AndSendChatPresence(t *testing.T) {
+	jid, err := gowa.FormatTargetJID("+628123456789")
+	require.NoError(t, err)
+	assert.Equal(t, "628123456789@s.whatsapp.net", jid)
+
+	groupJID, err := gowa.FormatTargetJID("120363000111222@g.us")
+	require.NoError(t, err)
+	assert.Equal(t, "120363000111222@g.us", groupJID)
+
+	_, err = gowa.FormatTargetJID("status@broadcast")
+	require.Error(t, err)
+	_, err = gowa.FormatTargetJID("12345@lid")
+	require.Error(t, err)
+
+	var paths []string
+	var payloads []map[string]string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		paths = append(paths, r.URL.Path)
+		var body map[string]string
+		require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
+		payloads = append(payloads, body)
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer srv.Close()
+
+	secret := "gowa-client-secret"
+	c, err := gowa.New(gowa.Config{
+		BaseURL:       srv.URL,
+		DeviceID:      "dev-1",
+		WebhookSecret: secret,
+	})
+	require.NoError(t, err)
+
+	body := []byte(`{"event":"message"}`)
+	mac := hmac.New(sha256.New, []byte(secret))
+	mac.Write(body)
+	sig := "sha256=" + hex.EncodeToString(mac.Sum(nil))
+	assert.True(t, c.VerifyWebhookSignature(body, sig))
+	assert.False(t, c.VerifyWebhookSignature(body, "sha256=bad"))
+
+	require.NoError(t, c.SendChatPresence(context.Background(), "120363000111222@g.us", "composing"))
+	require.NoError(t, c.SendMessage(context.Background(), "120363000111222@g.us", "Halo grup"))
+
+	require.Len(t, paths, 2)
+	assert.Equal(t, "/send/chat-presence", paths[0])
+	assert.Equal(t, "120363000111222@g.us", payloads[0]["phone"])
+	assert.Equal(t, "composing", payloads[0]["action"])
+	assert.Equal(t, "/send/message", paths[1])
+	assert.Equal(t, "120363000111222@g.us", payloads[1]["phone"])
+}

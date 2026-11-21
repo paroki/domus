@@ -28,21 +28,22 @@ var e164Re = regexp.MustCompile(`^\+[1-9][0-9]{6,14}$`)
 
 // Config configures a GOWA (go-whatsapp-web-multidevice) REST Client.
 type Config struct {
-	BaseURL   string
-	BasicUser string
-	BasicPass string
-	// ponytail: APP_GOWA_DEVICE_ID env wiring deferred until multi-device GOWA is used in Phase 6.
-	DeviceID   string
-	HTTPClient *http.Client
+	BaseURL       string
+	BasicUser     string
+	BasicPass     string
+	DeviceID      string
+	WebhookSecret string
+	HTTPClient    *http.Client
 }
 
 // Client sends outbound WhatsApp messages via the GOWA REST API.
 type Client struct {
-	baseURL    string
-	basicUser  string
-	basicPass  string
-	deviceID   string
-	httpClient *http.Client
+	baseURL       string
+	basicUser     string
+	basicPass     string
+	deviceID      string
+	webhookSecret string
+	httpClient    *http.Client
 }
 
 // New validates cfg and constructs a GOWA Client.
@@ -62,34 +63,81 @@ func New(cfg Config) (*Client, error) {
 	}
 
 	return &Client{
-		baseURL:    baseURL,
-		basicUser:  strings.TrimSpace(cfg.BasicUser),
-		basicPass:  cfg.BasicPass,
-		deviceID:   strings.TrimSpace(cfg.DeviceID),
-		httpClient: httpClient,
+		baseURL:       baseURL,
+		basicUser:     strings.TrimSpace(cfg.BasicUser),
+		basicPass:     cfg.BasicPass,
+		deviceID:      strings.TrimSpace(cfg.DeviceID),
+		webhookSecret: strings.TrimSpace(cfg.WebhookSecret),
+		httpClient:    httpClient,
 	}, nil
 }
 
-// SendMessage sends a WhatsApp text message to phoneE164 via GOWA POST /send/message.
-func (c *Client) SendMessage(ctx context.Context, phoneE164, message string) error {
+// VerifyWebhookSignature validates GOWA's X-Hub-Signature-256 header using this client's secret.
+func (c *Client) VerifyWebhookSignature(body []byte, signatureHeader string) bool {
+	if c == nil {
+		return false
+	}
+	return VerifyWebhookSignature(c.webhookSecret, body, signatureHeader)
+}
+
+// FormatTargetJID resolves a personal phone/JID or WhatsApp group JID (@g.us) into a GOWA target JID.
+func FormatTargetJID(target string) (string, error) {
+	raw := strings.TrimSpace(target)
+	if raw == "" {
+		return "", errors.New("gowa: target phone or JID is required")
+	}
+	if at := strings.LastIndex(raw, "@"); at != -1 && strings.EqualFold(raw[at:], "@g.us") {
+		local := strings.TrimSpace(raw[:at])
+		if local == "" {
+			return "", errors.New("gowa: invalid group JID")
+		}
+		return local + "@g.us", nil
+	}
+	e164, err := NormalizeJID(raw)
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimPrefix(e164, "+") + "@s.whatsapp.net", nil
+}
+
+// SendMessage sends a WhatsApp text message to target (E.164, personal JID, or @g.us group JID) via GOWA POST /send/message.
+func (c *Client) SendMessage(ctx context.Context, target, message string) error {
 	if strings.TrimSpace(message) == "" {
 		return errors.New("gowa: message text is required")
 	}
-	e164, err := NormalizeJID(phoneE164)
+	jid, err := FormatTargetJID(target)
 	if err != nil {
 		return err
 	}
-	jid := strings.TrimPrefix(e164, "+") + "@s.whatsapp.net"
-
-	rawBody, err := json.Marshal(map[string]string{
+	return c.postJSON(ctx, "/send/message", map[string]string{
 		"phone":   jid,
 		"message": message,
 	})
+}
+
+// SendChatPresence sends a transient chat presence indicator (e.g. "composing") via GOWA POST /send/chat-presence.
+func (c *Client) SendChatPresence(ctx context.Context, target, action string) error {
+	action = strings.TrimSpace(action)
+	if action == "" {
+		return errors.New("gowa: chat presence action is required")
+	}
+	jid, err := FormatTargetJID(target)
 	if err != nil {
-		return fmt.Errorf("gowa: marshal send message request: %w", err)
+		return err
+	}
+	return c.postJSON(ctx, "/send/chat-presence", map[string]string{
+		"phone":  jid,
+		"action": action,
+	})
+}
+
+func (c *Client) postJSON(ctx context.Context, path string, payload any) error {
+	rawBody, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("gowa: marshal %s request: %w", path, err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+"/send/message", bytes.NewReader(rawBody))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+path, bytes.NewReader(rawBody))
 	if err != nil {
 		return fmt.Errorf("gowa: build request: %w", err)
 	}
@@ -103,13 +151,13 @@ func (c *Client) SendMessage(ctx context.Context, phoneE164, message string) err
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("gowa: send message request failed: %w", err)
+		return fmt.Errorf("gowa: %s request failed: %w", path, err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
-		return fmt.Errorf("gowa: send message returned HTTP %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
+		return fmt.Errorf("gowa: %s returned HTTP %d: %s", path, resp.StatusCode, strings.TrimSpace(string(body)))
 	}
 	return nil
 }

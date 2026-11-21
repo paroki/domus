@@ -45,12 +45,45 @@ type Update struct {
 	Message  *Message `json:"message,omitempty"`
 }
 
+// MessageEntity represents a special entity in a Telegram message (e.g. mention, bot_command).
+type MessageEntity struct {
+	Type   string `json:"type"`
+	Offset int    `json:"offset"`
+	Length int    `json:"length"`
+}
+
 // Message represents a Telegram message inside an Update.
 type Message struct {
-	MessageID int64  `json:"message_id"`
-	From      *User  `json:"from,omitempty"`
-	Chat      Chat   `json:"chat"`
-	Text      string `json:"text,omitempty"`
+	MessageID       int64           `json:"message_id"`
+	From            *User           `json:"from,omitempty"`
+	Chat            Chat            `json:"chat"`
+	Text            string          `json:"text,omitempty"`
+	Caption         string          `json:"caption,omitempty"`
+	Entities        []MessageEntity `json:"entities,omitempty"`
+	CaptionEntities []MessageEntity `json:"caption_entities,omitempty"`
+	Photo           []any           `json:"photo,omitempty"`
+	Audio           any             `json:"audio,omitempty"`
+	Voice           any             `json:"voice,omitempty"`
+	Video           any             `json:"video,omitempty"`
+	VideoNote       any             `json:"video_note,omitempty"`
+	Sticker         any             `json:"sticker,omitempty"`
+	Document        any             `json:"document,omitempty"`
+	Animation       any             `json:"animation,omitempty"`
+}
+
+// HasMedia reports whether the Telegram message carries any non-text media attachment.
+func (m *Message) HasMedia() bool {
+	if m == nil {
+		return false
+	}
+	return len(m.Photo) > 0 ||
+		m.Audio != nil ||
+		m.Voice != nil ||
+		m.Video != nil ||
+		m.VideoNote != nil ||
+		m.Sticker != nil ||
+		m.Document != nil ||
+		m.Animation != nil
 }
 
 // Chat represents a Telegram chat destination.
