@@ -50,6 +50,11 @@ const id = {
       description:
         "Konfigurasi integrasi sistem, Telegram Bot, dan WhatsApp (GOWA).",
     },
+    agent: {
+      name: "Asisten AI",
+      description:
+        "Asisten paroki cerdas untuk informasi kegiatan, organisasi, dan memori.",
+    },
   },
   auth: {
     title: "Masuk ke Domus",
@@ -443,6 +448,39 @@ const id = {
       embeddingNote:
         "Vektor dinormalisasi ke 768-dimensi (halfvec(768)). Jika dipilih Nonaktif atau API Key penyedia kosong, pencarian memori otomatis menggunakan BM25 saja.",
     },
+  },
+  agent: {
+    title: "Asisten AI",
+    subtitle: "Gabriel & spesialis paroki siap membantu Anda.",
+    noParishTitle: "Pilih Paroki Aktif",
+    noParishDescription:
+      "Silakan pilih paroki aktif melalui pemilih paroki di bagian atas untuk menggunakan Asisten AI.",
+    newSession: "Percakapan Baru",
+    searchSessionsPlaceholder: "Cari percakapan…",
+    searchMessagesPlaceholder: "Cari pesan dalam sesi…",
+    emptySessions: "Belum ada percakapan. Mulai obrolan baru dengan Gabriel!",
+    renameSession: "Ubah Judul",
+    deleteSession: "Hapus",
+    loadMore: "Muat Lebih Banyak",
+    loadOlder: "Muat Pesan Lama",
+    memoryButton: "Memori AI",
+    memoryDrawerTitle: "Memori AI",
+    memoryPersonalTab: "Memori Pribadi",
+    memoryParishTab: "FAQ & Pengetahuan Paroki",
+    memoryPinnedCount: "{{count}} / 5 disematkan",
+    memoryParishReadOnly:
+      "Hanya Admin Paroki yang dapat menambah atau mengubah memori pengetahuan paroki.",
+    memorySearchPlaceholder: "Cari memori…",
+    memoryAdd: "Tambah Memori",
+    memoryEmpty: "Belum ada memori tersimpan.",
+    composerPlaceholder:
+      "Tanyakan jadwal kegiatan, organisasi, atau informasi paroki…",
+    send: "Kirim",
+    stop: "Hentikan",
+    thinkingLabel: "💭 Penalaran ({{agent}})",
+    emptyChatTitle: "Halo, ada yang bisa Gabriel bantu?",
+    emptyChatDescription:
+      "Tanyakan jadwal kegiatan paroki, organisasi, atau simpan preferensi Anda.",
   },
 } as const;
 
