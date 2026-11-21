@@ -12,7 +12,11 @@ import libReport from "istanbul-lib-report";
 import reports from "istanbul-reports";
 import { type Browser, chromium } from "playwright";
 import { createPages } from "../pages";
-import { loginAsSuperAdmin, loginAsUser } from "./auth";
+import {
+  bootstrapParishAdminSession,
+  loginAsSuperAdmin,
+  loginAsUser,
+} from "./auth";
 import { config } from "./config";
 import { startServers, stopServers } from "./servers";
 import type { DomusWorld } from "./world";
@@ -46,6 +50,16 @@ Before({ tags: "@authenticated" }, async function (this: DomusWorld) {
   });
   await this.context.addCookies(session.cookies);
   this.client.setToken(session.rawToken);
+});
+
+Before({ tags: "@parish-admin" }, async function (this: DomusWorld) {
+  const result = await bootstrapParishAdminSession(this.client);
+  await this.context.addCookies(result.session.cookies);
+  this.client.setToken(result.session.rawToken);
+  this.activeDioceseId = result.diocese.id;
+  this.activeParishId = result.parish.id;
+  this.activeParishName = result.parish.name;
+  this.activeParishCode = result.parish.code;
 });
 
 After(async function (this: DomusWorld) {

@@ -12,6 +12,11 @@ export class DomusWorld extends World {
   page!: Page;
   pages!: AppPages;
   readonly client: TestClient;
+  activeDioceseId?: string;
+  activeParishId?: string;
+  activeParishName?: string;
+  activeParishCode?: string;
+  activeOrgId?: string;
 
   constructor(options: IWorldOptions) {
     super(options);

@@ -81,4 +81,21 @@ export class LookupsPage extends BasePage {
       .filter({ has: this.page.getByText(label, { exact: true }) });
     await row.waitFor({ state: "detached", timeout: 10_000 });
   }
+
+  async expectLookupReadOnly(label: string): Promise<void> {
+    const row = this.page
+      .locator("section > div.divide-y > div")
+      .filter({ has: this.page.getByText(label, { exact: true }) });
+    await row.waitFor({ state: "visible", timeout: 10_000 });
+    assert.equal(
+      await row.getByRole("button", { name: `Ubah ${label}` }).count(),
+      0,
+      `Expected read-only lookup "${label}" to have no edit button`,
+    );
+    assert.equal(
+      await row.getByRole("button", { name: `Hapus ${label}` }).count(),
+      0,
+      `Expected read-only lookup "${label}" to have no delete button`,
+    );
+  }
 }
