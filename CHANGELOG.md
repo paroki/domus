@@ -2,6 +2,46 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.0.0-alpha.2](https://github.com/paroki/domus/compare/v1.0.0-alpha.1...v1.0.0-alpha.2) (2026-11-21)
+
+### ⚙️ API
+
+#### ✨ Features
+
+- expose event MCP tools and integration tests ([1d0fe8d](https://github.com/paroki/domus/commit/1d0fe8d56ce5ed99418cad3c838bb0d5f3746c26))
+- implement event RSVP upsert, cutoff, summary, and roster API ([f03c412](https://github.com/paroki/domus/commit/f03c412c30fdf143e98b644cf184cfd097d30915))
+- implement event CRUD, visibility rules, and Casbin RBAC ([7662db1](https://github.com/paroki/domus/commit/7662db1103edb39631910e49854479871a340636))
+- add Event and EventRSVP Ent schemas, migration, and in-use guards ([3e2350a](https://github.com/paroki/domus/commit/3e2350a115aac4148e055c7a1fdc70f2350ee7ac))
+- add org mcp tools and tests ([d2e1466](https://github.com/paroki/domus/commit/d2e146673486584fbf80cf740feee8b70adda9c1))
+- add org invites and guest auth onboarding ([4ea2784](https://github.com/paroki/domus/commit/4ea2784130c1239bb80c1940adb99a95e059fdaf))
+- implement org crud, members, casbin, and facade ([682d210](https://github.com/paroki/domus/commit/682d210bd5f0e4603f75bbb648f1fe9bb5fec728))
+- add org ent schemas and migration ([cef0a34](https://github.com/paroki/domus/commit/cef0a34e32546a13f8cec03c09949eb9d70a04cb))
+- add stdlib SMTP mailer and wire email OTP delivery ([24700a4](https://github.com/paroki/domus/commit/24700a48a3818ab754b7f6a9af279982a2442748))
+- add zone ward lookup and period CRUD ([3925cd9](https://github.com/paroki/domus/commit/3925cd94f5450092d086787b0f4e11263e268fe4))
+- add ref feature for diocese parish and members ([36da2b0](https://github.com/paroki/domus/commit/36da2b06ab30d6849702a2ca9daa41fe7c9fb909))
+- include parish roles in user session and profile ([5555272](https://github.com/paroki/domus/commit/55552727a780cf99c15e56addbd5a79bce4b10cc))
+- add ref Ent schemas and Atlas migration ([16b727b](https://github.com/paroki/domus/commit/16b727b7937f4754b432db479bbb38f4a2f100bc))
+
+#### 🐛 Bug Fixes
+
+- fix org migration indexes, invite maxUses, member and period guards ([ecdfe3c](https://github.com/paroki/domus/commit/ecdfe3c45fade0a6dfa1f22097a0c0e1fd6d4ec0))
+- enforce parish membership on session switch and header ([4eb20c4](https://github.com/paroki/domus/commit/4eb20c430dd0d99d82789f64000e776f84bdedc9))
+- enforce global lookup uniqueness, member name, and sort order ([d602f13](https://github.com/paroki/domus/commit/d602f139ea662b9524003704ac82b7f200dd9069))
+
+### 🖥️ UI
+
+#### ✨ Features
+
+- implement event feed, detail workspace, RSVP widget, and roster ([6c25ec7](https://github.com/paroki/domus/commit/6c25ec7778b68630fcd590d7c9b57bded5a7c5b6))
+- implement org directory, roster, invites, and join ui ([c0a8da0](https://github.com/paroki/domus/commit/c0a8da06b256f099e539ccc44f5d50a6f8094190))
+- add territory, lookup, and period management pages ([3131d60](https://github.com/paroki/domus/commit/3131d601d9ce1455f923162672c3c96619ce90b4))
+- add parish switcher, settings grid, and parish pages ([c4af258](https://github.com/paroki/domus/commit/c4af2589c18f039113749a75c460013e4e0671be))
+
+#### 🐛 Bug Fixes
+
+- fix org period filter, inline edit, invite revoke and join flash ([dcc9435](https://github.com/paroki/domus/commit/dcc9435d3ca0c70b84196de732ff8b5031658afb))
+- clear optional ref fields and share session hooks ([cf6f83c](https://github.com/paroki/domus/commit/cf6f83cc4d8060a9fff538ab87317aae41a7b7d7))
+
 ## [v1.0.0-alpha.1](https://github.com/paroki/domus/releases/tag/v1.0.0-alpha.1) (2026-11-20)
 
 ### ⚙️ API
