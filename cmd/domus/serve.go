@@ -38,8 +38,8 @@ func newServeCmd() *cobra.Command {
 			}, logger); err != nil {
 				return err
 			}
-			// ponytail: cipher constructed at startup to fail fast; wire into features when encrypted columns land.
-			if _, err = crypt.New(cfg.Secret); err != nil {
+			cipher, err := crypt.New(cfg.Secret)
+			if err != nil {
 				return err
 			}
 
@@ -94,7 +94,7 @@ func newServeCmd() *cobra.Command {
 			if err := authz.RegisterFeatures(ctx, enforcer, userFeature, refFeature, orgFeature, eventFeature); err != nil {
 				return err
 			}
-			settingStore := setting.NewStore(db)
+			settingStore := setting.NewStore(db, setting.WithCipher(cipher))
 			setting.RegisterFeatures(settingStore, userFeature, refFeature, orgFeature, eventFeature)
 			if err := settingStore.Load(ctx); err != nil {
 				return err

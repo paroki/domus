@@ -8,8 +8,10 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
+	entsetting "github.com/paroki/domus/ent/setting"
 	"github.com/paroki/domus/internal/platform/authx"
 	"github.com/paroki/domus/internal/platform/authz"
+	"github.com/paroki/domus/internal/platform/crypt"
 	"github.com/paroki/domus/internal/platform/httpx"
 	"github.com/paroki/domus/internal/platform/setting"
 	"github.com/paroki/domus/testutil"
@@ -222,4 +224,83 @@ func (s *SettingSuite) TestAuthzAndCRUD() {
 	s.False(items[0].Configured)
 	s.False(items[1].Configured)
 	s.Equal("", s.store.Get("user.telegram.bot_token"))
+}
+
+func (s *SettingSuite) TestWithCipher_DefaultValue_And_PersistValue() {
+	ctx := context.Background()
+	db := testutil.NewEntClient(s.T())
+	cipher, err := crypt.New("0123456789abcdef0123456789abcdef")
+	s.Require().NoError(err)
+
+	store := setting.NewStore(db, setting.WithCipher(cipher))
+	store.Register(setting.Descriptor{
+		Key:    setting.Key("agent", "provider.gemini.api_key"),
+		Group:  "AI Provider",
+		Label:  "Gemini API Key",
+		Secret: true,
+	})
+	store.Register(setting.Descriptor{
+		Key:          setting.Key("agent", "gabriel.model"),
+		Group:        "AI Agent",
+		Label:        "Gabriel Model",
+		DefaultValue: "gemini-2.5-flash",
+	})
+
+	var onChangeCount int
+	var lastEffective map[string]string
+	store.OnChange(func(_ context.Context, values map[string]string) error {
+		onChangeCount++
+		lastEffective = values
+		return nil
+	})
+
+	s.Require().NoError(store.Load(ctx))
+	s.Equal(1, onChangeCount)
+	s.Equal("gemini-2.5-flash", store.Get("agent.gabriel.model"))
+	s.Equal("gemini-2.5-flash", lastEffective["agent.gabriel.model"])
+
+	// Update secret -> encrypted in DB, plaintext in Get/OnChange, masked in List
+	_, err = store.Update(ctx, map[string]string{
+		"agent.provider.gemini.api_key": "AIza-super-secret",
+		"agent.gabriel.model":           "gemini-2.5-pro",
+	})
+	s.Require().NoError(err)
+	s.Equal(2, onChangeCount)
+	s.Equal("AIza-super-secret", store.Get("agent.provider.gemini.api_key"))
+	s.Equal("AIza-super-secret", lastEffective["agent.provider.gemini.api_key"])
+	s.Equal("gemini-2.5-pro", store.Get("agent.gabriel.model"))
+
+	row, err := db.Setting.Query().Where(entsetting.KeyEQ("agent.provider.gemini.api_key")).Only(ctx)
+	s.Require().NoError(err)
+	s.True(crypt.IsEncryptedString(row.Value))
+	s.NotEqual("AIza-super-secret", row.Value)
+
+	// Reload into a fresh store -> decrypts from DB
+	store2 := setting.NewStore(db, setting.WithCipher(cipher))
+	store2.Register(setting.Descriptor{
+		Key:    setting.Key("agent", "provider.gemini.api_key"),
+		Group:  "AI Provider",
+		Label:  "Gemini API Key",
+		Secret: true,
+	})
+	store2.Register(setting.Descriptor{
+		Key:          setting.Key("agent", "gabriel.model"),
+		Group:        "AI Agent",
+		Label:        "Gabriel Model",
+		DefaultValue: "gemini-2.5-flash",
+	})
+	s.Require().NoError(store2.Load(ctx))
+	s.Equal("AIza-super-secret", store2.Get("agent.provider.gemini.api_key"))
+
+	// PersistValue updates DB and cache without triggering OnChange
+	s.Require().NoError(store.PersistValue(ctx, "agent.gabriel.model", "gemini-2.5-flash-lite"))
+	s.Equal(2, onChangeCount)
+	s.Equal("gemini-2.5-flash-lite", store.Get("agent.gabriel.model"))
+
+	// Clearing setting with DefaultValue deletes override and restores default
+	_, err = store.Update(ctx, map[string]string{
+		"agent.gabriel.model": "",
+	})
+	s.Require().NoError(err)
+	s.Equal("gemini-2.5-flash", store.Get("agent.gabriel.model"))
 }

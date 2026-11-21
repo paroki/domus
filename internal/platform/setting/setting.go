@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"maps"
 	"regexp"
+	"slices"
 	"strings"
 	"sync"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/paroki/domus/ent"
 	entsetting "github.com/paroki/domus/ent/setting"
+	"github.com/paroki/domus/internal/platform/crypt"
 	"github.com/paroki/domus/internal/platform/httpx"
 )
 
@@ -33,12 +35,13 @@ func Key(scope, name string) string {
 
 // Descriptor defines metadata for a registered application setting.
 type Descriptor struct {
-	Key         string `json:"key"`
-	Group       string `json:"group"`
-	Label       string `json:"label"`
-	Description string `json:"description,omitempty"`
-	Secret      bool   `json:"secret"`
-	Placeholder string `json:"placeholder,omitempty"`
+	Key          string `json:"key"`
+	Group        string `json:"group"`
+	Label        string `json:"label"`
+	Description  string `json:"description,omitempty"`
+	Secret       bool   `json:"secret"`
+	Placeholder  string `json:"placeholder,omitempty"`
+	DefaultValue string `json:"defaultValue,omitempty"`
 }
 
 // SettingResponse represents a setting item returned by GET/PATCH /api/settings.
@@ -76,10 +79,22 @@ func RegisterFeatures(s *Store, features ...any) {
 // Returning an error aborts Update with 422 SETTING_VALIDATION_ERROR.
 type OnChangeFunc func(ctx context.Context, values map[string]string) error
 
+// StoreOption configures optional Store behavior.
+type StoreOption func(*Store)
+
+// WithCipher enables transparent at-rest encryption for Secret=true settings.
+func WithCipher(c *crypt.Cipher) StoreOption {
+	return func(s *Store) {
+		s.cipher = c
+	}
+}
+
 // Store manages registered setting descriptors, DB persistence, in-memory cache,
 // and hot-reload listeners.
 type Store struct {
 	db          *ent.Client
+	cipher      *crypt.Cipher
+	writeMu     sync.Mutex
 	mu          sync.RWMutex
 	descriptors []Descriptor
 	descIndex   map[string]int
@@ -88,12 +103,18 @@ type Store struct {
 }
 
 // NewStore constructs a setting Store backed by db.
-func NewStore(db *ent.Client) *Store {
-	return &Store{
+func NewStore(db *ent.Client, opts ...StoreOption) *Store {
+	s := &Store{
 		db:        db,
 		descIndex: make(map[string]int),
 		values:    make(map[string]string),
 	}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(s)
+		}
+	}
+	return s
 }
 
 // Register records a setting Descriptor in registration order, deduplicated by Key.
@@ -124,6 +145,15 @@ func (s *Store) OnChange(fn OnChangeFunc) {
 // Load reads all persisted settings from the database into the cache and
 // invokes all registered OnChange listeners.
 func (s *Store) Load(ctx context.Context) error {
+	s.writeMu.Lock()
+	defer s.writeMu.Unlock()
+
+	s.mu.RLock()
+	cipher := s.cipher
+	descIndex := maps.Clone(s.descIndex)
+	descriptors := slices.Clone(s.descriptors)
+	s.mu.RUnlock()
+
 	loaded := make(map[string]string)
 	if s.db != nil {
 		rows, err := s.db.Setting.Query().All(ctx)
@@ -131,9 +161,18 @@ func (s *Store) Load(ctx context.Context) error {
 			return fmt.Errorf("load settings: %w", err)
 		}
 		for _, row := range rows {
-			if row.Value != "" {
-				loaded[row.Key] = row.Value
+			if row.Value == "" {
+				continue
 			}
+			val := row.Value
+			if idx, ok := descIndex[row.Key]; ok && descriptors[idx].Secret && cipher != nil && crypt.IsEncryptedString(val) {
+				dec, err := cipher.DecryptString(val)
+				if err != nil {
+					return fmt.Errorf("decrypt setting %s: %w", row.Key, err)
+				}
+				val = dec
+			}
+			loaded[row.Key] = val
 		}
 	}
 
@@ -141,22 +180,43 @@ func (s *Store) Load(ctx context.Context) error {
 	s.values = loaded
 	listeners := make([]OnChangeFunc, len(s.listeners))
 	copy(listeners, s.listeners)
-	snapshot := maps.Clone(s.values)
+	snapshot := s.effectiveMapLocked(s.values)
 	s.mu.Unlock()
 
 	for _, fn := range listeners {
-		if err := fn(ctx, maps.Clone(snapshot)); err != nil {
+		if err := fn(ctx, snapshot); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-// Get returns the raw cached value for key, or "" if unset.
+// Get returns the effective cached value for key, falling back to Descriptor.DefaultValue.
 func (s *Store) Get(key string) string {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	return s.values[key]
+	if v := s.values[key]; v != "" {
+		return v
+	}
+	if idx, ok := s.descIndex[key]; ok {
+		return s.descriptors[idx].DefaultValue
+	}
+	return ""
+}
+
+func (s *Store) effectiveMapLocked(values map[string]string) map[string]string {
+	out := make(map[string]string, len(s.descriptors)+len(values))
+	for _, d := range s.descriptors {
+		if d.DefaultValue != "" {
+			out[d.Key] = d.DefaultValue
+		}
+	}
+	for k, v := range values {
+		if v != "" {
+			out[k] = v
+		}
+	}
+	return out
 }
 
 // List returns all registered settings in registration order with secrets masked.
@@ -170,9 +230,12 @@ func (s *Store) listLocked() []SettingResponse {
 	out := make([]SettingResponse, 0, len(s.descriptors))
 	for _, d := range s.descriptors {
 		raw := s.values[d.Key]
-		configured := raw != ""
 		val := raw
-		if d.Secret && configured {
+		if val == "" && d.DefaultValue != "" {
+			val = d.DefaultValue
+		}
+		configured := raw != "" || (d.DefaultValue != "" && !d.Secret)
+		if d.Secret && raw != "" {
 			val = MaskedSecret
 		}
 		out = append(out, SettingResponse{
@@ -192,18 +255,19 @@ func (s *Store) listLocked() []SettingResponse {
 // Update validates and applies partial setting updates, invoking OnChange listeners
 // before persisting to the database so invalid configurations never corrupt state.
 func (s *Store) Update(ctx context.Context, updates map[string]string) ([]SettingResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.writeMu.Lock()
+	defer s.writeMu.Unlock()
 
+	s.mu.RLock()
 	nextValues := maps.Clone(s.values)
 	if nextValues == nil {
 		nextValues = make(map[string]string)
 	}
-
 	toPersist := make(map[string]string)
 	for k, v := range updates {
 		idx, ok := s.descIndex[k]
 		if !ok {
+			s.mu.RUnlock()
 			return nil, httpx.NewError(
 				fiber.StatusBadRequest,
 				"SETTING_KEY_UNKNOWN",
@@ -223,9 +287,15 @@ func (s *Store) Update(ctx context.Context, updates map[string]string) ([]Settin
 			toPersist[k] = trimmed
 		}
 	}
+	effectiveNext := s.effectiveMapLocked(nextValues)
+	listeners := slices.Clone(s.listeners)
+	descIndex := maps.Clone(s.descIndex)
+	descriptors := slices.Clone(s.descriptors)
+	cipher := s.cipher
+	s.mu.RUnlock()
 
-	for _, fn := range s.listeners {
-		if err := fn(ctx, maps.Clone(nextValues)); err != nil {
+	for _, fn := range listeners {
+		if err := fn(ctx, maps.Clone(effectiveNext)); err != nil {
 			return nil, httpx.NewError(
 				fiber.StatusUnprocessableEntity,
 				"SETTING_VALIDATION_ERROR",
@@ -242,20 +312,90 @@ func (s *Store) Update(ctx context.Context, updates map[string]string) ([]Settin
 				}
 				continue
 			}
-			affected, err := s.db.Setting.Update().Where(entsetting.KeyEQ(k)).SetValue(v).Save(ctx)
+			dbVal := v
+			if idx, ok := descIndex[k]; ok && descriptors[idx].Secret && cipher != nil && !crypt.IsEncryptedString(v) {
+				enc, err := cipher.EncryptString(v)
+				if err != nil {
+					return nil, fmt.Errorf("encrypt setting %s: %w", k, err)
+				}
+				dbVal = enc
+			}
+			affected, err := s.db.Setting.Update().Where(entsetting.KeyEQ(k)).SetValue(dbVal).Save(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("update setting %s: %w", k, err)
 			}
 			if affected == 0 {
-				if _, err := s.db.Setting.Create().SetKey(k).SetValue(v).Save(ctx); err != nil {
+				if _, err := s.db.Setting.Create().SetKey(k).SetValue(dbVal).Save(ctx); err != nil {
 					return nil, fmt.Errorf("create setting %s: %w", k, err)
 				}
 			}
 		}
 	}
 
-	s.values = nextValues
-	return s.listLocked(), nil
+	s.mu.Lock()
+	if s.values == nil {
+		s.values = make(map[string]string)
+	}
+	for k, v := range toPersist {
+		if v == "" {
+			delete(s.values, k)
+		} else {
+			s.values[k] = v
+		}
+	}
+	res := s.listLocked()
+	s.mu.Unlock()
+	return res, nil
+}
+
+// PersistValue persists a single registered key directly to the database and cache
+// without re-triggering OnChange listeners.
+func (s *Store) PersistValue(ctx context.Context, key, value string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	idx, ok := s.descIndex[key]
+	if !ok {
+		return fmt.Errorf("unknown setting key %q", key)
+	}
+	desc := s.descriptors[idx]
+	trimmed := strings.TrimSpace(value)
+
+	if s.db != nil {
+		if trimmed == "" {
+			if _, err := s.db.Setting.Delete().Where(entsetting.KeyEQ(key)).Exec(ctx); err != nil {
+				return fmt.Errorf("delete setting %s: %w", key, err)
+			}
+		} else {
+			dbVal := trimmed
+			if desc.Secret && s.cipher != nil && !crypt.IsEncryptedString(trimmed) {
+				enc, err := s.cipher.EncryptString(trimmed)
+				if err != nil {
+					return fmt.Errorf("encrypt setting %s: %w", key, err)
+				}
+				dbVal = enc
+			}
+			affected, err := s.db.Setting.Update().Where(entsetting.KeyEQ(key)).SetValue(dbVal).Save(ctx)
+			if err != nil {
+				return fmt.Errorf("update setting %s: %w", key, err)
+			}
+			if affected == 0 {
+				if _, err := s.db.Setting.Create().SetKey(key).SetValue(dbVal).Save(ctx); err != nil {
+					return fmt.Errorf("create setting %s: %w", key, err)
+				}
+			}
+		}
+	}
+
+	if s.values == nil {
+		s.values = make(map[string]string)
+	}
+	if trimmed == "" {
+		delete(s.values, key)
+	} else {
+		s.values[key] = trimmed
+	}
+	return nil
 }
 
 // Feature exposes HTTP endpoints for reading and updating application settings.
