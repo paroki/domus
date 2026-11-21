@@ -197,16 +197,7 @@ func (r *Repository) UpdateMemory(ctx context.Context, in domain.UpdateMemoryInp
 
 // SoftDeleteMemory soft-deletes a memory fact scoped to (parishID, userID).
 func (r *Repository) SoftDeleteMemory(ctx context.Context, parishID, userID, memoryID uuid.UUID) error {
-	row, err := r.client.AgentMemory.Query().
-		Where(
-			agentmemory.IDEQ(memoryID),
-			agentmemory.ParishIDEQ(parishID),
-			agentmemory.DeletedAtIsNil(),
-		).
-		Only(ctx)
-	if ent.IsNotFound(err) {
-		return domain.ErrMemoryNotFound
-	}
+	row, err := r.FindMemoryByID(ctx, parishID, memoryID)
 	if err != nil {
 		return err
 	}
@@ -218,6 +209,21 @@ func (r *Repository) SoftDeleteMemory(ctx context.Context, parishID, userID, mem
 	return r.client.AgentMemory.UpdateOneID(row.ID).
 		SetDeletedAt(time.Now().UTC()).
 		Exec(ctx)
+}
+
+// FindMemoryByID returns a non-deleted memory fact in parishID.
+func (r *Repository) FindMemoryByID(ctx context.Context, parishID, memoryID uuid.UUID) (*ent.AgentMemory, error) {
+	row, err := r.client.AgentMemory.Query().
+		Where(
+			agentmemory.IDEQ(memoryID),
+			agentmemory.ParishIDEQ(parishID),
+			agentmemory.DeletedAtIsNil(),
+		).
+		Only(ctx)
+	if ent.IsNotFound(err) {
+		return nil, domain.ErrMemoryNotFound
+	}
+	return row, err
 }
 
 func (r *Repository) checkMemoryQuota(
