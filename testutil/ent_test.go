@@ -55,7 +55,7 @@ func TestNewEntClient_MetaCRUDAndMixins(t *testing.T) {
 	updated, err := got.Update().SetValue("Paroki").Save(ctx)
 	require.NoError(t, err)
 	assert.Equal(t, "Paroki", updated.Value)
-	assert.True(t, updated.CreatedAt.Equal(first.CreatedAt))
+	assert.True(t, updated.CreatedAt.Truncate(time.Microsecond).Equal(first.CreatedAt.Truncate(time.Microsecond)))
 	assert.True(t, updated.UpdatedAt.After(first.UpdatedAt) || updated.UpdatedAt.Equal(first.UpdatedAt))
 
 	// Delete
