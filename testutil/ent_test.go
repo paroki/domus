@@ -9,13 +9,13 @@ import (
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/ent/event"
 	"github.com/paroki/domus/ent/eventrsvp"
-	"github.com/paroki/domus/ent/meta"
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orginvite"
 	"github.com/paroki/domus/ent/orgmember"
 	"github.com/paroki/domus/ent/parishmember"
 	"github.com/paroki/domus/ent/period"
 	"github.com/paroki/domus/ent/schema"
+	"github.com/paroki/domus/ent/setting"
 	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/zone"
 	"github.com/paroki/domus/testutil"
@@ -23,12 +23,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestNewEntClient_MetaCRUDAndMixins(t *testing.T) {
+func TestNewEntClient_SettingCRUDAndMixins(t *testing.T) {
 	ctx := context.Background()
 	client := testutil.NewEntClient(t)
 
 	// UUIDv7 IDMixin & TimeMixin
-	first, err := client.Meta.Create().SetKey("site.name").SetValue("Domus").Save(ctx)
+	first, err := client.Setting.Create().SetKey("site.name").SetValue("Domus").Save(ctx)
 	require.NoError(t, err)
 	assert.Equal(t, uuid.Version(7), first.ID.Version())
 	assert.False(t, first.CreatedAt.IsZero())
@@ -36,18 +36,18 @@ func TestNewEntClient_MetaCRUDAndMixins(t *testing.T) {
 
 	time.Sleep(2 * time.Millisecond)
 
-	second, err := client.Meta.Create().SetKey("site.lang").SetValue("id").Save(ctx)
+	second, err := client.Setting.Create().SetKey("site.lang").SetValue("id").Save(ctx)
 	require.NoError(t, err)
 	assert.Equal(t, uuid.Version(7), second.ID.Version())
 	assert.Less(t, first.ID.String(), second.ID.String())
 
 	// Unique constraint on key
-	_, err = client.Meta.Create().SetKey("site.name").SetValue("Duplicate").Save(ctx)
+	_, err = client.Setting.Create().SetKey("site.name").SetValue("Duplicate").Save(ctx)
 	require.Error(t, err)
 	assert.True(t, ent.IsConstraintError(err))
 
 	// Read & Update
-	got, err := client.Meta.Query().Where(meta.KeyEQ("site.name")).Only(ctx)
+	got, err := client.Setting.Query().Where(setting.KeyEQ("site.name")).Only(ctx)
 	require.NoError(t, err)
 	assert.Equal(t, "Domus", got.Value)
 
@@ -59,8 +59,8 @@ func TestNewEntClient_MetaCRUDAndMixins(t *testing.T) {
 	assert.True(t, updated.UpdatedAt.After(first.UpdatedAt) || updated.UpdatedAt.Equal(first.UpdatedAt))
 
 	// Delete
-	require.NoError(t, client.Meta.DeleteOneID(updated.ID).Exec(ctx))
-	exists, err := client.Meta.Query().Where(meta.ID(updated.ID)).Exist(ctx)
+	require.NoError(t, client.Setting.DeleteOneID(updated.ID).Exec(ctx))
+	exists, err := client.Setting.Query().Where(setting.ID(updated.ID)).Exist(ctx)
 	require.NoError(t, err)
 	assert.False(t, exists)
 }
