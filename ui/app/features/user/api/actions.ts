@@ -4,11 +4,15 @@ import { useLogout, useSwitchParish } from "~/shared/api/session";
 import { USER_ERRORS } from "./errors";
 import { userKeys } from "./keys";
 import type {
+  AddOrgMemberRequest,
+  AddParishMemberRequest,
   AdminCreateUserRequest,
   AdminUpdateUserRequest,
   LinkAccountOTPRequest,
   RequestOTPRequest,
   UpdateMeRequest,
+  UpdateOrgMemberRequest,
+  UpdateParishMemberRequest,
   VerifyLinkAccountRequest,
   VerifyOTPRequest,
 } from "./types";
@@ -135,5 +139,140 @@ export function useAdminDeleteUser() {
       );
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: userKeys.list() }),
+  });
+}
+
+export function useDirectoryAddParishMember(parishId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: AddParishMemberRequest) =>
+      unwrap(
+        api.POST("/ref/parishes/{id}/members", {
+          params: { path: { id: parishId } },
+          body,
+        }),
+        USER_ERRORS,
+      ),
+    onSuccess: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: userKeys.parishMembers(parishId) }),
+        qc.invalidateQueries({ queryKey: userKeys.me() }),
+      ]),
+  });
+}
+
+export function useDirectoryUpdateParishMember(parishId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      userId,
+      body,
+    }: {
+      userId: string;
+      body: UpdateParishMemberRequest;
+    }) =>
+      unwrap(
+        api.PATCH("/ref/parishes/{id}/members/{userId}", {
+          params: { path: { id: parishId, userId } },
+          body,
+        }),
+        USER_ERRORS,
+      ),
+    onSuccess: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: userKeys.parishMembers(parishId) }),
+        qc.invalidateQueries({ queryKey: userKeys.me() }),
+      ]),
+  });
+}
+
+export function useDirectoryRemoveParishMember(parishId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      await unwrap(
+        api.DELETE("/ref/parishes/{id}/members/{userId}", {
+          params: { path: { id: parishId, userId } },
+        }),
+        USER_ERRORS,
+      );
+    },
+    onSuccess: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: userKeys.parishMembers(parishId) }),
+        qc.invalidateQueries({ queryKey: userKeys.me() }),
+      ]),
+  });
+}
+
+export function useDirectoryAddOrgMember(orgId: string, parishId?: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: AddOrgMemberRequest) =>
+      unwrap(
+        api.POST("/orgs/{id}/members", {
+          params: { path: { id: orgId } },
+          body,
+        }),
+        USER_ERRORS,
+      ),
+    onSuccess: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: userKeys.orgMembers(orgId) }),
+        ...(parishId
+          ? [qc.invalidateQueries({ queryKey: userKeys.orgs(parishId) })]
+          : []),
+        qc.invalidateQueries({ queryKey: userKeys.me() }),
+      ]),
+  });
+}
+
+export function useDirectoryUpdateOrgMember(orgId: string, parishId?: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      userId,
+      body,
+    }: {
+      userId: string;
+      body: UpdateOrgMemberRequest;
+    }) =>
+      unwrap(
+        api.PATCH("/orgs/{id}/members/{userId}", {
+          params: { path: { id: orgId, userId } },
+          body,
+        }),
+        USER_ERRORS,
+      ),
+    onSuccess: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: userKeys.orgMembers(orgId) }),
+        ...(parishId
+          ? [qc.invalidateQueries({ queryKey: userKeys.orgs(parishId) })]
+          : []),
+        qc.invalidateQueries({ queryKey: userKeys.me() }),
+      ]),
+  });
+}
+
+export function useDirectoryRemoveOrgMember(orgId: string, parishId?: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      await unwrap(
+        api.DELETE("/orgs/{id}/members/{userId}", {
+          params: { path: { id: orgId, userId } },
+        }),
+        USER_ERRORS,
+      );
+    },
+    onSuccess: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: userKeys.orgMembers(orgId) }),
+        ...(parishId
+          ? [qc.invalidateQueries({ queryKey: userKeys.orgs(parishId) })]
+          : []),
+        qc.invalidateQueries({ queryKey: userKeys.me() }),
+      ]),
   });
 }

@@ -1,4 +1,4 @@
-import { Building2, Plus, Search, ShieldPlus } from "lucide-react";
+import { Building2, Plus, Search } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
@@ -7,7 +7,7 @@ import i18n from "~/shared/i18n";
 import { Badge } from "~/shared/ui/Badge";
 import { Button } from "~/shared/ui/Button";
 import { Card } from "~/shared/ui/Card";
-import { useCreateOrg, useQuickSelfAssignOrgAdmin } from "../api/actions";
+import { useCreateOrg } from "../api/actions";
 import { resolveOrgError } from "../api/errors";
 import { useOrgs, useOrgWards, useOrgZones } from "../api/queries";
 import {
@@ -42,11 +42,7 @@ export default function OrgsPage() {
   const [parentId, setParentId] = useState("");
   const [zoneId, setZoneId] = useState("");
   const [wardId, setWardId] = useState("");
-  const [selfAsAdmin, setSelfAsAdmin] = useState(true);
-  const [initialAdminEmail, setInitialAdminEmail] = useState("");
-  const [initialAdminName, setInitialAdminName] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
 
   const orgsQuery = useOrgs(
     {
@@ -63,7 +59,6 @@ export default function OrgsPage() {
   const wardsQuery = useOrgWards(hasParish && showCreate && kind === "ward");
 
   const createOrg = useCreateOrg();
-  const quickSelfAssign = useQuickSelfAssignOrgAdmin();
 
   const items = orgsQuery.data?.pages.flatMap((p) => p.data ?? []) ?? [];
   const parentOptions =
@@ -88,15 +83,6 @@ export default function OrgsPage() {
         parentId: parentId || undefined,
         zoneId: kind === "zone" && zoneId ? zoneId : undefined,
         wardId: kind === "ward" && wardId ? wardId : undefined,
-        initialAdminUserId: selfAsAdmin && me?.id ? me.id : undefined,
-        initialAdminEmail:
-          !selfAsAdmin && initialAdminEmail.trim()
-            ? initialAdminEmail.trim()
-            : undefined,
-        initialAdminName:
-          !selfAsAdmin && initialAdminName.trim()
-            ? initialAdminName.trim()
-            : undefined,
       });
       setName("");
       setCode("");
@@ -105,21 +91,9 @@ export default function OrgsPage() {
       setParentId("");
       setZoneId("");
       setWardId("");
-      setInitialAdminEmail("");
-      setInitialAdminName("");
       setShowCreate(false);
     } catch (err) {
       setFormError(resolveOrgError(err));
-    }
-  }
-
-  async function handleSelfAssign(orgId: string) {
-    if (!me?.id) return;
-    setActionError(null);
-    try {
-      await quickSelfAssign.mutateAsync({ orgId, userId: me.id });
-    } catch (err) {
-      setActionError(resolveOrgError(err));
     }
   }
 
@@ -273,41 +247,6 @@ export default function OrgsPage() {
               />
             </label>
 
-            <label className="flex items-center gap-2 text-sm font-medium text-fg sm:col-span-2">
-              <input
-                type="checkbox"
-                checked={selfAsAdmin}
-                onChange={(e) => setSelfAsAdmin(e.target.checked)}
-                className="size-4 accent-primary"
-              />
-              Jadikan saya Admin Organisasi ini
-            </label>
-
-            {!selfAsAdmin && (
-              <>
-                <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
-                  Email Admin Awal (opsional)
-                  <input
-                    type="email"
-                    value={initialAdminEmail}
-                    onChange={(e) => setInitialAdminEmail(e.target.value)}
-                    placeholder="admin@paroki.org"
-                    className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
-                  />
-                </label>
-                <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
-                  Nama Admin Awal (opsional)
-                  <input
-                    type="text"
-                    value={initialAdminName}
-                    onChange={(e) => setInitialAdminName(e.target.value)}
-                    placeholder="Nama lengkap"
-                    className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
-                  />
-                </label>
-              </>
-            )}
-
             <div className="flex justify-end gap-2 sm:col-span-2">
               <Button variant="outline" onClick={() => setShowCreate(false)}>
                 Batal
@@ -367,15 +306,6 @@ export default function OrgsPage() {
         </div>
       </Card>
 
-      {actionError && (
-        <div
-          role="alert"
-          className="rounded-lg bg-danger-bg px-3.5 py-2.5 text-sm font-medium text-danger-fg"
-        >
-          {actionError}
-        </div>
-      )}
-
       {orgsQuery.isLoading ? (
         <p className="text-sm text-muted">Memuat organisasi…</p>
       ) : items.length === 0 ? (
@@ -425,16 +355,6 @@ export default function OrgsPage() {
                 >
                   Buka Detail →
                 </Link>
-                {parishAdmin && org.myRole !== "admin" && org.id && (
-                  <Button
-                    variant="outline"
-                    disabled={quickSelfAssign.isPending}
-                    onClick={() => handleSelfAssign(org.id ?? "")}
-                  >
-                    <ShieldPlus aria-hidden className="size-4" />
-                    {t("org.enterAsAdmin")}
-                  </Button>
-                )}
               </div>
             </Card>
           ))}

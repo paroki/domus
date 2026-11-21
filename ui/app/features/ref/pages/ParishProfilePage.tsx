@@ -1,19 +1,10 @@
-import { ArrowLeft, Trash2, UserPlus } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 
-import {
-  useAddParishMember,
-  useRemoveParishMember,
-  useUpdateCurrentParishProfile,
-  useUpdateParishMember,
-} from "../api/actions";
-import {
-  useCurrentIdentity,
-  useCurrentParish,
-  useParishMembersSearch,
-} from "../api/queries";
+import { useUpdateCurrentParishProfile } from "../api/actions";
+import { useCurrentIdentity, useCurrentParish } from "../api/queries";
 import { isParishAdmin } from "../model";
 
 export function meta() {
@@ -30,9 +21,6 @@ export default function ParishProfilePage() {
     error: parishError,
   } = useCurrentParish(Boolean(me?.activeParishId));
   const updateProfile = useUpdateCurrentParishProfile();
-  const addMember = useAddParishMember();
-  const updateMember = useUpdateParishMember();
-  const removeMember = useRemoveParishMember();
 
   const [name, setName] = useState("");
   const [patronSaint, setPatronSaint] = useState("");
@@ -42,12 +30,6 @@ export default function ParishProfilePage() {
   const [address, setAddress] = useState("");
   const [website, setWebsite] = useState("");
   const [profileSaved, setProfileSaved] = useState(false);
-
-  const [memberEmail, setMemberEmail] = useState("");
-  const [memberName, setMemberName] = useState("");
-  const [memberPhone, setMemberPhone] = useState("");
-  const [memberRole, setMemberRole] = useState<"admin" | "member">("member");
-  const [memberSearch, setMemberSearch] = useState("");
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -60,14 +42,6 @@ export default function ParishProfilePage() {
     setAddress(parish.address ?? "");
     setWebsite(parish.website ?? "");
   }, [parish]);
-
-  const membersQuery = useParishMembersSearch(
-    parish?.id ?? "",
-    { q: memberSearch || undefined },
-    Boolean(parish?.id),
-  );
-  const members =
-    membersQuery.data?.pages.flatMap((page) => page.data ?? []) ?? [];
 
   async function handleSaveProfile(e: FormEvent) {
     e.preventDefault();
@@ -86,29 +60,6 @@ export default function ParishProfilePage() {
       setProfileSaved(true);
     } catch (err) {
       setFeedbackError(err instanceof Error ? err.message : "Gagal menyimpan.");
-    }
-  }
-
-  async function handleAddMember(e: FormEvent) {
-    e.preventDefault();
-    if (!parish?.id) return;
-    setFeedbackError(null);
-    try {
-      await addMember.mutateAsync({
-        parishId: parish.id,
-        body: {
-          email: memberEmail.trim(),
-          name: memberName.trim() || undefined,
-          phone: memberPhone.trim() || undefined,
-          role: memberRole,
-        },
-      });
-      setMemberEmail("");
-      setMemberName("");
-      setMemberPhone("");
-      setMemberRole("member");
-    } catch (err) {
-      setFeedbackError(err instanceof Error ? err.message : "Gagal menambah.");
     }
   }
 
@@ -256,141 +207,6 @@ export default function ParishProfilePage() {
               </button>
             </div>
           </form>
-
-          <section className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-lg font-semibold text-fg">
-                {t("ref.membersTitle")}
-              </h2>
-              <input
-                type="search"
-                value={memberSearch}
-                onChange={(e) => setMemberSearch(e.target.value)}
-                placeholder={t("ref.searchMembersPlaceholder")}
-                className="h-9 w-60 rounded-lg border border-line bg-canvas px-3 text-sm text-fg placeholder:text-muted"
-              />
-            </div>
-
-            <form
-              onSubmit={handleAddMember}
-              className="grid gap-3 rounded-xl border border-line bg-canvas p-4 sm:grid-cols-5"
-            >
-              <input
-                required
-                type="email"
-                value={memberEmail}
-                onChange={(e) => setMemberEmail(e.target.value)}
-                placeholder={t("ref.emailLabel")}
-                className="h-9 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
-              />
-              <input
-                value={memberName}
-                onChange={(e) => setMemberName(e.target.value)}
-                placeholder={t("ref.nameLabel")}
-                className="h-9 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
-              />
-              <input
-                value={memberPhone}
-                onChange={(e) => setMemberPhone(e.target.value)}
-                placeholder={t("ref.phoneLabel")}
-                className="h-9 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
-              />
-              <select
-                value={memberRole}
-                onChange={(e) =>
-                  setMemberRole(e.target.value as "admin" | "member")
-                }
-                className="h-9 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
-              >
-                <option value="member">{t("ref.roleMember")}</option>
-                <option value="admin">{t("ref.roleAdmin")}</option>
-              </select>
-              <button
-                type="submit"
-                disabled={addMember.isPending}
-                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-on-primary disabled:opacity-50"
-              >
-                <UserPlus aria-hidden className="size-4" />
-                {t("ref.addMember")}
-              </button>
-            </form>
-
-            <div className="divide-y divide-line">
-              {members.map((m) => (
-                <div
-                  key={m.id}
-                  className="flex flex-wrap items-center justify-between gap-3 py-3"
-                >
-                  <div>
-                    <p className="text-sm font-semibold text-fg">{m.name}</p>
-                    <p className="text-xs text-muted">
-                      {m.email}
-                      {m.phone ? ` · ${m.phone}` : ""}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <select
-                      aria-label={`${t("ref.roleLabel")} ${m.name}`}
-                      value={m.role}
-                      disabled={updateMember.isPending}
-                      onChange={async (e) => {
-                        if (!parish?.id || !m.userId) return;
-                        setFeedbackError(null);
-                        try {
-                          await updateMember.mutateAsync({
-                            parishId: parish.id,
-                            userId: m.userId,
-                            body: {
-                              role: e.target.value as "admin" | "member",
-                            },
-                          });
-                        } catch (err) {
-                          setFeedbackError(
-                            err instanceof Error
-                              ? err.message
-                              : "Gagal memperbarui peran.",
-                          );
-                        }
-                      }}
-                      className="h-8 rounded-lg border border-line bg-canvas px-2 text-xs font-medium text-fg"
-                    >
-                      <option value="member">{t("ref.roleMember")}</option>
-                      <option value="admin">{t("ref.roleAdmin")}</option>
-                    </select>
-                    <button
-                      type="button"
-                      aria-label={`${t("ref.removeMember")} ${m.name}`}
-                      disabled={removeMember.isPending}
-                      onClick={async () => {
-                        if (!parish?.id || !m.userId) return;
-                        setFeedbackError(null);
-                        try {
-                          await removeMember.mutateAsync({
-                            parishId: parish.id,
-                            userId: m.userId,
-                          });
-                        } catch (err) {
-                          setFeedbackError(
-                            err instanceof Error
-                              ? err.message
-                              : "Gagal menghapus anggota.",
-                          );
-                        }
-                      }}
-                      className="inline-flex size-8 items-center justify-center rounded-lg text-danger hover:bg-danger/10 disabled:opacity-50"
-                    >
-                      <Trash2 aria-hidden className="size-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-              {members.length === 0 && (
-                <p className="py-4 text-center text-sm text-muted">
-                  {t("ref.membersEmpty")}
-                </p>
-              )}
-            </div>
-          </section>
         </>
       )}
     </div>

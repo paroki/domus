@@ -3,10 +3,17 @@ import test from "node:test";
 import type { User } from "./api/types";
 import {
   buildOnboardingSteps,
+  canManageUsers,
   formatUserAgent,
+  getAvailableUserScopes,
+  isOrgAdmin,
+  isParishAdmin,
   isSuperAdmin,
   providerLabel,
+  ROLE_ORG_ADMIN,
+  ROLE_PARISH_ADMIN,
   ROLE_SUPER_ADMIN,
+  ROLE_USER,
   sanitizeRedirect,
   shouldRedirectToOnboarding,
 } from "./model";
@@ -37,11 +44,39 @@ test("providerLabel maps known providers", () => {
 });
 
 test("isSuperAdmin checks user:super-admin role", () => {
-  const admin = { roles: [ROLE_SUPER_ADMIN, "user:user"] } as User;
-  const member = { roles: ["user:user"] } as User;
+  const admin = { roles: [ROLE_SUPER_ADMIN, ROLE_USER] } as User;
+  const member = { roles: [ROLE_USER] } as User;
   assert.equal(isSuperAdmin(admin), true);
   assert.equal(isSuperAdmin(member), false);
   assert.equal(isSuperAdmin(null), false);
+});
+
+test("role helpers and getAvailableUserScopes resolve directory scopes", () => {
+  const superUser = { roles: [ROLE_SUPER_ADMIN, ROLE_USER] } as User;
+  const parishUser = { roles: [ROLE_PARISH_ADMIN, ROLE_USER] } as User;
+  const orgUser = { roles: [ROLE_ORG_ADMIN, ROLE_USER] } as User;
+  const plainUser = { roles: [ROLE_USER] } as User;
+
+  assert.equal(isParishAdmin(parishUser), true);
+  assert.equal(isOrgAdmin(orgUser), true);
+  assert.equal(canManageUsers(superUser), true);
+  assert.equal(canManageUsers(parishUser), true);
+  assert.equal(canManageUsers(orgUser), true);
+  assert.equal(canManageUsers(plainUser), false);
+
+  assert.deepEqual(getAvailableUserScopes(superUser.roles), [
+    "global",
+    "parish",
+  ]);
+  assert.deepEqual(getAvailableUserScopes(parishUser.roles), ["parish", "org"]);
+  assert.deepEqual(getAvailableUserScopes(orgUser.roles), ["org"]);
+  assert.deepEqual(getAvailableUserScopes([ROLE_SUPER_ADMIN, ROLE_ORG_ADMIN]), [
+    "global",
+    "parish",
+    "org",
+  ]);
+  assert.deepEqual(getAvailableUserScopes(plainUser.roles), []);
+  assert.deepEqual(getAvailableUserScopes(null), []);
 });
 
 test("sanitizeRedirect rejects protocol-relative and external URLs", () => {

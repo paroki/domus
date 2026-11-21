@@ -84,6 +84,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/auth/roles": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List registered application roles
+     * @description Returns self-registered application roles with human-readable names, scopes, and descriptions.
+     */
+    get: operations["getAuthRoles"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/auth/{provider}": {
     parameters: {
       query?: never;
@@ -1280,6 +1300,14 @@ export interface components {
     "app.healthStatus": {
       status?: string;
     };
+    "authz.RoleDescriptor": {
+      code?: string;
+      description?: string;
+      name?: string;
+      scope?: components["schemas"]["authz.RoleScope"];
+    };
+    /** @enum {string} */
+    "authz.RoleScope": "global" | "parish" | "org";
     "domain.AddOrgMemberRequest": {
       email?: string;
       endDate?: string;
@@ -1922,6 +1950,7 @@ export interface components {
       name?: string;
       onboarded?: boolean;
       phone?: string;
+      roleDetails?: components["schemas"]["authz.RoleDescriptor"][];
       roles?: string[];
       status?: string;
       updatedAt?: string;
@@ -1996,6 +2025,11 @@ export interface components {
     };
     "httpx.Envelope-app_healthStatus": {
       data?: components["schemas"]["app.healthStatus"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-array_authz_RoleDescriptor": {
+      data?: components["schemas"]["authz.RoleDescriptor"][];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -2379,6 +2413,26 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["httpx.Envelope-domain_AuthProvidersResponse"];
+        };
+      };
+    };
+  };
+  getAuthRoles: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-array_authz_RoleDescriptor"];
         };
       };
     };

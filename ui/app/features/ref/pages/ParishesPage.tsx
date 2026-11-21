@@ -1,11 +1,10 @@
-import { ArrowLeft, Plus, Trash2, UserPlus } from "lucide-react";
+import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 
 import {
   useActivateSessionParish,
-  useAddParishMember,
   useCreateDiocese,
   useCreateParish,
   useDeleteDiocese,
@@ -36,7 +35,6 @@ export default function ParishesPage() {
   const deleteDiocese = useDeleteDiocese();
   const createParish = useCreateParish();
   const deleteParish = useDeleteParish();
-  const addMember = useAddParishMember();
   const activateSessionParish = useActivateSessionParish();
 
   const [dCode, setDCode] = useState("");
@@ -46,10 +44,6 @@ export default function ParishesPage() {
   const [pDioceseId, setPDioceseId] = useState("");
   const [pCode, setPCode] = useState("");
   const [pName, setPName] = useState("");
-
-  const [appointParishId, setAppointParishId] = useState("");
-  const [adminEmail, setAdminEmail] = useState("");
-  const [adminName, setAdminName] = useState("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   async function handleCreateDiocese(e: FormEvent) {
@@ -93,30 +87,6 @@ export default function ParishesPage() {
       }
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "Gagal membuat paroki.");
-    }
-  }
-
-  async function handleAppointAdmin(e: FormEvent) {
-    e.preventDefault();
-    const parishId = appointParishId || parishes[0]?.id;
-    if (!parishId) return;
-    setErrorMsg(null);
-    try {
-      await addMember.mutateAsync({
-        parishId,
-        body: {
-          email: adminEmail.trim(),
-          name: adminName.trim() || undefined,
-          role: "admin",
-        },
-      });
-      setAdminEmail("");
-      setAdminName("");
-      if (!me?.activeParishId) {
-        await activateSessionParish.mutateAsync(parishId);
-      }
-    } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Gagal menunjuk admin.");
     }
   }
 
@@ -318,51 +288,6 @@ export default function ParishesPage() {
                 <p className="py-3 text-sm text-muted">{t("ref.emptyList")}</p>
               )}
             </div>
-          </section>
-
-          <section className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-6">
-            <h2 className="text-lg font-semibold text-fg">
-              {t("ref.appointAdminSection")}
-            </h2>
-            <form
-              onSubmit={handleAppointAdmin}
-              className="grid gap-3 sm:grid-cols-4"
-            >
-              <select
-                value={appointParishId || parishes[0]?.id || ""}
-                onChange={(e) => setAppointParishId(e.target.value)}
-                className="h-9 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
-              >
-                <option value="">{t("header.selectParish")}</option>
-                {parishes.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-              <input
-                required
-                type="email"
-                value={adminEmail}
-                onChange={(e) => setAdminEmail(e.target.value)}
-                placeholder={t("ref.emailLabel")}
-                className="h-9 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
-              />
-              <input
-                value={adminName}
-                onChange={(e) => setAdminName(e.target.value)}
-                placeholder={t("ref.nameLabel")}
-                className="h-9 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
-              />
-              <button
-                type="submit"
-                disabled={addMember.isPending || parishes.length === 0}
-                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-on-primary disabled:opacity-50"
-              >
-                <UserPlus aria-hidden className="size-4" />
-                {t("ref.appointAdmin")}
-              </button>
-            </form>
           </section>
         </>
       )}

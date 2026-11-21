@@ -7,9 +7,7 @@ import {
   LogOut,
   Pencil,
   Search,
-  ShieldAlert,
   Trash2,
-  UserPlus,
 } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -20,14 +18,11 @@ import { Badge } from "~/shared/ui/Badge";
 import { Button } from "~/shared/ui/Button";
 import { Card } from "~/shared/ui/Card";
 import {
-  useAddOrgMember,
   useCreateOrgInvite,
   useDeleteOrg,
-  useQuickSelfAssignOrgAdmin,
   useRemoveOrgMember,
   useRevokeOrgInvite,
   useUpdateOrg,
-  useUpdateOrgMember,
 } from "../api/actions";
 import { resolveOrgError } from "../api/errors";
 import {
@@ -71,24 +66,10 @@ export default function OrgDetailPage() {
   const [editActive, setEditActive] = useState(true);
   const [pageError, setPageError] = useState<string | null>(null);
 
-  const [appointEmail, setAppointEmail] = useState("");
-  const [appointName, setAppointName] = useState("");
-
   const [memberQ, setMemberQ] = useState("");
   const [memberRoleFilter, setMemberRoleFilter] = useState("");
   const [memberStatusFilter, setMemberStatusFilter] = useState("");
   const [memberPeriodFilter, setMemberPeriodFilter] = useState("");
-
-  const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
-  const [editMemberPos, setEditMemberPos] = useState("");
-  const [editMemberPeriodId, setEditMemberPeriodId] = useState("");
-
-  const [addEmail, setAddEmail] = useState("");
-  const [addName, setAddName] = useState("");
-  const [addPhone, setAddPhone] = useState("");
-  const [addRole, setAddRole] = useState<"member" | "admin">("member");
-  const [addPosition, setAddPosition] = useState("");
-  const [addPeriodId, setAddPeriodId] = useState("");
 
   const [invRole, setInvRole] = useState<"member" | "admin">("member");
   const [invPosition, setInvPosition] = useState("");
@@ -114,9 +95,6 @@ export default function OrgDetailPage() {
 
   const updateOrg = useUpdateOrg(orgId);
   const deleteOrg = useDeleteOrg();
-  const selfAssignAdmin = useQuickSelfAssignOrgAdmin();
-  const addMember = useAddOrgMember(orgId);
-  const updateMember = useUpdateOrgMember(orgId);
   const removeMember = useRemoveOrgMember(orgId);
   const createInvite = useCreateOrgInvite(orgId);
   const revokeInvite = useRevokeOrgInvite(orgId);
@@ -162,78 +140,6 @@ export default function OrgDetailPage() {
     }
   }
 
-  async function handleSelfAssignAdmin() {
-    if (!me?.id) return;
-    setPageError(null);
-    try {
-      await selfAssignAdmin.mutateAsync({ orgId, userId: me.id });
-    } catch (err) {
-      setPageError(resolveOrgError(err));
-    }
-  }
-
-  async function handleAppointAdmin(e: FormEvent) {
-    e.preventDefault();
-    setPageError(null);
-    try {
-      await addMember.mutateAsync({
-        email: appointEmail.trim(),
-        name: appointName.trim(),
-        role: "admin",
-      });
-      setAppointEmail("");
-      setAppointName("");
-    } catch (err) {
-      setPageError(resolveOrgError(err));
-    }
-  }
-
-  async function handleAddMember(e: FormEvent) {
-    e.preventDefault();
-    setPageError(null);
-    try {
-      await addMember.mutateAsync({
-        email: addEmail.trim(),
-        name: addName.trim() || undefined,
-        phone: addPhone.trim() || undefined,
-        role: addRole,
-        position: addPosition.trim() || undefined,
-        periodId: addPeriodId || undefined,
-      });
-      setAddEmail("");
-      setAddName("");
-      setAddPhone("");
-      setAddPosition("");
-      setAddPeriodId("");
-    } catch (err) {
-      setPageError(resolveOrgError(err));
-    }
-  }
-
-  async function handleToggleRole(userId: string, currentRole: string) {
-    setPageError(null);
-    try {
-      await updateMember.mutateAsync({
-        userId,
-        body: { role: currentRole === "admin" ? "member" : "admin" },
-      });
-    } catch (err) {
-      setPageError(resolveOrgError(err));
-    }
-  }
-
-  async function handleToggleStatus(userId: string, currentStatus: string) {
-    setPageError(null);
-    try {
-      await updateMember.mutateAsync({
-        userId,
-        body: { status: currentStatus === "active" ? "inactive" : "active" },
-      });
-    } catch (err) {
-      setPageError(resolveOrgError(err));
-    }
-  }
-
   async function handleRemoveMember(userId: string) {
     const isLeaving = userId === me?.id;
     if (
@@ -249,34 +155,6 @@ export default function OrgDetailPage() {
       if (isLeaving) {
         navigate("/org", { replace: true });
       }
-    } catch (err) {
-      setPageError(resolveOrgError(err));
-    }
-  }
-
-  function startEditMember(
-    userId: string,
-    position?: string | null,
-    periodId?: string | null,
-  ) {
-    setEditingMemberId(userId);
-    setEditMemberPos(position ?? "");
-    setEditMemberPeriodId(periodId ?? "");
-  }
-
-  async function handleSaveMemberEdit(e: FormEvent, userId: string) {
-    e.preventDefault();
-    setPageError(null);
-    try {
-      await updateMember.mutateAsync({
-        userId,
-        body: {
-          position: editMemberPos.trim(),
-          periodId:
-            editMemberPeriodId || "00000000-0000-0000-0000-000000000000",
-        },
-      });
-      setEditingMemberId(null);
     } catch (err) {
       setPageError(resolveOrgError(err));
     }
@@ -478,60 +356,6 @@ export default function OrgDetailPage() {
         )}
       </Card>
 
-      {parishAdmin && !isOrgAdmin && (
-        <Card className="border-primary/40 bg-primary/5 p-5">
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-sm font-medium text-fg">
-                <ShieldAlert aria-hidden className="size-5 text-primary" />
-                {t("org.parishAdminBanner")}
-              </div>
-              <Button
-                disabled={selfAssignAdmin.isPending}
-                onClick={handleSelfAssignAdmin}
-              >
-                {t("org.joinAsOrgAdmin")}
-              </Button>
-            </div>
-
-            <form
-              onSubmit={handleAppointAdmin}
-              className="flex flex-wrap items-end gap-3 border-t border-line pt-3"
-            >
-              <label className="flex flex-1 flex-col gap-1 text-xs font-medium text-fg">
-                Email Admin
-                <input
-                  type="email"
-                  required
-                  value={appointEmail}
-                  onChange={(e) => setAppointEmail(e.target.value)}
-                  placeholder="pengurus@paroki.org"
-                  className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
-                />
-              </label>
-              <label className="flex flex-1 flex-col gap-1 text-xs font-medium text-fg">
-                Nama Admin
-                <input
-                  type="text"
-                  required
-                  value={appointName}
-                  onChange={(e) => setAppointName(e.target.value)}
-                  placeholder="Nama lengkap"
-                  className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
-                />
-              </label>
-              <Button
-                type="submit"
-                variant="outline"
-                disabled={addMember.isPending}
-              >
-                {t("org.appointOrgAdmin")}
-              </Button>
-            </form>
-          </div>
-        </Card>
-      )}
-
       {!isOrgMember && !parishAdmin && (
         <Card className="p-6 text-center">
           <h2 className="text-base font-semibold text-fg">
@@ -566,72 +390,6 @@ export default function OrgDetailPage() {
               <option key={pos} value={pos} />
             ))}
           </datalist>
-
-          {isOrgAdmin && (
-            <form
-              onSubmit={handleAddMember}
-              className="grid gap-3 rounded-lg border border-line bg-canvas p-4 sm:grid-cols-3"
-            >
-              <input
-                type="email"
-                required
-                value={addEmail}
-                onChange={(e) => setAddEmail(e.target.value)}
-                placeholder="Email anggota *"
-                className="h-10 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
-              />
-              <input
-                type="text"
-                value={addName}
-                onChange={(e) => setAddName(e.target.value)}
-                placeholder="Nama lengkap (opsional)"
-                className="h-10 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
-              />
-              <input
-                type="tel"
-                value={addPhone}
-                onChange={(e) => setAddPhone(e.target.value)}
-                placeholder="No. HP (opsional)"
-                className="h-10 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
-              />
-              <select
-                value={addRole}
-                onChange={(e) =>
-                  setAddRole(e.target.value as "member" | "admin")
-                }
-                className="h-10 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
-              >
-                <option value="member">Anggota (member)</option>
-                <option value="admin">Admin Organisasi (admin)</option>
-              </select>
-              <input
-                type="text"
-                list="org-position-suggestions"
-                value={addPosition}
-                onChange={(e) => setAddPosition(e.target.value)}
-                placeholder="Jabatan (mis. Sekretaris)"
-                className="h-10 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
-              />
-              <select
-                value={addPeriodId}
-                onChange={(e) => setAddPeriodId(e.target.value)}
-                className="h-10 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
-              >
-                <option value="">Periode (opsional)</option>
-                {(periodsQuery.data ?? []).map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-              <div className="sm:col-span-3 flex justify-end">
-                <Button type="submit" disabled={addMember.isPending}>
-                  <UserPlus aria-hidden className="size-4" />
-                  Tambah Anggota
-                </Button>
-              </div>
-            </form>
-          )}
 
           <div className="flex flex-wrap gap-2">
             <div className="relative min-w-[200px] flex-1">
@@ -689,8 +447,6 @@ export default function OrgDetailPage() {
                 const periodLabel = m.periodId
                   ? periodNameById.get(m.periodId)
                   : undefined;
-                const isEditingRow =
-                  Boolean(m.userId) && editingMemberId === m.userId;
                 return (
                   <div key={m.id} className="flex flex-col gap-3 py-3">
                     <div className="flex flex-wrap items-center justify-between gap-3">
@@ -716,97 +472,7 @@ export default function OrgDetailPage() {
                           {periodLabel ? ` · ${periodLabel}` : ""}
                         </p>
                       </div>
-
-                      {isOrgAdmin && m.userId && (
-                        <div className="flex flex-wrap gap-2">
-                          <Button
-                            variant="outline"
-                            onClick={() =>
-                              startEditMember(
-                                m.userId ?? "",
-                                m.position,
-                                m.periodId,
-                              )
-                            }
-                          >
-                            <Pencil aria-hidden className="size-3.5" />
-                            {t("org.editMember")}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            onClick={() =>
-                              handleToggleRole(
-                                m.userId ?? "",
-                                m.role ?? "member",
-                              )
-                            }
-                          >
-                            {m.role === "admin"
-                              ? "Jadikan Anggota"
-                              : "Jadikan Admin"}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            onClick={() =>
-                              handleToggleStatus(
-                                m.userId ?? "",
-                                m.status ?? "active",
-                              )
-                            }
-                          >
-                            {m.status === "active" ? "Nonaktifkan" : "Aktifkan"}
-                          </Button>
-                          <Button
-                            variant="danger"
-                            onClick={() => handleRemoveMember(m.userId ?? "")}
-                          >
-                            Hapus
-                          </Button>
-                        </div>
-                      )}
                     </div>
-
-                    {isEditingRow && (
-                      <form
-                        onSubmit={(e) =>
-                          handleSaveMemberEdit(e, m.userId ?? "")
-                        }
-                        className="flex flex-wrap items-end gap-2 rounded-lg border border-line bg-canvas p-3"
-                      >
-                        <input
-                          type="text"
-                          list="org-position-suggestions"
-                          value={editMemberPos}
-                          onChange={(e) => setEditMemberPos(e.target.value)}
-                          placeholder="Jabatan (kosongkan untuk hapus)"
-                          className="h-9 flex-1 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
-                        />
-                        <select
-                          value={editMemberPeriodId}
-                          onChange={(e) =>
-                            setEditMemberPeriodId(e.target.value)
-                          }
-                          className="h-9 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
-                        >
-                          <option value="">Tanpa Periode</option>
-                          {(periodsQuery.data ?? []).map((p) => (
-                            <option key={p.id} value={p.id}>
-                              {p.name}
-                            </option>
-                          ))}
-                        </select>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setEditingMemberId(null)}
-                        >
-                          Batal
-                        </Button>
-                        <Button type="submit" disabled={updateMember.isPending}>
-                          Simpan
-                        </Button>
-                      </form>
-                    )}
                   </div>
                 );
               })}
