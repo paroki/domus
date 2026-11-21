@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, setActiveParish, unwrap } from "~/shared/api/client";
+import { api, setActiveParish, unwrap, unwrapVoid } from "~/shared/api/client";
 import { sessionKeys } from "~/shared/api/session";
 import { orgKeys } from "./keys";
 import type {
@@ -36,7 +36,7 @@ export function useDeleteOrg() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (orgId: string) =>
-      unwrap(api.DELETE("/orgs/{id}", { params: { path: { id: orgId } } })),
+      unwrapVoid(api.DELETE("/orgs/{id}", { params: { path: { id: orgId } } })),
     onSuccess: () => qc.invalidateQueries({ queryKey: orgKeys.all }),
   });
 }
@@ -93,7 +93,7 @@ export function useRemoveOrgMember(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (userId: string) =>
-      unwrap(
+      unwrapVoid(
         api.DELETE("/orgs/{id}/members/{userId}", {
           params: { path: { id: orgId, userId } },
         }),
@@ -121,7 +121,7 @@ export function useRevokeOrgInvite(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (inviteId: string) =>
-      unwrap(
+      unwrapVoid(
         api.DELETE("/orgs/{id}/invites/{inviteId}", {
           params: { path: { id: orgId, inviteId } },
         }),

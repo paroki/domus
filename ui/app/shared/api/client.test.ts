@@ -7,6 +7,7 @@ import {
   setActiveParishId,
   unwrap,
   unwrapMeta,
+  unwrapVoid,
 } from "./client";
 import { createQueryClient } from "./query-client";
 
@@ -23,6 +24,39 @@ test("unwrap returns data on 200 envelope", async () => {
     }),
   );
   assert.deepEqual(data, { status: "ok" });
+});
+
+test("unwrapVoid resolves on 204 No Content and throws ApiError on failure", async () => {
+  const res204 = new Response(null, { status: 204 });
+  await unwrapVoid(
+    Promise.resolve({
+      data: undefined,
+      response: res204,
+    }),
+  );
+
+  const res403 = new Response("{}", { status: 403 });
+  await assert.rejects(
+    () =>
+      unwrapVoid(
+        Promise.resolve({
+          error: {
+            data: null,
+            meta: null,
+            error: { code: "REF_FORBIDDEN", message: "forbidden" },
+          },
+          response: res403,
+        }),
+        { REF_FORBIDDEN: "Akses ditolak" },
+      ),
+    (err: unknown) => {
+      assert.ok(err instanceof ApiError);
+      assert.equal(err.status, 403);
+      assert.equal(err.code, "REF_FORBIDDEN");
+      assert.equal(err.message, "Akses ditolak");
+      return true;
+    },
+  );
 });
 
 test("unwrapMeta returns data and pagination meta", async () => {

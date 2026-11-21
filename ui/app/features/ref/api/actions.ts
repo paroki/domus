@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, unwrap } from "~/shared/api/client";
+import { api, unwrap, unwrapVoid } from "~/shared/api/client";
 import { useSwitchParish } from "~/shared/api/session";
 import { REF_ERRORS } from "./errors";
 import { refKeys } from "./keys";
@@ -20,15 +20,6 @@ import type {
   UpdateWardRequest,
   UpdateZoneRequest,
 } from "./types";
-
-async function unwrapVoid(
-  promise: Promise<{ data?: unknown; error?: unknown; response: Response }>,
-): Promise<void> {
-  const res = await promise;
-  if (!res.response.ok) {
-    await unwrap(Promise.resolve(res as never), REF_ERRORS);
-  }
-}
 
 export function useActivateSessionParish() {
   const switchParish = useSwitchParish();
@@ -68,6 +59,7 @@ export function useDeleteDiocese() {
     mutationFn: (id: string) =>
       unwrapVoid(
         api.DELETE("/ref/dioceses/{id}", { params: { path: { id } } }),
+        REF_ERRORS,
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
   });
@@ -109,6 +101,7 @@ export function useDeleteParish() {
     mutationFn: (id: string) =>
       unwrapVoid(
         api.DELETE("/ref/parishes/{id}", { params: { path: { id } } }),
+        REF_ERRORS,
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
   });
@@ -174,6 +167,7 @@ export function useRemoveParishMember() {
         api.DELETE("/ref/parishes/{id}/members/{userId}", {
           params: { path: { id: parishId, userId } },
         }),
+        REF_ERRORS,
       ),
     onSuccess: () =>
       Promise.all([
@@ -208,7 +202,10 @@ export function useDeleteZone() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) =>
-      unwrapVoid(api.DELETE("/ref/zones/{id}", { params: { path: { id } } })),
+      unwrapVoid(
+        api.DELETE("/ref/zones/{id}", { params: { path: { id } } }),
+        REF_ERRORS,
+      ),
     onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
   });
 }
@@ -238,7 +235,10 @@ export function useDeleteWard() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) =>
-      unwrapVoid(api.DELETE("/ref/wards/{id}", { params: { path: { id } } })),
+      unwrapVoid(
+        api.DELETE("/ref/wards/{id}", { params: { path: { id } } }),
+        REF_ERRORS,
+      ),
     onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
   });
 }
@@ -268,7 +268,10 @@ export function useDeleteLookup() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) =>
-      unwrapVoid(api.DELETE("/ref/lookups/{id}", { params: { path: { id } } })),
+      unwrapVoid(
+        api.DELETE("/ref/lookups/{id}", { params: { path: { id } } }),
+        REF_ERRORS,
+      ),
     onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
   });
 }
@@ -298,7 +301,10 @@ export function useDeletePeriod() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) =>
-      unwrapVoid(api.DELETE("/ref/periods/{id}", { params: { path: { id } } })),
+      unwrapVoid(
+        api.DELETE("/ref/periods/{id}", { params: { path: { id } } }),
+        REF_ERRORS,
+      ),
     onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
   });
 }

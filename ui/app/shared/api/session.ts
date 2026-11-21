@@ -6,7 +6,13 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { api, setActiveParish, unwrap, unwrapMeta } from "~/shared/api/client";
+import {
+  api,
+  setActiveParish,
+  unwrap,
+  unwrapMeta,
+  unwrapVoid,
+} from "~/shared/api/client";
 import type { components } from "~/shared/api/schema";
 
 type SearchParishesRequest =
@@ -38,7 +44,7 @@ export function useSwitchParish() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (body: SwitchSessionParishRequest) => {
-      await unwrap(api.PATCH("/me/session", { body }));
+      await unwrapVoid(api.PATCH("/me/session", { body }));
       return body.activeParishId;
     },
     onSuccess: async (parishId) => {

@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, setActiveParish, unwrap } from "~/shared/api/client";
+import { api, setActiveParish, unwrap, unwrapVoid } from "~/shared/api/client";
 import { useLogout, useSwitchParish } from "~/shared/api/session";
 import { USER_ERRORS } from "./errors";
 import { userKeys } from "./keys";
@@ -50,12 +50,11 @@ export function useUpdateMe() {
 export function useRevokeSession() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
-      await unwrap(
+    mutationFn: (id: string) =>
+      unwrapVoid(
         api.DELETE("/me/sessions/{id}", { params: { path: { id } } }),
         USER_ERRORS,
-      );
-    },
+      ),
     onSuccess: () =>
       Promise.all([
         qc.invalidateQueries({ queryKey: userKeys.sessions() }),
@@ -67,12 +66,11 @@ export function useRevokeSession() {
 export function useUnlinkAccount() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
-      await unwrap(
+    mutationFn: (id: string) =>
+      unwrapVoid(
         api.DELETE("/me/accounts/{id}", { params: { path: { id } } }),
         USER_ERRORS,
-      );
-    },
+      ),
     onSuccess: () => qc.invalidateQueries({ queryKey: userKeys.accounts() }),
   });
 }
@@ -132,12 +130,11 @@ export function useAdminUpdateUser() {
 export function useAdminDeleteUser() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
-      await unwrap(
+    mutationFn: (id: string) =>
+      unwrapVoid(
         api.DELETE("/users/{id}", { params: { path: { id } } }),
         USER_ERRORS,
-      );
-    },
+      ),
     onSuccess: () => qc.invalidateQueries({ queryKey: userKeys.list() }),
   });
 }
@@ -189,14 +186,13 @@ export function useDirectoryUpdateParishMember(parishId: string) {
 export function useDirectoryRemoveParishMember(parishId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (userId: string) => {
-      await unwrap(
+    mutationFn: (userId: string) =>
+      unwrapVoid(
         api.DELETE("/ref/parishes/{id}/members/{userId}", {
           params: { path: { id: parishId, userId } },
         }),
         USER_ERRORS,
-      );
-    },
+      ),
     onSuccess: () =>
       Promise.all([
         qc.invalidateQueries({ queryKey: userKeys.parishMembers(parishId) }),
@@ -258,14 +254,13 @@ export function useDirectoryUpdateOrgMember(orgId: string, parishId?: string) {
 export function useDirectoryRemoveOrgMember(orgId: string, parishId?: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (userId: string) => {
-      await unwrap(
+    mutationFn: (userId: string) =>
+      unwrapVoid(
         api.DELETE("/orgs/{id}/members/{userId}", {
           params: { path: { id: orgId, userId } },
         }),
         USER_ERRORS,
-      );
-    },
+      ),
     onSuccess: () =>
       Promise.all([
         qc.invalidateQueries({ queryKey: userKeys.orgMembers(orgId) }),

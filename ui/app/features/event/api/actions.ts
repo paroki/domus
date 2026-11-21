@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, unwrap } from "~/shared/api/client";
+import { api, unwrap, unwrapVoid } from "~/shared/api/client";
 import { eventKeys } from "./keys";
 import type {
   CreateEventRequest,
@@ -31,7 +31,9 @@ export function useDeleteEvent() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (eventId: string) =>
-      unwrap(api.DELETE("/events/{id}", { params: { path: { id: eventId } } })),
+      unwrapVoid(
+        api.DELETE("/events/{id}", { params: { path: { id: eventId } } }),
+      ),
     onSuccess: () => qc.invalidateQueries({ queryKey: eventKeys.all }),
   });
 }
@@ -60,7 +62,7 @@ export function useDeleteEventRSVP(eventId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () =>
-      unwrap(
+      unwrapVoid(
         api.DELETE("/events/{id}/rsvp", { params: { path: { id: eventId } } }),
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: eventKeys.all }),

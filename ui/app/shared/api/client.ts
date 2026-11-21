@@ -130,6 +130,20 @@ function toApiError(
   );
 }
 
+export async function unwrapVoid(
+  promise: Promise<{ data?: unknown; error?: unknown; response: Response }>,
+  featureErrors?: Record<string, string>,
+): Promise<void> {
+  const result = await promise;
+  const env =
+    result.data && typeof result.data === "object"
+      ? (result.data as ApiEnvelope<unknown>)
+      : undefined;
+  if (!result.response.ok || env?.error) {
+    throw toApiError({ ...result, data: env }, featureErrors);
+  }
+}
+
 export async function unwrap<T>(
   promise: Promise<FetchResult<T>>,
   featureErrors?: Record<string, string>,
