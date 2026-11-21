@@ -14,6 +14,7 @@ import { type Browser, chromium } from "playwright";
 import { createPages } from "../pages";
 import {
   bootstrapOrgAdminSession,
+  bootstrapOrgMemberSession,
   bootstrapParishAdminSession,
   loginAsSuperAdmin,
   loginAsUser,
@@ -76,6 +77,22 @@ Before({ tags: "@org-admin" }, async function (this: DomusWorld) {
   this.activeOrgName = result.org.name;
   this.activeOrgCode = result.org.code;
   this.activePeriodName = result.period.name;
+});
+
+Before({ tags: "@org-member" }, async function (this: DomusWorld) {
+  const result = await bootstrapOrgMemberSession(this.client);
+  await this.context.addCookies(result.session.cookies);
+  this.client.setToken(result.session.rawToken);
+  this.client.setParishId(result.parish.id);
+  this.activeParishId = result.parish.id;
+  this.activeParishName = result.parish.name;
+  this.activeParishCode = result.parish.code;
+  this.activeOrgId = result.orgA.id;
+  this.activeOrgName = result.orgA.name;
+  this.otherOrgId = result.orgB.id;
+  this.otherOrgName = result.orgB.name;
+  this.orgAdminToken = result.orgAdminToken;
+  this.parishAdminToken = result.parishAdminToken;
 });
 
 After(async function (this: DomusWorld) {

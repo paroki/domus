@@ -171,4 +171,30 @@ export class OrgDetailPage extends BasePage {
       .filter({ hasText: message })
       .waitFor({ state: "visible", timeout: 10_000 });
   }
+
+  async expectInvitesSectionVisible(visible: boolean): Promise<void> {
+    const heading = this.page.getByRole("heading", {
+      name: "Tautan Undangan",
+    });
+    if (visible) {
+      await heading.waitFor({ state: "visible", timeout: 10_000 });
+    } else {
+      assert.equal(await heading.count(), 0);
+    }
+  }
+
+  async expectRosterRestrictedBanner(): Promise<void> {
+    await this.page
+      .getByRole("heading", { name: "Keanggotaan Diperlukan" })
+      .waitFor({ state: "visible", timeout: 10_000 });
+    await this.page
+      .getByText(
+        "Hanya anggota atau pengurus organisasi ini yang dapat melihat daftar anggota internal.",
+      )
+      .waitFor({ state: "visible", timeout: 10_000 });
+    assert.equal(
+      await this.page.getByRole("heading", { name: "Daftar Anggota" }).count(),
+      0,
+    );
+  }
 }

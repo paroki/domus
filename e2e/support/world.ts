@@ -20,6 +20,10 @@ export class DomusWorld extends World {
   activeOrgName?: string;
   activeOrgCode?: string;
   activePeriodName?: string;
+  otherOrgId?: string;
+  otherOrgName?: string;
+  orgAdminToken?: string;
+  parishAdminToken?: string;
 
   constructor(options: IWorldOptions) {
     super(options);

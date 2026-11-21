@@ -218,8 +218,10 @@ export async function bootstrapOrgAdminSession(
   parish: { id: string; code: string; name: string };
   org: { id: string; code: string; name: string };
   period: { id: string; name: string };
+  parishAdminToken: string;
 }> {
-  const { parish } = await bootstrapParishAdminSession(client);
+  const { session: parishAdminSession, parish } =
+    await bootstrapParishAdminSession(client);
   client.setParishId(parish.id);
   const suffix = `${Date.now().toString(36)}-${parishBootstrapCounter}`;
 
@@ -295,6 +297,93 @@ export async function bootstrapOrgAdminSession(
     parish,
     org: { id: orgId, code: orgCode, name: orgName },
     period: { id: periodRes.data.data.id, name: periodName },
+    parishAdminToken: parishAdminSession.rawToken,
+  };
+}
+
+export async function bootstrapOrgMemberSession(
+  client: TestClient,
+  options?: {
+    email?: string;
+    name?: string;
+    orgName?: string;
+    otherOrgName?: string;
+  },
+): Promise<{
+  session: AuthSession;
+  parish: { id: string; code: string; name: string };
+  orgA: { id: string; code: string; name: string };
+  orgB: { id: string; code: string; name: string };
+  orgAdminToken: string;
+  parishAdminToken: string;
+}> {
+  const adminBoot = await bootstrapOrgAdminSession(client, {
+    orgName: options?.orgName,
+  });
+  const orgAdminToken = adminBoot.session.rawToken;
+  const parishAdminToken = adminBoot.parishAdminToken;
+
+  client.setParishId(adminBoot.parish.id);
+  client.setToken(orgAdminToken);
+
+  const email = options?.email ?? "member.e2e@domus.test";
+  const name = options?.name ?? "Anggota Organisasi E2E";
+  const memberRes = await client.post(`/orgs/${adminBoot.org.id}/members`, {
+    email,
+    name,
+    role: "member",
+    position: "Anggota Koor",
+  });
+  if (memberRes.status !== 201 && memberRes.status !== 409) {
+    throw new Error(
+      `Failed to bootstrap org member: ${memberRes.status} ${JSON.stringify(memberRes.data)}`,
+    );
+  }
+
+  client.setToken(parishAdminToken);
+  const suffix = `${Date.now().toString(36)}-${parishBootstrapCounter}`;
+  const orgBCode = `katekese-e2e-${suffix}`;
+  const orgBName = options?.otherOrgName ?? "Seksi Katekese E2E";
+  const orgBRes = await client.post<{
+    data?: { id?: string; code?: string; name?: string };
+  }>("/orgs", {
+    kind: "section",
+    code: orgBCode,
+    name: orgBName,
+  });
+  if (orgBRes.status !== 201 || !orgBRes.data?.data?.id) {
+    throw new Error(
+      `Failed to bootstrap sibling org: ${orgBRes.status} ${JSON.stringify(orgBRes.data)}`,
+    );
+  }
+  const orgBId = orgBRes.data.data.id;
+
+  const orgBAdminRes = await client.post(`/orgs/${orgBId}/members`, {
+    email: "orgadmin.e2e@domus.test",
+    name: "Admin Organisasi E2E",
+    role: "admin",
+  });
+  if (orgBAdminRes.status !== 201 && orgBAdminRes.status !== 409) {
+    throw new Error(
+      `Failed to appoint sibling org admin: ${orgBAdminRes.status} ${JSON.stringify(orgBAdminRes.data)}`,
+    );
+  }
+
+  const session = loginAsUser({
+    email,
+    name,
+    onboarded: true,
+    activeParishId: adminBoot.parish.id,
+  });
+  client.setToken(session.rawToken);
+
+  return {
+    session,
+    parish: adminBoot.parish,
+    orgA: adminBoot.org,
+    orgB: { id: orgBId, code: orgBCode, name: orgBName },
+    orgAdminToken,
+    parishAdminToken,
   };
 }
 

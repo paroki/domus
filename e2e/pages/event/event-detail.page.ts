@@ -170,4 +170,30 @@ export class EventDetailPage extends BasePage {
         .waitFor({ state: "visible", timeout: 10_000 });
     }
   }
+
+  async expectRsvpStatus(statusLabel: string, note?: string): Promise<void> {
+    await this.page
+      .getByText(`Status: ${statusLabel}`, { exact: true })
+      .waitFor({ state: "visible", timeout: 10_000 });
+    if (note) {
+      await this.page
+        .getByText(note, { exact: true })
+        .first()
+        .waitFor({ state: "visible", timeout: 10_000 });
+    }
+  }
+
+  async expectRsvpRemoved(_memberName: string): Promise<void> {
+    await this.page
+      .getByText(/^Status: /)
+      .waitFor({ state: "detached", timeout: 10_000 });
+    await this.page
+      .getByRole("button", { name: "Hapus RSVP" })
+      .waitFor({ state: "detached", timeout: 10_000 });
+    await this.expectSummaryCounts({
+      going: 0,
+      maybe: 0,
+      notGoing: 0,
+    });
+  }
 }
