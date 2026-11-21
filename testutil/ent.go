@@ -25,13 +25,20 @@ var entDBCounter atomic.Uint64
 // falls back to an in-memory SQLite database.
 func NewEntClient(t testing.TB) *ent.Client {
 	t.Helper()
+	client, _, _ := NewEntClientWithDB(t)
+	return client
+}
+
+// NewEntClientWithDB creates an isolated Ent client and returns its underlying *sql.DB and dialect name.
+func NewEntClientWithDB(t testing.TB) (*ent.Client, *sql.DB, string) {
+	t.Helper()
 	if dsn := os.Getenv("TEST_DSN"); dsn != "" {
 		return newPostgresEntClient(t, dsn)
 	}
 	return newSQLiteEntClient(t)
 }
 
-func newSQLiteEntClient(t testing.TB) *ent.Client {
+func newSQLiteEntClient(t testing.TB) (*ent.Client, *sql.DB, string) {
 	t.Helper()
 	id := entDBCounter.Add(1)
 	dsn := fmt.Sprintf("file:ent_%d?mode=memory&cache=shared&_pragma=foreign_keys(1)", id)
@@ -43,10 +50,10 @@ func newSQLiteEntClient(t testing.TB) *ent.Client {
 	t.Cleanup(func() {
 		_ = client.Close()
 	})
-	return client
+	return client, db, dialect.SQLite
 }
 
-func newPostgresEntClient(t testing.TB, dsn string) *ent.Client {
+func newPostgresEntClient(t testing.TB, dsn string) (*ent.Client, *sql.DB, string) {
 	t.Helper()
 	schema := fmt.Sprintf("test_%d_%d", os.Getpid(), entDBCounter.Add(1))
 
@@ -73,10 +80,21 @@ func newPostgresEntClient(t testing.TB, dsn string) *ent.Client {
 
 	drv := entsql.OpenDB(dialect.Postgres, db)
 	client := enttest.NewClient(t, enttest.WithOptions(ent.Driver(drv)))
+
+	for _, stmt := range []string{
+		`ALTER TABLE "agent_memories" ADD COLUMN IF NOT EXISTS "embedding" halfvec(768) NULL`,
+		`CREATE INDEX IF NOT EXISTS "agent_messages_bm25_idx" ON "agent_messages" USING bm25 ("id", "content", "parish_id", "user_id", "session_id", "role") WITH (key_field = 'id')`,
+		`CREATE INDEX IF NOT EXISTS "agent_memories_bm25_idx" ON "agent_memories" USING bm25 ("id", "content", "category", "scope", "parish_id", "user_id") WITH (key_field = 'id')`,
+		`CREATE INDEX IF NOT EXISTS "agent_memories_embedding_hnsw_idx" ON "agent_memories" USING hnsw ("embedding" halfvec_cosine_ops) WITH (m = 16, ef_construction = 64) WHERE "deleted_at" IS NULL AND "embedding" IS NOT NULL`,
+	} {
+		_, err = db.ExecContext(ctx, stmt)
+		require.NoError(t, err, "apply postgres agent DDL: %s", stmt)
+	}
+
 	t.Cleanup(func() {
 		_ = client.Close()
 		_, _ = adminDB.ExecContext(context.Background(), "DROP SCHEMA IF EXISTS "+schema+" CASCADE")
 		_ = adminDB.Close()
 	})
-	return client
+	return client, db, dialect.Postgres
 }
