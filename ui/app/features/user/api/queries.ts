@@ -17,7 +17,10 @@ export function authProvidersQueryOptions() {
     queryKey: userKeys.providers(),
     queryFn: async () => {
       const res = await unwrap(api.GET("/auth/providers"), USER_ERRORS);
-      return res.providers ?? [];
+      return {
+        providers: res.providers ?? [],
+        otpChannels: res.otpChannels ?? ["email"],
+      };
     },
     staleTime: 5 * 60_000,
   });

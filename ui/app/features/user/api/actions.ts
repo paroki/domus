@@ -6,8 +6,10 @@ import { userKeys } from "./keys";
 import type {
   AdminCreateUserRequest,
   AdminUpdateUserRequest,
+  LinkAccountOTPRequest,
   RequestOTPRequest,
   UpdateMeRequest,
+  VerifyLinkAccountRequest,
   VerifyOTPRequest,
 } from "./types";
 
@@ -68,6 +70,33 @@ export function useUnlinkAccount() {
       );
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: userKeys.accounts() }),
+  });
+}
+
+export function useRequestLinkAccountOTP() {
+  return useMutation({
+    mutationFn: (body: LinkAccountOTPRequest) =>
+      unwrap(api.POST("/me/accounts/otp", { body }), USER_ERRORS),
+  });
+}
+
+export function useVerifyLinkAccount() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: VerifyLinkAccountRequest) =>
+      unwrap(api.POST("/me/accounts/verify", { body }), USER_ERRORS),
+    onSuccess: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: userKeys.accounts() }),
+        qc.invalidateQueries({ queryKey: userKeys.me() }),
+      ]),
+  });
+}
+
+export function useCreateTelegramLinkToken() {
+  return useMutation({
+    mutationFn: () =>
+      unwrap(api.POST("/me/accounts/telegram/token"), USER_ERRORS),
   });
 }
 

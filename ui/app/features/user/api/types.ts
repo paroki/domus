@@ -18,3 +18,8 @@ export type SearchAccountsRequest = Schemas["domain.SearchAccountsRequest"];
 export type SearchUsersRequest = Schemas["domain.SearchUsersRequest"];
 export type AdminCreateUserRequest = Schemas["domain.AdminCreateUserRequest"];
 export type AdminUpdateUserRequest = Schemas["domain.AdminUpdateUserRequest"];
+export type LinkAccountOTPRequest = Schemas["domain.LinkAccountOTPRequest"];
+export type VerifyLinkAccountRequest =
+  Schemas["domain.VerifyLinkAccountRequest"];
+export type TelegramLinkTokenResponse =
+  Schemas["domain.TelegramLinkTokenResponse"];

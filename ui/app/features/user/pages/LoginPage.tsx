@@ -1,4 +1,4 @@
-import { Church, Mail } from "lucide-react";
+import { Church, Mail, MessageCircle, Send } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router";
@@ -15,21 +15,38 @@ export function meta({}: Route.MetaArgs) {
   return [{ title: `${i18n.t("auth.title")} · Domus` }];
 }
 
+type OtpChannel = "email" | "whatsapp" | "telegram";
+
+function normalizeChannel(raw: string): OtpChannel {
+  if (raw === "whatsapp" || raw === "telegram") return raw;
+  return "email";
+}
+
 export default function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const redirectTo = sanitizeRedirect(params.get("redirect"));
 
-  const { data: providers = [] } = useAuthProviders();
+  const { data: authConfig } = useAuthProviders();
+  const providers = authConfig?.providers ?? [];
+  const otpChannels = authConfig?.otpChannels ?? ["email"];
+
   const requestOTP = useRequestOTP();
   const verifyOTP = useVerifyOTP();
 
-  const [step, setStep] = useState<"email" | "code">("email");
-  const [email, setEmail] = useState("");
+  const [channel, setChannel] = useState<OtpChannel>("email");
+  const [step, setStep] = useState<"target" | "code">("target");
+  const [target, setTarget] = useState("");
   const [code, setCode] = useState("");
   const [cooldown, setCooldown] = useState(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (otpChannels.length > 0 && !otpChannels.includes(channel)) {
+      setChannel(normalizeChannel(otpChannels[0] ?? "email"));
+    }
+  }, [channel, otpChannels]);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -37,11 +54,24 @@ export default function LoginPage() {
     return () => clearTimeout(timer);
   }, [cooldown]);
 
+  function handleSelectChannel(next: OtpChannel) {
+    if (next === channel) return;
+    setChannel(next);
+    setStep("target");
+    setTarget("");
+    setCode("");
+    setCooldown(0);
+    setErrorMsg(null);
+  }
+
   async function handleRequestOTP(e: FormEvent) {
     e.preventDefault();
     setErrorMsg(null);
     try {
-      await requestOTP.mutateAsync({ email: email.trim() });
+      await requestOTP.mutateAsync({
+        channel,
+        target: target.trim(),
+      });
       setStep("code");
       setCooldown(60);
     } catch (err) {
@@ -53,7 +83,11 @@ export default function LoginPage() {
     e.preventDefault();
     setErrorMsg(null);
     try {
-      await verifyOTP.mutateAsync({ email: email.trim(), code: code.trim() });
+      await verifyOTP.mutateAsync({
+        channel,
+        target: target.trim(),
+        code: code.trim(),
+      });
       navigate(redirectTo, { replace: true });
     } catch (err) {
       if (err instanceof ApiError) {
@@ -61,6 +95,46 @@ export default function LoginPage() {
       }
     }
   }
+
+  const channelMeta: Record<
+    OtpChannel,
+    {
+      tabLabel: string;
+      inputLabel: string;
+      inputType: "email" | "tel" | "text";
+      autoComplete: string;
+      placeholder: string;
+      Icon: typeof Mail;
+    }
+  > = {
+    email: {
+      tabLabel: t("auth.channelEmail"),
+      inputLabel: t("auth.emailLabel"),
+      inputType: "email",
+      autoComplete: "email",
+      placeholder: t("auth.emailPlaceholder"),
+      Icon: Mail,
+    },
+    whatsapp: {
+      tabLabel: t("auth.channelWhatsapp"),
+      inputLabel: t("auth.whatsappLabel"),
+      inputType: "tel",
+      autoComplete: "tel",
+      placeholder: t("auth.whatsappPlaceholder"),
+      Icon: MessageCircle,
+    },
+    telegram: {
+      tabLabel: t("auth.channelTelegram"),
+      inputLabel: t("auth.telegramLabel"),
+      inputType: "text",
+      autoComplete: "username",
+      placeholder: t("auth.telegramPlaceholder"),
+      Icon: Send,
+    },
+  };
+
+  const activeMeta = channelMeta[channel];
+  const ChannelIcon = activeMeta.Icon;
 
   return (
     <main className="flex min-h-dvh items-center justify-center bg-canvas px-4 py-10">
@@ -90,10 +164,40 @@ export default function LoginPage() {
             <div className="relative my-2 flex items-center justify-center">
               <span className="h-px w-full bg-line" />
               <span className="bg-surface px-3 text-xs font-medium text-muted">
-                {t("auth.orEmail")}
+                {otpChannels.length > 1 ? t("auth.orOtp") : t("auth.orEmail")}
               </span>
               <span className="h-px w-full bg-line" />
             </div>
+          </div>
+        )}
+
+        {otpChannels.length > 1 && (
+          <div
+            role="tablist"
+            aria-label="OTP Channel"
+            className="mb-5 grid grid-cols-3 gap-1 rounded-lg bg-canvas p-1 border border-line"
+          >
+            {otpChannels.map((raw) => {
+              const ch = normalizeChannel(raw);
+              const meta = channelMeta[ch];
+              const isSelected = ch === channel;
+              return (
+                <button
+                  key={ch}
+                  type="button"
+                  role="tab"
+                  aria-selected={isSelected}
+                  onClick={() => handleSelectChannel(ch)}
+                  className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
+                    isSelected
+                      ? "bg-primary text-on-primary"
+                      : "text-muted hover:text-fg"
+                  }`}
+                >
+                  {meta.tabLabel}
+                </button>
+              );
+            })}
           </div>
         )}
 
@@ -106,29 +210,29 @@ export default function LoginPage() {
           </div>
         )}
 
-        {step === "email" ? (
+        {step === "target" ? (
           <form onSubmit={handleRequestOTP} className="flex flex-col gap-4">
             <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
-              {t("auth.emailLabel")}
+              {activeMeta.inputLabel}
               <input
-                type="email"
+                type={activeMeta.inputType}
                 required
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={t("auth.emailPlaceholder")}
+                autoComplete={activeMeta.autoComplete}
+                value={target}
+                onChange={(e) => setTarget(e.target.value)}
+                placeholder={activeMeta.placeholder}
                 className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg placeholder:text-muted"
               />
             </label>
             <Button type="submit" disabled={requestOTP.isPending}>
-              <Mail aria-hidden className="size-4" />
+              <ChannelIcon aria-hidden className="size-4" />
               {requestOTP.isPending ? t("auth.sendingOtp") : t("auth.sendOtp")}
             </Button>
           </form>
         ) : (
           <form onSubmit={handleVerifyOTP} className="flex flex-col gap-4">
             <p className="text-sm text-muted">
-              {t("auth.otpSentTo", { email: email.trim() })}
+              {t("auth.otpSentTo", { target: target.trim() })}
             </p>
             <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
               {t("auth.otpLabel")}
@@ -155,7 +259,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => {
-                  setStep("email");
+                  setStep("target");
                   setCode("");
                   setErrorMsg(null);
                 }}

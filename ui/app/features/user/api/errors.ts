@@ -15,4 +15,8 @@ export const USER_ERRORS: Record<string, string> = {
   USER_ACCOUNT_NOT_FOUND: "Akun tertaut tidak ditemukan.",
   USER_LAST_ACCOUNT_REQUIRED:
     "Minimal satu metode login harus tetap tertaut pada akun Anda.",
+  USER_ACCOUNT_CONFLICT:
+    "Akun WhatsApp atau Telegram ini sudah terhubung dengan akun Domus lain.",
+  AUTH_CHANNEL_DISABLED:
+    "Kanal verifikasi yang dipilih belum diaktifkan oleh administrator.",
 };
