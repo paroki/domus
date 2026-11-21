@@ -13,6 +13,7 @@ const (
 	KindGone
 	KindValidation
 	KindRateLimited
+	KindUnavailable
 )
 
 // FieldError describes a single field-level validation failure.
@@ -99,6 +100,11 @@ func ValidationError(details ...FieldError) *Error {
 // RateLimited constructs a KindRateLimited domain Error.
 func RateLimited(code, message string) *Error {
 	return New(KindRateLimited, code, message)
+}
+
+// Unavailable constructs a KindUnavailable domain Error.
+func Unavailable(code, message string) *Error {
+	return New(KindUnavailable, code, message)
 }
 
 // Internal constructs a KindInternal domain Error wrapping an optional cause.

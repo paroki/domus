@@ -156,7 +156,7 @@ func ErrorHandler(logger *slog.Logger) fiber.ErrorHandler {
 			}
 		} else if domErr, ok := errors.AsType[*errx.Error](err); ok {
 			status = statusForKind(domErr.Kind)
-			if status >= fiber.StatusInternalServerError {
+			if domErr.Kind == errx.KindInternal {
 				code = "INTERNAL_ERROR"
 				message = "An unexpected internal error occurred."
 			} else {
@@ -243,6 +243,8 @@ func statusForKind(kind errx.Kind) int {
 		return fiber.StatusUnprocessableEntity
 	case errx.KindRateLimited:
 		return fiber.StatusTooManyRequests
+	case errx.KindUnavailable:
+		return fiber.StatusServiceUnavailable
 	default:
 		return fiber.StatusInternalServerError
 	}
@@ -266,6 +268,8 @@ func defaultCodeForStatus(status int) string {
 		return "VALIDATION_ERROR"
 	case fiber.StatusTooManyRequests:
 		return "RATE_LIMITED"
+	case fiber.StatusServiceUnavailable:
+		return "SERVICE_UNAVAILABLE"
 	default:
 		return "INTERNAL_ERROR"
 	}
