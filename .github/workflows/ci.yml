@@ -50,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:18-alpine
+        image: paradedb/paradedb:latest-pg18
         env:
           POSTGRES_USER: domus
           POSTGRES_PASSWORD: domus
@@ -129,7 +129,7 @@ jobs:
     timeout-minutes: 20
     services:
       postgres:
-        image: postgres:18-alpine
+        image: paradedb/paradedb:latest-pg18
         env:
           POSTGRES_USER: domus
           POSTGRES_PASSWORD: domus
