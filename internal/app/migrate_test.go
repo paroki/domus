@@ -48,9 +48,11 @@ func TestRunMigrations_IdempotentSQLite(t *testing.T) {
 		t.Fatalf("expected %d applied migrations, got %d", len(sqlFiles), count)
 	}
 
-	var settingsTable string
-	if err := db.QueryRowContext(ctx, "SELECT name FROM sqlite_master WHERE type='table' AND name='settings'").Scan(&settingsTable); err != nil {
-		t.Fatalf("expected settings table to exist: %v", err)
+	for _, tbl := range []string{"settings", "agent_sessions", "agent_messages", "agent_memories"} {
+		var found string
+		if err := db.QueryRowContext(ctx, "SELECT name FROM sqlite_master WHERE type='table' AND name=$1", tbl).Scan(&found); err != nil {
+			t.Fatalf("expected %s table to exist: %v", tbl, err)
+		}
 	}
 
 	client, err := OpenDB(ctx, cfg)

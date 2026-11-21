@@ -53,13 +53,19 @@ func newPostgresEntClient(t testing.TB, dsn string) *ent.Client {
 	adminDB, err := sql.Open("pgx", dsn)
 	require.NoError(t, err, "open postgres admin connection")
 
-	_, err = adminDB.ExecContext(context.Background(), "CREATE SCHEMA "+schema)
+	ctx := context.Background()
+	_, err = adminDB.ExecContext(ctx, "CREATE EXTENSION IF NOT EXISTS vector")
+	require.NoError(t, err, "enable vector extension")
+	_, err = adminDB.ExecContext(ctx, "CREATE EXTENSION IF NOT EXISTS pg_search CASCADE")
+	require.NoError(t, err, "enable pg_search extension")
+
+	_, err = adminDB.ExecContext(ctx, "CREATE SCHEMA "+schema)
 	require.NoError(t, err, "create isolated test schema")
 
 	u, err := url.Parse(dsn)
 	require.NoError(t, err, "parse TEST_DSN")
 	q := u.Query()
-	q.Set("search_path", schema)
+	q.Set("search_path", schema+",public")
 	u.RawQuery = q.Encode()
 
 	db, err := sql.Open("pgx", u.String())

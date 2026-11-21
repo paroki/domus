@@ -16,6 +16,9 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/paroki/domus/ent/agentmemory"
+	"github.com/paroki/domus/ent/agentmessage"
+	"github.com/paroki/domus/ent/agentsession"
 	"github.com/paroki/domus/ent/casbinrule"
 	"github.com/paroki/domus/ent/diocese"
 	"github.com/paroki/domus/ent/event"
@@ -41,6 +44,12 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// AgentMemory is the client for interacting with the AgentMemory builders.
+	AgentMemory *AgentMemoryClient
+	// AgentMessage is the client for interacting with the AgentMessage builders.
+	AgentMessage *AgentMessageClient
+	// AgentSession is the client for interacting with the AgentSession builders.
+	AgentSession *AgentSessionClient
 	// CasbinRule is the client for interacting with the CasbinRule builders.
 	CasbinRule *CasbinRuleClient
 	// Diocese is the client for interacting with the Diocese builders.
@@ -88,6 +97,9 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.AgentMemory = NewAgentMemoryClient(c.config)
+	c.AgentMessage = NewAgentMessageClient(c.config)
+	c.AgentSession = NewAgentSessionClient(c.config)
 	c.CasbinRule = NewCasbinRuleClient(c.config)
 	c.Diocese = NewDioceseClient(c.config)
 	c.Event = NewEventClient(c.config)
@@ -198,6 +210,9 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	return &Tx{
 		ctx:          ctx,
 		config:       cfg,
+		AgentMemory:  NewAgentMemoryClient(cfg),
+		AgentMessage: NewAgentMessageClient(cfg),
+		AgentSession: NewAgentSessionClient(cfg),
 		CasbinRule:   NewCasbinRuleClient(cfg),
 		Diocese:      NewDioceseClient(cfg),
 		Event:        NewEventClient(cfg),
@@ -235,6 +250,9 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	return &Tx{
 		ctx:          ctx,
 		config:       cfg,
+		AgentMemory:  NewAgentMemoryClient(cfg),
+		AgentMessage: NewAgentMessageClient(cfg),
+		AgentSession: NewAgentSessionClient(cfg),
 		CasbinRule:   NewCasbinRuleClient(cfg),
 		Diocese:      NewDioceseClient(cfg),
 		Event:        NewEventClient(cfg),
@@ -259,7 +277,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		CasbinRule.
+//		AgentMemory.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -282,9 +300,10 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.CasbinRule, c.Diocese, c.Event, c.EventRSVP, c.Lookup, c.OrgInvite,
-		c.OrgMember, c.Organization, c.Parish, c.ParishMember, c.Period, c.Setting,
-		c.User, c.UserAccount, c.UserOTP, c.UserSession, c.Ward, c.Zone,
+		c.AgentMemory, c.AgentMessage, c.AgentSession, c.CasbinRule, c.Diocese, c.Event,
+		c.EventRSVP, c.Lookup, c.OrgInvite, c.OrgMember, c.Organization, c.Parish,
+		c.ParishMember, c.Period, c.Setting, c.User, c.UserAccount, c.UserOTP,
+		c.UserSession, c.Ward, c.Zone,
 	} {
 		n.Use(hooks...)
 	}
@@ -294,9 +313,10 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.CasbinRule, c.Diocese, c.Event, c.EventRSVP, c.Lookup, c.OrgInvite,
-		c.OrgMember, c.Organization, c.Parish, c.ParishMember, c.Period, c.Setting,
-		c.User, c.UserAccount, c.UserOTP, c.UserSession, c.Ward, c.Zone,
+		c.AgentMemory, c.AgentMessage, c.AgentSession, c.CasbinRule, c.Diocese, c.Event,
+		c.EventRSVP, c.Lookup, c.OrgInvite, c.OrgMember, c.Organization, c.Parish,
+		c.ParishMember, c.Period, c.Setting, c.User, c.UserAccount, c.UserOTP,
+		c.UserSession, c.Ward, c.Zone,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -305,6 +325,12 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *AgentMemoryMutation:
+		return c.AgentMemory.mutate(ctx, m)
+	case *AgentMessageMutation:
+		return c.AgentMessage.mutate(ctx, m)
+	case *AgentSessionMutation:
+		return c.AgentSession.mutate(ctx, m)
 	case *CasbinRuleMutation:
 		return c.CasbinRule.mutate(ctx, m)
 	case *DioceseMutation:
@@ -343,6 +369,437 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Zone.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// AgentMemoryClient is a client for the AgentMemory schema.
+type AgentMemoryClient struct {
+	config
+}
+
+// NewAgentMemoryClient returns a client for the AgentMemory from the given config.
+func NewAgentMemoryClient(c config) *AgentMemoryClient {
+	return &AgentMemoryClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `agentmemory.Hooks(f(g(h())))`.
+func (c *AgentMemoryClient) Use(hooks ...Hook) {
+	c.hooks.AgentMemory = append(c.hooks.AgentMemory, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `agentmemory.Intercept(f(g(h())))`.
+func (c *AgentMemoryClient) Intercept(interceptors ...Interceptor) {
+	c.inters.AgentMemory = append(c.inters.AgentMemory, interceptors...)
+}
+
+// Create returns a builder for creating a AgentMemory entity.
+func (c *AgentMemoryClient) Create() *AgentMemoryCreate {
+	mutation := newAgentMemoryMutation(c.config, OpCreate)
+	return &AgentMemoryCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of AgentMemory entities.
+func (c *AgentMemoryClient) CreateBulk(builders ...*AgentMemoryCreate) *AgentMemoryCreateBulk {
+	return &AgentMemoryCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *AgentMemoryClient) MapCreateBulk(slice any, setFunc func(*AgentMemoryCreate, int)) *AgentMemoryCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &AgentMemoryCreateBulk{err: fmt.Errorf("calling to AgentMemoryClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*AgentMemoryCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &AgentMemoryCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for AgentMemory.
+func (c *AgentMemoryClient) Update() *AgentMemoryUpdate {
+	mutation := newAgentMemoryMutation(c.config, OpUpdate)
+	return &AgentMemoryUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AgentMemoryClient) UpdateOne(_m *AgentMemory) *AgentMemoryUpdateOne {
+	mutation := newAgentMemoryMutation(c.config, OpUpdateOne, withAgentMemory(_m))
+	return &AgentMemoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AgentMemoryClient) UpdateOneID(id uuid.UUID) *AgentMemoryUpdateOne {
+	mutation := newAgentMemoryMutation(c.config, OpUpdateOne, withAgentMemoryID(id))
+	return &AgentMemoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for AgentMemory.
+func (c *AgentMemoryClient) Delete() *AgentMemoryDelete {
+	mutation := newAgentMemoryMutation(c.config, OpDelete)
+	return &AgentMemoryDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *AgentMemoryClient) DeleteOne(_m *AgentMemory) *AgentMemoryDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *AgentMemoryClient) DeleteOneID(id uuid.UUID) *AgentMemoryDeleteOne {
+	builder := c.Delete().Where(agentmemory.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AgentMemoryDeleteOne{builder}
+}
+
+// Query returns a query builder for AgentMemory.
+func (c *AgentMemoryClient) Query() *AgentMemoryQuery {
+	return &AgentMemoryQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeAgentMemory},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a AgentMemory entity by its id.
+func (c *AgentMemoryClient) Get(ctx context.Context, id uuid.UUID) (*AgentMemory, error) {
+	return c.Query().Where(agentmemory.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AgentMemoryClient) GetX(ctx context.Context, id uuid.UUID) *AgentMemory {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *AgentMemoryClient) Hooks() []Hook {
+	return c.hooks.AgentMemory
+}
+
+// Interceptors returns the client interceptors.
+func (c *AgentMemoryClient) Interceptors() []Interceptor {
+	return c.inters.AgentMemory
+}
+
+func (c *AgentMemoryClient) mutate(ctx context.Context, m *AgentMemoryMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&AgentMemoryCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&AgentMemoryUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&AgentMemoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&AgentMemoryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown AgentMemory mutation op: %q", m.Op())
+	}
+}
+
+// AgentMessageClient is a client for the AgentMessage schema.
+type AgentMessageClient struct {
+	config
+}
+
+// NewAgentMessageClient returns a client for the AgentMessage from the given config.
+func NewAgentMessageClient(c config) *AgentMessageClient {
+	return &AgentMessageClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `agentmessage.Hooks(f(g(h())))`.
+func (c *AgentMessageClient) Use(hooks ...Hook) {
+	c.hooks.AgentMessage = append(c.hooks.AgentMessage, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `agentmessage.Intercept(f(g(h())))`.
+func (c *AgentMessageClient) Intercept(interceptors ...Interceptor) {
+	c.inters.AgentMessage = append(c.inters.AgentMessage, interceptors...)
+}
+
+// Create returns a builder for creating a AgentMessage entity.
+func (c *AgentMessageClient) Create() *AgentMessageCreate {
+	mutation := newAgentMessageMutation(c.config, OpCreate)
+	return &AgentMessageCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of AgentMessage entities.
+func (c *AgentMessageClient) CreateBulk(builders ...*AgentMessageCreate) *AgentMessageCreateBulk {
+	return &AgentMessageCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *AgentMessageClient) MapCreateBulk(slice any, setFunc func(*AgentMessageCreate, int)) *AgentMessageCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &AgentMessageCreateBulk{err: fmt.Errorf("calling to AgentMessageClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*AgentMessageCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &AgentMessageCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for AgentMessage.
+func (c *AgentMessageClient) Update() *AgentMessageUpdate {
+	mutation := newAgentMessageMutation(c.config, OpUpdate)
+	return &AgentMessageUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AgentMessageClient) UpdateOne(_m *AgentMessage) *AgentMessageUpdateOne {
+	mutation := newAgentMessageMutation(c.config, OpUpdateOne, withAgentMessage(_m))
+	return &AgentMessageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AgentMessageClient) UpdateOneID(id uuid.UUID) *AgentMessageUpdateOne {
+	mutation := newAgentMessageMutation(c.config, OpUpdateOne, withAgentMessageID(id))
+	return &AgentMessageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for AgentMessage.
+func (c *AgentMessageClient) Delete() *AgentMessageDelete {
+	mutation := newAgentMessageMutation(c.config, OpDelete)
+	return &AgentMessageDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *AgentMessageClient) DeleteOne(_m *AgentMessage) *AgentMessageDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *AgentMessageClient) DeleteOneID(id uuid.UUID) *AgentMessageDeleteOne {
+	builder := c.Delete().Where(agentmessage.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AgentMessageDeleteOne{builder}
+}
+
+// Query returns a query builder for AgentMessage.
+func (c *AgentMessageClient) Query() *AgentMessageQuery {
+	return &AgentMessageQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeAgentMessage},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a AgentMessage entity by its id.
+func (c *AgentMessageClient) Get(ctx context.Context, id uuid.UUID) (*AgentMessage, error) {
+	return c.Query().Where(agentmessage.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AgentMessageClient) GetX(ctx context.Context, id uuid.UUID) *AgentMessage {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QuerySession queries the session edge of a AgentMessage.
+func (c *AgentMessageClient) QuerySession(_m *AgentMessage) *AgentSessionQuery {
+	query := (&AgentSessionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(agentmessage.Table, agentmessage.FieldID, id),
+			sqlgraph.To(agentsession.Table, agentsession.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, agentmessage.SessionTable, agentmessage.SessionColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *AgentMessageClient) Hooks() []Hook {
+	return c.hooks.AgentMessage
+}
+
+// Interceptors returns the client interceptors.
+func (c *AgentMessageClient) Interceptors() []Interceptor {
+	return c.inters.AgentMessage
+}
+
+func (c *AgentMessageClient) mutate(ctx context.Context, m *AgentMessageMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&AgentMessageCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&AgentMessageUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&AgentMessageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&AgentMessageDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown AgentMessage mutation op: %q", m.Op())
+	}
+}
+
+// AgentSessionClient is a client for the AgentSession schema.
+type AgentSessionClient struct {
+	config
+}
+
+// NewAgentSessionClient returns a client for the AgentSession from the given config.
+func NewAgentSessionClient(c config) *AgentSessionClient {
+	return &AgentSessionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `agentsession.Hooks(f(g(h())))`.
+func (c *AgentSessionClient) Use(hooks ...Hook) {
+	c.hooks.AgentSession = append(c.hooks.AgentSession, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `agentsession.Intercept(f(g(h())))`.
+func (c *AgentSessionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.AgentSession = append(c.inters.AgentSession, interceptors...)
+}
+
+// Create returns a builder for creating a AgentSession entity.
+func (c *AgentSessionClient) Create() *AgentSessionCreate {
+	mutation := newAgentSessionMutation(c.config, OpCreate)
+	return &AgentSessionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of AgentSession entities.
+func (c *AgentSessionClient) CreateBulk(builders ...*AgentSessionCreate) *AgentSessionCreateBulk {
+	return &AgentSessionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *AgentSessionClient) MapCreateBulk(slice any, setFunc func(*AgentSessionCreate, int)) *AgentSessionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &AgentSessionCreateBulk{err: fmt.Errorf("calling to AgentSessionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*AgentSessionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &AgentSessionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for AgentSession.
+func (c *AgentSessionClient) Update() *AgentSessionUpdate {
+	mutation := newAgentSessionMutation(c.config, OpUpdate)
+	return &AgentSessionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AgentSessionClient) UpdateOne(_m *AgentSession) *AgentSessionUpdateOne {
+	mutation := newAgentSessionMutation(c.config, OpUpdateOne, withAgentSession(_m))
+	return &AgentSessionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AgentSessionClient) UpdateOneID(id uuid.UUID) *AgentSessionUpdateOne {
+	mutation := newAgentSessionMutation(c.config, OpUpdateOne, withAgentSessionID(id))
+	return &AgentSessionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for AgentSession.
+func (c *AgentSessionClient) Delete() *AgentSessionDelete {
+	mutation := newAgentSessionMutation(c.config, OpDelete)
+	return &AgentSessionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *AgentSessionClient) DeleteOne(_m *AgentSession) *AgentSessionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *AgentSessionClient) DeleteOneID(id uuid.UUID) *AgentSessionDeleteOne {
+	builder := c.Delete().Where(agentsession.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AgentSessionDeleteOne{builder}
+}
+
+// Query returns a query builder for AgentSession.
+func (c *AgentSessionClient) Query() *AgentSessionQuery {
+	return &AgentSessionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeAgentSession},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a AgentSession entity by its id.
+func (c *AgentSessionClient) Get(ctx context.Context, id uuid.UUID) (*AgentSession, error) {
+	return c.Query().Where(agentsession.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AgentSessionClient) GetX(ctx context.Context, id uuid.UUID) *AgentSession {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryMessages queries the messages edge of a AgentSession.
+func (c *AgentSessionClient) QueryMessages(_m *AgentSession) *AgentMessageQuery {
+	query := (&AgentMessageClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(agentsession.Table, agentsession.FieldID, id),
+			sqlgraph.To(agentmessage.Table, agentmessage.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, agentsession.MessagesTable, agentsession.MessagesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *AgentSessionClient) Hooks() []Hook {
+	return c.hooks.AgentSession
+}
+
+// Interceptors returns the client interceptors.
+func (c *AgentSessionClient) Interceptors() []Interceptor {
+	return c.inters.AgentSession
+}
+
+func (c *AgentSessionClient) mutate(ctx context.Context, m *AgentSessionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&AgentSessionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&AgentSessionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&AgentSessionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&AgentSessionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown AgentSession mutation op: %q", m.Op())
 	}
 }
 
@@ -3159,13 +3616,13 @@ func (c *ZoneClient) mutate(ctx context.Context, m *ZoneMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		CasbinRule, Diocese, Event, EventRSVP, Lookup, OrgInvite, OrgMember,
-		Organization, Parish, ParishMember, Period, Setting, User, UserAccount,
-		UserOTP, UserSession, Ward, Zone []ent.Hook
+		AgentMemory, AgentMessage, AgentSession, CasbinRule, Diocese, Event, EventRSVP,
+		Lookup, OrgInvite, OrgMember, Organization, Parish, ParishMember, Period,
+		Setting, User, UserAccount, UserOTP, UserSession, Ward, Zone []ent.Hook
 	}
 	inters struct {
-		CasbinRule, Diocese, Event, EventRSVP, Lookup, OrgInvite, OrgMember,
-		Organization, Parish, ParishMember, Period, Setting, User, UserAccount,
-		UserOTP, UserSession, Ward, Zone []ent.Interceptor
+		AgentMemory, AgentMessage, AgentSession, CasbinRule, Diocese, Event, EventRSVP,
+		Lookup, OrgInvite, OrgMember, Organization, Parish, ParishMember, Period,
+		Setting, User, UserAccount, UserOTP, UserSession, Ward, Zone []ent.Interceptor
 	}
 )

@@ -18,7 +18,22 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-var sqliteTimestamptzRe = regexp.MustCompile(`(?i)\btimestamptz\b`)
+var (
+	sqliteTimestamptzRe     = regexp.MustCompile(`(?i)\btimestamptz\b`)
+	sqliteJsonbRe           = regexp.MustCompile(`(?i)\bjsonb\b`)
+	sqliteCreateExtensionRe = regexp.MustCompile(`(?is)CREATE\s+EXTENSION\b[^;]*;`)
+	sqliteHalfvecColRe      = regexp.MustCompile(`(?is)ALTER\s+TABLE\b[^;]*\bhalfvec\b[^;]*;`)
+	sqlitePgUsingIndexRe    = regexp.MustCompile(`(?is)CREATE\s+INDEX\b[^;]*\bUSING\s+(?:bm25|hnsw)\b[^;]*;`)
+)
+
+func normalizeSQLiteMigration(stmt string) string {
+	stmt = sqliteCreateExtensionRe.ReplaceAllString(stmt, "")
+	stmt = sqliteHalfvecColRe.ReplaceAllString(stmt, "")
+	stmt = sqlitePgUsingIndexRe.ReplaceAllString(stmt, "")
+	stmt = sqliteTimestamptzRe.ReplaceAllString(stmt, "timestamp")
+	stmt = sqliteJsonbRe.ReplaceAllString(stmt, "text")
+	return stmt
+}
 
 // RunMigrations applies embedded SQL migrations in lexicographical order and tracks checksums.
 func RunMigrations(ctx context.Context, cfg Config, logger *slog.Logger) error {
@@ -82,7 +97,7 @@ func runMigrationsFromFS(ctx context.Context, cfg Config, logger *slog.Logger, f
 		}
 		stmt := string(raw)
 		if isSQLite {
-			stmt = sqliteTimestamptzRe.ReplaceAllString(stmt, "timestamp")
+			stmt = normalizeSQLiteMigration(stmt)
 		}
 		if _, err := tx.ExecContext(ctx, stmt); err != nil {
 			_ = tx.Rollback()

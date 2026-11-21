@@ -12,6 +12,9 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/paroki/domus/ent/agentmemory"
+	"github.com/paroki/domus/ent/agentmessage"
+	"github.com/paroki/domus/ent/agentsession"
 	"github.com/paroki/domus/ent/casbinrule"
 	"github.com/paroki/domus/ent/diocese"
 	"github.com/paroki/domus/ent/event"
@@ -90,6 +93,9 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
+			agentmemory.Table:  agentmemory.ValidColumn,
+			agentmessage.Table: agentmessage.ValidColumn,
+			agentsession.Table: agentsession.ValidColumn,
 			casbinrule.Table:   casbinrule.ValidColumn,
 			diocese.Table:      diocese.ValidColumn,
 			event.Table:        event.ValidColumn,

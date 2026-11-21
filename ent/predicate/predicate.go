@@ -6,6 +6,15 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// AgentMemory is the predicate function for agentmemory builders.
+type AgentMemory func(*sql.Selector)
+
+// AgentMessage is the predicate function for agentmessage builders.
+type AgentMessage func(*sql.Selector)
+
+// AgentSession is the predicate function for agentsession builders.
+type AgentSession func(*sql.Selector)
+
 // CasbinRule is the predicate function for casbinrule builders.
 type CasbinRule func(*sql.Selector)
 
