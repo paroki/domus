@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
+	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/internal/platform/authx"
 	"github.com/paroki/domus/internal/user/domain"
 	"github.com/paroki/domus/internal/user/repo"
@@ -23,6 +24,11 @@ func (s *Service) GetMe(ctx context.Context, p authx.Principal) (domain.UserResp
 
 // UpdateMe updates the authenticated user's mutable profile fields.
 func (s *Service) UpdateMe(ctx context.Context, p authx.Principal, req domain.UpdateMeRequest) (domain.UserResponse, error) {
+	current, err := guardActiveUser(s.repo.FindUserByID(ctx, p.UserID))
+	if err != nil {
+		return domain.UserResponse{}, err
+	}
+
 	var namePtr *string
 	if req.Name != nil {
 		trimmed := strings.TrimSpace(*req.Name)
@@ -41,13 +47,61 @@ func (s *Service) UpdateMe(ctx context.Context, p authx.Principal, req domain.Up
 		phonePtr = &norm
 	}
 
+	var genderPtr *user.Gender
+	if req.Gender != nil {
+		trimmed := strings.TrimSpace(*req.Gender)
+		if trimmed == "" {
+			return domain.UserResponse{}, domain.ValidationError("gender", "REQUIRED", "Gender is required.")
+		}
+		g := user.Gender(trimmed)
+		if g != user.GenderPria && g != user.GenderWanita {
+			return domain.UserResponse{}, domain.ValidationError("gender", "INVALID_GENDER", "Gender must be pria or wanita.")
+		}
+		genderPtr = &g
+	}
+
+	var birthDatePtr *string
+	if req.BirthDate != nil {
+		trimmed := strings.TrimSpace(*req.BirthDate)
+		if trimmed == "" {
+			return domain.UserResponse{}, domain.ValidationError("birthDate", "REQUIRED", "Birth date is required.")
+		}
+		parsed, parseErr := time.Parse("2006-01-02", trimmed)
+		if parseErr != nil {
+			return domain.UserResponse{}, domain.ValidationError("birthDate", "INVALID_DATE", "Birth date must be formatted as YYYY-MM-DD.")
+		}
+		now := time.Now().UTC()
+		today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+		if parsed.After(today.AddDate(-13, 0, 0)) || parsed.Before(today.AddDate(-120, 0, 0)) {
+			return domain.UserResponse{}, domain.ValidationError("birthDate", "INVALID_DATE", "Age must be between 13 and 120 years.")
+		}
+		birthDatePtr = &trimmed
+	}
+
+	if req.Onboarded != nil && *req.Onboarded {
+		effectiveGender := current.Gender
+		if genderPtr != nil {
+			effectiveGender = genderPtr
+		}
+		if effectiveGender == nil || *effectiveGender == "" {
+			return domain.UserResponse{}, domain.ValidationError("gender", "REQUIRED", "Gender is required to complete onboarding.")
+		}
+		effectiveBirthDate := current.BirthDate
+		if birthDatePtr != nil {
+			effectiveBirthDate = birthDatePtr
+		}
+		if effectiveBirthDate == nil || *effectiveBirthDate == "" {
+			return domain.UserResponse{}, domain.ValidationError("birthDate", "REQUIRED", "Birth date is required to complete onboarding.")
+		}
+	}
+
 	var avatarPtr *string
 	if req.AvatarURL != nil {
 		trimmed := strings.TrimSpace(*req.AvatarURL)
 		avatarPtr = &trimmed
 	}
 
-	u, err := s.repo.UpdateUser(ctx, p.UserID, namePtr, phonePtr, avatarPtr, req.DefaultParishID, nil, req.Onboarded)
+	u, err := s.repo.UpdateUser(ctx, p.UserID, namePtr, phonePtr, genderPtr, birthDatePtr, avatarPtr, req.DefaultParishID, nil, req.Onboarded)
 	if ent.IsNotFound(err) {
 		return domain.UserResponse{}, domain.ErrUserNotFound
 	}

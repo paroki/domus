@@ -44,6 +44,8 @@ type UserResponse struct {
 	Email           string                 `json:"email"`
 	Name            string                 `json:"name"`
 	Phone           *string                `json:"phone,omitempty"`
+	Gender          *string                `json:"gender,omitempty"`
+	BirthDate       *string                `json:"birthDate,omitempty"`
 	AvatarURL       *string                `json:"avatarUrl,omitempty"`
 	Status          string                 `json:"status"`
 	Onboarded       bool                   `json:"onboarded"`
@@ -68,6 +70,8 @@ type AuthSessionResponse struct {
 type UpdateMeRequest struct {
 	Name            *string    `json:"name,omitempty" validate:"omitempty,min=1"`
 	Phone           *string    `json:"phone,omitempty"`
+	Gender          *string    `json:"gender,omitempty"`
+	BirthDate       *string    `json:"birthDate,omitempty"`
 	AvatarURL       *string    `json:"avatarUrl,omitempty" validate:"omitempty,url"`
 	DefaultParishID *uuid.UUID `json:"defaultParishId,omitempty"`
 	Onboarded       *bool      `json:"onboarded,omitempty"`

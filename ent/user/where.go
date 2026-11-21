@@ -86,6 +86,11 @@ func Phone(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldPhone, v))
 }
 
+// BirthDate applies equality check predicate on the "birth_date" field. It's identical to BirthDateEQ.
+func BirthDate(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldBirthDate, v))
+}
+
 // AvatarURL applies equality check predicate on the "avatar_url" field. It's identical to AvatarURLEQ.
 func AvatarURL(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldAvatarURL, v))
@@ -439,6 +444,111 @@ func PhoneEqualFold(v string) predicate.User {
 // PhoneContainsFold applies the ContainsFold predicate on the "phone" field.
 func PhoneContainsFold(v string) predicate.User {
 	return predicate.User(sql.FieldContainsFold(FieldPhone, v))
+}
+
+// GenderEQ applies the EQ predicate on the "gender" field.
+func GenderEQ(v Gender) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldGender, v))
+}
+
+// GenderNEQ applies the NEQ predicate on the "gender" field.
+func GenderNEQ(v Gender) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldGender, v))
+}
+
+// GenderIn applies the In predicate on the "gender" field.
+func GenderIn(vs ...Gender) predicate.User {
+	return predicate.User(sql.FieldIn(FieldGender, vs...))
+}
+
+// GenderNotIn applies the NotIn predicate on the "gender" field.
+func GenderNotIn(vs ...Gender) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldGender, vs...))
+}
+
+// GenderIsNil applies the IsNil predicate on the "gender" field.
+func GenderIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldGender))
+}
+
+// GenderNotNil applies the NotNil predicate on the "gender" field.
+func GenderNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldGender))
+}
+
+// BirthDateEQ applies the EQ predicate on the "birth_date" field.
+func BirthDateEQ(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldBirthDate, v))
+}
+
+// BirthDateNEQ applies the NEQ predicate on the "birth_date" field.
+func BirthDateNEQ(v string) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldBirthDate, v))
+}
+
+// BirthDateIn applies the In predicate on the "birth_date" field.
+func BirthDateIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldIn(FieldBirthDate, vs...))
+}
+
+// BirthDateNotIn applies the NotIn predicate on the "birth_date" field.
+func BirthDateNotIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldBirthDate, vs...))
+}
+
+// BirthDateGT applies the GT predicate on the "birth_date" field.
+func BirthDateGT(v string) predicate.User {
+	return predicate.User(sql.FieldGT(FieldBirthDate, v))
+}
+
+// BirthDateGTE applies the GTE predicate on the "birth_date" field.
+func BirthDateGTE(v string) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldBirthDate, v))
+}
+
+// BirthDateLT applies the LT predicate on the "birth_date" field.
+func BirthDateLT(v string) predicate.User {
+	return predicate.User(sql.FieldLT(FieldBirthDate, v))
+}
+
+// BirthDateLTE applies the LTE predicate on the "birth_date" field.
+func BirthDateLTE(v string) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldBirthDate, v))
+}
+
+// BirthDateContains applies the Contains predicate on the "birth_date" field.
+func BirthDateContains(v string) predicate.User {
+	return predicate.User(sql.FieldContains(FieldBirthDate, v))
+}
+
+// BirthDateHasPrefix applies the HasPrefix predicate on the "birth_date" field.
+func BirthDateHasPrefix(v string) predicate.User {
+	return predicate.User(sql.FieldHasPrefix(FieldBirthDate, v))
+}
+
+// BirthDateHasSuffix applies the HasSuffix predicate on the "birth_date" field.
+func BirthDateHasSuffix(v string) predicate.User {
+	return predicate.User(sql.FieldHasSuffix(FieldBirthDate, v))
+}
+
+// BirthDateIsNil applies the IsNil predicate on the "birth_date" field.
+func BirthDateIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldBirthDate))
+}
+
+// BirthDateNotNil applies the NotNil predicate on the "birth_date" field.
+func BirthDateNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldBirthDate))
+}
+
+// BirthDateEqualFold applies the EqualFold predicate on the "birth_date" field.
+func BirthDateEqualFold(v string) predicate.User {
+	return predicate.User(sql.FieldEqualFold(FieldBirthDate, v))
+}
+
+// BirthDateContainsFold applies the ContainsFold predicate on the "birth_date" field.
+func BirthDateContainsFold(v string) predicate.User {
+	return predicate.User(sql.FieldContainsFold(FieldBirthDate, v))
 }
 
 // AvatarURLEQ applies the EQ predicate on the "avatar_url" field.

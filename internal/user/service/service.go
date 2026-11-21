@@ -327,11 +327,18 @@ func (s *Service) describeRoles(roles []string) []authz.RoleDescriptor {
 }
 
 func toUserResponse(u *ent.User) domain.UserResponse {
+	var gender *string
+	if u.Gender != nil {
+		g := string(*u.Gender)
+		gender = &g
+	}
 	return domain.UserResponse{
 		ID:              u.ID,
 		Email:           u.Email,
 		Name:            u.Name,
 		Phone:           u.Phone,
+		Gender:          gender,
+		BirthDate:       u.BirthDate,
 		AvatarURL:       u.AvatarURL,
 		Status:          string(u.Status),
 		Onboarded:       u.Onboarded,

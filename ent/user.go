@@ -30,6 +30,10 @@ type User struct {
 	Name string `json:"name,omitempty"`
 	// Phone holds the value of the "phone" field.
 	Phone *string `json:"phone,omitempty"`
+	// Gender holds the value of the "gender" field.
+	Gender *user.Gender `json:"gender,omitempty"`
+	// BirthDate holds the value of the "birth_date" field.
+	BirthDate *string `json:"birth_date,omitempty"`
 	// AvatarURL holds the value of the "avatar_url" field.
 	AvatarURL *string `json:"avatar_url,omitempty"`
 	// Status holds the value of the "status" field.
@@ -84,7 +88,7 @@ func (*User) scanValues(columns []string) ([]any, error) {
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case user.FieldOnboarded:
 			values[i] = new(sql.NullBool)
-		case user.FieldEmail, user.FieldName, user.FieldPhone, user.FieldAvatarURL, user.FieldStatus:
+		case user.FieldEmail, user.FieldName, user.FieldPhone, user.FieldGender, user.FieldBirthDate, user.FieldAvatarURL, user.FieldStatus:
 			values[i] = new(sql.NullString)
 		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldDeletedAt, user.FieldLastLoginAt:
 			values[i] = new(sql.NullTime)
@@ -148,6 +152,20 @@ func (_m *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Phone = new(string)
 				*_m.Phone = value.String
+			}
+		case user.FieldGender:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field gender", values[i])
+			} else if value.Valid {
+				_m.Gender = new(user.Gender)
+				*_m.Gender = user.Gender(value.String)
+			}
+		case user.FieldBirthDate:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field birth_date", values[i])
+			} else if value.Valid {
+				_m.BirthDate = new(string)
+				*_m.BirthDate = value.String
 			}
 		case user.FieldAvatarURL:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -247,6 +265,16 @@ func (_m *User) String() string {
 	builder.WriteString(", ")
 	if v := _m.Phone; v != nil {
 		builder.WriteString("phone=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.Gender; v != nil {
+		builder.WriteString("gender=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.BirthDate; v != nil {
+		builder.WriteString("birth_date=")
 		builder.WriteString(*v)
 	}
 	builder.WriteString(", ")

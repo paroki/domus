@@ -28,6 +28,10 @@ const (
 	FieldName = "name"
 	// FieldPhone holds the string denoting the phone field in the database.
 	FieldPhone = "phone"
+	// FieldGender holds the string denoting the gender field in the database.
+	FieldGender = "gender"
+	// FieldBirthDate holds the string denoting the birth_date field in the database.
+	FieldBirthDate = "birth_date"
 	// FieldAvatarURL holds the string denoting the avatar_url field in the database.
 	FieldAvatarURL = "avatar_url"
 	// FieldStatus holds the string denoting the status field in the database.
@@ -69,6 +73,8 @@ var Columns = []string{
 	FieldEmail,
 	FieldName,
 	FieldPhone,
+	FieldGender,
+	FieldBirthDate,
 	FieldAvatarURL,
 	FieldStatus,
 	FieldOnboarded,
@@ -102,6 +108,29 @@ var (
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
+
+// Gender defines the type for the "gender" enum field.
+type Gender string
+
+// Gender values.
+const (
+	GenderPria   Gender = "pria"
+	GenderWanita Gender = "wanita"
+)
+
+func (ge Gender) String() string {
+	return string(ge)
+}
+
+// GenderValidator is a validator for the "gender" field enum values. It is called by the builders before save.
+func GenderValidator(ge Gender) error {
+	switch ge {
+	case GenderPria, GenderWanita:
+		return nil
+	default:
+		return fmt.Errorf("user: invalid enum value for gender field: %q", ge)
+	}
+}
 
 // Status defines the type for the "status" enum field.
 type Status string
@@ -165,6 +194,16 @@ func ByName(opts ...sql.OrderTermOption) OrderOption {
 // ByPhone orders the results by the phone field.
 func ByPhone(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPhone, opts...).ToFunc()
+}
+
+// ByGender orders the results by the gender field.
+func ByGender(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldGender, opts...).ToFunc()
+}
+
+// ByBirthDate orders the results by the birth_date field.
+func ByBirthDate(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldBirthDate, opts...).ToFunc()
 }
 
 // ByAvatarURL orders the results by the avatar_url field.

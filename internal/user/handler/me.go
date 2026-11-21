@@ -33,7 +33,7 @@ func (h *Handler) GetMe(c fiber.Ctx) error {
 // UpdateMe updates the authenticated user's profile fields.
 //
 //	@Summary		Update current user profile
-//	@Description	Updates name, phone (normalized to E.164), avatarUrl, defaultParishId, or onboarded status.
+//	@Description	Updates name, phone (normalized to E.164), gender, birthDate, avatarUrl, defaultParishId, or onboarded status.
 //	@ID				updateMe
 //	@Tags			Me
 //	@Accept			json

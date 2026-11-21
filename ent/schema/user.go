@@ -28,6 +28,8 @@ func (User) Fields() []ent.Field {
 		field.String("email").NotEmpty().Unique(),
 		field.String("name").NotEmpty(),
 		field.String("phone").Optional().Nillable(),
+		field.Enum("gender").Values("pria", "wanita").Optional().Nillable(),
+		field.String("birth_date").Optional().Nillable(),
 		field.String("avatar_url").Optional().Nillable(),
 		field.Enum("status").Values("active", "disabled").Default("active"),
 		field.Bool("onboarded").Default(false),

@@ -1648,7 +1648,13 @@
                     "avatarUrl": {
                         "type": "string"
                     },
+                    "birthDate": {
+                        "type": "string"
+                    },
                     "defaultParishId": {
+                        "type": "string"
+                    },
+                    "gender": {
                         "type": "string"
                     },
                     "name": {
@@ -1966,6 +1972,9 @@
                     "avatarUrl": {
                         "type": "string"
                     },
+                    "birthDate": {
+                        "type": "string"
+                    },
                     "createdAt": {
                         "type": "string"
                     },
@@ -1973,6 +1982,9 @@
                         "type": "string"
                     },
                     "email": {
+                        "type": "string"
+                    },
+                    "gender": {
                         "type": "string"
                     },
                     "id": {
@@ -4067,7 +4079,7 @@
                 ]
             },
             "patch": {
-                "description": "Updates name, phone (normalized to E.164), avatarUrl, defaultParishId, or onboarded status.",
+                "description": "Updates name, phone (normalized to E.164), gender, birthDate, avatarUrl, defaultParishId, or onboarded status.",
                 "operationId": "updateMe",
                 "requestBody": {
                     "content": {

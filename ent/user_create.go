@@ -91,6 +91,34 @@ func (_c *UserCreate) SetNillablePhone(v *string) *UserCreate {
 	return _c
 }
 
+// SetGender sets the "gender" field.
+func (_c *UserCreate) SetGender(v user.Gender) *UserCreate {
+	_c.mutation.SetGender(v)
+	return _c
+}
+
+// SetNillableGender sets the "gender" field if the given value is not nil.
+func (_c *UserCreate) SetNillableGender(v *user.Gender) *UserCreate {
+	if v != nil {
+		_c.SetGender(*v)
+	}
+	return _c
+}
+
+// SetBirthDate sets the "birth_date" field.
+func (_c *UserCreate) SetBirthDate(v string) *UserCreate {
+	_c.mutation.SetBirthDate(v)
+	return _c
+}
+
+// SetNillableBirthDate sets the "birth_date" field if the given value is not nil.
+func (_c *UserCreate) SetNillableBirthDate(v *string) *UserCreate {
+	if v != nil {
+		_c.SetBirthDate(*v)
+	}
+	return _c
+}
+
 // SetAvatarURL sets the "avatar_url" field.
 func (_c *UserCreate) SetAvatarURL(v string) *UserCreate {
 	_c.mutation.SetAvatarURL(v)
@@ -286,6 +314,11 @@ func (_c *UserCreate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "User.name": %w`, err)}
 		}
 	}
+	if v, ok := _c.mutation.Gender(); ok {
+		if err := user.GenderValidator(v); err != nil {
+			return &ValidationError{Name: "gender", err: fmt.Errorf(`ent: validator failed for field "User.gender": %w`, err)}
+		}
+	}
 	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "User.status"`)}
 	}
@@ -355,6 +388,14 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Phone(); ok {
 		_spec.SetField(user.FieldPhone, field.TypeString, value)
 		_node.Phone = &value
+	}
+	if value, ok := _c.mutation.Gender(); ok {
+		_spec.SetField(user.FieldGender, field.TypeEnum, value)
+		_node.Gender = &value
+	}
+	if value, ok := _c.mutation.BirthDate(); ok {
+		_spec.SetField(user.FieldBirthDate, field.TypeString, value)
+		_node.BirthDate = &value
 	}
 	if value, ok := _c.mutation.AvatarURL(); ok {
 		_spec.SetField(user.FieldAvatarURL, field.TypeString, value)

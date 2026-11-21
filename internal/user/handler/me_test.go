@@ -276,18 +276,107 @@ func (s *MeHandlerSuite) TestOnboardedFlag_UpdateAndReactivateReset() {
 	s.Equal([]string{"email"}, me.LinkedProviders)
 
 	onboardedTrue := true
+	// Missing gender -> 422 VALIDATION_ERROR
 	s.Request("/api/me", http.MethodPatch, domain.UpdateMeRequest{Onboarded: &onboardedTrue})
+	s.UnprocessableEntity()
+	s.Equal("VALIDATION_ERROR", s.GetErrorResponse().Error.Code)
+	s.Equal("gender", s.GetErrorResponse().Error.Details[0].Field)
+
+	// Gender provided, missing birthDate -> 422 VALIDATION_ERROR
+	gender := "pria"
+	s.Request("/api/me", http.MethodPatch, domain.UpdateMeRequest{Gender: &gender, Onboarded: &onboardedTrue})
+	s.UnprocessableEntity()
+	s.Equal("VALIDATION_ERROR", s.GetErrorResponse().Error.Code)
+	s.Equal("birthDate", s.GetErrorResponse().Error.Details[0].Field)
+
+	// Both gender and birthDate provided -> 200 OK
+	birthDate := "1995-05-10"
+	s.Request("/api/me", http.MethodPatch, domain.UpdateMeRequest{
+		Gender:    &gender,
+		BirthDate: &birthDate,
+		Onboarded: &onboardedTrue,
+	})
 	s.OK()
 	updated := testutil.DecodeAs[domain.UserResponse](&s.ApiTestSuite).Data
 	s.True(updated.Onboarded)
+	s.Require().NotNil(updated.Gender)
+	s.Equal("pria", *updated.Gender)
+	s.Require().NotNil(updated.BirthDate)
+	s.Equal("1995-05-10", *updated.BirthDate)
 	s.Equal([]string{"email"}, updated.LinkedProviders)
 
-	// Soft-deleted user reactivated via EnsureUser resets onboarded back to false.
+	// Soft-deleted user reactivated via EnsureUser resets onboarded, gender, and birthDate.
 	_, err := s.client.User.UpdateOneID(u.ID).SetDeletedAt(time.Now().UTC()).Save(ctx)
 	s.Require().NoError(err)
 	reactivated, err := s.feature.EnsureUser(ctx, "onboard@paroki.org", "Onboard User", "", "email", "onboard@paroki.org")
 	s.Require().NoError(err)
 	s.False(reactivated.Onboarded)
+	s.Nil(reactivated.Gender)
+	s.Nil(reactivated.BirthDate)
+}
+
+func (s *MeHandlerSuite) TestUpdateMe_GenderAndBirthDateValidation() {
+	_, cookie := s.loginUser("biodata@paroki.org", "Biodata User", "Browser/1")
+	s.SetCookie(cookie)
+
+	empty := "  "
+	s.Request("/api/me", http.MethodPatch, domain.UpdateMeRequest{Gender: &empty})
+	s.UnprocessableEntity()
+	s.Equal("VALIDATION_ERROR", s.GetErrorResponse().Error.Code)
+	s.Equal("gender", s.GetErrorResponse().Error.Details[0].Field)
+
+	badGender := "other"
+	s.Request("/api/me", http.MethodPatch, domain.UpdateMeRequest{Gender: &badGender})
+	s.UnprocessableEntity()
+	s.Equal("VALIDATION_ERROR", s.GetErrorResponse().Error.Code)
+	s.Equal("gender", s.GetErrorResponse().Error.Details[0].Field)
+
+	s.Request("/api/me", http.MethodPatch, domain.UpdateMeRequest{BirthDate: &empty})
+	s.UnprocessableEntity()
+	s.Equal("VALIDATION_ERROR", s.GetErrorResponse().Error.Code)
+	s.Equal("birthDate", s.GetErrorResponse().Error.Details[0].Field)
+
+	badFormat := "10-05-1995"
+	s.Request("/api/me", http.MethodPatch, domain.UpdateMeRequest{BirthDate: &badFormat})
+	s.UnprocessableEntity()
+	s.Equal("VALIDATION_ERROR", s.GetErrorResponse().Error.Code)
+	s.Equal("birthDate", s.GetErrorResponse().Error.Details[0].Field)
+
+	now := time.Now().UTC()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+
+	tooYoung := today.AddDate(-12, 0, 0).Format("2006-01-02")
+	s.Request("/api/me", http.MethodPatch, domain.UpdateMeRequest{BirthDate: &tooYoung})
+	s.UnprocessableEntity()
+	s.Equal("VALIDATION_ERROR", s.GetErrorResponse().Error.Code)
+	s.Equal("birthDate", s.GetErrorResponse().Error.Details[0].Field)
+
+	tooOld := today.AddDate(-121, 0, 0).Format("2006-01-02")
+	s.Request("/api/me", http.MethodPatch, domain.UpdateMeRequest{BirthDate: &tooOld})
+	s.UnprocessableEntity()
+	s.Equal("VALIDATION_ERROR", s.GetErrorResponse().Error.Code)
+	s.Equal("birthDate", s.GetErrorResponse().Error.Details[0].Field)
+
+	minValid := today.AddDate(-120, 0, 0).Format("2006-01-02")
+	maxValid := today.AddDate(-13, 0, 0).Format("2006-01-02")
+	wanita := "wanita"
+	s.Request("/api/me", http.MethodPatch, domain.UpdateMeRequest{Gender: &wanita, BirthDate: &minValid})
+	s.OK()
+	resMin := testutil.DecodeAs[domain.UserResponse](&s.ApiTestSuite).Data
+	s.Require().NotNil(resMin.Gender)
+	s.Equal("wanita", *resMin.Gender)
+	s.Require().NotNil(resMin.BirthDate)
+	s.Equal(minValid, *resMin.BirthDate)
+
+	s.Request("/api/me", http.MethodPatch, domain.UpdateMeRequest{BirthDate: &maxValid})
+	s.OK()
+	s.Request("/api/me", http.MethodGet, nil)
+	s.OK()
+	fetched := testutil.DecodeAs[domain.UserResponse](&s.ApiTestSuite).Data
+	s.Require().NotNil(fetched.Gender)
+	s.Equal("wanita", *fetched.Gender)
+	s.Require().NotNil(fetched.BirthDate)
+	s.Equal(maxValid, *fetched.BirthDate)
 }
 
 func (s *MeHandlerSuite) TestLinkWhatsAppAndTelegramToken() {

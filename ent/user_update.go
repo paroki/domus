@@ -105,6 +105,46 @@ func (_u *UserUpdate) ClearPhone() *UserUpdate {
 	return _u
 }
 
+// SetGender sets the "gender" field.
+func (_u *UserUpdate) SetGender(v user.Gender) *UserUpdate {
+	_u.mutation.SetGender(v)
+	return _u
+}
+
+// SetNillableGender sets the "gender" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableGender(v *user.Gender) *UserUpdate {
+	if v != nil {
+		_u.SetGender(*v)
+	}
+	return _u
+}
+
+// ClearGender clears the value of the "gender" field.
+func (_u *UserUpdate) ClearGender() *UserUpdate {
+	_u.mutation.ClearGender()
+	return _u
+}
+
+// SetBirthDate sets the "birth_date" field.
+func (_u *UserUpdate) SetBirthDate(v string) *UserUpdate {
+	_u.mutation.SetBirthDate(v)
+	return _u
+}
+
+// SetNillableBirthDate sets the "birth_date" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableBirthDate(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetBirthDate(*v)
+	}
+	return _u
+}
+
+// ClearBirthDate clears the value of the "birth_date" field.
+func (_u *UserUpdate) ClearBirthDate() *UserUpdate {
+	_u.mutation.ClearBirthDate()
+	return _u
+}
+
 // SetAvatarURL sets the "avatar_url" field.
 func (_u *UserUpdate) SetAvatarURL(v string) *UserUpdate {
 	_u.mutation.SetAvatarURL(v)
@@ -318,6 +358,11 @@ func (_u *UserUpdate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "User.name": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Gender(); ok {
+		if err := user.GenderValidator(v); err != nil {
+			return &ValidationError{Name: "gender", err: fmt.Errorf(`ent: validator failed for field "User.gender": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.Status(); ok {
 		if err := user.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "User.status": %w`, err)}
@@ -358,6 +403,18 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.PhoneCleared() {
 		_spec.ClearField(user.FieldPhone, field.TypeString)
+	}
+	if value, ok := _u.mutation.Gender(); ok {
+		_spec.SetField(user.FieldGender, field.TypeEnum, value)
+	}
+	if _u.mutation.GenderCleared() {
+		_spec.ClearField(user.FieldGender, field.TypeEnum)
+	}
+	if value, ok := _u.mutation.BirthDate(); ok {
+		_spec.SetField(user.FieldBirthDate, field.TypeString, value)
+	}
+	if _u.mutation.BirthDateCleared() {
+		_spec.ClearField(user.FieldBirthDate, field.TypeString)
 	}
 	if value, ok := _u.mutation.AvatarURL(); ok {
 		_spec.SetField(user.FieldAvatarURL, field.TypeString, value)
@@ -564,6 +621,46 @@ func (_u *UserUpdateOne) SetNillablePhone(v *string) *UserUpdateOne {
 // ClearPhone clears the value of the "phone" field.
 func (_u *UserUpdateOne) ClearPhone() *UserUpdateOne {
 	_u.mutation.ClearPhone()
+	return _u
+}
+
+// SetGender sets the "gender" field.
+func (_u *UserUpdateOne) SetGender(v user.Gender) *UserUpdateOne {
+	_u.mutation.SetGender(v)
+	return _u
+}
+
+// SetNillableGender sets the "gender" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableGender(v *user.Gender) *UserUpdateOne {
+	if v != nil {
+		_u.SetGender(*v)
+	}
+	return _u
+}
+
+// ClearGender clears the value of the "gender" field.
+func (_u *UserUpdateOne) ClearGender() *UserUpdateOne {
+	_u.mutation.ClearGender()
+	return _u
+}
+
+// SetBirthDate sets the "birth_date" field.
+func (_u *UserUpdateOne) SetBirthDate(v string) *UserUpdateOne {
+	_u.mutation.SetBirthDate(v)
+	return _u
+}
+
+// SetNillableBirthDate sets the "birth_date" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableBirthDate(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetBirthDate(*v)
+	}
+	return _u
+}
+
+// ClearBirthDate clears the value of the "birth_date" field.
+func (_u *UserUpdateOne) ClearBirthDate() *UserUpdateOne {
+	_u.mutation.ClearBirthDate()
 	return _u
 }
 
@@ -793,6 +890,11 @@ func (_u *UserUpdateOne) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "User.name": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Gender(); ok {
+		if err := user.GenderValidator(v); err != nil {
+			return &ValidationError{Name: "gender", err: fmt.Errorf(`ent: validator failed for field "User.gender": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.Status(); ok {
 		if err := user.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "User.status": %w`, err)}
@@ -850,6 +952,18 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	}
 	if _u.mutation.PhoneCleared() {
 		_spec.ClearField(user.FieldPhone, field.TypeString)
+	}
+	if value, ok := _u.mutation.Gender(); ok {
+		_spec.SetField(user.FieldGender, field.TypeEnum, value)
+	}
+	if _u.mutation.GenderCleared() {
+		_spec.ClearField(user.FieldGender, field.TypeEnum)
+	}
+	if value, ok := _u.mutation.BirthDate(); ok {
+		_spec.SetField(user.FieldBirthDate, field.TypeString, value)
+	}
+	if _u.mutation.BirthDateCleared() {
+		_spec.ClearField(user.FieldBirthDate, field.TypeString)
 	}
 	if value, ok := _u.mutation.AvatarURL(); ok {
 		_spec.SetField(user.FieldAvatarURL, field.TypeString, value)

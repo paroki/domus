@@ -65,6 +65,8 @@ func (r *Repository) ReactivateUser(ctx context.Context, id uuid.UUID, name stri
 		SetStatus(user.StatusActive).
 		SetOnboarded(false).
 		SetName(name).
+		ClearGender().
+		ClearBirthDate().
 		ClearAvatarURL().
 		ClearDefaultParishID().
 		ClearLastLoginAt()
@@ -383,6 +385,8 @@ func (r *Repository) UpdateUser(
 	id uuid.UUID,
 	name *string,
 	phone *string,
+	gender *user.Gender,
+	birthDate *string,
 	avatarURL *string,
 	defaultParishID *uuid.UUID,
 	status *user.Status,
@@ -397,6 +401,20 @@ func (r *Repository) UpdateUser(
 			upd.ClearPhone()
 		} else {
 			upd.SetPhone(*phone)
+		}
+	}
+	if gender != nil {
+		if *gender == "" {
+			upd.ClearGender()
+		} else {
+			upd.SetGender(*gender)
+		}
+	}
+	if birthDate != nil {
+		if *birthDate == "" {
+			upd.ClearBirthDate()
+		} else {
+			upd.SetBirthDate(*birthDate)
 		}
 	}
 	if avatarURL != nil {
