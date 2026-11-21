@@ -1,4 +1,7 @@
 {{- if .Values.pdb.enabled }}
+{{- if and (not .Values.hpa.enabled) (le (int .Values.replicaCount) 1) (eq (toString .Values.pdb.minAvailable) "1") (not .Values.pdb.maxUnavailable) }}
+{{- fail "pdb.enabled with minAvailable: 1 requires replicaCount > 1 or hpa.enabled: true (or set maxUnavailable)" }}
+{{- end }}
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
@@ -6,7 +9,11 @@ metadata:
   labels:
     {{- include "domus.labels" . | nindent 4 }}
 spec:
+  {{- if .Values.pdb.maxUnavailable }}
+  maxUnavailable: {{ .Values.pdb.maxUnavailable }}
+  {{- else }}
   minAvailable: {{ .Values.pdb.minAvailable }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "domus.selectorLabels" . | nindent 6 }}

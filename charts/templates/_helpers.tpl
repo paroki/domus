@@ -129,14 +129,16 @@ Environment variables from values.config.
 - name: APP_SMTP_FROM
   value: {{ .from | quote }}
 {{- end }}
-{{- with $c.sentry.dsn }}
+{{- with $c.sentry }}
+{{- with .dsn }}
 - name: APP_SENTRY_DSN
   value: {{ . | quote }}
 {{- end }}
 - name: APP_SENTRY_ENVIRONMENT
-  value: {{ $c.sentry.environment | quote }}
+  value: {{ .environment | quote }}
 - name: APP_SENTRY_RELEASE
-  value: {{ default .Chart.AppVersion $c.sentry.release | quote }}
+  value: {{ default $.Chart.AppVersion .release | quote }}
+{{- end }}
 {{- with .Values.extraEnv }}
 {{ toYaml . }}
 {{- end }}

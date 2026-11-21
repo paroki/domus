@@ -91,6 +91,7 @@ ingress:
 resources: {}
 
 hpa:
+  # -- Requires resources.requests.cpu to be set.
   enabled: false
   minReplicas: 2
   maxReplicas: 5
@@ -98,7 +99,10 @@ hpa:
 
 pdb:
   enabled: false
+  # -- Set minAvailable or maxUnavailable (maxUnavailable takes precedence).
+  # Avoid minAvailable: 1 with replicaCount: 1.
   minAvailable: 1
+  maxUnavailable: ""
 
 podAnnotations: {}
 podLabels: {}

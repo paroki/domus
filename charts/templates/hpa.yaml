@@ -1,4 +1,7 @@
 {{- if .Values.hpa.enabled }}
+{{- if not (and .Values.resources .Values.resources.requests .Values.resources.requests.cpu) }}
+{{- fail "hpa.enabled requires resources.requests.cpu to be set" }}
+{{- end }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
