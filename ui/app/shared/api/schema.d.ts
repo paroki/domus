@@ -312,7 +312,7 @@ export interface paths {
     head?: never;
     /**
      * Update current user profile
-     * @description Updates name, phone (normalized to E.164), avatarUrl, defaultParishId, or onboarded status.
+     * @description Updates name, phone (normalized to E.164), gender, birthDate, avatarUrl, defaultParishId, or onboarded status.
      */
     patch: operations["updateMe"];
     trace?: never;
@@ -1857,7 +1857,9 @@ export interface components {
     };
     "domain.UpdateMeRequest": {
       avatarUrl?: string;
+      birthDate?: string;
       defaultParishId?: string;
+      gender?: string;
       name?: string;
       onboarded?: boolean;
       phone?: string;
@@ -1965,9 +1967,11 @@ export interface components {
     "domain.UserResponse": {
       activeParishId?: string;
       avatarUrl?: string;
+      birthDate?: string;
       createdAt?: string;
       defaultParishId?: string;
       email?: string;
+      gender?: string;
       id?: string;
       lastLoginAt?: string;
       linkedProviders?: string[];

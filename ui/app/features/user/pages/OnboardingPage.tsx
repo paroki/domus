@@ -17,7 +17,12 @@ import { useLogout, useUpdateMe } from "../api/actions";
 import { useAuthProviders, useMe } from "../api/queries";
 import { TelegramLinkPanel } from "../components/TelegramLinkPanel";
 import { WhatsAppLinkForm } from "../components/WhatsAppLinkForm";
-import { buildOnboardingSteps, sanitizeRedirect } from "../model";
+import {
+  buildOnboardingSteps,
+  getBirthDateBounds,
+  sanitizeRedirect,
+  USER_GENDERS,
+} from "../model";
 import type { Route } from "./+types/OnboardingPage";
 
 export function meta({}: Route.MetaArgs) {
@@ -38,6 +43,8 @@ export default function OnboardingPage() {
   const [stepIndex, setStepIndex] = useState(0);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [gender, setGender] = useState("");
+  const [birthDate, setBirthDate] = useState("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const initializedRef = useRef(false);
@@ -48,8 +55,12 @@ export default function OnboardingPage() {
       initializedRef.current = true;
       setName(me.name ?? "");
       setPhone(me.phone ?? "");
+      setGender(me.gender ?? "");
+      setBirthDate(me.birthDate ?? "");
     }
   }, [me]);
+
+  const birthDateBounds = getBirthDateBounds();
 
   const otpChannels = providersQuery.data?.otpChannels ?? ["email"];
   const steps = buildOnboardingSteps(otpChannels);
@@ -98,6 +109,8 @@ export default function OnboardingPage() {
         await updateMe.mutateAsync({
           name: name.trim(),
           phone: phone.trim(),
+          gender,
+          birthDate,
           onboarded: true,
         });
         navigate(nextPath, { replace: true });
@@ -105,6 +118,8 @@ export default function OnboardingPage() {
         await updateMe.mutateAsync({
           name: name.trim(),
           phone: phone.trim(),
+          gender,
+          birthDate,
         });
         setStepIndex((i) => i + 1);
       }
@@ -237,6 +252,40 @@ export default function OnboardingPage() {
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder={t("onboarding.phonePlaceholder")}
                       className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg placeholder:text-muted"
+                    />
+                  </label>
+
+                  <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
+                    {t("onboarding.genderLabel")}
+                    <select
+                      required
+                      value={gender}
+                      onChange={(e) => setGender(e.target.value)}
+                      className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
+                    >
+                      <option value="" disabled>
+                        {t("onboarding.genderPlaceholder")}
+                      </option>
+                      {USER_GENDERS.map((g) => (
+                        <option key={g} value={g}>
+                          {g === "pria"
+                            ? t("onboarding.genderPria")
+                            : t("onboarding.genderWanita")}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
+                    {t("onboarding.birthDateLabel")}
+                    <input
+                      type="date"
+                      required
+                      min={birthDateBounds.min}
+                      max={birthDateBounds.max}
+                      value={birthDate}
+                      onChange={(e) => setBirthDate(e.target.value)}
+                      className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
                     />
                   </label>
 

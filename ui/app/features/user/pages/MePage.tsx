@@ -10,6 +10,7 @@ import { useLogout, useUpdateMe } from "../api/actions";
 import { useMe } from "../api/queries";
 import { AccountList } from "../components/AccountList";
 import { SessionList } from "../components/SessionList";
+import { getBirthDateBounds, USER_GENDERS } from "../model";
 import type { Route } from "./+types/MePage";
 
 export function meta({}: Route.MetaArgs) {
@@ -25,6 +26,8 @@ export default function MePage() {
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [gender, setGender] = useState("");
+  const [birthDate, setBirthDate] = useState("");
   const [saved, setSaved] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -32,8 +35,12 @@ export default function MePage() {
     if (me) {
       setName(me.name ?? "");
       setPhone(me.phone ?? "");
+      setGender(me.gender ?? "");
+      setBirthDate(me.birthDate ?? "");
     }
   }, [me]);
+
+  const birthDateBounds = getBirthDateBounds();
 
   async function handleSave(e: FormEvent) {
     e.preventDefault();
@@ -43,6 +50,8 @@ export default function MePage() {
       await updateMe.mutateAsync({
         name: name.trim(),
         phone: phone.trim(),
+        gender,
+        birthDate,
       });
       setSaved(true);
     } catch (err) {
@@ -124,6 +133,36 @@ export default function MePage() {
               onChange={(e) => setPhone(e.target.value)}
               placeholder={t("me.phonePlaceholder")}
               className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg placeholder:text-muted"
+            />
+          </label>
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
+            {t("me.genderLabel")}
+            <select
+              required
+              value={gender}
+              onChange={(e) => setGender(e.target.value)}
+              className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
+            >
+              <option value="" disabled>
+                {t("me.genderPlaceholder")}
+              </option>
+              {USER_GENDERS.map((g) => (
+                <option key={g} value={g}>
+                  {g === "pria" ? t("me.genderPria") : t("me.genderWanita")}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
+            {t("me.birthDateLabel")}
+            <input
+              type="date"
+              required
+              min={birthDateBounds.min}
+              max={birthDateBounds.max}
+              value={birthDate}
+              onChange={(e) => setBirthDate(e.target.value)}
+              className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
             />
           </label>
           <div>

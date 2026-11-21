@@ -142,3 +142,22 @@ export function shouldRedirectToOnboarding(
 ): boolean {
   return onboarded === false && pathname !== "/onboarding";
 }
+
+export const USER_GENDERS = ["pria", "wanita"] as const;
+export type UserGender = (typeof USER_GENDERS)[number];
+
+export function getBirthDateBounds(now: Date = new Date()): {
+  min: string;
+  max: string;
+} {
+  const min = new Date(
+    Date.UTC(now.getUTCFullYear() - 120, now.getUTCMonth(), now.getUTCDate()),
+  );
+  const max = new Date(
+    Date.UTC(now.getUTCFullYear() - 13, now.getUTCMonth(), now.getUTCDate()),
+  );
+  return {
+    min: min.toISOString().slice(0, 10),
+    max: max.toISOString().slice(0, 10),
+  };
+}

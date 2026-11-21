@@ -6,6 +6,7 @@ import {
   canManageUsers,
   formatUserAgent,
   getAvailableUserScopes,
+  getBirthDateBounds,
   isOrgAdmin,
   isParishAdmin,
   isSuperAdmin,
@@ -16,6 +17,7 @@ import {
   ROLE_USER,
   sanitizeRedirect,
   shouldRedirectToOnboarding,
+  USER_GENDERS,
 } from "./model";
 
 test("formatUserAgent detects common browsers and OS", () => {
@@ -112,4 +114,12 @@ test("shouldRedirectToOnboarding avoids /onboarding loop and handles states", ()
   assert.equal(shouldRedirectToOnboarding(true, "/me"), false);
   assert.equal(shouldRedirectToOnboarding(undefined, "/"), false);
   assert.equal(shouldRedirectToOnboarding(undefined, "/me"), false);
+});
+
+test("USER_GENDERS and getBirthDateBounds define biodata constraints", () => {
+  assert.deepEqual(USER_GENDERS, ["pria", "wanita"]);
+  assert.deepEqual(getBirthDateBounds(new Date("2026-11-21T15:30:00Z")), {
+    min: "1906-11-21",
+    max: "2013-11-21",
+  });
 });
