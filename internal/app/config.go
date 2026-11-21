@@ -28,15 +28,6 @@ type Config struct {
 	SMTPUser string `env:"APP_SMTP_USER"`
 	SMTPPass string `env:"APP_SMTP_PASS"`
 	SMTPFrom string `env:"APP_SMTP_FROM, default=Domus <no-reply@example.com>"`
-
-	// Optional messaging channels for OTP delivery and bot webhooks.
-	// ponytail: APP_GOWA_DEVICE_ID and APP_GOWA_WEBHOOK_SECRET deferred to Phase 6 (MVP-6.4).
-	TelegramBotToken      string `env:"APP_TELEGRAM_BOT_TOKEN"`
-	TelegramBotUsername   string `env:"APP_TELEGRAM_BOT_USERNAME"`
-	TelegramWebhookSecret string `env:"APP_TELEGRAM_WEBHOOK_SECRET"`
-	GowaBaseURL           string `env:"APP_GOWA_BASE_URL"`
-	GowaBasicUser         string `env:"APP_GOWA_BASIC_USER"`
-	GowaBasicPass         string `env:"APP_GOWA_BASIC_PASS"`
 }
 
 // StartupOAuthConfig carries OAuth2 credentials checked during startup env validation.
@@ -59,38 +50,6 @@ func ValidateStartupEnv(cfg Config, oauth StartupOAuthConfig, logger *slog.Logge
 	if _, err := crypt.New(cfg.Secret); err != nil {
 		errs = append(errs, fmt.Errorf("invalid APP_SECRET: %w", err))
 	}
-
-	// Telegram requires all 3 vars when any is set.
-	var tgMissing []string
-	if strings.TrimSpace(cfg.TelegramBotToken) == "" {
-		tgMissing = append(tgMissing, "APP_TELEGRAM_BOT_TOKEN")
-	}
-	if strings.TrimSpace(cfg.TelegramBotUsername) == "" {
-		tgMissing = append(tgMissing, "APP_TELEGRAM_BOT_USERNAME")
-	}
-	if strings.TrimSpace(cfg.TelegramWebhookSecret) == "" {
-		tgMissing = append(tgMissing, "APP_TELEGRAM_WEBHOOK_SECRET")
-	}
-	switch len(tgMissing) {
-	case 0:
-	case 3:
-		logger.Warn("optional integration disabled",
-			"integration", "telegram",
-			"missing_env", []string{"APP_TELEGRAM_BOT_TOKEN", "APP_TELEGRAM_BOT_USERNAME", "APP_TELEGRAM_WEBHOOK_SECRET"},
-		)
-	default:
-		errs = append(errs, fmt.Errorf("partial Telegram configuration: missing %s", strings.Join(tgMissing, ", ")))
-	}
-
-	// GOWA allows base URL alone, but basic auth requires user+pass+base URL.
-	errs = append(errs, validateHostWithOptionalAuth(
-		"gowa",
-		cfg.GowaBaseURL, "APP_GOWA_BASE_URL",
-		cfg.GowaBasicUser, "APP_GOWA_BASIC_USER",
-		cfg.GowaBasicPass, "APP_GOWA_BASIC_PASS",
-		"optional integration disabled",
-		logger,
-	)...)
 
 	// SMTP allows host alone, but auth credentials require user+pass+host.
 	errs = append(errs, validateHostWithOptionalAuth(
