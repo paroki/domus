@@ -106,3 +106,47 @@ jobs:
         run: |
           helm lint charts --strict
           helm template domus charts > /dev/null
+
+  e2e:
+    name: E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install UI dependencies
+        run: bun install --frozen-lockfile --cwd ui
+
+      - name: Install E2E dependencies
+        run: bun install --frozen-lockfile --cwd e2e
+
+      - name: Run Biome check
+        run: bunx @biomejs/biome@2.6.7 check e2e
+
+      - name: Run E2E typecheck
+        run: bun run --cwd e2e typecheck
+
+      - name: Install Playwright Chromium
+        run: cd e2e && bunx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: bun run --cwd e2e e2e
+
+      - name: Upload E2E report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-report
+          path: e2e/reports
+          if-no-files-found: ignore
+          retention-days: 7

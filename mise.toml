@@ -79,6 +79,16 @@ run = "bun test --pass-with-no-tests"
 description = "Run API and UI tests"
 depends = ["test:api", "test:ui"]
 
+[tasks."e2e:setup"]
+description = "Install Playwright Chromium browser for E2E tests"
+dir = "e2e"
+run = "bunx playwright install chromium"
+
+[tasks.e2e]
+description = "Run Playwright + Cucumber E2E tests"
+dir = "e2e"
+run = "bun run e2e"
+
 # --- Dev Utilities ---
 [tasks."fmt:api"]
 description = "Format Go files"
@@ -88,9 +98,13 @@ run = "gofmt -w ."
 description = "Format and organize UI imports via biome"
 run = "biome check --write ui/app"
 
+[tasks."fmt:e2e"]
+description = "Format and organize E2E imports via biome"
+run = "biome check --write e2e"
+
 [tasks.fmt]
-description = "Format API and UI code"
-depends = ["fmt:api", "fmt:ui"]
+description = "Format API, UI, and E2E code"
+depends = ["fmt:api", "fmt:ui", "fmt:e2e"]
 
 [tasks.tidy]
 description = "Tidy Go modules"
@@ -192,15 +206,43 @@ printf '  %s\n' "${report[@]}"
 exit "$failed"
 '''
 
-[tasks.qc]
-description = "Run qc:api and qc:ui (continue on failure, report at end)"
+[tasks."qc:e2e"]
+description = "Run all E2E format/lint and typecheck checks"
 run = '''
 #!/usr/bin/env bash
 set -uo pipefail
 report=()
 failed=0
 
-for task in qc:api qc:ui; do
+run_check() {
+  local name="$1"; shift
+  echo "==> [qc:e2e] $name"
+  if "$@"; then
+    report+=("PASS: $name")
+  else
+    report+=("FAIL: $name")
+    failed=1
+  fi
+}
+
+run_check "biome check" biome check e2e
+run_check "typecheck" bun run --cwd e2e typecheck
+
+echo ""
+echo "=== qc:e2e summary ==="
+printf '  %s\n' "${report[@]}"
+exit "$failed"
+'''
+
+[tasks.qc]
+description = "Run qc:api, qc:ui, and qc:e2e (continue on failure, report at end)"
+run = '''
+#!/usr/bin/env bash
+set -uo pipefail
+report=()
+failed=0
+
+for task in qc:api qc:ui qc:e2e; do
   if mise run "$task"; then
     report+=("PASS: $task")
   else
