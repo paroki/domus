@@ -1,5 +1,9 @@
 # dependencies (bun install)
 node_modules
+e2e/node_modules/
+
+# e2e reports
+e2e/reports/
 
 # output
 out
