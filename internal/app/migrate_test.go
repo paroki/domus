@@ -9,6 +9,7 @@ import (
 	"testing"
 	"testing/fstest"
 
+	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/migrations"
 )
 
@@ -50,6 +51,27 @@ func TestRunMigrations_IdempotentSQLite(t *testing.T) {
 	var metaTable string
 	if err := db.QueryRowContext(ctx, "SELECT name FROM sqlite_master WHERE type='table' AND name='meta'").Scan(&metaTable); err != nil {
 		t.Fatalf("expected meta table to exist: %v", err)
+	}
+
+	client, err := OpenDB(ctx, cfg)
+	if err != nil {
+		t.Fatalf("OpenDB failed: %v", err)
+	}
+	defer func() { _ = client.Close() }()
+
+	created, err := client.User.Create().
+		SetEmail("migrate-test@domus.test").
+		SetName("Migrate Test").
+		Save(ctx)
+	if err != nil {
+		t.Fatalf("create user failed: %v", err)
+	}
+	got, err := client.User.Query().Where(user.IDEQ(created.ID)).Only(ctx)
+	if err != nil {
+		t.Fatalf("query user failed: %v", err)
+	}
+	if got.CreatedAt.IsZero() {
+		t.Fatal("expected non-zero created_at")
 	}
 }
 

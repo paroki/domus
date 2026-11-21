@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io/fs"
 	"log/slog"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -16,6 +17,8 @@ import (
 	"github.com/paroki/domus/migrations"
 	_ "modernc.org/sqlite"
 )
+
+var sqliteTimestamptzRe = regexp.MustCompile(`(?i)\btimestamptz\b`)
 
 // RunMigrations applies embedded SQL migrations in lexicographical order and tracks checksums.
 func RunMigrations(ctx context.Context, cfg Config, logger *slog.Logger) error {
@@ -42,6 +45,8 @@ func runMigrationsFromFS(ctx context.Context, cfg Config, logger *slog.Logger, f
 	`); err != nil {
 		return fmt.Errorf("create schema_migrations table: %w", err)
 	}
+
+	isSQLite := strings.HasPrefix(cfg.DatabaseURL, "sqlite://") || strings.HasPrefix(cfg.DatabaseURL, "file:")
 
 	files, err := fs.Glob(fsys, "*.sql")
 	if err != nil {
@@ -75,7 +80,11 @@ func runMigrationsFromFS(ctx context.Context, cfg Config, logger *slog.Logger, f
 		if err != nil {
 			return fmt.Errorf("begin migration tx %s: %w", name, err)
 		}
-		if _, err := tx.ExecContext(ctx, string(raw)); err != nil {
+		stmt := string(raw)
+		if isSQLite {
+			stmt = sqliteTimestamptzRe.ReplaceAllString(stmt, "timestamp")
+		}
+		if _, err := tx.ExecContext(ctx, stmt); err != nil {
 			_ = tx.Rollback()
 			return fmt.Errorf("apply migration %s: %w", name, err)
 		}
