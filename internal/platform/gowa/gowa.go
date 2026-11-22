@@ -32,6 +32,7 @@ type Config struct {
 	BasicUser     string
 	BasicPass     string
 	DeviceID      string
+	BotNumber     string // optional bot phone number, used to detect group mentions
 	WebhookSecret string
 	HTTPClient    *http.Client
 }
@@ -42,6 +43,7 @@ type Client struct {
 	basicUser     string
 	basicPass     string
 	deviceID      string
+	botDigits     string
 	webhookSecret string
 	httpClient    *http.Client
 }
@@ -67,6 +69,7 @@ func New(cfg Config) (*Client, error) {
 		basicUser:     strings.TrimSpace(cfg.BasicUser),
 		basicPass:     cfg.BasicPass,
 		deviceID:      strings.TrimSpace(cfg.DeviceID),
+		botDigits:     digitsOnly(cfg.BotNumber),
 		webhookSecret: strings.TrimSpace(cfg.WebhookSecret),
 		httpClient:    httpClient,
 	}, nil
@@ -220,4 +223,31 @@ func NormalizeJID(jid string) (string, error) {
 		return "", fmt.Errorf("gowa: invalid E.164 phone %q", jid)
 	}
 	return cleaned, nil
+}
+
+func digitsOnly(s string) string {
+	return strings.Map(func(r rune) rune {
+		if r >= '0' && r <= '9' {
+			return r
+		}
+		return -1
+	}, s)
+}
+
+// IsBotMention reports whether a mention (JID like "62812...@s.whatsapp.net" or
+// "62812...:3@s.whatsapp.net", or "@62812...") refers to the configured bot number.
+// Returns false when no bot number is configured.
+func (c *Client) IsBotMention(mention string) bool {
+	if c == nil || c.botDigits == "" {
+		return false
+	}
+	local := strings.TrimPrefix(strings.TrimSpace(mention), "@")
+	if i := strings.IndexAny(local, "@:"); i != -1 {
+		local = local[:i]
+	}
+	d := digitsOnly(local)
+	if strings.HasPrefix(d, "0") {
+		d = "62" + d[1:]
+	}
+	return d != "" && d == c.botDigits
 }

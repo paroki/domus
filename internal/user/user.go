@@ -52,6 +52,7 @@ var (
 	SettingGowaBasicPass         = setting.Key("user", "gowa.basic_pass")
 	SettingGowaDeviceID          = setting.Key("user", "gowa.device_id")
 	SettingGowaWebhookSecret     = setting.Key("user", "gowa.webhook_secret")
+	SettingGowaBotNumber         = setting.Key("user", "gowa.bot_number")
 )
 
 type options struct {
@@ -262,6 +263,14 @@ func (f *Feature) RegisterSettings(s *setting.Store) {
 		Placeholder: "default",
 	})
 	s.Register(setting.Descriptor{
+		Key:         SettingGowaBotNumber,
+		Group:       "GOWA (WhatsApp)",
+		Label:       "Nomor WhatsApp Bot",
+		Description: "Opsional: nomor WhatsApp bot (mis. 62812xxxx) untuk mendeteksi mention di grup.",
+		Secret:      false,
+		Placeholder: "62812xxxxxxx",
+	})
+	s.Register(setting.Descriptor{
 		Key:         SettingGowaWebhookSecret,
 		Group:       "GOWA (WhatsApp)",
 		Label:       "Webhook Secret",
@@ -303,10 +312,11 @@ func (f *Feature) RegisterSettings(s *setting.Store) {
 		basicUser := strings.TrimSpace(values[SettingGowaBasicUser])
 		basicPass := strings.TrimSpace(values[SettingGowaBasicPass])
 		deviceID := strings.TrimSpace(values[SettingGowaDeviceID])
+		botNumber := strings.TrimSpace(values[SettingGowaBotNumber])
 		gowaWebhookSecret := strings.TrimSpace(values[SettingGowaWebhookSecret])
 
 		var gowaClient *gowa.Client
-		if baseURL != "" || basicUser != "" || basicPass != "" || deviceID != "" || gowaWebhookSecret != "" {
+		if baseURL != "" || basicUser != "" || basicPass != "" || deviceID != "" || botNumber != "" || gowaWebhookSecret != "" {
 			if (basicUser != "") != (basicPass != "") {
 				return errors.New("konfigurasi GOWA Basic Auth harus mencakup Username dan Password")
 			}
@@ -318,6 +328,7 @@ func (f *Feature) RegisterSettings(s *setting.Store) {
 				BasicUser:     basicUser,
 				BasicPass:     basicPass,
 				DeviceID:      deviceID,
+				BotNumber:     botNumber,
 				WebhookSecret: gowaWebhookSecret,
 			})
 			if err != nil {

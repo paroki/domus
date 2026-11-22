@@ -174,7 +174,7 @@ func (s *Service) HandleWhatsAppInbound(ctx context.Context, in WhatsAppInbound)
 	}
 
 	rawText := firstNonEmpty(in.Text, in.Caption)
-	if isGroup && len(in.MentionedJIDs) == 0 && !waGabrielRe.MatchString(rawText) && !waDigitsMentionRe.MatchString(rawText) {
+	if isGroup && !isWhatsAppBotMentioned(gowaClient, in.MentionedJIDs, rawText) {
 		return nil
 	}
 	promptText := stripWhatsAppMentions(rawText)
@@ -361,6 +361,25 @@ func stripTelegramBotMention(rawText, botUsername string) string {
 	}
 	cleaned := telegramMentionRe(botUsername).ReplaceAllString(rawText, "")
 	return strings.TrimSpace(multiSpaceRe.ReplaceAllString(cleaned, " "))
+}
+
+// isWhatsAppBotMentioned is true for a literal "@gabriel", or (when app bot number is
+// configured) a mention JID / "@<digits>" that matches the bot's own number.
+func isWhatsAppBotMentioned(c *gowa.Client, jids []string, text string) bool {
+	if waGabrielRe.MatchString(text) {
+		return true
+	}
+	for _, j := range jids {
+		if c.IsBotMention(j) {
+			return true
+		}
+	}
+	for _, m := range waDigitsMentionRe.FindAllString(text, -1) {
+		if c.IsBotMention(m) {
+			return true
+		}
+	}
+	return false
 }
 
 func stripWhatsAppMentions(rawText string) string {

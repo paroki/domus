@@ -182,3 +182,26 @@ func TestFormatTargetJID_AndSendChatPresence(t *testing.T) {
 	assert.Equal(t, "/send/message", paths[1])
 	assert.Equal(t, "120363000111222@g.us", payloads[1]["phone"])
 }
+
+func TestIsBotMention(t *testing.T) {
+	c, err := gowa.New(gowa.Config{BaseURL: "http://gowa.local", BotNumber: "+62 812-3456"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for in, want := range map[string]bool{
+		"628123456@s.whatsapp.net":   true,
+		"628123456:7@s.whatsapp.net": true,
+		"@628123456":                 true,
+		"0812 3456":                  true,
+		"628999999@s.whatsapp.net":   false,
+		"":                           false,
+	} {
+		if got := c.IsBotMention(in); got != want {
+			t.Errorf("IsBotMention(%q)=%v want %v", in, got, want)
+		}
+	}
+	none, _ := gowa.New(gowa.Config{BaseURL: "http://gowa.local"})
+	if none.IsBotMention("628123456@s.whatsapp.net") {
+		t.Error("unconfigured bot number must not match")
+	}
+}
