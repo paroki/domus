@@ -87,7 +87,7 @@ Domain units across both backend and frontend are called **features** (never "mo
 ## 3. Backend: Fiber v3, Entgo, Swag & OpenAPI 3.1
 
 - **Fiber v3**: Register feature routes under the `/api` group in `internal/app/fiber.go` via `<feature>.Register(api)`. Use `fiber.Ctx` (v3 signature: `func(c fiber.Ctx) error`).
-- **Entgo (`ent/`)**: All database schemas live in `ent/schema/`. Share the generated `*ent.Client` across features via dependency injection in `Register` / `New`.
+- **Entgo (`ent/`)**: All database schemas live in `ent/schema/`. Share the generated `*ent.Client` across features via dependency injection in `Register` / `New`. Domus uses **ParadeDB** (`paradedb/paradedb:latest-pg18`) exclusively for runtime, local testing (`TEST_DSN` / `domus_test`), and CI.
 - **Strict DTO Boundary**:
   - NEVER expose generated `ent` models directly in HTTP responses or Swag annotations.
   - ALL request/response DTOs are defined in `internal/<feature>/domain/dto.go`. Handlers, services, and Swag annotations reference `domain.<Dto>`; NEVER define DTOs in `handler/`.
