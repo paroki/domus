@@ -50,7 +50,13 @@ func TestGeminiDriver_StreamEmbedAndDiscover(t *testing.T) {
 			_, _ = fmt.Fprint(w, "data: {\"candidates\":[{\"content\":{\"parts\":[{\"thought\":true,\"text\":\"Mengecek...\"}]}}]}\n\n")
 			_, _ = fmt.Fprint(w, "data: {\"candidates\":[{\"content\":{\"parts\":[{\"functionCall\":{\"name\":\"event_list\",\"args\":{\"limit\":5}}}]}}]}\n\n")
 			_, _ = fmt.Fprint(w, "data: {\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"Halo!\"}]}}]}\n\n")
+		case strings.Contains(r.URL.Path, ":batchEmbedContents"):
+			w.Header().Set("Content-Type", "application/json")
+			vec := make([]float32, 768)
+			vec[0] = 2.0
+			_ = json.NewEncoder(w).Encode(map[string]any{"embeddings": []map[string]any{{"values": vec}}})
 		case strings.Contains(r.URL.Path, ":embedContent"):
+			w.Header().Set("Content-Type", "application/json")
 			vec := make([]float32, 768)
 			vec[0] = 2.0
 			_ = json.NewEncoder(w).Encode(map[string]any{"embedding": map[string]any{"values": vec}})
@@ -146,7 +152,7 @@ func TestGeminiDriver_StreamEmbedAndDiscover(t *testing.T) {
 	_, nestedHasAddProp := nested["additionalProperties"]
 	assert.False(t, nestedHasAddProp)
 	opt := props["opt"].(map[string]any)
-	assert.Equal(t, "string", opt["type"])
+	assert.Equal(t, "STRING", opt["type"])
 	assert.Equal(t, true, opt["nullable"])
 }
 
@@ -158,15 +164,22 @@ func TestAnthropicDriver_StreamDiscoverAndNoEmbed(t *testing.T) {
 		assert.Equal(t, "ant-secret", r.Header.Get("x-api-key"))
 		assert.Equal(t, "2023-06-01", r.Header.Get("anthropic-version"))
 		switch r.URL.Path {
-		case "/messages":
+		case "/messages", "/v1/messages":
 			b, _ := io.ReadAll(r.Body)
 			_ = json.Unmarshal(b, &capturedBody)
 			w.Header().Set("Content-Type", "text/event-stream")
-			_, _ = fmt.Fprint(w, "data: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"thinking_delta\",\"thinking\":\"Berpikir...\"}}\n\n")
-			_, _ = fmt.Fprint(w, "data: {\"type\":\"content_block_start\",\"index\":1,\"content_block\":{\"type\":\"tool_use\",\"id\":\"tu_1\",\"name\":\"org_list\"}}\n\n")
-			_, _ = fmt.Fprint(w, "data: {\"type\":\"content_block_delta\",\"index\":1,\"delta\":{\"type\":\"input_json_delta\",\"partial_json\":\"{\\\"q\\\":\\\"koor\\\"}\"}}\n\n")
-			_, _ = fmt.Fprint(w, "data: {\"type\":\"content_block_stop\",\"index\":1}\n\n")
-			_, _ = fmt.Fprint(w, "data: {\"type\":\"content_block_delta\",\"index\":2,\"delta\":{\"type\":\"text_delta\",\"text\":\"Siap!\"}}\n\n")
+			_, _ = fmt.Fprint(w, "event: message_start\ndata: {\"type\":\"message_start\",\"message\":{\"id\":\"msg_1\",\"type\":\"message\",\"role\":\"assistant\",\"model\":\"claude-3-7-sonnet\",\"content\":[],\"stop_reason\":null,\"usage\":{\"input_tokens\":10,\"output_tokens\":0}}}\n\n")
+			_, _ = fmt.Fprint(w, "event: content_block_start\ndata: {\"type\":\"content_block_start\",\"index\":0,\"content_block\":{\"type\":\"thinking\",\"thinking\":\"\",\"signature\":\"\"}}\n\n")
+			_, _ = fmt.Fprint(w, "event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"thinking_delta\",\"thinking\":\"Berpikir...\"}}\n\n")
+			_, _ = fmt.Fprint(w, "event: content_block_stop\ndata: {\"type\":\"content_block_stop\",\"index\":0}\n\n")
+			_, _ = fmt.Fprint(w, "event: content_block_start\ndata: {\"type\":\"content_block_start\",\"index\":1,\"content_block\":{\"type\":\"tool_use\",\"id\":\"tu_1\",\"name\":\"org_list\",\"input\":{}}}\n\n")
+			_, _ = fmt.Fprint(w, "event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":1,\"delta\":{\"type\":\"input_json_delta\",\"partial_json\":\"{\\\"q\\\":\\\"koor\\\"}\"}}\n\n")
+			_, _ = fmt.Fprint(w, "event: content_block_stop\ndata: {\"type\":\"content_block_stop\",\"index\":1}\n\n")
+			_, _ = fmt.Fprint(w, "event: content_block_start\ndata: {\"type\":\"content_block_start\",\"index\":2,\"content_block\":{\"type\":\"text\",\"text\":\"\"}}\n\n")
+			_, _ = fmt.Fprint(w, "event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":2,\"delta\":{\"type\":\"text_delta\",\"text\":\"Siap!\"}}\n\n")
+			_, _ = fmt.Fprint(w, "event: content_block_stop\ndata: {\"type\":\"content_block_stop\",\"index\":2}\n\n")
+			_, _ = fmt.Fprint(w, "event: message_delta\ndata: {\"type\":\"message_delta\",\"delta\":{\"stop_reason\":\"tool_use\"},\"usage\":{\"output_tokens\":20}}\n\n")
+			_, _ = fmt.Fprint(w, "event: message_stop\ndata: {\"type\":\"message_stop\"}\n\n")
 		case "/models":
 			_ = json.NewEncoder(w).Encode(map[string]any{
 				"data": []map[string]any{{"id": "claude-3-7-sonnet", "display_name": "Claude 3.7 Sonnet"}},
@@ -223,6 +236,7 @@ func TestOpenAIAndOpenRouterDriver_StreamEmbedAndErrors(t *testing.T) {
 			_, _ = fmt.Fprint(w, "data: {\"choices\":[{\"delta\":{\"content\":\"Baik.\"}}]}\n\n")
 			_, _ = fmt.Fprint(w, "data: [DONE]\n\n")
 		case "/embeddings":
+			w.Header().Set("Content-Type", "application/json")
 			vec := make([]float32, 768)
 			vec[0] = 5.0
 			_ = json.NewEncoder(w).Encode(map[string]any{

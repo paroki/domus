@@ -67,6 +67,7 @@ type ChatResponse struct {
 // Registry dispatches chat streaming, embedding, and model discovery across LLM providers.
 type Registry struct {
 	httpClient *http.Client
+	pool       genkitPool
 }
 
 // NewRegistry creates a Registry using httpClient (or a default client with a 60s response-header timeout if nil).
@@ -114,11 +115,11 @@ func (r *Registry) StreamChat(
 	}
 	switch domain.ProviderName(modelCfg.Provider) {
 	case domain.ProviderGemini:
-		return r.streamGemini(ctx, modelCfg, req, onEvent)
+		return r.streamGenkit(ctx, modelCfg, req, onEvent)
 	case domain.ProviderAnthropic:
-		return r.streamAnthropic(ctx, modelCfg, req, onEvent)
+		return r.streamGenkit(ctx, modelCfg, req, onEvent)
 	case domain.ProviderOpenAI, domain.ProviderOpenRouter:
-		return r.streamOpenAI(ctx, modelCfg, req, onEvent)
+		return r.streamGenkit(ctx, modelCfg, req, onEvent)
 	default:
 		return nil, fmt.Errorf("%w: unsupported provider %q", domain.ErrProviderUnavailable, modelCfg.Provider)
 	}
@@ -135,11 +136,11 @@ func (r *Registry) Embed(
 	}
 	switch domain.ProviderName(provider) {
 	case domain.ProviderGemini:
-		return r.embedGemini(ctx, baseURL, key, model, text)
+		return r.embedGenkit(ctx, provider, baseURL, key, model, text)
 	case domain.ProviderAnthropic:
 		return nil, fmt.Errorf("%w: Anthropic does not support text embeddings", domain.ErrProviderUnavailable)
 	case domain.ProviderOpenAI, domain.ProviderOpenRouter:
-		return r.embedOpenAI(ctx, provider, baseURL, key, model, text)
+		return r.embedGenkit(ctx, provider, baseURL, key, model, text)
 	default:
 		return nil, fmt.Errorf("%w: unsupported provider %q", domain.ErrProviderUnavailable, provider)
 	}

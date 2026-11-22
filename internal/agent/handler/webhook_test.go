@@ -207,7 +207,7 @@ func (s *AgentWebhookSuite) waitCalls() {
 	for time.Now().Before(deadline) {
 		if n := count(); n != last {
 			last, stableSince = n, time.Now()
-		} else if n > 0 && time.Since(stableSince) > 200*time.Millisecond {
+		} else if n > 0 && time.Since(stableSince) > 800*time.Millisecond {
 			return
 		}
 		time.Sleep(20 * time.Millisecond)

@@ -517,7 +517,8 @@ func (s *AgentHandlerSuite) TestChatSSE_PreStreamErrorsAndStreaming() {
 	s.OK()
 	errBody := s.readBody()
 	s.Contains(errBody, "event: error\n")
-	s.Contains(errBody, "provider HTTP 502")
+	s.Contains(errBody, "AGENT_PROVIDER_OVERLOADED")
+	s.Contains(errBody, "502")
 
 	// 6. Continue from last interrupted turn without duplicating the user message.
 	s.setLLMHandler(func(w http.ResponseWriter, r *http.Request) {
