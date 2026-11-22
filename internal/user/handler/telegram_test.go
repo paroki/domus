@@ -124,7 +124,14 @@ func (s *TelegramHandlerSuite) TestTelegramWebhook_SecretValidationAndMalformedJ
 	s.Request("/api/telegram/hooks", http.MethodPost, telegram.Update{UpdateID: 1})
 	s.Unauthorized()
 
-	// Empty configured webhook secret (fail-closed) -> 401 UNAUTHORIZED
+	// No Telegram client configured -> 401 UNAUTHORIZED
+	noBotFeature := user.New(s.client, s.enforcer, s.cfg, slog.New(slog.DiscardHandler))
+	s.WithFeatures(noBotFeature)
+	s.SetHeader(telegram.SecretTokenHeader, "")
+	s.Request("/api/telegram/hooks", http.MethodPost, telegram.Update{UpdateID: 1})
+	s.Unauthorized()
+
+	// Empty configured webhook secret -> 200 OK without requiring secret header
 	noSecretClient, err := telegram.New(telegram.Config{
 		BotToken:    "123:TG_SECRET",
 		BotUsername: "domus_test_bot",
@@ -135,7 +142,7 @@ func (s *TelegramHandlerSuite) TestTelegramWebhook_SecretValidationAndMalformedJ
 	s.WithFeatures(noSecretFeature)
 	s.SetHeader(telegram.SecretTokenHeader, "")
 	s.Request("/api/telegram/hooks", http.MethodPost, telegram.Update{UpdateID: 1})
-	s.Unauthorized()
+	s.OK()
 
 	// Valid secret + malformed JSON -> 400 BAD_REQUEST
 	s.WithFeatures(s.feature)

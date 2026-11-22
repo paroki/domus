@@ -16,8 +16,10 @@ func TestNewValidationAndDeepLink(t *testing.T) {
 	_, err := telegram.New(telegram.Config{BotUsername: "domus_bot"})
 	require.Error(t, err)
 
-	_, err = telegram.New(telegram.Config{BotToken: "secret-token"})
-	require.Error(t, err)
+	tokenOnly, err := telegram.New(telegram.Config{BotToken: "secret-token"})
+	require.NoError(t, err)
+	assert.Empty(t, tokenOnly.BotUsername())
+	assert.False(t, tokenOnly.HasWebhookSecret())
 
 	_, err = telegram.New(telegram.Config{
 		BotToken:    "secret-token",
@@ -33,9 +35,40 @@ func TestNewValidationAndDeepLink(t *testing.T) {
 	})
 	require.NoError(t, err)
 	assert.Equal(t, "domus_paroki_bot", c.BotUsername())
+	assert.True(t, c.HasWebhookSecret())
 	assert.Equal(t, "https://t.me/domus_paroki_bot?start=abc123", c.DeepLinkURL("abc123"))
 	assert.True(t, c.VerifyWebhookSecret("hook-secret-123"))
 	assert.False(t, c.VerifyWebhookSecret("wrong-secret"))
+}
+
+func TestResolveBotUsername_GetMeAndCache(t *testing.T) {
+	calls := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.Equal(t, "/bot12345:SECRET/getMe", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"ok":true,"result":{"id":12345,"username":"@domus_auto_bot"}}`))
+	}))
+	defer srv.Close()
+
+	c, err := telegram.New(telegram.Config{
+		BotToken: "12345:SECRET",
+		BaseURL:  srv.URL,
+	})
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	u1, err := c.ResolveBotUsername(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, "domus_auto_bot", u1)
+	assert.Equal(t, "https://t.me/domus_auto_bot?start=tok1", c.DeepLinkURL("tok1"))
+
+	// Second call uses cached username without hitting getMe again.
+	u2, err := c.ResolveBotUsername(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, "domus_auto_bot", u2)
+	assert.Equal(t, 1, calls)
 }
 
 func TestVerifyWebhookSecret(t *testing.T) {

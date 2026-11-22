@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -32,6 +33,7 @@ type Config struct {
 
 // Client sends outbound Telegram Bot API requests and verifies inbound webhook secrets.
 type Client struct {
+	mu            sync.RWMutex
 	botToken      string
 	botUsername   string
 	webhookSecret string
@@ -107,9 +109,6 @@ func New(cfg Config) (*Client, error) {
 		return nil, errors.New("telegram: bot token is required")
 	}
 	username := strings.TrimPrefix(strings.TrimSpace(cfg.BotUsername), "@")
-	if username == "" {
-		return nil, errors.New("telegram: bot username is required")
-	}
 
 	baseURL := strings.TrimRight(strings.TrimSpace(cfg.BaseURL), "/")
 	if baseURL == "" {
@@ -136,12 +135,43 @@ func New(cfg Config) (*Client, error) {
 
 // BotUsername returns the normalized Telegram bot username without leading '@'.
 func (c *Client) BotUsername() string {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	return c.botUsername
+}
+
+// ResolveBotUsername returns the bot username, fetching and caching it via getMe if not yet set.
+func (c *Client) ResolveBotUsername(ctx context.Context) (string, error) {
+	if username := c.BotUsername(); username != "" {
+		return username, nil
+	}
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.botUsername != "" {
+		return c.botUsername, nil
+	}
+
+	var me User
+	if err := c.getJSON(ctx, "getMe", &me); err != nil {
+		return "", err
+	}
+	username := strings.TrimPrefix(strings.TrimSpace(me.Username), "@")
+	if username == "" {
+		return "", errors.New("telegram: getMe returned empty bot username")
+	}
+	c.botUsername = username
+	return username, nil
 }
 
 // DeepLinkURL builds a Telegram deep link URL carrying start payload token.
 func (c *Client) DeepLinkURL(token string) string {
-	return fmt.Sprintf("https://t.me/%s?start=%s", c.botUsername, url.QueryEscape(strings.TrimSpace(token)))
+	return fmt.Sprintf("https://t.me/%s?start=%s", c.BotUsername(), url.QueryEscape(strings.TrimSpace(token)))
+}
+
+// HasWebhookSecret reports whether a webhook secret token is configured.
+func (c *Client) HasWebhookSecret() bool {
+	return c.webhookSecret != ""
 }
 
 // VerifyWebhookSecret verifies X-Telegram-Bot-Api-Secret-Token against the configured secret.
@@ -176,6 +206,47 @@ func (c *Client) SendChatAction(ctx context.Context, chatID int64, action string
 		"chat_id": chatID,
 		"action":  action,
 	})
+}
+
+func (c *Client) getJSON(ctx context.Context, method string, out any) error {
+	endpoint := fmt.Sprintf("%s/bot%s/%s", c.baseURL, url.PathEscape(c.botToken), method)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+	if err != nil {
+		return fmt.Errorf("telegram: build %s request: %w", method, c.redactErr(err))
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("telegram: %s request failed: %w", method, c.redactErr(err))
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	respBytes, err := io.ReadAll(io.LimitReader(resp.Body, 4096))
+	if err != nil {
+		return fmt.Errorf("telegram: read %s response: %w", method, err)
+	}
+
+	var apiResp struct {
+		OK          bool            `json:"ok"`
+		ErrorCode   int             `json:"error_code"`
+		Description string          `json:"description"`
+		Result      json.RawMessage `json:"result"`
+	}
+	if err := json.Unmarshal(respBytes, &apiResp); err != nil {
+		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+			return fmt.Errorf("telegram: %s returned HTTP %d", method, resp.StatusCode)
+		}
+		return fmt.Errorf("telegram: decode %s response: %w", method, err)
+	}
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 || !apiResp.OK {
+		return fmt.Errorf("telegram: %s failed (status=%d code=%d): %s", method, resp.StatusCode, apiResp.ErrorCode, apiResp.Description)
+	}
+	if out != nil && len(apiResp.Result) > 0 {
+		if err := json.Unmarshal(apiResp.Result, out); err != nil {
+			return fmt.Errorf("telegram: decode %s result: %w", method, err)
+		}
+	}
+	return nil
 }
 
 func (c *Client) postJSON(ctx context.Context, method string, payload any) error {

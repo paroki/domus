@@ -20,7 +20,7 @@ import (
 //	@Tags			Telegram
 //	@Accept			json
 //	@Produce		json
-//	@Param			X-Telegram-Bot-Api-Secret-Token	header		string	true	"Telegram webhook secret token"
+//	@Param			X-Telegram-Bot-Api-Secret-Token	header		string	false	"Optional Telegram webhook secret token"
 //	@Param			body							body		object	true	"Telegram update payload"
 //	@Success		200								{object}	httpx.Envelope[any]
 //	@Failure		400								{object}	httpx.Envelope[any]
@@ -28,7 +28,10 @@ import (
 //	@Router			/telegram/hooks [post]
 func (h *Handler) TelegramWebhook(c fiber.Ctx) error {
 	tgClient := h.getTelegramClient()
-	if tgClient == nil || !tgClient.VerifyWebhookSecret(c.Get(telegram.SecretTokenHeader)) {
+	if tgClient == nil {
+		return httpx.Unauthorized("Telegram bot is not configured.")
+	}
+	if tgClient.HasWebhookSecret() && !tgClient.VerifyWebhookSecret(c.Get(telegram.SecretTokenHeader)) {
 		return httpx.Unauthorized("Invalid Telegram webhook secret.")
 	}
 

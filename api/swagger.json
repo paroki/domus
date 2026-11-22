@@ -10639,10 +10639,9 @@
                 "operationId": "telegramWebhook",
                 "parameters": [
                     {
-                        "description": "Telegram webhook secret token",
+                        "description": "Optional Telegram webhook secret token",
                         "in": "header",
                         "name": "X-Telegram-Bot-Api-Secret-Token",
-                        "required": true,
                         "schema": {
                             "type": "string"
                         }

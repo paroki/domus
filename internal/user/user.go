@@ -44,10 +44,8 @@ var (
 
 // Feature-owned runtime setting keys.
 var (
-	SettingTelegramBotToken      = setting.Key("user", "telegram.bot_token")
-	SettingTelegramBotUsername   = setting.Key("user", "telegram.bot_username")
-	SettingTelegramWebhookSecret = setting.Key("user", "telegram.webhook_secret")
-	SettingGowaBaseURL           = setting.Key("user", "gowa.base_url")
+	SettingTelegramBotToken  = setting.Key("user", "telegram.bot_token")
+	SettingGowaBaseURL       = setting.Key("user", "gowa.base_url")
 	SettingGowaBasicUser         = setting.Key("user", "gowa.basic_user")
 	SettingGowaBasicPass         = setting.Key("user", "gowa.basic_pass")
 	SettingGowaDeviceID          = setting.Key("user", "gowa.device_id")
@@ -215,22 +213,6 @@ func (f *Feature) RegisterSettings(s *setting.Store) {
 		Placeholder: "123456:ABC-DEF...",
 	})
 	s.Register(setting.Descriptor{
-		Key:         SettingTelegramBotUsername,
-		Group:       "Telegram Bot",
-		Label:       "Bot Username",
-		Description: "Username bot Telegram tanpa awalan @.",
-		Secret:      false,
-		Placeholder: "domus_bot",
-	})
-	s.Register(setting.Descriptor{
-		Key:         SettingTelegramWebhookSecret,
-		Group:       "Telegram Bot",
-		Label:       "Webhook Secret",
-		Description: "Secret token untuk memverifikasi header X-Telegram-Bot-Api-Secret-Token.",
-		Secret:      true,
-		Placeholder: "secret-token",
-	})
-	s.Register(setting.Descriptor{
 		Key:         SettingGowaBaseURL,
 		Group:       "GOWA (WhatsApp)",
 		Label:       "Base URL",
@@ -281,31 +263,16 @@ func (f *Feature) RegisterSettings(s *setting.Store) {
 
 	s.OnChange(func(_ context.Context, values map[string]string) error {
 		botToken := strings.TrimSpace(values[SettingTelegramBotToken])
-		botUsername := strings.TrimSpace(values[SettingTelegramBotUsername])
-		webhookSecret := strings.TrimSpace(values[SettingTelegramWebhookSecret])
-
-		tgSetCount := 0
-		for _, v := range []string{botToken, botUsername, webhookSecret} {
-			if v != "" {
-				tgSetCount++
-			}
-		}
 
 		var tgClient *telegram.Client
-		switch tgSetCount {
-		case 0:
-		case 3:
+		if botToken != "" {
 			c, err := telegram.New(telegram.Config{
-				BotToken:      botToken,
-				BotUsername:   botUsername,
-				WebhookSecret: webhookSecret,
+				BotToken: botToken,
 			})
 			if err != nil {
 				return err
 			}
 			tgClient = c
-		default:
-			return errors.New("konfigurasi Telegram harus mencakup Bot Token, Bot Username, dan Webhook Secret")
 		}
 
 		baseURL := strings.TrimSpace(values[SettingGowaBaseURL])

@@ -113,7 +113,7 @@ func (s *Service) HandleTelegramUpdate(ctx context.Context, update telegram.Upda
 	if rawText == "" {
 		rawText = strings.TrimSpace(msg.Caption)
 	}
-	botUser := tgClient.BotUsername()
+	botUser, _ := tgClient.ResolveBotUsername(ctx)
 	if isGroup && !hasTelegramMention(rawText, msg.Entities, msg.CaptionEntities, botUser) {
 		return nil
 	}

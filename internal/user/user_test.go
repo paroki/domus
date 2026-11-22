@@ -528,26 +528,17 @@ func (s *UserFeatureSuite) TestRegisterSettings_HotReloadAndValidation() {
 	providers := testutil.DecodeAs[domain.AuthProvidersResponse](&s.ApiTestSuite).Data
 	s.Equal([]string{domain.ProviderEmail}, providers.OTPChannels)
 
-	// Partial Telegram -> validation error
-	_, err := store.Update(ctx, map[string]string{
-		user.SettingTelegramBotToken: "123:tok",
-	})
-	s.Require().Error(err)
-	s.Contains(err.Error(), "konfigurasi Telegram harus mencakup Bot Token, Bot Username, dan Webhook Secret")
-
 	// Partial GOWA -> validation error
-	_, err = store.Update(ctx, map[string]string{
+	_, err := store.Update(ctx, map[string]string{
 		user.SettingGowaBaseURL:   "https://gowa.example.com",
 		user.SettingGowaBasicUser: "gowa",
 	})
 	s.Require().Error(err)
 
-	// Valid Telegram + GOWA -> hot-reloaded in /api/auth/providers
+	// Valid Telegram (Bot Token only) + GOWA -> hot-reloaded in /api/auth/providers
 	_, err = store.Update(ctx, map[string]string{
-		user.SettingTelegramBotToken:      "123:tok",
-		user.SettingTelegramBotUsername:   "domus_bot",
-		user.SettingTelegramWebhookSecret: "hook-secret",
-		user.SettingGowaBaseURL:           "https://gowa.example.com",
+		user.SettingTelegramBotToken: "123:tok",
+		user.SettingGowaBaseURL:      "https://gowa.example.com",
 	})
 	s.Require().NoError(err)
 
@@ -559,10 +550,8 @@ func (s *UserFeatureSuite) TestRegisterSettings_HotReloadAndValidation() {
 
 	// Clear Telegram + GOWA -> disabled again
 	_, err = store.Update(ctx, map[string]string{
-		user.SettingTelegramBotToken:      "",
-		user.SettingTelegramBotUsername:   "",
-		user.SettingTelegramWebhookSecret: "",
-		user.SettingGowaBaseURL:           "",
+		user.SettingTelegramBotToken: "",
+		user.SettingGowaBaseURL:      "",
 	})
 	s.Require().NoError(err)
 

@@ -112,6 +112,11 @@ func (s *Service) CreateTelegramLinkToken(ctx context.Context, p authx.Principal
 		return domain.TelegramLinkTokenResponse{}, domain.ErrAuthChannelDisabled
 	}
 
+	botUsername, err := tgClient.ResolveBotUsername(ctx)
+	if err != nil {
+		return domain.TelegramLinkTokenResponse{}, err
+	}
+
 	token, err := randomToken(24)
 	if err != nil {
 		return domain.TelegramLinkTokenResponse{}, err
@@ -128,7 +133,7 @@ func (s *Service) CreateTelegramLinkToken(ctx context.Context, p authx.Principal
 
 	return domain.TelegramLinkTokenResponse{
 		DeepLinkURL:      tgClient.DeepLinkURL(token),
-		BotUsername:      tgClient.BotUsername(),
+		BotUsername:      botUsername,
 		ExpiresInSeconds: int(s.cfg.OTPTTL.Seconds()),
 	}, nil
 }
