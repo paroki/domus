@@ -49,7 +49,7 @@ type UpdateAgentProviderRequest struct {
 	Description *string `json:"description,omitempty" validate:"omitempty,max=500"`
 	Provider    *string `json:"provider,omitempty" validate:"omitempty,oneof=gemini anthropic openai openrouter"`
 	APIKey      *string `json:"apiKey,omitempty"`
-	BaseURL     *string `json:"baseUrl,omitempty" validate:"omitempty,http_url"`
+	BaseURL     *string `json:"baseUrl,omitempty"`
 }
 
 // AgentSessionResponse is the public API representation of an AgentSession.

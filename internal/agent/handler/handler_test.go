@@ -264,6 +264,21 @@ func (s *AgentHandlerSuite) TestProvidersCRUD_RBAC_AndSyncModels() {
 	s.AssertStatus(http.StatusConflict)
 	s.Equal("AGENT_PROVIDER_IN_USE", s.GetErrorResponse().Error.Code)
 
+	// Patch with empty baseUrl clears it; invalid baseUrl returns 400
+	emptyBaseURL := ""
+	s.Request("/api/agent/providers/"+second.ID.String(), http.MethodPatch, domain.UpdateAgentProviderRequest{
+		BaseURL: &emptyBaseURL,
+	})
+	s.OK()
+	cleared := testutil.DecodeAs[domain.AgentProviderResponse](&s.ApiTestSuite).Data
+	s.Equal("", cleared.BaseURL)
+
+	badBaseURL := "not-a-url"
+	s.Request("/api/agent/providers/"+second.ID.String(), http.MethodPatch, domain.UpdateAgentProviderRequest{
+		BaseURL: &badBaseURL,
+	})
+	s.BadRequest()
+
 	// Unused provider can be deleted
 	s.Request("/api/agent/providers/"+second.ID.String(), http.MethodDelete, nil)
 	s.NoContent()
