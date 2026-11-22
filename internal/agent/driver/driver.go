@@ -69,10 +69,13 @@ type Registry struct {
 	httpClient *http.Client
 }
 
-// NewRegistry creates a Registry using httpClient (or a default 60s-timeout client if nil).
+// NewRegistry creates a Registry using httpClient (or a default client with a 60s response-header timeout if nil).
 func NewRegistry(httpClient *http.Client) *Registry {
 	if httpClient == nil {
-		httpClient = &http.Client{Timeout: 60 * time.Second}
+		// No overall Timeout: it would cut long SSE streams. Callers bound total time via ctx.
+		tr := http.DefaultTransport.(*http.Transport).Clone()
+		tr.ResponseHeaderTimeout = 60 * time.Second
+		httpClient = &http.Client{Transport: tr}
 	}
 	return &Registry{httpClient: httpClient}
 }
