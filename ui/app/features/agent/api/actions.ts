@@ -174,13 +174,9 @@ export async function streamAgentChat({
       onEvent(ev);
       if (ev.event === "error") {
         const code = ev.code ?? "INTERNAL_ERROR";
-        const message =
-          code === "AGENT_PROVIDER_UNAVAILABLE" &&
-          ev.message &&
-          ev.message !==
-            "The configured AI provider is unavailable or missing an API key."
-            ? ev.message
-            : resolveErrorMessage(code, ev.message, AGENT_ERRORS);
+        const message = ev.message?.includes("provider HTTP")
+          ? ev.message
+          : resolveErrorMessage(code, ev.message, AGENT_ERRORS);
         throw new ApiError(500, code, message);
       }
     }

@@ -10,6 +10,11 @@ export const AGENT_ERRORS: Record<string, string> = {
     "Asisten masih memproses pesan sebelumnya pada sesi ini. Silakan tunggu sebentar.",
   AGENT_PROVIDER_UNAVAILABLE:
     "Penyedia AI belum dikonfigurasi atau sedang tidak tersedia.",
+  AGENT_PROVIDER_AUTH_FAILED:
+    "Autentikasi penyedia AI gagal. Periksa API key Anda.",
+  AGENT_PROVIDER_RATE_LIMITED:
+    "Batas permintaan penyedia AI tercapai. Silakan coba lagi sebentar.",
+  AGENT_PROVIDER_REQUEST_INVALID: "Permintaan ditolak oleh penyedia AI.",
   AGENT_MAX_STEPS_EXCEEDED:
     "Asisten mencapai batas maksimum langkah pemanggilan alat.",
   AGENT_MEMORY_LIMIT_EXCEEDED:
