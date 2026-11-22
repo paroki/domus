@@ -19,10 +19,8 @@ export class SystemSettingsPage extends BasePage {
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
-  async selectTab(
-    tab: "Kanal Komunikasi" | "Penyedia LLM" | "Agen & Embedding",
-  ): Promise<void> {
-    await this.page.getByRole("tab", { name: tab }).click();
+  async openLauncherItem(label: string): Promise<void> {
+    await this.page.getByRole("link", { name: label }).click();
   }
 
   async expectChannelGroupsVisible(groupNames: string[]): Promise<void> {
@@ -232,6 +230,24 @@ export class SystemSettingsPage extends BasePage {
       ),
       this.page
         .getByRole("button", { name: "Simpan Konfigurasi Agen" })
+        .click(),
+    ]);
+    await this.page
+      .getByRole("status")
+      .filter({ hasText: "Pengaturan berhasil disimpan." })
+      .waitFor({ state: "visible", timeout: 10_000 });
+  }
+
+  async saveEmbeddingConfig(): Promise<void> {
+    await Promise.all([
+      this.page.waitForResponse(
+        (r) =>
+          r.url().includes("/api/settings") &&
+          r.request().method() === "PATCH" &&
+          r.status() === 200,
+      ),
+      this.page
+        .getByRole("button", { name: "Simpan Konfigurasi Embedding" })
         .click(),
     ]);
     await this.page

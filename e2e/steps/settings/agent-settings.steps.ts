@@ -23,11 +23,9 @@ Then(
 );
 
 When(
-  "I switch settings tab to {string}",
-  async function (this: DomusWorld, tab: string) {
-    await this.pages.settings.selectTab(
-      tab as "Kanal Komunikasi" | "Penyedia LLM" | "Agen & Embedding",
-    );
+  "I open settings launcher {string}",
+  async function (this: DomusWorld, label: string) {
+    await this.pages.settings.openLauncherItem(label);
   },
 );
 
@@ -102,6 +100,10 @@ When(
 
 When("I save agent configuration", async function (this: DomusWorld) {
   await this.pages.settings.saveAgentConfig();
+});
+
+When("I save embedding configuration", async function (this: DomusWorld) {
+  await this.pages.settings.saveEmbeddingConfig();
 });
 
 Then(
