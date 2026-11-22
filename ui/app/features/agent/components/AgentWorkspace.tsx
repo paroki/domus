@@ -2,26 +2,18 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Bot, Brain, PanelLeft, Send, Square } from "lucide-react";
 import { type FormEvent, type KeyboardEvent, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { useMe } from "~/shared/api/session";
-import i18n from "~/shared/i18n";
 import { Button } from "~/shared/ui/Button";
 import { Card } from "~/shared/ui/Card";
 import { streamAgentChat } from "../api/actions";
 import { resolveAgentError } from "../api/errors";
 import { agentKeys } from "../api/keys";
 import { useAgentMessages, useAgentSessions } from "../api/queries";
-import {
-  ChatTimeline,
-  type LiveStreamingState,
-} from "../components/ChatTimeline";
-import { MemoryDrawer } from "../components/MemoryDrawer";
-import { SessionSidebar } from "../components/SessionSidebar";
 import { buildTimelineItems, isToolErrorResult } from "../model";
-
-export function meta() {
-  return [{ title: `${i18n.t("agent.title")} · Domus` }];
-}
+import { ChatTimeline, type LiveStreamingState } from "./ChatTimeline";
+import { MemoryDrawer } from "./MemoryDrawer";
+import { SessionSidebar } from "./SessionSidebar";
 
 const EMPTY_STREAM: LiveStreamingState = {
   active: false,
@@ -31,7 +23,7 @@ const EMPTY_STREAM: LiveStreamingState = {
   toolSteps: [],
 };
 
-export default function AgentPage() {
+export function AgentWorkspace() {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const { data: me } = useMe();
@@ -213,13 +205,21 @@ export default function AgentPage() {
           <p className="mt-1 text-sm text-muted">
             {t("agent.noParishDescription")}
           </p>
+          <div className="mt-4 flex justify-center">
+            <Link
+              to="/?tab=menu"
+              className="inline-flex h-9 items-center rounded-lg border border-line bg-canvas px-4 text-xs font-semibold text-fg no-underline hover:bg-fg/8"
+            >
+              {t("header.tabMenu")}
+            </Link>
+          </div>
         </Card>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-4.5rem)] w-full max-w-7xl flex-col gap-3 px-4 py-4">
+    <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col gap-3 px-4 py-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <Button

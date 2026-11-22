@@ -7,6 +7,9 @@ const id = {
   },
   header: {
     homeLabel: "Domus, beranda",
+    navLabel: "Navigasi utama",
+    tabGabriel: "Gabriel",
+    tabMenu: "Menu",
     searchLabel: "Cari menu",
     searchPlaceholder: "Cari menu…",
     account: "Akun saya",
@@ -49,11 +52,6 @@ const id = {
       name: "Pengaturan",
       description:
         "Konfigurasi integrasi sistem, Telegram Bot, dan WhatsApp (GOWA).",
-    },
-    agent: {
-      name: "Asisten AI",
-      description:
-        "Asisten paroki cerdas untuk informasi kegiatan, organisasi, dan memori.",
     },
   },
   auth: {
