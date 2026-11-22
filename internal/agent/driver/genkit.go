@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -18,7 +19,6 @@ import (
 	oaiplugin "github.com/firebase/genkit/go/plugins/compat_oai/openai"
 	openrouterplugin "github.com/firebase/genkit/go/plugins/compat_oai/openrouter"
 	"github.com/firebase/genkit/go/plugins/googlegenai"
-	"github.com/google/uuid"
 	openaiopt "github.com/openai/openai-go/option"
 	"google.golang.org/genai"
 
@@ -183,30 +183,35 @@ func toGenkitMessages(in []ChatMessage) []*ai.Message {
 	return out
 }
 
-func (r *Registry) streamGenkit(
+func (r *Registry) generateGenkit(
 	ctx context.Context,
 	cfg domain.ModelConfig,
 	req ChatRequest,
 	onEvent StreamCallback,
-) (*ChatResponse, error) {
+	extraOpts ...ai.GenerateOption,
+) (*ai.ModelResponse, error) {
 	key := strings.TrimSpace(cfg.APIKey)
 	g, prefix, err := r.instance(ctx, cfg.Provider, cfg.BaseURL, key)
 	if err != nil {
 		return nil, err
 	}
+	var streamErr error
 	opts := []ai.GenerateOption{
 		ai.WithModelName(prefix + cfg.Model),
 		ai.WithMessages(toGenkitMessages(req.Messages)...),
 		ai.WithConfig(providerConfig(cfg)),
-		ai.WithReturnToolRequests(true),
 		ai.WithStreaming(func(_ context.Context, c *ai.ModelResponseChunk) error {
 			if s := c.Reasoning(); s != "" {
 				if err := emitEvent(onEvent, StreamEvent{Type: StreamEventThinking, Delta: s}); err != nil {
+					streamErr = err
 					return err
 				}
 			}
 			if s := c.Text(); s != "" {
-				return emitEvent(onEvent, StreamEvent{Type: StreamEventDelta, Delta: s})
+				if err := emitEvent(onEvent, StreamEvent{Type: StreamEventDelta, Delta: s}); err != nil {
+					streamErr = err
+					return err
+				}
 			}
 			return nil
 		}),
@@ -217,24 +222,31 @@ func (r *Registry) streamGenkit(
 	if len(req.Tools) > 0 {
 		opts = append(opts, ai.WithTools(req.Tools...))
 	}
+	opts = append(opts, extraOpts...)
+	// Innermost middleware maps raw provider SDK errors while preserving caller/stream errors.
+	opts = append(opts, ai.WithUse(ai.MiddlewareFunc(func(context.Context) (*ai.Hooks, error) {
+		return &ai.Hooks{
+			WrapModel: func(ctx context.Context, p *ai.ModelParams, next ai.ModelNext) (*ai.ModelResponse, error) {
+				resp, err := next(ctx, p)
+				if err != nil {
+					if streamErr != nil {
+						return nil, streamErr
+					}
+					return nil, mapGenkitError(err, key)
+				}
+				return resp, nil
+			},
+		}, nil
+	})))
+
 	resp, err := genkit.Generate(ctx, g, opts...)
 	if err != nil {
-		return nil, mapGenkitError(err, key)
-	}
-	out := &ChatResponse{Content: resp.Text(), Thinking: resp.Reasoning()}
-	for _, tr := range resp.ToolRequests() {
-		args, _ := json.Marshal(tr.ToolRequest.Input)
-		id := tr.ToolRequest.Ref
-		if id == "" {
-			id = uuid.NewString()
+		if errors.Is(err, ai.ErrMaxTurnsExceeded) {
+			return nil, domain.ErrMaxStepsExceeded
 		}
-		tc := domain.ToolCall{ID: id, Name: tr.ToolRequest.Name, Arguments: string(args)}
-		out.ToolCalls = append(out.ToolCalls, tc)
-		if err := emitEvent(onEvent, StreamEvent{Type: StreamEventToolCall, ToolCall: &tc}); err != nil {
-			return nil, err
-		}
+		return nil, err
 	}
-	return out, nil
+	return resp, nil
 }
 
 func (r *Registry) embedGenkit(ctx context.Context, provider, baseURL, key, model, text string) ([]float32, error) {

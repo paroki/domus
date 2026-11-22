@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log/slog"
 	"slices"
 	"strings"
@@ -465,176 +464,181 @@ func (s *Service) runReActLoop(
 	tools = append(tools, mcpTools...)
 
 	toolRefs := make([]ai.ToolRef, len(tools))
-	toolMap := make(map[string]ai.Tool, len(tools))
 	for i, t := range tools {
 		toolRefs[i] = t
-		toolMap[t.Name()] = t
 	}
 
-	history := make([]driver.ChatMessage, len(messages))
-	copy(history, messages)
+	var (
+		mu              sync.Mutex
+		delegatedAnswer string
+		hasDelegated    bool
+	)
+	errDelegatedHandoff := errors.New("delegated handoff complete")
 
-	for range maxSteps {
-		if ctx.Err() != nil {
-			return "", ctx.Err()
-		}
-
-		resp, err := s.drivers.StreamChat(ctx, agentCfg.Model, driver.ChatRequest{
-			SystemPrompt: systemPrompt,
-			Messages:     history,
-			Tools:        toolRefs,
-		}, func(ev driver.StreamEvent) error {
-			switch ev.Type {
-			case driver.StreamEventThinking:
-				return emitStep(onStep, domain.AgentSSEEvent{
-					Event:     "thinking",
-					SessionID: &sessionID,
-					AgentName: agentCfg.Name,
-					Content:   ev.Delta,
-				})
-			case driver.StreamEventDelta:
-				if !emitDeltas {
-					return nil
+	hooksMiddleware := ai.MiddlewareFunc(func(context.Context) (*ai.Hooks, error) {
+		return &ai.Hooks{
+			WrapModel: func(ctx context.Context, params *ai.ModelParams, next ai.ModelNext) (*ai.ModelResponse, error) {
+				mu.Lock()
+				delegated := hasDelegated
+				mu.Unlock()
+				if delegated {
+					return nil, errDelegatedHandoff
 				}
-				return emitStep(onStep, domain.AgentSSEEvent{
-					Event:     "delta",
-					SessionID: &sessionID,
-					AgentName: agentCfg.Name,
-					Content:   ev.Delta,
-				})
-			case driver.StreamEventToolCall:
-				if ev.ToolCall == nil {
-					return nil
+				if ctx.Err() != nil {
+					return nil, ctx.Err()
 				}
-				return emitStep(onStep, domain.AgentSSEEvent{
-					Event:      "tool_call",
-					SessionID:  &sessionID,
-					AgentName:  agentCfg.Name,
-					ToolCallID: ev.ToolCall.ID,
-					ToolName:   ev.ToolCall.Name,
-					Arguments:  ev.ToolCall.Arguments,
-				})
-			}
-			return nil
-		})
-		if err != nil {
-			return "", err
-		}
 
-		var thinkingPtr *string
-		if resp.Thinking != "" {
-			t := resp.Thinking
-			thinkingPtr = &t
-		}
-		if _, err := s.repo.AppendMessage(ctx, domain.CreateMessageInput{
-			ParishID:  p.ParishID,
-			UserID:    p.UserID,
-			SessionID: sessionID,
-			AgentName: agentCfg.Name,
-			Role:      domain.RoleAssistant,
-			Content:   resp.Content,
-			Thinking:  thinkingPtr,
-			ToolCalls: resp.ToolCalls,
-		}); err != nil {
-			return "", err
-		}
+				resp, err := next(ctx, params)
+				if err != nil {
+					return nil, err
+				}
 
-		if len(resp.ToolCalls) == 0 {
-			return resp.Content, nil
-		}
+				var toolCalls []domain.ToolCall
+				for _, tr := range resp.ToolRequests() {
+					if tr.ToolRequest.Ref == "" {
+						tr.ToolRequest.Ref = uuid.NewString()
+					}
+					args, _ := json.Marshal(tr.ToolRequest.Input)
+					toolCalls = append(toolCalls, domain.ToolCall{
+						ID:        tr.ToolRequest.Ref,
+						Name:      tr.ToolRequest.Name,
+						Arguments: string(args),
+					})
+				}
 
-		history = append(history, driver.ChatMessage{
-			Role:      domain.RoleAssistant,
-			Content:   resp.Content,
-			ToolCalls: resp.ToolCalls,
-		})
+				var thinkingPtr *string
+				if th := resp.Reasoning(); th != "" {
+					thinkingPtr = &th
+				}
 
-		var delegatedAnswer string
-		var hasDelegated bool
-		for _, tc := range resp.ToolCalls {
-			var resultStr string
-			var toolErr error
-			if t, ok := toolMap[tc.Name]; ok {
-				argMap := map[string]any{}
-				if trimmed := strings.TrimSpace(tc.Arguments); trimmed != "" {
-					if uerr := json.Unmarshal([]byte(trimmed), &argMap); uerr != nil {
-						toolErr = errx.Invalid("INVALID_TOOL_ARGS", fmt.Sprintf("Invalid JSON arguments for %s: %v", tc.Name, uerr))
+				mu.Lock()
+				defer mu.Unlock()
+
+				if _, err := s.repo.AppendMessage(ctx, domain.CreateMessageInput{
+					ParishID:  p.ParishID,
+					UserID:    p.UserID,
+					SessionID: sessionID,
+					AgentName: agentCfg.Name,
+					Role:      domain.RoleAssistant,
+					Content:   resp.Text(),
+					Thinking:  thinkingPtr,
+					ToolCalls: toolCalls,
+				}); err != nil {
+					return nil, err
+				}
+
+				for _, tc := range toolCalls {
+					if err := emitStep(onStep, domain.AgentSSEEvent{
+						Event:      "tool_call",
+						SessionID:  &sessionID,
+						AgentName:  agentCfg.Name,
+						ToolCallID: tc.ID,
+						ToolName:   tc.Name,
+						Arguments:  tc.Arguments,
+					}); err != nil {
+						return nil, err
 					}
 				}
-				if toolErr == nil {
-					var rawOut any
-					rawOut, toolErr = t.RunRaw(ctx, argMap)
-					if toolErr == nil {
-						switch v := rawOut.(type) {
-						case string:
-							resultStr = v
-						default:
-							b, _ := json.Marshal(v)
-							resultStr = string(b)
+				return resp, nil
+			},
+			WrapTool: func(ctx context.Context, params *ai.ToolParams, next ai.ToolNext) (*ai.MultipartToolResponse, error) {
+				res, toolErr := next(ctx, params)
+				var resultStr string
+				if toolErr != nil {
+					if errors.Is(toolErr, domain.ErrProviderUnavailable) || errors.Is(toolErr, domain.ErrMaxStepsExceeded) || ctx.Err() != nil {
+						return nil, toolErr
+					}
+					resultStr = formatToolErrorJSON(toolErr)
+				} else {
+					switch v := res.Output.(type) {
+					case string:
+						resultStr = v
+					default:
+						b, _ := json.Marshal(v)
+						resultStr = string(b)
+					}
+					if params.Request.Name == "delegate_specialist" {
+						var parsed struct {
+							Answer string `json:"answer"`
+						}
+						if json.Unmarshal([]byte(resultStr), &parsed) == nil {
+							mu.Lock()
+							delegatedAnswer = parsed.Answer
+							hasDelegated = true
+							mu.Unlock()
 						}
 					}
 				}
-			} else {
-				toolErr = errx.Invalid("TOOL_NOT_ALLOWED", "Tool is not allowed for this agent.")
-			}
+				resultStr = truncateToolResult(resultStr)
 
-			if toolErr != nil {
-				if errors.Is(toolErr, domain.ErrProviderUnavailable) || errors.Is(toolErr, domain.ErrMaxStepsExceeded) || ctx.Err() != nil {
-					return "", toolErr
+				tcID := params.Request.Ref
+				tcName := params.Request.Name
+
+				mu.Lock()
+				defer mu.Unlock()
+
+				if _, err := s.repo.AppendMessage(ctx, domain.CreateMessageInput{
+					ParishID:   p.ParishID,
+					UserID:     p.UserID,
+					SessionID:  sessionID,
+					AgentName:  agentCfg.Name,
+					Role:       domain.RoleTool,
+					Content:    resultStr,
+					ToolCallID: &tcID,
+					ToolName:   &tcName,
+				}); err != nil {
+					return nil, err
 				}
-				resultStr = formatToolErrorJSON(toolErr)
-			} else if tc.Name == "delegate_specialist" {
-				var res struct {
-					Answer string `json:"answer"`
+
+				if err := emitStep(onStep, domain.AgentSSEEvent{
+					Event:      "tool_result",
+					SessionID:  &sessionID,
+					AgentName:  agentCfg.Name,
+					ToolCallID: tcID,
+					ToolName:   tcName,
+					Content:    resultStr,
+				}); err != nil {
+					return nil, err
 				}
-				if json.Unmarshal([]byte(resultStr), &res) == nil {
-					delegatedAnswer = res.Answer
-					hasDelegated = true
-				}
-			}
-			resultStr = truncateToolResult(resultStr)
 
-			tcID := tc.ID
-			tcName := tc.Name
-			if _, err := s.repo.AppendMessage(ctx, domain.CreateMessageInput{
-				ParishID:   p.ParishID,
-				UserID:     p.UserID,
-				SessionID:  sessionID,
-				AgentName:  agentCfg.Name,
-				Role:       domain.RoleTool,
-				Content:    resultStr,
-				ToolCallID: &tcID,
-				ToolName:   &tcName,
-			}); err != nil {
-				return "", err
-			}
+				return &ai.MultipartToolResponse{Output: resultStr}, nil
+			},
+		}, nil
+	})
 
-			if err := emitStep(onStep, domain.AgentSSEEvent{
-				Event:      "tool_result",
-				SessionID:  &sessionID,
-				AgentName:  agentCfg.Name,
-				ToolCallID: tc.ID,
-				ToolName:   tc.Name,
-				Content:    resultStr,
-			}); err != nil {
-				return "", err
+	resp, err := s.drivers.Generate(ctx, agentCfg.Model, driver.ChatRequest{
+		SystemPrompt: systemPrompt,
+		Messages:     messages,
+		Tools:        toolRefs,
+	}, func(ev driver.StreamEvent) error {
+		switch ev.Type {
+		case driver.StreamEventThinking:
+			return emitStep(onStep, domain.AgentSSEEvent{
+				Event:     "thinking",
+				SessionID: &sessionID,
+				AgentName: agentCfg.Name,
+				Content:   ev.Delta,
+			})
+		case driver.StreamEventDelta:
+			if !emitDeltas {
+				return nil
 			}
-
-			history = append(history, driver.ChatMessage{
-				Role:       domain.RoleTool,
-				Content:    resultStr,
-				ToolCallID: tc.ID,
-				ToolName:   tc.Name,
+			return emitStep(onStep, domain.AgentSSEEvent{
+				Event:     "delta",
+				SessionID: &sessionID,
+				AgentName: agentCfg.Name,
+				Content:   ev.Delta,
 			})
 		}
-
-		// Handoff complete: specialist already persisted and streamed its reply.
-		if hasDelegated {
+		return nil
+	}, ai.WithMaxTurns(maxSteps), ai.WithUse(hooksMiddleware))
+	if err != nil {
+		if errors.Is(err, errDelegatedHandoff) {
 			return delegatedAnswer, nil
 		}
+		return "", err
 	}
-
-	return "", domain.ErrMaxStepsExceeded
+	return resp.Text(), nil
 }
 
 func formatToolErrorJSON(err error) string {

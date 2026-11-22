@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/firebase/genkit/go/ai"
+	"github.com/google/uuid"
 	"github.com/paroki/domus/internal/agent/domain"
 )
 
@@ -96,24 +97,48 @@ func NormalizeEmbedding768(vec []float32) ([]float32, error) {
 	return out, nil
 }
 
-// StreamChat streams a chat completion from the configured provider.
+// StreamChat streams a single-turn chat completion from the configured provider.
 func (r *Registry) StreamChat(
 	ctx context.Context,
 	modelCfg domain.ModelConfig,
 	req ChatRequest,
 	onEvent StreamCallback,
 ) (*ChatResponse, error) {
+	resp, err := r.Generate(ctx, modelCfg, req, onEvent, ai.WithReturnToolRequests(true))
+	if err != nil {
+		return nil, err
+	}
+	out := &ChatResponse{Content: resp.Text(), Thinking: resp.Reasoning()}
+	for _, tr := range resp.ToolRequests() {
+		args, _ := json.Marshal(tr.ToolRequest.Input)
+		id := tr.ToolRequest.Ref
+		if id == "" {
+			id = uuid.NewString()
+		}
+		tc := domain.ToolCall{ID: id, Name: tr.ToolRequest.Name, Arguments: string(args)}
+		out.ToolCalls = append(out.ToolCalls, tc)
+		if err := emitEvent(onEvent, StreamEvent{Type: StreamEventToolCall, ToolCall: &tc}); err != nil {
+			return nil, err
+		}
+	}
+	return out, nil
+}
+
+// Generate runs a multi-turn Genkit generation loop against the configured provider.
+func (r *Registry) Generate(
+	ctx context.Context,
+	modelCfg domain.ModelConfig,
+	req ChatRequest,
+	onEvent StreamCallback,
+	extraOpts ...ai.GenerateOption,
+) (*ai.ModelResponse, error) {
 	apiKey := strings.TrimSpace(modelCfg.APIKey)
 	if apiKey == "" {
 		return nil, fmt.Errorf("%w: missing API key for provider %q", domain.ErrProviderUnavailable, modelCfg.Provider)
 	}
 	switch domain.ProviderName(modelCfg.Provider) {
-	case domain.ProviderGemini:
-		return r.streamGenkit(ctx, modelCfg, req, onEvent)
-	case domain.ProviderAnthropic:
-		return r.streamGenkit(ctx, modelCfg, req, onEvent)
-	case domain.ProviderOpenAI, domain.ProviderOpenRouter:
-		return r.streamGenkit(ctx, modelCfg, req, onEvent)
+	case domain.ProviderGemini, domain.ProviderAnthropic, domain.ProviderOpenAI, domain.ProviderOpenRouter:
+		return r.generateGenkit(ctx, modelCfg, req, onEvent, extraOpts...)
 	default:
 		return nil, fmt.Errorf("%w: unsupported provider %q", domain.ErrProviderUnavailable, modelCfg.Provider)
 	}
