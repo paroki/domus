@@ -16,6 +16,7 @@ var (
 	ErrProviderUnavailable          = errx.Invalid("AGENT_PROVIDER_UNAVAILABLE", "The configured AI provider is unavailable or missing an API key.")
 	ErrProviderAuthFailed           = errx.Invalid("AGENT_PROVIDER_AUTH_FAILED", "AI provider authentication failed.")
 	ErrProviderRateLimited          = errx.Invalid("AGENT_PROVIDER_RATE_LIMITED", "AI provider rate limit exceeded.")
+	ErrProviderOverloaded           = errx.Invalid("AGENT_PROVIDER_OVERLOADED", "AI provider is temporarily overloaded due to high demand.")
 	ErrProviderRequestInvalid       = errx.Invalid("AGENT_PROVIDER_REQUEST_INVALID", "AI provider rejected the request.")
 	ErrMaxStepsExceeded             = &errx.Error{Kind: errx.KindValidation, Code: "AGENT_MAX_STEPS_EXCEEDED", Message: "Agent exceeded the maximum number of tool-calling steps."}
 	ErrMemoryLimitExceeded          = &errx.Error{Kind: errx.KindValidation, Code: "AGENT_MEMORY_LIMIT_EXCEEDED", Message: "Active or pinned memory limit exceeded."}

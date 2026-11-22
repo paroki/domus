@@ -211,7 +211,7 @@ func providerStatusSentinel(status int) error {
 		if status < http.StatusInternalServerError {
 			return domain.ErrProviderRequestInvalid
 		}
-		return domain.ErrProviderUnavailable
+		return domain.ErrProviderOverloaded
 	}
 }
 

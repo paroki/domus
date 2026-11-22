@@ -276,11 +276,18 @@ func TestOpenAIAndOpenRouterDriver_StreamEmbedAndErrors(t *testing.T) {
 	assert.Equal(t, []string{"chat"}, models[0].Capabilities)
 	assert.Equal(t, []string{"embedding"}, models[1].Capabilities)
 
-	// Missing API key and HTTP >= 400 wrap ErrProviderUnavailable and redact key
+	// Missing API key and decode failures wrap ErrProviderUnavailable and redact key
 	_, err = reg.StreamChat(ctx, domain.ModelConfig{Provider: "openai", Model: "gpt-4o"}, ChatRequest{}, nil)
 	require.ErrorIs(t, err, domain.ErrProviderUnavailable)
 
 	_, err = reg.DiscoverModels(ctx, "openai", srv.URL+"/fail", "oa-secret")
 	require.ErrorIs(t, err, domain.ErrProviderUnavailable)
 	assert.NotContains(t, err.Error(), "oa-secret")
+
+	assert.ErrorIs(t, providerStatusSentinel(http.StatusBadRequest), domain.ErrProviderRequestInvalid)
+	assert.ErrorIs(t, providerStatusSentinel(http.StatusUnauthorized), domain.ErrProviderAuthFailed)
+	assert.ErrorIs(t, providerStatusSentinel(http.StatusForbidden), domain.ErrProviderAuthFailed)
+	assert.ErrorIs(t, providerStatusSentinel(http.StatusTooManyRequests), domain.ErrProviderRateLimited)
+	assert.ErrorIs(t, providerStatusSentinel(http.StatusServiceUnavailable), domain.ErrProviderOverloaded)
+	assert.ErrorIs(t, providerStatusSentinel(http.StatusBadGateway), domain.ErrProviderOverloaded)
 }
