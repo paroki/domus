@@ -3,6 +3,7 @@ package app
 import (
 	"io/fs"
 	"log/slog"
+	"path"
 	"strings"
 	"time"
 
@@ -72,21 +73,40 @@ func GetFiber(_ Config, logger *slog.Logger, features ...Feature) *fiber.App {
 	app.All("/mcp", mcpHandler)
 	app.All("/mcp/*", mcpHandler)
 
-	// ponytail: serves embedded SPA without custom Cache-Control headers; add immutable asset caching when CDN/traffic requires.
 	if distFS, err := ui.DistFS(); err == nil {
+		isBypass := func(p string) bool {
+			return strings.HasPrefix(p, "/api") || p == "/mcp" || strings.HasPrefix(p, "/mcp/")
+		}
+		app.Use(func(c fiber.Ctx) error {
+			p := c.Path()
+			if isBypass(p) {
+				return c.Next()
+			}
+			if strings.HasPrefix(p, "/assets/") {
+				c.Set(fiber.HeaderCacheControl, "public, max-age=31536000, immutable")
+			} else if p == "/" || p == "/index.html" || path.Ext(p) == "" {
+				c.Set(fiber.HeaderCacheControl, "no-cache, no-store, must-revalidate")
+			}
+			return c.Next()
+		})
 		app.Use(static.New("", static.Config{
 			FS: distFS,
 			Next: func(c fiber.Ctx) bool {
-				p := c.Path()
-				return strings.HasPrefix(p, "/api") || p == "/mcp" || strings.HasPrefix(p, "/mcp/")
+				return isBypass(c.Path())
 			},
 			NotFoundHandler: func(c fiber.Ctx) error {
+				p := c.Path()
+				if strings.HasPrefix(p, "/assets/") || path.Ext(p) != "" {
+					c.Set(fiber.HeaderCacheControl, "no-store")
+					return fiber.ErrNotFound
+				}
 				index, err := fs.ReadFile(distFS, "index.html")
 				if err != nil {
 					return fiber.ErrNotFound
 				}
+				c.Set(fiber.HeaderCacheControl, "no-cache, no-store, must-revalidate")
 				c.Set(fiber.HeaderContentType, fiber.MIMETextHTMLCharsetUTF8)
-				return c.Send(index)
+				return c.Status(fiber.StatusOK).Send(index)
 			},
 		}))
 	}
