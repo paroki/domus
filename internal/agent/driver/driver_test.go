@@ -112,6 +112,38 @@ func TestGeminiDriver_StreamEmbedAndDiscover(t *testing.T) {
 	assert.Equal(t, "gemini-2.5-flash", models[0].ID)
 	assert.Equal(t, []string{"chat"}, models[0].Capabilities)
 	assert.Equal(t, []string{"embedding"}, models[1].Capabilities)
+
+	// Gemma models and ReasoningNone must omit thinkingConfig, and tool schemas
+	// must strip additionalProperties/$schema for Gemini v1beta compatibility.
+	_, err = reg.StreamChat(ctx, domain.ModelConfig{
+		Provider:        "gemini",
+		BaseURL:         srv.URL,
+		APIKey:          "gem-secret",
+		Model:           "gemma-4-26b-a4b-it",
+		ReasoningEffort: domain.ReasoningLow,
+	}, ChatRequest{
+		Messages: []ChatMessage{{Role: domain.RoleUser, Content: "Hi"}},
+		Tools: []ToolDefinition{{
+			Name:        "event_list",
+			Description: "list",
+			Parameters:  json.RawMessage(`{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","additionalProperties":false,"properties":{"nested":{"type":"object","additionalProperties":false}}}`),
+		}},
+	}, nil)
+	require.NoError(t, err)
+	gemmaGenCfg := capturedBody["generationConfig"].(map[string]any)
+	_, hasThinking := gemmaGenCfg["thinkingConfig"]
+	assert.False(t, hasThinking)
+
+	tools := capturedBody["tools"].([]any)
+	decls := tools[0].(map[string]any)["functionDeclarations"].([]any)
+	params := decls[0].(map[string]any)["parameters"].(map[string]any)
+	_, hasAddProp := params["additionalProperties"]
+	_, hasSchema := params["$schema"]
+	assert.False(t, hasAddProp)
+	assert.False(t, hasSchema)
+	nested := params["properties"].(map[string]any)["nested"].(map[string]any)
+	_, nestedHasAddProp := nested["additionalProperties"]
+	assert.False(t, nestedHasAddProp)
 }
 
 func TestAnthropicDriver_StreamDiscoverAndNoEmbed(t *testing.T) {

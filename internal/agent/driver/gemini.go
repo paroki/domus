@@ -21,7 +21,10 @@ func geminiHeaders(apiKey string) map[string]string {
 	}
 }
 
-func geminiThinkingConfig(effort domain.ReasoningEffort) map[string]any {
+func geminiThinkingConfig(model string, effort domain.ReasoningEffort) map[string]any {
+	if strings.HasPrefix(strings.ToLower(model), "gemma-") {
+		return nil
+	}
 	switch effort {
 	case domain.ReasoningLow:
 		return map[string]any{"includeThoughts": true, "thinkingBudget": 1024}
@@ -30,7 +33,31 @@ func geminiThinkingConfig(effort domain.ReasoningEffort) map[string]any {
 	case domain.ReasoningHigh:
 		return map[string]any{"includeThoughts": true, "thinkingBudget": 16384}
 	default:
-		return map[string]any{"includeThoughts": false, "thinkingBudget": 0}
+		return nil
+	}
+}
+
+// sanitizeGeminiSchema strips JSON Schema keywords (such as additionalProperties
+// and $schema) that Gemini v1beta Schema objects reject.
+func sanitizeGeminiSchema(v any) any {
+	switch val := v.(type) {
+	case map[string]any:
+		out := make(map[string]any, len(val))
+		for k, child := range val {
+			if k == "additionalProperties" || k == "$schema" {
+				continue
+			}
+			out[k] = sanitizeGeminiSchema(child)
+		}
+		return out
+	case []any:
+		out := make([]any, len(val))
+		for i, child := range val {
+			out[i] = sanitizeGeminiSchema(child)
+		}
+		return out
+	default:
+		return v
 	}
 }
 
@@ -99,12 +126,15 @@ func (r *Registry) streamGemini(
 		temp = domain.DefaultTemperature
 	}
 
+	genCfg := map[string]any{
+		"temperature": temp,
+	}
+	if tc := geminiThinkingConfig(modelCfg.Model, modelCfg.ReasoningEffort); tc != nil {
+		genCfg["thinkingConfig"] = tc
+	}
 	payload := map[string]any{
-		"contents": contents,
-		"generationConfig": map[string]any{
-			"temperature":    temp,
-			"thinkingConfig": geminiThinkingConfig(modelCfg.ReasoningEffort),
-		},
+		"contents":         contents,
+		"generationConfig": genCfg,
 	}
 	if strings.TrimSpace(req.SystemPrompt) != "" {
 		payload["systemInstruction"] = map[string]any{
@@ -121,7 +151,7 @@ func (r *Registry) streamGemini(
 			decls = append(decls, map[string]any{
 				"name":        t.Name,
 				"description": t.Description,
-				"parameters":  params,
+				"parameters":  sanitizeGeminiSchema(params),
 			})
 		}
 		payload["tools"] = []map[string]any{{"functionDeclarations": decls}}
