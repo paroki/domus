@@ -2,6 +2,45 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.0.0-alpha.4](https://github.com/paroki/domus/compare/v1.0.0-alpha.3...v1.0.0-alpha.4) (2026-11-22)
+
+### ⚙️ API
+
+#### ✨ Features
+
+- add telegram and gowa whatsapp webhook adapters for agent ([c1030ca](https://github.com/paroki/domus/commit/c1030cae6041b3222c7f0069d21684e36a6d33e6))
+- add user gowa settings and ref parish code lookup ([a14b7cf](https://github.com/paroki/domus/commit/a14b7cfbd11c97197d4b2a142cee9b8f18a9a4a0))
+- extend gowa and telegram clients for agent webhooks ([33b3b82](https://github.com/paroki/domus/commit/33b3b82222ec2d1e47af3d65a0df00bb52ccd3ba))
+- add agent http/sse api, permissions, and serve wiring ([7720e21](https://github.com/paroki/domus/commit/7720e21e8f36d96fac3d495146bcbbf595f2d512))
+- add memory tools and multi-agent react orchestrator ([2a3a104](https://github.com/paroki/domus/commit/2a3a10437d00a81a9233d34ade074bfc320af604))
+- add in-process mcp bridge and user channel lookup ([a95e004](https://github.com/paroki/domus/commit/a95e0044a0c8ace25913a5b2ef0c38dc4ad642b5))
+- add agent settings registration and model sync ([b52e9c0](https://github.com/paroki/domus/commit/b52e9c074414453ff18c097ac5161b83edad79fa))
+- add multi-provider llm and embedding drivers ([cc5df05](https://github.com/paroki/domus/commit/cc5df05cc9680d713491cce730b42f9454af87c8))
+- add embedded agent persona prompts ([f999620](https://github.com/paroki/domus/commit/f99962073bd5dfee5e359d6573d4119f6c2e821e))
+- encrypt secret settings and support defaults ([43721b6](https://github.com/paroki/domus/commit/43721b6504de62d8d4d79ce9eeb2ab8ebca07f88))
+- add agent domain contract and 3-tier memory repo ([c2ce72c](https://github.com/paroki/domus/commit/c2ce72c60924a15c0c4beedbc861e3c9489b52cf))
+- add errx KindUnavailable and httpx 503 mapping ([7d1d672](https://github.com/paroki/domus/commit/7d1d6725c06622ea6c52f7496a04dfceaf1c2c34))
+- add agent session, message, and memory schemas ([15db6cc](https://github.com/paroki/domus/commit/15db6cccdba72c5b82ba0200439698a735e8a2f4))
+- add gender and birthDate to user schema and me endpoint ([27cbfb0](https://github.com/paroki/domus/commit/27cbfb0666a6f074a0f9d369829a62d239df8995))
+
+#### 🐛 Bug Fixes
+
+- drop overall llm client timeout for sse streams ([a1456d2](https://github.com/paroki/domus/commit/a1456d219f946a1d9d5fbfe47d9fb019ebed8fb5))
+- block nested specialist delegation ([6478c5b](https://github.com/paroki/domus/commit/6478c5b1fe6521c985b381049af602389fee158f))
+- sanitize agent history and cap tool results ([c82fcb5](https://github.com/paroki/domus/commit/c82fcb5f309bd51cdcd7014e7e88150be2091204))
+- match whatsapp group mentions against bot number ([033517c](https://github.com/paroki/domus/commit/033517ccc5a95871219653085eb3153272fcf7bc))
+- run agent webhooks async with dedup and fix mentions ([42aa6ee](https://github.com/paroki/domus/commit/42aa6eebba1fd1578fb0bf5a0ebbf5dedce953ac))
+- cancel agent sse turn on disconnect and timeout ([e50460d](https://github.com/paroki/domus/commit/e50460d8e369aefd9778a0be7d5d6e95ac05ce64))
+- add lowercase json tags on ProviderModelItem ([8ba1ada](https://github.com/paroki/domus/commit/8ba1ada04f4ff8af235a6703abf0e22b09b9c4aa))
+
+### 🖥️ UI
+
+#### ✨ Features
+
+- add ai assistant workspace, memory drawer, and sse chat ([5a56515](https://github.com/paroki/domus/commit/5a56515339aae9bf8e03b9cabcc6bfb8875b32d8))
+- add llm providers and agent config tabs to settings ([1b19225](https://github.com/paroki/domus/commit/1b1922519d6c55f88a38c98232bd720e968363e1))
+- add gender and birthDate fields to onboarding and profile ([0d192ff](https://github.com/paroki/domus/commit/0d192ff78bd970cf111112081f4bcb0db842e153))
+
 ## [v1.0.0-alpha.3](https://github.com/paroki/domus/compare/v1.0.0-alpha.2...v1.0.0-alpha.3) (2026-11-21)
 
 ### ⚙️ API
