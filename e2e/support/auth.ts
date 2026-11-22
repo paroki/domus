@@ -22,23 +22,8 @@ function sha256Hex(value: string): string {
   return createHash("sha256").update(value).digest("hex");
 }
 
-function isPostgres(): boolean {
-  return (
-    config.appDbUrl.startsWith("postgres://") ||
-    config.appDbUrl.startsWith("postgresql://")
-  );
-}
-
 function openDb(): SQL {
-  return new SQL(isPostgres() ? config.appDbUrl : `sqlite://${config.dbPath}`);
-}
-
-function formatSqliteTime(d: Date): string {
-  return d.toISOString().replace("T", " ").replace("Z", " +0000 UTC");
-}
-
-function formatDbTime(d: Date): string {
-  return isPostgres() ? d.toISOString() : formatSqliteTime(d);
+  return new SQL(config.appDbUrl);
 }
 
 export async function loginAsUser(options: {
@@ -49,8 +34,8 @@ export async function loginAsUser(options: {
 }): Promise<AuthSession> {
   const db = openDb();
   try {
-    const now = formatDbTime(new Date());
-    const expiresAt = formatDbTime(new Date(Date.now() + 24 * 60 * 60 * 1000));
+    const now = new Date().toISOString();
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
     const email = options.email.trim().toLowerCase();
     const name = options.name ?? email;
     const onboarded = options.onboarded ?? true;
@@ -393,8 +378,8 @@ export async function seedOtpCode(
 ): Promise<void> {
   const db = openDb();
   try {
-    const now = formatDbTime(new Date());
-    const expiresAt = formatDbTime(new Date(Date.now() + 5 * 60 * 1000));
+    const now = new Date().toISOString();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
     const target = email.trim().toLowerCase();
 
     await db`DELETE FROM user_otps WHERE channel = ${channel} AND target = ${target}`;

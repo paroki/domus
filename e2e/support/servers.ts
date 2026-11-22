@@ -78,21 +78,12 @@ export async function startServers(): Promise<void> {
   rmSync(config.apiRawCoverageDir, { recursive: true, force: true });
   mkdirSync(config.apiRawCoverageDir, { recursive: true });
 
-  if (
-    config.appDbUrl.startsWith("postgres://") ||
-    config.appDbUrl.startsWith("postgresql://")
-  ) {
-    const db = new SQL(config.appDbUrl);
-    try {
-      await db`DROP SCHEMA IF EXISTS public CASCADE`;
-      await db`CREATE SCHEMA public`;
-    } finally {
-      await db.close();
-    }
-  } else {
-    for (const suffix of ["", "-wal", "-shm"]) {
-      rmSync(`${config.dbPath}${suffix}`, { force: true });
-    }
+  const db = new SQL(config.appDbUrl);
+  try {
+    await db`DROP SCHEMA IF EXISTS public CASCADE`;
+    await db`CREATE SCHEMA public`;
+  } finally {
+    await db.close();
   }
 
   const apiProc = spawnLogged(
