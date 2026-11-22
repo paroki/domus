@@ -1,0 +1,54 @@
+{
+  "name": "domus",
+  "dockerComposeFile": "compose.yaml",
+  "service": "workspace",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "hostRequirements": { "cpus": 4, "memory": "16gb" },
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {},
+    "ghcr.io/devcontainers-extra/features/mise:1": {},
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+  },
+  "forwardPorts": [8080, 5173, 5432],
+  "portsAttributes": {
+    "8080": { "label": "domus api" },
+    "5173": { "label": "domus ui" },
+    "5432": { "label": "paradedb" }
+  },
+  "containerEnv": {
+    "MISE_DATA_DIR": "/mnt/mise-data"
+  },
+  "remoteEnv": {
+    "PATH": "${containerEnv:PATH}:/mnt/mise-data/shims:/home/vscode/.bun/bin"
+  },
+  "onCreateCommand": "sudo mkdir -p /mnt/mise-data && sudo chown -R \"$(id -u):$(id -g)\" /mnt/mise-data /commandhistory",
+  "updateContentCommand": "mise trust --yes && mise install",
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "postStartCommand": "sudo chown \"$(id -u):$(id -g)\" /commandhistory && sudo chown -R \"$(id -u):$(id -g)\" /mnt/mise-data && touch /commandhistory/.bash_history",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "hverlin.mise-vscode",
+        "golang.go",
+        "biomejs.biome",
+        "bradlc.vscode-tailwindcss",
+        "ms-azuretools.vscode-docker",
+        "editorconfig.editorconfig",
+        "CucumberOpen.cucumber-official",
+        "google.google-antigravity",
+        "github.vscode-github-actions",
+        "ms-ossdata.vscode-pgsql"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "editor.formatOnSave": true,
+        "cucumber.features": ["e2e/features/**/*.feature"],
+        "cucumber.glue": ["e2e/steps/**/*.ts"],
+        "[typescript]": { "editor.defaultFormatter": "biomejs.biome" },
+        "[typescriptreact]": { "editor.defaultFormatter": "biomejs.biome" },
+        "[json]": { "editor.defaultFormatter": "biomejs.biome" },
+        "[go]": { "editor.defaultFormatter": "golang.go" }
+      }
+    }
+  }
+}

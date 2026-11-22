@@ -1,0 +1,46 @@
+name: domus
+
+services:
+  workspace:
+    image: mcr.microsoft.com/devcontainers/base:ubuntu
+    command: sleep infinity
+    volumes:
+      # Mount the parent dir so the repo folder name does not matter (Codespaces)
+      - ../..:/workspaces:cached
+      - bash-history:/commandhistory
+      - gemini:/home/vscode/.gemini
+      - mise-data:/mnt/mise-data
+    environment:
+      MISE_DATA_DIR: /mnt/mise-data
+      APP_DB_URL: postgres://domus:domus@postgres:5432/domus?sslmode=disable
+      TEST_DSN: postgres://domus:domus@postgres:5432/domus_test?sslmode=disable
+      APP_SECRET: 6171ce314c622f9a4cdb542c810d40b91edde2f659bcd5224c6aeee7d7ea4925
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: paradedb/paradedb:latest-pg18
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: domus
+      POSTGRES_PASSWORD: domus
+      POSTGRES_DB: domus
+    volumes:
+      # PG 18+: mount at /var/lib/postgresql, not /var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql
+      # initdb scripts only run when the volume is first created
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U domus -d domus"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:
+  bash-history:
+  gemini:
+  mise-data:
