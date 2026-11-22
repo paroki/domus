@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { Bot, Brain, PanelLeft, Send, Square } from "lucide-react";
+import { Bot, Brain, PanelLeft, RotateCcw, Send, Square } from "lucide-react";
 import { type FormEvent, type KeyboardEvent, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router";
@@ -38,6 +38,9 @@ export function AgentWorkspace() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [input, setInput] = useState("");
   const [chatError, setChatError] = useState<string | null>(null);
+  const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(
+    null,
+  );
   const [streaming, setStreaming] = useState<LiveStreamingState>(EMPTY_STREAM);
 
   const abortRef = useRef<AbortController | null>(null);
@@ -75,6 +78,7 @@ export function AgentWorkspace() {
     if (!trimmed || streaming.active) return;
 
     setChatError(null);
+    setLastFailedMessage(null);
     setInput("");
 
     const controller = new AbortController();
@@ -164,6 +168,7 @@ export function AgentWorkspace() {
     } catch (err) {
       if (!controller.signal.aborted) {
         setChatError(resolveAgentError(err));
+        setLastFailedMessage(trimmed);
       }
     } finally {
       abortRef.current = null;
@@ -256,11 +261,14 @@ export function AgentWorkspace() {
             onSearchChange={setSessionSearch}
             onSelectSession={(id) => {
               setSessionParam(id);
+              setChatError(null);
+              setLastFailedMessage(null);
               setSidebarOpen(false);
             }}
             onNewSession={() => {
               setSessionParam("");
               setChatError(null);
+              setLastFailedMessage(null);
               setSidebarOpen(false);
             }}
             hasNextPage={Boolean(sessionsQuery.hasNextPage)}
@@ -278,9 +286,21 @@ export function AgentWorkspace() {
           {chatError ? (
             <div
               role="alert"
-              className="mx-4 mt-3 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-700 dark:text-red-300"
+              className="mx-4 mt-3 flex items-center justify-between gap-3 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-700 dark:text-red-300"
             >
-              {chatError}
+              <span className="min-w-0 flex-1 break-words">{chatError}</span>
+              {lastFailedMessage ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={streaming.active}
+                  onClick={() => void sendMessage(lastFailedMessage)}
+                  className="h-7 shrink-0 border-red-500/40 px-2.5 text-xs text-red-700 hover:bg-red-500/10 dark:text-red-300"
+                >
+                  <RotateCcw className="size-3.5" />
+                  {t("agent.retry", "Coba lagi")}
+                </Button>
+              ) : null}
             </div>
           ) : null}
 
