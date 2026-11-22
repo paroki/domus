@@ -9,6 +9,7 @@ import {
   type TimelineItem,
   toolDisplayMeta,
 } from "../model";
+import { MarkdownContent } from "./MarkdownContent";
 
 export interface LiveStreamingState {
   active: boolean;
@@ -196,8 +197,8 @@ export function ChatTimeline({
               </div>
 
               {item.content ? (
-                <div className="max-w-[90%] rounded-2xl rounded-bl-sm border border-line bg-canvas px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap text-fg">
-                  {item.content}
+                <div className="max-w-[90%] rounded-2xl rounded-bl-sm border border-line bg-canvas px-4 py-2.5">
+                  <MarkdownContent content={item.content} />
                 </div>
               ) : null}
             </div>
@@ -247,8 +248,8 @@ export function ChatTimeline({
             </div>
 
             {streaming.delta ? (
-              <div className="max-w-[90%] rounded-2xl rounded-bl-sm border border-line bg-canvas px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap text-fg">
-                {streaming.delta}
+              <div className="max-w-[90%] rounded-2xl rounded-bl-sm border border-line bg-canvas px-4 py-2.5">
+                <MarkdownContent content={streaming.delta} />
               </div>
             ) : null}
           </div>
