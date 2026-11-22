@@ -132,6 +132,23 @@ func InternalError(err error) *AppError {
 	}
 }
 
+// ErrorStatus maps an error to its HTTP status code using the same rules as ErrorHandler.
+func ErrorStatus(err error) int {
+	if appErr, ok := errors.AsType[*AppError](err); ok {
+		return appErr.Status
+	}
+	if domErr, ok := errors.AsType[*errx.Error](err); ok {
+		return statusForKind(domErr.Kind)
+	}
+	if _, ok := errors.AsType[validator.ValidationErrors](err); ok {
+		return fiber.StatusUnprocessableEntity
+	}
+	if fiberErr, ok := errors.AsType[*fiber.Error](err); ok {
+		return fiberErr.Code
+	}
+	return fiber.StatusInternalServerError
+}
+
 // ErrorHandler returns a Fiber v3 ErrorHandler that logs and formats errors as Envelope[any].
 func ErrorHandler(logger *slog.Logger) fiber.ErrorHandler {
 	if logger == nil {

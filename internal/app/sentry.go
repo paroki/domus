@@ -1,7 +1,6 @@
 package app
 
 import (
-	"errors"
 	"time"
 
 	"github.com/getsentry/sentry-go"
@@ -38,20 +37,8 @@ func sentryMiddleware(c fiber.Ctx) error {
 		}
 	}()
 	err := c.Next()
-	if err != nil && errStatus(err) >= fiber.StatusInternalServerError {
+	if err != nil && httpx.ErrorStatus(err) >= fiber.StatusInternalServerError {
 		hub.CaptureException(err)
 	}
 	return err
-}
-
-func errStatus(err error) int {
-	var ae *httpx.AppError
-	if errors.As(err, &ae) {
-		return ae.Status
-	}
-	var fe *fiber.Error
-	if errors.As(err, &fe) {
-		return fe.Code
-	}
-	return fiber.StatusInternalServerError
 }
