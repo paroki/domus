@@ -37,8 +37,9 @@ func geminiThinkingConfig(model string, effort domain.ReasoningEffort) map[strin
 	}
 }
 
-// sanitizeGeminiSchema strips JSON Schema keywords (such as additionalProperties
-// and $schema) that Gemini v1beta Schema objects reject.
+// sanitizeGeminiSchema normalizes JSON Schema objects for Gemini v1beta compatibility
+// by stripping unsupported keywords and converting type arrays (e.g. ["string", "null"])
+// into a scalar type plus nullable: true.
 func sanitizeGeminiSchema(v any) any {
 	switch val := v.(type) {
 	case map[string]any:
@@ -46,6 +47,28 @@ func sanitizeGeminiSchema(v any) any {
 		for k, child := range val {
 			if k == "additionalProperties" || k == "$schema" {
 				continue
+			}
+			if k == "type" {
+				if arr, ok := child.([]any); ok {
+					var primary string
+					nullable := false
+					for _, item := range arr {
+						if s, ok := item.(string); ok {
+							if s == "null" {
+								nullable = true
+							} else if primary == "" {
+								primary = s
+							}
+						}
+					}
+					if primary != "" {
+						out["type"] = primary
+					}
+					if nullable {
+						out["nullable"] = true
+					}
+					continue
+				}
 			}
 			out[k] = sanitizeGeminiSchema(child)
 		}

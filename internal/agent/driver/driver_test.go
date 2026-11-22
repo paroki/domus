@@ -126,7 +126,7 @@ func TestGeminiDriver_StreamEmbedAndDiscover(t *testing.T) {
 		Tools: []ToolDefinition{{
 			Name:        "event_list",
 			Description: "list",
-			Parameters:  json.RawMessage(`{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","additionalProperties":false,"properties":{"nested":{"type":"object","additionalProperties":false}}}`),
+			Parameters:  json.RawMessage(`{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","additionalProperties":false,"properties":{"nested":{"type":"object","additionalProperties":false},"opt":{"type":["string","null"]}}}`),
 		}},
 	}, nil)
 	require.NoError(t, err)
@@ -141,9 +141,13 @@ func TestGeminiDriver_StreamEmbedAndDiscover(t *testing.T) {
 	_, hasSchema := params["$schema"]
 	assert.False(t, hasAddProp)
 	assert.False(t, hasSchema)
-	nested := params["properties"].(map[string]any)["nested"].(map[string]any)
+	props := params["properties"].(map[string]any)
+	nested := props["nested"].(map[string]any)
 	_, nestedHasAddProp := nested["additionalProperties"]
 	assert.False(t, nestedHasAddProp)
+	opt := props["opt"].(map[string]any)
+	assert.Equal(t, "string", opt["type"])
+	assert.Equal(t, true, opt["nullable"])
 }
 
 func TestAnthropicDriver_StreamDiscoverAndNoEmbed(t *testing.T) {

@@ -196,9 +196,23 @@ func (r *Registry) doJSONRequest(
 		defer func() { _ = resp.Body.Close() }()
 		errBody, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
 		msg := redactAPIKey(strings.TrimSpace(string(errBody)), apiKey)
-		return nil, fmt.Errorf("%w: provider HTTP %d: %s", domain.ErrProviderUnavailable, resp.StatusCode, msg)
+		return nil, fmt.Errorf("%w: provider HTTP %d: %s", providerStatusSentinel(resp.StatusCode), resp.StatusCode, msg)
 	}
 	return resp, nil
+}
+
+func providerStatusSentinel(status int) error {
+	switch status {
+	case http.StatusUnauthorized, http.StatusForbidden:
+		return domain.ErrProviderAuthFailed
+	case http.StatusTooManyRequests:
+		return domain.ErrProviderRateLimited
+	default:
+		if status < http.StatusInternalServerError {
+			return domain.ErrProviderRequestInvalid
+		}
+		return domain.ErrProviderUnavailable
+	}
 }
 
 func redactAPIKey(s, apiKey string) string {
