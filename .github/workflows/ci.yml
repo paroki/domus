@@ -169,6 +169,12 @@ jobs:
       - name: Install Playwright Chromium
         run: cd e2e && bunx playwright install --with-deps chromium
 
+      - name: Enable Postgres extensions
+        run: |
+          psql postgres://domus:domus@localhost:5432/domus?sslmode=disable \
+            -c "CREATE EXTENSION IF NOT EXISTS vector;" \
+            -c "CREATE EXTENSION IF NOT EXISTS pg_search CASCADE;"
+
       - name: Run E2E tests
         env:
           APP_DB_URL: postgres://domus:domus@localhost:5432/domus?sslmode=disable
