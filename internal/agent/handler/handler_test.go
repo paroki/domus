@@ -515,5 +515,7 @@ func (s *AgentHandlerSuite) TestChatSSE_PreStreamErrorsAndStreaming() {
 		"message":   "Trigger stream error",
 	})
 	s.OK()
-	s.Contains(s.readBody(), "event: error\n")
+	errBody := s.readBody()
+	s.Contains(errBody, "event: error\n")
+	s.Contains(errBody, "provider HTTP 502")
 }

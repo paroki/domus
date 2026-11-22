@@ -119,6 +119,11 @@ func (s *Service) SetMCPServer(srv *mcp.Server) {
 	s.mcpServer = srv
 }
 
+// Logger returns the service's structured logger.
+func (s *Service) Logger() *slog.Logger {
+	return s.logger
+}
+
 // SetChannelResolver binds the user channel resolver and messaging clients.
 func (s *Service) SetChannelResolver(r ChannelUserResolver) {
 	s.channelResolver = r

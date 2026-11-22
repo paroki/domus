@@ -71,6 +71,13 @@ func (h *Handler) Chat(c fiber.Ctx) error {
 			return nil
 		})
 		if runErr != nil {
+			h.service.Logger().ErrorContext(streamCtx, "agent chat stream failed",
+				"session_id", prep.Session.ID,
+				"agent", prep.Gabriel.Name,
+				"provider", prep.Gabriel.Model.Provider,
+				"model", prep.Gabriel.Model.Model,
+				"err", runErr,
+			)
 			_ = writeSSEFrame(w, errorSSEEvent(runErr))
 		}
 	})
@@ -99,7 +106,7 @@ func errorSSEEvent(err error) domain.AgentSSEEvent {
 		if ex.Code != "" {
 			code = ex.Code
 		}
-		if ex.Message != "" {
+		if msg == "" && ex.Message != "" {
 			msg = ex.Message
 		}
 	}
