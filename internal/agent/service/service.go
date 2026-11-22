@@ -293,7 +293,7 @@ func (s *Service) RunPreparedTurn(ctx context.Context, prep *PreparedTurn, onSte
 		sess.ID,
 		gabrielCfg,
 		sysPrompt,
-		history,
+		sanitizeHistory(history),
 		mcpSession,
 		onStep,
 		true,
@@ -514,6 +514,7 @@ func (s *Service) runReActLoop(
 				}
 				resultStr = formatToolErrorJSON(toolErr)
 			}
+			resultStr = truncateToolResult(resultStr)
 
 			tcID := tc.ID
 			tcName := tc.Name
