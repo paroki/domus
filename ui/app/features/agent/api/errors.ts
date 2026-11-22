@@ -14,6 +14,8 @@ export const AGENT_ERRORS: Record<string, string> = {
     "Autentikasi penyedia AI gagal. Periksa API key Anda.",
   AGENT_PROVIDER_RATE_LIMITED:
     "Batas permintaan penyedia AI tercapai. Silakan coba lagi sebentar.",
+  AGENT_PROVIDER_OVERLOADED:
+    "Penyedia AI sedang sibuk (high demand). Silakan coba lagi sebentar.",
   AGENT_PROVIDER_REQUEST_INVALID: "Permintaan ditolak oleh penyedia AI.",
   AGENT_MAX_STEPS_EXCEEDED:
     "Asisten mencapai batas maksimum langkah pemanggilan alat.",
