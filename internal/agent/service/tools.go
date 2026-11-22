@@ -19,29 +19,29 @@ const roleParishAdmin = "ref:parish-admin"
 
 type memorySaveArgs struct {
 	Content     string  `json:"content" jsonschema:"description=Fakta singkat (maks 500 karakter)"`
-	Category    string  `json:"category" jsonschema:"enum=profile,enum=preference,enum=ministry,enum=parish_faq"`
+	Category    string  `json:"category" jsonschema:"enum=profile,enum=preference,enum=ministry,enum=parish_faq,description=Kategori fakta memori"`
 	IsPinned    bool    `json:"is_pinned,omitempty" jsonschema:"description=Pin agar selalu disuntikkan ke konteks"`
-	Scope       string  `json:"scope,omitempty" jsonschema:"enum=user,enum=parish"`
+	Scope       string  `json:"scope,omitempty" jsonschema:"enum=user,enum=parish,description=Cakupan memori (user pribadi atau paroki)"`
 	SupersedeID *string `json:"supersede_id,omitempty" jsonschema:"description=UUID memori lama yang digantikan"`
 }
 
 type memoryRecallArgs struct {
-	Query    string `json:"query"`
-	Category string `json:"category,omitempty" jsonschema:"enum=profile,enum=preference,enum=ministry,enum=parish_faq"`
-	Limit    int    `json:"limit,omitempty" jsonschema:"minimum=1,maximum=20"`
+	Query    string `json:"query" jsonschema:"description=Kata kunci pencarian fakta memori"`
+	Category string `json:"category,omitempty" jsonschema:"enum=profile,enum=preference,enum=ministry,enum=parish_faq,description=Filter kategori memori opsional"`
+	Limit    int    `json:"limit,omitempty" jsonschema:"minimum=1,maximum=20,description=Jumlah maksimal hasil memori (1-20)"`
 }
 
 type memoryForgetArgs struct {
-	MemoryID string `json:"memory_id"`
+	MemoryID string `json:"memory_id" jsonschema:"description=UUID memori yang akan dihapus"`
 }
 
 type memorySearchHistoryArgs struct {
-	Query string `json:"query"`
-	Limit int    `json:"limit,omitempty" jsonschema:"minimum=1,maximum=20"`
+	Query string `json:"query" jsonschema:"description=Kata kunci pencarian riwayat percakapan lintas sesi"`
+	Limit int    `json:"limit,omitempty" jsonschema:"minimum=1,maximum=20,description=Jumlah maksimal hasil riwayat (1-20)"`
 }
 
 type delegateSpecialistArgs struct {
-	AgentName string `json:"agent_name" jsonschema:"enum=mikael,enum=rafael"`
+	AgentName string `json:"agent_name" jsonschema:"enum=mikael,enum=rafael,description=Nama agen spesialis tujuan (mikael atau rafael)"`
 	Task      string `json:"task" jsonschema:"description=Instruksi tugas jelas untuk spesialis"`
 }
 

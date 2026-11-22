@@ -201,6 +201,9 @@ func (r *Registry) generateGenkit(
 		ai.WithMessages(toGenkitMessages(req.Messages)...),
 		ai.WithConfig(providerConfig(cfg)),
 		ai.WithStreaming(func(_ context.Context, c *ai.ModelResponseChunk) error {
+			if c.Role != "" && c.Role != ai.RoleModel {
+				return nil
+			}
 			if s := c.Reasoning(); s != "" {
 				if err := emitEvent(onEvent, StreamEvent{Type: StreamEventThinking, Delta: s}); err != nil {
 					streamErr = err
