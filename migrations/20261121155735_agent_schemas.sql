@@ -1,6 +1,3 @@
--- Enable pgvector and ParadeDB BM25 extensions
-CREATE EXTENSION IF NOT EXISTS vector;
-CREATE EXTENSION IF NOT EXISTS pg_search CASCADE;
 -- Create "agent_sessions" table
 CREATE TABLE IF NOT EXISTS "agent_sessions" (
   "id" uuid NOT NULL,

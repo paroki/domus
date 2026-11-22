@@ -51,6 +51,13 @@ func runMigrationsFromFS(ctx context.Context, cfg Config, logger *slog.Logger, f
 	}
 	defer func() { _ = db.Close() }()
 
+	isSQLite := strings.HasPrefix(cfg.DatabaseURL, "sqlite://") || strings.HasPrefix(cfg.DatabaseURL, "file:")
+	if !isSQLite {
+		if err := checkPostgresExtensions(ctx, db); err != nil {
+			return err
+		}
+	}
+
 	if _, err := db.ExecContext(ctx, `
 		CREATE TABLE IF NOT EXISTS schema_migrations (
 			version TEXT PRIMARY KEY,
@@ -60,8 +67,6 @@ func runMigrationsFromFS(ctx context.Context, cfg Config, logger *slog.Logger, f
 	`); err != nil {
 		return fmt.Errorf("create schema_migrations table: %w", err)
 	}
-
-	isSQLite := strings.HasPrefix(cfg.DatabaseURL, "sqlite://") || strings.HasPrefix(cfg.DatabaseURL, "file:")
 
 	files, err := fs.Glob(fsys, "*.sql")
 	if err != nil {
