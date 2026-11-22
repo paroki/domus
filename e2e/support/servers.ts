@@ -82,6 +82,8 @@ export async function startServers(): Promise<void> {
   try {
     await db`DROP SCHEMA IF EXISTS public CASCADE`;
     await db`CREATE SCHEMA public`;
+    await db`CREATE EXTENSION IF NOT EXISTS vector`;
+    await db`CREATE EXTENSION IF NOT EXISTS pg_search CASCADE`;
   } finally {
     await db.close();
   }
