@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/firebase/genkit/go/ai"
 	"github.com/paroki/domus/internal/agent/domain"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -79,6 +80,10 @@ func TestGeminiDriver_StreamEmbedAndDiscover(t *testing.T) {
 	}))
 	defer srv.Close()
 
+	noop := func(name, desc string, schema map[string]any) ai.ToolRef {
+		return ai.NewTool(name, desc, func(*ai.ToolContext, any) (any, error) { return nil, nil }, ai.WithInputSchema(schema))
+	}
+
 	reg := NewRegistry(srv.Client())
 	var events []StreamEvent
 	resp, err := reg.StreamChat(ctx, domain.ModelConfig{
@@ -90,7 +95,7 @@ func TestGeminiDriver_StreamEmbedAndDiscover(t *testing.T) {
 	}, ChatRequest{
 		SystemPrompt: "System",
 		Messages:     []ChatMessage{{Role: domain.RoleUser, Content: "Hi"}},
-		Tools:        []ToolDefinition{{Name: "event_list", Description: "list", Parameters: json.RawMessage(`{"type":"object"}`)}},
+		Tools:        []ai.ToolRef{noop("event_list", "list", map[string]any{"type": "object"})},
 	}, func(ev StreamEvent) error {
 		events = append(events, ev)
 		return nil
@@ -121,6 +126,8 @@ func TestGeminiDriver_StreamEmbedAndDiscover(t *testing.T) {
 
 	// Gemma models and ReasoningNone must omit thinkingConfig, and tool schemas
 	// must strip additionalProperties/$schema for Gemini v1beta compatibility.
+	var complexSchema map[string]any
+	_ = json.Unmarshal([]byte(`{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","additionalProperties":false,"properties":{"nested":{"type":"object","additionalProperties":false},"opt":{"type":["string","null"]}}}`), &complexSchema)
 	_, err = reg.StreamChat(ctx, domain.ModelConfig{
 		Provider:        "gemini",
 		BaseURL:         srv.URL,
@@ -129,11 +136,7 @@ func TestGeminiDriver_StreamEmbedAndDiscover(t *testing.T) {
 		ReasoningEffort: domain.ReasoningLow,
 	}, ChatRequest{
 		Messages: []ChatMessage{{Role: domain.RoleUser, Content: "Hi"}},
-		Tools: []ToolDefinition{{
-			Name:        "event_list",
-			Description: "list",
-			Parameters:  json.RawMessage(`{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","additionalProperties":false,"properties":{"nested":{"type":"object","additionalProperties":false},"opt":{"type":["string","null"]}}}`),
-		}},
+		Tools:    []ai.ToolRef{noop("event_list", "list", complexSchema)},
 	}, nil)
 	require.NoError(t, err)
 	gemmaGenCfg := capturedBody["generationConfig"].(map[string]any)

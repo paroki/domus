@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"slices"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/firebase/genkit/go/ai"
 	"github.com/google/uuid"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/paroki/domus/ent"
@@ -455,16 +457,19 @@ func (s *Service) runReActLoop(
 		maxSteps = domain.MaxSteps
 	}
 
-	toolDefs := internalToolDefinitions(agentCfg.Tools)
-	internalSet := make(map[string]struct{}, len(toolDefs))
-	for _, td := range toolDefs {
-		internalSet[td.Name] = struct{}{}
-	}
-	mcpDefs, mcpSet, err := discoverMCPTools(ctx, mcpSession, agentCfg.Tools)
+	tools := s.internalTools(p, ch, sessionID, mcpSession, onStep, agentCfg.Tools)
+	mcpTools, err := discoverMCPTools(ctx, mcpSession, agentCfg.Tools)
 	if err != nil {
 		return "", err
 	}
-	toolDefs = append(toolDefs, mcpDefs...)
+	tools = append(tools, mcpTools...)
+
+	toolRefs := make([]ai.ToolRef, len(tools))
+	toolMap := make(map[string]ai.Tool, len(tools))
+	for i, t := range tools {
+		toolRefs[i] = t
+		toolMap[t.Name()] = t
+	}
 
 	history := make([]driver.ChatMessage, len(messages))
 	copy(history, messages)
@@ -477,7 +482,7 @@ func (s *Service) runReActLoop(
 		resp, err := s.drivers.StreamChat(ctx, agentCfg.Model, driver.ChatRequest{
 			SystemPrompt: systemPrompt,
 			Messages:     history,
-			Tools:        toolDefs,
+			Tools:        toolRefs,
 		}, func(ev driver.StreamEvent) error {
 			switch ev.Type {
 			case driver.StreamEventThinking:
@@ -549,10 +554,26 @@ func (s *Service) runReActLoop(
 		for _, tc := range resp.ToolCalls {
 			var resultStr string
 			var toolErr error
-			if _, isInternal := internalSet[tc.Name]; isInternal {
-				resultStr, toolErr = s.executeInternalTool(ctx, p, ch, sessionID, mcpSession, onStep, tc.Name, tc.Arguments)
-			} else if _, isMCP := mcpSet[tc.Name]; isMCP {
-				resultStr, toolErr = callMCPTool(ctx, mcpSession, tc.Name, tc.Arguments)
+			if t, ok := toolMap[tc.Name]; ok {
+				argMap := map[string]any{}
+				if trimmed := strings.TrimSpace(tc.Arguments); trimmed != "" {
+					if uerr := json.Unmarshal([]byte(trimmed), &argMap); uerr != nil {
+						toolErr = errx.Invalid("INVALID_TOOL_ARGS", fmt.Sprintf("Invalid JSON arguments for %s: %v", tc.Name, uerr))
+					}
+				}
+				if toolErr == nil {
+					var rawOut any
+					rawOut, toolErr = t.RunRaw(ctx, argMap)
+					if toolErr == nil {
+						switch v := rawOut.(type) {
+						case string:
+							resultStr = v
+						default:
+							b, _ := json.Marshal(v)
+							resultStr = string(b)
+						}
+					}
+				}
 			} else {
 				toolErr = errx.Invalid("TOOL_NOT_ALLOWED", "Tool is not allowed for this agent.")
 			}

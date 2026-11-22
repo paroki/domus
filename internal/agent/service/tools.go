@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strings"
 
+	"github.com/firebase/genkit/go/ai"
 	"github.com/google/uuid"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/paroki/domus/ent/agentmemory"
@@ -13,82 +13,88 @@ import (
 	"github.com/paroki/domus/internal/agent/driver"
 	"github.com/paroki/domus/internal/platform/authx"
 	"github.com/paroki/domus/internal/platform/authz"
-	"github.com/paroki/domus/internal/platform/errx"
 )
 
 const roleParishAdmin = "ref:parish-admin"
 
-func internalToolDefinitions(patterns []string) []driver.ToolDefinition {
-	catalog := []driver.ToolDefinition{
-		{
-			Name:        "memory_save",
-			Description: "Simpan fakta jangka panjang tentang pengguna atau FAQ paroki ke dalam memori.",
-			Parameters: json.RawMessage(`{
-				"type": "object",
-				"properties": {
-					"content": {"type": "string", "description": "Fakta singkat (maks 500 karakter)"},
-					"category": {"type": "string", "enum": ["profile", "preference", "ministry", "parish_faq"]},
-					"is_pinned": {"type": "boolean", "description": "Pin agar selalu disuntikkan ke konteks"},
-					"scope": {"type": "string", "enum": ["user", "parish"]},
-					"supersede_id": {"type": "string", "description": "UUID memori lama yang digantikan"}
-				},
-				"required": ["content", "category"]
-			}`),
-		},
-		{
-			Name:        "memory_recall",
-			Description: "Cari fakta jangka panjang yang relevan dari memori pengguna dan FAQ paroki.",
-			Parameters: json.RawMessage(`{
-				"type": "object",
-				"properties": {
-					"query": {"type": "string"},
-					"category": {"type": "string", "enum": ["profile", "preference", "ministry", "parish_faq"]},
-					"limit": {"type": "integer", "minimum": 1, "maximum": 20}
-				},
-				"required": ["query"]
-			}`),
-		},
-		{
-			Name:        "memory_forget",
-			Description: "Hapus (soft-delete) satu fakta memori berdasarkan UUID.",
-			Parameters: json.RawMessage(`{
-				"type": "object",
-				"properties": {
-					"memory_id": {"type": "string"}
-				},
-				"required": ["memory_id"]
-			}`),
-		},
-		{
-			Name:        "memory_search_history",
-			Description: "Cari riwayat percakapan terdahulu lintas sesi dan saluran (web, telegram, whatsapp).",
-			Parameters: json.RawMessage(`{
-				"type": "object",
-				"properties": {
-					"query": {"type": "string"},
-					"limit": {"type": "integer", "minimum": 1, "maximum": 20}
-				},
-				"required": ["query"]
-			}`),
-		},
-		{
-			Name:        "delegate_specialist",
-			Description: "Delegasikan tugas spesialis ke Mikael (acara/RSVP) atau Rafael (organisasi/undangan).",
-			Parameters: json.RawMessage(`{
-				"type": "object",
-				"properties": {
-					"agent_name": {"type": "string", "enum": ["mikael", "rafael"]},
-					"task": {"type": "string", "description": "Instruksi tugas jelas untuk spesialis"}
-				},
-				"required": ["agent_name", "task"]
-			}`),
-		},
+type memorySaveArgs struct {
+	Content     string  `json:"content" jsonschema:"description=Fakta singkat (maks 500 karakter)"`
+	Category    string  `json:"category" jsonschema:"enum=profile,enum=preference,enum=ministry,enum=parish_faq"`
+	IsPinned    bool    `json:"is_pinned,omitempty" jsonschema:"description=Pin agar selalu disuntikkan ke konteks"`
+	Scope       string  `json:"scope,omitempty" jsonschema:"enum=user,enum=parish"`
+	SupersedeID *string `json:"supersede_id,omitempty" jsonschema:"description=UUID memori lama yang digantikan"`
+}
+
+type memoryRecallArgs struct {
+	Query    string `json:"query"`
+	Category string `json:"category,omitempty" jsonschema:"enum=profile,enum=preference,enum=ministry,enum=parish_faq"`
+	Limit    int    `json:"limit,omitempty" jsonschema:"minimum=1,maximum=20"`
+}
+
+type memoryForgetArgs struct {
+	MemoryID string `json:"memory_id"`
+}
+
+type memorySearchHistoryArgs struct {
+	Query string `json:"query"`
+	Limit int    `json:"limit,omitempty" jsonschema:"minimum=1,maximum=20"`
+}
+
+type delegateSpecialistArgs struct {
+	AgentName string `json:"agent_name" jsonschema:"enum=mikael,enum=rafael"`
+	Task      string `json:"task" jsonschema:"description=Instruksi tugas jelas untuk spesialis"`
+}
+
+func (s *Service) internalTools(
+	p authx.Principal,
+	ch domain.Channel,
+	sessionID uuid.UUID,
+	mcpSession *mcp.ClientSession,
+	onStep StepCallback,
+	patterns []string,
+) []ai.Tool {
+	catalog := []ai.Tool{
+		ai.NewTool(
+			"memory_save",
+			"Simpan fakta jangka panjang tentang pengguna atau FAQ paroki ke dalam memori.",
+			func(tc *ai.ToolContext, args memorySaveArgs) (string, error) {
+				return s.execMemorySave(tc.Context, p, sessionID, args)
+			},
+		),
+		ai.NewTool(
+			"memory_recall",
+			"Cari fakta jangka panjang yang relevan dari memori pengguna dan FAQ paroki.",
+			func(tc *ai.ToolContext, args memoryRecallArgs) (string, error) {
+				return s.execMemoryRecall(tc.Context, p, args)
+			},
+		),
+		ai.NewTool(
+			"memory_forget",
+			"Hapus (soft-delete) satu fakta memori berdasarkan UUID.",
+			func(tc *ai.ToolContext, args memoryForgetArgs) (string, error) {
+				return s.execMemoryForget(tc.Context, p, args)
+			},
+		),
+		ai.NewTool(
+			"memory_search_history",
+			"Cari riwayat percakapan terdahulu lintas sesi dan saluran (web, telegram, whatsapp).",
+			func(tc *ai.ToolContext, args memorySearchHistoryArgs) (string, error) {
+				return s.execMemorySearchHistory(tc.Context, p, args)
+			},
+		),
+		ai.NewTool(
+			"delegate_specialist",
+			"Delegasikan tugas spesialis ke Mikael (acara/RSVP) atau Rafael (organisasi/undangan).",
+			func(tc *ai.ToolContext, args delegateSpecialistArgs) (string, error) {
+				return s.execDelegateSpecialist(tc.Context, p, ch, sessionID, mcpSession, onStep, args)
+			},
+		),
 	}
 
-	var out []driver.ToolDefinition
-	for _, td := range catalog {
-		if matchesAnyPattern(patterns, td.Name) {
-			out = append(out, td)
+	var out []ai.Tool
+	for _, t := range catalog {
+		if matchesAnyPattern(patterns, t.Name()) {
+			out = append(out, t)
 		}
 	}
 	return out
@@ -114,43 +120,7 @@ func (s *Service) bestEffortEmbed(ctx context.Context, text string) []float32 {
 	return vec
 }
 
-func (s *Service) executeInternalTool(
-	ctx context.Context,
-	p authx.Principal,
-	ch domain.Channel,
-	sessionID uuid.UUID,
-	mcpSession *mcp.ClientSession,
-	onStep StepCallback,
-	name string,
-	argsJSON string,
-) (string, error) {
-	switch name {
-	case "memory_save":
-		return s.execMemorySave(ctx, p, sessionID, argsJSON)
-	case "memory_recall":
-		return s.execMemoryRecall(ctx, p, argsJSON)
-	case "memory_forget":
-		return s.execMemoryForget(ctx, p, argsJSON)
-	case "memory_search_history":
-		return s.execMemorySearchHistory(ctx, p, argsJSON)
-	case "delegate_specialist":
-		return s.execDelegateSpecialist(ctx, p, ch, sessionID, mcpSession, onStep, argsJSON)
-	default:
-		return "", errx.Invalid("UNKNOWN_TOOL", fmt.Sprintf("Unknown internal tool %q.", name))
-	}
-}
-
-func (s *Service) execMemorySave(ctx context.Context, p authx.Principal, sessionID uuid.UUID, argsJSON string) (string, error) {
-	var args struct {
-		Content     string  `json:"content"`
-		Category    string  `json:"category"`
-		IsPinned    bool    `json:"is_pinned"`
-		Scope       string  `json:"scope"`
-		SupersedeID *string `json:"supersede_id"`
-	}
-	if err := json.Unmarshal([]byte(argsJSON), &args); err != nil {
-		return "", errx.Invalid("INVALID_TOOL_ARGS", "Invalid JSON arguments for memory_save.")
-	}
+func (s *Service) execMemorySave(ctx context.Context, p authx.Principal, sessionID uuid.UUID, args memorySaveArgs) (string, error) {
 	content := strings.TrimSpace(args.Content)
 	if content == "" || len([]rune(content)) > domain.MaxMemoryContentLen {
 		return "", domain.ValidationError("content", "INVALID_CONTENT", "Memory content must be 1..500 characters.")
@@ -217,15 +187,7 @@ func (s *Service) execMemorySave(ctx context.Context, p authx.Principal, session
 	return string(b), nil
 }
 
-func (s *Service) execMemoryRecall(ctx context.Context, p authx.Principal, argsJSON string) (string, error) {
-	var args struct {
-		Query    string `json:"query"`
-		Category string `json:"category"`
-		Limit    int    `json:"limit"`
-	}
-	if err := json.Unmarshal([]byte(argsJSON), &args); err != nil {
-		return "", errx.Invalid("INVALID_TOOL_ARGS", "Invalid JSON arguments for memory_recall.")
-	}
+func (s *Service) execMemoryRecall(ctx context.Context, p authx.Principal, args memoryRecallArgs) (string, error) {
 	q := strings.TrimSpace(args.Query)
 	if q == "" {
 		return "", domain.ValidationError("query", "REQUIRED", "Query is required.")
@@ -252,13 +214,7 @@ func (s *Service) execMemoryRecall(ctx context.Context, p authx.Principal, argsJ
 	return string(b), nil
 }
 
-func (s *Service) execMemoryForget(ctx context.Context, p authx.Principal, argsJSON string) (string, error) {
-	var args struct {
-		MemoryID string `json:"memory_id"`
-	}
-	if err := json.Unmarshal([]byte(argsJSON), &args); err != nil {
-		return "", errx.Invalid("INVALID_TOOL_ARGS", "Invalid JSON arguments for memory_forget.")
-	}
+func (s *Service) execMemoryForget(ctx context.Context, p authx.Principal, args memoryForgetArgs) (string, error) {
 	memID, err := uuid.Parse(strings.TrimSpace(args.MemoryID))
 	if err != nil {
 		return "", domain.ValidationError("memory_id", "INVALID_UUID", "Invalid memory_id UUID.")
@@ -286,14 +242,7 @@ func (s *Service) execMemoryForget(ctx context.Context, p authx.Principal, argsJ
 	return `{"deleted":true}`, nil
 }
 
-func (s *Service) execMemorySearchHistory(ctx context.Context, p authx.Principal, argsJSON string) (string, error) {
-	var args struct {
-		Query string `json:"query"`
-		Limit int    `json:"limit"`
-	}
-	if err := json.Unmarshal([]byte(argsJSON), &args); err != nil {
-		return "", errx.Invalid("INVALID_TOOL_ARGS", "Invalid JSON arguments for memory_search_history.")
-	}
+func (s *Service) execMemorySearchHistory(ctx context.Context, p authx.Principal, args memorySearchHistoryArgs) (string, error) {
 	q := strings.TrimSpace(args.Query)
 	if q == "" {
 		return "", domain.ValidationError("query", "REQUIRED", "Query is required.")
@@ -329,15 +278,8 @@ func (s *Service) execDelegateSpecialist(
 	sessionID uuid.UUID,
 	mcpSession *mcp.ClientSession,
 	onStep StepCallback,
-	argsJSON string,
+	args delegateSpecialistArgs,
 ) (string, error) {
-	var args struct {
-		AgentName string `json:"agent_name"`
-		Task      string `json:"task"`
-	}
-	if err := json.Unmarshal([]byte(argsJSON), &args); err != nil {
-		return "", errx.Invalid("INVALID_TOOL_ARGS", "Invalid JSON arguments for delegate_specialist.")
-	}
 	if inDelegation(ctx) {
 		return "", domain.ValidationError("agent_name", "NESTED_DELEGATION", "Specialists cannot delegate to other specialists.")
 	}

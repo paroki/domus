@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/firebase/genkit/go/ai"
 	"github.com/paroki/domus/internal/agent/domain"
 )
 
@@ -34,13 +35,6 @@ type StreamEvent struct {
 // StreamCallback receives incremental StreamEvents during StreamChat.
 type StreamCallback func(StreamEvent) error
 
-// ToolDefinition describes a callable tool exposed to an LLM provider.
-type ToolDefinition struct {
-	Name        string          `json:"name"`
-	Description string          `json:"description"`
-	Parameters  json.RawMessage `json:"parameters"`
-}
-
 // ChatMessage represents a single turn in a provider-agnostic conversation history.
 type ChatMessage struct {
 	Role       domain.Role
@@ -54,7 +48,7 @@ type ChatMessage struct {
 type ChatRequest struct {
 	SystemPrompt string
 	Messages     []ChatMessage
-	Tools        []ToolDefinition
+	Tools        []ai.ToolRef
 }
 
 // ChatResponse is the aggregated output of StreamChat.

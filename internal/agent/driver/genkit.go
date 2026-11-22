@@ -183,18 +183,6 @@ func toGenkitMessages(in []ChatMessage) []*ai.Message {
 	return out
 }
 
-// noopTool advertises a schema only: the agent service executes tools itself.
-func noopTool(d ToolDefinition) (ai.ToolRef, error) {
-	schema := map[string]any{"type": "object"}
-	if len(d.Parameters) > 0 {
-		if err := json.Unmarshal(d.Parameters, &schema); err != nil {
-			return nil, fmt.Errorf("%w: tool %q schema: %v", domain.ErrProviderRequestInvalid, d.Name, err)
-		}
-	}
-	return ai.NewToolWithInputSchema(d.Name, d.Description, schema,
-		func(*ai.ToolContext, any) (any, error) { return nil, nil }), nil
-}
-
 func (r *Registry) streamGenkit(
 	ctx context.Context,
 	cfg domain.ModelConfig,
@@ -227,15 +215,7 @@ func (r *Registry) streamGenkit(
 		opts = append(opts, ai.WithSystem(req.SystemPrompt))
 	}
 	if len(req.Tools) > 0 {
-		tools := make([]ai.ToolRef, 0, len(req.Tools))
-		for _, d := range req.Tools {
-			t, err := noopTool(d)
-			if err != nil {
-				return nil, err
-			}
-			tools = append(tools, t)
-		}
-		opts = append(opts, ai.WithTools(tools...))
+		opts = append(opts, ai.WithTools(req.Tools...))
 	}
 	resp, err := genkit.Generate(ctx, g, opts...)
 	if err != nil {

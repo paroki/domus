@@ -7,8 +7,8 @@ import (
 	"path"
 	"strings"
 
+	"github.com/firebase/genkit/go/ai"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
-	"github.com/paroki/domus/internal/agent/driver"
 	"github.com/paroki/domus/internal/platform/errx"
 )
 
@@ -16,42 +16,45 @@ func discoverMCPTools(
 	ctx context.Context,
 	session *mcp.ClientSession,
 	patterns []string,
-) ([]driver.ToolDefinition, map[string]struct{}, error) {
+) ([]ai.Tool, error) {
 	if session == nil || len(patterns) == 0 {
-		return nil, map[string]struct{}{}, nil
+		return nil, nil
 	}
 
-	var defs []driver.ToolDefinition
-	allowed := make(map[string]struct{})
+	var tools []ai.Tool
 	var cursor string
 	for {
 		res, err := session.ListTools(ctx, &mcp.ListToolsParams{Cursor: cursor})
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		for _, t := range res.Tools {
 			if !matchesAnyPattern(patterns, t.Name) {
 				continue
 			}
-			allowed[t.Name] = struct{}{}
-			params := json.RawMessage(`{"type":"object"}`)
+			schema := map[string]any{"type": "object"}
 			if t.InputSchema != nil {
 				if raw, merr := json.Marshal(t.InputSchema); merr == nil && len(raw) > 0 {
-					params = raw
+					var m map[string]any
+					if json.Unmarshal(raw, &m) == nil && len(m) > 0 {
+						schema = m
+					}
 				}
 			}
-			defs = append(defs, driver.ToolDefinition{
-				Name:        t.Name,
-				Description: t.Description,
-				Parameters:  params,
-			})
+			toolName := t.Name
+			tools = append(tools, ai.NewTool(toolName, t.Description,
+				func(tc *ai.ToolContext, input any) (string, error) {
+					return callMCPTool(tc.Context, session, toolName, input)
+				},
+				ai.WithInputSchema(schema),
+			))
 		}
 		if res.NextCursor == "" {
 			break
 		}
 		cursor = res.NextCursor
 	}
-	return defs, allowed, nil
+	return tools, nil
 }
 
 func matchesAnyPattern(patterns []string, name string) bool {
@@ -67,14 +70,30 @@ func callMCPTool(
 	ctx context.Context,
 	session *mcp.ClientSession,
 	name string,
-	argsJSON string,
+	input any,
 ) (string, error) {
 	if session == nil {
 		return "", errx.Internal("MCP_UNAVAILABLE", "MCP session is not connected.", nil)
 	}
 	args := map[string]any{}
-	if trimmed := strings.TrimSpace(argsJSON); trimmed != "" {
-		if err := json.Unmarshal([]byte(trimmed), &args); err != nil {
+	switch v := input.(type) {
+	case map[string]any:
+		if v != nil {
+			args = v
+		}
+	case string:
+		if trimmed := strings.TrimSpace(v); trimmed != "" {
+			if err := json.Unmarshal([]byte(trimmed), &args); err != nil {
+				return "", errx.Invalid("INVALID_TOOL_ARGS", fmt.Sprintf("Invalid JSON arguments for %s: %v", name, err))
+			}
+		}
+	case nil:
+	default:
+		raw, err := json.Marshal(v)
+		if err != nil {
+			return "", errx.Invalid("INVALID_TOOL_ARGS", fmt.Sprintf("Invalid arguments for %s: %v", name, err))
+		}
+		if err := json.Unmarshal(raw, &args); err != nil {
 			return "", errx.Invalid("INVALID_TOOL_ARGS", fmt.Sprintf("Invalid JSON arguments for %s: %v", name, err))
 		}
 	}

@@ -228,7 +228,11 @@ func TestService_RunTurn_MemoryAndDelegateSpecialist(t *testing.T) {
 
 	// Grant ref:parish-admin and verify parish-scope memory_save succeeds
 	require.NoError(t, enforcer.AssignRole(ctx, principal.Subject(), roleParishAdmin, authz.ParishDomain(parishID)))
-	resStr, err := svc.execMemorySave(ctx, principal, sess.ID, `{"content":"Misa jam 07:00","category":"parish_faq","scope":"parish"}`)
+	resStr, err := svc.execMemorySave(ctx, principal, sess.ID, memorySaveArgs{
+		Content:  "Misa jam 07:00",
+		Category: "parish_faq",
+		Scope:    "parish",
+	})
 	require.NoError(t, err)
 	assert.Contains(t, resStr, `"scope":"parish"`)
 }
