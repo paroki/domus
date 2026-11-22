@@ -530,8 +530,7 @@ func (s *UserFeatureSuite) TestRegisterSettings_HotReloadAndValidation() {
 
 	// Partial GOWA -> validation error
 	_, err := store.Update(ctx, map[string]string{
-		user.SettingGowaBaseURL:   "https://gowa.example.com",
-		user.SettingGowaBasicUser: "gowa",
+		user.SettingGowaWebhookSecret: "secret",
 	})
 	s.Require().Error(err)
 
