@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/paroki/domus/internal/agent/domain"
@@ -57,11 +58,18 @@ func (h *Handler) Chat(c fiber.Ctx) error {
 	c.Set("X-Accel-Buffering", "no")
 
 	// Capture an independent context because fasthttp recycles fiber.Ctx after the handler returns.
-	streamCtx := authx.WithPrincipal(context.Background(), p)
+	// Cancel on client disconnect (write error) or after chatTurnTimeout.
+	streamCtx, cancel := context.WithTimeout(context.Background(), chatTurnTimeout)
+	streamCtx = authx.WithPrincipal(streamCtx, p)
 	c.RequestCtx().SetBodyStreamWriter(func(w *bufio.Writer) {
+		defer cancel()
 		defer prep.Release()
 		_, _, runErr := h.service.RunPreparedTurn(streamCtx, prep, func(ev domain.AgentSSEEvent) error {
-			return writeSSEFrame(w, ev)
+			if err := writeSSEFrame(w, ev); err != nil {
+				cancel()
+				return err
+			}
+			return nil
 		})
 		if runErr != nil {
 			_ = writeSSEFrame(w, errorSSEEvent(runErr))
@@ -69,6 +77,9 @@ func (h *Handler) Chat(c fiber.Ctx) error {
 	})
 	return nil
 }
+
+// chatTurnTimeout bounds a single SSE chat turn.
+const chatTurnTimeout = 5 * time.Minute
 
 func writeSSEFrame(w *bufio.Writer, ev domain.AgentSSEEvent) error {
 	b, err := json.Marshal(ev)
