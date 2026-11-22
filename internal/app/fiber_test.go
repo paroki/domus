@@ -2,35 +2,28 @@ package app
 
 import (
 	"io"
-	"io/fs"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
+	"testing/fstest"
 
 	"github.com/gofiber/fiber/v3"
-	"github.com/paroki/domus/ui"
+	"github.com/paroki/domus/internal/platform/httpx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestSPACachingAndFallback(t *testing.T) {
-	distFS, err := ui.DistFS()
-	require.NoError(t, err)
-
-	var firstAsset string
-	entries, err := fs.ReadDir(distFS, "assets")
-	if err == nil {
-		for _, e := range entries {
-			if !e.IsDir() && strings.HasSuffix(e.Name(), ".js") {
-				firstAsset = "/assets/" + e.Name()
-				break
-			}
-		}
+	distFS := fstest.MapFS{
+		"index.html":        {Data: []byte("<!doctype html><html><body>domus</body></html>")},
+		"assets/app-123.js": {Data: []byte("console.log('ok');")},
 	}
 
-	app := GetFiber(Config{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	app := fiber.New(fiber.Config{
+		ErrorHandler: httpx.ErrorHandler(slog.New(slog.NewTextHandler(io.Discard, nil))),
+	})
+	mountSPA(app, distFS)
 
 	t.Run("root index.html is not cached", func(t *testing.T) {
 		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/", nil))
@@ -62,14 +55,12 @@ func TestSPACachingAndFallback(t *testing.T) {
 		assert.Equal(t, "no-store", resp.Header.Get(fiber.HeaderCacheControl))
 	})
 
-	if firstAsset != "" {
-		t.Run("existing hashed asset is cached as immutable", func(t *testing.T) {
-			resp, err := app.Test(httptest.NewRequest(http.MethodGet, firstAsset, nil))
-			require.NoError(t, err)
-			defer func() { _ = resp.Body.Close() }()
+	t.Run("existing hashed asset is cached as immutable", func(t *testing.T) {
+		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/assets/app-123.js", nil))
+		require.NoError(t, err)
+		defer func() { _ = resp.Body.Close() }()
 
-			assert.Equal(t, fiber.StatusOK, resp.StatusCode)
-			assert.Equal(t, "public, max-age=31536000, immutable", resp.Header.Get(fiber.HeaderCacheControl))
-		})
-	}
+		assert.Equal(t, fiber.StatusOK, resp.StatusCode)
+		assert.Equal(t, "public, max-age=31536000, immutable", resp.Header.Get(fiber.HeaderCacheControl))
+	})
 }
