@@ -338,6 +338,9 @@ func (s *Service) execDelegateSpecialist(
 	if err := json.Unmarshal([]byte(argsJSON), &args); err != nil {
 		return "", errx.Invalid("INVALID_TOOL_ARGS", "Invalid JSON arguments for delegate_specialist.")
 	}
+	if inDelegation(ctx) {
+		return "", domain.ValidationError("agent_name", "NESTED_DELEGATION", "Specialists cannot delegate to other specialists.")
+	}
 	target := strings.TrimSpace(args.AgentName)
 	if target != "mikael" && target != "rafael" {
 		return "", domain.ValidationError("agent_name", "INVALID_AGENT", "agent_name must be mikael or rafael.")
@@ -357,7 +360,7 @@ func (s *Service) execDelegateSpecialist(
 	}
 
 	answer, err := s.runReActLoop(
-		ctx,
+		withDelegation(ctx),
 		p,
 		ch,
 		sessionID,
