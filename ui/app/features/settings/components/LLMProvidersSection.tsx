@@ -51,6 +51,7 @@ export function LLMProvidersSection({ onStatus }: LLMProvidersSectionProps) {
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
   const [form, setForm] = useState<ProviderFormState>(EMPTY_FORM);
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -65,6 +66,7 @@ export function LLMProvidersSection({ onStatus }: LLMProvidersSectionProps) {
   function startCreate() {
     onStatus(null, null);
     setEditingId(null);
+    setShowApiKeyInput(true);
     setForm(EMPTY_FORM);
     setShowForm(true);
   }
@@ -72,6 +74,7 @@ export function LLMProvidersSection({ onStatus }: LLMProvidersSectionProps) {
   function startEdit(p: AgentProviderResponse) {
     onStatus(null, null);
     setEditingId(p.id ?? null);
+    setShowApiKeyInput(false);
     setForm({
       name: p.name ?? "",
       description: p.description ?? "",
@@ -85,6 +88,7 @@ export function LLMProvidersSection({ onStatus }: LLMProvidersSectionProps) {
   function cancelForm() {
     setShowForm(false);
     setEditingId(null);
+    setShowApiKeyInput(false);
     setForm(EMPTY_FORM);
   }
 
@@ -244,24 +248,46 @@ export function LLMProvidersSection({ onStatus }: LLMProvidersSectionProps) {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="provider-apikey"
-                className="text-sm font-medium text-fg"
-              >
-                {t("settings.providers.apiKey")}
-              </label>
-              <input
-                id="provider-apikey"
-                type="password"
-                required={!editingId}
-                value={form.apiKey}
-                onChange={(e) => setForm({ ...form, apiKey: e.target.value })}
-                placeholder={
-                  editingId ? t("settings.providers.apiKeyKeepHint") : "sk-..."
-                }
-                autoComplete="off"
-                className="h-10 rounded-lg border border-line bg-bg px-3 text-sm text-fg placeholder:text-muted focus:border-fg/40 focus:outline-none"
-              />
+              <div className="flex items-center justify-between gap-2">
+                <label
+                  htmlFor="provider-apikey"
+                  className="text-sm font-medium text-fg"
+                >
+                  {t("settings.providers.apiKey")}
+                </label>
+                {editingId && showApiKeyInput ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowApiKeyInput(false);
+                      setForm({ ...form, apiKey: "" });
+                    }}
+                    className="text-[11px] font-medium text-muted underline-offset-2 hover:text-fg hover:underline"
+                  >
+                    {t("settings.providers.cancel")}
+                  </button>
+                ) : null}
+              </div>
+              {editingId && !showApiKeyInput ? (
+                <button
+                  type="button"
+                  onClick={() => setShowApiKeyInput(true)}
+                  className="flex h-10 w-fit items-center rounded-lg border border-line bg-bg px-3 text-xs font-medium text-fg transition hover:bg-fg/6"
+                >
+                  {t("settings.providers.updateApiKey")}
+                </button>
+              ) : (
+                <input
+                  id="provider-apikey"
+                  type="password"
+                  required
+                  value={form.apiKey}
+                  onChange={(e) => setForm({ ...form, apiKey: e.target.value })}
+                  placeholder="sk-..."
+                  autoComplete="off"
+                  className="h-10 rounded-lg border border-line bg-bg px-3 text-sm text-fg placeholder:text-muted focus:border-fg/40 focus:outline-none"
+                />
+              )}
             </div>
 
             <div className="flex flex-col gap-1.5">

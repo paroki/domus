@@ -449,6 +449,7 @@ const id = {
       synced: "Katalog model {{provider}} berhasil disinkronkan.",
       deleted: "Konfigurasi penyedia berhasil dihapus.",
       apiKey: "API Key",
+      updateApiKey: "Update API Key",
       apiKeyKeepHint: "Biarkan kosong untuk mempertahankan API Key lama",
       baseUrl: "Base URL",
       empty:
