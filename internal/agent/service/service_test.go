@@ -286,3 +286,34 @@ func TestService_SessionBusy_AndMaxStepsExceeded(t *testing.T) {
 	_, _, err = svc.RunTurn(ctx, ChatTurnInput{Principal: principal, SessionID: &sess.ID, Message: "Loop"})
 	assert.ErrorIs(t, err, domain.ErrMaxStepsExceeded)
 }
+
+func TestService_BuildPromptForTurn_InjectsUserRoles(t *testing.T) {
+	ctx := context.Background()
+	client, sqlDB, d := testutil.NewEntClientWithDB(t)
+	r := repo.New(client, sqlDB, d)
+	enforcer, err := authz.NewEnforcer(client)
+	require.NoError(t, err)
+
+	parishID := uuid.New()
+	userID := uuid.New()
+	principal := authx.Principal{UserID: userID, ParishID: parishID}
+
+	require.NoError(t, enforcer.AssignRole(ctx, principal.Subject(), "user:super-admin", authz.DomainGlobal))
+	require.NoError(t, enforcer.AssignRole(ctx, principal.Subject(), roleParishAdmin, authz.ParishDomain(parishID)))
+
+	svc := New(
+		r,
+		stubConfigProvider{},
+		driver.NewRegistry(nil),
+		enforcer,
+		nil,
+		stubUserReader{profile: &UserProfileInfo{ID: userID, Name: "Anthonius"}},
+		stubParishReader{info: &ParishInfo{ID: parishID, Code: "p-1", Name: "Katedral"}},
+		stubOrgReader{},
+		slog.New(slog.DiscardHandler),
+	)
+
+	prompt, err := svc.buildPromptForTurn(ctx, principal, domain.ChannelWeb, "Gabriel")
+	require.NoError(t, err)
+	assert.Contains(t, prompt, "<user_roles>\n    <role>ref:parish-admin</role>\n    <role>user:super-admin</role>\n  </user_roles>")
+}

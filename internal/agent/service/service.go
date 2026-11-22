@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log/slog"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -403,10 +404,38 @@ func (s *Service) buildPromptForTurn(
 		Channel:        ch,
 		Now:            s.nowFn(),
 		Parish:         parishInfo,
+		Roles:          s.collectUserRoles(p),
 		Orgs:           orgs,
 		User:           userProf,
 		PinnedMemories: pinned,
 	}), nil
+}
+
+func (s *Service) collectUserRoles(p authx.Principal) []string {
+	if s.enforcer == nil || p.UserID == uuid.Nil {
+		return nil
+	}
+	seen := make(map[string]struct{})
+	var roles []string
+	addRoles := func(dom string) {
+		list, err := s.enforcer.RolesForUserInDomain(p.Subject(), dom)
+		if err != nil {
+			return
+		}
+		for _, r := range list {
+			if _, ok := seen[r]; ok {
+				continue
+			}
+			seen[r] = struct{}{}
+			roles = append(roles, r)
+		}
+	}
+	addRoles(authz.DomainGlobal)
+	if p.ParishID != uuid.Nil {
+		addRoles(authz.ParishDomain(p.ParishID))
+	}
+	slices.Sort(roles)
+	return roles
 }
 
 func (s *Service) runReActLoop(

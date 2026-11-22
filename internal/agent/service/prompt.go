@@ -99,6 +99,7 @@ type PromptInput struct {
 	Channel        domain.Channel
 	Now            time.Time
 	Parish         *ParishInfo
+	Roles          []string
 	Orgs           []OrgInfo
 	User           *UserProfileInfo
 	PinnedMemories []domain.Memory
@@ -125,6 +126,11 @@ func BuildSystemPrompt(in PromptInput) string {
 			promptXMLEscaper.Replace(in.Parish.Name),
 		)
 	}
+	b.WriteString("  <user_roles>\n")
+	for _, role := range in.Roles {
+		fmt.Fprintf(&b, "    <role>%s</role>\n", promptXMLEscaper.Replace(role))
+	}
+	b.WriteString("  </user_roles>\n")
 	b.WriteString("  <user_organizations>\n")
 	for _, org := range in.Orgs {
 		fmt.Fprintf(
