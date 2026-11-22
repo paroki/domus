@@ -16,3 +16,17 @@ export function useSettings(enabled = true) {
     enabled,
   });
 }
+
+export function agentProvidersQueryOptions() {
+  return queryOptions({
+    queryKey: settingsKeys.providers(),
+    queryFn: () => unwrap(api.GET("/agent/providers"), SETTING_ERRORS),
+  });
+}
+
+export function useAgentProviders(enabled = true) {
+  return useQuery({
+    ...agentProvidersQueryOptions(),
+    enabled,
+  });
+}

@@ -11,3 +11,8 @@ export type ProviderModelItem = Schemas["domain.ProviderModelDTO"] & {
 };
 export type SyncProviderModelsResponse =
   Schemas["domain.SyncProviderModelsResponse"];
+export type AgentProviderResponse = Schemas["domain.AgentProviderResponse"];
+export type CreateAgentProviderRequest =
+  Schemas["domain.CreateAgentProviderRequest"];
+export type UpdateAgentProviderRequest =
+  Schemas["domain.UpdateAgentProviderRequest"];

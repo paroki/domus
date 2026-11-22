@@ -88,7 +88,55 @@ export interface paths {
     patch: operations["updateAgentMemory"];
     trace?: never;
   };
-  "/agent/providers/{provider}/sync-models": {
+  "/agent/providers": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List AI provider configs
+     * @description Lists all configured LLM provider entries with masked API keys and synced models.
+     */
+    get: operations["listAgentProviders"];
+    put?: never;
+    /**
+     * Create AI provider config
+     * @description Creates a new LLM provider configuration, encrypts its API key, and best-effort syncs models.
+     */
+    post: operations["createAgentProvider"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/agent/providers/{providerId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Delete AI provider config
+     * @description Deletes an LLM provider configuration if not referenced by any agent or embedding.
+     */
+    delete: operations["deleteAgentProvider"];
+    options?: never;
+    head?: never;
+    /**
+     * Update AI provider config
+     * @description Updates an LLM provider configuration; empty apiKey preserves the existing key.
+     */
+    patch: operations["updateAgentProvider"];
+    trace?: never;
+  };
+  "/agent/providers/{providerId}/sync-models": {
     parameters: {
       query?: never;
       header?: never;
@@ -1614,6 +1662,18 @@ export interface components {
       toolCalls?: components["schemas"]["domain.AgentToolCallDTO"][];
       toolName?: string;
     };
+    "domain.AgentProviderResponse": {
+      apiKeyMasked?: string;
+      baseUrl?: string;
+      createdAt?: string;
+      description?: string;
+      hasApiKey?: boolean;
+      id?: string;
+      models?: components["schemas"]["domain.ProviderModelDTO"][];
+      name?: string;
+      provider?: string;
+      updatedAt?: string;
+    };
     "domain.AgentSessionResponse": {
       channel?: string;
       createdAt?: string;
@@ -1651,6 +1711,14 @@ export interface components {
       /** @enum {string} */
       scope: "user" | "parish";
       supersedeId?: string;
+    };
+    "domain.CreateAgentProviderRequest": {
+      apiKey: string;
+      baseUrl?: string;
+      description?: string;
+      name: string;
+      /** @enum {string} */
+      provider: "gemini" | "anthropic" | "openai" | "openrouter";
     };
     "domain.CreateAgentSessionRequest": {
       title?: string;
@@ -2120,6 +2188,7 @@ export interface components {
       activeParishId: string;
     };
     "domain.SyncProviderModelsResponse": {
+      id?: string;
       models?: components["schemas"]["domain.ProviderModelDTO"][];
       provider?: string;
     };
@@ -2133,6 +2202,14 @@ export interface components {
       category?: "profile" | "preference" | "ministry" | "parish_faq";
       content?: string;
       isPinned?: boolean;
+    };
+    "domain.UpdateAgentProviderRequest": {
+      apiKey?: string;
+      baseUrl?: string;
+      description?: string;
+      name?: string;
+      /** @enum {string} */
+      provider?: "gemini" | "anthropic" | "openai" | "openrouter";
     };
     "domain.UpdateAgentSessionRequest": {
       title: string;
@@ -2384,6 +2461,11 @@ export interface components {
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
+    "httpx.Envelope-array_domain_AgentProviderResponse": {
+      data?: components["schemas"]["domain.AgentProviderResponse"][];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
     "httpx.Envelope-array_domain_AgentSessionResponse": {
       data?: components["schemas"]["domain.AgentSessionResponse"][];
       error?: components["schemas"]["httpx.ErrorPayload"];
@@ -2471,6 +2553,11 @@ export interface components {
     };
     "httpx.Envelope-domain_AgentMemoryResponse": {
       data?: components["schemas"]["domain.AgentMemoryResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_AgentProviderResponse": {
+      data?: components["schemas"]["domain.AgentProviderResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -2952,13 +3039,253 @@ export interface operations {
       };
     };
   };
+  listAgentProviders: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_AgentProviderResponse"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  createAgentProvider: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Provider config payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.CreateAgentProviderRequest"];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_AgentProviderResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  deleteAgentProvider: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Provider config UUID */
+        providerId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  updateAgentProvider: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Provider config UUID */
+        providerId: string;
+      };
+      cookie?: never;
+    };
+    /** @description Updated fields */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UpdateAgentProviderRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_AgentProviderResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
   syncAgentProviderModels: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        /** @description AI provider name (gemini, anthropic, openai, openrouter) */
-        provider: string;
+        /** @description Provider config UUID */
+        providerId: string;
       };
       cookie?: never;
     };
@@ -2993,6 +3320,15 @@ export interface operations {
       };
       /** @description Forbidden */
       403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
         headers: {
           [name: string]: unknown;
         };

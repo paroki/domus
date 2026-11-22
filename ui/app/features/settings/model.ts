@@ -1,57 +1,91 @@
-import type { ProviderModelItem, SettingResponse } from "./api/types";
+import {
+  Bot,
+  Calendar,
+  Cpu,
+  type LucideIcon,
+  MessageCircle,
+  Send,
+  Sparkles,
+  Users,
+} from "lucide-react";
+import type {
+  AgentProviderResponse,
+  ProviderModelItem,
+  SettingResponse,
+} from "./api/types";
 
 export const ROLE_SUPER_ADMIN = "user:super-admin";
 
-export type SettingsTab = "channels" | "providers" | "agents";
+export interface SettingsLauncherItem {
+  id: "telegram" | "whatsapp" | "aiProvider" | "aiAgent";
+  path: string;
+  plate: 1 | 2 | 3 | 4 | 5 | 6;
+  icon: LucideIcon;
+}
+
+export const SETTINGS_LAUNCHERS: SettingsLauncherItem[] = [
+  { id: "telegram", path: "/settings/telegram", plate: 1, icon: Send },
+  {
+    id: "whatsapp",
+    path: "/settings/whatsapp",
+    plate: 2,
+    icon: MessageCircle,
+  },
+  { id: "aiProvider", path: "/settings/ai-provider", plate: 3, icon: Cpu },
+  { id: "aiAgent", path: "/settings/ai-agent", plate: 4, icon: Bot },
+];
+
+export const CHANNEL_GROUP_NAMES = {
+  telegram: "Telegram Bot",
+  whatsapp: "GOWA (WhatsApp)",
+} as const;
+
+export type LLMProviderType = "gemini" | "anthropic" | "openai" | "openrouter";
 
 export interface LLMProviderDef {
-  id: "gemini" | "anthropic" | "openai" | "openrouter";
+  id: LLMProviderType;
   label: string;
   defaultBaseURL: string;
-  apiKeyKey: string;
-  baseURLKey: string;
-  modelsKey: string;
+  supportsEmbedding: boolean;
 }
 
 export const LLM_PROVIDERS: LLMProviderDef[] = [
   {
     id: "gemini",
-    label: "Google Gemini",
+    label: "Google AI Studio (Gemini)",
     defaultBaseURL: "https://generativelanguage.googleapis.com",
-    apiKeyKey: "agent.provider.gemini.api_key",
-    baseURLKey: "agent.provider.gemini.base_url",
-    modelsKey: "agent.provider.gemini.models",
+    supportsEmbedding: true,
   },
   {
     id: "anthropic",
     label: "Anthropic Claude",
     defaultBaseURL: "https://api.anthropic.com",
-    apiKeyKey: "agent.provider.anthropic.api_key",
-    baseURLKey: "agent.provider.anthropic.base_url",
-    modelsKey: "agent.provider.anthropic.models",
+    supportsEmbedding: false,
   },
   {
     id: "openai",
     label: "OpenAI",
     defaultBaseURL: "https://api.openai.com/v1",
-    apiKeyKey: "agent.provider.openai.api_key",
-    baseURLKey: "agent.provider.openai.base_url",
-    modelsKey: "agent.provider.openai.models",
+    supportsEmbedding: true,
   },
   {
     id: "openrouter",
     label: "OpenRouter",
     defaultBaseURL: "https://openrouter.ai/api/v1",
-    apiKeyKey: "agent.provider.openrouter.api_key",
-    baseURLKey: "agent.provider.openrouter.base_url",
-    modelsKey: "agent.provider.openrouter.models",
+    supportsEmbedding: true,
   },
 ];
+
+export function getProviderLabel(provider?: string): string {
+  return LLM_PROVIDERS.find((p) => p.id === provider)?.label ?? provider ?? "";
+}
 
 export interface AgentPersonaDef {
   id: "gabriel" | "mikael" | "rafael";
   name: string;
   role: string;
+  plate: 1 | 2 | 3 | 4 | 5 | 6;
+  icon: LucideIcon;
   tools: string[];
   providerKey: string;
   modelKey: string;
@@ -64,8 +98,10 @@ export const AGENT_PERSONAS: AgentPersonaDef[] = [
     id: "gabriel",
     name: "Gabriel",
     role: "Orkestrator & Memori Utama",
+    plate: 1,
+    icon: Sparkles,
     tools: ["delegate_specialist", "memory_*"],
-    providerKey: "agent.gabriel.provider",
+    providerKey: "agent.gabriel.provider_id",
     modelKey: "agent.gabriel.model",
     effortKey: "agent.gabriel.effort",
     instructionKey: "agent.gabriel.instruction",
@@ -74,8 +110,10 @@ export const AGENT_PERSONAS: AgentPersonaDef[] = [
     id: "mikael",
     name: "Mikael",
     role: "Spesialis Kegiatan & Jadwal",
+    plate: 2,
+    icon: Calendar,
     tools: ["event_*"],
-    providerKey: "agent.mikael.provider",
+    providerKey: "agent.mikael.provider_id",
     modelKey: "agent.mikael.model",
     effortKey: "agent.mikael.effort",
     instructionKey: "agent.mikael.instruction",
@@ -84,8 +122,10 @@ export const AGENT_PERSONAS: AgentPersonaDef[] = [
     id: "rafael",
     name: "Rafael",
     role: "Spesialis Organisasi & Komunitas",
+    plate: 3,
+    icon: Users,
     tools: ["org_*"],
-    providerKey: "agent.rafael.provider",
+    providerKey: "agent.rafael.provider_id",
     modelKey: "agent.rafael.model",
     effortKey: "agent.rafael.effort",
     instructionKey: "agent.rafael.instruction",
@@ -99,15 +139,8 @@ export const REASONING_EFFORTS = [
   { value: "high", label: "Tinggi (High — 16.384 token)" },
 ] as const;
 
-export const EMBEDDING_PROVIDERS = [
-  { id: "gemini", label: "Google Gemini" },
-  { id: "openai", label: "OpenAI" },
-  { id: "openrouter", label: "OpenRouter" },
-  { id: "none", label: "Nonaktif (BM25 Saja)" },
-] as const;
-
 export const EMBEDDING_KEYS = {
-  providerKey: "agent.embedding.provider",
+  providerKey: "agent.embedding.provider_id",
   modelKey: "agent.embedding.model",
 } as const;
 
@@ -188,39 +221,78 @@ export function filterModelsByCapability(
   });
 }
 
-export function isProviderConfigured(
-  itemsByKey: Record<string, SettingResponse>,
-  draft: Record<string, string>,
-  provider: string,
-): boolean {
-  const apiKeyKey = `agent.provider.${provider}.api_key`;
-  const persisted = itemsByKey[apiKeyKey]?.configured;
-  const draftVal = draft[apiKeyKey]?.trim() ?? "";
-  return Boolean(persisted) || draftVal.length > 0;
-}
-
 export interface ProviderOption {
   id: string;
   label: string;
-  configured: boolean;
+  provider?: string;
+}
+
+export function findAgentPersona(id?: string): AgentPersonaDef | undefined {
+  if (!id) return undefined;
+  return AGENT_PERSONAS.find((persona) => persona.id === id);
+}
+
+export function findChannelGroup(
+  items: SettingResponse[],
+  groupName: string,
+): SettingGroup | undefined {
+  return groupChannelSettings(items).find((group) => group.name === groupName);
+}
+
+export function indexSettingsByKey(
+  items?: SettingResponse[],
+): Record<string, SettingResponse> {
+  const map: Record<string, SettingResponse> = {};
+  for (const item of items ?? []) {
+    if (item.key) {
+      map[item.key] = item;
+    }
+  }
+  return map;
+}
+
+export function buildSettingsDraft(
+  items?: SettingResponse[],
+): Record<string, string> {
+  const next: Record<string, string> = {};
+  for (const item of items ?? []) {
+    if (item.key) {
+      next[item.key] = item.value ?? "";
+    }
+  }
+  return next;
+}
+
+export function getProviderModelsByCapability(
+  providers: AgentProviderResponse[],
+  providerId: string,
+  capability: "chat" | "embedding",
+): ProviderModelItem[] {
+  if (!providerId || providerId === "none") return [];
+  const found = providers.find((p) => p.id === providerId);
+  if (!found?.models) return [];
+  return filterModelsByCapability(found.models, capability);
 }
 
 export function buildProviderOptionList(
-  itemsByKey: Record<string, SettingResponse>,
-  draft: Record<string, string>,
+  providers: AgentProviderResponse[],
   includeNone = false,
 ): ProviderOption[] {
-  const source = includeNone ? EMBEDDING_PROVIDERS : LLM_PROVIDERS;
-  return source.map((p) => {
-    const configured =
-      p.id === "none" ? true : isProviderConfigured(itemsByKey, draft, p.id);
-    return {
-      id: p.id,
-      label:
-        p.id === "none"
-          ? p.label
-          : `${p.label} (${configured ? "Aktif" : "Belum dikonfigurasi"})`,
-      configured,
-    };
-  });
+  const filtered = includeNone
+    ? providers.filter((p) => {
+        const def = LLM_PROVIDERS.find((d) => d.id === p.provider);
+        return def?.supportsEmbedding ?? false;
+      })
+    : providers;
+
+  const opts: ProviderOption[] = filtered.map((p) => ({
+    id: p.id ?? "",
+    label: `${p.name ?? p.id} (${getProviderLabel(p.provider)})`,
+    provider: p.provider,
+  }));
+
+  if (includeNone) {
+    opts.push({ id: "none", label: "Nonaktif (BM25 Saja)" });
+  }
+  return opts;
 }
