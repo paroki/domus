@@ -1,10 +1,12 @@
 package app
 
 import (
+	"errors"
 	"time"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/gofiber/fiber/v3"
+	"github.com/paroki/domus/internal/platform/errx"
 	"github.com/paroki/domus/internal/platform/httpx"
 )
 
@@ -37,8 +39,15 @@ func sentryMiddleware(c fiber.Ctx) error {
 		}
 	}()
 	err := c.Next()
-	if err != nil && httpx.ErrorStatus(err) >= fiber.StatusInternalServerError {
+	if err != nil && shouldCaptureSentry(err) {
 		hub.CaptureException(err)
 	}
 	return err
+}
+
+func shouldCaptureSentry(err error) bool {
+	if domErr, ok := errors.AsType[*errx.Error](err); ok && domErr.Kind == errx.KindUnavailable {
+		return false
+	}
+	return httpx.ErrorStatus(err) >= fiber.StatusInternalServerError
 }
