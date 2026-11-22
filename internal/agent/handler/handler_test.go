@@ -518,4 +518,28 @@ func (s *AgentHandlerSuite) TestChatSSE_PreStreamErrorsAndStreaming() {
 	errBody := s.readBody()
 	s.Contains(errBody, "event: error\n")
 	s.Contains(errBody, "provider HTTP 502")
+
+	// 6. Continue from last interrupted turn without duplicating the user message.
+	s.setLLMHandler(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/chat/completions") {
+			w.Header().Set("Content-Type", "text/event-stream")
+			_, _ = io.WriteString(w, "data: {\"choices\":[{\"delta\":{\"content\":\"Dilanjutkan!\"},\"finish_reason\":\"stop\"}]}\n\n")
+			_, _ = io.WriteString(w, "data: [DONE]\n\n")
+			return
+		}
+		http.NotFound(w, r)
+	})
+	s.Request("/api/agent/chat", http.MethodPost, map[string]any{
+		"sessionId": sess.ID,
+		"continue":  true,
+	})
+	s.OK()
+	contBody := s.readBody()
+	s.Contains(contBody, "Dilanjutkan!")
+	s.Contains(contBody, "event: done\n")
+
+	s.Request("/api/agent/sessions/"+sess.ID.String()+"/messages/search", http.MethodPost, nil)
+	s.OK()
+	msgsAfterCont := testutil.DecodeAs[[]domain.AgentMessageResponse](&s.ApiTestSuite).Data
+	s.Len(msgsAfterCont, 4) // 2 from first turn + 1 interrupted user + 1 continued assistant
 }

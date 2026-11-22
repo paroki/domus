@@ -47,6 +47,7 @@ func (h *Handler) Chat(c fiber.Ctx) error {
 		Channel:   domain.ChannelWeb,
 		SessionID: req.SessionID,
 		Message:   req.Message,
+		Continue:  req.Continue,
 	})
 	if err != nil {
 		return err

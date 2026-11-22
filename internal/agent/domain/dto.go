@@ -160,10 +160,11 @@ type UpdateAgentMemoryRequest struct {
 	IsPinned *bool   `json:"isPinned,omitempty"`
 }
 
-// AgentChatRequest sends a user message to the AI agent chat SSE endpoint.
+// AgentChatRequest sends a user message (or continues an interrupted turn) to the AI agent chat SSE endpoint.
 type AgentChatRequest struct {
 	SessionID *uuid.UUID `json:"sessionId,omitempty"`
-	Message   string     `json:"message" validate:"required,min=1"`
+	Message   string     `json:"message,omitempty"`
+	Continue  bool       `json:"continue,omitempty"`
 }
 
 // AgentSSEEvent represents a single Server-Sent Event frame emitted during agent chat.

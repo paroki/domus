@@ -143,6 +143,7 @@ type ChatTurnInput struct {
 	Channel   domain.Channel
 	SessionID *uuid.UUID
 	Message   string
+	Continue  bool
 	OnStep    StepCallback
 }
 
@@ -152,6 +153,7 @@ type PreparedTurn struct {
 	Channel   domain.Channel
 	Session   *ent.AgentSession
 	Message   string
+	Continue  bool
 	Gabriel   domain.AgentConfig
 	locker    *sessionLocker
 	released  bool
@@ -170,7 +172,11 @@ func (p *PreparedTurn) Release() {
 // and acquires the per-session turn mutex before any SSE headers are written.
 func (s *Service) PrepareTurn(ctx context.Context, in ChatTurnInput) (*PreparedTurn, error) {
 	msgText := strings.TrimSpace(in.Message)
-	if msgText == "" {
+	if in.Continue {
+		if in.SessionID == nil || *in.SessionID == uuid.Nil {
+			return nil, domain.ValidationError("sessionId", "REQUIRED", "Session ID is required to continue.")
+		}
+	} else if msgText == "" {
 		return nil, domain.ErrEmptyMessage
 	}
 	ch := in.Channel
@@ -197,6 +203,7 @@ func (s *Service) PrepareTurn(ctx context.Context, in ChatTurnInput) (*PreparedT
 		Channel:   ch,
 		Session:   sess,
 		Message:   msgText,
+		Continue:  in.Continue,
 		Gabriel:   gabrielCfg,
 		locker:    s.locker,
 	}, nil
@@ -218,15 +225,17 @@ func (s *Service) RunPreparedTurn(ctx context.Context, prep *PreparedTurn, onSte
 	sess := prep.Session
 	gabrielCfg := prep.Gabriel
 
-	if _, err := s.repo.AppendMessage(ctx, domain.CreateMessageInput{
-		ParishID:  prep.Principal.ParishID,
-		UserID:    prep.Principal.UserID,
-		SessionID: sess.ID,
-		AgentName: gabrielCfg.Name,
-		Role:      domain.RoleUser,
-		Content:   prep.Message,
-	}); err != nil {
-		return nil, "", err
+	if !prep.Continue && prep.Message != "" {
+		if _, err := s.repo.AppendMessage(ctx, domain.CreateMessageInput{
+			ParishID:  prep.Principal.ParishID,
+			UserID:    prep.Principal.UserID,
+			SessionID: sess.ID,
+			AgentName: gabrielCfg.Name,
+			Role:      domain.RoleUser,
+			Content:   prep.Message,
+		}); err != nil {
+			return nil, "", err
+		}
 	}
 
 	if err := emitStep(onStep, domain.AgentSSEEvent{
@@ -290,6 +299,11 @@ func (s *Service) RunPreparedTurn(ctx context.Context, prep *PreparedTurn, onSte
 		})
 	}
 
+	sanitized := sanitizeHistory(history)
+	if len(sanitized) == 0 {
+		return nil, "", domain.ErrEmptyMessage
+	}
+
 	answer, err := s.runReActLoop(
 		turnCtx,
 		prep.Principal,
@@ -297,7 +311,7 @@ func (s *Service) RunPreparedTurn(ctx context.Context, prep *PreparedTurn, onSte
 		sess.ID,
 		gabrielCfg,
 		sysPrompt,
-		sanitizeHistory(history),
+		sanitized,
 		mcpSession,
 		onStep,
 		true,

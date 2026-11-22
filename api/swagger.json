@@ -152,17 +152,16 @@
             },
             "domain.AgentChatRequest": {
                 "properties": {
+                    "continue": {
+                        "type": "boolean"
+                    },
                     "message": {
-                        "minLength": 1,
                         "type": "string"
                     },
                     "sessionId": {
                         "type": "string"
                     }
                 },
-                "required": [
-                    "message"
-                ],
                 "type": "object"
             },
             "domain.AgentMemoryResponse": {
