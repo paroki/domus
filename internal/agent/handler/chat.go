@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/gofiber/fiber/v3"
@@ -63,8 +64,44 @@ func (h *Handler) Chat(c fiber.Ctx) error {
 	c.RequestCtx().SetBodyStreamWriter(func(w *bufio.Writer) {
 		defer cancel()
 		defer prep.Release()
+
+		var writeMu sync.Mutex
+		var wg sync.WaitGroup
+		stopPing := make(chan struct{})
+		defer wg.Wait()
+		defer close(stopPing)
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			ticker := time.NewTicker(sseKeepaliveInterval)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-stopPing:
+					return
+				case <-streamCtx.Done():
+					return
+				case <-ticker.C:
+					writeMu.Lock()
+					_, err := w.WriteString(": keepalive\n\n")
+					if err == nil {
+						err = w.Flush()
+					}
+					writeMu.Unlock()
+					if err != nil {
+						cancel()
+						return
+					}
+				}
+			}
+		}()
+
 		_, _, runErr := h.service.RunPreparedTurn(streamCtx, prep, func(ev domain.AgentSSEEvent) error {
-			if err := writeSSEFrame(w, ev); err != nil {
+			writeMu.Lock()
+			err := writeSSEFrame(w, ev)
+			writeMu.Unlock()
+			if err != nil {
 				cancel()
 				return err
 			}
@@ -78,14 +115,19 @@ func (h *Handler) Chat(c fiber.Ctx) error {
 				"model", prep.Gabriel.Model.Model,
 				"err", runErr,
 			)
+			writeMu.Lock()
 			_ = writeSSEFrame(w, errorSSEEvent(runErr))
+			writeMu.Unlock()
 		}
 	})
 	return nil
 }
 
-// chatTurnTimeout bounds a single SSE chat turn.
-const chatTurnTimeout = 5 * time.Minute
+// chatTurnTimeout bounds a single SSE chat turn; sseKeepaliveInterval keeps proxy/tunnel connections alive.
+const (
+	chatTurnTimeout      = 5 * time.Minute
+	sseKeepaliveInterval = 15 * time.Second
+)
 
 func writeSSEFrame(w *bufio.Writer, ev domain.AgentSSEEvent) error {
 	b, err := json.Marshal(ev)

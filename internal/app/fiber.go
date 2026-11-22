@@ -22,7 +22,7 @@ func GetFiber(_ Config, logger *slog.Logger, features ...Feature) *fiber.App {
 	app := fiber.New(fiber.Config{
 		AppName:          "domus",
 		ReadTimeout:      10 * time.Second,
-		WriteTimeout:     10 * time.Second,
+		WriteTimeout:     0, // ponytail: 0 avoids cutting off long-lived SSE streams; chatTurnTimeout bounds agent turns
 		IdleTimeout:      60 * time.Second,
 		BodyLimit:        4 * 1024 * 1024,
 		ProxyHeader:      fiber.HeaderXForwardedFor,
