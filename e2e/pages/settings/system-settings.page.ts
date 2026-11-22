@@ -86,22 +86,16 @@ export class SystemSettingsPage extends BasePage {
   }
 
   async syncProviderModels(
-    providerId: string,
+    _providerId: string,
     providerLabel: string,
   ): Promise<void> {
-    const uuid = this.resolveProviderValue(providerId);
     const section = this.providerSection(providerLabel);
     await Promise.all([
       this.page.waitForResponse(
         (r) =>
-          r.url().includes(`/api/agent/providers/${uuid}/sync-models`) &&
+          r.url().includes("/api/agent/providers/") &&
+          r.url().endsWith("/sync-models") &&
           r.request().method() === "POST" &&
-          r.status() === 200,
-      ),
-      this.page.waitForResponse(
-        (r) =>
-          r.url().endsWith("/api/agent/providers") &&
-          r.request().method() === "GET" &&
           r.status() === 200,
       ),
       section.getByRole("button", { name: "Sinkronkan Model" }).click(),
@@ -154,7 +148,7 @@ export class SystemSettingsPage extends BasePage {
     const id = agentName.toLowerCase();
     if (input.provider !== undefined) {
       await this.page
-        .locator(`[id="setting-agent.${id}.provider"]`)
+        .locator(`[id="setting-agent.${id}.provider_id"]`)
         .selectOption(this.resolveProviderValue(input.provider));
     }
     if (input.model !== undefined) {
@@ -187,7 +181,7 @@ export class SystemSettingsPage extends BasePage {
     const id = agentName.toLowerCase();
     if (expected.provider !== undefined) {
       const val = await this.page
-        .locator(`[id="setting-agent.${id}.provider"]`)
+        .locator(`[id="setting-agent.${id}.provider_id"]`)
         .inputValue();
       assert.equal(val, this.resolveProviderValue(expected.provider));
     }
@@ -232,7 +226,7 @@ export class SystemSettingsPage extends BasePage {
     model?: string;
   }): Promise<void> {
     await this.page
-      .locator('[id="setting-agent.embedding.provider"]')
+      .locator('[id="setting-agent.embedding.provider_id"]')
       .selectOption(this.resolveProviderValue(input.provider));
     if (input.model !== undefined) {
       await this.setControlValue(

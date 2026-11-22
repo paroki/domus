@@ -149,13 +149,13 @@ Given(
     const providerId = provRes.data.data.id;
     const res = await superClient.patch("/settings", {
       values: {
-        "agent.gabriel.provider": providerId,
+        "agent.gabriel.provider_id": providerId,
         "agent.gabriel.model": "gpt-4.1-mini",
-        "agent.mikael.provider": providerId,
+        "agent.mikael.provider_id": providerId,
         "agent.mikael.model": "gpt-4.1-mini",
-        "agent.rafael.provider": providerId,
+        "agent.rafael.provider_id": providerId,
         "agent.rafael.model": "gpt-4.1-mini",
-        "agent.embedding.provider": "none",
+        "agent.embedding.provider_id": "none",
       },
     });
     assert.equal(res.status, 200);
