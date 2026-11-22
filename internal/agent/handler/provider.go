@@ -137,7 +137,6 @@ func (h *Handler) DeleteProvider(c fiber.Ctx) error {
 //	@Failure		401			{object}	httpx.Envelope[any]
 //	@Failure		403			{object}	httpx.Envelope[any]
 //	@Failure		404			{object}	httpx.Envelope[any]
-//	@Failure		503			{object}	httpx.Envelope[any]
 //	@Router			/agent/providers/{providerId}/sync-models [post]
 func (h *Handler) SyncProviderModels(c fiber.Ctx) error {
 	if h.providers == nil {

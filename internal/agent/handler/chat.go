@@ -31,7 +31,6 @@ import (
 //	@Failure		403		{object}	httpx.Envelope[any]
 //	@Failure		404		{object}	httpx.Envelope[any]
 //	@Failure		409		{object}	httpx.Envelope[any]
-//	@Failure		503		{object}	httpx.Envelope[any]
 //	@Router			/agent/chat [post]
 func (h *Handler) Chat(c fiber.Ctx) error {
 	p, ok := authx.UserContext(c.Context())

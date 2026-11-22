@@ -13,7 +13,7 @@ var (
 	ErrProviderNotFound             = errx.NotFound("AGENT_PROVIDER_NOT_FOUND", "Agent provider configuration not found.")
 	ErrProviderInUse                = errx.Conflict("AGENT_PROVIDER_IN_USE", "Agent provider configuration is currently in use and cannot be deleted.")
 	ErrProviderEmbeddingUnsupported = errx.Invalid("AGENT_PROVIDER_EMBEDDING_UNSUPPORTED", "Anthropic provider does not support text embeddings.")
-	ErrProviderUnavailable          = errx.Unavailable("AGENT_PROVIDER_UNAVAILABLE", "The configured AI provider is unavailable or missing an API key.")
+	ErrProviderUnavailable          = errx.Invalid("AGENT_PROVIDER_UNAVAILABLE", "The configured AI provider is unavailable or missing an API key.")
 	ErrMaxStepsExceeded             = &errx.Error{Kind: errx.KindValidation, Code: "AGENT_MAX_STEPS_EXCEEDED", Message: "Agent exceeded the maximum number of tool-calling steps."}
 	ErrMemoryLimitExceeded          = &errx.Error{Kind: errx.KindValidation, Code: "AGENT_MEMORY_LIMIT_EXCEEDED", Message: "Active or pinned memory limit exceeded."}
 )

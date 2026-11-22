@@ -430,9 +430,9 @@ func (s *AgentHandlerSuite) TestChatSSE_PreStreamErrorsAndStreaming() {
 	s.NotFound()
 	s.Equal("AGENT_SESSION_NOT_FOUND", s.GetErrorResponse().Error.Code)
 
-	// 3. Unconfigured provider -> 503 AGENT_PROVIDER_UNAVAILABLE.
+	// 3. Unconfigured provider -> 400 AGENT_PROVIDER_UNAVAILABLE.
 	s.Request("/api/agent/chat", http.MethodPost, map[string]any{"message": "Halo"})
-	s.AssertStatus(http.StatusServiceUnavailable)
+	s.BadRequest()
 	s.Equal("AGENT_PROVIDER_UNAVAILABLE", s.GetErrorResponse().Error.Code)
 
 	// Configure Gabriel on OpenAI mock server.

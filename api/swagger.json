@@ -3602,16 +3602,6 @@
                             }
                         },
                         "description": "Conflict"
-                    },
-                    "503": {
-                        "content": {
-                            "text/event-stream": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Service Unavailable"
                     }
                 },
                 "summary": "Chat with AI agent (SSE)",
@@ -4272,16 +4262,6 @@
                             }
                         },
                         "description": "Not Found"
-                    },
-                    "503": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Service Unavailable"
                     }
                 },
                 "summary": "Sync provider models",
