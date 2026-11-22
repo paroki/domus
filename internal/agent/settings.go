@@ -285,7 +285,7 @@ var agentDefs = []agentDef{
 		effortKey:          SettingRafaelEffort,
 		instructionKey:     SettingRafaelInstruction,
 		defaultInstruction: prompts.RafaelInstruction,
-		tools:              []string{"org_list", "org_get", "org_list_members", "org_update_member", "org_create_invite", "org_revoke_invite", "org_redeem_invite"},
+		tools:              []string{"org_list", "org_get", "org_create", "org_list_members", "org_update_member", "org_create_invite", "org_revoke_invite", "org_redeem_invite"},
 	},
 }
 

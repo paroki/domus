@@ -338,5 +338,31 @@ func (s *OrgMCPSuite) TestOrgMCP_DiscoveryToolsAndRBAC() {
 	})
 	s.Contains(revBody, `"revoked":true`)
 
+	// 8. org_create: non-parish-admin rejected, ref:parish-admin succeeds.
+	_, createDeniedBody := s.mcpPost(sessionID, orgAdminCookies, parishID, map[string]any{
+		"jsonrpc": "2.0",
+		"id":      11,
+		"method":  "tools/call",
+		"params": map[string]any{
+			"name":      "org_create",
+			"arguments": map[string]any{"kind": "ward", "code": "ling-st-yusuf", "name": "Lingkungan St. Yusuf"},
+		},
+	})
+	s.Contains(createDeniedBody, `"isError":true`)
+	s.Contains(createDeniedBody, domain.ErrForbidden.Error())
+
+	pAdminSessionID := s.initMCPSession(pAdminCookies, parishID)
+	_, createOKBody := s.mcpPost(pAdminSessionID, pAdminCookies, parishID, map[string]any{
+		"jsonrpc": "2.0",
+		"id":      12,
+		"method":  "tools/call",
+		"params": map[string]any{
+			"name":      "org_create",
+			"arguments": map[string]any{"kind": "ward", "code": "ling-st-yusuf", "name": "Lingkungan St. Yusuf"},
+		},
+	})
+	s.NotContains(createOKBody, `"isError":true`)
+	s.Contains(createOKBody, `"code":"ling-st-yusuf"`)
+
 	_ = uuid.Nil
 }

@@ -47,6 +47,21 @@ type OrgGetInput struct {
 	OrgID string `json:"orgId"`
 }
 
+// OrgCreateInput is the input schema for org_create.
+type OrgCreateInput struct {
+	ParentID           *string `json:"parentId,omitempty"`
+	ZoneID             *string `json:"zoneId,omitempty"`
+	WardID             *string `json:"wardId,omitempty"`
+	Kind               string  `json:"kind,omitempty"`
+	Code               string  `json:"code"`
+	Name               string  `json:"name"`
+	Description        *string `json:"description,omitempty"`
+	Active             *bool   `json:"active,omitempty"`
+	InitialAdminUserID *string `json:"initialAdminUserId,omitempty"`
+	InitialAdminEmail  string  `json:"initialAdminEmail,omitempty"`
+	InitialAdminName   string  `json:"initialAdminName,omitempty"`
+}
+
 // OrgListMembersInput is the input schema for org_list_members.
 type OrgListMembersInput struct {
 	OrgID  string `json:"orgId"`
@@ -155,6 +170,11 @@ func (f *Feature) RegisterMCP(s *mcp.Server) {
 	}, f.mcpOrgGet)
 
 	mcp.AddTool(s, &mcp.Tool{
+		Name:        "org_create",
+		Description: "Create an organization (or reactivate a soft-deleted one) in the caller's active parish (requires ref:parish-admin).",
+	}, f.mcpOrgCreate)
+
+	mcp.AddTool(s, &mcp.Tool{
 		Name:        "org_list_members",
 		Description: "List members of an organization (requires org:admin or org:member).",
 	}, f.mcpOrgListMembers)
@@ -221,6 +241,57 @@ func (f *Feature) mcpOrgGet(ctx context.Context, _ *mcp.CallToolRequest, in OrgG
 		return nil, MCPOrganization{}, httpx.BadRequest("Invalid organization ID.")
 	}
 	res, err := f.service.GetOrganizationForCaller(ctx, p, orgID)
+	if err != nil {
+		return nil, MCPOrganization{}, err
+	}
+	return nil, toMCPOrganization(res), nil
+}
+
+func parseOptionalUUID(raw *string, field string) (*uuid.UUID, error) {
+	if raw == nil || *raw == "" {
+		return nil, nil
+	}
+	parsed, err := uuid.Parse(*raw)
+	if err != nil {
+		return nil, httpx.BadRequest("Invalid " + field + ".")
+	}
+	return &parsed, nil
+}
+
+func (f *Feature) mcpOrgCreate(ctx context.Context, _ *mcp.CallToolRequest, in OrgCreateInput) (*mcp.CallToolResult, MCPOrganization, error) {
+	p, err := requireMCPTenant(ctx)
+	if err != nil {
+		return nil, MCPOrganization{}, err
+	}
+	parentID, err := parseOptionalUUID(in.ParentID, "parentId")
+	if err != nil {
+		return nil, MCPOrganization{}, err
+	}
+	zoneID, err := parseOptionalUUID(in.ZoneID, "zoneId")
+	if err != nil {
+		return nil, MCPOrganization{}, err
+	}
+	wardID, err := parseOptionalUUID(in.WardID, "wardId")
+	if err != nil {
+		return nil, MCPOrganization{}, err
+	}
+	initialAdminUserID, err := parseOptionalUUID(in.InitialAdminUserID, "initialAdminUserId")
+	if err != nil {
+		return nil, MCPOrganization{}, err
+	}
+	res, err := f.service.CreateOrganization(ctx, p, domain.CreateOrganizationRequest{
+		ParentID:           parentID,
+		ZoneID:             zoneID,
+		WardID:             wardID,
+		Kind:               in.Kind,
+		Code:               in.Code,
+		Name:               in.Name,
+		Description:        in.Description,
+		Active:             in.Active,
+		InitialAdminUserID: initialAdminUserID,
+		InitialAdminEmail:  in.InitialAdminEmail,
+		InitialAdminName:   in.InitialAdminName,
+	})
 	if err != nil {
 		return nil, MCPOrganization{}, err
 	}
