@@ -1,7 +1,6 @@
 package driver
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -240,12 +239,6 @@ func redactAPIKey(s, apiKey string) string {
 		return s
 	}
 	return strings.ReplaceAll(s, apiKey, "[REDACTED]")
-}
-
-func newSSEScanner(r io.Reader) *bufio.Scanner {
-	scanner := bufio.NewScanner(r)
-	scanner.Buffer(make([]byte, 0, 64*1024), 4*1024*1024)
-	return scanner
 }
 
 func emitEvent(cb StreamCallback, ev StreamEvent) error {
