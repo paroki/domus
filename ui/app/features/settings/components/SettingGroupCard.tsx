@@ -63,7 +63,7 @@ export function SettingGroupCard({
                 onChange={(e) => onChange(key, e.target.value)}
                 placeholder={item.placeholder ?? ""}
                 autoComplete="off"
-                className="h-10 rounded-lg border border-line bg-bg px-3 text-sm text-fg placeholder:text-muted focus:border-fg/40 focus:outline-none"
+                className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg placeholder:text-muted focus:border-fg/40 focus:outline-none"
               />
               {item.description ? (
                 <p className="text-xs text-muted">{item.description}</p>

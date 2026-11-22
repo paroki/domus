@@ -84,7 +84,7 @@ export function SessionSidebar({
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder={t("agent.searchSessionsPlaceholder")}
-          className="h-9 w-full rounded-lg border border-line bg-bg pr-3 pl-8 text-xs text-fg placeholder:text-muted focus:border-fg/40 focus:outline-none"
+          className="h-9 w-full rounded-lg border border-line bg-canvas pr-3 pl-8 text-xs text-fg placeholder:text-muted focus:border-fg/40 focus:outline-none"
         />
       </div>
 
@@ -122,7 +122,7 @@ export function SessionSidebar({
                           setEditingId(null);
                         }
                       }}
-                      className="h-7 flex-1 rounded border border-line bg-bg px-2 text-xs text-fg focus:outline-none"
+                      className="h-7 flex-1 rounded border border-line bg-canvas px-2 text-xs text-fg focus:outline-none"
                     />
                     <button
                       type="button"

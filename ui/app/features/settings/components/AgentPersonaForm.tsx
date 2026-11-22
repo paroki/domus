@@ -2,6 +2,7 @@ import { type FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { ApiError } from "~/shared/api/client";
+import { Button } from "~/shared/ui/Button";
 import { useUpdateSettings } from "../api/actions";
 import { useAgentProviders } from "../api/queries";
 import type { SettingResponse } from "../api/types";
@@ -131,7 +132,7 @@ export function AgentPersonaForm({
               id={`setting-${persona.providerKey}`}
               value={prov}
               onChange={(e) => handleProviderChange(e.target.value)}
-              className="h-10 rounded-lg border border-line bg-bg px-3 text-sm text-fg focus:border-fg/40 focus:outline-none"
+              className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-fg/40 focus:outline-none"
             >
               <option value="">{t("settings.agents.selectProvider")}</option>
               {providerOptions.map((opt) => (
@@ -180,14 +181,14 @@ export function AgentPersonaForm({
                 value={modelVal}
                 onChange={(e) => onChange(persona.modelKey, e.target.value)}
                 placeholder="gemini-2.5-flash"
-                className="h-10 rounded-lg border border-line bg-bg px-3 text-sm text-fg placeholder:text-muted focus:border-fg/40 focus:outline-none"
+                className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg placeholder:text-muted focus:border-fg/40 focus:outline-none"
               />
             ) : (
               <select
                 id={`setting-${persona.modelKey}`}
                 value={modelVal}
                 onChange={(e) => onChange(persona.modelKey, e.target.value)}
-                className="h-10 rounded-lg border border-line bg-bg px-3 text-sm text-fg focus:border-fg/40 focus:outline-none"
+                className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-fg/40 focus:outline-none"
               >
                 {modelAbsentFromCatalog ? (
                   <option value={modelVal}>{modelVal}</option>
@@ -212,7 +213,7 @@ export function AgentPersonaForm({
               id={`setting-${persona.effortKey}`}
               value={effortVal}
               onChange={(e) => onChange(persona.effortKey, e.target.value)}
-              className="h-10 rounded-lg border border-line bg-bg px-3 text-sm text-fg focus:border-fg/40 focus:outline-none"
+              className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-fg/40 focus:outline-none"
             >
               {REASONING_EFFORTS.map((eff) => (
                 <option key={eff.value} value={eff.value}>
@@ -245,21 +246,21 @@ export function AgentPersonaForm({
             rows={10}
             value={instrVal}
             onChange={(e) => onChange(persona.instructionKey, e.target.value)}
-            className="rounded-lg border border-line bg-bg p-3 font-mono text-xs/relaxed text-fg placeholder:text-muted focus:border-fg/40 focus:outline-none"
+            className="rounded-lg border border-line bg-canvas p-3 font-mono text-xs/relaxed text-fg placeholder:text-muted focus:border-fg/40 focus:outline-none"
           />
         </div>
       </section>
 
       <div className="flex justify-end">
-        <button
+        <Button
           type="submit"
           disabled={updateSettings.isPending}
-          className="h-10 rounded-lg bg-fg px-5 text-sm font-semibold text-bg transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          className="h-10"
         >
           {updateSettings.isPending
             ? t("settings.saving")
             : t("settings.agents.save")}
-        </button>
+        </Button>
       </div>
     </form>
   );

@@ -54,7 +54,7 @@ function ToolStepsList({ steps }: { steps: CorrelatedToolStep[] }) {
         return (
           <details
             key={step.id}
-            className="rounded-lg border border-line/80 bg-bg/70 px-3 py-1.5 text-xs"
+            className="rounded-lg border border-line/80 bg-canvas/70 px-3 py-1.5 text-xs"
           >
             <summary className="flex cursor-pointer flex-wrap items-center gap-2 select-none">
               <span className="font-medium text-fg">
@@ -116,7 +116,7 @@ export function ChatTimeline({
             value={messageSearch}
             onChange={(e) => onMessageSearchChange(e.target.value)}
             placeholder={t("agent.searchMessagesPlaceholder")}
-            className="h-8 w-full rounded-lg border border-line bg-bg pr-3 pl-8 text-xs text-fg placeholder:text-muted focus:border-fg/40 focus:outline-none"
+            className="h-8 w-full rounded-lg border border-line bg-canvas pr-3 pl-8 text-xs text-fg placeholder:text-muted focus:border-fg/40 focus:outline-none"
           />
         </div>
         {hasOlder ? (
@@ -135,7 +135,7 @@ export function ChatTimeline({
       <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
         {isEmpty ? (
           <div className="my-auto flex flex-col items-center gap-4 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl border border-line bg-bg text-fg">
+            <div className="flex size-12 items-center justify-center rounded-2xl border border-line bg-canvas text-fg">
               <Bot className="size-6" />
             </div>
             <div>
@@ -152,7 +152,7 @@ export function ChatTimeline({
                   key={prompt}
                   type="button"
                   onClick={() => onStarterPrompt(prompt)}
-                  className="rounded-full border border-line bg-bg px-3 py-1.5 text-xs text-fg transition hover:bg-fg/6"
+                  className="rounded-full border border-line bg-canvas px-3 py-1.5 text-xs text-fg transition hover:bg-fg/6"
                 >
                   {prompt}
                 </button>
@@ -165,7 +165,7 @@ export function ChatTimeline({
           if (item.role === "user") {
             return (
               <div key={item.id} className="flex justify-end">
-                <div className="max-w-[82%] rounded-2xl rounded-br-sm bg-fg px-4 py-2.5 text-sm whitespace-pre-wrap text-bg">
+                <div className="max-w-[82%] rounded-2xl rounded-br-sm bg-primary px-4 py-2.5 text-sm whitespace-pre-wrap text-on-primary">
                   {item.content}
                 </div>
               </div>
@@ -181,7 +181,7 @@ export function ChatTimeline({
               </div>
 
               {item.thinking ? (
-                <details className="w-full max-w-[90%] rounded-lg border border-line/70 bg-bg/50 px-3 py-1.5 text-xs">
+                <details className="w-full max-w-[90%] rounded-lg border border-line/70 bg-canvas/50 px-3 py-1.5 text-xs">
                   <summary className="cursor-pointer font-medium text-muted select-none hover:text-fg">
                     {t("agent.thinkingLabel", { agent: meta.name })}
                   </summary>
@@ -196,7 +196,7 @@ export function ChatTimeline({
               </div>
 
               {item.content ? (
-                <div className="max-w-[90%] rounded-2xl rounded-bl-sm border border-line bg-bg px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap text-fg">
+                <div className="max-w-[90%] rounded-2xl rounded-bl-sm border border-line bg-canvas px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap text-fg">
                   {item.content}
                 </div>
               ) : null}
@@ -206,7 +206,7 @@ export function ChatTimeline({
 
         {streaming.active && streaming.userMessage ? (
           <div className="flex justify-end">
-            <div className="max-w-[82%] rounded-2xl rounded-br-sm bg-fg px-4 py-2.5 text-sm whitespace-pre-wrap text-bg">
+            <div className="max-w-[82%] rounded-2xl rounded-br-sm bg-primary px-4 py-2.5 text-sm whitespace-pre-wrap text-on-primary">
               {streaming.userMessage}
             </div>
           </div>
@@ -229,7 +229,7 @@ export function ChatTimeline({
             {streaming.thinking ? (
               <details
                 open
-                className="w-full max-w-[90%] rounded-lg border border-line/70 bg-bg/50 px-3 py-1.5 text-xs"
+                className="w-full max-w-[90%] rounded-lg border border-line/70 bg-canvas/50 px-3 py-1.5 text-xs"
               >
                 <summary className="cursor-pointer font-medium text-muted select-none">
                   {t("agent.thinkingLabel", {
@@ -247,7 +247,7 @@ export function ChatTimeline({
             </div>
 
             {streaming.delta ? (
-              <div className="max-w-[90%] rounded-2xl rounded-bl-sm border border-line bg-bg px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap text-fg">
+              <div className="max-w-[90%] rounded-2xl rounded-bl-sm border border-line bg-canvas px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap text-fg">
                 {streaming.delta}
               </div>
             ) : null}

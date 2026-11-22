@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ApiError } from "~/shared/api/client";
+import { Button } from "~/shared/ui/Button";
 import {
   useCreateAgentProvider,
   useDeleteAgentProvider,
@@ -160,14 +161,14 @@ export function LLMProvidersSection({ onStatus }: LLMProvidersSectionProps) {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex justify-end">
-        <button
+        <Button
           type="button"
           disabled={busy}
           onClick={startCreate}
-          className="h-9 rounded-lg bg-fg px-4 text-xs font-semibold text-bg transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          className="h-9 px-4 text-xs"
         >
           {t("settings.providers.add")}
-        </button>
+        </Button>
       </div>
 
       {showForm ? (
@@ -197,7 +198,7 @@ export function LLMProvidersSection({ onStatus }: LLMProvidersSectionProps) {
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 placeholder="Gemini 1"
-                className="h-10 rounded-lg border border-line bg-bg px-3 text-sm text-fg placeholder:text-muted focus:border-fg/40 focus:outline-none"
+                className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg placeholder:text-muted focus:border-fg/40 focus:outline-none"
               />
             </div>
 
@@ -217,7 +218,7 @@ export function LLMProvidersSection({ onStatus }: LLMProvidersSectionProps) {
                     provider: e.target.value as LLMProviderType,
                   })
                 }
-                className="h-10 rounded-lg border border-line bg-bg px-3 text-sm text-fg focus:border-fg/40 focus:outline-none"
+                className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-fg/40 focus:outline-none"
               >
                 {LLM_PROVIDERS.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -243,7 +244,7 @@ export function LLMProvidersSection({ onStatus }: LLMProvidersSectionProps) {
                   setForm({ ...form, description: e.target.value })
                 }
                 placeholder="API key utama paroki..."
-                className="h-10 rounded-lg border border-line bg-bg px-3 text-sm text-fg placeholder:text-muted focus:border-fg/40 focus:outline-none"
+                className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg placeholder:text-muted focus:border-fg/40 focus:outline-none"
               />
             </div>
 
@@ -272,7 +273,7 @@ export function LLMProvidersSection({ onStatus }: LLMProvidersSectionProps) {
                 <button
                   type="button"
                   onClick={() => setShowApiKeyInput(true)}
-                  className="flex h-10 w-fit items-center rounded-lg border border-line bg-bg px-3 text-xs font-medium text-fg transition hover:bg-fg/6"
+                  className="flex h-10 w-fit items-center rounded-lg border border-line bg-canvas px-3 text-xs font-medium text-fg transition hover:bg-fg/6"
                 >
                   {t("settings.providers.updateApiKey")}
                 </button>
@@ -285,7 +286,7 @@ export function LLMProvidersSection({ onStatus }: LLMProvidersSectionProps) {
                   onChange={(e) => setForm({ ...form, apiKey: e.target.value })}
                   placeholder="sk-..."
                   autoComplete="off"
-                  className="h-10 rounded-lg border border-line bg-bg px-3 text-sm text-fg placeholder:text-muted focus:border-fg/40 focus:outline-none"
+                  className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg placeholder:text-muted focus:border-fg/40 focus:outline-none"
                 />
               )}
             </div>
@@ -304,7 +305,7 @@ export function LLMProvidersSection({ onStatus }: LLMProvidersSectionProps) {
                 onChange={(e) => setForm({ ...form, baseUrl: e.target.value })}
                 placeholder={selectedDef?.defaultBaseURL ?? ""}
                 autoComplete="off"
-                className="h-10 rounded-lg border border-line bg-bg px-3 text-sm text-fg placeholder:text-muted focus:border-fg/40 focus:outline-none"
+                className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg placeholder:text-muted focus:border-fg/40 focus:outline-none"
               />
             </div>
           </div>
@@ -318,13 +319,9 @@ export function LLMProvidersSection({ onStatus }: LLMProvidersSectionProps) {
             >
               {t("settings.providers.cancel")}
             </button>
-            <button
-              type="submit"
-              disabled={busy}
-              className="h-9 rounded-lg bg-fg px-4 text-xs font-semibold text-bg transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-            >
+            <Button type="submit" disabled={busy} className="h-9 px-4 text-xs">
               {t("settings.providers.save")}
-            </button>
+            </Button>
           </div>
         </form>
       ) : null}

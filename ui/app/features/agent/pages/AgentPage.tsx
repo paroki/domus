@@ -204,7 +204,7 @@ export default function AgentPage() {
     return (
       <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-6 py-10">
         <Card className="p-6 text-center">
-          <div className="mx-auto mb-3 flex size-11 items-center justify-center rounded-xl border border-line bg-bg">
+          <div className="mx-auto mb-3 flex size-11 items-center justify-center rounded-xl border border-line bg-canvas">
             <Bot className="size-5 text-fg" />
           </div>
           <h1 className="text-lg font-semibold text-fg">
@@ -297,7 +297,7 @@ export default function AgentPage() {
 
           <form
             onSubmit={handleSubmit}
-            className="flex items-end gap-2 border-t border-line bg-bg/50 p-3"
+            className="flex items-end gap-2 border-t border-line bg-canvas/50 p-3"
           >
             <textarea
               rows={2}
@@ -305,7 +305,7 @@ export default function AgentPage() {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={t("agent.composerPlaceholder")}
-              className="max-h-36 min-h-10 flex-1 resize-none rounded-lg border border-line bg-bg px-3 py-2 text-sm text-fg placeholder:text-muted focus:border-fg/40 focus:outline-none"
+              className="max-h-36 min-h-10 flex-1 resize-none rounded-lg border border-line bg-canvas px-3 py-2 text-sm text-fg placeholder:text-muted focus:border-fg/40 focus:outline-none"
             />
             {streaming.active ? (
               <Button

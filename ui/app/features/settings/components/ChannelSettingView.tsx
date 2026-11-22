@@ -1,6 +1,7 @@
 import type { FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { ApiError } from "~/shared/api/client";
+import { Button } from "~/shared/ui/Button";
 import { useUpdateSettings } from "../api/actions";
 import {
   buildClearValues,
@@ -97,15 +98,15 @@ export function ChannelSettingView({
           />
 
           <div className="flex justify-end">
-            <button
+            <Button
               type="submit"
               disabled={updateSettings.isPending}
-              className="h-10 rounded-lg bg-fg px-5 text-sm font-semibold text-bg transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              className="h-10"
             >
               {updateSettings.isPending
                 ? t("settings.saving")
                 : t("settings.save")}
-            </button>
+            </Button>
           </div>
         </form>
       )}

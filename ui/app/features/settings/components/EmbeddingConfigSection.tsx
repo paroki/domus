@@ -2,6 +2,7 @@ import type { FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { ApiError } from "~/shared/api/client";
+import { Button } from "~/shared/ui/Button";
 import { useUpdateSettings } from "../api/actions";
 import { useAgentProviders } from "../api/queries";
 import type { SettingResponse } from "../api/types";
@@ -78,7 +79,7 @@ export function EmbeddingConfigSection({
               onChange={(e) =>
                 onChange(EMBEDDING_KEYS.providerKey, e.target.value)
               }
-              className="h-10 rounded-lg border border-line bg-bg px-3 text-sm text-fg focus:border-fg/40 focus:outline-none"
+              className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-fg/40 focus:outline-none"
             >
               <option value="">{t("settings.agents.selectProvider")}</option>
               {embeddingProviderOptions.map((opt) => (
@@ -116,7 +117,7 @@ export function EmbeddingConfigSection({
                 onChange={(e) =>
                   onChange(EMBEDDING_KEYS.modelKey, e.target.value)
                 }
-                className="h-10 rounded-lg border border-line bg-bg px-3 text-sm text-fg focus:border-fg/40 focus:outline-none"
+                className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-fg/40 focus:outline-none"
               >
                 {embHasCustom ? (
                   <option value={embModel}>{embModel}</option>
@@ -137,7 +138,7 @@ export function EmbeddingConfigSection({
                   onChange(EMBEDDING_KEYS.modelKey, e.target.value)
                 }
                 placeholder="text-embedding-004"
-                className="h-10 rounded-lg border border-line bg-bg px-3 text-sm text-fg placeholder:text-muted focus:border-fg/40 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg placeholder:text-muted focus:border-fg/40 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               />
             )}
           </div>
@@ -148,15 +149,15 @@ export function EmbeddingConfigSection({
       </section>
 
       <div className="flex justify-end">
-        <button
+        <Button
           type="submit"
           disabled={updateSettings.isPending}
-          className="h-10 rounded-lg bg-fg px-5 text-sm font-semibold text-bg transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          className="h-10"
         >
           {updateSettings.isPending
             ? t("settings.saving")
             : t("settings.agents.saveEmbedding")}
-        </button>
+        </Button>
       </div>
     </form>
   );

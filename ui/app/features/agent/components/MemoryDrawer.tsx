@@ -159,7 +159,7 @@ export function MemoryDrawer({ open, onClose }: MemoryDrawerProps) {
       <div
         role="tablist"
         aria-label={t("agent.memoryDrawerTitle")}
-        className="grid grid-cols-2 gap-1 rounded-lg bg-bg p-1"
+        className="grid grid-cols-2 gap-1 rounded-lg bg-canvas p-1"
       >
         {MEMORY_SCOPES.map((s) => {
           const selected = scope === s.value;
@@ -218,14 +218,14 @@ export function MemoryDrawer({ open, onClose }: MemoryDrawerProps) {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={t("agent.memorySearchPlaceholder")}
-            className="h-8 w-full rounded-lg border border-line bg-bg pr-2.5 pl-8 text-xs text-fg placeholder:text-muted focus:border-fg/40 focus:outline-none"
+            className="h-8 w-full rounded-lg border border-line bg-canvas pr-2.5 pl-8 text-xs text-fg placeholder:text-muted focus:border-fg/40 focus:outline-none"
           />
         </div>
         <div className="flex items-center gap-2">
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="h-8 flex-1 rounded-lg border border-line bg-bg px-2 text-xs text-fg focus:outline-none"
+            className="h-8 flex-1 rounded-lg border border-line bg-canvas px-2 text-xs text-fg focus:outline-none"
           >
             <option value="all">Semua Kategori</option>
             {MEMORY_CATEGORIES.map((c) => (
@@ -257,7 +257,7 @@ export function MemoryDrawer({ open, onClose }: MemoryDrawerProps) {
       {showForm && canCreateInScope ? (
         <form
           onSubmit={handleSubmit}
-          className="flex flex-col gap-2.5 rounded-lg border border-line bg-bg p-3"
+          className="flex flex-col gap-2.5 rounded-lg border border-line bg-canvas p-3"
         >
           <select
             value={category}
@@ -323,7 +323,7 @@ export function MemoryDrawer({ open, onClose }: MemoryDrawerProps) {
             return (
               <div
                 key={m.id}
-                className="flex flex-col gap-1.5 rounded-lg border border-line bg-bg p-2.5"
+                className="flex flex-col gap-1.5 rounded-lg border border-line bg-canvas p-2.5"
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5">
