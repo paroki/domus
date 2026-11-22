@@ -2785,15 +2785,6 @@ export interface operations {
           "text/event-stream": components["schemas"]["httpx.Envelope-any"];
         };
       };
-      /** @description Service Unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "text/event-stream": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
     };
   };
   createAgentMemory: {
@@ -3329,15 +3320,6 @@ export interface operations {
       };
       /** @description Not Found */
       404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Service Unavailable */
-      503: {
         headers: {
           [name: string]: unknown;
         };
