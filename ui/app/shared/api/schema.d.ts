@@ -8490,9 +8490,9 @@ export interface operations {
   telegramWebhook: {
     parameters: {
       query?: never;
-      header: {
-        /** @description Telegram webhook secret token */
-        "X-Telegram-Bot-Api-Secret-Token": string;
+      header?: {
+        /** @description Optional Telegram webhook secret token */
+        "X-Telegram-Bot-Api-Secret-Token"?: string;
       };
       path?: never;
       cookie?: never;
