@@ -267,7 +267,7 @@ func (r *Repository) checkMemoryQuota(
 	return nil
 }
 
-// RecallMemories retrieves Tier 3 long-term facts using Hybrid RRF (BM25 + halfvec), BM25-only, or SQLite fallback.
+// RecallMemories retrieves Tier 3 long-term facts using Hybrid RRF (BM25 + halfvec), BM25-only, or Ent fallback.
 func (r *Repository) RecallMemories(ctx context.Context, in domain.RecallMemoriesInput) ([]domain.Memory, error) {
 	limit := in.Limit
 	if limit <= 0 {

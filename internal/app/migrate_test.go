@@ -3,9 +3,13 @@ package app
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"io/fs"
 	"log/slog"
+	"net/url"
+	"os"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"testing/fstest"
 
@@ -13,17 +17,64 @@ import (
 	"github.com/paroki/domus/migrations"
 )
 
-func TestRunMigrations_IdempotentSQLite(t *testing.T) {
+var migrateSchemaCounter atomic.Uint64
+
+func newTestPostgresSchemaDSN(t *testing.T) (string, *sql.DB) {
+	t.Helper()
 	ctx := context.Background()
-	dsn := "file:migrate_idempotent?mode=memory&cache=shared"
-	db, err := sql.Open("sqlite", dsn)
+	dsn := testDSN()
+
+	adminDB, err := sql.Open("pgx", dsn)
 	if err != nil {
-		t.Fatalf("open sqlite: %v", err)
+		t.Fatalf("open postgres admin: %v", err)
 	}
-	defer func() { _ = db.Close() }()
+	if _, err := adminDB.ExecContext(ctx, "CREATE EXTENSION IF NOT EXISTS vector"); err != nil {
+		_ = adminDB.Close()
+		t.Fatalf("enable vector extension: %v", err)
+	}
+	if _, err := adminDB.ExecContext(ctx, "CREATE EXTENSION IF NOT EXISTS pg_search CASCADE"); err != nil {
+		_ = adminDB.Close()
+		t.Fatalf("enable pg_search extension: %v", err)
+	}
+
+	schema := fmt.Sprintf("migrate_test_%d_%d", os.Getpid(), migrateSchemaCounter.Add(1))
+	if _, err := adminDB.ExecContext(ctx, "CREATE SCHEMA "+schema); err != nil {
+		_ = adminDB.Close()
+		t.Fatalf("create schema %s: %v", schema, err)
+	}
+
+	u, err := url.Parse(dsn)
+	if err != nil {
+		_ = adminDB.Close()
+		t.Fatalf("parse dsn: %v", err)
+	}
+	q := u.Query()
+	q.Set("search_path", schema+",public")
+	u.RawQuery = q.Encode()
+	schemaDSN := u.String()
+
+	db, err := sql.Open("pgx", schemaDSN)
+	if err != nil {
+		_ = adminDB.Close()
+		t.Fatalf("open postgres schema: %v", err)
+	}
 	if err := db.PingContext(ctx); err != nil {
-		t.Fatalf("ping sqlite: %v", err)
+		_ = db.Close()
+		_ = adminDB.Close()
+		t.Fatalf("ping postgres schema: %v", err)
 	}
+
+	t.Cleanup(func() {
+		_ = db.Close()
+		_, _ = adminDB.ExecContext(context.Background(), "DROP SCHEMA IF EXISTS "+schema+" CASCADE")
+		_ = adminDB.Close()
+	})
+	return schemaDSN, db
+}
+
+func TestRunMigrations_Idempotent(t *testing.T) {
+	ctx := context.Background()
+	dsn, db := newTestPostgresSchemaDSN(t)
 
 	cfg := Config{DatabaseURL: dsn}
 	logger := slog.New(slog.DiscardHandler)
@@ -50,7 +101,7 @@ func TestRunMigrations_IdempotentSQLite(t *testing.T) {
 
 	for _, tbl := range []string{"settings", "agent_sessions", "agent_messages", "agent_memories"} {
 		var found string
-		if err := db.QueryRowContext(ctx, "SELECT name FROM sqlite_master WHERE type='table' AND name=$1", tbl).Scan(&found); err != nil {
+		if err := db.QueryRowContext(ctx, "SELECT table_name FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = $1", tbl).Scan(&found); err != nil {
 			t.Fatalf("expected %s table to exist: %v", tbl, err)
 		}
 	}
@@ -79,15 +130,7 @@ func TestRunMigrations_IdempotentSQLite(t *testing.T) {
 
 func TestRunMigrations_ChecksumMismatch(t *testing.T) {
 	ctx := context.Background()
-	dsn := "file:migrate_mismatch?mode=memory&cache=shared"
-	db, err := sql.Open("sqlite", dsn)
-	if err != nil {
-		t.Fatalf("open sqlite: %v", err)
-	}
-	defer func() { _ = db.Close() }()
-	if err := db.PingContext(ctx); err != nil {
-		t.Fatalf("ping sqlite: %v", err)
-	}
+	dsn, _ := newTestPostgresSchemaDSN(t)
 
 	cfg := Config{DatabaseURL: dsn}
 
@@ -101,7 +144,7 @@ func TestRunMigrations_ChecksumMismatch(t *testing.T) {
 	fs2 := fstest.MapFS{
 		"001_init.sql": &fstest.MapFile{Data: []byte("CREATE TABLE t1 (id TEXT PRIMARY KEY, extra TEXT);")},
 	}
-	err = runMigrationsFromFS(ctx, cfg, nil, fs2)
+	err := runMigrationsFromFS(ctx, cfg, nil, fs2)
 	if err == nil || !strings.Contains(err.Error(), "checksum mismatch") {
 		t.Fatalf("expected checksum mismatch error, got %v", err)
 	}

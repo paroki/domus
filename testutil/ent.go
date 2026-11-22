@@ -15,42 +15,27 @@ import (
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/ent/enttest"
 	"github.com/stretchr/testify/require"
-	_ "modernc.org/sqlite"
 )
+
+const defaultTestDSN = "postgres://domus:domus@localhost:5432/domus_test?sslmode=disable"
 
 var entDBCounter atomic.Uint64
 
-// NewEntClient creates an isolated Ent client with migrated schema.
-// When TEST_DSN is set, it provisions a per-test Postgres schema; otherwise it
-// falls back to an in-memory SQLite database.
+// NewEntClient creates an isolated Ent client with migrated schema on ParadeDB.
 func NewEntClient(t testing.TB) *ent.Client {
 	t.Helper()
 	client, _, _ := NewEntClientWithDB(t)
 	return client
 }
 
-// NewEntClientWithDB creates an isolated Ent client and returns its underlying *sql.DB and dialect name.
+// NewEntClientWithDB creates an isolated Ent client on ParadeDB and returns its underlying *sql.DB and dialect name.
 func NewEntClientWithDB(t testing.TB) (*ent.Client, *sql.DB, string) {
 	t.Helper()
-	if dsn := os.Getenv("TEST_DSN"); dsn != "" {
-		return newPostgresEntClient(t, dsn)
+	dsn := os.Getenv("TEST_DSN")
+	if dsn == "" {
+		dsn = defaultTestDSN
 	}
-	return newSQLiteEntClient(t)
-}
-
-func newSQLiteEntClient(t testing.TB) (*ent.Client, *sql.DB, string) {
-	t.Helper()
-	id := entDBCounter.Add(1)
-	dsn := fmt.Sprintf("file:ent_%d?mode=memory&cache=shared&_pragma=foreign_keys(1)", id)
-	db, err := sql.Open("sqlite", dsn)
-	require.NoError(t, err, "open in-memory sqlite")
-
-	drv := entsql.OpenDB(dialect.SQLite, db)
-	client := enttest.NewClient(t, enttest.WithOptions(ent.Driver(drv)))
-	t.Cleanup(func() {
-		_ = client.Close()
-	})
-	return client, db, dialect.SQLite
+	return newPostgresEntClient(t, dsn)
 }
 
 func newPostgresEntClient(t testing.TB, dsn string) (*ent.Client, *sql.DB, string) {

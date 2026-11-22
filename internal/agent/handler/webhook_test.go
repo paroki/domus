@@ -152,7 +152,7 @@ func (s *AgentWebhookSuite) SetupTest() {
 	s.agentFeature = agent.New(
 		driver.NewRegistry(s.llmServer.Client()),
 		logger,
-		agent.WithService(s.client, nil, dialect.SQLite, s.enforcer, nil, s.userFeature, s.refFeature, s.orgFeature),
+		agent.WithService(s.client, nil, dialect.Postgres, s.enforcer, nil, s.userFeature, s.refFeature, s.orgFeature),
 		agent.WithSettings(s.settingStore),
 	)
 

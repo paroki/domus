@@ -257,7 +257,7 @@ func TestMemory_Tier1Pinned_Tier3QuotasSupersedeAndRecall(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	// Recall with query (hybrid on Postgres, ContainsFold on SQLite)
+	// Recall with query (hybrid RRF on ParadeDB)
 	var recallEmbedding []float32
 	if r.dialect == dialect.Postgres {
 		recallEmbedding = vec
