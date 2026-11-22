@@ -10,7 +10,11 @@ import { streamAgentChat } from "../api/actions";
 import { resolveAgentError } from "../api/errors";
 import { agentKeys } from "../api/keys";
 import { useAgentMessages, useAgentSessions } from "../api/queries";
-import { buildTimelineItems, isToolErrorResult } from "../model";
+import {
+  buildTimelineItems,
+  hasInterruptedTurn,
+  isToolErrorResult,
+} from "../model";
 import { ChatTimeline, type LiveStreamingState } from "./ChatTimeline";
 import { MemoryDrawer } from "./MemoryDrawer";
 import { SessionSidebar } from "./SessionSidebar";
@@ -38,9 +42,11 @@ export function AgentWorkspace() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [input, setInput] = useState("");
   const [chatError, setChatError] = useState<string | null>(null);
-  const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(
-    null,
-  );
+  const [retryTarget, setRetryTarget] = useState<{
+    sessionId?: string;
+    message?: string;
+    continueTurn?: boolean;
+  } | null>(null);
   const [streaming, setStreaming] = useState<LiveStreamingState>(EMPTY_STREAM);
 
   const abortRef = useRef<AbortController | null>(null);
@@ -64,6 +70,11 @@ export function AgentWorkspace() {
   const rawMessages =
     messagesQuery.data?.pages.flatMap((p) => p.data ?? []) ?? [];
   const timelineItems = buildTimelineItems(rawMessages);
+  const canContinueSession =
+    Boolean(activeSessionId) &&
+    !streaming.active &&
+    !messagesQuery.isLoading &&
+    hasInterruptedTurn(rawMessages);
 
   function setSessionParam(id: string) {
     if (id) {
@@ -73,23 +84,40 @@ export function AgentWorkspace() {
     }
   }
 
-  async function sendMessage(text: string) {
-    const trimmed = text.trim();
-    if (!trimmed || streaming.active) return;
+  async function runChatTurn({
+    sessionId,
+    message,
+    continueTurn,
+  }: {
+    sessionId?: string;
+    message?: string;
+    continueTurn?: boolean;
+  }) {
+    if (streaming.active) return;
+    const trimmed = (message ?? "").trim();
+    const targetSessionId = sessionId ?? activeSessionId;
+    if (continueTurn) {
+      if (!targetSessionId) return;
+    } else if (!trimmed) {
+      return;
+    }
 
     setChatError(null);
-    setLastFailedMessage(null);
-    setInput("");
+    setRetryTarget(null);
+    if (!continueTurn) {
+      setInput("");
+    }
 
     const controller = new AbortController();
     abortRef.current = controller;
 
-    let resolvedSessionId = activeSessionId;
+    let resolvedSessionId = targetSessionId;
+    let sessionConfirmed = false;
     let touchedMemory = false;
 
     setStreaming({
       active: true,
-      userMessage: trimmed,
+      userMessage: continueTurn ? undefined : trimmed,
       agentName: "gabriel",
       thinking: "",
       delta: "",
@@ -98,14 +126,14 @@ export function AgentWorkspace() {
 
     try {
       await streamAgentChat({
-        body: {
-          sessionId: activeSessionId || undefined,
-          message: trimmed,
-        },
+        body: continueTurn
+          ? { sessionId: targetSessionId, continue: true }
+          : { sessionId: targetSessionId || undefined, message: trimmed },
         signal: controller.signal,
         onEvent: (ev) => {
           switch (ev.event) {
             case "session":
+              sessionConfirmed = true;
               if (ev.sessionId) {
                 resolvedSessionId = ev.sessionId;
                 setSessionParam(ev.sessionId);
@@ -168,7 +196,15 @@ export function AgentWorkspace() {
     } catch (err) {
       if (!controller.signal.aborted) {
         setChatError(resolveAgentError(err));
-        setLastFailedMessage(trimmed);
+        if (sessionConfirmed && resolvedSessionId) {
+          setRetryTarget({ sessionId: resolvedSessionId, continueTurn: true });
+        } else {
+          setRetryTarget(
+            continueTurn
+              ? { sessionId: targetSessionId, continueTurn: true }
+              : { sessionId: targetSessionId || undefined, message: trimmed },
+          );
+        }
       }
     } finally {
       abortRef.current = null;
@@ -183,6 +219,10 @@ export function AgentWorkspace() {
         void qc.invalidateQueries({ queryKey: agentKeys.memories() });
       }
     }
+  }
+
+  function sendMessage(text: string) {
+    return runChatTurn({ message: text });
   }
 
   function handleSubmit(e: FormEvent) {
@@ -262,13 +302,13 @@ export function AgentWorkspace() {
             onSelectSession={(id) => {
               setSessionParam(id);
               setChatError(null);
-              setLastFailedMessage(null);
+              setRetryTarget(null);
               setSidebarOpen(false);
             }}
             onNewSession={() => {
               setSessionParam("");
               setChatError(null);
-              setLastFailedMessage(null);
+              setRetryTarget(null);
               setSidebarOpen(false);
             }}
             hasNextPage={Boolean(sessionsQuery.hasNextPage)}
@@ -289,18 +329,48 @@ export function AgentWorkspace() {
               className="mx-4 mt-3 flex items-center justify-between gap-3 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-700 dark:text-red-300"
             >
               <span className="min-w-0 flex-1 break-words">{chatError}</span>
-              {lastFailedMessage ? (
+              {retryTarget || canContinueSession ? (
                 <Button
                   type="button"
                   variant="outline"
                   disabled={streaming.active}
-                  onClick={() => void sendMessage(lastFailedMessage)}
+                  onClick={() =>
+                    void runChatTurn(
+                      retryTarget ?? {
+                        sessionId: activeSessionId,
+                        continueTurn: true,
+                      },
+                    )
+                  }
                   className="h-7 shrink-0 border-red-500/40 px-2.5 text-xs text-red-700 hover:bg-red-500/10 dark:text-red-300"
                 >
                   <RotateCcw className="size-3.5" />
                   {t("agent.retry", "Coba lagi")}
                 </Button>
               ) : null}
+            </div>
+          ) : canContinueSession ? (
+            <div className="mx-4 mt-3 flex items-center justify-between gap-3 rounded-lg border border-line bg-canvas px-3 py-2 text-xs text-muted">
+              <span>
+                {t(
+                  "agent.interruptedHint",
+                  "Respons sebelumnya terhenti sebelum selesai.",
+                )}
+              </span>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() =>
+                  void runChatTurn({
+                    sessionId: activeSessionId,
+                    continueTurn: true,
+                  })
+                }
+                className="h-7 shrink-0 px-2.5 text-xs"
+              >
+                <RotateCcw className="size-3.5" />
+                {t("agent.continue", "Lanjutkan")}
+              </Button>
             </div>
           ) : null}
 

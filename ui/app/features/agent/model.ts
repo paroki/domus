@@ -115,6 +115,15 @@ export function sortMessagesChronologically(
   });
 }
 
+export function hasInterruptedTurn(messages: AgentMessageResponse[]): boolean {
+  if (messages.length === 0) return false;
+  const sorted = sortMessagesChronologically(messages);
+  const last = sorted[sorted.length - 1];
+  if (!last) return false;
+  if (last.role === "user" || last.role === "tool") return true;
+  return last.role === "assistant" && (last.toolCalls?.length ?? 0) > 0;
+}
+
 export interface CorrelatedToolStep {
   id: string;
   name: string;

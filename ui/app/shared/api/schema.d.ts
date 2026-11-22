@@ -1628,7 +1628,8 @@ export interface components {
       status?: "active" | "disabled";
     };
     "domain.AgentChatRequest": {
-      message: string;
+      continue?: boolean;
+      message?: string;
       sessionId?: string;
     };
     "domain.AgentMemoryResponse": {
