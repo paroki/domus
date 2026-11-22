@@ -20,7 +20,7 @@ export class SystemSettingsPage extends BasePage {
   }
 
   async openLauncherItem(label: string): Promise<void> {
-    await this.page.getByRole("link", { name: label }).click();
+    await this.page.locator("main").getByRole("link", { name: label }).click();
   }
 
   async expectChannelGroupsVisible(groupNames: string[]): Promise<void> {

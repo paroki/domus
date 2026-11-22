@@ -3,7 +3,7 @@ Feature: Organization Admin menu visibility, /users roster CRUD, profile, and in
   @org-admin
   Scenario: Org Admin sees restricted launcher, settings, /users scope, and /org create button hidden
     When I open "/"
-    Then I see launcher tiles "Organisasi, Kegiatan, Asisten AI, Pengguna"
+    Then I see launcher tiles "Organisasi, Kegiatan, Pengguna"
     And I do not see launcher tiles "Referensi, Pengaturan"
     When I open "/ref"
     Then I see empty settings message
