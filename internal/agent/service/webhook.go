@@ -8,6 +8,9 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
+	"unicode/utf16"
 
 	"github.com/google/uuid"
 	"github.com/paroki/domus/internal/agent/domain"
@@ -22,6 +25,51 @@ var (
 	waGabrielRe       = regexp.MustCompile(`(?i)@gabriel\b`)
 	multiSpaceRe      = regexp.MustCompile(`[ \t]{2,}`)
 )
+
+// webhookTurnTimeout bounds a background channel turn.
+const webhookTurnTimeout = 5 * time.Minute
+
+// dedupCache remembers recently seen webhook message keys so provider retries are ignored.
+// ponytail: in-memory per-process; move to DB/redis if running multiple replicas.
+type dedupCache struct {
+	mu   sync.Mutex
+	seen map[string]time.Time
+}
+
+func (d *dedupCache) firstSeen(key string) bool {
+	if key == "" {
+		return true
+	}
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	now := time.Now()
+	if d.seen == nil {
+		d.seen = make(map[string]time.Time)
+	}
+	if len(d.seen) > 2048 {
+		for k, t := range d.seen {
+			if now.Sub(t) > 10*time.Minute {
+				delete(d.seen, k)
+			}
+		}
+	}
+	if t, ok := d.seen[key]; ok && now.Sub(t) < 10*time.Minute {
+		return false
+	}
+	d.seen[key] = now
+	return true
+}
+
+// runAsync runs fn detached from the webhook request so the provider gets a fast 200.
+func (s *Service) runAsync(fn func(ctx context.Context) error) {
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), webhookTurnTimeout)
+		defer cancel()
+		if err := fn(ctx); err != nil {
+			s.logger.WarnContext(ctx, "agent channel turn failed", "err", err)
+		}
+	}()
+}
 
 // ChannelUserResolver resolves linked messaging channel identities and clients.
 type ChannelUserResolver interface {
@@ -43,6 +91,7 @@ type WhatsAppInbound struct {
 	Caption       string
 	MentionedJIDs []string
 	HasMedia      bool
+	MessageID     string
 }
 
 // HandleTelegramUpdate routes non-/start Telegram bot updates through the AI agent.
@@ -75,10 +124,16 @@ func (s *Service) HandleTelegramUpdate(ctx context.Context, update telegram.Upda
 		senderSubject = strconv.FormatInt(msg.Chat.ID, 10)
 	}
 
-	sendText := func(txt string) { _ = tgClient.SendMessage(ctx, msg.Chat.ID, txt) }
-	sendTyping := func() { _ = tgClient.SendChatAction(ctx, msg.Chat.ID, "typing") }
-
-	return s.handleChannelMessage(ctx, domain.ChannelTelegram, senderSubject, promptText, msg.HasMedia(), sendText, sendTyping)
+	if !s.dedup.firstSeen("tg:" + strconv.FormatInt(update.UpdateID, 10)) {
+		return nil
+	}
+	hasMedia := msg.HasMedia()
+	s.runAsync(func(ctx context.Context) error {
+		sendText := func(txt string) { _ = tgClient.SendMessage(ctx, msg.Chat.ID, txt) }
+		sendTyping := func() { _ = tgClient.SendChatAction(ctx, msg.Chat.ID, "typing") }
+		return s.handleChannelMessage(ctx, domain.ChannelTelegram, senderSubject, promptText, hasMedia, sendText, sendTyping)
+	})
+	return nil
 }
 
 // HandleWhatsAppInbound routes normalized GOWA WhatsApp webhook messages through the AI agent.
@@ -124,10 +179,15 @@ func (s *Service) HandleWhatsAppInbound(ctx context.Context, in WhatsAppInbound)
 	}
 	promptText := stripWhatsAppMentions(rawText)
 
-	sendText := func(txt string) { _ = gowaClient.SendMessage(ctx, replyTarget, txt) }
-	sendTyping := func() { _ = gowaClient.SendChatPresence(ctx, replyTarget, "composing") }
-
-	return s.handleChannelMessage(ctx, domain.ChannelWhatsApp, senderSubject, promptText, in.HasMedia, sendText, sendTyping)
+	if in.MessageID != "" && !s.dedup.firstSeen("wa:"+in.MessageID) {
+		return nil
+	}
+	s.runAsync(func(ctx context.Context) error {
+		sendText := func(txt string) { _ = gowaClient.SendMessage(ctx, replyTarget, txt) }
+		sendTyping := func() { _ = gowaClient.SendChatPresence(ctx, replyTarget, "composing") }
+		return s.handleChannelMessage(ctx, domain.ChannelWhatsApp, senderSubject, promptText, in.HasMedia, sendText, sendTyping)
+	})
+	return nil
 }
 
 func (s *Service) handleChannelMessage(
@@ -258,23 +318,35 @@ func (s *Service) handleParishCommand(
 	return nil
 }
 
+var tgMentionRes sync.Map // lowercased bot username -> *regexp.Regexp
+
+func telegramMentionRe(botUsername string) *regexp.Regexp {
+	key := strings.ToLower(botUsername)
+	if v, ok := tgMentionRes.Load(key); ok {
+		return v.(*regexp.Regexp)
+	}
+	re := regexp.MustCompile(`(?i)@` + regexp.QuoteMeta(botUsername) + `\b`)
+	tgMentionRes.Store(key, re)
+	return re
+}
+
 func hasTelegramMention(rawText string, entities, captionEntities []telegram.MessageEntity, botUsername string) bool {
 	if botUsername == "" {
 		return false
 	}
-	needle := "@" + strings.ToLower(botUsername)
-	if strings.Contains(strings.ToLower(rawText), needle) {
+	re := telegramMentionRe(botUsername)
+	if re.MatchString(rawText) {
 		return true
 	}
-	runes := []rune(rawText)
+	// Telegram entity offsets/lengths are UTF-16 code units.
+	units := utf16.Encode([]rune(rawText))
 	for _, list := range [][]telegram.MessageEntity{entities, captionEntities} {
 		for _, e := range list {
 			if e.Type != "mention" && e.Type != "bot_command" {
 				continue
 			}
-			if e.Offset >= 0 && e.Length > 0 && e.Offset+e.Length <= len(runes) {
-				sub := strings.ToLower(string(runes[e.Offset : e.Offset+e.Length]))
-				if strings.Contains(sub, needle) {
+			if e.Offset >= 0 && e.Length > 0 && e.Offset+e.Length <= len(units) {
+				if re.MatchString(string(utf16.Decode(units[e.Offset : e.Offset+e.Length]))) {
 					return true
 				}
 			}
@@ -287,8 +359,7 @@ func stripTelegramBotMention(rawText, botUsername string) string {
 	if botUsername == "" {
 		return strings.TrimSpace(rawText)
 	}
-	re := regexp.MustCompile(`(?i)@` + regexp.QuoteMeta(botUsername) + `\b`)
-	cleaned := re.ReplaceAllString(rawText, "")
+	cleaned := telegramMentionRe(botUsername).ReplaceAllString(rawText, "")
 	return strings.TrimSpace(multiSpaceRe.ReplaceAllString(cleaned, " "))
 }
 
@@ -322,11 +393,12 @@ func parseSlashCommand(text string) (cmd, arg string) {
 
 func formatDelegateProgress(rawArgs string) string {
 	var args struct {
+		AgentName  string `json:"agent_name"`
 		Specialist string `json:"specialist"`
 		Agent      string `json:"agent"`
 	}
 	_ = json.Unmarshal([]byte(rawArgs), &args)
-	target := firstNonEmpty(args.Specialist, args.Agent)
+	target := firstNonEmpty(args.AgentName, args.Specialist, args.Agent)
 	if target != "" {
 		return fmt.Sprintf("⏳ Menghubungi spesialis %s...", strings.ToUpper(target[:1])+target[1:])
 	}

@@ -12,6 +12,7 @@ import (
 )
 
 type gowaWebhookPayload struct {
+	ID            string          `json:"id"`
 	Event         string          `json:"event"`
 	From          string          `json:"from"`
 	ChatID        string          `json:"chat_id"`
@@ -122,6 +123,7 @@ func normalizeGowaPayload(p gowaWebhookPayload) service.WhatsAppInbound {
 		Caption:       caption,
 		MentionedJIDs: mentions,
 		HasMedia:      hasMedia,
+		MessageID:     p.ID,
 	}
 }
 

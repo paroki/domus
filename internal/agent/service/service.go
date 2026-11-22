@@ -77,6 +77,7 @@ type Service struct {
 	orgs            OrgReader
 	channelResolver ChannelUserResolver
 	locker          *sessionLocker
+	dedup           dedupCache
 	logger          *slog.Logger
 	nowFn           func() time.Time
 }
