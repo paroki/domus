@@ -136,15 +136,24 @@ Given(
     const superSession = await loginAsSuperAdmin();
     const superClient = new TestClient();
     superClient.setToken(superSession.rawToken);
+    const provRes = await superClient.post<{ data: { id: string } }>(
+      "/agent/providers",
+      {
+        name: "OpenAI E2E",
+        provider: "openai",
+        apiKey: "e2e-mock-key",
+        baseUrl: this.mockLlmBaseUrl,
+      },
+    );
+    assert.equal(provRes.status, 201);
+    const providerId = provRes.data.data.id;
     const res = await superClient.patch("/settings", {
       values: {
-        "agent.provider.openai.api_key": "e2e-mock-key",
-        "agent.provider.openai.base_url": this.mockLlmBaseUrl,
-        "agent.gabriel.provider": "openai",
+        "agent.gabriel.provider": providerId,
         "agent.gabriel.model": "gpt-4.1-mini",
-        "agent.mikael.provider": "openai",
+        "agent.mikael.provider": providerId,
         "agent.mikael.model": "gpt-4.1-mini",
-        "agent.rafael.provider": "openai",
+        "agent.rafael.provider": providerId,
         "agent.rafael.model": "gpt-4.1-mini",
         "agent.embedding.provider": "none",
       },

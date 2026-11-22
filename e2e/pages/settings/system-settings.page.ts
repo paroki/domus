@@ -36,6 +36,12 @@ export class SystemSettingsPage extends BasePage {
     assert.equal(count, 0, "Expected no agent.* inputs in Channels tab");
   }
 
+  private providerIds = new Map<string, string>();
+
+  private resolveProviderValue(provider: string): string {
+    return this.providerIds.get(provider.toLowerCase()) ?? provider;
+  }
+
   private providerSection(providerLabel: string): Locator {
     return this.page
       .locator("section")
@@ -47,38 +53,54 @@ export class SystemSettingsPage extends BasePage {
 
   async configureProvider(
     providerId: string,
-    input: { apiKey: string; baseUrl?: string },
+    input: { apiKey: string; baseUrl?: string; name?: string },
   ): Promise<void> {
     const id = providerId.toLowerCase();
-    await this.page
-      .locator(`[id="setting-agent.provider.${id}.api_key"]`)
-      .fill(input.apiKey);
+    const displayName = input.name ?? (id === "openai" ? "OpenAI" : providerId);
+
+    await this.page.getByRole("button", { name: "Tambah Konfigurasi" }).click();
+    await this.page.locator("#provider-name").fill(displayName);
+    await this.page.locator("#provider-type").selectOption(id);
+    await this.page.locator("#provider-apikey").fill(input.apiKey);
     if (input.baseUrl !== undefined) {
-      await this.page
-        .locator(`[id="setting-agent.provider.${id}.base_url"]`)
-        .fill(input.baseUrl);
+      await this.page.locator("#provider-baseurl").fill(input.baseUrl);
     }
+
+    const [createRes] = await Promise.all([
+      this.page.waitForResponse(
+        (r) =>
+          r.url().endsWith("/api/agent/providers") &&
+          r.request().method() === "POST" &&
+          r.status() === 201,
+      ),
+      this.page.getByRole("button", { name: "Simpan Konfigurasi" }).click(),
+    ]);
+    const body = (await createRes.json()) as { data?: { id?: string } };
+    if (body.data?.id) {
+      this.providerIds.set(id, body.data.id);
+    }
+    await this.page
+      .getByRole("status")
+      .filter({ hasText: "Pengaturan berhasil disimpan." })
+      .waitFor({ state: "visible", timeout: 10_000 });
   }
 
   async syncProviderModels(
     providerId: string,
     providerLabel: string,
   ): Promise<void> {
+    const uuid = this.resolveProviderValue(providerId);
     const section = this.providerSection(providerLabel);
     await Promise.all([
       this.page.waitForResponse(
         (r) =>
-          r
-            .url()
-            .includes(
-              `/api/agent/providers/${providerId.toLowerCase()}/sync-models`,
-            ) &&
+          r.url().includes(`/api/agent/providers/${uuid}/sync-models`) &&
           r.request().method() === "POST" &&
           r.status() === 200,
       ),
       this.page.waitForResponse(
         (r) =>
-          r.url().endsWith("/api/settings") &&
+          r.url().endsWith("/api/agent/providers") &&
           r.request().method() === "GET" &&
           r.status() === 200,
       ),
@@ -133,7 +155,7 @@ export class SystemSettingsPage extends BasePage {
     if (input.provider !== undefined) {
       await this.page
         .locator(`[id="setting-agent.${id}.provider"]`)
-        .selectOption(input.provider);
+        .selectOption(this.resolveProviderValue(input.provider));
     }
     if (input.model !== undefined) {
       await this.setControlValue(
@@ -167,7 +189,7 @@ export class SystemSettingsPage extends BasePage {
       const val = await this.page
         .locator(`[id="setting-agent.${id}.provider"]`)
         .inputValue();
-      assert.equal(val, expected.provider);
+      assert.equal(val, this.resolveProviderValue(expected.provider));
     }
     if (expected.model !== undefined) {
       const val = await this.page
@@ -211,7 +233,7 @@ export class SystemSettingsPage extends BasePage {
   }): Promise<void> {
     await this.page
       .locator('[id="setting-agent.embedding.provider"]')
-      .selectOption(input.provider);
+      .selectOption(this.resolveProviderValue(input.provider));
     if (input.model !== undefined) {
       await this.setControlValue(
         this.page.locator('[id="setting-agent.embedding.model"]'),
