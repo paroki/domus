@@ -16,6 +16,8 @@ type Tx struct {
 	AgentMemory *AgentMemoryClient
 	// AgentMessage is the client for interacting with the AgentMessage builders.
 	AgentMessage *AgentMessageClient
+	// AgentProvider is the client for interacting with the AgentProvider builders.
+	AgentProvider *AgentProviderClient
 	// AgentSession is the client for interacting with the AgentSession builders.
 	AgentSession *AgentSessionClient
 	// CasbinRule is the client for interacting with the CasbinRule builders.
@@ -187,6 +189,7 @@ func (tx *Tx) Client() *Client {
 func (tx *Tx) init() {
 	tx.AgentMemory = NewAgentMemoryClient(tx.config)
 	tx.AgentMessage = NewAgentMessageClient(tx.config)
+	tx.AgentProvider = NewAgentProviderClient(tx.config)
 	tx.AgentSession = NewAgentSessionClient(tx.config)
 	tx.CasbinRule = NewCasbinRuleClient(tx.config)
 	tx.Diocese = NewDioceseClient(tx.config)

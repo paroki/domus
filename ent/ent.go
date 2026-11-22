@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/paroki/domus/ent/agentmemory"
 	"github.com/paroki/domus/ent/agentmessage"
+	"github.com/paroki/domus/ent/agentprovider"
 	"github.com/paroki/domus/ent/agentsession"
 	"github.com/paroki/domus/ent/casbinrule"
 	"github.com/paroki/domus/ent/diocese"
@@ -93,27 +94,28 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			agentmemory.Table:  agentmemory.ValidColumn,
-			agentmessage.Table: agentmessage.ValidColumn,
-			agentsession.Table: agentsession.ValidColumn,
-			casbinrule.Table:   casbinrule.ValidColumn,
-			diocese.Table:      diocese.ValidColumn,
-			event.Table:        event.ValidColumn,
-			eventrsvp.Table:    eventrsvp.ValidColumn,
-			lookup.Table:       lookup.ValidColumn,
-			orginvite.Table:    orginvite.ValidColumn,
-			orgmember.Table:    orgmember.ValidColumn,
-			organization.Table: organization.ValidColumn,
-			parish.Table:       parish.ValidColumn,
-			parishmember.Table: parishmember.ValidColumn,
-			period.Table:       period.ValidColumn,
-			setting.Table:      setting.ValidColumn,
-			user.Table:         user.ValidColumn,
-			useraccount.Table:  useraccount.ValidColumn,
-			userotp.Table:      userotp.ValidColumn,
-			usersession.Table:  usersession.ValidColumn,
-			ward.Table:         ward.ValidColumn,
-			zone.Table:         zone.ValidColumn,
+			agentmemory.Table:   agentmemory.ValidColumn,
+			agentmessage.Table:  agentmessage.ValidColumn,
+			agentprovider.Table: agentprovider.ValidColumn,
+			agentsession.Table:  agentsession.ValidColumn,
+			casbinrule.Table:    casbinrule.ValidColumn,
+			diocese.Table:       diocese.ValidColumn,
+			event.Table:         event.ValidColumn,
+			eventrsvp.Table:     eventrsvp.ValidColumn,
+			lookup.Table:        lookup.ValidColumn,
+			orginvite.Table:     orginvite.ValidColumn,
+			orgmember.Table:     orgmember.ValidColumn,
+			organization.Table:  organization.ValidColumn,
+			parish.Table:        parish.ValidColumn,
+			parishmember.Table:  parishmember.ValidColumn,
+			period.Table:        period.ValidColumn,
+			setting.Table:       setting.ValidColumn,
+			user.Table:          user.ValidColumn,
+			useraccount.Table:   useraccount.ValidColumn,
+			userotp.Table:       userotp.ValidColumn,
+			usersession.Table:   usersession.ValidColumn,
+			ward.Table:          ward.ValidColumn,
+			zone.Table:          zone.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

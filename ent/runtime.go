@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent/agentmemory"
 	"github.com/paroki/domus/ent/agentmessage"
+	"github.com/paroki/domus/ent/agentprovider"
 	"github.com/paroki/domus/ent/agentsession"
 	"github.com/paroki/domus/ent/casbinrule"
 	"github.com/paroki/domus/ent/diocese"
@@ -94,6 +95,47 @@ func init() {
 	agentmessageDescID := agentmessageMixinFields0[0].Descriptor()
 	// agentmessage.DefaultID holds the default value on creation for the id field.
 	agentmessage.DefaultID = agentmessageDescID.Default.(func() uuid.UUID)
+	agentproviderMixin := schema.AgentProvider{}.Mixin()
+	agentproviderMixinFields0 := agentproviderMixin[0].Fields()
+	_ = agentproviderMixinFields0
+	agentproviderMixinFields1 := agentproviderMixin[1].Fields()
+	_ = agentproviderMixinFields1
+	agentproviderFields := schema.AgentProvider{}.Fields()
+	_ = agentproviderFields
+	// agentproviderDescCreatedAt is the schema descriptor for created_at field.
+	agentproviderDescCreatedAt := agentproviderMixinFields1[0].Descriptor()
+	// agentprovider.DefaultCreatedAt holds the default value on creation for the created_at field.
+	agentprovider.DefaultCreatedAt = agentproviderDescCreatedAt.Default.(func() time.Time)
+	// agentproviderDescUpdatedAt is the schema descriptor for updated_at field.
+	agentproviderDescUpdatedAt := agentproviderMixinFields1[1].Descriptor()
+	// agentprovider.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	agentprovider.DefaultUpdatedAt = agentproviderDescUpdatedAt.Default.(func() time.Time)
+	// agentprovider.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	agentprovider.UpdateDefaultUpdatedAt = agentproviderDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// agentproviderDescName is the schema descriptor for name field.
+	agentproviderDescName := agentproviderFields[0].Descriptor()
+	// agentprovider.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	agentprovider.NameValidator = agentproviderDescName.Validators[0].(func(string) error)
+	// agentproviderDescDescription is the schema descriptor for description field.
+	agentproviderDescDescription := agentproviderFields[1].Descriptor()
+	// agentprovider.DefaultDescription holds the default value on creation for the description field.
+	agentprovider.DefaultDescription = agentproviderDescDescription.Default.(string)
+	// agentproviderDescAPIKey is the schema descriptor for api_key field.
+	agentproviderDescAPIKey := agentproviderFields[3].Descriptor()
+	// agentprovider.APIKeyValidator is a validator for the "api_key" field. It is called by the builders before save.
+	agentprovider.APIKeyValidator = agentproviderDescAPIKey.Validators[0].(func(string) error)
+	// agentproviderDescBaseURL is the schema descriptor for base_url field.
+	agentproviderDescBaseURL := agentproviderFields[4].Descriptor()
+	// agentprovider.DefaultBaseURL holds the default value on creation for the base_url field.
+	agentprovider.DefaultBaseURL = agentproviderDescBaseURL.Default.(string)
+	// agentproviderDescModels is the schema descriptor for models field.
+	agentproviderDescModels := agentproviderFields[5].Descriptor()
+	// agentprovider.DefaultModels holds the default value on creation for the models field.
+	agentprovider.DefaultModels = agentproviderDescModels.Default.([]schema.AgentProviderModel)
+	// agentproviderDescID is the schema descriptor for id field.
+	agentproviderDescID := agentproviderMixinFields0[0].Descriptor()
+	// agentprovider.DefaultID holds the default value on creation for the id field.
+	agentprovider.DefaultID = agentproviderDescID.Default.(func() uuid.UUID)
 	agentsessionMixin := schema.AgentSession{}.Mixin()
 	agentsessionMixinFields0 := agentsessionMixin[0].Fields()
 	_ = agentsessionMixinFields0

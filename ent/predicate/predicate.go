@@ -12,6 +12,9 @@ type AgentMemory func(*sql.Selector)
 // AgentMessage is the predicate function for agentmessage builders.
 type AgentMessage func(*sql.Selector)
 
+// AgentProvider is the predicate function for agentprovider builders.
+type AgentProvider func(*sql.Selector)
+
 // AgentSession is the predicate function for agentsession builders.
 type AgentSession func(*sql.Selector)
 

@@ -15,20 +15,24 @@ import (
 	"github.com/paroki/domus/internal/platform/httpx"
 )
 
-// ProviderSyncer discovers and persists available models for an AI provider.
-type ProviderSyncer interface {
-	SyncProviderModels(ctx context.Context, provider string) (domain.SyncProviderModelsResponse, error)
+// ProviderManager manages LLM provider configs and model discovery.
+type ProviderManager interface {
+	ListProviders(ctx context.Context) ([]domain.AgentProviderResponse, error)
+	CreateProvider(ctx context.Context, req domain.CreateAgentProviderRequest) (domain.AgentProviderResponse, error)
+	UpdateProvider(ctx context.Context, id uuid.UUID, req domain.UpdateAgentProviderRequest) (domain.AgentProviderResponse, error)
+	DeleteProvider(ctx context.Context, id uuid.UUID) error
+	SyncProviderModels(ctx context.Context, id uuid.UUID) (domain.SyncProviderModelsResponse, error)
 }
 
 // Handler exposes HTTP and SSE endpoints for the AI agent feature.
 type Handler struct {
-	service *service.Service
-	syncer  ProviderSyncer
+	service   *service.Service
+	providers ProviderManager
 }
 
-// New constructs an agent Handler backed by svc and syncer.
-func New(svc *service.Service, syncer ProviderSyncer) *Handler {
-	return &Handler{service: svc, syncer: syncer}
+// New constructs an agent Handler backed by svc and providers.
+func New(svc *service.Service, providers ProviderManager) *Handler {
+	return &Handler{service: svc, providers: providers}
 }
 
 // Register mounts /agent routes onto api (/api).
@@ -37,6 +41,7 @@ func (h *Handler) Register(
 	authMW fiber.Handler,
 	requireAuth fiber.Handler,
 	requireTenant fiber.Handler,
+	requireAdminRead fiber.Handler,
 	requireAdminWrite fiber.Handler,
 	requireSessionsRead fiber.Handler,
 	requireSessionsWrite fiber.Handler,
@@ -47,7 +52,11 @@ func (h *Handler) Register(
 	agentGroup.Post("/webhooks/whatsapp", h.WhatsAppWebhook)
 
 	authed := agentGroup.Group("", authMW, requireAuth)
-	authed.Post("/providers/:provider/sync-models", requireAdminWrite, h.SyncProviderModels)
+	authed.Get("/providers", requireAdminRead, h.ListProviders)
+	authed.Post("/providers", requireAdminWrite, h.CreateProvider)
+	authed.Patch("/providers/:providerId", requireAdminWrite, h.UpdateProvider)
+	authed.Delete("/providers/:providerId", requireAdminWrite, h.DeleteProvider)
+	authed.Post("/providers/:providerId/sync-models", requireAdminWrite, h.SyncProviderModels)
 
 	tenant := authed.Group("", requireTenant)
 	tenant.Post("/sessions/search", requireSessionsRead, h.SearchSessions)

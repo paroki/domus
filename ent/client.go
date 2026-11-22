@@ -18,6 +18,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/paroki/domus/ent/agentmemory"
 	"github.com/paroki/domus/ent/agentmessage"
+	"github.com/paroki/domus/ent/agentprovider"
 	"github.com/paroki/domus/ent/agentsession"
 	"github.com/paroki/domus/ent/casbinrule"
 	"github.com/paroki/domus/ent/diocese"
@@ -48,6 +49,8 @@ type Client struct {
 	AgentMemory *AgentMemoryClient
 	// AgentMessage is the client for interacting with the AgentMessage builders.
 	AgentMessage *AgentMessageClient
+	// AgentProvider is the client for interacting with the AgentProvider builders.
+	AgentProvider *AgentProviderClient
 	// AgentSession is the client for interacting with the AgentSession builders.
 	AgentSession *AgentSessionClient
 	// CasbinRule is the client for interacting with the CasbinRule builders.
@@ -99,6 +102,7 @@ func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.AgentMemory = NewAgentMemoryClient(c.config)
 	c.AgentMessage = NewAgentMessageClient(c.config)
+	c.AgentProvider = NewAgentProviderClient(c.config)
 	c.AgentSession = NewAgentSessionClient(c.config)
 	c.CasbinRule = NewCasbinRuleClient(c.config)
 	c.Diocese = NewDioceseClient(c.config)
@@ -208,29 +212,30 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:          ctx,
-		config:       cfg,
-		AgentMemory:  NewAgentMemoryClient(cfg),
-		AgentMessage: NewAgentMessageClient(cfg),
-		AgentSession: NewAgentSessionClient(cfg),
-		CasbinRule:   NewCasbinRuleClient(cfg),
-		Diocese:      NewDioceseClient(cfg),
-		Event:        NewEventClient(cfg),
-		EventRSVP:    NewEventRSVPClient(cfg),
-		Lookup:       NewLookupClient(cfg),
-		OrgInvite:    NewOrgInviteClient(cfg),
-		OrgMember:    NewOrgMemberClient(cfg),
-		Organization: NewOrganizationClient(cfg),
-		Parish:       NewParishClient(cfg),
-		ParishMember: NewParishMemberClient(cfg),
-		Period:       NewPeriodClient(cfg),
-		Setting:      NewSettingClient(cfg),
-		User:         NewUserClient(cfg),
-		UserAccount:  NewUserAccountClient(cfg),
-		UserOTP:      NewUserOTPClient(cfg),
-		UserSession:  NewUserSessionClient(cfg),
-		Ward:         NewWardClient(cfg),
-		Zone:         NewZoneClient(cfg),
+		ctx:           ctx,
+		config:        cfg,
+		AgentMemory:   NewAgentMemoryClient(cfg),
+		AgentMessage:  NewAgentMessageClient(cfg),
+		AgentProvider: NewAgentProviderClient(cfg),
+		AgentSession:  NewAgentSessionClient(cfg),
+		CasbinRule:    NewCasbinRuleClient(cfg),
+		Diocese:       NewDioceseClient(cfg),
+		Event:         NewEventClient(cfg),
+		EventRSVP:     NewEventRSVPClient(cfg),
+		Lookup:        NewLookupClient(cfg),
+		OrgInvite:     NewOrgInviteClient(cfg),
+		OrgMember:     NewOrgMemberClient(cfg),
+		Organization:  NewOrganizationClient(cfg),
+		Parish:        NewParishClient(cfg),
+		ParishMember:  NewParishMemberClient(cfg),
+		Period:        NewPeriodClient(cfg),
+		Setting:       NewSettingClient(cfg),
+		User:          NewUserClient(cfg),
+		UserAccount:   NewUserAccountClient(cfg),
+		UserOTP:       NewUserOTPClient(cfg),
+		UserSession:   NewUserSessionClient(cfg),
+		Ward:          NewWardClient(cfg),
+		Zone:          NewZoneClient(cfg),
 	}, nil
 }
 
@@ -248,29 +253,30 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:          ctx,
-		config:       cfg,
-		AgentMemory:  NewAgentMemoryClient(cfg),
-		AgentMessage: NewAgentMessageClient(cfg),
-		AgentSession: NewAgentSessionClient(cfg),
-		CasbinRule:   NewCasbinRuleClient(cfg),
-		Diocese:      NewDioceseClient(cfg),
-		Event:        NewEventClient(cfg),
-		EventRSVP:    NewEventRSVPClient(cfg),
-		Lookup:       NewLookupClient(cfg),
-		OrgInvite:    NewOrgInviteClient(cfg),
-		OrgMember:    NewOrgMemberClient(cfg),
-		Organization: NewOrganizationClient(cfg),
-		Parish:       NewParishClient(cfg),
-		ParishMember: NewParishMemberClient(cfg),
-		Period:       NewPeriodClient(cfg),
-		Setting:      NewSettingClient(cfg),
-		User:         NewUserClient(cfg),
-		UserAccount:  NewUserAccountClient(cfg),
-		UserOTP:      NewUserOTPClient(cfg),
-		UserSession:  NewUserSessionClient(cfg),
-		Ward:         NewWardClient(cfg),
-		Zone:         NewZoneClient(cfg),
+		ctx:           ctx,
+		config:        cfg,
+		AgentMemory:   NewAgentMemoryClient(cfg),
+		AgentMessage:  NewAgentMessageClient(cfg),
+		AgentProvider: NewAgentProviderClient(cfg),
+		AgentSession:  NewAgentSessionClient(cfg),
+		CasbinRule:    NewCasbinRuleClient(cfg),
+		Diocese:       NewDioceseClient(cfg),
+		Event:         NewEventClient(cfg),
+		EventRSVP:     NewEventRSVPClient(cfg),
+		Lookup:        NewLookupClient(cfg),
+		OrgInvite:     NewOrgInviteClient(cfg),
+		OrgMember:     NewOrgMemberClient(cfg),
+		Organization:  NewOrganizationClient(cfg),
+		Parish:        NewParishClient(cfg),
+		ParishMember:  NewParishMemberClient(cfg),
+		Period:        NewPeriodClient(cfg),
+		Setting:       NewSettingClient(cfg),
+		User:          NewUserClient(cfg),
+		UserAccount:   NewUserAccountClient(cfg),
+		UserOTP:       NewUserOTPClient(cfg),
+		UserSession:   NewUserSessionClient(cfg),
+		Ward:          NewWardClient(cfg),
+		Zone:          NewZoneClient(cfg),
 	}, nil
 }
 
@@ -300,10 +306,10 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.AgentMemory, c.AgentMessage, c.AgentSession, c.CasbinRule, c.Diocese, c.Event,
-		c.EventRSVP, c.Lookup, c.OrgInvite, c.OrgMember, c.Organization, c.Parish,
-		c.ParishMember, c.Period, c.Setting, c.User, c.UserAccount, c.UserOTP,
-		c.UserSession, c.Ward, c.Zone,
+		c.AgentMemory, c.AgentMessage, c.AgentProvider, c.AgentSession, c.CasbinRule,
+		c.Diocese, c.Event, c.EventRSVP, c.Lookup, c.OrgInvite, c.OrgMember,
+		c.Organization, c.Parish, c.ParishMember, c.Period, c.Setting, c.User,
+		c.UserAccount, c.UserOTP, c.UserSession, c.Ward, c.Zone,
 	} {
 		n.Use(hooks...)
 	}
@@ -313,10 +319,10 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.AgentMemory, c.AgentMessage, c.AgentSession, c.CasbinRule, c.Diocese, c.Event,
-		c.EventRSVP, c.Lookup, c.OrgInvite, c.OrgMember, c.Organization, c.Parish,
-		c.ParishMember, c.Period, c.Setting, c.User, c.UserAccount, c.UserOTP,
-		c.UserSession, c.Ward, c.Zone,
+		c.AgentMemory, c.AgentMessage, c.AgentProvider, c.AgentSession, c.CasbinRule,
+		c.Diocese, c.Event, c.EventRSVP, c.Lookup, c.OrgInvite, c.OrgMember,
+		c.Organization, c.Parish, c.ParishMember, c.Period, c.Setting, c.User,
+		c.UserAccount, c.UserOTP, c.UserSession, c.Ward, c.Zone,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -329,6 +335,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.AgentMemory.mutate(ctx, m)
 	case *AgentMessageMutation:
 		return c.AgentMessage.mutate(ctx, m)
+	case *AgentProviderMutation:
+		return c.AgentProvider.mutate(ctx, m)
 	case *AgentSessionMutation:
 		return c.AgentSession.mutate(ctx, m)
 	case *CasbinRuleMutation:
@@ -651,6 +659,139 @@ func (c *AgentMessageClient) mutate(ctx context.Context, m *AgentMessageMutation
 		return (&AgentMessageDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown AgentMessage mutation op: %q", m.Op())
+	}
+}
+
+// AgentProviderClient is a client for the AgentProvider schema.
+type AgentProviderClient struct {
+	config
+}
+
+// NewAgentProviderClient returns a client for the AgentProvider from the given config.
+func NewAgentProviderClient(c config) *AgentProviderClient {
+	return &AgentProviderClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `agentprovider.Hooks(f(g(h())))`.
+func (c *AgentProviderClient) Use(hooks ...Hook) {
+	c.hooks.AgentProvider = append(c.hooks.AgentProvider, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `agentprovider.Intercept(f(g(h())))`.
+func (c *AgentProviderClient) Intercept(interceptors ...Interceptor) {
+	c.inters.AgentProvider = append(c.inters.AgentProvider, interceptors...)
+}
+
+// Create returns a builder for creating a AgentProvider entity.
+func (c *AgentProviderClient) Create() *AgentProviderCreate {
+	mutation := newAgentProviderMutation(c.config, OpCreate)
+	return &AgentProviderCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of AgentProvider entities.
+func (c *AgentProviderClient) CreateBulk(builders ...*AgentProviderCreate) *AgentProviderCreateBulk {
+	return &AgentProviderCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *AgentProviderClient) MapCreateBulk(slice any, setFunc func(*AgentProviderCreate, int)) *AgentProviderCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &AgentProviderCreateBulk{err: fmt.Errorf("calling to AgentProviderClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*AgentProviderCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &AgentProviderCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for AgentProvider.
+func (c *AgentProviderClient) Update() *AgentProviderUpdate {
+	mutation := newAgentProviderMutation(c.config, OpUpdate)
+	return &AgentProviderUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AgentProviderClient) UpdateOne(_m *AgentProvider) *AgentProviderUpdateOne {
+	mutation := newAgentProviderMutation(c.config, OpUpdateOne, withAgentProvider(_m))
+	return &AgentProviderUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AgentProviderClient) UpdateOneID(id uuid.UUID) *AgentProviderUpdateOne {
+	mutation := newAgentProviderMutation(c.config, OpUpdateOne, withAgentProviderID(id))
+	return &AgentProviderUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for AgentProvider.
+func (c *AgentProviderClient) Delete() *AgentProviderDelete {
+	mutation := newAgentProviderMutation(c.config, OpDelete)
+	return &AgentProviderDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *AgentProviderClient) DeleteOne(_m *AgentProvider) *AgentProviderDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *AgentProviderClient) DeleteOneID(id uuid.UUID) *AgentProviderDeleteOne {
+	builder := c.Delete().Where(agentprovider.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AgentProviderDeleteOne{builder}
+}
+
+// Query returns a query builder for AgentProvider.
+func (c *AgentProviderClient) Query() *AgentProviderQuery {
+	return &AgentProviderQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeAgentProvider},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a AgentProvider entity by its id.
+func (c *AgentProviderClient) Get(ctx context.Context, id uuid.UUID) (*AgentProvider, error) {
+	return c.Query().Where(agentprovider.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AgentProviderClient) GetX(ctx context.Context, id uuid.UUID) *AgentProvider {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *AgentProviderClient) Hooks() []Hook {
+	return c.hooks.AgentProvider
+}
+
+// Interceptors returns the client interceptors.
+func (c *AgentProviderClient) Interceptors() []Interceptor {
+	return c.inters.AgentProvider
+}
+
+func (c *AgentProviderClient) mutate(ctx context.Context, m *AgentProviderMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&AgentProviderCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&AgentProviderUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&AgentProviderUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&AgentProviderDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown AgentProvider mutation op: %q", m.Op())
 	}
 }
 
@@ -3616,13 +3757,15 @@ func (c *ZoneClient) mutate(ctx context.Context, m *ZoneMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		AgentMemory, AgentMessage, AgentSession, CasbinRule, Diocese, Event, EventRSVP,
-		Lookup, OrgInvite, OrgMember, Organization, Parish, ParishMember, Period,
-		Setting, User, UserAccount, UserOTP, UserSession, Ward, Zone []ent.Hook
+		AgentMemory, AgentMessage, AgentProvider, AgentSession, CasbinRule, Diocese,
+		Event, EventRSVP, Lookup, OrgInvite, OrgMember, Organization, Parish,
+		ParishMember, Period, Setting, User, UserAccount, UserOTP, UserSession, Ward,
+		Zone []ent.Hook
 	}
 	inters struct {
-		AgentMemory, AgentMessage, AgentSession, CasbinRule, Diocese, Event, EventRSVP,
-		Lookup, OrgInvite, OrgMember, Organization, Parish, ParishMember, Period,
-		Setting, User, UserAccount, UserOTP, UserSession, Ward, Zone []ent.Interceptor
+		AgentMemory, AgentMessage, AgentProvider, AgentSession, CasbinRule, Diocese,
+		Event, EventRSVP, Lookup, OrgInvite, OrgMember, Organization, Parish,
+		ParishMember, Period, Setting, User, UserAccount, UserOTP, UserSession, Ward,
+		Zone []ent.Interceptor
 	}
 )

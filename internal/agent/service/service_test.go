@@ -38,10 +38,6 @@ func (s stubConfigProvider) EmbeddingConfig() EmbeddingConfigSnapshot {
 	return s.emb
 }
 
-func (s stubConfigProvider) ProviderModels(_ string) []domain.ProviderModelItem {
-	return nil
-}
-
 type stubUserReader struct{ profile *UserProfileInfo }
 
 func (s stubUserReader) GetUser(_ context.Context, _ uuid.UUID) (*UserProfileInfo, error) {

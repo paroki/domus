@@ -2,58 +2,53 @@ package agent
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log/slog"
-	"maps"
 	"net/url"
 	"slices"
 	"strings"
 	"sync"
-	"time"
 
+	"github.com/google/uuid"
+	"github.com/paroki/domus/ent"
+	"github.com/paroki/domus/ent/agentprovider"
 	"github.com/paroki/domus/internal/agent/domain"
 	"github.com/paroki/domus/internal/agent/driver"
 	"github.com/paroki/domus/internal/agent/prompts"
+	"github.com/paroki/domus/internal/platform/crypt"
 	"github.com/paroki/domus/internal/platform/setting"
 )
 
-// Exported setting keys for AI Agent providers, personas, and embeddings (26 keys).
+// Exported setting keys for AI Agent personas and embeddings (14 keys).
 const (
-	SettingProviderGeminiAPIKey  = "agent.provider.gemini.api_key"
-	SettingProviderGeminiBaseURL = "agent.provider.gemini.base_url"
-	SettingProviderGeminiModels  = "agent.provider.gemini.models"
-
-	SettingProviderAnthropicAPIKey  = "agent.provider.anthropic.api_key"
-	SettingProviderAnthropicBaseURL = "agent.provider.anthropic.base_url"
-	SettingProviderAnthropicModels  = "agent.provider.anthropic.models"
-
-	SettingProviderOpenAIAPIKey  = "agent.provider.openai.api_key"
-	SettingProviderOpenAIBaseURL = "agent.provider.openai.base_url"
-	SettingProviderOpenAIModels  = "agent.provider.openai.models"
-
-	SettingProviderOpenRouterAPIKey  = "agent.provider.openrouter.api_key"
-	SettingProviderOpenRouterBaseURL = "agent.provider.openrouter.base_url"
-	SettingProviderOpenRouterModels  = "agent.provider.openrouter.models"
-
-	SettingGabrielProvider    = "agent.gabriel.provider"
+	SettingGabrielProviderID  = "agent.gabriel.provider_id"
 	SettingGabrielModel       = "agent.gabriel.model"
 	SettingGabrielEffort      = "agent.gabriel.effort"
 	SettingGabrielInstruction = "agent.gabriel.instruction"
 
-	SettingMikaelProvider    = "agent.mikael.provider"
+	SettingMikaelProviderID  = "agent.mikael.provider_id"
 	SettingMikaelModel       = "agent.mikael.model"
 	SettingMikaelEffort      = "agent.mikael.effort"
 	SettingMikaelInstruction = "agent.mikael.instruction"
 
-	SettingRafaelProvider    = "agent.rafael.provider"
+	SettingRafaelProviderID  = "agent.rafael.provider_id"
 	SettingRafaelModel       = "agent.rafael.model"
 	SettingRafaelEffort      = "agent.rafael.effort"
 	SettingRafaelInstruction = "agent.rafael.instruction"
 
-	SettingEmbeddingProvider = "agent.embedding.provider"
-	SettingEmbeddingModel    = "agent.embedding.model"
+	SettingEmbeddingProviderID = "agent.embedding.provider_id"
+	SettingEmbeddingModel      = "agent.embedding.model"
 )
+
+// ProviderRuntimeConfig holds a decrypted LLM provider configuration in memory.
+type ProviderRuntimeConfig struct {
+	ID       uuid.UUID
+	Name     string
+	Provider string
+	BaseURL  string
+	APIKey   string
+	Models   []domain.ProviderModelItem
+}
 
 // EmbeddingRuntimeConfig holds the resolved runtime settings for text embeddings.
 type EmbeddingRuntimeConfig struct {
@@ -63,16 +58,19 @@ type EmbeddingRuntimeConfig struct {
 	Model    string
 }
 
-// ConfigStore holds thread-safe hot-reloaded AI agent, embedding, and provider model settings.
+// ConfigStore holds thread-safe hot-reloaded AI agent, embedding, and provider configurations.
 type ConfigStore struct {
-	mu             sync.RWMutex
-	agents         map[string]domain.AgentConfig
-	embedding      EmbeddingRuntimeConfig
-	providerModels map[string][]domain.ProviderModelItem
-	prevAPIKeys    map[string]string
-	initialized    bool
-	drivers        *driver.Registry
-	logger         *slog.Logger
+	mu                  sync.RWMutex
+	db                  *ent.Client
+	cipher              *crypt.Cipher
+	providers           map[uuid.UUID]ProviderRuntimeConfig
+	providersLoaded     bool
+	agentProviderIDs    map[string]uuid.UUID
+	embeddingProviderID uuid.UUID
+	agents              map[string]domain.AgentConfig
+	embedding           EmbeddingRuntimeConfig
+	drivers             *driver.Registry
+	logger              *slog.Logger
 }
 
 // NewConfigStore creates a ConfigStore backed by drivers and logger.
@@ -84,12 +82,20 @@ func NewConfigStore(drivers *driver.Registry, logger *slog.Logger) *ConfigStore 
 		logger = slog.New(slog.DiscardHandler)
 	}
 	return &ConfigStore{
-		agents:         make(map[string]domain.AgentConfig),
-		providerModels: make(map[string][]domain.ProviderModelItem),
-		prevAPIKeys:    make(map[string]string),
-		drivers:        drivers,
-		logger:         logger,
+		providers:        make(map[uuid.UUID]ProviderRuntimeConfig),
+		agentProviderIDs: make(map[string]uuid.UUID),
+		agents:           make(map[string]domain.AgentConfig),
+		drivers:          drivers,
+		logger:           logger,
 	}
+}
+
+// BindStorage attaches the Ent client and optional cipher used to load provider credentials.
+func (c *ConfigStore) BindStorage(db *ent.Client, cipher *crypt.Cipher) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.db = db
+	c.cipher = cipher
 }
 
 // AgentConfig returns a snapshot of the runtime configuration for the named agent.
@@ -107,67 +113,128 @@ func (c *ConfigStore) EmbeddingConfig() EmbeddingRuntimeConfig {
 	return c.embedding
 }
 
-// ProviderModels returns cached discovered models for a provider.
-func (c *ConfigStore) ProviderModels(provider string) []domain.ProviderModelItem {
+// Provider returns a snapshot of the runtime provider configuration for id.
+func (c *ConfigStore) Provider(id uuid.UUID) (ProviderRuntimeConfig, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	return slices.Clone(c.providerModels[provider])
+	p, ok := c.providers[id]
+	if ok {
+		p.Models = slices.Clone(p.Models)
+	}
+	return p, ok
 }
 
-// SetProviderModels updates the in-memory discovered models cache for a provider.
-func (c *ConfigStore) SetProviderModels(provider string, models []domain.ProviderModelItem) {
+// ProviderModels returns cached discovered models for a provider config UUID.
+func (c *ConfigStore) ProviderModels(id uuid.UUID) []domain.ProviderModelItem {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	p, ok := c.providers[id]
+	if !ok {
+		return nil
+	}
+	return slices.Clone(p.Models)
+}
+
+// IsProviderInUse reports whether any agent or embedding config currently references id.
+func (c *ConfigStore) IsProviderInUse(id uuid.UUID) bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	if c.embeddingProviderID == id {
+		return true
+	}
+	for _, boundID := range c.agentProviderIDs {
+		if boundID == id {
+			return true
+		}
+	}
+	return false
+}
+
+// IsProviderUsedByEmbedding reports whether embedding currently references id.
+func (c *ConfigStore) IsProviderUsedByEmbedding(id uuid.UUID) bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.embeddingProviderID == id
+}
+
+// UpsertProvider updates the in-memory provider cache and refreshes bound agent/embedding snapshots.
+func (c *ConfigStore) UpsertProvider(p ProviderRuntimeConfig) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.providerModels[provider] = slices.Clone(models)
+	p.Models = slices.Clone(p.Models)
+	c.providers[p.ID] = p
+	c.providersLoaded = true
+
+	for agentName, boundID := range c.agentProviderIDs {
+		if boundID == p.ID {
+			if cfg, ok := c.agents[agentName]; ok {
+				cfg.Model.Provider = p.Provider
+				cfg.Model.BaseURL = p.BaseURL
+				cfg.Model.APIKey = p.APIKey
+				c.agents[agentName] = cfg
+			}
+		}
+	}
+	if c.embeddingProviderID == p.ID {
+		c.embedding.Provider = p.Provider
+		c.embedding.BaseURL = p.BaseURL
+		c.embedding.APIKey = p.APIKey
+	}
 }
 
-type providerDef struct {
-	name           string
-	label          string
-	group          string
-	apiKeyKey      string
-	baseURLKey     string
-	defaultBaseURL string
-	modelsKey      string
+// DeleteProvider removes id from the in-memory provider cache.
+func (c *ConfigStore) DeleteProvider(id uuid.UUID) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	delete(c.providers, id)
 }
 
-var providerDefs = []providerDef{
-	{
-		name:           "gemini",
-		label:          "Gemini",
-		group:          "AI Provider: Gemini",
-		apiKeyKey:      SettingProviderGeminiAPIKey,
-		baseURLKey:     SettingProviderGeminiBaseURL,
-		defaultBaseURL: "",
-		modelsKey:      SettingProviderGeminiModels,
-	},
-	{
-		name:           "anthropic",
-		label:          "Anthropic",
-		group:          "AI Provider: Anthropic",
-		apiKeyKey:      SettingProviderAnthropicAPIKey,
-		baseURLKey:     SettingProviderAnthropicBaseURL,
-		defaultBaseURL: "",
-		modelsKey:      SettingProviderAnthropicModels,
-	},
-	{
-		name:           "openai",
-		label:          "OpenAI",
-		group:          "AI Provider: OpenAI",
-		apiKeyKey:      SettingProviderOpenAIAPIKey,
-		baseURLKey:     SettingProviderOpenAIBaseURL,
-		defaultBaseURL: "https://api.openai.com/v1",
-		modelsKey:      SettingProviderOpenAIModels,
-	},
-	{
-		name:           "openrouter",
-		label:          "OpenRouter",
-		group:          "AI Provider: OpenRouter",
-		apiKeyKey:      SettingProviderOpenRouterAPIKey,
-		baseURLKey:     SettingProviderOpenRouterBaseURL,
-		defaultBaseURL: "https://openrouter.ai/api/v1",
-		modelsKey:      SettingProviderOpenRouterModels,
-	},
+// ReloadProviders loads all agent_providers rows from DB into the in-memory cache.
+func (c *ConfigStore) ReloadProviders(ctx context.Context) error {
+	c.mu.RLock()
+	db := c.db
+	cipher := c.cipher
+	c.mu.RUnlock()
+	if db == nil {
+		return nil
+	}
+
+	rows, err := db.AgentProvider.Query().
+		Order(agentprovider.ByCreatedAt()).
+		All(ctx)
+	if err != nil {
+		return err
+	}
+
+	next := make(map[uuid.UUID]ProviderRuntimeConfig, len(rows))
+	for _, row := range rows {
+		apiKey, err := decryptAPIKey(cipher, row.APIKey)
+		if err != nil {
+			return fmt.Errorf("agent_provider %s: %w", row.ID, err)
+		}
+		models := make([]domain.ProviderModelItem, len(row.Models))
+		for i, m := range row.Models {
+			models[i] = domain.ProviderModelItem{
+				ID:           m.ID,
+				Name:         m.Name,
+				Capabilities: slices.Clone(m.Capabilities),
+			}
+		}
+		next[row.ID] = ProviderRuntimeConfig{
+			ID:       row.ID,
+			Name:     row.Name,
+			Provider: string(row.Provider),
+			BaseURL:  row.BaseURL,
+			APIKey:   apiKey,
+			Models:   models,
+		}
+	}
+
+	c.mu.Lock()
+	c.providers = next
+	c.providersLoaded = true
+	c.mu.Unlock()
+	return nil
 }
 
 type agentDef struct {
@@ -175,7 +242,7 @@ type agentDef struct {
 	displayName        string
 	description        string
 	group              string
-	providerKey        string
+	providerIDKey      string
 	modelKey           string
 	effortKey          string
 	instructionKey     string
@@ -189,7 +256,7 @@ var agentDefs = []agentDef{
 		displayName:        "Gabriel",
 		description:        "Asisten AI utama dan orkestrator Domus.",
 		group:              "AI Agent: Gabriel",
-		providerKey:        SettingGabrielProvider,
+		providerIDKey:      SettingGabrielProviderID,
 		modelKey:           SettingGabrielModel,
 		effortKey:          SettingGabrielEffort,
 		instructionKey:     SettingGabrielInstruction,
@@ -201,7 +268,7 @@ var agentDefs = []agentDef{
 		displayName:        "Mikael",
 		description:        "Spesialis kegiatan, jadwal acara, dan RSVP paroki.",
 		group:              "AI Agent: Mikael",
-		providerKey:        SettingMikaelProvider,
+		providerIDKey:      SettingMikaelProviderID,
 		modelKey:           SettingMikaelModel,
 		effortKey:          SettingMikaelEffort,
 		instructionKey:     SettingMikaelInstruction,
@@ -213,7 +280,7 @@ var agentDefs = []agentDef{
 		displayName:        "Rafael",
 		description:        "Spesialis organisasi, keanggotaan, dan tautan undangan.",
 		group:              "AI Agent: Rafael",
-		providerKey:        SettingRafaelProvider,
+		providerIDKey:      SettingRafaelProviderID,
 		modelKey:           SettingRafaelModel,
 		effortKey:          SettingRafaelEffort,
 		instructionKey:     SettingRafaelInstruction,
@@ -222,41 +289,15 @@ var agentDefs = []agentDef{
 	},
 }
 
-// RegisterSettings registers all 26 AI agent descriptors and a hot-reload listener on s.
+// RegisterSettings registers all 14 AI agent settings descriptors and a hot-reload listener on s.
 func (c *ConfigStore) RegisterSettings(s *setting.Store) {
-	for _, p := range providerDefs {
-		s.Register(setting.Descriptor{
-			Key:         p.apiKeyKey,
-			Group:       p.group,
-			Label:       p.label + " API Key",
-			Description: "Kunci API untuk penyedia LLM " + p.label + ".",
-			Secret:      true,
-			Placeholder: "sk-...",
-		})
-		s.Register(setting.Descriptor{
-			Key:          p.baseURLKey,
-			Group:        p.group,
-			Label:        p.label + " Base URL",
-			Description:  "URL dasar endpoint API " + p.label + " (opsional jika menggunakan endpoint standar).",
-			DefaultValue: p.defaultBaseURL,
-			Placeholder:  p.defaultBaseURL,
-		})
-		s.Register(setting.Descriptor{
-			Key:          p.modelsKey,
-			Group:        p.group,
-			Label:        p.label + " Models",
-			Description:  "Daftar model tersinkronisasi dalam format array JSON.",
-			DefaultValue: "[]",
-		})
-	}
-
 	for _, a := range agentDefs {
 		s.Register(setting.Descriptor{
-			Key:          a.providerKey,
+			Key:          a.providerIDKey,
 			Group:        a.group,
-			Label:        "Provider",
-			Description:  "Penyedia LLM aktif untuk agen " + a.displayName + ".",
-			DefaultValue: "gemini",
+			Label:        "Provider Config",
+			Description:  "UUID konfigurasi penyedia LLM untuk agen " + a.displayName + ".",
+			DefaultValue: "",
 		})
 		s.Register(setting.Descriptor{
 			Key:          a.modelKey,
@@ -282,11 +323,11 @@ func (c *ConfigStore) RegisterSettings(s *setting.Store) {
 	}
 
 	s.Register(setting.Descriptor{
-		Key:          SettingEmbeddingProvider,
+		Key:          SettingEmbeddingProviderID,
 		Group:        "AI Embedding",
-		Label:        "Embedding Provider",
-		Description:  "Penyedia model embedding (gemini, openai, openrouter, none).",
-		DefaultValue: "gemini",
+		Label:        "Embedding Provider Config",
+		Description:  "UUID konfigurasi penyedia LLM untuk embedding (atau kosong / none).",
+		DefaultValue: "",
 	})
 	s.Register(setting.Descriptor{
 		Key:          SettingEmbeddingModel,
@@ -297,42 +338,44 @@ func (c *ConfigStore) RegisterSettings(s *setting.Store) {
 	})
 
 	s.OnChange(func(ctx context.Context, values map[string]string) error {
-		return c.applySettings(ctx, s, values)
+		return c.applySettings(ctx, values)
 	})
 }
 
-func (c *ConfigStore) applySettings(ctx context.Context, store *setting.Store, values map[string]string) error {
-	providerAPIKeys := make(map[string]string, len(providerDefs))
-	providerBaseURLs := make(map[string]string, len(providerDefs))
-	nextModels := make(map[string][]domain.ProviderModelItem, len(providerDefs))
-
-	for _, p := range providerDefs {
-		apiKey := strings.TrimSpace(values[p.apiKeyKey])
-		baseURL := strings.TrimSpace(values[p.baseURLKey])
-		if baseURL != "" {
-			if err := validateHTTPURL(baseURL); err != nil {
-				return fmt.Errorf("%s: %w", p.baseURLKey, err)
-			}
+func (c *ConfigStore) applySettings(ctx context.Context, values map[string]string) error {
+	c.mu.RLock()
+	loaded := c.providersLoaded
+	hasDB := c.db != nil
+	c.mu.RUnlock()
+	if !loaded && hasDB {
+		if err := c.ReloadProviders(ctx); err != nil {
+			return err
 		}
-		modelsJSON := strings.TrimSpace(values[p.modelsKey])
-		if modelsJSON == "" {
-			modelsJSON = "[]"
-		}
-		var parsedModels []domain.ProviderModelItem
-		if err := json.Unmarshal([]byte(modelsJSON), &parsedModels); err != nil {
-			return fmt.Errorf("%s harus berupa array JSON yang valid", p.modelsKey)
-		}
-		providerAPIKeys[p.name] = apiKey
-		providerBaseURLs[p.name] = baseURL
-		nextModels[p.name] = parsedModels
 	}
 
+	c.mu.RLock()
+	providers := c.providers
+	c.mu.RUnlock()
+
 	nextAgents := make(map[string]domain.AgentConfig, len(agentDefs))
+	nextAgentIDs := make(map[string]uuid.UUID, len(agentDefs))
 	for _, a := range agentDefs {
-		prov := strings.TrimSpace(values[a.providerKey])
-		if !isValidAgentProvider(prov) {
-			return fmt.Errorf("%s tidak valid: %q", a.providerKey, prov)
+		rawID := strings.TrimSpace(values[a.providerIDKey])
+		var boundID uuid.UUID
+		var provCfg ProviderRuntimeConfig
+		if rawID != "" {
+			parsed, err := uuid.Parse(rawID)
+			if err != nil {
+				return fmt.Errorf("%s tidak valid: harus berupa UUID", a.providerIDKey)
+			}
+			p, ok := providers[parsed]
+			if !ok {
+				return fmt.Errorf("%s tidak ditemukan: %q", a.providerIDKey, rawID)
+			}
+			boundID = parsed
+			provCfg = p
 		}
+
 		model := strings.TrimSpace(values[a.modelKey])
 		if model == "" {
 			return fmt.Errorf("%s wajib diisi", a.modelKey)
@@ -346,15 +389,18 @@ func (c *ConfigStore) applySettings(ctx context.Context, store *setting.Store, v
 			return fmt.Errorf("%s wajib diisi", a.instructionKey)
 		}
 
+		if boundID != uuid.Nil {
+			nextAgentIDs[a.name] = boundID
+		}
 		nextAgents[a.name] = domain.AgentConfig{
 			Name:        a.name,
 			DisplayName: a.displayName,
 			Description: a.description,
 			Instruction: instr,
 			Model: domain.ModelConfig{
-				Provider:        prov,
-				BaseURL:         providerBaseURLs[prov],
-				APIKey:          providerAPIKeys[prov],
+				Provider:        provCfg.Provider,
+				BaseURL:         provCfg.BaseURL,
+				APIKey:          provCfg.APIKey,
 				Model:           model,
 				ReasoningEffort: effort,
 				Temperature:     domain.DefaultTemperature,
@@ -364,71 +410,44 @@ func (c *ConfigStore) applySettings(ctx context.Context, store *setting.Store, v
 		}
 	}
 
-	embProv := strings.TrimSpace(values[SettingEmbeddingProvider])
-	if !isValidEmbeddingProvider(embProv) {
-		return fmt.Errorf("%s tidak valid: %q", SettingEmbeddingProvider, embProv)
-	}
+	rawEmbID := strings.TrimSpace(values[SettingEmbeddingProviderID])
 	embModel := strings.TrimSpace(values[SettingEmbeddingModel])
 	if embModel == "" {
 		return fmt.Errorf("%s wajib diisi", SettingEmbeddingModel)
 	}
+
+	var nextEmbID uuid.UUID
 	nextEmbedding := EmbeddingRuntimeConfig{
-		Provider: embProv,
-		BaseURL:  providerBaseURLs[embProv],
-		APIKey:   providerAPIKeys[embProv],
+		Provider: string(domain.ProviderNone),
 		Model:    embModel,
+	}
+	if rawEmbID != "" && rawEmbID != string(domain.ProviderNone) {
+		parsed, err := uuid.Parse(rawEmbID)
+		if err != nil {
+			return fmt.Errorf("%s tidak valid: harus berupa UUID", SettingEmbeddingProviderID)
+		}
+		p, ok := providers[parsed]
+		if !ok {
+			return fmt.Errorf("%s tidak ditemukan: %q", SettingEmbeddingProviderID, rawEmbID)
+		}
+		if !isValidEmbeddingProvider(p.Provider) {
+			return fmt.Errorf("%s tidak mendukung embedding: %q", SettingEmbeddingProviderID, p.Provider)
+		}
+		nextEmbID = parsed
+		nextEmbedding = EmbeddingRuntimeConfig{
+			Provider: p.Provider,
+			BaseURL:  p.BaseURL,
+			APIKey:   p.APIKey,
+			Model:    embModel,
+		}
 	}
 
 	c.mu.Lock()
-	wasInitialized := c.initialized
-	prevKeys := maps.Clone(c.prevAPIKeys)
 	c.agents = nextAgents
+	c.agentProviderIDs = nextAgentIDs
 	c.embedding = nextEmbedding
-	c.providerModels = nextModels
-	c.prevAPIKeys = maps.Clone(providerAPIKeys)
-	c.initialized = true
+	c.embeddingProviderID = nextEmbID
 	c.mu.Unlock()
-
-	if !wasInitialized {
-		return nil
-	}
-
-	// Best-effort /models auto-sync on api_key transitions after initial Load.
-	for _, p := range providerDefs {
-		newKey := providerAPIKeys[p.name]
-		oldKey := prevKeys[p.name]
-		if newKey == oldKey {
-			continue
-		}
-		if newKey == "" {
-			if err := store.PersistValue(ctx, p.modelsKey, "[]"); err != nil {
-				c.logger.WarnContext(ctx, "clear provider models failed", "provider", p.name, "err", err)
-			}
-			c.mu.Lock()
-			c.providerModels[p.name] = nil
-			c.mu.Unlock()
-			continue
-		}
-		syncCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
-		discovered, err := c.drivers.DiscoverModels(syncCtx, p.name, providerBaseURLs[p.name], newKey)
-		cancel()
-		if err != nil {
-			c.logger.WarnContext(ctx, "auto-sync provider models failed", "provider", p.name, "err", err)
-			continue
-		}
-		b, err := json.Marshal(discovered)
-		if err != nil {
-			c.logger.WarnContext(ctx, "marshal discovered models failed", "provider", p.name, "err", err)
-			continue
-		}
-		if err := store.PersistValue(ctx, p.modelsKey, string(b)); err != nil {
-			c.logger.WarnContext(ctx, "persist discovered models failed", "provider", p.name, "err", err)
-			continue
-		}
-		c.mu.Lock()
-		c.providerModels[p.name] = discovered
-		c.mu.Unlock()
-	}
 	return nil
 }
 
@@ -438,15 +457,6 @@ func validateHTTPURL(raw string) error {
 		return fmt.Errorf("URL harus diawali http:// atau https:// dan memiliki host yang valid")
 	}
 	return nil
-}
-
-func isValidAgentProvider(p string) bool {
-	switch domain.ProviderName(p) {
-	case domain.ProviderGemini, domain.ProviderAnthropic, domain.ProviderOpenAI, domain.ProviderOpenRouter:
-		return true
-	default:
-		return false
-	}
 }
 
 func isValidEmbeddingProvider(p string) bool {
@@ -465,4 +475,29 @@ func isValidEffort(e domain.ReasoningEffort) bool {
 	default:
 		return false
 	}
+}
+
+func encryptAPIKey(cipher *crypt.Cipher, plain string) (string, error) {
+	if cipher == nil {
+		return plain, nil
+	}
+	return cipher.EncryptString(plain)
+}
+
+func decryptAPIKey(cipher *crypt.Cipher, stored string) (string, error) {
+	if cipher == nil || !strings.HasPrefix(stored, crypt.StringPrefixV1) {
+		return stored, nil
+	}
+	return cipher.DecryptString(stored)
+}
+
+func maskAPIKey(plain string) string {
+	trimmed := strings.TrimSpace(plain)
+	if trimmed == "" {
+		return ""
+	}
+	if len(trimmed) <= 8 {
+		return "****"
+	}
+	return trimmed[:4] + "..." + trimmed[len(trimmed)-4:]
 }

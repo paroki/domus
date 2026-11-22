@@ -104,6 +104,7 @@ func (s *AgentHandlerSuite) SetupTest() {
 		logger,
 		agent.WithService(s.client, nil, dialect.Postgres, s.enforcer, nil, s.userFeature, s.refFeature, s.orgFeature),
 		agent.WithSettings(s.settingStore),
+		agent.WithCipher(cipher),
 	)
 
 	ctx := context.Background()
@@ -175,23 +176,17 @@ func (s *AgentHandlerSuite) readBody() string {
 	return string(b)
 }
 
-func (s *AgentHandlerSuite) TestSyncProviderModels_RBACAndDiscovery() {
+func (s *AgentHandlerSuite) TestProvidersCRUD_RBAC_AndSyncModels() {
 	memberCookie := s.login("member@paroki.org")
 	s.SetCookie(memberCookie)
-	s.Request("/api/agent/providers/gemini/sync-models", http.MethodPost, nil)
+	s.Request("/api/agent/providers", http.MethodGet, nil)
+	s.Forbidden()
+	s.Request("/api/agent/providers/"+uuid.NewString()+"/sync-models", http.MethodPost, nil)
 	s.Forbidden()
 
 	superCookie := s.login("super@paroki.org")
 	s.ClearCookies()
 	s.SetCookie(superCookie)
-
-	s.Request("/api/agent/providers/unknown/sync-models", http.MethodPost, nil)
-	s.BadRequest()
-
-	// No API key configured -> 503 AGENT_PROVIDER_UNAVAILABLE.
-	s.Request("/api/agent/providers/openai/sync-models", http.MethodPost, nil)
-	s.AssertStatus(http.StatusServiceUnavailable)
-	s.Equal("AGENT_PROVIDER_UNAVAILABLE", s.GetErrorResponse().Error.Code)
 
 	s.setLLMHandler(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasSuffix(r.URL.Path, "/models") {
@@ -204,19 +199,74 @@ func (s *AgentHandlerSuite) TestSyncProviderModels_RBACAndDiscovery() {
 		}
 		http.NotFound(w, r)
 	})
-	_, err := s.settingStore.Update(context.Background(), map[string]string{
-		agent.SettingProviderOpenAIAPIKey:  "sk-test",
-		agent.SettingProviderOpenAIBaseURL: s.llmServer.URL,
-	})
-	s.Require().NoError(err)
 
-	s.Request("/api/agent/providers/openai/sync-models", http.MethodPost, nil)
+	// Create first OpenAI config
+	s.Request("/api/agent/providers", http.MethodPost, domain.CreateAgentProviderRequest{
+		Name:        "OpenAI 1",
+		Description: "Main OpenAI key",
+		Provider:    "openai",
+		APIKey:      "sk-test-1234",
+		BaseURL:     s.llmServer.URL,
+	})
+	s.Created()
+	created := testutil.DecodeAs[domain.AgentProviderResponse](&s.ApiTestSuite).Data
+	s.Equal("OpenAI 1", created.Name)
+	s.Equal("openai", created.Provider)
+	s.True(created.HasAPIKey)
+	s.NotContains(created.APIKeyMasked, "sk-test-1234")
+	s.Require().Len(created.Models, 1)
+
+	// Create second OpenAI config (multiple configs per provider allowed)
+	s.Request("/api/agent/providers", http.MethodPost, domain.CreateAgentProviderRequest{
+		Name:     "OpenAI 2",
+		Provider: "openai",
+		APIKey:   "sk-second-5678",
+		BaseURL:  s.llmServer.URL,
+	})
+	s.Created()
+	second := testutil.DecodeAs[domain.AgentProviderResponse](&s.ApiTestSuite).Data
+
+	// List returns both
+	s.Request("/api/agent/providers", http.MethodGet, nil)
+	s.OK()
+	listed := testutil.DecodeAs[[]domain.AgentProviderResponse](&s.ApiTestSuite).Data
+	s.Len(listed, 2)
+
+	// Patch with empty apiKey preserves old key
+	newName := "OpenAI Primary"
+	emptyKey := ""
+	s.Request("/api/agent/providers/"+created.ID.String(), http.MethodPatch, domain.UpdateAgentProviderRequest{
+		Name:   &newName,
+		APIKey: &emptyKey,
+	})
+	s.OK()
+	updated := testutil.DecodeAs[domain.AgentProviderResponse](&s.ApiTestSuite).Data
+	s.Equal("OpenAI Primary", updated.Name)
+	s.True(updated.HasAPIKey)
+
+	// Sync models on UUID
+	s.Request("/api/agent/providers/"+created.ID.String()+"/sync-models", http.MethodPost, nil)
 	s.OK()
 	res := testutil.DecodeAs[domain.SyncProviderModelsResponse](&s.ApiTestSuite).Data
+	s.Equal(created.ID, res.ID)
 	s.Equal("openai", res.Provider)
 	s.Require().Len(res.Models, 1)
 	s.Equal("gpt-4o", res.Models[0].ID)
-	s.NotEmpty(s.agentFeature.Config().ProviderModels("openai"))
+	s.NotEmpty(s.agentFeature.Config().ProviderModels(created.ID))
+
+	// Bind Gabriel to created.ID -> delete must fail with 409 Conflict
+	_, err := s.settingStore.Update(context.Background(), map[string]string{
+		agent.SettingGabrielProviderID: created.ID.String(),
+	})
+	s.Require().NoError(err)
+
+	s.Request("/api/agent/providers/"+created.ID.String(), http.MethodDelete, nil)
+	s.AssertStatus(http.StatusConflict)
+	s.Equal("AGENT_PROVIDER_IN_USE", s.GetErrorResponse().Error.Code)
+
+	// Unused provider can be deleted
+	s.Request("/api/agent/providers/"+second.ID.String(), http.MethodDelete, nil)
+	s.NoContent()
 }
 
 func (s *AgentHandlerSuite) TestSessionsAndMessagesCRUD() {
@@ -385,12 +435,17 @@ func (s *AgentHandlerSuite) TestChatSSE_PreStreamErrorsAndStreaming() {
 		}
 		http.NotFound(w, r)
 	})
-	_, err := s.settingStore.Update(context.Background(), map[string]string{
-		agent.SettingProviderOpenAIAPIKey:  "sk-chat",
-		agent.SettingProviderOpenAIBaseURL: s.llmServer.URL,
-		agent.SettingGabrielProvider:       "openai",
-		agent.SettingGabrielModel:          "gpt-4o",
-		agent.SettingEmbeddingProvider:     "none",
+	prov, err := s.agentFeature.CreateProvider(context.Background(), domain.CreateAgentProviderRequest{
+		Name:     "OpenAI Chat",
+		Provider: "openai",
+		APIKey:   "sk-chat",
+		BaseURL:  s.llmServer.URL,
+	})
+	s.Require().NoError(err)
+	_, err = s.settingStore.Update(context.Background(), map[string]string{
+		agent.SettingGabrielProviderID:   prov.ID.String(),
+		agent.SettingGabrielModel:        "gpt-4o",
+		agent.SettingEmbeddingProviderID: "none",
 	})
 	s.Require().NoError(err)
 

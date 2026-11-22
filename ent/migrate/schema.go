@@ -83,6 +83,24 @@ var (
 			},
 		},
 	}
+	// AgentProvidersColumns holds the columns for the "agent_providers" table.
+	AgentProvidersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Default: ""},
+		{Name: "provider", Type: field.TypeEnum, Enums: []string{"gemini", "anthropic", "openai", "openrouter"}},
+		{Name: "api_key", Type: field.TypeString},
+		{Name: "base_url", Type: field.TypeString, Default: ""},
+		{Name: "models", Type: field.TypeJSON},
+	}
+	// AgentProvidersTable holds the schema information for the "agent_providers" table.
+	AgentProvidersTable = &schema.Table{
+		Name:       "agent_providers",
+		Columns:    AgentProvidersColumns,
+		PrimaryKey: []*schema.Column{AgentProvidersColumns[0]},
+	}
 	// AgentSessionsColumns holds the columns for the "agent_sessions" table.
 	AgentSessionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -830,6 +848,7 @@ var (
 	Tables = []*schema.Table{
 		AgentMemoriesTable,
 		AgentMessagesTable,
+		AgentProvidersTable,
 		AgentSessionsTable,
 		CasbinRulesTable,
 		DiocesesTable,
@@ -859,6 +878,9 @@ func init() {
 	AgentMessagesTable.ForeignKeys[0].RefTable = AgentSessionsTable
 	AgentMessagesTable.Annotation = &entsql.Annotation{
 		Table: "agent_messages",
+	}
+	AgentProvidersTable.Annotation = &entsql.Annotation{
+		Table: "agent_providers",
 	}
 	AgentSessionsTable.Annotation = &entsql.Annotation{
 		Table: "agent_sessions",

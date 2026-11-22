@@ -3,9 +3,7 @@ package agent
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"log/slog"
-	"strings"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
@@ -19,8 +17,8 @@ import (
 	"github.com/paroki/domus/internal/org"
 	"github.com/paroki/domus/internal/platform/authx"
 	"github.com/paroki/domus/internal/platform/authz"
+	"github.com/paroki/domus/internal/platform/crypt"
 	"github.com/paroki/domus/internal/platform/gowa"
-	"github.com/paroki/domus/internal/platform/httpx"
 	"github.com/paroki/domus/internal/platform/setting"
 	"github.com/paroki/domus/internal/platform/telegram"
 	"github.com/paroki/domus/internal/ref"
@@ -39,6 +37,8 @@ type Feature struct {
 	drivers  *driver.Registry
 	service  *service.Service
 	handler  *handler.Handler
+	db       *ent.Client
+	cipher   *crypt.Cipher
 	users    *user.Feature
 	settings *setting.Store
 }
@@ -59,10 +59,6 @@ func (a configAdapter) EmbeddingConfig() service.EmbeddingConfigSnapshot {
 		APIKey:   e.APIKey,
 		Model:    e.Model,
 	}
-}
-
-func (a configAdapter) ProviderModels(provider string) []domain.ProviderModelItem {
-	return a.store.ProviderModels(provider)
 }
 
 type userReaderAdapter struct {
@@ -172,8 +168,11 @@ func New(
 			opt(&cfgOpts)
 		}
 	}
+	f.db = cfgOpts.db
+	f.cipher = cfgOpts.cipher
 	f.users = cfgOpts.users
 	f.settings = cfgOpts.settings
+	cfg.BindStorage(cfgOpts.db, cfgOpts.cipher)
 	if cfgOpts.db != nil {
 		var ur service.UserReader
 		if cfgOpts.users != nil {
@@ -208,6 +207,7 @@ type featureOptions struct {
 	refs      *ref.Feature
 	orgs      *org.Feature
 	settings  *setting.Store
+	cipher    *crypt.Cipher
 }
 
 // Option configures optional dependencies on agent.New.
@@ -236,10 +236,17 @@ func WithService(
 	}
 }
 
-// WithSettings wires the setting.Store used for provider model discovery and persistence.
+// WithSettings wires the setting.Store used for agent and embedding configuration.
 func WithSettings(store *setting.Store) Option {
 	return func(o *featureOptions) {
 		o.settings = store
+	}
+}
+
+// WithCipher wires the crypt.Cipher used to encrypt provider API keys at rest.
+func WithCipher(c *crypt.Cipher) Option {
+	return func(o *featureOptions) {
+		o.cipher = c
 	}
 }
 
@@ -289,6 +296,7 @@ func (f *Feature) Register(api fiber.Router) {
 		f.users.AuthenticateMiddleware(),
 		f.users.RequireAuth(),
 		requireTenantMiddleware(),
+		f.users.Require(user.PermUsers, authz.ActionRead),
 		f.users.Require(user.PermUsers, authz.ActionWrite),
 		f.users.Require(PermSessions, authz.ActionRead),
 		f.users.Require(PermSessions, authz.ActionWrite),
@@ -317,49 +325,6 @@ func (f *Feature) RegisterPermissions(ctx context.Context, e *authz.Enforcer) er
 		}
 	}
 	return nil
-}
-
-// SyncProviderModels discovers available models from the upstream provider and persists the catalog.
-func (f *Feature) SyncProviderModels(ctx context.Context, provider string) (domain.SyncProviderModelsResponse, error) {
-	var pDef *providerDef
-	for i := range providerDefs {
-		if providerDefs[i].name == provider {
-			pDef = &providerDefs[i]
-			break
-		}
-	}
-	if pDef == nil {
-		return domain.SyncProviderModelsResponse{}, httpx.BadRequest("Unsupported AI provider.")
-	}
-	if f.settings == nil {
-		return domain.SyncProviderModelsResponse{}, domain.ErrProviderUnavailable
-	}
-	apiKey := strings.TrimSpace(f.settings.Get(pDef.apiKeyKey))
-	if apiKey == "" {
-		return domain.SyncProviderModelsResponse{}, domain.ErrProviderUnavailable
-	}
-	baseURL := strings.TrimSpace(f.settings.Get(pDef.baseURLKey))
-	discovered, err := f.drivers.DiscoverModels(ctx, pDef.name, baseURL, apiKey)
-	if err != nil {
-		return domain.SyncProviderModelsResponse{}, domain.ErrProviderUnavailable
-	}
-	b, err := json.Marshal(discovered)
-	if err != nil {
-		return domain.SyncProviderModelsResponse{}, err
-	}
-	if err := f.settings.PersistValue(ctx, pDef.modelsKey, string(b)); err != nil {
-		return domain.SyncProviderModelsResponse{}, err
-	}
-	f.config.SetProviderModels(pDef.name, discovered)
-
-	dtos := make([]domain.ProviderModelDTO, len(discovered))
-	for i, m := range discovered {
-		dtos[i] = domain.ProviderModelDTO(m)
-	}
-	return domain.SyncProviderModelsResponse{
-		Provider: pDef.name,
-		Models:   dtos,
-	}, nil
 }
 
 func requireTenantMiddleware() fiber.Handler {

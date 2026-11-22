@@ -98,6 +98,7 @@ func newServeCmd() *cobra.Command {
 				logger,
 				agent.WithService(db, sqlDB, dialectName, enforcer, nil, userFeature, refFeature, orgFeature),
 				agent.WithSettings(settingStore),
+				agent.WithCipher(cipher),
 			)
 			if err := authz.RegisterFeatures(ctx, enforcer, userFeature, refFeature, orgFeature, eventFeature, agentFeature); err != nil {
 				return err

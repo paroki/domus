@@ -263,6 +263,45 @@
                 },
                 "type": "object"
             },
+            "domain.AgentProviderResponse": {
+                "properties": {
+                    "apiKeyMasked": {
+                        "type": "string"
+                    },
+                    "baseUrl": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "hasApiKey": {
+                        "type": "boolean"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "models": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.ProviderModelDTO"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "provider": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.AgentSessionResponse": {
                 "properties": {
                     "channel": {
@@ -389,6 +428,41 @@
                     "category",
                     "content",
                     "scope"
+                ],
+                "type": "object"
+            },
+            "domain.CreateAgentProviderRequest": {
+                "properties": {
+                    "apiKey": {
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "baseUrl": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "maxLength": 500,
+                        "type": "string"
+                    },
+                    "name": {
+                        "maxLength": 100,
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "provider": {
+                        "enum": [
+                            "gemini",
+                            "anthropic",
+                            "openai",
+                            "openrouter"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "apiKey",
+                    "name",
+                    "provider"
                 ],
                 "type": "object"
             },
@@ -1824,6 +1898,9 @@
             },
             "domain.SyncProviderModelsResponse": {
                 "properties": {
+                    "id": {
+                        "type": "string"
+                    },
                     "models": {
                         "items": {
                             "$ref": "#/components/schemas/domain.ProviderModelDTO"
@@ -1869,6 +1946,35 @@
                     },
                     "isPinned": {
                         "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.UpdateAgentProviderRequest": {
+                "properties": {
+                    "apiKey": {
+                        "type": "string"
+                    },
+                    "baseUrl": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "maxLength": 500,
+                        "type": "string"
+                    },
+                    "name": {
+                        "maxLength": 100,
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "provider": {
+                        "enum": [
+                            "gemini",
+                            "anthropic",
+                            "openai",
+                            "openrouter"
+                        ],
+                        "type": "string"
                     }
                 },
                 "type": "object"
@@ -2641,6 +2747,24 @@
                 },
                 "type": "object"
             },
+            "httpx.Envelope-array_domain_AgentProviderResponse": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.AgentProviderResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
             "httpx.Envelope-array_domain_AgentSessionResponse": {
                 "properties": {
                     "data": {
@@ -2951,6 +3075,20 @@
                 "properties": {
                     "data": {
                         "$ref": "#/components/schemas/domain.AgentMemoryResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_AgentProviderResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.AgentProviderResponse"
                     },
                     "error": {
                         "$ref": "#/components/schemas/httpx.ErrorPayload"
@@ -3781,15 +3919,303 @@
                 ]
             }
         },
-        "/agent/providers/{provider}/sync-models": {
+        "/agent/providers": {
+            "get": {
+                "description": "Lists all configured LLM provider entries with masked API keys and synced models.",
+                "operationId": "listAgentProviders",
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_AgentProviderResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    }
+                },
+                "summary": "List AI provider configs",
+                "tags": [
+                    "Agent"
+                ]
+            },
+            "post": {
+                "description": "Creates a new LLM provider configuration, encrypts its API key, and best-effort syncs models.",
+                "operationId": "createAgentProvider",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.CreateAgentProviderRequest",
+                                "summary": "body",
+                                "description": "Provider config payload"
+                            }
+                        }
+                    },
+                    "description": "Provider config payload",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_AgentProviderResponse"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Create AI provider config",
+                "tags": [
+                    "Agent"
+                ]
+            }
+        },
+        "/agent/providers/{providerId}": {
+            "delete": {
+                "description": "Deletes an LLM provider configuration if not referenced by any agent or embedding.",
+                "operationId": "deleteAgentProvider",
+                "parameters": [
+                    {
+                        "description": "Provider config UUID",
+                        "in": "path",
+                        "name": "providerId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "content": {
+                            "application/json": {}
+                        },
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    }
+                },
+                "summary": "Delete AI provider config",
+                "tags": [
+                    "Agent"
+                ]
+            },
+            "patch": {
+                "description": "Updates an LLM provider configuration; empty apiKey preserves the existing key.",
+                "operationId": "updateAgentProvider",
+                "parameters": [
+                    {
+                        "description": "Provider config UUID",
+                        "in": "path",
+                        "name": "providerId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.UpdateAgentProviderRequest",
+                                "summary": "body",
+                                "description": "Updated fields"
+                            }
+                        }
+                    },
+                    "description": "Updated fields",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_AgentProviderResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Update AI provider config",
+                "tags": [
+                    "Agent"
+                ]
+            }
+        },
+        "/agent/providers/{providerId}/sync-models": {
             "post": {
                 "description": "Discovers models from the configured upstream AI provider and persists the catalog.",
                 "operationId": "syncAgentProviderModels",
                 "parameters": [
                     {
-                        "description": "AI provider name (gemini, anthropic, openai, openrouter)",
+                        "description": "Provider config UUID",
                         "in": "path",
-                        "name": "provider",
+                        "name": "providerId",
                         "required": true,
                         "schema": {
                             "type": "string"
@@ -3836,6 +4262,16 @@
                             }
                         },
                         "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
                     },
                     "503": {
                         "content": {

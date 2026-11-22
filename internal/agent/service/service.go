@@ -25,11 +25,10 @@ import (
 // StepCallback receives real-time orchestration events during an agent turn.
 type StepCallback func(event domain.AgentSSEEvent) error
 
-// ConfigProvider exposes hot-reloaded agent, embedding, and provider model snapshots.
+// ConfigProvider exposes hot-reloaded agent and embedding snapshots.
 type ConfigProvider interface {
 	AgentConfig(name string) (domain.AgentConfig, bool)
 	EmbeddingConfig() EmbeddingConfigSnapshot
-	ProviderModels(provider string) []domain.ProviderModelItem
 }
 
 // EmbeddingConfigSnapshot holds resolved embedding provider settings.

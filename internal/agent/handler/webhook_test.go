@@ -19,6 +19,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/internal/agent"
+	"github.com/paroki/domus/internal/agent/domain"
 	"github.com/paroki/domus/internal/agent/driver"
 	"github.com/paroki/domus/internal/org"
 	"github.com/paroki/domus/internal/platform/authz"
@@ -154,6 +155,7 @@ func (s *AgentWebhookSuite) SetupTest() {
 		logger,
 		agent.WithService(s.client, nil, dialect.Postgres, s.enforcer, nil, s.userFeature, s.refFeature, s.orgFeature),
 		agent.WithSettings(s.settingStore),
+		agent.WithCipher(cipher),
 	)
 
 	ctx := context.Background()
@@ -162,12 +164,17 @@ func (s *AgentWebhookSuite) SetupTest() {
 	s.Require().NoError(s.settingStore.Load(ctx))
 	s.Require().NoError(s.userFeature.Bootstrap(ctx))
 
+	prov, err := s.agentFeature.CreateProvider(ctx, domain.CreateAgentProviderRequest{
+		Name:     "OpenAI Webhook",
+		Provider: "openai",
+		APIKey:   "sk-webhook",
+		BaseURL:  s.llmServer.URL,
+	})
+	s.Require().NoError(err)
 	_, err = s.settingStore.Update(ctx, map[string]string{
-		agent.SettingProviderOpenAIAPIKey:  "sk-webhook",
-		agent.SettingProviderOpenAIBaseURL: s.llmServer.URL,
-		agent.SettingGabrielProvider:       "openai",
-		agent.SettingGabrielModel:          "gpt-4o",
-		agent.SettingEmbeddingProvider:     "none",
+		agent.SettingGabrielProviderID:   prov.ID.String(),
+		agent.SettingGabrielModel:        "gpt-4o",
+		agent.SettingEmbeddingProviderID: "none",
 	})
 	s.Require().NoError(err)
 
