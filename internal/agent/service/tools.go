@@ -369,7 +369,7 @@ func (s *Service) execDelegateSpecialist(
 		[]driver.ChatMessage{{Role: domain.RoleUser, Content: task}},
 		mcpSession,
 		onStep,
-		false, // do NOT emit specialist text deltas to top-level user stream
+		true, // stream specialist reply directly to user
 	)
 	if err != nil {
 		return "", err

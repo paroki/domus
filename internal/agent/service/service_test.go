@@ -147,13 +147,11 @@ func TestService_RunTurn_MemoryAndDelegateSpecialist(t *testing.T) {
 			_, _ = fmt.Fprint(w, "data: {\"choices\":[{\"delta\":{\"thinking\":\"\",\"reasoning_content\":\"Cek event\",\"tool_calls\":[{\"index\":0,\"id\":\"tc_3\",\"function\":{\"name\":\"event_list\",\"arguments\":\"{}\"}}]}}]}\n\n")
 			_, _ = fmt.Fprint(w, "data: [DONE]\n\n")
 		case 4:
-			// Mikael returns final answer (its delta must NOT emit to top-level stream)
+			// Mikael returns final answer (streamed directly to user; Gabriel does not reply again)
 			_, _ = fmt.Fprint(w, "data: {\"choices\":[{\"delta\":{\"content\":\"Ada Misa Natal.\"}}]}\n\n")
 			_, _ = fmt.Fprint(w, "data: [DONE]\n\n")
 		default:
-			// Gabriel returns final answer to user
-			_, _ = fmt.Fprint(w, "data: {\"choices\":[{\"delta\":{\"content\":\"Jadwal terdekat adalah Misa Natal.\"}}]}\n\n")
-			_, _ = fmt.Fprint(w, "data: [DONE]\n\n")
+			t.Fatalf("unexpected extra LLM call step %d after delegation handoff", step)
 		}
 	}))
 	defer srv.Close()
@@ -200,10 +198,11 @@ func TestService_RunTurn_MemoryAndDelegateSpecialist(t *testing.T) {
 		},
 	})
 	require.NoError(t, err)
-	assert.Equal(t, "Jadwal terdekat adalah Misa Natal.", answer)
+	assert.Equal(t, "Ada Misa Natal.", answer)
+	assert.Equal(t, int32(4), turnStep.Load())
 	assert.Equal(t, userID.String(), mcpPrincipalUserID)
 
-	// Verify parish-scope RBAC rejection was returned as structured tool_result and Mikael delta was suppressed
+	// Verify parish-scope RBAC rejection was returned as structured tool_result and Mikael delta streamed directly
 	var sawForbidden, sawMikaelDelta, sawMikaelToolResult, sawDone bool
 	for _, ev := range events {
 		if ev.Event == "tool_result" && ev.ToolName == "memory_save" && ev.AgentName == "gabriel" {
@@ -223,7 +222,7 @@ func TestService_RunTurn_MemoryAndDelegateSpecialist(t *testing.T) {
 		}
 	}
 	assert.True(t, sawForbidden)
-	assert.False(t, sawMikaelDelta)
+	assert.True(t, sawMikaelDelta)
 	assert.True(t, sawMikaelToolResult)
 	assert.True(t, sawDone)
 

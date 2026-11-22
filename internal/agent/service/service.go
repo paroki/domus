@@ -299,7 +299,7 @@ func (s *Service) RunPreparedTurn(ctx context.Context, prep *PreparedTurn, onSte
 		})
 	}
 
-	sanitized := sanitizeHistory(history)
+	sanitized := closeDelegatedToolTurns(sanitizeHistory(history))
 	if len(sanitized) == 0 {
 		return nil, "", domain.ErrEmptyMessage
 	}
@@ -515,6 +515,8 @@ func (s *Service) runReActLoop(
 			ToolCalls: resp.ToolCalls,
 		})
 
+		var delegatedAnswer string
+		var hasDelegated bool
 		for _, tc := range resp.ToolCalls {
 			var resultStr string
 			var toolErr error
@@ -531,6 +533,14 @@ func (s *Service) runReActLoop(
 					return "", toolErr
 				}
 				resultStr = formatToolErrorJSON(toolErr)
+			} else if tc.Name == "delegate_specialist" {
+				var res struct {
+					Answer string `json:"answer"`
+				}
+				if json.Unmarshal([]byte(resultStr), &res) == nil {
+					delegatedAnswer = res.Answer
+					hasDelegated = true
+				}
 			}
 			resultStr = truncateToolResult(resultStr)
 
@@ -566,6 +576,11 @@ func (s *Service) runReActLoop(
 				ToolCallID: tc.ID,
 				ToolName:   tc.Name,
 			})
+		}
+
+		// Handoff complete: specialist already persisted and streamed its reply.
+		if hasDelegated {
+			return delegatedAnswer, nil
 		}
 	}
 
