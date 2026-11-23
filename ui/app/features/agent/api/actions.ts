@@ -164,13 +164,8 @@ export async function streamAgentChat({
   const decoder = new TextDecoder();
   let remainder = "";
 
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    const chunk = decoder.decode(value, { stream: true });
-    const parsed = parseSSEBuffer(remainder + chunk);
-    remainder = parsed.remainder;
-    for (const ev of parsed.events) {
+  const emitParsedEvents = (events: AgentSSEEvent[]) => {
+    for (const ev of events) {
       onEvent(ev);
       if (ev.event === "error") {
         const code = ev.code ?? "INTERNAL_ERROR";
@@ -180,5 +175,20 @@ export async function streamAgentChat({
         throw new ApiError(500, code, message);
       }
     }
+  };
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    const chunk = decoder.decode(value, { stream: true });
+    const parsed = parseSSEBuffer(remainder + chunk);
+    remainder = parsed.remainder;
+    emitParsedEvents(parsed.events);
+  }
+
+  const tail = `${remainder}${decoder.decode()}`;
+  if (tail.trim()) {
+    const flushed = parseSSEBuffer(`${tail}\n\n`);
+    emitParsedEvents(flushed.events);
   }
 }

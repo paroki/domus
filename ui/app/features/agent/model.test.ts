@@ -5,6 +5,7 @@ import {
   buildTimelineItems,
   canMutateMemory,
   isParishAdmin,
+  parseContentSegments,
   parseSSEBuffer,
   sortMessagesChronologically,
   toolDisplayMeta,
@@ -127,4 +128,26 @@ test("parseSSEBuffer parses complete frames and retains partial tail", () => {
   assert.equal(r2.events[0]?.content, "Halo Kak!");
   assert.equal(r2.events[1]?.event, "done");
   assert.equal(r2.remainder, "");
+});
+
+test("parseContentSegments splits markdown and valid A2UI v0.9 blocks", () => {
+  const valid =
+    'Berikut jadwal:\n\n```a2ui\n[{"version":"v0.9","createSurface":{"surfaceId":"s1","catalogId":"c1"}}]\n```\n\nSilakan pilih.';
+  const segs = parseContentSegments(valid);
+  assert.equal(segs.length, 3);
+  assert.equal(segs[0]?.type, "markdown");
+  assert.equal(segs[1]?.type, "a2ui");
+  assert.equal(segs[2]?.type, "markdown");
+
+  const streamingPending = parseContentSegments(
+    'Sebentar:\n\n```a2ui\n[{"version":"v0.9"',
+    true,
+  );
+  assert.equal(streamingPending.length, 2);
+  assert.equal(streamingPending[0]?.type, "markdown");
+  assert.equal(streamingPending[1]?.type, "a2ui-pending");
+
+  const invalid = parseContentSegments("Halo\n\n```a2ui\n{broken\n```");
+  assert.equal(invalid.length, 1);
+  assert.equal(invalid[0]?.type, "markdown");
 });

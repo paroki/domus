@@ -6,18 +6,24 @@ import { Button } from "~/shared/ui/Button";
 import {
   agentDisplayMeta,
   type CorrelatedToolStep,
+  parseContentSegments,
   type TimelineItem,
   toolDisplayMeta,
 } from "../model";
+import { A2uiSurfaceBlock } from "./A2uiSurfaceBlock";
 import { MarkdownContent } from "./MarkdownContent";
 
-export interface LiveStreamingState {
-  active: boolean;
-  userMessage?: string;
+export interface LiveStreamSegment {
   agentName: string;
   thinking: string;
   delta: string;
   toolSteps: CorrelatedToolStep[];
+}
+
+export interface LiveStreamingState {
+  active: boolean;
+  userMessage?: string;
+  segments: LiveStreamSegment[];
 }
 
 interface ChatTimelineProps {
@@ -29,6 +35,7 @@ interface ChatTimelineProps {
   isLoadingOlder: boolean;
   onLoadOlder: () => void;
   onStarterPrompt: (prompt: string) => void;
+  onA2uiAction?: (actionPrompt: string) => void;
 }
 
 function formatJsonPreview(raw?: string): string {
@@ -82,6 +89,53 @@ function ToolStepsList({ steps }: { steps: CorrelatedToolStep[] }) {
   );
 }
 
+function MessageBody({
+  content,
+  isStreaming = false,
+  onA2uiAction,
+}: {
+  content: string;
+  isStreaming?: boolean;
+  onA2uiAction?: (actionPrompt: string) => void;
+}) {
+  const segments = parseContentSegments(content, isStreaming);
+  if (segments.length === 0) return null;
+
+  return (
+    <div className="flex max-w-[90%] flex-col gap-2">
+      {segments.map((seg, idx) => {
+        if (seg.type === "markdown") {
+          return (
+            <div
+              key={`md-${idx}`}
+              className="rounded-2xl rounded-bl-sm border border-line bg-canvas px-4 py-2.5"
+            >
+              <MarkdownContent content={seg.content} />
+            </div>
+          );
+        }
+        if (seg.type === "a2ui-pending") {
+          return (
+            <div
+              key={`a2ui-pending-${idx}`}
+              className="rounded-xl border border-line bg-surface px-3 py-2 text-xs text-muted"
+            >
+              ⏳ Menyiapkan tampilan interaktif...
+            </div>
+          );
+        }
+        return (
+          <A2uiSurfaceBlock
+            key={`a2ui-${idx}`}
+            messages={seg.messages}
+            onAction={onA2uiAction}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
 const STARTER_PROMPTS = [
   "Apa saja jadwal kegiatan minggu ini?",
   "Daftar organisasi yang saya ikuti",
@@ -97,13 +151,17 @@ export function ChatTimeline({
   isLoadingOlder,
   onLoadOlder,
   onStarterPrompt,
+  onA2uiAction,
 }: ChatTimelineProps) {
   const { t } = useTranslation();
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  const lastSeg = streaming.segments[streaming.segments.length - 1];
+  const scrollSignal = `${streaming.segments.length}:${lastSeg?.thinking.length ?? 0}:${lastSeg?.delta.length ?? 0}:${lastSeg?.toolSteps.length ?? 0}`;
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [items.length, streaming.delta, streaming.toolSteps.length]);
+  }, [items.length, scrollSignal]);
 
   const isEmpty = items.length === 0 && !streaming.active;
 
@@ -197,9 +255,10 @@ export function ChatTimeline({
               </div>
 
               {item.content ? (
-                <div className="max-w-[90%] rounded-2xl rounded-bl-sm border border-line bg-canvas px-4 py-2.5">
-                  <MarkdownContent content={item.content} />
-                </div>
+                <MessageBody
+                  content={item.content}
+                  onA2uiAction={onA2uiAction}
+                />
               ) : null}
             </div>
           );
@@ -213,47 +272,50 @@ export function ChatTimeline({
           </div>
         ) : null}
 
-        {streaming.active ? (
-          <div className="flex flex-col items-start gap-2">
-            {(() => {
-              const meta = agentDisplayMeta(streaming.agentName);
+        {streaming.active
+          ? streaming.segments.map((seg, idx) => {
+              const meta = agentDisplayMeta(seg.agentName);
               return (
-                <div className="flex items-center gap-2">
-                  <Badge tone={meta.tone}>{meta.name}</Badge>
-                  <span className="text-[11px] text-muted">
-                    {meta.roleLabel}
-                  </span>
+                <div
+                  key={`live-${seg.agentName}-${idx}`}
+                  className="flex flex-col items-start gap-2"
+                >
+                  <div className="flex items-center gap-2">
+                    <Badge tone={meta.tone}>{meta.name}</Badge>
+                    <span className="text-[11px] text-muted">
+                      {meta.roleLabel}
+                    </span>
+                  </div>
+
+                  {seg.thinking ? (
+                    <details
+                      open
+                      className="w-full max-w-[90%] rounded-lg border border-line/70 bg-canvas/50 px-3 py-1.5 text-xs"
+                    >
+                      <summary className="cursor-pointer font-medium text-muted select-none">
+                        {t("agent.thinkingLabel", { agent: meta.name })}
+                      </summary>
+                      <p className="mt-1.5 whitespace-pre-wrap text-muted">
+                        {seg.thinking}
+                      </p>
+                    </details>
+                  ) : null}
+
+                  <div className="w-full max-w-[90%]">
+                    <ToolStepsList steps={seg.toolSteps} />
+                  </div>
+
+                  {seg.delta ? (
+                    <MessageBody
+                      content={seg.delta}
+                      isStreaming
+                      onA2uiAction={onA2uiAction}
+                    />
+                  ) : null}
                 </div>
               );
-            })()}
-
-            {streaming.thinking ? (
-              <details
-                open
-                className="w-full max-w-[90%] rounded-lg border border-line/70 bg-canvas/50 px-3 py-1.5 text-xs"
-              >
-                <summary className="cursor-pointer font-medium text-muted select-none">
-                  {t("agent.thinkingLabel", {
-                    agent: agentDisplayMeta(streaming.agentName).name,
-                  })}
-                </summary>
-                <p className="mt-1.5 whitespace-pre-wrap text-muted">
-                  {streaming.thinking}
-                </p>
-              </details>
-            ) : null}
-
-            <div className="w-full max-w-[90%]">
-              <ToolStepsList steps={streaming.toolSteps} />
-            </div>
-
-            {streaming.delta ? (
-              <div className="max-w-[90%] rounded-2xl rounded-bl-sm border border-line bg-canvas px-4 py-2.5">
-                <MarkdownContent content={streaming.delta} />
-              </div>
-            ) : null}
-          </div>
-        ) : null}
+            })
+          : null}
 
         <div ref={bottomRef} />
       </div>

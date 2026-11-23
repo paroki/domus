@@ -254,3 +254,78 @@ export function parseSSEBuffer(buffer: string): {
 
   return { events, remainder };
 }
+
+export type ContentSegment =
+  | { type: "markdown"; content: string }
+  | { type: "a2ui"; messages: Record<string, unknown>[] }
+  | { type: "a2ui-pending" };
+
+function isValidA2uiEnvelopeArray(
+  raw: string,
+): Record<string, unknown>[] | null {
+  try {
+    const parsed: unknown = JSON.parse(raw.trim());
+    if (!Array.isArray(parsed) || parsed.length === 0) return null;
+    for (const item of parsed) {
+      if (!item || typeof item !== "object") return null;
+      const rec = item as Record<string, unknown>;
+      if (rec.version !== "v0.9") return null;
+      if (
+        !("createSurface" in rec) &&
+        !("updateComponents" in rec) &&
+        !("updateDataModel" in rec) &&
+        !("deleteSurface" in rec)
+      ) {
+        return null;
+      }
+    }
+    return parsed as Record<string, unknown>[];
+  } catch {
+    return null;
+  }
+}
+
+export function parseContentSegments(
+  content: string,
+  isStreaming = false,
+): ContentSegment[] {
+  if (!content.includes("```a2ui")) {
+    return content ? [{ type: "markdown", content }] : [];
+  }
+
+  const segments: ContentSegment[] = [];
+  const fenceRe = /```a2ui[ \t]*\r?\n([\s\S]*?)\r?\n```/g;
+  let lastIndex = 0;
+
+  for (const match of content.matchAll(fenceRe)) {
+    const idx = match.index ?? 0;
+    const prose = content.slice(lastIndex, idx).trim();
+    if (prose) {
+      segments.push({ type: "markdown", content: prose });
+    }
+    const envelopes = isValidA2uiEnvelopeArray(match[1] ?? "");
+    if (envelopes) {
+      segments.push({ type: "a2ui", messages: envelopes });
+    }
+    lastIndex = idx + match[0].length;
+  }
+
+  const tail = content.slice(lastIndex);
+  if (isStreaming) {
+    const openIdx = tail.indexOf("```a2ui");
+    if (openIdx !== -1) {
+      const prose = tail.slice(0, openIdx).trim();
+      if (prose) {
+        segments.push({ type: "markdown", content: prose });
+      }
+      segments.push({ type: "a2ui-pending" });
+      return segments;
+    }
+  }
+
+  const trimmedTail = tail.trim();
+  if (trimmedTail) {
+    segments.push({ type: "markdown", content: trimmedTail });
+  }
+  return segments;
+}

@@ -15,17 +15,37 @@ import {
   hasInterruptedTurn,
   isToolErrorResult,
 } from "../model";
-import { ChatTimeline, type LiveStreamingState } from "./ChatTimeline";
+import {
+  ChatTimeline,
+  type LiveStreamingState,
+  type LiveStreamSegment,
+} from "./ChatTimeline";
 import { MemoryDrawer } from "./MemoryDrawer";
 import { SessionSidebar } from "./SessionSidebar";
 
 const EMPTY_STREAM: LiveStreamingState = {
   active: false,
-  agentName: "gabriel",
-  thinking: "",
-  delta: "",
-  toolSteps: [],
+  segments: [],
 };
+
+function upsertLiveSegment(
+  segments: LiveStreamSegment[],
+  agentName: string,
+  updater: (seg: LiveStreamSegment) => LiveStreamSegment,
+): LiveStreamSegment[] {
+  const normalized = agentName || "gabriel";
+  const last = segments[segments.length - 1];
+  if (last && last.agentName === normalized) {
+    return [...segments.slice(0, -1), updater(last)];
+  }
+  const fresh: LiveStreamSegment = {
+    agentName: normalized,
+    thinking: "",
+    delta: "",
+    toolSteps: [],
+  };
+  return [...segments, updater(fresh)];
+}
 
 export function AgentWorkspace() {
   const { t } = useTranslation();
@@ -118,10 +138,14 @@ export function AgentWorkspace() {
     setStreaming({
       active: true,
       userMessage: continueTurn ? undefined : trimmed,
-      agentName: "gabriel",
-      thinking: "",
-      delta: "",
-      toolSteps: [],
+      segments: [
+        {
+          agentName: "gabriel",
+          thinking: "",
+          delta: "",
+          toolSteps: [],
+        },
+      ],
     });
 
     try {
@@ -142,8 +166,14 @@ export function AgentWorkspace() {
             case "thinking":
               setStreaming((prev) => ({
                 ...prev,
-                agentName: ev.agentName || prev.agentName,
-                thinking: prev.thinking + (ev.content ?? ""),
+                segments: upsertLiveSegment(
+                  prev.segments,
+                  ev.agentName || "gabriel",
+                  (seg) => ({
+                    ...seg,
+                    thinking: seg.thinking + (ev.content ?? ""),
+                  }),
+                ),
               }));
               break;
             case "tool_call":
@@ -152,40 +182,55 @@ export function AgentWorkspace() {
               }
               setStreaming((prev) => ({
                 ...prev,
-                agentName: ev.agentName || prev.agentName,
-                toolSteps: [
-                  ...prev.toolSteps,
-                  {
-                    id: ev.toolCallId || `tc-${prev.toolSteps.length}`,
-                    name: ev.toolName || "",
-                    arguments: ev.arguments || "",
-                    agentName: ev.agentName || prev.agentName,
-                    status: "running",
-                  },
-                ],
+                segments: upsertLiveSegment(
+                  prev.segments,
+                  ev.agentName || "gabriel",
+                  (seg) => ({
+                    ...seg,
+                    toolSteps: [
+                      ...seg.toolSteps,
+                      {
+                        id: ev.toolCallId || `tc-${seg.toolSteps.length}`,
+                        name: ev.toolName || "",
+                        arguments: ev.arguments || "",
+                        agentName: ev.agentName || seg.agentName,
+                        status: "running",
+                      },
+                    ],
+                  }),
+                ),
               }));
               break;
             case "tool_result":
               setStreaming((prev) => ({
                 ...prev,
-                toolSteps: prev.toolSteps.map((step) =>
-                  step.id === ev.toolCallId
-                    ? {
-                        ...step,
-                        status: isToolErrorResult(ev.content)
-                          ? "error"
-                          : "done",
-                        result: ev.content,
-                      }
-                    : step,
-                ),
+                segments: prev.segments.map((seg) => ({
+                  ...seg,
+                  toolSteps: seg.toolSteps.map((step) =>
+                    step.id === ev.toolCallId
+                      ? {
+                          ...step,
+                          status: isToolErrorResult(ev.content)
+                            ? "error"
+                            : "done",
+                          result: ev.content,
+                        }
+                      : step,
+                  ),
+                })),
               }));
               break;
             case "delta":
               setStreaming((prev) => ({
                 ...prev,
-                agentName: ev.agentName || prev.agentName,
-                delta: prev.delta + (ev.content ?? ""),
+                segments: upsertLiveSegment(
+                  prev.segments,
+                  ev.agentName || "gabriel",
+                  (seg) => ({
+                    ...seg,
+                    delta: seg.delta + (ev.content ?? ""),
+                  }),
+                ),
               }));
               break;
             case "done":
@@ -383,6 +428,7 @@ export function AgentWorkspace() {
             isLoadingOlder={messagesQuery.isFetchingNextPage}
             onLoadOlder={() => void messagesQuery.fetchNextPage()}
             onStarterPrompt={(prompt) => void sendMessage(prompt)}
+            onA2uiAction={(actionPrompt) => void sendMessage(actionPrompt)}
           />
 
           <form
