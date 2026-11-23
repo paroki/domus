@@ -110,7 +110,7 @@ export async function startServers(): Promise<void> {
     path.join(config.logsDir, "api.log"),
   );
 
-  await waitForHttp(`${config.apiBaseUrl}/health`, apiProc);
+  await waitForHttp(`${config.apiBaseUrl}/health`, apiProc, 180_000);
 
   const reactRouterBin = path.join(
     config.repoRoot,
