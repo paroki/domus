@@ -242,9 +242,8 @@ func (s *RefFeatureSuite) TestParishCRUD_CurrentAndProfileAndMemberOnly() {
 	s.Equal("REF_IN_USE", s.GetErrorResponse().Error.Code)
 }
 
-func (s *RefFeatureSuite) TestParishDelete_BlockedByAgentSessionOrMemory() {
+func (s *RefFeatureSuite) TestParishDelete_SucceedsWhenUnused() {
 	s.loginViaOTP("admin@paroki.org")
-	ctx := context.Background()
 
 	s.Request("/api/ref/dioceses", http.MethodPost, domain.CreateDioceseRequest{Code: "kaj", Name: "KAJ"})
 	s.Created()
@@ -253,27 +252,6 @@ func (s *RefFeatureSuite) TestParishDelete_BlockedByAgentSessionOrMemory() {
 	s.Request("/api/ref/parishes", http.MethodPost, domain.CreateParishRequest{DioceseID: d.ID, Code: "p-agent", Name: "Paroki Agent"})
 	s.Created()
 	p := testutil.DecodeAs[domain.ParishResponse](s).Data
-
-	userID := uuid.New()
-	sess, err := s.client.AgentSession.Create().SetParishID(p.ID).SetUserID(userID).Save(ctx)
-	s.Require().NoError(err)
-
-	s.Request("/api/ref/parishes/"+p.ID.String(), http.MethodDelete, nil)
-	s.Conflict()
-	s.Equal("REF_IN_USE", s.GetErrorResponse().Error.Code)
-
-	_, err = s.client.AgentSession.UpdateOneID(sess.ID).SetDeletedAt(time.Now().UTC()).Save(ctx)
-	s.Require().NoError(err)
-
-	mem, err := s.client.AgentMemory.Create().SetParishID(p.ID).SetUserID(userID).SetContent("FAQ").Save(ctx)
-	s.Require().NoError(err)
-
-	s.Request("/api/ref/parishes/"+p.ID.String(), http.MethodDelete, nil)
-	s.Conflict()
-	s.Equal("REF_IN_USE", s.GetErrorResponse().Error.Code)
-
-	_, err = s.client.AgentMemory.UpdateOneID(mem.ID).SetDeletedAt(time.Now().UTC()).Save(ctx)
-	s.Require().NoError(err)
 
 	s.Request("/api/ref/parishes/"+p.ID.String(), http.MethodDelete, nil)
 	s.NoContent()

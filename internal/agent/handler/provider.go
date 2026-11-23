@@ -95,10 +95,10 @@ func (h *Handler) UpdateProvider(c fiber.Ctx) error {
 	return httpx.OK(c, res)
 }
 
-// DeleteProvider removes an unused LLM provider configuration.
+// DeleteProvider removes an LLM provider configuration.
 //
 //	@Summary		Delete AI provider config
-//	@Description	Deletes an LLM provider configuration if not referenced by any agent or embedding.
+//	@Description	Deletes an LLM provider configuration.
 //	@ID				deleteAgentProvider
 //	@Tags			Agent
 //	@Produce		json
@@ -108,7 +108,6 @@ func (h *Handler) UpdateProvider(c fiber.Ctx) error {
 //	@Failure		401			{object}	httpx.Envelope[any]
 //	@Failure		403			{object}	httpx.Envelope[any]
 //	@Failure		404			{object}	httpx.Envelope[any]
-//	@Failure		409			{object}	httpx.Envelope[any]
 //	@Router			/agent/providers/{providerId} [delete]
 func (h *Handler) DeleteProvider(c fiber.Ctx) error {
 	if h.providers == nil {

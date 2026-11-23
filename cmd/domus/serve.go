@@ -54,7 +54,7 @@ func newServeCmd() *cobra.Command {
 				return err
 			}
 
-			db, sqlDB, dialectName, err := app.OpenDBPool(ctx, cfg)
+			db, _, _, err := app.OpenDBPool(ctx, cfg)
 			if err != nil {
 				return err
 			}
@@ -96,14 +96,14 @@ func newServeCmd() *cobra.Command {
 			agentFeature := agent.New(
 				nil,
 				logger,
-				agent.WithService(db, sqlDB, dialectName, enforcer, nil, userFeature, refFeature, orgFeature),
-				agent.WithSettings(settingStore),
+				agent.WithDB(db),
+				agent.WithUsers(userFeature),
 				agent.WithCipher(cipher),
 			)
-			if err := authz.RegisterFeatures(ctx, enforcer, userFeature, refFeature, orgFeature, eventFeature, agentFeature); err != nil {
+			if err := authz.RegisterFeatures(ctx, enforcer, userFeature, refFeature, orgFeature, eventFeature); err != nil {
 				return err
 			}
-			setting.RegisterFeatures(settingStore, userFeature, refFeature, orgFeature, eventFeature, agentFeature)
+			setting.RegisterFeatures(settingStore, userFeature, refFeature, orgFeature, eventFeature)
 			if err := settingStore.Load(ctx); err != nil {
 				return err
 			}

@@ -7,9 +7,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
-	"github.com/paroki/domus/ent/agentmemory"
-	"github.com/paroki/domus/ent/agentmessage"
-	"github.com/paroki/domus/ent/agentsession"
 	"github.com/paroki/domus/ent/event"
 	"github.com/paroki/domus/ent/eventrsvp"
 	"github.com/paroki/domus/ent/organization"
@@ -515,66 +512,4 @@ func TestNewEntClient_EventAndRSVPSchemas(t *testing.T) {
 		Save(ctx)
 	require.Error(t, err)
 	assert.True(t, ent.IsConstraintError(err))
-}
-
-func TestNewEntClient_AgentSchemas(t *testing.T) {
-	ctx := context.Background()
-	client := testutil.NewEntClient(t)
-
-	parishID := schema.NewID()
-	userID := schema.NewID()
-
-	sess, err := client.AgentSession.Create().
-		SetParishID(parishID).
-		SetUserID(userID).
-		Save(ctx)
-	require.NoError(t, err)
-	assert.Equal(t, 7, int(sess.ID.Version()))
-	assert.Equal(t, agentsession.ChannelWeb, sess.Channel)
-	assert.Equal(t, "Percakapan Baru", sess.Title)
-	assert.False(t, sess.LastMessageAt.IsZero())
-	assert.Nil(t, sess.DeletedAt)
-
-	toolCalls := []schema.AgentToolCall{
-		{
-			ID:        "call_1",
-			Name:      "ref_search_parishes",
-			Arguments: `{"query":"katedral"}`,
-			AgentName: "gabriel",
-		},
-	}
-	msg, err := client.AgentMessage.Create().
-		SetParishID(parishID).
-		SetUserID(userID).
-		SetSession(sess).
-		SetRole(agentmessage.RoleAssistant).
-		SetContent("Berikut hasil pencarian.").
-		SetToolCalls(toolCalls).
-		Save(ctx)
-	require.NoError(t, err)
-	assert.Equal(t, 7, int(msg.ID.Version()))
-	assert.Equal(t, "gabriel", msg.AgentName)
-	assert.Equal(t, sess.ID, msg.SessionID)
-	require.Len(t, msg.ToolCalls, 1)
-	assert.Equal(t, "ref_search_parishes", msg.ToolCalls[0].Name)
-
-	msgs, err := sess.QueryMessages().All(ctx)
-	require.NoError(t, err)
-	require.Len(t, msgs, 1)
-	assert.Equal(t, msg.ID, msgs[0].ID)
-
-	mem, err := client.AgentMemory.Create().
-		SetParishID(parishID).
-		SetUserID(userID).
-		SetContent("Aktif di paduan suara lingkungan.").
-		SetSourceSessionID(sess.ID).
-		Save(ctx)
-	require.NoError(t, err)
-	assert.Equal(t, 7, int(mem.ID.Version()))
-	assert.Equal(t, agentmemory.ScopeUser, mem.Scope)
-	assert.Equal(t, agentmemory.CategoryPreference, mem.Category)
-	assert.False(t, mem.IsPinned)
-	assert.Nil(t, mem.DeletedAt)
-	require.NotNil(t, mem.SourceSessionID)
-	assert.Equal(t, sess.ID, *mem.SourceSessionID)
 }

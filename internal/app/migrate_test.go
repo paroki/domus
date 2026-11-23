@@ -99,7 +99,7 @@ func TestRunMigrations_Idempotent(t *testing.T) {
 		t.Fatalf("expected %d applied migrations, got %d", len(sqlFiles), count)
 	}
 
-	for _, tbl := range []string{"settings", "agent_sessions", "agent_messages", "agent_memories"} {
+	for _, tbl := range []string{"settings", "agent_providers"} {
 		var found string
 		if err := db.QueryRowContext(ctx, "SELECT table_name FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = $1", tbl).Scan(&found); err != nil {
 			t.Fatalf("expected %s table to exist: %v", tbl, err)

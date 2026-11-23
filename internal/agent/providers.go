@@ -2,6 +2,8 @@ package agent
 
 import (
 	"context"
+	"fmt"
+	"net/url"
 	"slices"
 	"strings"
 	"time"
@@ -11,6 +13,7 @@ import (
 	"github.com/paroki/domus/ent/agentprovider"
 	"github.com/paroki/domus/ent/schema"
 	"github.com/paroki/domus/internal/agent/domain"
+	"github.com/paroki/domus/internal/platform/crypt"
 	"github.com/paroki/domus/internal/platform/httpx"
 )
 
@@ -36,7 +39,7 @@ func (f *Feature) ListProviders(ctx context.Context) ([]domain.AgentProviderResp
 	return out, nil
 }
 
-// CreateProvider stores a new LLM provider config, auto-syncs models best-effort, and updates ConfigStore.
+// CreateProvider stores a new LLM provider config and auto-syncs models best-effort.
 func (f *Feature) CreateProvider(ctx context.Context, req domain.CreateAgentProviderRequest) (domain.AgentProviderResponse, error) {
 	if f.db == nil {
 		return domain.AgentProviderResponse{}, domain.ErrProviderUnavailable
@@ -59,14 +62,13 @@ func (f *Feature) CreateProvider(ctx context.Context, req domain.CreateAgentProv
 	}
 
 	var schemaModels []schema.AgentProviderModel
-	var domainModels []domain.ProviderModelItem
 	syncCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	discovered, syncErr := f.drivers.DiscoverModels(syncCtx, req.Provider, baseURL, plainKey)
 	cancel()
 	if syncErr == nil {
-		schemaModels, domainModels = toModelsPair(discovered)
+		schemaModels = toSchemaModels(discovered)
 	} else {
-		f.config.logger.WarnContext(ctx, "auto-sync provider models on create failed", "provider", req.Provider, "err", syncErr)
+		f.logger.WarnContext(ctx, "auto-sync provider models on create failed", "provider", req.Provider, "err", syncErr)
 	}
 
 	row, err := f.db.AgentProvider.Create().
@@ -80,19 +82,10 @@ func (f *Feature) CreateProvider(ctx context.Context, req domain.CreateAgentProv
 	if err != nil {
 		return domain.AgentProviderResponse{}, err
 	}
-
-	f.config.UpsertProvider(ProviderRuntimeConfig{
-		ID:       row.ID,
-		Name:     row.Name,
-		Provider: string(row.Provider),
-		BaseURL:  row.BaseURL,
-		APIKey:   plainKey,
-		Models:   domainModels,
-	})
 	return toProviderResponse(row, plainKey), nil
 }
 
-// UpdateProvider updates an existing LLM provider config and refreshes ConfigStore.
+// UpdateProvider updates an existing LLM provider config and re-syncs models if credentials changed.
 func (f *Feature) UpdateProvider(ctx context.Context, id uuid.UUID, req domain.UpdateAgentProviderRequest) (domain.AgentProviderResponse, error) {
 	if f.db == nil {
 		return domain.AgentProviderResponse{}, domain.ErrProviderUnavailable
@@ -123,9 +116,6 @@ func (f *Feature) UpdateProvider(ctx context.Context, id uuid.UUID, req domain.U
 		upd.SetDescription(strings.TrimSpace(*req.Description))
 	}
 	if req.Provider != nil && *req.Provider != nextProvider {
-		if *req.Provider == string(domain.ProviderAnthropic) && f.config.IsProviderUsedByEmbedding(id) {
-			return domain.AgentProviderResponse{}, domain.ErrProviderEmbeddingUnsupported
-		}
 		nextProvider = *req.Provider
 		upd.SetProvider(agentprovider.Provider(nextProvider))
 		credentialsChanged = true
@@ -161,10 +151,9 @@ func (f *Feature) UpdateProvider(ctx context.Context, id uuid.UUID, req domain.U
 		discovered, syncErr := f.drivers.DiscoverModels(syncCtx, nextProvider, nextBaseURL, nextPlainKey)
 		cancel()
 		if syncErr == nil {
-			schemaModels, _ := toModelsPair(discovered)
-			upd.SetModels(schemaModels)
+			upd.SetModels(toSchemaModels(discovered))
 		} else {
-			f.config.logger.WarnContext(ctx, "auto-sync provider models on update failed", "provider", nextProvider, "err", syncErr)
+			f.logger.WarnContext(ctx, "auto-sync provider models on update failed", "provider", nextProvider, "err", syncErr)
 		}
 	}
 
@@ -172,43 +161,19 @@ func (f *Feature) UpdateProvider(ctx context.Context, id uuid.UUID, req domain.U
 	if err != nil {
 		return domain.AgentProviderResponse{}, err
 	}
-
-	domainModels := make([]domain.ProviderModelItem, len(saved.Models))
-	for i, m := range saved.Models {
-		domainModels[i] = domain.ProviderModelItem{
-			ID:           m.ID,
-			Name:         m.Name,
-			Capabilities: slices.Clone(m.Capabilities),
-		}
-	}
-	f.config.UpsertProvider(ProviderRuntimeConfig{
-		ID:       saved.ID,
-		Name:     saved.Name,
-		Provider: string(saved.Provider),
-		BaseURL:  saved.BaseURL,
-		APIKey:   nextPlainKey,
-		Models:   domainModels,
-	})
 	return toProviderResponse(saved, nextPlainKey), nil
 }
 
-// DeleteProvider removes an unused LLM provider config; returns ErrProviderInUse (409) if bound.
+// DeleteProvider removes an LLM provider config.
 func (f *Feature) DeleteProvider(ctx context.Context, id uuid.UUID) error {
 	if f.db == nil {
 		return domain.ErrProviderUnavailable
-	}
-	if f.config.IsProviderInUse(id) {
-		return domain.ErrProviderInUse
 	}
 	err := f.db.AgentProvider.DeleteOneID(id).Exec(ctx)
 	if ent.IsNotFound(err) {
 		return domain.ErrProviderNotFound
 	}
-	if err != nil {
-		return err
-	}
-	f.config.DeleteProvider(id)
-	return nil
+	return err
 }
 
 // SyncProviderModels discovers available models from the upstream provider and persists the catalog.
@@ -237,22 +202,12 @@ func (f *Feature) SyncProviderModels(ctx context.Context, id uuid.UUID) (domain.
 		return domain.SyncProviderModelsResponse{}, domain.ErrProviderUnavailable
 	}
 
-	schemaModels, domainModels := toModelsPair(discovered)
 	saved, err := f.db.AgentProvider.UpdateOneID(id).
-		SetModels(schemaModels).
+		SetModels(toSchemaModels(discovered)).
 		Save(ctx)
 	if err != nil {
 		return domain.SyncProviderModelsResponse{}, err
 	}
-
-	f.config.UpsertProvider(ProviderRuntimeConfig{
-		ID:       saved.ID,
-		Name:     saved.Name,
-		Provider: string(saved.Provider),
-		BaseURL:  saved.BaseURL,
-		APIKey:   plainKey,
-		Models:   domainModels,
-	})
 
 	dtos := make([]domain.ProviderModelDTO, len(discovered))
 	for i, m := range discovered {
@@ -265,23 +220,16 @@ func (f *Feature) SyncProviderModels(ctx context.Context, id uuid.UUID) (domain.
 	}, nil
 }
 
-func toModelsPair(items []domain.ProviderModelItem) ([]schema.AgentProviderModel, []domain.ProviderModelItem) {
-	schemaModels := make([]schema.AgentProviderModel, len(items))
-	domainModels := make([]domain.ProviderModelItem, len(items))
+func toSchemaModels(items []domain.ProviderModelItem) []schema.AgentProviderModel {
+	out := make([]schema.AgentProviderModel, len(items))
 	for i, m := range items {
-		caps := slices.Clone(m.Capabilities)
-		schemaModels[i] = schema.AgentProviderModel{
+		out[i] = schema.AgentProviderModel{
 			ID:           m.ID,
 			Name:         m.Name,
-			Capabilities: caps,
-		}
-		domainModels[i] = domain.ProviderModelItem{
-			ID:           m.ID,
-			Name:         m.Name,
-			Capabilities: slices.Clone(caps),
+			Capabilities: slices.Clone(m.Capabilities),
 		}
 	}
-	return schemaModels, domainModels
+	return out
 }
 
 func toProviderResponse(row *ent.AgentProvider, plainKey string) domain.AgentProviderResponse {
@@ -305,4 +253,37 @@ func toProviderResponse(row *ent.AgentProvider, plainKey string) domain.AgentPro
 		CreatedAt:    row.CreatedAt,
 		UpdatedAt:    row.UpdatedAt,
 	}
+}
+
+func validateHTTPURL(raw string) error {
+	u, err := url.Parse(raw)
+	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
+		return fmt.Errorf("URL harus diawali http:// atau https:// dan memiliki host yang valid")
+	}
+	return nil
+}
+
+func encryptAPIKey(cipher *crypt.Cipher, plain string) (string, error) {
+	if cipher == nil {
+		return plain, nil
+	}
+	return cipher.EncryptString(plain)
+}
+
+func decryptAPIKey(cipher *crypt.Cipher, stored string) (string, error) {
+	if cipher == nil || !strings.HasPrefix(stored, crypt.StringPrefixV1) {
+		return stored, nil
+	}
+	return cipher.DecryptString(stored)
+}
+
+func maskAPIKey(plain string) string {
+	trimmed := strings.TrimSpace(plain)
+	if trimmed == "" {
+		return ""
+	}
+	if len(trimmed) <= 8 {
+		return "****"
+	}
+	return trimmed[:4] + "..." + trimmed[len(trimmed)-4:]
 }
