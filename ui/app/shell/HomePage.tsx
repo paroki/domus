@@ -2,7 +2,6 @@ import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router";
 
 import { apps } from "~/apps";
-import { AgentWorkspace } from "~/features/agent/components/AgentWorkspace";
 import { useMe } from "~/features/user/api/queries";
 import i18n from "~/shared/i18n";
 import { plateBg } from "~/shared/ui/plate";
@@ -20,11 +19,6 @@ export default function HomePage() {
   const { t } = useTranslation();
   const [params] = useSearchParams();
   const { data: me } = useMe();
-  const tab = params.get("tab") === "menu" ? "menu" : "gabriel";
-
-  if (tab === "gabriel") {
-    return <AgentWorkspace />;
-  }
 
   const q = (params.get("q") ?? "").trim();
   const userRoles = me?.roles ?? [];

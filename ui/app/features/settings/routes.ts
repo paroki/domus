@@ -5,9 +5,4 @@ export default [
   route("settings/telegram", "./features/settings/pages/TelegramPage.tsx"),
   route("settings/whatsapp", "./features/settings/pages/WhatsAppPage.tsx"),
   route("settings/ai-provider", "./features/settings/pages/AIProviderPage.tsx"),
-  route("settings/ai-agent", "./features/settings/pages/AIAgentPage.tsx"),
-  route(
-    "settings/ai-agent/:agentId",
-    "./features/settings/pages/AIAgentDetailPage.tsx",
-  ),
 ] satisfies RouteConfig;
