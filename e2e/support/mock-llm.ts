@@ -45,15 +45,6 @@ function pickToolCall(
     .filter((n) => n.length > 0);
   if (names.length === 0) return null;
 
-  if (names.includes("delegate_specialist")) {
-    return {
-      name: "delegate_specialist",
-      arguments: JSON.stringify({
-        specialist: "mikael",
-        task: "Periksa jadwal kegiatan paroki untuk umat.",
-      }),
-    };
-  }
   if (names.includes("event_list")) {
     return { name: "event_list", arguments: "{}" };
   }

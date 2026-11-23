@@ -43,5 +43,5 @@ Feature: AI Assistant workspace, multi-session sidebar, Memory Drawer, and SSE c
     And I send AI chat prompt "Apa jadwal kegiatan paroki?"
     Then I see user chat message "Apa jadwal kegiatan paroki?"
     And I see thinking indicator for "Gabriel"
-    And I see expandable tool execution badge for "delegate_specialist"
+    And I see expandable tool execution badge for "event_list"
     And I see assistant reply containing "informasi kegiatan dan organisasi sudah tersedia"

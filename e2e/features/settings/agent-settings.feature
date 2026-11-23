@@ -25,14 +25,6 @@ Feature: Super Admin system settings for communication channels, LLM providers, 
     When I open settings launcher "Gabriel"
     And I configure agent "Gabriel" with provider "openai", model "gpt-4.1-mini", effort "medium", and instruction "Instruksi Gabriel E2E"
     And I save agent configuration
-    When I open settings launcher "Kembali ke AI Agent"
-    And I open settings launcher "Mikael"
-    And I configure agent "Mikael" with provider "openai", model "gpt-4.1-mini", and effort "low"
-    And I save agent configuration
-    When I open settings launcher "Kembali ke AI Agent"
-    And I open settings launcher "Rafael"
-    And I configure agent "Rafael" with provider "openai", model "gpt-4.1-mini", and effort "low"
-    And I save agent configuration
     When I open "/settings/ai-agent/gabriel"
     Then I see agent "Gabriel" configured with provider "openai", model "gpt-4.1-mini", effort "medium", and instruction "Instruksi Gabriel E2E"
     When I reset instruction for agent "Gabriel"

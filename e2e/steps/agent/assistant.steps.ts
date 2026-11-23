@@ -151,10 +151,6 @@ Given(
       values: {
         "agent.gabriel.provider_id": providerId,
         "agent.gabriel.model": "gpt-4.1-mini",
-        "agent.mikael.provider_id": providerId,
-        "agent.mikael.model": "gpt-4.1-mini",
-        "agent.rafael.provider_id": providerId,
-        "agent.rafael.model": "gpt-4.1-mini",
         "agent.embedding.provider_id": "none",
       },
     });
