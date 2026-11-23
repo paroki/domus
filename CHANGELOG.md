@@ -2,6 +2,71 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.0.0-alpha.5](https://github.com/paroki/domus/compare/v1.0.0-alpha.4...v1.0.0-alpha.5) (2026-11-23)
+
+### ⚙️ API
+
+#### ✨ Features
+
+- add a2ui v0.9 web prompt instructions and block sanitizer ([f09ac9d](https://github.com/paroki/domus/commit/f09ac9d0d4becf59887426b56e89e5cbb3c90233))
+- add org_create MCP tool for parish admins ([4311ed3](https://github.com/paroki/domus/commit/4311ed31b251ec1f9e46ef03abfa72f5f64f3be3))
+- handoff directly to specialist on delegation ([3892998](https://github.com/paroki/domus/commit/38929986b35e344d25918997e972faa2a8c30a7c))
+- support continuing interrupted agent chat turns ([83cc776](https://github.com/paroki/domus/commit/83cc776d3d8d4e91912f594bb6d1f8cb9eef325e))
+- allow emoji and unicode characters in agent prompts ([8e225eb](https://github.com/paroki/domus/commit/8e225ebcd2671d0b76b72d4a56b54a9b271d95fa))
+- support multi-config LLM providers with UUID binding ([9e71463](https://github.com/paroki/domus/commit/9e71463720f05ca5fc3ff676e437395d86f655fe))
+
+#### 🐛 Bug Fixes
+
+- inject Casbin user roles into agent system prompt ([31c8111](https://github.com/paroki/domus/commit/31c81119cdc5f84951e5ed9c223b0122c475a93b))
+- instruct Gabriel to delegate silently ([71b1275](https://github.com/paroki/domus/commit/71b127578ab228ad65e15f8a1315b6ac7a9f07b3))
+- add ErrProviderOverloaded sentinel for upstream 5xx responses ([8a10293](https://github.com/paroki/domus/commit/8a10293304b69ee2c393decef546e5ed03fa717e))
+- normalize Gemini type arrays and separate provider error sentinels ([bf11e65](https://github.com/paroki/domus/commit/bf11e65cd17036650b5ab6281a456c7b4f3a85a0))
+- disable Fiber WriteTimeout and add SSE keepalive for agent chat ([f5d5383](https://github.com/paroki/domus/commit/f5d538357eb80697aa273456a1a85e21c2a50c1b))
+- log agent SSE stream errors and preserve provider details ([93c4690](https://github.com/paroki/domus/commit/93c469072a23e628129dd569856b7c2c3009ad8a))
+- capture all 5xx errors in sentry middleware ([0b5b4d9](https://github.com/paroki/domus/commit/0b5b4d911ce17a74d74c95cd10405b1c24f26a44))
+- return 400 for unavailable AI provider ([d5e84f7](https://github.com/paroki/domus/commit/d5e84f7b8cd00ca265e7999487aa86b6045c5da1))
+- skip unavailable errors in sentry middleware ([0d53b43](https://github.com/paroki/domus/commit/0d53b43042bbcfdfa2165e90b59c70cd9b4c7ba2))
+- skip 4xx errors in sentry middleware ([edcbe84](https://github.com/paroki/domus/commit/edcbe84a995caae86b3247ee501fe8f8492934e5))
+- allow empty baseUrl on provider update ([fc0ec7c](https://github.com/paroki/domus/commit/fc0ec7c654b695cb699c09731d5d0141f54b66d1))
+- skip gemma thinkingConfig and strip unsupported schema keys ([040d25f](https://github.com/paroki/domus/commit/040d25f6639f22e3e137e012b5dd1f41bd9f0568))
+- require only bot token for telegram config ([8beffd0](https://github.com/paroki/domus/commit/8beffd0d42e8a9fd5d1eb7eb30840fa5a89fc937))
+- prevent stale SPA cache and missing asset HTML fallback ([967ab10](https://github.com/paroki/domus/commit/967ab10a015cb8234bd198f8e3f042c75c3e9bba))
+- add missing agent_providers migration ([d7c964a](https://github.com/paroki/domus/commit/d7c964a5e52a62ee1e8d9b0abd1e5c513babbff6))
+- require postgres extensions on startup ([7033a6b](https://github.com/paroki/domus/commit/7033a6b0ad636ce9b029dbf9e4a9095326d3b0b4))
+
+### 🖥️ UI
+
+#### ✨ Features
+
+- add a2ui theme tokens and refine agent chat and settings ([7eed469](https://github.com/paroki/domus/commit/7eed4690b2c20efd28f8026c80a468a9f0084b8a))
+- add a2ui surface renderer and agent streaming fixes ([605b658](https://github.com/paroki/domus/commit/605b658d917d034887f4ddfb1b7d3e3a599b885e))
+- add continue from last support on interrupted turns ([1e800dc](https://github.com/paroki/domus/commit/1e800dce8d2fe686e782bcd46f7d7101d238ba06))
+- render markdown in agent chat timeline ([454c292](https://github.com/paroki/domus/commit/454c2924ec30aeecbcef12a61edf157ef64a3884))
+- add retry button to agent chat error banner ([ae6c612](https://github.com/paroki/domus/commit/ae6c612da2fb2aa284d674a8cb254aa6dc4a2d16))
+- show Gabriel and Menu tabs on root home ([f2a0b3d](https://github.com/paroki/domus/commit/f2a0b3de5b0c12505e204350f659a96ccd52e472))
+- add Update API Key toggle button on provider edit form ([2cb61ea](https://github.com/paroki/domus/commit/2cb61ea083920784beb37827e175372f31c83ade))
+- manage multiple LLM provider configs by UUID ([fce60e7](https://github.com/paroki/domus/commit/fce60e7daa4b00e13b73560f0af5309780522dd8))
+
+#### 🐛 Bug Fixes
+
+- add AGENT_PROVIDER_OVERLOADED error message ([2336654](https://github.com/paroki/domus/commit/233665420492b37f14a32c2df6e060f5fd8a3854))
+- map distinct agent provider error codes ([b95c5cf](https://github.com/paroki/domus/commit/b95c5cf4d71bafae7187b1591a86a64cc8f1e964))
+- surface provider error details from agent SSE stream ([a04686e](https://github.com/paroki/domus/commit/a04686e5a3889925d97592a291731b8b620e2db1))
+- use Button and canvas theme tokens instead of text-bg ([a27a9b4](https://github.com/paroki/domus/commit/a27a9b401841176e2b9e86ba718aaea35ae85665))
+
+### 🔧 Other
+
+#### 🐛 Bug Fixes
+
+- **tools:** restore postgres extensions after e2e schema reset ([7725c25](https://github.com/paroki/domus/commit/7725c2506ed3fd99733d7a7d06735ee609a1c2f1))
+
+### 📦 Dependencies
+
+- **deps:** add a2ui react and web_core packages ([56e7cda](https://github.com/paroki/domus/commit/56e7cda29859fcef6762444e63991904b7f5fd9c))
+- **deps:** add firebase genkit go v1.14.0 ([3f8723a](https://github.com/paroki/domus/commit/3f8723a0cb5ee4c15ac5c2fb2766d1161d79a1fc))
+- **deps:** add react-markdown and remark-gfm for agent chat ([4ebcbd1](https://github.com/paroki/domus/commit/4ebcbd179327722dd6c3315a17ef3442ea4cec20))
+- **deps:** remove modernc sqlite ([0c02ceb](https://github.com/paroki/domus/commit/0c02cebbb30edfe17467394411a1d046aef5a7b1))
+
 ## [v1.0.0-alpha.4](https://github.com/paroki/domus/compare/v1.0.0-alpha.3...v1.0.0-alpha.4) (2026-11-22)
 
 ### ⚙️ API
