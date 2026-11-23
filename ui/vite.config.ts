@@ -30,17 +30,17 @@ export default defineConfig({
   resolve: {
     tsconfigPaths: true,
   },
-  // ponytail: targets default backend port 8080; read process.env.VITE_API_TARGET when multi-port dev setups needed.
+  // ponytail: targets default backend port 8080; override via VITE_API_TARGET for multi-port setups.
   server: {
     host: true,
     allowedHosts: ["dev.itstoni.com"],
     proxy: {
       "/api": {
-        target: "http://127.0.0.1:8080",
+        target: process.env.VITE_API_TARGET ?? "http://127.0.0.1:8080",
         changeOrigin: true,
       },
       "/mcp": {
-        target: "http://127.0.0.1:8080",
+        target: process.env.VITE_API_TARGET ?? "http://127.0.0.1:8080",
         changeOrigin: true,
       },
     },
