@@ -195,19 +195,19 @@ func (s *AgentWebhookSuite) SetupTest() {
 	s.Require().NoError(err)
 }
 
-// waitCalls waits until async channel turns finished sending (call count stable).
-func (s *AgentWebhookSuite) waitCalls() {
+// waitCalls waits until at least minCalls outbound calls arrive and counts stabilize.
+func (s *AgentWebhookSuite) waitCalls(minCalls int) {
 	count := func() int {
 		s.callsMu.Lock()
 		defer s.callsMu.Unlock()
 		return len(s.tgCalls) + len(s.gowaCalls)
 	}
-	deadline := time.Now().Add(3 * time.Second)
+	deadline := time.Now().Add(5 * time.Second)
 	last, stableSince := -1, time.Now()
 	for time.Now().Before(deadline) {
 		if n := count(); n != last {
 			last, stableSince = n, time.Now()
-		} else if n > 0 && time.Since(stableSince) > 800*time.Millisecond {
+		} else if n >= minCalls && time.Since(stableSince) > 150*time.Millisecond {
 			return
 		}
 		time.Sleep(20 * time.Millisecond)
@@ -267,7 +267,7 @@ func (s *AgentWebhookSuite) TestTelegramWebhook_GroupMentionMediaCommandsAndTurn
 		},
 	}, s.tgSecret)
 	s.OK()
-	s.waitCalls()
+	s.waitCalls(1)
 	s.Require().Len(s.tgCalls, 1)
 	s.Contains(s.tgCalls[0].payload["text"], "hanya dapat membaca pesan teks")
 
@@ -283,7 +283,7 @@ func (s *AgentWebhookSuite) TestTelegramWebhook_GroupMentionMediaCommandsAndTurn
 		},
 	}, s.tgSecret)
 	s.OK()
-	s.waitCalls()
+	s.waitCalls(1)
 	s.Require().Len(s.tgCalls, 1)
 	s.Contains(s.tgCalls[0].payload["text"], "/me")
 
@@ -299,7 +299,7 @@ func (s *AgentWebhookSuite) TestTelegramWebhook_GroupMentionMediaCommandsAndTurn
 		},
 	}, s.tgSecret)
 	s.OK()
-	s.waitCalls()
+	s.waitCalls(1)
 	s.Require().Len(s.tgCalls, 1)
 	s.Contains(s.tgCalls[0].payload["text"], "Paroki Katedral")
 
@@ -315,7 +315,7 @@ func (s *AgentWebhookSuite) TestTelegramWebhook_GroupMentionMediaCommandsAndTurn
 		},
 	}, s.tgSecret)
 	s.OK()
-	s.waitCalls()
+	s.waitCalls(1)
 	s.Require().Len(s.tgCalls, 1)
 	s.Contains(s.tgCalls[0].payload["text"], "Sesi percakapan baru")
 
@@ -331,7 +331,7 @@ func (s *AgentWebhookSuite) TestTelegramWebhook_GroupMentionMediaCommandsAndTurn
 		},
 	}, s.tgSecret)
 	s.OK()
-	s.waitCalls()
+	s.waitCalls(2)
 	s.Require().GreaterOrEqual(len(s.tgCalls), 2)
 	s.Contains(s.tgCalls[0].path, "sendChatAction")
 	s.Equal("Siap Kak!", s.tgCalls[len(s.tgCalls)-1].payload["text"])
@@ -374,7 +374,7 @@ func (s *AgentWebhookSuite) TestWhatsAppWebhook_SignatureGroupSelfAndTurn() {
 		"text":    "/parish ktd",
 	}, s.gowaSecret)
 	s.OK()
-	s.waitCalls()
+	s.waitCalls(1)
 	s.Require().Len(s.gowaCalls, 1)
 	s.Contains(s.gowaCalls[0].payload["message"], "Paroki Katedral")
 
@@ -389,7 +389,7 @@ func (s *AgentWebhookSuite) TestWhatsAppWebhook_SignatureGroupSelfAndTurn() {
 		},
 	}, s.gowaSecret)
 	s.OK()
-	s.waitCalls()
+	s.waitCalls(2)
 	s.Require().GreaterOrEqual(len(s.gowaCalls), 2)
 	s.Equal("/send/chat-presence", s.gowaCalls[0].path)
 	s.Equal("120363000111222@g.us", s.gowaCalls[0].payload["phone"])
