@@ -1,5 +1,4 @@
 import type { Page } from "playwright";
-import { AgentWorkspacePage } from "./agent/agent.page";
 import { BasePage } from "./base.page";
 import { EventDetailPage } from "./event/event-detail.page";
 import { EventsPage } from "./event/events.page";
@@ -22,7 +21,6 @@ import { UsersPage } from "./user/users.page";
 export function createPages(page: Page) {
   return {
     base: new BasePage(page),
-    agent: new AgentWorkspacePage(page),
     event: {
       events: new EventsPage(page),
       detail: new EventDetailPage(page),
