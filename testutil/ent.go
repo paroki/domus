@@ -66,16 +66,6 @@ func newPostgresEntClient(t testing.TB, dsn string) (*ent.Client, *sql.DB, strin
 	drv := entsql.OpenDB(dialect.Postgres, db)
 	client := enttest.NewClient(t, enttest.WithOptions(ent.Driver(drv)))
 
-	for _, stmt := range []string{
-		`ALTER TABLE "agent_memories" ADD COLUMN IF NOT EXISTS "embedding" halfvec(768) NULL`,
-		`CREATE INDEX IF NOT EXISTS "agent_messages_bm25_idx" ON "agent_messages" USING bm25 ("id", "content", "parish_id", "user_id", "session_id", "role") WITH (key_field = 'id')`,
-		`CREATE INDEX IF NOT EXISTS "agent_memories_bm25_idx" ON "agent_memories" USING bm25 ("id", "content", "category", "scope", "parish_id", "user_id") WITH (key_field = 'id')`,
-		`CREATE INDEX IF NOT EXISTS "agent_memories_embedding_hnsw_idx" ON "agent_memories" USING hnsw ("embedding" halfvec_cosine_ops) WITH (m = 16, ef_construction = 64) WHERE "deleted_at" IS NULL AND "embedding" IS NOT NULL`,
-	} {
-		_, err = db.ExecContext(ctx, stmt)
-		require.NoError(t, err, "apply postgres agent DDL: %s", stmt)
-	}
-
 	t.Cleanup(func() {
 		_ = client.Close()
 		_, _ = adminDB.ExecContext(context.Background(), "DROP SCHEMA IF EXISTS "+schema+" CASCADE")

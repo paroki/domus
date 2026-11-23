@@ -6,10 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/paroki/domus/ent/agentmemory"
-	"github.com/paroki/domus/ent/agentmessage"
 	"github.com/paroki/domus/ent/agentprovider"
-	"github.com/paroki/domus/ent/agentsession"
 	"github.com/paroki/domus/ent/casbinrule"
 	"github.com/paroki/domus/ent/diocese"
 	"github.com/paroki/domus/ent/event"
@@ -35,66 +32,6 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
-	agentmemoryMixin := schema.AgentMemory{}.Mixin()
-	agentmemoryMixinFields0 := agentmemoryMixin[0].Fields()
-	_ = agentmemoryMixinFields0
-	agentmemoryMixinFields1 := agentmemoryMixin[1].Fields()
-	_ = agentmemoryMixinFields1
-	agentmemoryFields := schema.AgentMemory{}.Fields()
-	_ = agentmemoryFields
-	// agentmemoryDescCreatedAt is the schema descriptor for created_at field.
-	agentmemoryDescCreatedAt := agentmemoryMixinFields1[0].Descriptor()
-	// agentmemory.DefaultCreatedAt holds the default value on creation for the created_at field.
-	agentmemory.DefaultCreatedAt = agentmemoryDescCreatedAt.Default.(func() time.Time)
-	// agentmemoryDescUpdatedAt is the schema descriptor for updated_at field.
-	agentmemoryDescUpdatedAt := agentmemoryMixinFields1[1].Descriptor()
-	// agentmemory.DefaultUpdatedAt holds the default value on creation for the updated_at field.
-	agentmemory.DefaultUpdatedAt = agentmemoryDescUpdatedAt.Default.(func() time.Time)
-	// agentmemory.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
-	agentmemory.UpdateDefaultUpdatedAt = agentmemoryDescUpdatedAt.UpdateDefault.(func() time.Time)
-	// agentmemoryDescContent is the schema descriptor for content field.
-	agentmemoryDescContent := agentmemoryFields[4].Descriptor()
-	// agentmemory.ContentValidator is a validator for the "content" field. It is called by the builders before save.
-	agentmemory.ContentValidator = agentmemoryDescContent.Validators[0].(func(string) error)
-	// agentmemoryDescIsPinned is the schema descriptor for is_pinned field.
-	agentmemoryDescIsPinned := agentmemoryFields[5].Descriptor()
-	// agentmemory.DefaultIsPinned holds the default value on creation for the is_pinned field.
-	agentmemory.DefaultIsPinned = agentmemoryDescIsPinned.Default.(bool)
-	// agentmemoryDescID is the schema descriptor for id field.
-	agentmemoryDescID := agentmemoryMixinFields0[0].Descriptor()
-	// agentmemory.DefaultID holds the default value on creation for the id field.
-	agentmemory.DefaultID = agentmemoryDescID.Default.(func() uuid.UUID)
-	agentmessageMixin := schema.AgentMessage{}.Mixin()
-	agentmessageMixinFields0 := agentmessageMixin[0].Fields()
-	_ = agentmessageMixinFields0
-	agentmessageMixinFields1 := agentmessageMixin[1].Fields()
-	_ = agentmessageMixinFields1
-	agentmessageFields := schema.AgentMessage{}.Fields()
-	_ = agentmessageFields
-	// agentmessageDescCreatedAt is the schema descriptor for created_at field.
-	agentmessageDescCreatedAt := agentmessageMixinFields1[0].Descriptor()
-	// agentmessage.DefaultCreatedAt holds the default value on creation for the created_at field.
-	agentmessage.DefaultCreatedAt = agentmessageDescCreatedAt.Default.(func() time.Time)
-	// agentmessageDescUpdatedAt is the schema descriptor for updated_at field.
-	agentmessageDescUpdatedAt := agentmessageMixinFields1[1].Descriptor()
-	// agentmessage.DefaultUpdatedAt holds the default value on creation for the updated_at field.
-	agentmessage.DefaultUpdatedAt = agentmessageDescUpdatedAt.Default.(func() time.Time)
-	// agentmessage.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
-	agentmessage.UpdateDefaultUpdatedAt = agentmessageDescUpdatedAt.UpdateDefault.(func() time.Time)
-	// agentmessageDescAgentName is the schema descriptor for agent_name field.
-	agentmessageDescAgentName := agentmessageFields[3].Descriptor()
-	// agentmessage.DefaultAgentName holds the default value on creation for the agent_name field.
-	agentmessage.DefaultAgentName = agentmessageDescAgentName.Default.(string)
-	// agentmessage.AgentNameValidator is a validator for the "agent_name" field. It is called by the builders before save.
-	agentmessage.AgentNameValidator = agentmessageDescAgentName.Validators[0].(func(string) error)
-	// agentmessageDescContent is the schema descriptor for content field.
-	agentmessageDescContent := agentmessageFields[5].Descriptor()
-	// agentmessage.DefaultContent holds the default value on creation for the content field.
-	agentmessage.DefaultContent = agentmessageDescContent.Default.(string)
-	// agentmessageDescID is the schema descriptor for id field.
-	agentmessageDescID := agentmessageMixinFields0[0].Descriptor()
-	// agentmessage.DefaultID holds the default value on creation for the id field.
-	agentmessage.DefaultID = agentmessageDescID.Default.(func() uuid.UUID)
 	agentproviderMixin := schema.AgentProvider{}.Mixin()
 	agentproviderMixinFields0 := agentproviderMixin[0].Fields()
 	_ = agentproviderMixinFields0
@@ -136,37 +73,6 @@ func init() {
 	agentproviderDescID := agentproviderMixinFields0[0].Descriptor()
 	// agentprovider.DefaultID holds the default value on creation for the id field.
 	agentprovider.DefaultID = agentproviderDescID.Default.(func() uuid.UUID)
-	agentsessionMixin := schema.AgentSession{}.Mixin()
-	agentsessionMixinFields0 := agentsessionMixin[0].Fields()
-	_ = agentsessionMixinFields0
-	agentsessionMixinFields1 := agentsessionMixin[1].Fields()
-	_ = agentsessionMixinFields1
-	agentsessionFields := schema.AgentSession{}.Fields()
-	_ = agentsessionFields
-	// agentsessionDescCreatedAt is the schema descriptor for created_at field.
-	agentsessionDescCreatedAt := agentsessionMixinFields1[0].Descriptor()
-	// agentsession.DefaultCreatedAt holds the default value on creation for the created_at field.
-	agentsession.DefaultCreatedAt = agentsessionDescCreatedAt.Default.(func() time.Time)
-	// agentsessionDescUpdatedAt is the schema descriptor for updated_at field.
-	agentsessionDescUpdatedAt := agentsessionMixinFields1[1].Descriptor()
-	// agentsession.DefaultUpdatedAt holds the default value on creation for the updated_at field.
-	agentsession.DefaultUpdatedAt = agentsessionDescUpdatedAt.Default.(func() time.Time)
-	// agentsession.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
-	agentsession.UpdateDefaultUpdatedAt = agentsessionDescUpdatedAt.UpdateDefault.(func() time.Time)
-	// agentsessionDescTitle is the schema descriptor for title field.
-	agentsessionDescTitle := agentsessionFields[3].Descriptor()
-	// agentsession.DefaultTitle holds the default value on creation for the title field.
-	agentsession.DefaultTitle = agentsessionDescTitle.Default.(string)
-	// agentsession.TitleValidator is a validator for the "title" field. It is called by the builders before save.
-	agentsession.TitleValidator = agentsessionDescTitle.Validators[0].(func(string) error)
-	// agentsessionDescLastMessageAt is the schema descriptor for last_message_at field.
-	agentsessionDescLastMessageAt := agentsessionFields[4].Descriptor()
-	// agentsession.DefaultLastMessageAt holds the default value on creation for the last_message_at field.
-	agentsession.DefaultLastMessageAt = agentsessionDescLastMessageAt.Default.(func() time.Time)
-	// agentsessionDescID is the schema descriptor for id field.
-	agentsessionDescID := agentsessionMixinFields0[0].Descriptor()
-	// agentsession.DefaultID holds the default value on creation for the id field.
-	agentsession.DefaultID = agentsessionDescID.Default.(func() uuid.UUID)
 	casbinruleMixin := schema.CasbinRule{}.Mixin()
 	casbinruleMixinFields0 := casbinruleMixin[0].Fields()
 	_ = casbinruleMixinFields0

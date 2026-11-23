@@ -22,19 +22,6 @@ func anthropicHeaders(apiKey string) map[string]string {
 	}
 }
 
-func anthropicThinkingBudget(effort domain.ReasoningEffort) int {
-	switch effort {
-	case domain.ReasoningLow:
-		return 1024
-	case domain.ReasoningMedium:
-		return 4096
-	case domain.ReasoningHigh:
-		return 16384
-	default:
-		return 0
-	}
-}
-
 func (r *Registry) discoverAnthropicModels(
 	ctx context.Context,
 	baseURL, apiKey string,
