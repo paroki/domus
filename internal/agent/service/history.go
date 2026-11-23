@@ -1,8 +1,6 @@
 package service
 
 import (
-	"context"
-	"encoding/json"
 	"strings"
 	"unicode/utf8"
 
@@ -22,17 +20,6 @@ func truncateToolResult(s string) string {
 		cut--
 	}
 	return s[:cut] + "…[truncated]"
-}
-
-type delegateDepthKey struct{}
-
-func inDelegation(ctx context.Context) bool {
-	v, _ := ctx.Value(delegateDepthKey{}).(bool)
-	return v
-}
-
-func withDelegation(ctx context.Context) context.Context {
-	return context.WithValue(ctx, delegateDepthKey{}, true)
 }
 
 // sanitizeHistory drops tool messages without a preceding matching assistant tool call and
@@ -70,34 +57,6 @@ func sanitizeHistory(in []driver.ChatMessage) []driver.ChatMessage {
 			out = append(out, results...)
 		default:
 			out = append(out, m)
-		}
-	}
-	return out
-}
-
-// closeDelegatedToolTurns inserts a synthetic assistant message after a
-// delegate_specialist tool result when the next message is from the user,
-// keeping the [assistant(tool_calls), tool, assistant, user] sequence valid
-// across LLM providers on subsequent turns.
-func closeDelegatedToolTurns(in []driver.ChatMessage) []driver.ChatMessage {
-	out := make([]driver.ChatMessage, 0, len(in))
-	for i, m := range in {
-		out = append(out, m)
-		if m.Role != domain.RoleTool || m.ToolName != "delegate_specialist" {
-			continue
-		}
-		if i+1 >= len(in) || in[i+1].Role != domain.RoleUser {
-			continue
-		}
-		var res struct {
-			Answer string `json:"answer"`
-		}
-		_ = json.Unmarshal([]byte(m.Content), &res)
-		if strings.TrimSpace(res.Answer) != "" {
-			out = append(out, driver.ChatMessage{
-				Role:    domain.RoleAssistant,
-				Content: res.Answer,
-			})
 		}
 	}
 	return out

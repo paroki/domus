@@ -259,7 +259,7 @@ func (s *Service) RunPreparedTurn(ctx context.Context, prep *PreparedTurn, onSte
 		defer func() { _ = mcpSession.Close() }()
 	}
 
-	sysPrompt, err := s.buildPromptForTurn(turnCtx, prep.Principal, prep.Channel, gabrielCfg.Instruction)
+	sysPrompt, err := s.buildPromptForTurn(turnCtx, prep.Principal, prep.Channel, gabrielCfg.Instruction, true)
 	if err != nil {
 		return nil, "", err
 	}
@@ -301,7 +301,7 @@ func (s *Service) RunPreparedTurn(ctx context.Context, prep *PreparedTurn, onSte
 		})
 	}
 
-	sanitized := closeDelegatedToolTurns(sanitizeHistory(history))
+	sanitized := sanitizeHistory(history)
 	if len(sanitized) == 0 {
 		return nil, "", domain.ErrEmptyMessage
 	}
@@ -358,6 +358,7 @@ func (s *Service) buildPromptForTurn(
 	p authx.Principal,
 	ch domain.Channel,
 	baseInstruction string,
+	isOrchestrator bool,
 ) (string, error) {
 	var userProf *UserProfileInfo
 	if s.users != nil && p.UserID != uuid.Nil {
@@ -402,6 +403,7 @@ func (s *Service) buildPromptForTurn(
 
 	return BuildSystemPrompt(PromptInput{
 		Instruction:    baseInstruction,
+		IsOrchestrator: isOrchestrator,
 		Channel:        ch,
 		Now:            s.nowFn(),
 		Parish:         parishInfo,
@@ -456,7 +458,7 @@ func (s *Service) runReActLoop(
 		maxSteps = domain.MaxSteps
 	}
 
-	tools := s.internalTools(p, ch, sessionID, mcpSession, onStep, agentCfg.Tools)
+	tools := s.internalTools(p, sessionID, agentCfg.Tools)
 	mcpTools, err := discoverMCPTools(ctx, mcpSession, agentCfg.Tools)
 	if err != nil {
 		return "", err
@@ -468,22 +470,11 @@ func (s *Service) runReActLoop(
 		toolRefs[i] = t
 	}
 
-	var (
-		mu              sync.Mutex
-		delegatedAnswer string
-		hasDelegated    bool
-	)
-	errDelegatedHandoff := errors.New("delegated handoff complete")
+	var mu sync.Mutex
 
 	hooksMiddleware := ai.MiddlewareFunc(func(context.Context) (*ai.Hooks, error) {
 		return &ai.Hooks{
 			WrapModel: func(ctx context.Context, params *ai.ModelParams, next ai.ModelNext) (*ai.ModelResponse, error) {
-				mu.Lock()
-				delegated := hasDelegated
-				mu.Unlock()
-				if delegated {
-					return nil, errDelegatedHandoff
-				}
 				if ctx.Err() != nil {
 					return nil, ctx.Err()
 				}
@@ -518,17 +509,19 @@ func (s *Service) runReActLoop(
 				if len(toolCalls) == 0 {
 					content = SanitizeA2UIBlocks(content)
 				}
-				if _, err := s.repo.AppendMessage(ctx, domain.CreateMessageInput{
-					ParishID:  p.ParishID,
-					UserID:    p.UserID,
-					SessionID: sessionID,
-					AgentName: agentCfg.Name,
-					Role:      domain.RoleAssistant,
-					Content:   content,
-					Thinking:  thinkingPtr,
-					ToolCalls: toolCalls,
-				}); err != nil {
-					return nil, err
+				if emitDeltas || len(toolCalls) > 0 {
+					if _, err := s.repo.AppendMessage(ctx, domain.CreateMessageInput{
+						ParishID:  p.ParishID,
+						UserID:    p.UserID,
+						SessionID: sessionID,
+						AgentName: agentCfg.Name,
+						Role:      domain.RoleAssistant,
+						Content:   content,
+						Thinking:  thinkingPtr,
+						ToolCalls: toolCalls,
+					}); err != nil {
+						return nil, err
+					}
 				}
 
 				for _, tc := range toolCalls {
@@ -560,17 +553,6 @@ func (s *Service) runReActLoop(
 					default:
 						b, _ := json.Marshal(v)
 						resultStr = string(b)
-					}
-					if params.Request.Name == "delegate_specialist" {
-						var parsed struct {
-							Answer string `json:"answer"`
-						}
-						if json.Unmarshal([]byte(resultStr), &parsed) == nil {
-							mu.Lock()
-							delegatedAnswer = parsed.Answer
-							hasDelegated = true
-							mu.Unlock()
-						}
 					}
 				}
 				resultStr = truncateToolResult(resultStr)
@@ -637,9 +619,6 @@ func (s *Service) runReActLoop(
 		return nil
 	}, ai.WithMaxTurns(maxSteps), ai.WithUse(hooksMiddleware))
 	if err != nil {
-		if errors.Is(err, errDelegatedHandoff) {
-			return delegatedAnswer, nil
-		}
 		return "", err
 	}
 	return SanitizeA2UIBlocks(resp.Text()), nil

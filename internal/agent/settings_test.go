@@ -51,7 +51,7 @@ func TestAgentSettings_DefaultsValidationAndProviderBinding(t *testing.T) {
 	setting.RegisterFeatures(store, feat)
 
 	items := store.List(ctx)
-	require.Len(t, items, 14)
+	require.Len(t, items, 6)
 
 	require.NoError(t, store.Load(ctx))
 	assert.Equal(t, 0, discoverCalls)

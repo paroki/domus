@@ -96,7 +96,7 @@ func TestComputeAgeAndSalutation_AndBuildSystemPrompt(t *testing.T) {
 		},
 	})
 	assert.Contains(t, prompt, "<channel>web</channel>")
-	assert.Contains(t, prompt, "<default_salutation>Bapak Budi</default_salutation>")
+	assert.Contains(t, prompt, `salutation="Bapak Budi"`)
 	assert.Contains(t, prompt, "<user_memory>")
 	assert.Contains(t, prompt, "Sapa Pak Budi")
 }
@@ -139,19 +139,15 @@ func TestService_RunTurn_MemoryAndDelegateSpecialist(t *testing.T) {
 			_, _ = fmt.Fprint(w, "data: {\"choices\":[{\"delta\":{\"tool_calls\":[{\"index\":0,\"id\":\"tc_1\",\"function\":{\"name\":\"memory_save\",\"arguments\":\"{\\\"content\\\":\\\"FAQ\\\",\\\"category\\\":\\\"parish_faq\\\",\\\"scope\\\":\\\"parish\\\"}\"}}]}}]}\n\n")
 			_, _ = fmt.Fprint(w, "data: [DONE]\n\n")
 		case 2:
-			// Gabriel delegates to Mikael
-			_, _ = fmt.Fprint(w, "data: {\"choices\":[{\"delta\":{\"tool_calls\":[{\"index\":0,\"id\":\"tc_2\",\"function\":{\"name\":\"delegate_specialist\",\"arguments\":\"{\\\"agent_name\\\":\\\"mikael\\\",\\\"task\\\":\\\"Cek acara\\\"}\"}}]}}]}\n\n")
+			// Gabriel calls event_list directly via MCP
+			_, _ = fmt.Fprint(w, "data: {\"choices\":[{\"delta\":{\"thinking\":\"\",\"reasoning_content\":\"Cek event\",\"tool_calls\":[{\"index\":0,\"id\":\"tc_2\",\"function\":{\"name\":\"event_list\",\"arguments\":\"{}\"}}]}}]}\n\n")
 			_, _ = fmt.Fprint(w, "data: [DONE]\n\n")
 		case 3:
-			// Mikael calls event_list via MCP
-			_, _ = fmt.Fprint(w, "data: {\"choices\":[{\"delta\":{\"thinking\":\"\",\"reasoning_content\":\"Cek event\",\"tool_calls\":[{\"index\":0,\"id\":\"tc_3\",\"function\":{\"name\":\"event_list\",\"arguments\":\"{}\"}}]}}]}\n\n")
-			_, _ = fmt.Fprint(w, "data: [DONE]\n\n")
-		case 4:
-			// Mikael returns final answer (streamed directly to user; Gabriel does not reply again)
-			_, _ = fmt.Fprint(w, "data: {\"choices\":[{\"delta\":{\"content\":\"Ada Misa Natal.\"}}]}\n\n")
+			// Gabriel composes final reply from event_list tool result
+			_, _ = fmt.Fprint(w, "data: {\"choices\":[{\"delta\":{\"content\":\"Jadwal: Ada Misa Natal.\"}}]}\n\n")
 			_, _ = fmt.Fprint(w, "data: [DONE]\n\n")
 		default:
-			t.Fatalf("unexpected extra LLM call step %d after delegation handoff", step)
+			t.Fatalf("unexpected extra LLM call step %d", step)
 		}
 	}))
 	defer srv.Close()
@@ -162,14 +158,7 @@ func TestService_RunTurn_MemoryAndDelegateSpecialist(t *testing.T) {
 				Name:        "gabriel",
 				Instruction: "Gabriel",
 				Model:       domain.ModelConfig{Provider: "openai", BaseURL: srv.URL, APIKey: "k", Model: "gpt-4o"},
-				Tools:       []string{"delegate_specialist", "memory_*"},
-				MaxSteps:    domain.MaxSteps,
-			},
-			"mikael": {
-				Name:        "mikael",
-				Instruction: "Mikael",
-				Model:       domain.ModelConfig{Provider: "openai", BaseURL: srv.URL, APIKey: "k", Model: "gpt-4o"},
-				Tools:       []string{"event_*"},
+				Tools:       []string{"memory_*", "event_*", "org_*"},
 				MaxSteps:    domain.MaxSteps,
 			},
 		},
@@ -198,12 +187,12 @@ func TestService_RunTurn_MemoryAndDelegateSpecialist(t *testing.T) {
 		},
 	})
 	require.NoError(t, err)
-	assert.Equal(t, "Ada Misa Natal.", answer)
-	assert.Equal(t, int32(4), turnStep.Load())
+	assert.Equal(t, "Jadwal: Ada Misa Natal.", answer)
+	assert.Equal(t, int32(3), turnStep.Load())
 	assert.Equal(t, userID.String(), mcpPrincipalUserID)
 
-	// Verify parish-scope RBAC rejection was returned as structured tool_result and Mikael delta streamed directly
-	var sawForbidden, sawMikaelDelta, sawMikaelToolResult, sawDone bool
+	// Verify parish-scope RBAC rejection, Gabriel MCP tool result, and Gabriel final delta
+	var sawForbidden, sawGabrielDelta, sawGabrielToolResult, sawDone bool
 	for _, ev := range events {
 		if ev.Event == "tool_result" && ev.ToolName == "memory_save" && ev.AgentName == "gabriel" {
 			var payload map[string]map[string]string
@@ -211,19 +200,19 @@ func TestService_RunTurn_MemoryAndDelegateSpecialist(t *testing.T) {
 				sawForbidden = true
 			}
 		}
-		if ev.Event == "delta" && ev.AgentName == "mikael" {
-			sawMikaelDelta = true
+		if ev.Event == "delta" && ev.AgentName == "gabriel" {
+			sawGabrielDelta = true
 		}
-		if ev.Event == "tool_result" && ev.AgentName == "mikael" && ev.ToolName == "event_list" {
-			sawMikaelToolResult = true
+		if ev.Event == "tool_result" && ev.AgentName == "gabriel" && ev.ToolName == "event_list" {
+			sawGabrielToolResult = true
 		}
 		if ev.Event == "done" {
 			sawDone = true
 		}
 	}
 	assert.True(t, sawForbidden)
-	assert.True(t, sawMikaelDelta)
-	assert.True(t, sawMikaelToolResult)
+	assert.True(t, sawGabrielDelta)
+	assert.True(t, sawGabrielToolResult)
 	assert.True(t, sawDone)
 
 	// Grant ref:parish-admin and verify parish-scope memory_save succeeds
@@ -317,7 +306,7 @@ func TestService_BuildPromptForTurn_InjectsUserRoles(t *testing.T) {
 		slog.New(slog.DiscardHandler),
 	)
 
-	prompt, err := svc.buildPromptForTurn(ctx, principal, domain.ChannelWeb, "Gabriel")
+	prompt, err := svc.buildPromptForTurn(ctx, principal, domain.ChannelWeb, "Gabriel", true)
 	require.NoError(t, err)
 	assert.Contains(t, prompt, "<user_roles>\n    <role>ref:parish-admin</role>\n    <role>user:super-admin</role>\n  </user_roles>")
 }

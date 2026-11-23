@@ -3,12 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/paroki/domus/internal/agent/domain"
+	"github.com/paroki/domus/internal/agent/prompts"
 )
 
 // UserProfileInfo holds cross-feature user biodata for prompt injection.
@@ -96,6 +96,7 @@ func ComputeAgeAndSalutation(name string, gender, birthDate *string, now time.Ti
 // PromptInput holds all context blocks injected into an agent's system prompt.
 type PromptInput struct {
 	Instruction    string
+	IsOrchestrator bool
 	Channel        domain.Channel
 	Now            time.Time
 	Parish         *ParishInfo
@@ -105,36 +106,33 @@ type PromptInput struct {
 	PinnedMemories []domain.Memory
 }
 
-// BuildSystemPrompt assembles base persona instruction + XML context, profile, and pinned memory blocks.
+// BuildSystemPrompt assembles base persona instruction + XML context, pre-computed salutation,
+// conditional onboarding, and pinned memory blocks via Genkit Dotprompt.
 func BuildSystemPrompt(in PromptInput) string {
 	now := in.Now.UTC()
 	if now.IsZero() {
 		now = time.Now().UTC()
 	}
 
-	var b strings.Builder
-	b.WriteString(strings.TrimSpace(in.Instruction))
-	b.WriteString("\n\n<agent_context>\n")
-	fmt.Fprintf(&b, "  <channel>%s</channel>\n", promptXMLEscaper.Replace(string(in.Channel)))
-	fmt.Fprintf(&b, "  <current_time>%s</current_time>\n", now.Format(time.RFC3339))
+	var parishXML string
 	if in.Parish != nil {
-		fmt.Fprintf(
-			&b,
-			"  <parish id=\"%s\" code=\"%s\">%s</parish>\n",
+		parishXML = fmt.Sprintf(
+			`<parish id="%s" code="%s">%s</parish>`,
 			promptXMLEscaper.Replace(in.Parish.ID.String()),
 			promptXMLEscaper.Replace(in.Parish.Code),
 			promptXMLEscaper.Replace(in.Parish.Name),
 		)
 	}
-	b.WriteString("  <user_roles>\n")
+
+	var rolesB strings.Builder
 	for _, role := range in.Roles {
-		fmt.Fprintf(&b, "    <role>%s</role>\n", promptXMLEscaper.Replace(role))
+		fmt.Fprintf(&rolesB, "    <role>%s</role>\n", promptXMLEscaper.Replace(role))
 	}
-	b.WriteString("  </user_roles>\n")
-	b.WriteString("  <user_organizations>\n")
+
+	var orgsB strings.Builder
 	for _, org := range in.Orgs {
 		fmt.Fprintf(
-			&b,
+			&orgsB,
 			"    <organization id=\"%s\" code=\"%s\" kind=\"%s\" role=\"%s\">%s</organization>\n",
 			promptXMLEscaper.Replace(org.ID.String()),
 			promptXMLEscaper.Replace(org.Code),
@@ -143,8 +141,6 @@ func BuildSystemPrompt(in PromptInput) string {
 			promptXMLEscaper.Replace(org.Name),
 		)
 	}
-	b.WriteString("  </user_organizations>\n")
-	b.WriteString("</agent_context>\n\n")
 
 	userName := "Umat"
 	var genderPtr, birthDatePtr *string
@@ -155,35 +151,42 @@ func BuildSystemPrompt(in PromptInput) string {
 		genderPtr = in.User.Gender
 		birthDatePtr = in.User.BirthDate
 	}
-	age, defaultSal := ComputeAgeAndSalutation(userName, genderPtr, birthDatePtr, now)
-	genderStr := "unset"
-	if genderPtr != nil && strings.TrimSpace(*genderPtr) != "" {
-		genderStr = strings.TrimSpace(*genderPtr)
+	_, defaultSal := ComputeAgeAndSalutation(userName, genderPtr, birthDatePtr, now)
+
+	hasProfileMem, hasPrefMem := false, false
+	for _, m := range in.PinnedMemories {
+		if !m.IsPinned {
+			continue
+		}
+		switch m.Category {
+		case domain.MemoryCategoryProfile:
+			hasProfileMem = true
+		case domain.MemoryCategoryPreference:
+			hasPrefMem = true
+		}
 	}
-	birthDateStr := "unset"
-	if birthDatePtr != nil && strings.TrimSpace(*birthDatePtr) != "" {
-		birthDateStr = strings.TrimSpace(*birthDatePtr)
-	}
-	ageStr := "unset"
-	if age != nil {
-		ageStr = strconv.Itoa(*age)
+	needsOnboarding := in.IsOrchestrator && (!hasProfileMem || !hasPrefMem)
+
+	var a2ui string
+	if in.IsOrchestrator && in.Channel == domain.ChannelWeb {
+		a2ui = A2UIWebPromptInstructions()
 	}
 
-	b.WriteString("<user_profile>\n")
-	fmt.Fprintf(&b, "  <name>%s</name>\n", promptXMLEscaper.Replace(userName))
-	fmt.Fprintf(&b, "  <gender>%s</gender>\n", promptXMLEscaper.Replace(genderStr))
-	fmt.Fprintf(&b, "  <birth_date>%s</birth_date>\n", promptXMLEscaper.Replace(birthDateStr))
-	fmt.Fprintf(&b, "  <age>%s</age>\n", ageStr)
-	fmt.Fprintf(&b, "  <default_salutation>%s</default_salutation>\n", promptXMLEscaper.Replace(defaultSal))
-	b.WriteString("</user_profile>")
-
-	if memXML := domain.FormatUserMemoryXML(in.PinnedMemories); memXML != "" {
-		b.WriteString("\n\n")
-		b.WriteString(memXML)
+	rendered, err := prompts.RenderSystemPrompt(context.Background(), prompts.SystemPromptData{
+		Instruction:      strings.TrimSpace(in.Instruction),
+		Channel:          promptXMLEscaper.Replace(string(in.Channel)),
+		CurrentTime:      now.Format(time.RFC3339),
+		ParishXML:        parishXML,
+		RolesXML:         strings.TrimSuffix(rolesB.String(), "\n"),
+		OrgsXML:          strings.TrimSuffix(orgsB.String(), "\n"),
+		UserName:         promptXMLEscaper.Replace(userName),
+		Salutation:       promptXMLEscaper.Replace(defaultSal),
+		NeedsOnboarding:  needsOnboarding,
+		UserMemoryXML:    domain.FormatUserMemoryXML(in.PinnedMemories),
+		A2UIInstructions: a2ui,
+	})
+	if err == nil {
+		return rendered
 	}
-	if in.Channel == domain.ChannelWeb {
-		b.WriteString("\n\n")
-		b.WriteString(A2UIWebPromptInstructions())
-	}
-	return b.String()
+	return strings.TrimSpace(in.Instruction)
 }

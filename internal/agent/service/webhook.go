@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"regexp"
@@ -261,10 +260,7 @@ func (s *Service) handleChannelMessage(
 				}
 			case "tool_call":
 				thinkingSent = false
-				if ev.ToolName == "delegate_specialist" {
-					sendText(formatDelegateProgress(ev.Arguments))
-					sendTyping()
-				} else if ev.ToolName != "" {
+				if ev.ToolName != "" {
 					sendText(fmt.Sprintf("⏳ Memanggil `%s`...", ev.ToolName))
 					sendTyping()
 				}
@@ -408,20 +404,6 @@ func parseSlashCommand(text string) (cmd, arg string) {
 		arg = strings.TrimSpace(fields[1])
 	}
 	return cmd, arg
-}
-
-func formatDelegateProgress(rawArgs string) string {
-	var args struct {
-		AgentName  string `json:"agent_name"`
-		Specialist string `json:"specialist"`
-		Agent      string `json:"agent"`
-	}
-	_ = json.Unmarshal([]byte(rawArgs), &args)
-	target := firstNonEmpty(args.AgentName, args.Specialist, args.Agent)
-	if target != "" {
-		return fmt.Sprintf("⏳ Menghubungi spesialis %s...", strings.ToUpper(target[:1])+target[1:])
-	}
-	return "⏳ Menghubungi spesialis..."
 }
 
 func firstNonEmpty(vals ...string) string {

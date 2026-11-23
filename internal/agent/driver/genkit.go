@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -284,19 +285,22 @@ func (r *Registry) embedGenkit(ctx context.Context, provider, baseURL, key, mode
 	return NormalizeEmbedding768(res.Embeddings[0].Embedding)
 }
 
+var httpStatusCodeRe = regexp.MustCompile(`\b(400|401|403|404|429|500|502|503|529)\b`)
+
 // mapGenkitError maps SDK errors onto domain sentinels by HTTP status text and redacts the key.
 func mapGenkitError(err error, apiKey string) error {
 	msg := redactAPIKey(err.Error(), apiKey)
 	low := strings.ToLower(msg)
+	code := httpStatusCodeRe.FindString(low)
 	var sentinel error
 	switch {
-	case strings.Contains(low, "401"), strings.Contains(low, "403"), strings.Contains(low, "unauthenticated"), strings.Contains(low, "permission"):
+	case code == "401", code == "403", strings.Contains(low, "unauthenticated"), strings.Contains(low, "permission"):
 		sentinel = domain.ErrProviderAuthFailed
-	case strings.Contains(low, "429"), strings.Contains(low, "resource_exhausted"), strings.Contains(low, "rate limit"):
+	case code == "429", strings.Contains(low, "resource_exhausted"), strings.Contains(low, "rate limit"):
 		sentinel = domain.ErrProviderRateLimited
-	case strings.Contains(low, "500"), strings.Contains(low, "502"), strings.Contains(low, "503"), strings.Contains(low, "529"), strings.Contains(low, "overloaded"):
+	case code == "500", code == "502", code == "503", code == "529", strings.Contains(low, "overloaded"):
 		sentinel = domain.ErrProviderOverloaded
-	case strings.Contains(low, "400"), strings.Contains(low, "404"), strings.Contains(low, "invalid"):
+	case code == "400", code == "404", strings.Contains(low, "invalid"):
 		sentinel = domain.ErrProviderRequestInvalid
 	default:
 		sentinel = domain.ErrProviderUnavailable

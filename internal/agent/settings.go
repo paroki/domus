@@ -19,22 +19,12 @@ import (
 	"github.com/paroki/domus/internal/platform/setting"
 )
 
-// Exported setting keys for AI Agent personas and embeddings (14 keys).
+// Exported setting keys for AI Agent persona and embeddings (6 keys).
 const (
 	SettingGabrielProviderID  = "agent.gabriel.provider_id"
 	SettingGabrielModel       = "agent.gabriel.model"
 	SettingGabrielEffort      = "agent.gabriel.effort"
 	SettingGabrielInstruction = "agent.gabriel.instruction"
-
-	SettingMikaelProviderID  = "agent.mikael.provider_id"
-	SettingMikaelModel       = "agent.mikael.model"
-	SettingMikaelEffort      = "agent.mikael.effort"
-	SettingMikaelInstruction = "agent.mikael.instruction"
-
-	SettingRafaelProviderID  = "agent.rafael.provider_id"
-	SettingRafaelModel       = "agent.rafael.model"
-	SettingRafaelEffort      = "agent.rafael.effort"
-	SettingRafaelInstruction = "agent.rafael.instruction"
 
 	SettingEmbeddingProviderID = "agent.embedding.provider_id"
 	SettingEmbeddingModel      = "agent.embedding.model"
@@ -254,42 +244,22 @@ var agentDefs = []agentDef{
 	{
 		name:               "gabriel",
 		displayName:        "Gabriel",
-		description:        "Asisten AI utama dan orkestrator Domus.",
+		description:        "Asisten AI utama Domus untuk kegiatan, organisasi, dan memori paroki.",
 		group:              "AI Agent: Gabriel",
 		providerIDKey:      SettingGabrielProviderID,
 		modelKey:           SettingGabrielModel,
 		effortKey:          SettingGabrielEffort,
 		instructionKey:     SettingGabrielInstruction,
 		defaultInstruction: prompts.GabrielInstruction,
-		tools:              []string{"memory_save", "memory_recall", "memory_forget", "memory_search_history", "delegate_specialist"},
-	},
-	{
-		name:               "mikael",
-		displayName:        "Mikael",
-		description:        "Spesialis kegiatan, jadwal acara, dan RSVP paroki.",
-		group:              "AI Agent: Mikael",
-		providerIDKey:      SettingMikaelProviderID,
-		modelKey:           SettingMikaelModel,
-		effortKey:          SettingMikaelEffort,
-		instructionKey:     SettingMikaelInstruction,
-		defaultInstruction: prompts.MikaelInstruction,
-		tools:              []string{"event_list", "event_get", "event_create", "event_update", "event_rsvp", "event_list_rsvps"},
-	},
-	{
-		name:               "rafael",
-		displayName:        "Rafael",
-		description:        "Spesialis organisasi, keanggotaan, dan tautan undangan.",
-		group:              "AI Agent: Rafael",
-		providerIDKey:      SettingRafaelProviderID,
-		modelKey:           SettingRafaelModel,
-		effortKey:          SettingRafaelEffort,
-		instructionKey:     SettingRafaelInstruction,
-		defaultInstruction: prompts.RafaelInstruction,
-		tools:              []string{"org_list", "org_get", "org_create", "org_list_members", "org_update_member", "org_create_invite", "org_revoke_invite", "org_redeem_invite"},
+		tools: []string{
+			"memory_save", "memory_recall", "memory_forget", "memory_search_history",
+			"event_list", "event_get", "event_create", "event_update", "event_rsvp", "event_list_rsvps",
+			"org_list", "org_get", "org_create", "org_list_members", "org_update_member", "org_create_invite", "org_revoke_invite", "org_redeem_invite",
+		},
 	},
 }
 
-// RegisterSettings registers all 14 AI agent settings descriptors and a hot-reload listener on s.
+// RegisterSettings registers all 6 AI agent settings descriptors and a hot-reload listener on s.
 func (c *ConfigStore) RegisterSettings(s *setting.Store) {
 	for _, a := range agentDefs {
 		s.Register(setting.Descriptor{

@@ -7,10 +7,8 @@ import (
 
 	"github.com/firebase/genkit/go/ai"
 	"github.com/google/uuid"
-	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/paroki/domus/ent/agentmemory"
 	"github.com/paroki/domus/internal/agent/domain"
-	"github.com/paroki/domus/internal/agent/driver"
 	"github.com/paroki/domus/internal/platform/authx"
 	"github.com/paroki/domus/internal/platform/authz"
 )
@@ -40,17 +38,9 @@ type memorySearchHistoryArgs struct {
 	Limit int    `json:"limit,omitempty" jsonschema:"minimum=1,maximum=20,description=Jumlah maksimal hasil riwayat (1-20)"`
 }
 
-type delegateSpecialistArgs struct {
-	AgentName string `json:"agent_name" jsonschema:"enum=mikael,enum=rafael,description=Nama agen spesialis tujuan (mikael atau rafael)"`
-	Task      string `json:"task" jsonschema:"description=Instruksi tugas jelas untuk spesialis"`
-}
-
 func (s *Service) internalTools(
 	p authx.Principal,
-	ch domain.Channel,
 	sessionID uuid.UUID,
-	mcpSession *mcp.ClientSession,
-	onStep StepCallback,
 	patterns []string,
 ) []ai.Tool {
 	catalog := []ai.Tool{
@@ -80,13 +70,6 @@ func (s *Service) internalTools(
 			"Cari riwayat percakapan terdahulu lintas sesi dan saluran (web, telegram, whatsapp).",
 			func(tc *ai.ToolContext, args memorySearchHistoryArgs) (string, error) {
 				return s.execMemorySearchHistory(tc.Context, p, args)
-			},
-		),
-		ai.NewTool(
-			"delegate_specialist",
-			"Delegasikan tugas spesialis ke Mikael (acara/RSVP) atau Rafael (organisasi/undangan).",
-			func(tc *ai.ToolContext, args delegateSpecialistArgs) (string, error) {
-				return s.execDelegateSpecialist(tc.Context, p, ch, sessionID, mcpSession, onStep, args)
 			},
 		),
 	}
@@ -268,58 +251,6 @@ func (s *Service) execMemorySearchHistory(ctx context.Context, p authx.Principal
 		})
 	}
 	b, _ := json.Marshal(map[string]any{"messages": items})
-	return string(b), nil
-}
-
-func (s *Service) execDelegateSpecialist(
-	ctx context.Context,
-	p authx.Principal,
-	ch domain.Channel,
-	sessionID uuid.UUID,
-	mcpSession *mcp.ClientSession,
-	onStep StepCallback,
-	args delegateSpecialistArgs,
-) (string, error) {
-	if inDelegation(ctx) {
-		return "", domain.ValidationError("agent_name", "NESTED_DELEGATION", "Specialists cannot delegate to other specialists.")
-	}
-	target := strings.TrimSpace(args.AgentName)
-	if target != "mikael" && target != "rafael" {
-		return "", domain.ValidationError("agent_name", "INVALID_AGENT", "agent_name must be mikael or rafael.")
-	}
-	task := strings.TrimSpace(args.Task)
-	if task == "" {
-		return "", domain.ValidationError("task", "REQUIRED", "Task is required.")
-	}
-
-	specCfg, ok := s.config.AgentConfig(target)
-	if !ok {
-		return "", domain.ErrProviderUnavailable
-	}
-	sysPrompt, err := s.buildPromptForTurn(ctx, p, ch, specCfg.Instruction)
-	if err != nil {
-		return "", err
-	}
-
-	answer, err := s.runReActLoop(
-		withDelegation(ctx),
-		p,
-		ch,
-		sessionID,
-		specCfg,
-		sysPrompt,
-		[]driver.ChatMessage{{Role: domain.RoleUser, Content: task}},
-		mcpSession,
-		onStep,
-		true, // stream specialist reply directly to user
-	)
-	if err != nil {
-		return "", err
-	}
-	b, _ := json.Marshal(map[string]any{
-		"agent_name": target,
-		"answer":     answer,
-	})
 	return string(b), nil
 }
 
