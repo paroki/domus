@@ -490,12 +490,10 @@ const id = {
     unconfigured: "Belum Dikonfigurasi",
     empty: "Belum ada pengaturan yang terdaftar.",
     backToSettings: "Kembali ke Pengaturan",
-    backToAgents: "Kembali ke AI Agent",
     launcher: {
       telegram: "Telegram",
       whatsapp: "WhatsApp",
       aiProvider: "AI Provider",
-      aiAgent: "AI Agent",
     },
     channels: {
       telegramTitle: "Pengaturan Telegram",

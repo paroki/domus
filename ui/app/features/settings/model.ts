@@ -1,11 +1,4 @@
-import {
-  Bot,
-  Cpu,
-  type LucideIcon,
-  MessageCircle,
-  Send,
-  Sparkles,
-} from "lucide-react";
+import { Cpu, type LucideIcon, MessageCircle, Send } from "lucide-react";
 import type {
   AgentProviderResponse,
   ProviderModelItem,
@@ -15,7 +8,7 @@ import type {
 export const ROLE_SUPER_ADMIN = "user:super-admin";
 
 export interface SettingsLauncherItem {
-  id: "telegram" | "whatsapp" | "aiProvider" | "aiAgent";
+  id: "telegram" | "whatsapp" | "aiProvider";
   path: string;
   plate: 1 | 2 | 3 | 4 | 5 | 6;
   icon: LucideIcon;
@@ -30,7 +23,6 @@ export const SETTINGS_LAUNCHERS: SettingsLauncherItem[] = [
     icon: MessageCircle,
   },
   { id: "aiProvider", path: "/settings/ai-provider", plate: 3, icon: Cpu },
-  { id: "aiAgent", path: "/settings/ai-agent", plate: 4, icon: Bot },
 ];
 
 export const CHANNEL_GROUP_NAMES = {
@@ -44,7 +36,6 @@ export interface LLMProviderDef {
   id: LLMProviderType;
   label: string;
   defaultBaseURL: string;
-  supportsEmbedding: boolean;
 }
 
 export const LLM_PROVIDERS: LLMProviderDef[] = [
@@ -52,25 +43,21 @@ export const LLM_PROVIDERS: LLMProviderDef[] = [
     id: "gemini",
     label: "Google AI Studio (Gemini)",
     defaultBaseURL: "https://generativelanguage.googleapis.com",
-    supportsEmbedding: true,
   },
   {
     id: "anthropic",
     label: "Anthropic Claude",
     defaultBaseURL: "https://api.anthropic.com",
-    supportsEmbedding: false,
   },
   {
     id: "openai",
     label: "OpenAI",
     defaultBaseURL: "https://api.openai.com/v1",
-    supportsEmbedding: true,
   },
   {
     id: "openrouter",
     label: "OpenRouter",
     defaultBaseURL: "https://openrouter.ai/api/v1",
-    supportsEmbedding: true,
   },
 ];
 
@@ -78,52 +65,8 @@ export function getProviderLabel(provider?: string): string {
   return LLM_PROVIDERS.find((p) => p.id === provider)?.label ?? provider ?? "";
 }
 
-export interface AgentPersonaDef {
-  id: "gabriel";
-  name: string;
-  role: string;
-  plate: 1 | 2 | 3 | 4 | 5 | 6;
-  icon: LucideIcon;
-  tools: string[];
-  providerKey: string;
-  modelKey: string;
-  effortKey: string;
-  instructionKey: string;
-}
-
-export const AGENT_PERSONAS: AgentPersonaDef[] = [
-  {
-    id: "gabriel",
-    name: "Gabriel",
-    role: "Asisten Utama & Memori Paroki",
-    plate: 1,
-    icon: Sparkles,
-    tools: ["event_*", "org_*", "memory_*"],
-    providerKey: "agent.gabriel.provider_id",
-    modelKey: "agent.gabriel.model",
-    effortKey: "agent.gabriel.effort",
-    instructionKey: "agent.gabriel.instruction",
-  },
-];
-
-export const REASONING_EFFORTS = [
-  { value: "none", label: "Tanpa Penalaran (None)" },
-  { value: "low", label: "Rendah (Low — 1.024 token)" },
-  { value: "medium", label: "Sedang (Medium — 4.096 token)" },
-  { value: "high", label: "Tinggi (High — 16.384 token)" },
-] as const;
-
-export const EMBEDDING_KEYS = {
-  providerKey: "agent.embedding.provider_id",
-  modelKey: "agent.embedding.model",
-} as const;
-
 export function isSuperAdmin(roles?: string[]): boolean {
   return Boolean(roles?.includes(ROLE_SUPER_ADMIN));
-}
-
-export function isAgentSettingKey(key?: string): boolean {
-  return Boolean(key?.startsWith("agent."));
 }
 
 export interface SettingGroup {
@@ -148,10 +91,6 @@ export function groupSettings(items: SettingResponse[]): SettingGroup[] {
     items: groupItems,
     configured: groupItems.some((item) => Boolean(item.configured)),
   }));
-}
-
-export function groupChannelSettings(items: SettingResponse[]): SettingGroup[] {
-  return groupSettings(items.filter((item) => !isAgentSettingKey(item.key)));
 }
 
 export function buildClearValues(
@@ -195,22 +134,11 @@ export function filterModelsByCapability(
   });
 }
 
-export interface ProviderOption {
-  id: string;
-  label: string;
-  provider?: string;
-}
-
-export function findAgentPersona(id?: string): AgentPersonaDef | undefined {
-  if (!id) return undefined;
-  return AGENT_PERSONAS.find((persona) => persona.id === id);
-}
-
 export function findChannelGroup(
   items: SettingResponse[],
   groupName: string,
 ): SettingGroup | undefined {
-  return groupChannelSettings(items).find((group) => group.name === groupName);
+  return groupSettings(items).find((group) => group.name === groupName);
 }
 
 export function indexSettingsByKey(
@@ -237,36 +165,4 @@ export function buildSettingsDraft(
   return next;
 }
 
-export function getProviderModelsByCapability(
-  providers: AgentProviderResponse[],
-  providerId: string,
-  capability: "chat" | "embedding",
-): ProviderModelItem[] {
-  if (!providerId || providerId === "none") return [];
-  const found = providers.find((p) => p.id === providerId);
-  if (!found?.models) return [];
-  return filterModelsByCapability(found.models, capability);
-}
-
-export function buildProviderOptionList(
-  providers: AgentProviderResponse[],
-  includeNone = false,
-): ProviderOption[] {
-  const filtered = includeNone
-    ? providers.filter((p) => {
-        const def = LLM_PROVIDERS.find((d) => d.id === p.provider);
-        return def?.supportsEmbedding ?? false;
-      })
-    : providers;
-
-  const opts: ProviderOption[] = filtered.map((p) => ({
-    id: p.id ?? "",
-    label: `${p.name ?? p.id} (${getProviderLabel(p.provider)})`,
-    provider: p.provider,
-  }));
-
-  if (includeNone) {
-    opts.push({ id: "none", label: "Nonaktif (BM25 Saja)" });
-  }
-  return opts;
-}
+export type { AgentProviderResponse };
