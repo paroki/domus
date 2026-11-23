@@ -31,27 +31,12 @@ export interface AgentMeta {
   tone: AgentTone;
 }
 
-export function agentDisplayMeta(agentName?: string): AgentMeta {
-  switch (agentName?.toLowerCase()) {
-    case "mikael":
-      return {
-        name: "Mikael",
-        roleLabel: "Spesialis Kegiatan",
-        tone: "success",
-      };
-    case "rafael":
-      return {
-        name: "Rafael",
-        roleLabel: "Spesialis Organisasi",
-        tone: "warning",
-      };
-    default:
-      return {
-        name: "Gabriel",
-        roleLabel: "Orkestrator",
-        tone: "neutral",
-      };
-  }
+export function agentDisplayMeta(_agentName?: string): AgentMeta {
+  return {
+    name: "Gabriel",
+    roleLabel: "Asisten Paroki",
+    tone: "neutral",
+  };
 }
 
 export const MEMORY_SCOPES = [
@@ -89,9 +74,6 @@ export function toolDisplayMeta(toolName?: string): {
   category: string;
 } {
   const name = toolName ?? "";
-  if (name === "delegate_specialist") {
-    return { label: name, category: "Delegasi Spesialis" };
-  }
   if (name.startsWith("org_")) {
     return { label: name, category: "Organisasi" };
   }
@@ -260,6 +242,20 @@ export type ContentSegment =
   | { type: "a2ui"; messages: Record<string, unknown>[] }
   | { type: "a2ui-pending" };
 
+function isValidUpdateComponents(raw: unknown): boolean {
+  if (!raw || typeof raw !== "object") return false;
+  const comps = (raw as Record<string, unknown>).components;
+  if (!Array.isArray(comps) || comps.length === 0) return false;
+  for (const item of comps) {
+    if (!item || typeof item !== "object") return false;
+    const c = item as Record<string, unknown>;
+    if (typeof c.id !== "string" || !c.id) return false;
+    if (typeof c.component !== "string" || !c.component) return false;
+    if ("props" in c) return false;
+  }
+  return true;
+}
+
 function isValidA2uiEnvelopeArray(
   raw: string,
 ): Record<string, unknown>[] | null {
@@ -275,6 +271,12 @@ function isValidA2uiEnvelopeArray(
         !("updateComponents" in rec) &&
         !("updateDataModel" in rec) &&
         !("deleteSurface" in rec)
+      ) {
+        return null;
+      }
+      if (
+        "updateComponents" in rec &&
+        !isValidUpdateComponents(rec.updateComponents)
       ) {
         return null;
       }

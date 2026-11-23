@@ -23,6 +23,7 @@ export interface LiveStreamSegment {
 export interface LiveStreamingState {
   active: boolean;
   userMessage?: string;
+  baselineUserCount?: number;
   segments: LiveStreamSegment[];
 }
 
@@ -136,6 +137,65 @@ function MessageBody({
   );
 }
 
+function AssistantSegment({
+  agentName,
+  thinking,
+  toolSteps,
+  content,
+  isStreaming = false,
+  onA2uiAction,
+}: {
+  agentName: string;
+  thinking?: string;
+  toolSteps: CorrelatedToolStep[];
+  content?: string;
+  isStreaming?: boolean;
+  onA2uiAction?: (actionPrompt: string) => void;
+}) {
+  const { t } = useTranslation();
+  const meta = agentDisplayMeta(agentName);
+  const isSubagent = agentName.toLowerCase() !== "gabriel";
+
+  return (
+    <div className="flex flex-col items-start gap-2">
+      {!isSubagent ? (
+        <div className="flex items-center gap-2">
+          <Badge tone={meta.tone}>{meta.name}</Badge>
+          <span className="text-[11px] text-muted">{meta.roleLabel}</span>
+        </div>
+      ) : null}
+
+      {thinking ? (
+        <details
+          open={isStreaming ? true : undefined}
+          className="w-full max-w-[90%] rounded-lg border border-line/70 bg-canvas/50 px-3 py-1.5 text-xs"
+        >
+          <summary className="cursor-pointer font-medium text-muted select-none hover:text-fg">
+            {isSubagent
+              ? t("agent.subagentThinkingLabel", { agent: meta.name })
+              : t("agent.thinkingLabel", { agent: meta.name })}
+          </summary>
+          <p className="mt-1.5 whitespace-pre-wrap text-muted">{thinking}</p>
+        </details>
+      ) : null}
+
+      {toolSteps.length > 0 ? (
+        <div className="w-full max-w-[90%]">
+          <ToolStepsList steps={toolSteps} />
+        </div>
+      ) : null}
+
+      {content ? (
+        <MessageBody
+          content={content}
+          isStreaming={isStreaming}
+          onA2uiAction={onA2uiAction}
+        />
+      ) : null}
+    </div>
+  );
+}
+
 const STARTER_PROMPTS = [
   "Apa saja jadwal kegiatan minggu ini?",
   "Daftar organisasi yang saya ikuti",
@@ -164,6 +224,11 @@ export function ChatTimeline({
   }, [items.length, scrollSignal]);
 
   const isEmpty = items.length === 0 && !streaming.active;
+  const userItemCount = items.filter((item) => item.role === "user").length;
+  const showStreamingUserMessage =
+    streaming.active &&
+    Boolean(streaming.userMessage) &&
+    userItemCount <= (streaming.baselineUserCount ?? 0);
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
@@ -231,40 +296,19 @@ export function ChatTimeline({
             );
           }
 
-          const meta = agentDisplayMeta(item.agentName);
           return (
-            <div key={item.id} className="flex flex-col items-start gap-2">
-              <div className="flex items-center gap-2">
-                <Badge tone={meta.tone}>{meta.name}</Badge>
-                <span className="text-[11px] text-muted">{meta.roleLabel}</span>
-              </div>
-
-              {item.thinking ? (
-                <details className="w-full max-w-[90%] rounded-lg border border-line/70 bg-canvas/50 px-3 py-1.5 text-xs">
-                  <summary className="cursor-pointer font-medium text-muted select-none hover:text-fg">
-                    {t("agent.thinkingLabel", { agent: meta.name })}
-                  </summary>
-                  <p className="mt-1.5 whitespace-pre-wrap text-muted">
-                    {item.thinking}
-                  </p>
-                </details>
-              ) : null}
-
-              <div className="w-full max-w-[90%]">
-                <ToolStepsList steps={item.toolSteps} />
-              </div>
-
-              {item.content ? (
-                <MessageBody
-                  content={item.content}
-                  onA2uiAction={onA2uiAction}
-                />
-              ) : null}
-            </div>
+            <AssistantSegment
+              key={item.id}
+              agentName={item.agentName}
+              thinking={item.thinking}
+              toolSteps={item.toolSteps}
+              content={item.content}
+              onA2uiAction={onA2uiAction}
+            />
           );
         })}
 
-        {streaming.active && streaming.userMessage ? (
+        {showStreamingUserMessage ? (
           <div className="flex justify-end">
             <div className="max-w-[82%] rounded-2xl rounded-br-sm bg-primary px-4 py-2.5 text-sm whitespace-pre-wrap text-on-primary">
               {streaming.userMessage}
@@ -273,48 +317,17 @@ export function ChatTimeline({
         ) : null}
 
         {streaming.active
-          ? streaming.segments.map((seg, idx) => {
-              const meta = agentDisplayMeta(seg.agentName);
-              return (
-                <div
-                  key={`live-${seg.agentName}-${idx}`}
-                  className="flex flex-col items-start gap-2"
-                >
-                  <div className="flex items-center gap-2">
-                    <Badge tone={meta.tone}>{meta.name}</Badge>
-                    <span className="text-[11px] text-muted">
-                      {meta.roleLabel}
-                    </span>
-                  </div>
-
-                  {seg.thinking ? (
-                    <details
-                      open
-                      className="w-full max-w-[90%] rounded-lg border border-line/70 bg-canvas/50 px-3 py-1.5 text-xs"
-                    >
-                      <summary className="cursor-pointer font-medium text-muted select-none">
-                        {t("agent.thinkingLabel", { agent: meta.name })}
-                      </summary>
-                      <p className="mt-1.5 whitespace-pre-wrap text-muted">
-                        {seg.thinking}
-                      </p>
-                    </details>
-                  ) : null}
-
-                  <div className="w-full max-w-[90%]">
-                    <ToolStepsList steps={seg.toolSteps} />
-                  </div>
-
-                  {seg.delta ? (
-                    <MessageBody
-                      content={seg.delta}
-                      isStreaming
-                      onA2uiAction={onA2uiAction}
-                    />
-                  ) : null}
-                </div>
-              );
-            })
+          ? streaming.segments.map((seg, idx) => (
+              <AssistantSegment
+                key={`live-${seg.agentName}-${idx}`}
+                agentName={seg.agentName}
+                thinking={seg.thinking}
+                toolSteps={seg.toolSteps}
+                content={seg.delta}
+                isStreaming
+                onA2uiAction={onA2uiAction}
+              />
+            ))
           : null}
 
         <div ref={bottomRef} />

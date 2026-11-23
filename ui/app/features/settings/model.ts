@@ -1,12 +1,10 @@
 import {
   Bot,
-  Calendar,
   Cpu,
   type LucideIcon,
   MessageCircle,
   Send,
   Sparkles,
-  Users,
 } from "lucide-react";
 import type {
   AgentProviderResponse,
@@ -81,7 +79,7 @@ export function getProviderLabel(provider?: string): string {
 }
 
 export interface AgentPersonaDef {
-  id: "gabriel" | "mikael" | "rafael";
+  id: "gabriel";
   name: string;
   role: string;
   plate: 1 | 2 | 3 | 4 | 5 | 6;
@@ -97,38 +95,14 @@ export const AGENT_PERSONAS: AgentPersonaDef[] = [
   {
     id: "gabriel",
     name: "Gabriel",
-    role: "Orkestrator & Memori Utama",
+    role: "Asisten Utama & Memori Paroki",
     plate: 1,
     icon: Sparkles,
-    tools: ["delegate_specialist", "memory_*"],
+    tools: ["event_*", "org_*", "memory_*"],
     providerKey: "agent.gabriel.provider_id",
     modelKey: "agent.gabriel.model",
     effortKey: "agent.gabriel.effort",
     instructionKey: "agent.gabriel.instruction",
-  },
-  {
-    id: "mikael",
-    name: "Mikael",
-    role: "Spesialis Kegiatan & Jadwal",
-    plate: 2,
-    icon: Calendar,
-    tools: ["event_*"],
-    providerKey: "agent.mikael.provider_id",
-    modelKey: "agent.mikael.model",
-    effortKey: "agent.mikael.effort",
-    instructionKey: "agent.mikael.instruction",
-  },
-  {
-    id: "rafael",
-    name: "Rafael",
-    role: "Spesialis Organisasi & Komunitas",
-    plate: 3,
-    icon: Users,
-    tools: ["org_*"],
-    providerKey: "agent.rafael.provider_id",
-    modelKey: "agent.rafael.model",
-    effortKey: "agent.rafael.effort",
-    instructionKey: "agent.rafael.instruction",
   },
 ];
 

@@ -44,16 +44,11 @@ test("isParishAdmin and canMutateMemory enforce scope ownership", () => {
 
 test("agentDisplayMeta and toolDisplayMeta return expected labels", () => {
   assert.equal(agentDisplayMeta("gabriel").name, "Gabriel");
-  assert.equal(agentDisplayMeta("mikael").tone, "success");
-  assert.equal(agentDisplayMeta("rafael").tone, "warning");
+  assert.equal(agentDisplayMeta("gabriel").tone, "neutral");
 
   assert.equal(toolDisplayMeta("org_list").category, "Organisasi");
   assert.equal(toolDisplayMeta("event_create").category, "Kegiatan");
   assert.equal(toolDisplayMeta("memory_save").category, "Memori");
-  assert.equal(
-    toolDisplayMeta("delegate_specialist").category,
-    "Delegasi Spesialis",
-  );
 });
 
 test("sortMessagesChronologically and buildTimelineItems pair tool calls and results", () => {
@@ -68,7 +63,7 @@ test("sortMessagesChronologically and buildTimelineItems pair tool calls and res
     {
       id: "m2",
       role: "tool",
-      agentName: "mikael",
+      agentName: "gabriel",
       toolCallId: "tc1",
       toolName: "event_list",
       content: '{"items":[{"title":"Misa"}]}',
@@ -77,7 +72,7 @@ test("sortMessagesChronologically and buildTimelineItems pair tool calls and res
     {
       id: "m1",
       role: "assistant",
-      agentName: "mikael",
+      agentName: "gabriel",
       content: "",
       thinking: "Cek jadwal",
       toolCalls: [{ id: "tc1", name: "event_list", arguments: "{}" }],
@@ -150,4 +145,10 @@ test("parseContentSegments splits markdown and valid A2UI v0.9 blocks", () => {
   const invalid = parseContentSegments("Halo\n\n```a2ui\n{broken\n```");
   assert.equal(invalid.length, 1);
   assert.equal(invalid[0]?.type, "markdown");
+
+  const legacyProps = parseContentSegments(
+    'Daftar:\n\n```a2ui\n[{"version":"v0.9","updateComponents":{"surfaceId":"s1","components":[{"id":"root","type":"Column","props":{}}]}}]\n```',
+  );
+  assert.equal(legacyProps.length, 1);
+  assert.equal(legacyProps[0]?.type, "markdown");
 });

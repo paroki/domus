@@ -190,8 +190,6 @@ test("SETTINGS_LAUNCHERS, findAgentPersona, findChannelGroup, and draft helpers 
     ],
   );
   assert.equal(findAgentPersona("gabriel")?.name, "Gabriel");
-  assert.equal(findAgentPersona("mikael")?.name, "Mikael");
-  assert.equal(findAgentPersona("rafael")?.name, "Rafael");
   assert.equal(findAgentPersona("unknown"), undefined);
 
   const items = [

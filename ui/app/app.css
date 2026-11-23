@@ -35,6 +35,22 @@
   --color-plate-6: var(--plate-6);
 }
 
+/* Map A2UI v0.9 basicCatalog CSS tokens to Domus theme variables. */
+:root {
+  --a2ui-color-background: var(--canvas);
+  --a2ui-color-on-background: var(--fg);
+  --a2ui-color-surface: var(--surface);
+  --a2ui-color-on-surface: var(--fg);
+  --a2ui-color-primary: var(--primary);
+  --a2ui-color-on-primary: var(--on-primary);
+  --a2ui-color-secondary: var(--surface-2);
+  --a2ui-color-on-secondary: var(--fg);
+  --a2ui-color-border: var(--line);
+  --a2ui-text-caption-color: var(--muted);
+  --a2ui-icon-color: var(--fg);
+  --a2ui-font-family: var(--font-sans);
+}
+
 /*
  * Themes: Deep Sacristy Green (default) and Warm Terracotta, each light/dark.
  * <html data-theme="green|terracotta" data-mode="light|dark"> is set by the

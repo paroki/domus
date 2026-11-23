@@ -70,6 +70,7 @@ export function AgentWorkspace() {
   const [streaming, setStreaming] = useState<LiveStreamingState>(EMPTY_STREAM);
 
   const abortRef = useRef<AbortController | null>(null);
+  const inFlightRef = useRef(false);
 
   const sessionsQuery = useAgentSessions({}, hasParish);
   const allSessions =
@@ -113,7 +114,7 @@ export function AgentWorkspace() {
     message?: string;
     continueTurn?: boolean;
   }) {
-    if (streaming.active) return;
+    if (inFlightRef.current || streaming.active) return;
     const trimmed = (message ?? "").trim();
     const targetSessionId = sessionId ?? activeSessionId;
     if (continueTurn) {
@@ -122,6 +123,7 @@ export function AgentWorkspace() {
       return;
     }
 
+    inFlightRef.current = true;
     setChatError(null);
     setRetryTarget(null);
     if (!continueTurn) {
@@ -134,10 +136,14 @@ export function AgentWorkspace() {
     let resolvedSessionId = targetSessionId;
     let sessionConfirmed = false;
     let touchedMemory = false;
+    const baselineUserCount = timelineItems.filter(
+      (item) => item.role === "user",
+    ).length;
 
     setStreaming({
       active: true,
       userMessage: continueTurn ? undefined : trimmed,
+      baselineUserCount,
       segments: [
         {
           agentName: "gabriel",
@@ -252,6 +258,7 @@ export function AgentWorkspace() {
         }
       }
     } finally {
+      inFlightRef.current = false;
       abortRef.current = null;
       setStreaming(EMPTY_STREAM);
       void qc.invalidateQueries({ queryKey: agentKeys.sessions() });
@@ -276,7 +283,7 @@ export function AgentWorkspace() {
   }
 
   function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
       void sendMessage(input);
     }

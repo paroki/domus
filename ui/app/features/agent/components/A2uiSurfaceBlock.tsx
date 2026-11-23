@@ -1,10 +1,14 @@
 import { A2uiSurface, type ReactCatalogComponent } from "@a2ui/react/v0_9";
-import { MessageProcessor, type ProcessableMessage } from "@a2ui/web_core/v0_9";
+import {
+  MessageProcessor,
+  type ProcessableMessage,
+  type SurfaceModel,
+} from "@a2ui/web_core/v0_9";
 import {
   basicCatalog,
   injectBasicCatalogStyles,
 } from "@a2ui/web_core/v0_9/basic_catalog";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 let stylesInjected = false;
 
@@ -24,9 +28,18 @@ export function A2uiSurfaceBlock({
   const onActionRef = useRef(onAction);
   onActionRef.current = onAction;
 
-  const processor = useMemo(() => {
+  const messagesKey = JSON.stringify(messages);
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
+
+  const [surfaces, setSurfaces] = useState<
+    SurfaceModel<ReactCatalogComponent>[]
+  >([]);
+  const [renderFailed, setRenderFailed] = useState(false);
+
+  useEffect(() => {
     ensureA2uiStyles();
-    return new MessageProcessor<ReactCatalogComponent>(
+    const processor = new MessageProcessor<ReactCatalogComponent>(
       [basicCatalog],
       async (action) => {
         const context = action.context ?? {};
@@ -37,28 +50,36 @@ export function A2uiSurfaceBlock({
         onActionRef.current?.(summary);
       },
     );
-  }, []);
 
-  const [surfaces, setSurfaces] = useState(() =>
-    Array.from(processor.model.surfacesMap.values()),
-  );
-
-  useEffect(() => {
     const sync = () =>
       setSurfaces(Array.from(processor.model.surfacesMap.values()));
     const createdSub = processor.onSurfaceCreated(sync);
     const deletedSub = processor.onSurfaceDeleted(sync);
+
+    setRenderFailed(false);
     try {
-      processor.processMessages(messages as unknown as ProcessableMessage[]);
+      processor.processMessages(
+        messagesRef.current as unknown as ProcessableMessage[],
+      );
       sync();
-    } catch {
-      // Ignore invalid A2UI envelopes safely; prose remains visible.
+    } catch (err) {
+      console.warn("A2UI render failed:", err);
+      setRenderFailed(true);
     }
+
     return () => {
       createdSub.unsubscribe();
       deletedSub.unsubscribe();
     };
-  }, [processor, messages]);
+  }, [messagesKey]);
+
+  if (renderFailed) {
+    return (
+      <div className="rounded-xl border border-line bg-surface px-3 py-2 text-xs text-muted">
+        ⚠ Tampilan interaktif tidak dapat dirender.
+      </div>
+    );
+  }
 
   if (surfaces.length === 0) return null;
 
