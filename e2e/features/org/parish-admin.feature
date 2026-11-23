@@ -1,32 +1,36 @@
 Feature: Parish Admin launcher visibility, parish members, and org bootstrap
 
   @parish-admin
-  Scenario: Parish Admin sees all 4 launcher tiles and parish/org scopes on /users
+  Scenario: Parish Admin sees all 4 launcher tiles and parish role filters on /users
     When I open "/"
     Then I see the home page with admin launcher menus
     When I open home launcher tile "Pengguna"
     Then I am on "/users"
-    And I see users directory scopes "Admin & Anggota Paroki, Pengurus & Anggota Organisasi"
-    And I do not see users directory scopes "Pengguna Global"
+    And I see users filter buttons "Semua Peran, Admin Paroki, Anggota"
+    And I do not see users directory controls "Pengguna Global, Semua status"
 
   @parish-admin
   Scenario: Parish Admin manages parish members with last admin demotion guard
+    Given a parish member with email "umat.paroki.e2e@domus.test" name "Umat Paroki E2E" exists in the active parish
     When I open "/users"
     Then I see the users directory page
-    When I change parish member "Admin Paroki E2E" role to "Anggota"
+    When I open user detail "Admin Paroki E2E"
+    And I demote parish membership in the active parish
     Then I see users error "Minimal harus ada satu Admin Paroki yang tersisa."
-    When I appoint parish member with email "umat.paroki.e2e@domus.test" name "Umat Paroki E2E" and role "Anggota"
-    Then I see parish member "Umat Paroki E2E" with role "Anggota"
-    When I change parish member "Umat Paroki E2E" role to "Admin Paroki"
-    Then I see parish member "Umat Paroki E2E" with role "Admin Paroki"
-    When I change parish member "Umat Paroki E2E" role to "Anggota"
-    Then I see parish member "Umat Paroki E2E" with role "Anggota"
-    When I remove parish member "Umat Paroki E2E"
-    Then I do not see parish member "Umat Paroki E2E"
+    When I go back to the users directory
+    And I open user detail "Umat Paroki E2E"
+    And I promote parish membership in the active parish
+    Then I see active parish membership with role "Admin Paroki"
+    When I demote parish membership in the active parish
+    Then I see active parish membership with role "Anggota"
+    When I remove parish membership in the active parish
+    And I go back to the users directory
+    Then I do not see user "umat.paroki.e2e@domus.test"
 
   @parish-admin
   Scenario: Parish Admin bootstraps organizations at /org and appoints Org Admin via /users
     Given a zone with code "wil-1-e2e" and name "Wilayah I E2E" exists in the active parish
+    And a parish member with email "ketua.liturgi.e2e@domus.test" name "Ketua Liturgi E2E" exists in the active parish
     When I open "/org"
     Then I see the orgs directory page
     When I create organization with kind "DPP" name "DPP Katedral E2E" code "dpp-e2e"
@@ -36,9 +40,12 @@ Feature: Parish Admin launcher visibility, parish members, and org bootstrap
     And I search organizations for "Liturgi"
     Then I see organization card "Seksi Liturgi E2E" with code "liturgi-e2e" and kind "Bidang / Seksi"
     When I open "/users"
-    And I switch users scope to "Pengurus & Anggota Organisasi"
-    And I select organization "Seksi Liturgi E2E"
-    And I self-assign as Organization Admin
-    Then I see org member "Admin Paroki E2E" with role "Admin Organisasi"
-    When I add org member with email "ketua.liturgi.e2e@domus.test" name "Ketua Liturgi E2E" and role "Admin Organisasi"
-    Then I see org member "Ketua Liturgi E2E" with role "Admin Organisasi"
+    And I open user detail "Admin Paroki E2E"
+    And I switch user detail tab to "Organisasi"
+    And I add user to org "Seksi Liturgi E2E" with role "Admin Organisasi"
+    Then I see user org membership "Seksi Liturgi E2E" with role "Admin Organisasi"
+    When I go back to the users directory
+    And I open user detail "Ketua Liturgi E2E"
+    And I switch user detail tab to "Organisasi"
+    And I add user to org "Seksi Liturgi E2E" with role "Admin Organisasi"
+    Then I see user org membership "Seksi Liturgi E2E" with role "Admin Organisasi"

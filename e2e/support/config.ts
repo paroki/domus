@@ -5,8 +5,8 @@ const repoRoot = path.resolve(e2eDir, "..");
 const reportsDir = path.join(e2eDir, "reports");
 const coverageDir = path.join(repoRoot, "coverage");
 
-const appPort = Number(process.env.APP_PORT ?? 8080);
-const uiPort = Number(process.env.UI_PORT ?? 5173);
+const appPort = Number(process.env.APP_PORT ?? 18080);
+const uiPort = Number(process.env.UI_PORT ?? 15173);
 
 export const config = {
   repoRoot,

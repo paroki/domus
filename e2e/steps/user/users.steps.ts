@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { Given, Then, When } from "@cucumber/cucumber";
-import type { UserScopeLabel } from "../../pages/user/users.page";
+import type { UserDetailTabLabel } from "../../pages/user/users.page";
 import type { DomusWorld } from "../../support/world";
 
 Then("I see the users forbidden banner", async function (this: DomusWorld) {
@@ -11,15 +11,19 @@ Then("I see the users directory page", async function (this: DomusWorld) {
   await this.pages.user.users.expectLoaded();
 });
 
-When(
-  "I create a global user with email {string} name {string} phone {string}",
+Given(
+  "a global user with email {string} name {string} phone {string} exists",
   async function (
     this: DomusWorld,
     email: string,
     name: string,
     phone: string,
   ) {
-    await this.pages.user.users.createGlobalUser({ email, name, phone });
+    const res = await this.client.post("/users", { email, name, phone });
+    assert.ok(
+      res.status === 201 || res.status === 409,
+      `Expected 201 or 409 creating global user, got ${res.status}`,
+    );
   },
 );
 
@@ -45,50 +49,38 @@ Then(
 );
 
 When(
-  "I promote user {string} to Super Admin",
-  async function (this: DomusWorld, email: string) {
-    await this.pages.user.users.promoteToSuperAdmin(email);
+  "I open user detail {string}",
+  async function (this: DomusWorld, nameOrEmail: string) {
+    await this.pages.user.users.openUserDetail(nameOrEmail);
   },
 );
 
-Then(
-  "I see global user {string} with Super Admin badge",
-  async function (this: DomusWorld, name: string) {
-    await this.pages.user.users.expectUserVisible(name, name, {
-      hasSuperAdminBadge: true,
-    });
-  },
-);
+When("I go back to the users directory", async function (this: DomusWorld) {
+  await this.pages.user.users.backToDirectory();
+});
 
 When(
-  "I demote user {string} from Super Admin",
-  async function (this: DomusWorld, email: string) {
-    await this.pages.user.users.demoteFromSuperAdmin(email);
+  "I switch user detail tab to {string}",
+  async function (this: DomusWorld, tabLabel: string) {
+    await this.pages.user.users.selectDetailTab(tabLabel as UserDetailTabLabel);
   },
 );
 
-Then(
-  "I see global user {string} without Super Admin badge",
-  async function (this: DomusWorld, name: string) {
-    await this.pages.user.users.expectUserVisible(name, name, {
-      hasSuperAdminBadge: false,
-    });
-  },
-);
+When("I promote the user to Super Admin", async function (this: DomusWorld) {
+  await this.pages.user.users.promoteToSuperAdmin();
+});
 
-When(
-  "I disable user {string}",
-  async function (this: DomusWorld, email: string) {
-    await this.pages.user.users.disableUser(email);
-  },
-);
+When("I demote the user from Super Admin", async function (this: DomusWorld) {
+  await this.pages.user.users.demoteFromSuperAdmin();
+});
 
-When(
-  "I enable user {string}",
-  async function (this: DomusWorld, email: string) {
-    await this.pages.user.users.enableUser(email);
-  },
-);
+When("I disable the user", async function (this: DomusWorld) {
+  await this.pages.user.users.disableUser();
+});
+
+When("I enable the user", async function (this: DomusWorld) {
+  await this.pages.user.users.enableUser();
+});
 
 When(
   "I filter users by status {string}",
@@ -97,12 +89,9 @@ When(
   },
 );
 
-When(
-  "I delete global user {string}",
-  async function (this: DomusWorld, name: string) {
-    await this.pages.user.users.deleteUser(name);
-  },
-);
+When("I delete the user", async function (this: DomusWorld) {
+  await this.pages.user.users.deleteUser();
+});
 
 Then(
   "I do not see user {string}",
@@ -139,40 +128,20 @@ Given(
 );
 
 When(
-  "I switch users scope to {string}",
-  async function (this: DomusWorld, scopeLabel: string) {
-    await this.pages.user.users.selectScope(scopeLabel as UserScopeLabel);
-  },
-);
-
-When(
-  "I select parish {string}",
-  async function (this: DomusWorld, parishName: string) {
-    await this.pages.user.users.selectParish(parishName);
-  },
-);
-
-When(
-  "I appoint parish member with email {string} name {string} and role {string}",
-  async function (
-    this: DomusWorld,
-    email: string,
-    name: string,
-    roleLabel: string,
-  ) {
-    await this.pages.user.users.addParishMember({
-      email,
-      name,
-      roleLabel: roleLabel as "Admin Paroki" | "Anggota",
-    });
+  "I add user to parish {string} with role {string}",
+  async function (this: DomusWorld, parishName: string, roleLabel: string) {
+    await this.pages.user.users.addToParish(
+      parishName,
+      roleLabel as "Admin Paroki" | "Anggota",
+    );
   },
 );
 
 Then(
-  "I see parish member {string} with role {string}",
-  async function (this: DomusWorld, name: string, roleLabel: string) {
-    await this.pages.user.users.expectParishMemberVisible(
-      name,
+  "I see user parish membership {string} with role {string}",
+  async function (this: DomusWorld, parishName: string, roleLabel: string) {
+    await this.pages.user.users.expectParishMembershipVisible(
+      parishName,
       roleLabel as "Admin Paroki" | "Anggota",
     );
   },

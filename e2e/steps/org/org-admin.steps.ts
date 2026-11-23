@@ -1,4 +1,5 @@
-import { Then, When } from "@cucumber/cucumber";
+import assert from "node:assert/strict";
+import { Given, Then, When } from "@cucumber/cucumber";
 import type { DomusWorld } from "../../support/world";
 
 function splitCsv(raw: string): string[] {
@@ -33,85 +34,106 @@ Then(
   },
 );
 
-When(
-  "I toggle org member {string} role via {string}",
-  async function (this: DomusWorld, name: string, buttonLabel: string) {
-    await this.pages.user.users.toggleOrgMemberRole(
+Given(
+  "an org member with email {string} name {string} position {string} exists in the active org and period",
+  async function (
+    this: DomusWorld,
+    email: string,
+    name: string,
+    position: string,
+  ) {
+    assert.ok(this.activeOrgId, "Expected activeOrgId");
+    const periodsRes = await this.client.post<{
+      data?: Array<{ id?: string; name?: string }>;
+    }>("/ref/periods/search", {});
+    assert.equal(periodsRes.status, 200);
+    const periodId = periodsRes.data?.data?.find(
+      (p) => p.name === this.activePeriodName,
+    )?.id;
+    const res = await this.client.post(`/orgs/${this.activeOrgId}/members`, {
+      email,
       name,
+      role: "member",
+      position,
+      periodId,
+    });
+    assert.ok(
+      res.status === 201 || res.status === 409,
+      `Expected 201 or 409 creating org member, got ${res.status}`,
+    );
+  },
+);
+
+When(
+  "I toggle active org membership role via {string}",
+  async function (this: DomusWorld, buttonLabel: string) {
+    assert.ok(this.activeOrgName, "Expected activeOrgName");
+    await this.pages.user.users.toggleOrgMembershipRole(
+      this.activeOrgName,
       buttonLabel as "Jadikan Admin" | "Jadikan Anggota",
     );
   },
 );
 
 When(
-  "I toggle org member {string} status via {string}",
-  async function (this: DomusWorld, name: string, buttonLabel: string) {
-    await this.pages.user.users.toggleOrgMemberStatus(
-      name,
+  "I toggle active org membership status via {string}",
+  async function (this: DomusWorld, buttonLabel: string) {
+    assert.ok(this.activeOrgName, "Expected activeOrgName");
+    await this.pages.user.users.toggleOrgMembershipStatus(
+      this.activeOrgName,
       buttonLabel as "Nonaktifkan" | "Aktifkan",
     );
   },
 );
 
-When(
-  "I add org member with email {string} name {string} phone {string} role {string} position {string} period {string}",
-  async function (
-    this: DomusWorld,
-    email: string,
-    name: string,
-    phone: string,
-    roleLabel: string,
-    position: string,
-    periodName: string,
-  ) {
-    await this.pages.user.users.addOrgMember({
-      email,
-      name,
-      phone,
-      roleLabel: roleLabel as "Admin Organisasi" | "Anggota",
-      position,
-      periodName,
-    });
+Then(
+  "I see active org membership with role {string}",
+  async function (this: DomusWorld, roleLabel: string) {
+    assert.ok(this.activeOrgName, "Expected activeOrgName");
+    await this.pages.user.users.expectOrgMembershipVisible(
+      this.activeOrgName,
+      roleLabel as "Admin Organisasi" | "Anggota",
+    );
   },
 );
 
 Then(
-  "I see org member {string} metadata {string}",
-  async function (this: DomusWorld, name: string, text: string) {
-    await this.pages.user.users.expectOrgMemberMetadata(name, text);
-  },
-);
-
-When(
-  "I edit org member {string} position to {string}",
-  async function (this: DomusWorld, name: string, position: string) {
-    await this.pages.user.users.editOrgMemberPosition(name, { position });
-  },
-);
-
-Then(
-  "I see org member {string} status {string}",
-  async function (this: DomusWorld, name: string, statusLabel: string) {
-    await this.pages.user.users.expectOrgMemberStatus(
-      name,
-      statusLabel as "Aktif" | "Nonaktif",
+  "I see active org membership metadata {string}",
+  async function (this: DomusWorld, text: string) {
+    assert.ok(this.activeOrgName, "Expected activeOrgName");
+    await this.pages.user.users.expectOrgMembershipMetadata(
+      this.activeOrgName,
+      text,
     );
   },
 );
 
 When(
-  "I remove org member {string}",
-  async function (this: DomusWorld, name: string) {
-    await this.pages.user.users.removeOrgMember(name);
+  "I edit active org membership position to {string}",
+  async function (this: DomusWorld, position: string) {
+    assert.ok(this.activeOrgName, "Expected activeOrgName");
+    await this.pages.user.users.editOrgMembershipPosition(
+      this.activeOrgName,
+      position,
+    );
   },
 );
 
 Then(
-  "I do not see org member {string}",
-  async function (this: DomusWorld, name: string) {
-    await this.pages.user.users.expectOrgMemberNotVisible(name);
+  "I see active org membership status {string}",
+  async function (this: DomusWorld, statusLabel: string) {
+    assert.ok(this.activeOrgName, "Expected activeOrgName");
+    await this.pages.user.users.expectOrgMembershipStatus(
+      this.activeOrgName,
+      statusLabel as "Aktif" | "Nonaktif",
+    );
   },
 );
+
+When("I remove active org membership", async function (this: DomusWorld) {
+  assert.ok(this.activeOrgName, "Expected activeOrgName");
+  await this.pages.user.users.removeOrgMembership(this.activeOrgName);
+});
 
 When(
   "I open organization detail {string}",

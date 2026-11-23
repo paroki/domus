@@ -129,6 +129,7 @@ export async function startServers(): Promise<void> {
     path.join(config.repoRoot, "ui"),
     {
       VITE_COVERAGE: "true",
+      VITE_API_TARGET: `http://127.0.0.1:${config.appPort}`,
     },
     path.join(config.logsDir, "ui.log"),
   );

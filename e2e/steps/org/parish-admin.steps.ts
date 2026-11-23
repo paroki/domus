@@ -17,26 +17,76 @@ When(
 );
 
 Then(
-  "I see users directory scopes {string}",
+  "I see users filter buttons {string}",
   async function (this: DomusWorld, labels: string) {
-    await this.pages.user.users.expectVisibleScopes(splitCsv(labels));
+    await this.pages.user.users.expectFilterButtonsVisible(splitCsv(labels));
   },
 );
 
 Then(
-  "I do not see users directory scopes {string}",
+  "I do not see users directory controls {string}",
   async function (this: DomusWorld, labels: string) {
-    await this.pages.user.users.expectHiddenScopes(splitCsv(labels));
+    await this.pages.user.users.expectHiddenControls(splitCsv(labels));
+  },
+);
+
+Given(
+  "a parish member with email {string} name {string} exists in the active parish",
+  async function (this: DomusWorld, email: string, name: string) {
+    assert.ok(this.activeParishId, "Expected activeParishId");
+    const res = await this.client.post(
+      `/ref/parishes/${this.activeParishId}/members`,
+      {
+        email,
+        name,
+        role: "member",
+      },
+    );
+    assert.ok(
+      res.status === 201 || res.status === 409,
+      `Expected 201 or 409 creating parish member, got ${res.status}`,
+    );
   },
 );
 
 When(
-  "I change parish member {string} role to {string}",
-  async function (this: DomusWorld, name: string, roleLabel: string) {
-    await this.pages.user.users.changeParishMemberRole(
-      name,
+  "I demote parish membership in the active parish",
+  async function (this: DomusWorld) {
+    assert.ok(this.activeParishName, "Expected activeParishName");
+    await this.pages.user.users.changeParishMembershipRole(
+      this.activeParishName,
+      "Anggota",
+    );
+  },
+);
+
+When(
+  "I promote parish membership in the active parish",
+  async function (this: DomusWorld) {
+    assert.ok(this.activeParishName, "Expected activeParishName");
+    await this.pages.user.users.changeParishMembershipRole(
+      this.activeParishName,
+      "Admin Paroki",
+    );
+  },
+);
+
+Then(
+  "I see active parish membership with role {string}",
+  async function (this: DomusWorld, roleLabel: string) {
+    assert.ok(this.activeParishName, "Expected activeParishName");
+    await this.pages.user.users.expectParishMembershipVisible(
+      this.activeParishName,
       roleLabel as "Admin Paroki" | "Anggota",
     );
+  },
+);
+
+When(
+  "I remove parish membership in the active parish",
+  async function (this: DomusWorld) {
+    assert.ok(this.activeParishName, "Expected activeParishName");
+    await this.pages.user.users.removeParishMembership(this.activeParishName);
   },
 );
 
@@ -44,20 +94,6 @@ Then(
   "I see users error {string}",
   async function (this: DomusWorld, message: string) {
     await this.pages.user.users.expectErrorAlert(message);
-  },
-);
-
-When(
-  "I remove parish member {string}",
-  async function (this: DomusWorld, name: string) {
-    await this.pages.user.users.removeParishMember(name);
-  },
-);
-
-Then(
-  "I do not see parish member {string}",
-  async function (this: DomusWorld, name: string) {
-    await this.pages.user.users.expectParishMemberNotVisible(name);
   },
 );
 
@@ -155,37 +191,20 @@ Then(
 );
 
 When(
-  "I select organization {string}",
-  async function (this: DomusWorld, orgName: string) {
-    await this.pages.user.users.selectOrganization(orgName);
-  },
-);
-
-When("I self-assign as Organization Admin", async function (this: DomusWorld) {
-  await this.pages.user.users.selfAssignOrgAdmin();
-});
-
-When(
-  "I add org member with email {string} name {string} and role {string}",
-  async function (
-    this: DomusWorld,
-    email: string,
-    name: string,
-    roleLabel: string,
-  ) {
-    await this.pages.user.users.addOrgMember({
-      email,
-      name,
+  "I add user to org {string} with role {string}",
+  async function (this: DomusWorld, orgName: string, roleLabel: string) {
+    await this.pages.user.users.addToOrg({
+      orgName,
       roleLabel: roleLabel as "Admin Organisasi" | "Anggota",
     });
   },
 );
 
 Then(
-  "I see org member {string} with role {string}",
-  async function (this: DomusWorld, name: string, roleLabel: string) {
-    await this.pages.user.users.expectOrgMemberVisible(
-      name,
+  "I see user org membership {string} with role {string}",
+  async function (this: DomusWorld, orgName: string, roleLabel: string) {
+    await this.pages.user.users.expectOrgMembershipVisible(
+      orgName,
       roleLabel as "Admin Organisasi" | "Anggota",
     );
   },

@@ -1,7 +1,7 @@
 Feature: Organization Admin menu visibility, /users roster CRUD, profile, and invites
 
   @org-admin
-  Scenario: Org Admin sees restricted launcher, settings, /users scope, and /org create button hidden
+  Scenario: Org Admin sees restricted launcher, settings, /users directory, and /org create button hidden
     When I open "/"
     Then I see launcher tiles "Organisasi, Kegiatan, Pengguna"
     And I do not see launcher tiles "Referensi, Pengaturan"
@@ -12,36 +12,40 @@ Feature: Organization Admin menu visibility, /users roster CRUD, profile, and in
     When I open "/ref/profile"
     Then I see the parish admin restriction banner
     When I open "/users"
-    Then I see users directory scopes "Pengurus & Anggota Organisasi"
-    And I do not see users directory scopes "Pengguna Global, Admin & Anggota Paroki"
+    Then I see the users directory page
+    And I do not see users directory controls "Pengguna Global, Admin & Anggota Paroki, Semua status, Semua Peran"
     When I open "/org"
     Then I see the orgs directory page
     And I do not see the create organization button
 
   @org-admin
-  Scenario: Org Admin manages org member roster in /users with last admin guard
+  Scenario: Org Admin manages org member roster in /users/:id with last admin guard
+    Given an org member with email "anggota.liturgi@domus.test" name "Anggota Liturgi E2E" position "Sekretaris E2E" exists in the active org and period
     When I open "/users"
     Then I see the users directory page
-    When I toggle org member "Admin Organisasi E2E" role via "Jadikan Anggota"
+    When I open user detail "Admin Organisasi E2E"
+    And I toggle active org membership role via "Jadikan Anggota"
     Then I see users error "Minimal harus ada satu Admin Organisasi aktif yang tersisa."
-    When I toggle org member "Admin Organisasi E2E" status via "Nonaktifkan"
+    When I toggle active org membership status via "Nonaktifkan"
     Then I see users error "Minimal harus ada satu Admin Organisasi aktif yang tersisa."
-    When I add org member with email "anggota.liturgi@domus.test" name "Anggota Liturgi E2E" phone "+6281311112222" role "Anggota" position "Sekretaris E2E" period "Periode 2025-2028"
-    Then I see org member "Anggota Liturgi E2E" with role "Anggota"
-    And I see org member "Anggota Liturgi E2E" metadata "Sekretaris E2E"
-    And I see org member "Anggota Liturgi E2E" metadata "Periode 2025-2028"
-    When I edit org member "Anggota Liturgi E2E" position to "Bendahara"
-    Then I see org member "Anggota Liturgi E2E" metadata "Bendahara"
-    When I toggle org member "Anggota Liturgi E2E" role via "Jadikan Admin"
-    Then I see org member "Anggota Liturgi E2E" with role "Admin Organisasi"
-    When I toggle org member "Anggota Liturgi E2E" role via "Jadikan Anggota"
-    Then I see org member "Anggota Liturgi E2E" with role "Anggota"
-    When I toggle org member "Anggota Liturgi E2E" status via "Nonaktifkan"
-    Then I see org member "Anggota Liturgi E2E" status "Nonaktif"
-    When I toggle org member "Anggota Liturgi E2E" status via "Aktifkan"
-    Then I see org member "Anggota Liturgi E2E" status "Aktif"
-    When I remove org member "Anggota Liturgi E2E"
-    Then I do not see org member "Anggota Liturgi E2E"
+    When I go back to the users directory
+    And I open user detail "Anggota Liturgi E2E"
+    Then I see active org membership with role "Anggota"
+    And I see active org membership metadata "Sekretaris E2E"
+    And I see active org membership metadata "Periode 2025-2028"
+    When I edit active org membership position to "Bendahara"
+    Then I see active org membership metadata "Bendahara"
+    When I toggle active org membership role via "Jadikan Admin"
+    Then I see active org membership with role "Admin Organisasi"
+    When I toggle active org membership role via "Jadikan Anggota"
+    Then I see active org membership with role "Anggota"
+    When I toggle active org membership status via "Nonaktifkan"
+    Then I see active org membership status "Nonaktif"
+    When I toggle active org membership status via "Aktifkan"
+    Then I see active org membership status "Aktif"
+    When I remove active org membership
+    And I go back to the users directory
+    Then I do not see user "anggota.liturgi@domus.test"
 
   @org-admin
   Scenario: Org Admin updates organization profile, views read-only roster, and manages invite links

@@ -1,16 +1,25 @@
 import assert from "node:assert/strict";
 import { BasePage } from "../base.page";
 
-export type UserScopeLabel =
-  | "Pengguna Global"
-  | "Admin & Anggota Paroki"
-  | "Pengurus & Anggota Organisasi";
+export type UserDetailTabLabel = "Profil" | "Paroki" | "Organisasi";
 
 export class UsersPage extends BasePage {
   private rowFor(nameOrEmail: string) {
     return this.page
-      .locator("div.divide-y > div")
+      .locator("div.divide-y > a")
       .filter({ hasText: nameOrEmail });
+  }
+
+  private parishMembershipRow(parishName: string) {
+    return this.page
+      .locator("#user-tabpanel-parish div.divide-y > div")
+      .filter({ hasText: parishName });
+  }
+
+  private orgMembershipRow(orgName: string) {
+    return this.page
+      .locator("#user-tabpanel-org div.divide-y > div")
+      .filter({ hasText: orgName });
   }
 
   async expectLoaded(): Promise<void> {
@@ -30,33 +39,27 @@ export class UsersPage extends BasePage {
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
-  async selectScope(scopeLabel: UserScopeLabel): Promise<void> {
-    await this.page.getByRole("tab", { name: scopeLabel }).click();
-  }
-
-  async expectVisibleScopes(labels: string[]): Promise<void> {
-    if (
-      labels.length === 1 &&
-      labels[0] === "Pengurus & Anggota Organisasi" &&
-      (await this.page.getByRole("tablist").count()) === 0
-    ) {
-      await this.expectLoaded();
-      await this.page
-        .getByLabel("Pilih organisasi")
-        .waitFor({ state: "visible", timeout: 10_000 });
-      return;
-    }
+  async expectFilterButtonsVisible(labels: string[]): Promise<void> {
     for (const label of labels) {
       await this.page
-        .getByRole("tab", { name: label })
+        .getByRole("button", { name: label, exact: true })
         .waitFor({ state: "visible", timeout: 10_000 });
     }
   }
 
-  async expectHiddenScopes(labels: string[]): Promise<void> {
+  async expectHiddenControls(labels: string[]): Promise<void> {
     for (const label of labels) {
-      const count = await this.page.getByRole("tab", { name: label }).count();
-      assert.equal(count, 0, `Expected scope tab "${label}" to be hidden`);
+      const tabCount = await this.page
+        .getByRole("tab", { name: label, exact: true })
+        .count();
+      const btnCount = await this.page
+        .getByRole("button", { name: label, exact: true })
+        .count();
+      assert.equal(
+        tabCount + btnCount,
+        0,
+        `Expected control "${label}" to be hidden`,
+      );
     }
   }
 
@@ -67,27 +70,6 @@ export class UsersPage extends BasePage {
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
-  async createGlobalUser(input: {
-    email: string;
-    name: string;
-    phone?: string;
-    isSuperAdmin?: boolean;
-  }): Promise<void> {
-    await this.page.getByRole("button", { name: "Tambah Pengguna" }).click();
-    await this.page.getByLabel("Alamat email").fill(input.email);
-    await this.page.getByLabel("Nama lengkap").fill(input.name);
-    if (input.phone) {
-      await this.page.getByLabel("Nomor telepon (opsional)").fill(input.phone);
-    }
-    if (input.isSuperAdmin) {
-      await this.page.getByLabel("Jadikan Super Admin").check();
-    }
-    await this.page.getByRole("button", { name: "Buat Pengguna" }).click();
-    await this.page
-      .getByRole("button", { name: "Buat Pengguna" })
-      .waitFor({ state: "detached", timeout: 10_000 });
-  }
-
   async search(query: string): Promise<void> {
     await this.page
       .getByRole("searchbox", { name: "Cari nama atau email…" })
@@ -96,8 +78,28 @@ export class UsersPage extends BasePage {
 
   async filterByStatus(statusLabel: string): Promise<void> {
     await this.page
-      .getByLabel("Semua status")
-      .selectOption({ label: statusLabel });
+      .getByRole("button", { name: statusLabel, exact: true })
+      .click();
+  }
+
+  async openUserDetail(nameOrEmail: string): Promise<void> {
+    await this.rowFor(nameOrEmail).click();
+    await this.page
+      .getByRole("link", { name: "Kembali ke Direktori Pengguna" })
+      .waitFor({ state: "visible", timeout: 10_000 });
+  }
+
+  async backToDirectory(): Promise<void> {
+    await this.page
+      .getByRole("link", { name: "Kembali ke Direktori Pengguna" })
+      .click();
+    await this.expectLoaded();
+  }
+
+  async selectDetailTab(tabLabel: UserDetailTabLabel): Promise<void> {
+    await this.page
+      .getByRole("tab", { name: new RegExp(`^${tabLabel}`) })
+      .click();
   }
 
   async expectUserVisible(
@@ -127,32 +129,46 @@ export class UsersPage extends BasePage {
     }
   }
 
-  async promoteToSuperAdmin(nameOrEmail: string): Promise<void> {
-    const row = this.rowFor(nameOrEmail);
-    await row.getByRole("button", { name: "Jadikan Super Admin" }).click();
-    await row
-      .getByText("Super Admin", { exact: true })
+  async expectDetailSuperAdminBadge(visible: boolean): Promise<void> {
+    const badge = this.page
+      .locator("div.flex.flex-wrap.items-center.gap-2")
+      .first()
+      .getByText("Super Admin", { exact: true });
+    if (visible) {
+      await badge.waitFor({ state: "visible", timeout: 10_000 });
+    } else {
+      await badge.waitFor({ state: "detached", timeout: 10_000 });
+    }
+  }
+
+  async promoteToSuperAdmin(): Promise<void> {
+    await this.page
+      .getByRole("button", { name: "Jadikan Super Admin" })
+      .click();
+    await this.expectDetailSuperAdminBadge(true);
+  }
+
+  async demoteFromSuperAdmin(): Promise<void> {
+    await this.page.getByRole("button", { name: "Cabut Super Admin" }).click();
+    await this.page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Cabut Super Admin" })
+      .click();
+    await this.expectDetailSuperAdminBadge(false);
+  }
+
+  async disableUser(): Promise<void> {
+    await this.page.getByRole("button", { name: "Nonaktifkan" }).click();
+    await this.page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Nonaktifkan" })
+      .click();
+    await this.page
+      .getByRole("button", { name: "Aktifkan" })
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
-  async demoteFromSuperAdmin(nameOrEmail: string): Promise<void> {
-    const row = this.rowFor(nameOrEmail);
-    await row.getByRole("button", { name: "Cabut Super Admin" }).click();
-    await row
-      .getByText("Super Admin", { exact: true })
-      .waitFor({ state: "detached", timeout: 10_000 });
-  }
-
-  async disableUser(nameOrEmail: string): Promise<void> {
-    const row = this.rowFor(nameOrEmail);
-    await row.getByRole("button", { name: "Nonaktifkan" }).click();
-    await row
-      .getByText("Nonaktif", { exact: true })
-      .waitFor({ state: "visible", timeout: 10_000 });
-  }
-
-  async enableUser(nameOrEmail: string): Promise<void> {
-    const row = this.rowFor(nameOrEmail);
+  async enableUser(): Promise<void> {
     await Promise.all([
       this.page.waitForResponse(
         (r) =>
@@ -160,13 +176,20 @@ export class UsersPage extends BasePage {
           r.request().method() === "PATCH" &&
           r.status() === 200,
       ),
-      row.getByRole("button", { name: "Aktifkan" }).click(),
+      this.page.getByRole("button", { name: "Aktifkan" }).click(),
     ]);
+    await this.page
+      .getByRole("button", { name: "Nonaktifkan" })
+      .waitFor({ state: "visible", timeout: 10_000 });
   }
 
-  async deleteUser(name: string): Promise<void> {
-    this.page.once("dialog", (dialog) => dialog.accept());
-    await this.page.getByRole("button", { name: `Hapus ${name}` }).click();
+  async deleteUser(): Promise<void> {
+    await this.page.getByRole("button", { name: "Hapus", exact: true }).click();
+    await this.page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Hapus", exact: true })
+      .click();
+    await this.expectLoaded();
   }
 
   async expectUserNotVisible(nameOrEmail: string): Promise<void> {
@@ -176,186 +199,172 @@ export class UsersPage extends BasePage {
     });
   }
 
-  async selectParish(parishName: string): Promise<void> {
-    const select = this.page.getByLabel("Pilih paroki");
+  async addToParish(
+    parishName: string,
+    roleLabel: "Admin Paroki" | "Anggota",
+  ): Promise<void> {
+    const panel = this.page.locator("#user-tabpanel-parish");
+    const select = panel.getByLabel("Pilih paroki");
     await select
       .locator("option", { hasText: parishName })
       .waitFor({ state: "attached", timeout: 10_000 });
     await select.selectOption({ label: parishName });
+    await panel.getByLabel("Peran").selectOption({ label: roleLabel });
+    await panel.getByRole("button", { name: "Tambahkan ke Paroki" }).click();
   }
 
-  async addParishMember(input: {
-    email: string;
-    name: string;
-    phone?: string;
-    roleLabel: "Admin Paroki" | "Anggota";
-  }): Promise<void> {
-    await this.page.getByRole("button", { name: "Tambah Pengguna" }).click();
-    await this.page.getByLabel("Alamat email").fill(input.email);
-    await this.page.getByLabel("Nama lengkap").fill(input.name);
-    if (input.phone) {
-      await this.page.getByLabel("Nomor telepon (opsional)").fill(input.phone);
+  async expectParishMembershipVisible(
+    parishName: string,
+    roleLabel: "Admin Paroki" | "Anggota",
+  ): Promise<void> {
+    const row = this.parishMembershipRow(parishName);
+    await row.waitFor({ state: "visible", timeout: 10_000 });
+    await row
+      .locator("span", { hasText: new RegExp(`^${roleLabel}$`) })
+      .waitFor({ state: "visible", timeout: 10_000 });
+  }
+
+  async changeParishMembershipRole(
+    parishName: string,
+    roleLabel: "Admin Paroki" | "Anggota",
+  ): Promise<void> {
+    const row = this.parishMembershipRow(parishName);
+    if (roleLabel === "Anggota") {
+      await row.getByRole("button", { name: "Turunkan ke Anggota" }).click();
+      await this.page
+        .getByRole("dialog")
+        .getByRole("button", { name: "Turunkan ke Anggota" })
+        .click();
+      await this.page
+        .getByRole("dialog")
+        .waitFor({ state: "detached", timeout: 10_000 });
+    } else {
+      await row.getByRole("button", { name: "Jadikan Admin Paroki" }).click();
     }
+  }
+
+  async removeParishMembership(parishName: string): Promise<void> {
     await this.page
-      .locator("form")
-      .getByLabel("Peran")
-      .selectOption({ label: input.roleLabel });
-    await this.page
-      .getByRole("button", { name: "Simpan Anggota Paroki" })
+      .getByRole("button", { name: `Hapus ${parishName}` })
       .click();
     await this.page
-      .getByRole("button", { name: "Simpan Anggota Paroki" })
-      .waitFor({ state: "detached", timeout: 10_000 });
+      .getByRole("dialog")
+      .getByRole("button", { name: "Hapus", exact: true })
+      .click();
+    await this.parishMembershipRow(parishName).waitFor({
+      state: "detached",
+      timeout: 10_000,
+    });
   }
 
-  async expectParishMemberVisible(
-    name: string,
-    roleLabel: "Admin Paroki" | "Anggota",
-  ): Promise<void> {
-    const row = this.rowFor(name);
-    await row.waitFor({ state: "visible", timeout: 10_000 });
-    await row
-      .locator("span", { hasText: new RegExp(`^${roleLabel}$`) })
-      .waitFor({ state: "visible", timeout: 10_000 });
+  async expectParishMembershipNotVisible(parishName: string): Promise<void> {
+    await this.parishMembershipRow(parishName).waitFor({
+      state: "detached",
+      timeout: 10_000,
+    });
   }
 
-  async changeParishMemberRole(
-    name: string,
-    roleLabel: "Admin Paroki" | "Anggota",
-  ): Promise<void> {
-    await this.page
-      .getByLabel(`Peran ${name}`)
-      .selectOption({ label: roleLabel });
+  async addToOrg(input: {
+    orgName: string;
+    roleLabel: "Admin Organisasi" | "Anggota";
+    position?: string;
+    periodName?: string;
+  }): Promise<void> {
+    const panel = this.page.locator("#user-tabpanel-org");
+    const select = panel.getByLabel("Pilih organisasi");
+    await select
+      .locator("option", { hasText: input.orgName })
+      .waitFor({ state: "attached", timeout: 10_000 });
+    await select.selectOption({ label: input.orgName });
+    const roleSelect = panel.getByLabel("Peran");
+    if (await roleSelect.isEnabled()) {
+      await roleSelect.selectOption({ label: input.roleLabel });
+    }
+    if (input.position) {
+      await panel.getByLabel("Jabatan").fill(input.position);
+    }
+    if (input.periodName) {
+      await panel
+        .getByLabel("Periode")
+        .selectOption({ label: input.periodName });
+    }
+    await panel
+      .getByRole("button", { name: "Tambahkan ke Organisasi" })
+      .click();
   }
 
-  async removeParishMember(name: string): Promise<void> {
-    this.page.once("dialog", (dialog) => dialog.accept());
-    await this.page.getByRole("button", { name: `Hapus ${name}` }).click();
-  }
-
-  async expectParishMemberNotVisible(name: string): Promise<void> {
-    await this.rowFor(name).waitFor({ state: "detached", timeout: 10_000 });
-  }
-
-  async expectOrgMemberVisible(
-    name: string,
+  async expectOrgMembershipVisible(
+    orgName: string,
     roleLabel: "Admin Organisasi" | "Anggota",
   ): Promise<void> {
-    const row = this.rowFor(name);
+    const row = this.orgMembershipRow(orgName);
     await row.waitFor({ state: "visible", timeout: 10_000 });
     await row
       .locator("span", { hasText: new RegExp(`^${roleLabel}$`) })
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
-  async expectOrgMemberMetadata(name: string, text: string): Promise<void> {
-    const row = this.rowFor(name);
+  async expectOrgMembershipMetadata(
+    orgName: string,
+    text: string,
+  ): Promise<void> {
+    const row = this.orgMembershipRow(orgName);
     await row.waitFor({ state: "visible", timeout: 10_000 });
     await row
       .getByText(text, { exact: false })
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
-  async expectOrgMemberStatus(
-    name: string,
+  async expectOrgMembershipStatus(
+    orgName: string,
     statusLabel: "Aktif" | "Nonaktif",
   ): Promise<void> {
-    const row = this.rowFor(name);
+    const row = this.orgMembershipRow(orgName);
     await row.waitFor({ state: "visible", timeout: 10_000 });
     await row
       .locator("span", { hasText: new RegExp(`^${statusLabel}$`) })
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
-  async expectOrgMemberNotVisible(name: string): Promise<void> {
-    await this.rowFor(name).waitFor({ state: "detached", timeout: 10_000 });
+  async expectOrgMembershipNotVisible(orgName: string): Promise<void> {
+    await this.orgMembershipRow(orgName).waitFor({
+      state: "detached",
+      timeout: 10_000,
+    });
   }
 
-  async selectOrganization(orgName: string): Promise<void> {
-    const select = this.page.getByLabel("Pilih organisasi");
-    await select
-      .locator("option", { hasText: orgName })
-      .waitFor({ state: "attached", timeout: 10_000 });
-    await select.selectOption({ label: orgName });
-  }
-
-  async selfAssignOrgAdmin(): Promise<void> {
-    await this.page
-      .getByRole("button", { name: "Jadikan Saya Admin Organisasi" })
-      .click();
-  }
-
-  async addOrgMember(input: {
-    email: string;
-    name?: string;
-    phone?: string;
-    roleLabel: "Admin Organisasi" | "Anggota";
-    position?: string;
-    periodName?: string;
-  }): Promise<void> {
-    await this.page.getByRole("button", { name: "Tambah Pengguna" }).click();
-    await this.page.getByLabel("Alamat email").fill(input.email);
-    if (input.name) {
-      await this.page.getByLabel("Nama lengkap").fill(input.name);
-    }
-    if (input.phone) {
-      await this.page.getByLabel("Nomor telepon (opsional)").fill(input.phone);
-    }
-    const roleSelect = this.page.locator("form").getByLabel("Peran");
-    if (await roleSelect.isEnabled()) {
-      await roleSelect.selectOption({ label: input.roleLabel });
-    }
-    if (input.position) {
-      await this.page
-        .locator("form")
-        .getByLabel("Jabatan")
-        .fill(input.position);
-    }
-    if (input.periodName) {
-      await this.page
-        .locator("form")
-        .getByLabel("Periode")
-        .selectOption({ label: input.periodName });
-    }
-    await this.page
-      .getByRole("button", { name: "Simpan Anggota Organisasi" })
-      .click();
-    await this.page
-      .getByRole("button", { name: "Simpan Anggota Organisasi" })
-      .waitFor({ state: "detached", timeout: 10_000 });
-  }
-
-  async editOrgMemberPosition(
-    name: string,
-    input: { position: string; periodName?: string },
+  async editOrgMembershipPosition(
+    orgName: string,
+    position: string,
   ): Promise<void> {
-    const row = this.rowFor(name);
+    const row = this.orgMembershipRow(orgName);
     await row.getByRole("button", { name: "Ubah Jabatan" }).click();
-    await row.getByLabel("Jabatan").fill(input.position);
-    if (input.periodName) {
-      await row.getByLabel("Periode").selectOption({ label: input.periodName });
-    }
+    await row.getByLabel("Jabatan").fill(position);
     await row.getByRole("button", { name: "Simpan" }).click();
   }
 
-  async toggleOrgMemberRole(
-    name: string,
+  async toggleOrgMembershipRole(
+    orgName: string,
     targetButtonLabel: "Jadikan Admin" | "Jadikan Anggota",
   ): Promise<void> {
-    const row = this.rowFor(name);
+    const row = this.orgMembershipRow(orgName);
     await row.getByRole("button", { name: targetButtonLabel }).click();
   }
 
-  async toggleOrgMemberStatus(
-    name: string,
+  async toggleOrgMembershipStatus(
+    orgName: string,
     targetButtonLabel: "Nonaktifkan" | "Aktifkan",
   ): Promise<void> {
-    const row = this.rowFor(name);
+    const row = this.orgMembershipRow(orgName);
     await row.getByRole("button", { name: targetButtonLabel }).click();
   }
 
-  async removeOrgMember(name: string): Promise<void> {
-    this.page.once("dialog", (dialog) => dialog.accept());
-    await this.page.getByRole("button", { name: `Hapus ${name}` }).click();
+  async removeOrgMembership(orgName: string): Promise<void> {
+    await this.page.getByRole("button", { name: `Hapus ${orgName}` }).click();
+    await this.page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Hapus", exact: true })
+      .click();
+    await this.expectOrgMembershipNotVisible(orgName);
   }
 }
