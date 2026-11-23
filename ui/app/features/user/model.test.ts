@@ -4,12 +4,16 @@ import type { User } from "./api/types";
 import {
   buildOnboardingSteps,
   canManageUsers,
+  deduplicateOrgMembers,
   formatUserAgent,
+  getAvailableUserDetailTabs,
   getAvailableUserScopes,
   getBirthDateBounds,
+  getInitials,
   isOrgAdmin,
   isParishAdmin,
   isSuperAdmin,
+  parseUserDetailTab,
   providerLabel,
   ROLE_ORG_ADMIN,
   ROLE_PARISH_ADMIN,
@@ -66,15 +70,11 @@ test("role helpers and getAvailableUserScopes resolve directory scopes", () => {
   assert.equal(canManageUsers(orgUser), true);
   assert.equal(canManageUsers(plainUser), false);
 
-  assert.deepEqual(getAvailableUserScopes(superUser.roles), [
-    "global",
-    "parish",
-  ]);
-  assert.deepEqual(getAvailableUserScopes(parishUser.roles), ["parish", "org"]);
+  assert.deepEqual(getAvailableUserScopes(superUser.roles), ["global"]);
+  assert.deepEqual(getAvailableUserScopes(parishUser.roles), ["org"]);
   assert.deepEqual(getAvailableUserScopes(orgUser.roles), ["org"]);
   assert.deepEqual(getAvailableUserScopes([ROLE_SUPER_ADMIN, ROLE_ORG_ADMIN]), [
     "global",
-    "parish",
     "org",
   ]);
   assert.deepEqual(getAvailableUserScopes(plainUser.roles), []);
@@ -122,4 +122,56 @@ test("USER_GENDERS and getBirthDateBounds define biodata constraints", () => {
     min: "1906-11-21",
     max: "2013-11-21",
   });
+});
+
+test("getInitials derives two-letter initials from name or email", () => {
+  assert.equal(getInitials("Budi Santoso", "budi@example.com"), "BS");
+  assert.equal(getInitials("Maria", "maria@example.com"), "MA");
+  assert.equal(getInitials("", "admin@parish.id"), "AD");
+  assert.equal(getInitials("", ""), "?");
+});
+
+test("parseUserDetailTab and getAvailableUserDetailTabs respect caller roles", () => {
+  assert.deepEqual(getAvailableUserDetailTabs([ROLE_SUPER_ADMIN]), [
+    "profile",
+    "parish",
+    "org",
+  ]);
+  assert.deepEqual(getAvailableUserDetailTabs([ROLE_PARISH_ADMIN]), [
+    "parish",
+    "org",
+  ]);
+  assert.deepEqual(getAvailableUserDetailTabs([ROLE_ORG_ADMIN]), ["org"]);
+  assert.deepEqual(getAvailableUserDetailTabs([ROLE_USER]), []);
+
+  assert.equal(parseUserDetailTab(null), "profile");
+  assert.equal(parseUserDetailTab("profile"), "profile");
+  assert.equal(parseUserDetailTab("parish"), "parish");
+  assert.equal(parseUserDetailTab("org"), "org");
+  assert.equal(parseUserDetailTab("unknown"), "profile");
+  assert.equal(parseUserDetailTab("profile", ["parish", "org"]), "parish");
+  assert.equal(parseUserDetailTab("parish", ["org"]), "org");
+});
+
+test("deduplicateOrgMembers merges multi-org memberships per user", () => {
+  const result = deduplicateOrgMembers([
+    {
+      org: { id: "o1", name: "OMK" },
+      members: [
+        { userId: "u2", name: "Budi", email: "budi@p.id", role: "member" },
+        { userId: "u1", name: "Ani", email: "ani@p.id", role: "admin" },
+      ],
+    },
+    {
+      org: { id: "o2", name: "Koor" },
+      members: [
+        { userId: "u1", name: "Ani", email: "ani@p.id", role: "member" },
+      ],
+    },
+  ]);
+
+  assert.equal(result.length, 2);
+  assert.equal(result[0]?.id, "u1");
+  assert.equal(result[0]?.orgs.length, 2);
+  assert.equal(result[1]?.id, "u2");
 });

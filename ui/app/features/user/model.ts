@@ -1,4 +1,9 @@
-import type { RoleDescriptor, User } from "./api/types";
+import type {
+  Organization,
+  OrgMember,
+  RoleDescriptor,
+  User,
+} from "./api/types";
 
 export const ROLE_SUPER_ADMIN = "user:super-admin";
 export const ROLE_USER = "user:user";
@@ -44,7 +49,85 @@ export const ROLE_DESCRIPTORS: RoleDescriptor[] = [
   },
 ];
 
-export type UserDirectoryScope = "global" | "parish" | "org";
+export type UserDirectoryScope = "global" | "org";
+export type UserDetailTab = "profile" | "parish" | "org";
+
+export function getAvailableUserDetailTabs(
+  roles?: string[] | null,
+): UserDetailTab[] {
+  if (!roles?.length) return [];
+  const tabs: UserDetailTab[] = [];
+  if (roles.includes(ROLE_SUPER_ADMIN)) {
+    tabs.push("profile", "parish", "org");
+    return tabs;
+  }
+  if (roles.includes(ROLE_PARISH_ADMIN)) {
+    tabs.push("parish", "org");
+    return tabs;
+  }
+  if (roles.includes(ROLE_ORG_ADMIN)) {
+    tabs.push("org");
+  }
+  return tabs;
+}
+
+export function parseUserDetailTab(
+  raw: string | null,
+  allowed: UserDetailTab[] = ["profile", "parish", "org"],
+): UserDetailTab {
+  if (
+    (raw === "profile" || raw === "parish" || raw === "org") &&
+    allowed.includes(raw)
+  ) {
+    return raw;
+  }
+  return allowed[0] ?? "profile";
+}
+
+export type DirectoryOrgUser = {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  orgs: Array<{
+    orgId: string;
+    orgName: string;
+    role: string;
+    status: string;
+  }>;
+};
+
+export function deduplicateOrgMembers(
+  groups: Array<{ org: Organization; members: OrgMember[] }>,
+): DirectoryOrgUser[] {
+  const byId = new Map<string, DirectoryOrgUser>();
+  for (const { org, members } of groups) {
+    for (const m of members) {
+      if (!m.userId) continue;
+      const existing = byId.get(m.userId);
+      const entry = {
+        orgId: org.id ?? "",
+        orgName: org.name ?? "",
+        role: m.role ?? "member",
+        status: m.status ?? "active",
+      };
+      if (existing) {
+        existing.orgs.push(entry);
+      } else {
+        byId.set(m.userId, {
+          id: m.userId,
+          name: m.name ?? "",
+          email: m.email ?? "",
+          phone: m.phone,
+          orgs: [entry],
+        });
+      }
+    }
+  }
+  return Array.from(byId.values()).sort((a, b) =>
+    (a.name || a.email).localeCompare(b.name || b.email, "id"),
+  );
+}
 
 export function isSuperAdmin(user?: User | null): boolean {
   return Boolean(user?.roles?.includes(ROLE_SUPER_ADMIN));
@@ -66,9 +149,6 @@ export function getAvailableUserScopes(
   if (roles.includes(ROLE_SUPER_ADMIN)) {
     scopes.push("global");
   }
-  if (roles.includes(ROLE_SUPER_ADMIN) || roles.includes(ROLE_PARISH_ADMIN)) {
-    scopes.push("parish");
-  }
   if (roles.includes(ROLE_PARISH_ADMIN) || roles.includes(ROLE_ORG_ADMIN)) {
     scopes.push("org");
   }
@@ -77,6 +157,19 @@ export function getAvailableUserScopes(
 
 export function canManageUsers(user?: User | null): boolean {
   return getAvailableUserScopes(user?.roles).length > 0;
+}
+
+export function getInitials(
+  name?: string | null,
+  email?: string | null,
+): string {
+  const source = name?.trim() || email?.trim() || "";
+  if (!source) return "?";
+  const parts = source.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return `${parts[0]?.[0] ?? ""}${parts[1]?.[0] ?? ""}`.toUpperCase();
+  }
+  return source.slice(0, 2).toUpperCase();
 }
 
 export function formatUserAgent(ua: string): string {

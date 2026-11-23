@@ -2,10 +2,12 @@ import {
   infiniteQueryOptions,
   queryOptions,
   useInfiniteQuery,
+  useQueries,
   useQuery,
 } from "@tanstack/react-query";
 import { api, unwrap, unwrapMeta } from "~/shared/api/client";
 import { meQueryOptions, useMe } from "~/shared/api/session";
+import { type DirectoryOrgUser, deduplicateOrgMembers } from "../model";
 import { USER_ERRORS } from "./errors";
 import { userKeys } from "./keys";
 import type {
@@ -90,6 +92,18 @@ export function useUsersSearch(
   );
 }
 
+export function useUserDetail(id: string | undefined, enabled = true) {
+  return useQuery({
+    queryKey: userKeys.detail(id ?? ""),
+    enabled: Boolean(id) && enabled,
+    queryFn: () =>
+      unwrap(
+        api.GET("/users/{id}", { params: { path: { id: id ?? "" } } }),
+        USER_ERRORS,
+      ),
+  });
+}
+
 export function useDirectoryParishes(enabled = true) {
   return useQuery({
     queryKey: userKeys.parishes(),
@@ -100,6 +114,45 @@ export function useDirectoryParishes(enabled = true) {
         USER_ERRORS,
       ),
   });
+}
+
+export function useUserParishMemberships(
+  userId: string | undefined,
+  email: string | undefined,
+  enabled = true,
+) {
+  const parishesQuery = useDirectoryParishes(enabled);
+  const parishes = parishesQuery.data ?? [];
+
+  const memberQueries = useQueries({
+    queries: parishes.map((parish) => ({
+      queryKey: userKeys.parishMembers(parish.id ?? "", {
+        q: email,
+        limit: 20,
+      }),
+      enabled: Boolean(enabled && userId && email && parish.id),
+      queryFn: () =>
+        unwrap(
+          api.POST("/ref/parishes/{id}/members/search", {
+            params: { path: { id: parish.id ?? "" } },
+            body: { q: email, limit: 20 },
+          }),
+          USER_ERRORS,
+        ),
+    })),
+  });
+
+  const memberships = parishes.flatMap((parish, idx) => {
+    const match = memberQueries[idx]?.data?.find((m) => m.userId === userId);
+    return match ? [{ parish, member: match }] : [];
+  });
+
+  return {
+    parishes,
+    memberships,
+    isLoading:
+      parishesQuery.isLoading || memberQueries.some((q) => q.isLoading),
+  };
 }
 
 export function useDirectoryParishMembers(
@@ -142,6 +195,49 @@ export function useDirectoryOrgs(parishId: string | undefined, enabled = true) {
         USER_ERRORS,
       ),
   });
+}
+
+export function useUserOrgMemberships(
+  userId: string | undefined,
+  email: string | undefined,
+  parishId: string | undefined,
+  enabled = true,
+) {
+  const orgsQuery = useDirectoryOrgs(parishId, enabled);
+  const orgs = orgsQuery.data ?? [];
+  const inspectableOrgs = orgs.filter(
+    (o) => Boolean(o.id) && (o.myRole === "admin" || o.myRole === "member"),
+  );
+
+  const memberQueries = useQueries({
+    queries: inspectableOrgs.map((org) => ({
+      queryKey: userKeys.orgMembers(org.id ?? "", {
+        q: email,
+        limit: 20,
+      }),
+      enabled: Boolean(enabled && userId && email && org.id),
+      queryFn: () =>
+        unwrap(
+          api.POST("/orgs/{id}/members/search", {
+            params: { path: { id: org.id ?? "" } },
+            body: { q: email, limit: 20 },
+          }),
+          USER_ERRORS,
+        ),
+    })),
+  });
+
+  const memberships = inspectableOrgs.flatMap((org, idx) => {
+    const match = memberQueries[idx]?.data?.find((m) => m.userId === userId);
+    return match ? [{ org, member: match }] : [];
+  });
+
+  return {
+    orgs,
+    inspectableOrgs,
+    memberships,
+    isLoading: orgsQuery.isLoading || memberQueries.some((q) => q.isLoading),
+  };
 }
 
 export function useDirectoryOrgMembers(
@@ -199,4 +295,50 @@ export function useDirectoryPeriods(
         USER_ERRORS,
       ),
   });
+}
+
+export function useDirectoryManagedOrgUsers(
+  parishId: string | undefined,
+  q: string,
+  enabled = true,
+): {
+  users: DirectoryOrgUser[];
+  isLoading: boolean;
+} {
+  const orgsQuery = useDirectoryOrgs(parishId, enabled);
+  const manageableOrgs = (orgsQuery.data ?? []).filter(
+    (o) => Boolean(o.id) && o.myRole === "admin",
+  );
+
+  // ponytail: fan-out search over manageable orgs and deduplicate by userId
+  const memberQueries = useQueries({
+    queries: manageableOrgs.map((org) => ({
+      queryKey: userKeys.orgMembers(org.id ?? "", {
+        q: q || undefined,
+        limit: 100,
+      }),
+      enabled: Boolean(enabled && parishId && org.id),
+      queryFn: () =>
+        unwrap(
+          api.POST("/orgs/{id}/members/search", {
+            params: { path: { id: org.id ?? "" } },
+            body: { q: q || undefined, limit: 100 },
+          }),
+          USER_ERRORS,
+        ),
+    })),
+  });
+
+  const users = deduplicateOrgMembers(
+    manageableOrgs.map((org, idx) => ({
+      org,
+      members: memberQueries[idx]?.data ?? [],
+    })),
+  );
+
+  return {
+    users,
+    isLoading:
+      orgsQuery.isLoading || memberQueries.some((query) => query.isLoading),
+  };
 }
