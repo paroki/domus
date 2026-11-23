@@ -181,5 +181,9 @@ func BuildSystemPrompt(in PromptInput) string {
 		b.WriteString("\n\n")
 		b.WriteString(memXML)
 	}
+	if in.Channel == domain.ChannelWeb {
+		b.WriteString("\n\n")
+		b.WriteString(A2UIWebPromptInstructions())
+	}
 	return b.String()
 }

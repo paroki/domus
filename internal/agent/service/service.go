@@ -514,13 +514,17 @@ func (s *Service) runReActLoop(
 				mu.Lock()
 				defer mu.Unlock()
 
+				content := resp.Text()
+				if len(toolCalls) == 0 {
+					content = SanitizeA2UIBlocks(content)
+				}
 				if _, err := s.repo.AppendMessage(ctx, domain.CreateMessageInput{
 					ParishID:  p.ParishID,
 					UserID:    p.UserID,
 					SessionID: sessionID,
 					AgentName: agentCfg.Name,
 					Role:      domain.RoleAssistant,
-					Content:   resp.Text(),
+					Content:   content,
 					Thinking:  thinkingPtr,
 					ToolCalls: toolCalls,
 				}); err != nil {
@@ -638,7 +642,7 @@ func (s *Service) runReActLoop(
 		}
 		return "", err
 	}
-	return resp.Text(), nil
+	return SanitizeA2UIBlocks(resp.Text()), nil
 }
 
 func formatToolErrorJSON(err error) string {
