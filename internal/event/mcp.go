@@ -67,14 +67,14 @@ type MCPEvent struct {
 
 // EventListInput is the input schema for event_list.
 type EventListInput struct {
-	Query      string `json:"query,omitempty"`
-	OrgID      string `json:"orgId,omitempty"`
-	From       string `json:"from,omitempty"`
-	To         string `json:"to,omitempty"`
-	Visibility string `json:"visibility,omitempty"`
-	Status     string `json:"status,omitempty"`
-	MyOrgsOnly bool   `json:"myOrgsOnly,omitempty"`
-	Limit      int    `json:"limit,omitempty"`
+	Query      string `json:"query,omitempty" jsonschema:"Optional text search query matching event title, description, or location"`
+	OrgID      string `json:"orgId,omitempty" jsonschema:"Optional organization UUID filter"`
+	From       string `json:"from,omitempty" jsonschema:"Optional inclusive start timestamp in RFC3339 (e.g. 2026-11-23T00:00:00Z) or YYYY-MM-DD"`
+	To         string `json:"to,omitempty" jsonschema:"Optional inclusive end timestamp in RFC3339 (e.g. 2026-11-29T23:59:59Z) or YYYY-MM-DD"`
+	Visibility string `json:"visibility,omitempty" jsonschema:"Optional visibility filter: public or private"`
+	Status     string `json:"status,omitempty" jsonschema:"Optional status filter: scheduled or cancelled"`
+	MyOrgsOnly bool   `json:"myOrgsOnly,omitempty" jsonschema:"If true, restrict results to events owned by caller's organizations"`
+	Limit      int    `json:"limit,omitempty" jsonschema:"Maximum number of events to return (default 20, max 100)"`
 }
 
 // EventListOutput is the output schema for event_list.
@@ -189,16 +189,16 @@ func (f *Feature) mcpEventList(ctx context.Context, _ *mcp.CallToolRequest, in E
 			filter.OrgID = &parsed
 		}
 		if in.From != "" {
-			t, err := time.Parse(time.RFC3339, in.From)
+			t, err := parseMCPTimestamp(in.From, false)
 			if err != nil {
-				return nil, EventListOutput{}, httpx.BadRequest("Invalid 'from' timestamp; expected RFC3339.")
+				return nil, EventListOutput{}, httpx.BadRequest("Invalid 'from' timestamp; expected RFC3339 or YYYY-MM-DD.")
 			}
 			filter.From = &t
 		}
 		if in.To != "" {
-			t, err := time.Parse(time.RFC3339, in.To)
+			t, err := parseMCPTimestamp(in.To, true)
 			if err != nil {
-				return nil, EventListOutput{}, httpx.BadRequest("Invalid 'to' timestamp; expected RFC3339.")
+				return nil, EventListOutput{}, httpx.BadRequest("Invalid 'to' timestamp; expected RFC3339 or YYYY-MM-DD.")
 			}
 			filter.To = &t
 		}
@@ -469,6 +469,20 @@ func toMCPEventRSVP(r domain.EventRSVPResponse) MCPEventRSVP {
 		CreatedAt:   r.CreatedAt.UTC().Format(time.RFC3339),
 		UpdatedAt:   r.UpdatedAt.UTC().Format(time.RFC3339),
 	}
+}
+
+func parseMCPTimestamp(raw string, endOfDay bool) (time.Time, error) {
+	if t, err := time.Parse(time.RFC3339, raw); err == nil {
+		return t, nil
+	}
+	d, err := time.Parse(time.DateOnly, raw)
+	if err != nil {
+		return time.Time{}, err
+	}
+	if endOfDay {
+		return d.Add(24*time.Hour - time.Nanosecond), nil
+	}
+	return d, nil
 }
 
 func toMCPEventRSVPSummary(s domain.EventRSVPSummaryResponse) MCPEventRSVPSummary {

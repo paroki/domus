@@ -292,14 +292,18 @@ func (s *EventMCPSuite) TestEventMCP_DiscoveryToolsAndRBAC() {
 	})
 	s.Contains(createPrivBody, "Rapat Internal OMK")
 
-	// Extract public event ID via event_list.
+	// Extract public event ID via event_list (including date-only YYYY-MM-DD range).
 	_, adminListBody := s.mcpPost(adminSess, orgAdminCookies, parishID, map[string]any{
 		"jsonrpc": "2.0",
 		"id":      6,
 		"method":  "tools/call",
 		"params": map[string]any{
-			"name":      "event_list",
-			"arguments": map[string]any{"query": "Misa OMK"},
+			"name": "event_list",
+			"arguments": map[string]any{
+				"query": "Misa OMK",
+				"from":  startAt.Format(time.DateOnly),
+				"to":    endAt.Format(time.DateOnly),
+			},
 		},
 	})
 	s.Contains(adminListBody, "Misa OMK")
