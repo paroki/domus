@@ -6,4 +6,5 @@ import "github.com/google/uuid"
 type ChatRequest struct {
 	SessionID *uuid.UUID `json:"sessionId,omitempty"`
 	Message   string     `json:"message" validate:"required"`
+	Retry     bool       `json:"retry,omitempty"`
 }

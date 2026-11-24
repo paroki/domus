@@ -543,6 +543,123 @@ func (s *ChatSuite) TestAbortMidStreamCancelsAndPersistsCompletedTools() {
 	s.Equal(http.StatusOK, followResp.StatusCode)
 }
 
+func (s *ChatSuite) TestChatRetryDoesNotDuplicateUserMessage() {
+	ctx := context.Background()
+	var callNum atomic.Int32
+
+	s.setLLMHandler(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/models") {
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"data": []map[string]any{{"id": "gpt-4o", "name": "GPT-4o"}},
+			})
+			return
+		}
+		if strings.HasSuffix(r.URL.Path, "/chat/completions") {
+			n := callNum.Add(1)
+			if n == 1 {
+				w.WriteHeader(http.StatusInternalServerError)
+				_, _ = w.Write([]byte(`{"error":"upstream failed"}`))
+				return
+			}
+			w.Header().Set("Content-Type", "text/event-stream")
+			w.WriteHeader(http.StatusOK)
+			writeOpenAITextChunk(w, "Berhasil setelah retry")
+			if flusher, ok := w.(http.Flusher); ok {
+				flusher.Flush()
+			}
+			return
+		}
+		http.NotFound(w, r)
+	})
+
+	provBody, _ := json.Marshal(domain.CreateAgentProviderRequest{
+		Name:     "OpenAI",
+		Provider: "openai",
+		APIKey:   "sk-test",
+		BaseURL:  s.llmServer.URL,
+	})
+	pReq := httptest.NewRequest(http.MethodPost, "/api/agent/providers", bytes.NewReader(provBody))
+	pReq.Header.Set("Content-Type", "application/json")
+	pReq.AddCookie(s.superCookie)
+	pResp, err := s.fiberApp.Test(pReq)
+	s.Require().NoError(err)
+	var provEnv struct {
+		Data domain.AgentProviderResponse `json:"data"`
+	}
+	s.Require().NoError(json.NewDecoder(pResp.Body).Decode(&provEnv))
+	_ = pResp.Body.Close()
+
+	_, err = s.settings.Update(ctx, map[string]string{
+		"agent.model.gabriel": provEnv.Data.ID.String() + ":gpt-4o",
+	})
+	s.Require().NoError(err)
+
+	// First attempt fails mid-stream after persisting the user message
+	req1 := httptest.NewRequest(http.MethodPost, "/api/agent/chat", strings.NewReader(`{"message":"Cek jadwal misa"}`))
+	req1.Header.Set("Content-Type", "application/json")
+	req1.AddCookie(s.memberCookie)
+	req1.Header.Set("X-Parish-Id", s.parishID.String())
+	resp1, err := s.fiberApp.Test(req1, fiber.TestConfig{Timeout: 10 * time.Second})
+	s.Require().NoError(err)
+	events1 := parseSSEEvents(s.T(), resp1.Body)
+	_ = resp1.Body.Close()
+
+	var sessionID string
+	hasErr := false
+	for _, ev := range events1 {
+		if ev.name == "session" {
+			var p map[string]any
+			_ = json.Unmarshal([]byte(ev.data), &p)
+			sessionID, _ = p["sessionId"].(string)
+		}
+		if ev.name == "error" {
+			hasErr = true
+		}
+	}
+	s.Require().NotEmpty(sessionID)
+	s.True(hasErr)
+
+	// Retry with retry: true should succeed without duplicating the user message
+	retryBody := fmt.Sprintf(`{"sessionId":%q,"message":"Cek jadwal misa","retry":true}`, sessionID)
+	req2 := httptest.NewRequest(http.MethodPost, "/api/agent/chat", strings.NewReader(retryBody))
+	req2.Header.Set("Content-Type", "application/json")
+	req2.AddCookie(s.memberCookie)
+	req2.Header.Set("X-Parish-Id", s.parishID.String())
+	resp2, err := s.fiberApp.Test(req2, fiber.TestConfig{Timeout: 10 * time.Second})
+	s.Require().NoError(err)
+	events2 := parseSSEEvents(s.T(), resp2.Body)
+	_ = resp2.Body.Close()
+
+	hasDone := false
+	for _, ev := range events2 {
+		if ev.name == "done" {
+			hasDone = true
+		}
+	}
+	s.True(hasDone)
+
+	sid, err := uuid.Parse(sessionID)
+	s.Require().NoError(err)
+	msgs, err := s.client.AgentMessage.Query().All(ctx)
+	s.Require().NoError(err)
+	userCount := 0
+	assistantCount := 0
+	for _, m := range msgs {
+		if m.SessionID != sid {
+			continue
+		}
+		switch m.Role {
+		case "user":
+			userCount++
+		case "assistant":
+			assistantCount++
+		}
+	}
+	s.Equal(1, userCount)
+	s.Equal(1, assistantCount)
+}
+
 type sseEvent struct {
 	name string
 	data string

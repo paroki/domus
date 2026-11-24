@@ -55,6 +55,7 @@ type ChatTurnPrep struct {
 	RafaelPrompt    string
 	PromptContext   PromptContext
 	History         []*schema.Message
+	SkipAppendUser  bool
 }
 
 func (s *Service) tryLockSession(id uuid.UUID) bool {
@@ -151,12 +152,17 @@ func (s *Service) PrepareChat(ctx context.Context, p authx.Principal, req domain
 
 	var history []*schema.Message
 	var title string
+	skipAppendUser := false
 	if existingSess != nil {
 		title = existingSess.Title
 		rows, err := s.repo.ListMessages(ctx, p.ParishID, p.UserID, existingSess.ID, 0)
 		if err != nil {
 			releaseOnError()
 			return nil, err
+		}
+		if req.Retry && len(rows) > 0 && rows[len(rows)-1].Role == "user" && strings.TrimSpace(rows[len(rows)-1].Content) == msg {
+			skipAppendUser = true
+			rows = rows[:len(rows)-1]
 		}
 		history = ProjectHistory(rows)
 	} else {
@@ -181,7 +187,8 @@ func (s *Service) PrepareChat(ctx context.Context, p authx.Principal, req domain
 			CurrentTime:       time.Now().UTC().Format(time.RFC3339),
 			RetrievedMemories: memories,
 		},
-		History: history,
+		History:        history,
+		SkipAppendUser: skipAppendUser,
 	}, nil
 }
 
@@ -211,11 +218,13 @@ func (s *Service) ExecuteChatStream(prep *ChatTurnPrep, writeEvent func(StreamEv
 		sessionID = *prep.SessionID
 	}
 
-	if _, err := s.repo.AppendMessages(bgCtx, prep.Principal.ParishID, prep.Principal.UserID, sessionID, []domain.AppendMessageInput{
-		{Role: "user", Content: prep.Message},
-	}); err != nil {
-		_ = writeEvent(StreamEvent{Event: "error", Data: map[string]string{"code": "INTERNAL_ERROR", "message": err.Error()}})
-		return
+	if !prep.SkipAppendUser {
+		if _, err := s.repo.AppendMessages(bgCtx, prep.Principal.ParishID, prep.Principal.UserID, sessionID, []domain.AppendMessageInput{
+			{Role: "user", Content: prep.Message},
+		}); err != nil {
+			_ = writeEvent(StreamEvent{Event: "error", Data: map[string]string{"code": "INTERNAL_ERROR", "message": err.Error()}})
+			return
+		}
 	}
 
 	if err := writeEvent(StreamEvent{
