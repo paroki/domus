@@ -112,7 +112,7 @@ func New(drivers *driver.Registry, logger *slog.Logger, opts ...Option) *Feature
 	if f.db != nil {
 		f.repo = repo.New(f.db, f.sqlDB)
 		f.service = service.New(f.repo, f.db, f.drivers, f.cipher, f.settings, f.logger)
-		f.handler = handler.New(f, f.service, f.service)
+		f.handler = handler.New(f, f.service, f.service, f.service)
 	}
 	return f
 }
@@ -125,6 +125,9 @@ func (f *Feature) SQLDB() *sql.DB {
 // SetMCPServer binds the shared MCP server instance (invoked by app.GetFiber).
 func (f *Feature) SetMCPServer(s *mcp.Server) {
 	f.mcpServer = s
+	if f.service != nil {
+		f.service.SetMCPServer(s)
+	}
 }
 
 // MCPServer returns the bound MCP server, or nil if unset.

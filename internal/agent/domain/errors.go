@@ -6,6 +6,7 @@ import "github.com/paroki/domus/internal/platform/errx"
 var (
 	ErrProviderNotFound       = errx.NotFound("AGENT_PROVIDER_NOT_FOUND", "Agent provider configuration not found.")
 	ErrSessionNotFound        = errx.NotFound("AGENT_SESSION_NOT_FOUND", "Agent session not found.")
+	ErrSessionBusy            = errx.Conflict("AGENT_SESSION_BUSY", "Agent session is currently processing another request.")
 	ErrMemoryNotFound         = errx.NotFound("AGENT_MEMORY_NOT_FOUND", "Agent memory not found.")
 	ErrProviderInUse          = errx.Conflict("AGENT_PROVIDER_IN_USE", "AI provider is currently assigned to an active agent model setting.")
 	ErrProviderUnavailable    = errx.Invalid("AGENT_PROVIDER_UNAVAILABLE", "The configured AI provider is unavailable or missing an API key.")

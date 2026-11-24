@@ -222,6 +222,20 @@
                 },
                 "type": "object"
             },
+            "domain.ChatRequest": {
+                "properties": {
+                    "message": {
+                        "type": "string"
+                    },
+                    "sessionId": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "message"
+                ],
+                "type": "object"
+            },
             "domain.CreateAgentProviderRequest": {
                 "properties": {
                     "apiKey": {
@@ -3491,6 +3505,101 @@
         "url": ""
     },
     "paths": {
+        "/agent/chat": {
+            "post": {
+                "description": "Validates request, resolves active model/session, and streams SSE events (session, agent_transfer, tool_start, tool_end, token, done, error).",
+                "operationId": "chatWithAgent",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.ChatRequest",
+                                "summary": "body",
+                                "description": "Chat request"
+                            }
+                        }
+                    },
+                    "description": "Chat request",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "text/event-stream": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "description": "text/event-stream"
+                    },
+                    "400": {
+                        "content": {
+                            "text/event-stream": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "text/event-stream": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "text/event-stream": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "text/event-stream": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "text/event-stream": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "text/event-stream": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Chat with AI assistant (SSE)",
+                "tags": [
+                    "Agent"
+                ]
+            }
+        },
         "/agent/memories": {
             "post": {
                 "description": "Creates a new AI memory item and best-effort computes its 768-dim embedding.",

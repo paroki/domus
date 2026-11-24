@@ -9,6 +9,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 	"github.com/paroki/domus/internal/agent/domain"
+	"github.com/paroki/domus/internal/agent/service"
 	"github.com/paroki/domus/internal/platform/authx"
 	"github.com/paroki/domus/internal/platform/httpx"
 )
@@ -38,19 +39,27 @@ type MemoryManager interface {
 	DeleteMemory(ctx context.Context, p authx.Principal, memoryID uuid.UUID) error
 }
 
-// Handler exposes HTTP endpoints for AI agent providers, sessions, and memories.
+// ChatManager prepares and executes streaming AI chat turns.
+type ChatManager interface {
+	PrepareChat(ctx context.Context, p authx.Principal, req domain.ChatRequest) (*service.ChatTurnPrep, error)
+	ExecuteChatStream(prep *service.ChatTurnPrep, writeEvent func(service.StreamEvent) error)
+}
+
+// Handler exposes HTTP endpoints for AI agent providers, sessions, memories, and chat.
 type Handler struct {
 	providers ProviderManager
 	sessions  SessionManager
 	memories  MemoryManager
+	chat      ChatManager
 }
 
 // New constructs an agent Handler.
-func New(providers ProviderManager, sessions SessionManager, memories MemoryManager) *Handler {
+func New(providers ProviderManager, sessions SessionManager, memories MemoryManager, chat ChatManager) *Handler {
 	return &Handler{
 		providers: providers,
 		sessions:  sessions,
 		memories:  memories,
+		chat:      chat,
 	}
 }
 
@@ -73,6 +82,7 @@ func (h *Handler) Register(
 	authed.Post("/providers/:providerId/sync-models", requireAdminWrite, h.SyncProviderModels)
 
 	tenanted := authed.Group("", requireTenant)
+	tenanted.Post("/chat", requireChatWrite, h.Chat)
 	tenanted.Post("/sessions/search", requireChatRead, h.SearchSessions)
 	tenanted.Get("/sessions/:sessionId", requireChatRead, h.GetSession)
 	tenanted.Patch("/sessions/:sessionId", requireChatWrite, h.UpdateSession)
