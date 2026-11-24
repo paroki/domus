@@ -61,6 +61,22 @@ export function validateChatMessage(raw: string): string | null {
   return null;
 }
 
+export function isToolErrorContent(content: string): boolean {
+  return (
+    (content.startsWith("Tool ") && content.includes(" error: ")) ||
+    content.startsWith("Error: ")
+  );
+}
+
+export function formatToolJSON(raw?: string): string {
+  if (!raw) return "";
+  try {
+    return JSON.stringify(JSON.parse(raw), null, 2);
+  } catch {
+    return raw;
+  }
+}
+
 export type SSEFrame =
   | {
       event: "session";
@@ -83,6 +99,7 @@ export type SSEFrame =
         toolCallId: string;
         toolName: string;
         isError: boolean;
+        output?: string;
       };
     }
   | { event: "token"; data: { agent: string; delta: string } }

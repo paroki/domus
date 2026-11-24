@@ -610,6 +610,9 @@ const id = {
     cancel: "Batal",
     sessionsTitle: "Riwayat Percakapan",
     handoffLabel: "{{from}} -> {{to}}",
+    verboseMode: "Verbose",
+    toolArgsLabel: "Argumen",
+    toolOutputLabel: "Hasil",
   },
 } as const;
 

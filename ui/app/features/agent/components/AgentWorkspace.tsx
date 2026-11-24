@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { Brain, Menu, RotateCcw } from "lucide-react";
+import { Brain, Menu, RotateCcw, Terminal } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
@@ -33,6 +33,10 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
   );
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [memoryOpen, setMemoryOpen] = useState(false);
+  const [verbose, setVerbose] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("domus:agent:verbose") === "true";
+  });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [lastFailedMsg, setLastFailedMsg] = useState<string | null>(null);
 
@@ -117,6 +121,7 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
                   agent: frame.data.agent,
                   toolName: frame.data.toolName,
                   status: "running",
+                  args: frame.data.args,
                 },
               ]);
               break;
@@ -128,6 +133,7 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
                     ? {
                         ...tl,
                         status: frame.data.isError ? "error" : "done",
+                        output: frame.data.output,
                       }
                     : tl,
                 ),
@@ -220,14 +226,41 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
             </h1>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setMemoryOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-bg px-3 py-1.5 text-xs font-medium text-fg hover:bg-fg/6"
-          >
-            <Brain aria-hidden className="size-3.5 text-primary" />
-            {t("agent.memoryButton")}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              aria-pressed={verbose}
+              onClick={() => {
+                setVerbose((prev) => {
+                  const next = !prev;
+                  if (typeof window !== "undefined") {
+                    window.localStorage.setItem(
+                      "domus:agent:verbose",
+                      String(next),
+                    );
+                  }
+                  return next;
+                });
+              }}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                verbose
+                  ? "border-primary/40 bg-primary/10 text-primary"
+                  : "border-line bg-bg text-muted hover:bg-fg/6 hover:text-fg"
+              }`}
+            >
+              <Terminal aria-hidden className="size-3.5" />
+              {t("agent.verboseMode")}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setMemoryOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-bg px-3 py-1.5 text-xs font-medium text-fg hover:bg-fg/6"
+            >
+              <Brain aria-hidden className="size-3.5 text-primary" />
+              {t("agent.memoryButton")}
+            </button>
+          </div>
         </div>
 
         {errorMsg ? (
@@ -257,6 +290,7 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
           streamingText={streamingText}
           liveTransfers={liveTransfers}
           liveTools={liveTools}
+          verbose={verbose}
           onRetry={
             !streaming && !errorMsg
               ? (msg) => void handleSend(msg, true)

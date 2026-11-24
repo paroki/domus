@@ -3,7 +3,9 @@ import test from "node:test";
 import {
   createSSEParser,
   formatAgentLabel,
+  formatToolJSON,
   isSuperAdmin,
+  isToolErrorContent,
   safeUrlTransform,
   validateChatMessage,
   validateMemoryContent,
@@ -79,4 +81,17 @@ test("validators and helpers enforce rune limits and roles", () => {
   assert.equal(formatAgentLabel("rafael"), "Rafael");
   assert.equal(isSuperAdmin(["user:super-admin"]), true);
   assert.equal(isSuperAdmin(["user:user"]), false);
+
+  assert.equal(
+    isToolErrorContent(
+      "Tool event_list error: Invalid 'from' timestamp; expected RFC3339.",
+    ),
+    true,
+  );
+  assert.equal(isToolErrorContent("Error: connection refused"), true);
+  assert.equal(isToolErrorContent('{"items":[]}'), false);
+
+  assert.equal(formatToolJSON('{"a":1}'), '{\n  "a": 1\n}');
+  assert.equal(formatToolJSON("raw-text"), "raw-text");
+  assert.equal(formatToolJSON(""), "");
 });

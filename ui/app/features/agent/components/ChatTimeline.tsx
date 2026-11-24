@@ -9,7 +9,7 @@ import {
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import type { MessageResponse } from "../api/types";
-import { formatAgentLabel } from "../model";
+import { formatAgentLabel, formatToolJSON, isToolErrorContent } from "../model";
 import { SafeMarkdown } from "./SafeMarkdown";
 
 export interface LiveToolCall {
@@ -17,6 +17,8 @@ export interface LiveToolCall {
   agent: string;
   toolName: string;
   status: "running" | "done" | "error";
+  args?: string;
+  output?: string;
 }
 
 export interface LiveTransfer {
@@ -32,6 +34,7 @@ interface ChatTimelineProps {
   streamingText: string;
   liveTransfers: LiveTransfer[];
   liveTools: LiveToolCall[];
+  verbose?: boolean;
   onRetry?: (message: string) => void;
 }
 
@@ -43,6 +46,7 @@ export function ChatTimeline({
   streamingText,
   liveTransfers,
   liveTools,
+  verbose = false,
   onRetry,
 }: ChatTimelineProps) {
   const { t } = useTranslation();
@@ -100,15 +104,45 @@ export function ChatTimeline({
           }
 
           if (msg.role === "tool") {
+            const isError = isToolErrorContent(msg.content);
+            const showBody = (verbose && Boolean(msg.content)) || isError;
             return (
-              <div key={msg.id} className="flex items-center gap-2 pl-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-2.5 py-1 text-xs text-muted">
-                  <CheckCircle2
-                    aria-hidden
-                    className="size-3.5 text-emerald-600 dark:text-emerald-400"
-                  />
-                  <span>{msg.toolName || "tool"}</span>
-                </span>
+              <div key={msg.id} className="flex flex-col gap-1.5 pl-2">
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs ${
+                      isError
+                        ? "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300"
+                        : "border-line bg-surface text-muted"
+                    }`}
+                  >
+                    {isError ? (
+                      <XCircle aria-hidden className="size-3.5 text-red-500" />
+                    ) : (
+                      <CheckCircle2
+                        aria-hidden
+                        className="size-3.5 text-emerald-600 dark:text-emerald-400"
+                      />
+                    )}
+                    <span>{msg.toolName || "tool"}</span>
+                    {verbose && msg.agentName ? (
+                      <span className="opacity-60">
+                        ({formatAgentLabel(msg.agentName)})
+                      </span>
+                    ) : null}
+                  </span>
+                </div>
+                {showBody && msg.content ? (
+                  <pre
+                    className={`max-w-[90%] overflow-x-auto rounded-xl border px-3 py-2 font-mono text-xs whitespace-pre-wrap break-words ${
+                      isError
+                        ? "border-red-500/30 bg-red-500/5 text-red-700 dark:text-red-300"
+                        : "border-line bg-surface text-muted"
+                    }`}
+                  >
+                    {msg.content}
+                  </pre>
+                ) : null}
               </div>
             );
           }
@@ -132,15 +166,34 @@ export function ChatTimeline({
               ) : null}
 
               {msg.toolCalls && msg.toolCalls.length > 0 ? (
-                <div className="flex flex-wrap gap-1.5 pl-2">
-                  {msg.toolCalls.map((tc) => (
-                    <span
-                      key={tc.id}
-                      className="inline-flex items-center gap-1 rounded-full border border-line bg-canvas px-2.5 py-0.5 text-xs text-muted"
-                    >
-                      {tc.name}
-                    </span>
-                  ))}
+                <div className="flex flex-col gap-1.5 pl-2">
+                  <div className="flex flex-wrap gap-1.5">
+                    {msg.toolCalls.map((tc) => (
+                      <span
+                        key={tc.id}
+                        className="inline-flex items-center gap-1 rounded-full border border-line bg-canvas px-2.5 py-0.5 text-xs text-muted"
+                      >
+                        {tc.name}
+                        {verbose && msg.agentName ? (
+                          <span className="opacity-60">
+                            ({formatAgentLabel(msg.agentName)})
+                          </span>
+                        ) : null}
+                      </span>
+                    ))}
+                  </div>
+                  {verbose
+                    ? msg.toolCalls.map((tc) =>
+                        tc.arguments ? (
+                          <pre
+                            key={`${tc.id}-args`}
+                            className="max-w-[90%] overflow-x-auto rounded-xl border border-line bg-canvas px-3 py-2 font-mono text-xs whitespace-pre-wrap break-words text-muted"
+                          >
+                            {`${tc.name} ${t("agent.toolArgsLabel")}: ${formatToolJSON(tc.arguments)}`}
+                          </pre>
+                        ) : null,
+                      )
+                    : null}
                 </div>
               ) : null}
 
@@ -182,25 +235,71 @@ export function ChatTimeline({
             ))}
 
             {liveTools.length > 0 ? (
-              <div className="flex flex-wrap gap-1.5 pl-2">
-                {liveTools.map((tl) => (
-                  <span
-                    key={tl.toolCallId}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-2.5 py-1 text-xs text-muted"
-                  >
-                    {tl.status === "running" ? (
-                      <Loader2 aria-hidden className="size-3.5 animate-spin" />
-                    ) : tl.status === "error" ? (
-                      <XCircle aria-hidden className="size-3.5 text-red-500" />
-                    ) : (
-                      <CheckCircle2
-                        aria-hidden
-                        className="size-3.5 text-emerald-600 dark:text-emerald-400"
-                      />
-                    )}
-                    <span>{tl.toolName}</span>
-                  </span>
-                ))}
+              <div className="flex flex-col gap-1.5 pl-2">
+                <div className="flex flex-wrap gap-1.5">
+                  {liveTools.map((tl) => (
+                    <span
+                      key={tl.toolCallId}
+                      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs ${
+                        tl.status === "error"
+                          ? "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300"
+                          : "border-line bg-surface text-muted"
+                      }`}
+                    >
+                      {tl.status === "running" ? (
+                        <Loader2
+                          aria-hidden
+                          className="size-3.5 animate-spin"
+                        />
+                      ) : tl.status === "error" ? (
+                        <XCircle
+                          aria-hidden
+                          className="size-3.5 text-red-500"
+                        />
+                      ) : (
+                        <CheckCircle2
+                          aria-hidden
+                          className="size-3.5 text-emerald-600 dark:text-emerald-400"
+                        />
+                      )}
+                      <span>{tl.toolName}</span>
+                      {verbose && tl.agent ? (
+                        <span className="opacity-60">
+                          ({formatAgentLabel(tl.agent)})
+                        </span>
+                      ) : null}
+                    </span>
+                  ))}
+                </div>
+                {liveTools.map((tl) => {
+                  const showArgs = verbose && Boolean(tl.args);
+                  const showOutput =
+                    Boolean(tl.output) && (verbose || tl.status === "error");
+                  if (!showArgs && !showOutput) return null;
+                  return (
+                    <div
+                      key={`${tl.toolCallId}-detail`}
+                      className="flex flex-col gap-1"
+                    >
+                      {showArgs && tl.args ? (
+                        <pre className="max-w-[90%] overflow-x-auto rounded-xl border border-line bg-canvas px-3 py-2 font-mono text-xs whitespace-pre-wrap break-words text-muted">
+                          {`${tl.toolName} ${t("agent.toolArgsLabel")}: ${formatToolJSON(tl.args)}`}
+                        </pre>
+                      ) : null}
+                      {showOutput && tl.output ? (
+                        <pre
+                          className={`max-w-[90%] overflow-x-auto rounded-xl border px-3 py-2 font-mono text-xs whitespace-pre-wrap break-words ${
+                            tl.status === "error"
+                              ? "border-red-500/30 bg-red-500/5 text-red-700 dark:text-red-300"
+                              : "border-line bg-surface text-muted"
+                          }`}
+                        >
+                          {tl.output}
+                        </pre>
+                      ) : null}
+                    </div>
+                  );
+                })}
               </div>
             ) : null}
 
