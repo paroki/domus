@@ -7,9 +7,6 @@ const id = {
   },
   header: {
     homeLabel: "Domus, beranda",
-    navLabel: "Navigasi utama",
-    tabGabriel: "Gabriel",
-    tabMenu: "Menu",
     searchLabel: "Cari menu",
     searchPlaceholder: "Cari menu…",
     account: "Akun saya",
@@ -47,6 +44,10 @@ const id = {
     ref: {
       name: "Referensi",
       description: "Keuskupan, paroki, wilayah, kamus referensi, dan periode.",
+    },
+    agent: {
+      name: "Asisten AI",
+      description: "Asisten AI paroki untuk jadwal, organisasi, dan memori.",
     },
     settings: {
       name: "Pengaturan",
@@ -593,6 +594,21 @@ const id = {
     emptyChatTitle: "Halo, ada yang bisa Gabriel bantu?",
     emptyChatDescription:
       "Tanyakan jadwal kegiatan paroki, organisasi, atau simpan preferensi Anda.",
+    modelOverrideLabel: "Model Sesi",
+    modelDefaultBadge: "Default (Gabriel)",
+    resetModelOverride: "Reset ke Default",
+    selectModelOverride: "Pilih model sesi…",
+    categoryAll: "Semua",
+    categoryPreference: "Preferensi",
+    categoryFact: "Fakta",
+    categoryContext: "Konteks",
+    memoryContentPlaceholder:
+      "Tulis fakta atau preferensi (maks. 2000 karakter)…",
+    editMemory: "Ubah Memori",
+    saveMemory: "Simpan Memori",
+    cancel: "Batal",
+    sessionsTitle: "Riwayat Percakapan",
+    handoffLabel: "{{from}} -> {{to}}",
   },
 } as const;
 

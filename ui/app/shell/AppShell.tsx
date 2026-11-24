@@ -1,16 +1,16 @@
-import { Outlet, useLocation, useSearchParams } from "react-router";
+import { Outlet, useLocation } from "react-router";
 
 import { Header } from "./Header";
 
 export default function AppShell() {
   const { pathname } = useLocation();
-  const [searchParams] = useSearchParams();
-  const isGabrielHome = pathname === "/" && searchParams.get("tab") !== "menu";
+  const isAgentWorkspace =
+    pathname === "/agent" || pathname.startsWith("/agent/");
 
   return (
     <div
       className={
-        isGabrielHome
+        isAgentWorkspace
           ? "flex h-dvh flex-col overflow-hidden"
           : "flex min-h-screen flex-col"
       }

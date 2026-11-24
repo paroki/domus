@@ -1,15 +1,7 @@
-import {
-  Bot,
-  ChevronDown,
-  Church,
-  LayoutGrid,
-  LogOut,
-  Shield,
-  User,
-} from "lucide-react";
+import { ChevronDown, Church, LogOut, Shield, User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useLocation, useNavigate, useSearchParams } from "react-router";
+import { Link, useNavigate } from "react-router";
 
 import {
   useLogout,
@@ -30,14 +22,6 @@ function getInitials(name?: string): string {
 export function Header() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { pathname } = useLocation();
-  const [searchParams] = useSearchParams();
-  const isHome = pathname === "/";
-  const activeTab = isHome
-    ? searchParams.get("tab") === "menu"
-      ? "menu"
-      : "gabriel"
-    : null;
   const { data: me } = useMe();
   const logout = useLogout();
   const switchParish = useSwitchParish();
@@ -100,38 +84,6 @@ export function Header() {
         <img src="/logo.svg" alt="" aria-hidden className="size-8 rounded-lg" />
         Domus
       </Link>
-
-      <nav
-        aria-label={t("header.navLabel")}
-        className="order-last flex w-full justify-center sm:order-none sm:ml-2 sm:w-auto"
-      >
-        <div className="inline-flex items-center rounded-full border border-line bg-canvas p-0.5">
-          <Link
-            to="/"
-            aria-current={activeTab === "gabriel" ? "page" : undefined}
-            className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold no-underline transition-colors ${
-              activeTab === "gabriel"
-                ? "bg-primary text-on-primary"
-                : "text-muted hover:text-fg"
-            }`}
-          >
-            <Bot aria-hidden className="size-3.5" />
-            {t("header.tabGabriel")}
-          </Link>
-          <Link
-            to="/?tab=menu"
-            aria-current={activeTab === "menu" ? "page" : undefined}
-            className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold no-underline transition-colors ${
-              activeTab === "menu"
-                ? "bg-primary text-on-primary"
-                : "text-muted hover:text-fg"
-            }`}
-          >
-            <LayoutGrid aria-hidden className="size-3.5" />
-            {t("header.tabMenu")}
-          </Link>
-        </div>
-      </nav>
 
       <div className="ml-auto flex items-center gap-1">
         {me && (
