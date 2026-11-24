@@ -1,31 +1,42 @@
 package agent
 
 import (
+	"context"
 	"log/slog"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/paroki/domus/ent"
+	"github.com/paroki/domus/internal/agent/domain"
 	"github.com/paroki/domus/internal/agent/driver"
 	"github.com/paroki/domus/internal/agent/handler"
 	"github.com/paroki/domus/internal/platform/authz"
 	"github.com/paroki/domus/internal/platform/crypt"
+	"github.com/paroki/domus/internal/platform/setting"
 	"github.com/paroki/domus/internal/user"
+)
+
+// Re-exported Casbin permissions for the agent feature.
+var (
+	PermProviders = domain.PermProviders
+	PermChat      = domain.PermChat
 )
 
 // Feature wires LLM provider configuration and model discovery for the agent feature.
 type Feature struct {
-	drivers *driver.Registry
-	handler *handler.Handler
-	db      *ent.Client
-	cipher  *crypt.Cipher
-	users   *user.Feature
-	logger  *slog.Logger
+	drivers  *driver.Registry
+	handler  *handler.Handler
+	db       *ent.Client
+	cipher   *crypt.Cipher
+	users    *user.Feature
+	settings *setting.Store
+	logger   *slog.Logger
 }
 
 type featureOptions struct {
-	db     *ent.Client
-	users  *user.Feature
-	cipher *crypt.Cipher
+	db       *ent.Client
+	users    *user.Feature
+	cipher   *crypt.Cipher
+	settings *setting.Store
 }
 
 // Option configures optional dependencies on agent.New.
@@ -52,6 +63,13 @@ func WithCipher(c *crypt.Cipher) Option {
 	}
 }
 
+// WithSettings wires the setting.Store used for agent model routing and prompt settings.
+func WithSettings(s *setting.Store) Option {
+	return func(o *featureOptions) {
+		o.settings = s
+	}
+}
+
 // New constructs the agent Feature for LLM provider management.
 func New(drivers *driver.Registry, logger *slog.Logger, opts ...Option) *Feature {
 	if drivers == nil {
@@ -67,11 +85,12 @@ func New(drivers *driver.Registry, logger *slog.Logger, opts ...Option) *Feature
 		}
 	}
 	f := &Feature{
-		drivers: drivers,
-		db:      cfgOpts.db,
-		cipher:  cfgOpts.cipher,
-		users:   cfgOpts.users,
-		logger:  logger,
+		drivers:  drivers,
+		db:       cfgOpts.db,
+		cipher:   cfgOpts.cipher,
+		users:    cfgOpts.users,
+		settings: cfgOpts.settings,
+		logger:   logger,
 	}
 	if f.db != nil {
 		f.handler = handler.New(f)
@@ -84,6 +103,23 @@ func (f *Feature) Drivers() *driver.Registry {
 	return f.drivers
 }
 
+// RegisterPermissions registers agent feature policies with the Casbin enforcer.
+func (f *Feature) RegisterPermissions(ctx context.Context, e *authz.Enforcer) error {
+	if e == nil {
+		return nil
+	}
+	if err := e.AddPermissionForRole(ctx, user.RoleSuperAdmin, authz.DomainGlobal, PermProviders, authz.ActionRead); err != nil {
+		return err
+	}
+	if err := e.AddPermissionForRole(ctx, user.RoleSuperAdmin, authz.DomainGlobal, PermProviders, authz.ActionWrite); err != nil {
+		return err
+	}
+	if err := e.AddPermissionForRole(ctx, user.RoleUser, authz.DomainGlobal, PermChat, authz.ActionRead); err != nil {
+		return err
+	}
+	return e.AddPermissionForRole(ctx, user.RoleUser, authz.DomainGlobal, PermChat, authz.ActionWrite)
+}
+
 // Register mounts /agent/providers routes under /api.
 func (f *Feature) Register(api fiber.Router) {
 	if f.handler == nil || f.users == nil {
@@ -93,7 +129,7 @@ func (f *Feature) Register(api fiber.Router) {
 		api,
 		f.users.AuthenticateMiddleware(),
 		f.users.RequireAuth(),
-		f.users.Require(user.PermUsers, authz.ActionRead),
-		f.users.Require(user.PermUsers, authz.ActionWrite),
+		f.users.Require(PermProviders, authz.ActionRead),
+		f.users.Require(PermProviders, authz.ActionWrite),
 	)
 }

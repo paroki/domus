@@ -40,6 +40,7 @@ type Descriptor struct {
 	Label        string `json:"label"`
 	Description  string `json:"description,omitempty"`
 	Secret       bool   `json:"secret"`
+	Multiline    bool   `json:"multiline"`
 	Placeholder  string `json:"placeholder,omitempty"`
 	DefaultValue string `json:"defaultValue,omitempty"`
 }
@@ -51,9 +52,11 @@ type SettingResponse struct {
 	Label       string `json:"label"`
 	Description string `json:"description,omitempty"`
 	Secret      bool   `json:"secret"`
+	Multiline   bool   `json:"multiline"`
 	Placeholder string `json:"placeholder,omitempty"`
 	Value       string `json:"value"`
 	Configured  bool   `json:"configured"`
+	Overridden  bool   `json:"overridden"`
 }
 
 // UpdateSettingsRequest is the payload for PATCH /api/settings.
@@ -244,9 +247,11 @@ func (s *Store) listLocked() []SettingResponse {
 			Label:       d.Label,
 			Description: d.Description,
 			Secret:      d.Secret,
+			Multiline:   d.Multiline,
 			Placeholder: d.Placeholder,
 			Value:       val,
 			Configured:  configured,
+			Overridden:  raw != "" && !d.Secret,
 		})
 	}
 	return out

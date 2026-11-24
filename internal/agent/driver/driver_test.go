@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/paroki/domus/internal/agent/domain"
+	"github.com/paroki/domus/internal/platform/errx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -100,6 +101,7 @@ func TestOpenAIDriver_DiscoverModelsAndErrors(t *testing.T) {
 	assert.ErrorIs(t, providerStatusSentinel(http.StatusUnauthorized), domain.ErrProviderAuthFailed)
 	assert.ErrorIs(t, providerStatusSentinel(http.StatusForbidden), domain.ErrProviderAuthFailed)
 	assert.ErrorIs(t, providerStatusSentinel(http.StatusTooManyRequests), domain.ErrProviderRateLimited)
+	assert.Equal(t, errx.KindRateLimited, domain.ErrProviderRateLimited.Kind)
 	assert.ErrorIs(t, providerStatusSentinel(http.StatusServiceUnavailable), domain.ErrProviderOverloaded)
 	assert.ErrorIs(t, providerStatusSentinel(http.StatusBadGateway), domain.ErrProviderOverloaded)
 }

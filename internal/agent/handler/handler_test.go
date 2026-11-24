@@ -93,7 +93,7 @@ func (s *AgentHandlerSuite) SetupTest() {
 	)
 
 	ctx := context.Background()
-	s.Require().NoError(authz.RegisterFeatures(ctx, s.enforcer, s.userFeature))
+	s.Require().NoError(authz.RegisterFeatures(ctx, s.enforcer, s.userFeature, s.agentFeature))
 	s.Require().NoError(s.userFeature.Bootstrap(ctx))
 
 	s.WithFeatures(s.userFeature, s.agentFeature)

@@ -99,11 +99,12 @@ func newServeCmd() *cobra.Command {
 				agent.WithDB(db),
 				agent.WithUsers(userFeature),
 				agent.WithCipher(cipher),
+				agent.WithSettings(settingStore),
 			)
-			if err := authz.RegisterFeatures(ctx, enforcer, userFeature, refFeature, orgFeature, eventFeature); err != nil {
+			if err := authz.RegisterFeatures(ctx, enforcer, userFeature, refFeature, orgFeature, eventFeature, agentFeature); err != nil {
 				return err
 			}
-			setting.RegisterFeatures(settingStore, userFeature, refFeature, orgFeature, eventFeature)
+			setting.RegisterFeatures(settingStore, userFeature, refFeature, orgFeature, eventFeature, agentFeature)
 			if err := settingStore.Load(ctx); err != nil {
 				return err
 			}

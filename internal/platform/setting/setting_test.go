@@ -243,6 +243,7 @@ func (s *SettingSuite) TestWithCipher_DefaultValue_And_PersistValue() {
 		Key:          setting.Key("agent", "gabriel.model"),
 		Group:        "AI Agent",
 		Label:        "Gabriel Model",
+		Multiline:    true,
 		DefaultValue: "gemini-2.5-flash",
 	})
 
@@ -259,8 +260,15 @@ func (s *SettingSuite) TestWithCipher_DefaultValue_And_PersistValue() {
 	s.Equal("gemini-2.5-flash", store.Get("agent.gabriel.model"))
 	s.Equal("gemini-2.5-flash", lastEffective["agent.gabriel.model"])
 
+	listed := store.List(ctx)
+	s.Require().Len(listed, 2)
+	s.False(listed[0].Overridden)
+	s.True(listed[1].Multiline)
+	s.True(listed[1].Configured)
+	s.False(listed[1].Overridden)
+
 	// Update secret -> encrypted in DB, plaintext in Get/OnChange, masked in List
-	_, err = store.Update(ctx, map[string]string{
+	listed, err = store.Update(ctx, map[string]string{
 		"agent.provider.gemini.api_key": "AIza-super-secret",
 		"agent.gabriel.model":           "gemini-2.5-pro",
 	})
@@ -269,6 +277,8 @@ func (s *SettingSuite) TestWithCipher_DefaultValue_And_PersistValue() {
 	s.Equal("AIza-super-secret", store.Get("agent.provider.gemini.api_key"))
 	s.Equal("AIza-super-secret", lastEffective["agent.provider.gemini.api_key"])
 	s.Equal("gemini-2.5-pro", store.Get("agent.gabriel.model"))
+	s.False(listed[0].Overridden)
+	s.True(listed[1].Overridden)
 
 	row, err := db.Setting.Query().Where(entsetting.KeyEQ("agent.provider.gemini.api_key")).Only(ctx)
 	s.Require().NoError(err)
@@ -298,9 +308,10 @@ func (s *SettingSuite) TestWithCipher_DefaultValue_And_PersistValue() {
 	s.Equal("gemini-2.5-flash-lite", store.Get("agent.gabriel.model"))
 
 	// Clearing setting with DefaultValue deletes override and restores default
-	_, err = store.Update(ctx, map[string]string{
+	listed, err = store.Update(ctx, map[string]string{
 		"agent.gabriel.model": "",
 	})
 	s.Require().NoError(err)
 	s.Equal("gemini-2.5-flash", store.Get("agent.gabriel.model"))
+	s.False(listed[1].Overridden)
 }

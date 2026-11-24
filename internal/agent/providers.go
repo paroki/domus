@@ -164,12 +164,27 @@ func (f *Feature) UpdateProvider(ctx context.Context, id uuid.UUID, req domain.U
 	return toProviderResponse(saved, nextPlainKey), nil
 }
 
-// DeleteProvider removes an LLM provider config.
+// DeleteProvider removes an LLM provider config if no agent.model.* setting references it.
 func (f *Feature) DeleteProvider(ctx context.Context, id uuid.UUID) error {
 	if f.db == nil {
 		return domain.ErrProviderUnavailable
 	}
-	err := f.db.AgentProvider.DeleteOneID(id).Exec(ctx)
+	exists, err := f.db.AgentProvider.Query().Where(agentprovider.IDEQ(id)).Exist(ctx)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return domain.ErrProviderNotFound
+	}
+	if f.settings != nil {
+		prefix := id.String() + ":"
+		for _, key := range modelSettingKeys {
+			if strings.HasPrefix(f.settings.Get(key), prefix) {
+				return domain.ErrProviderInUse
+			}
+		}
+	}
+	err = f.db.AgentProvider.DeleteOneID(id).Exec(ctx)
 	if ent.IsNotFound(err) {
 		return domain.ErrProviderNotFound
 	}
@@ -199,7 +214,7 @@ func (f *Feature) SyncProviderModels(ctx context.Context, id uuid.UUID) (domain.
 
 	discovered, err := f.drivers.DiscoverModels(ctx, string(row.Provider), row.BaseURL, plainKey)
 	if err != nil {
-		return domain.SyncProviderModelsResponse{}, domain.ErrProviderUnavailable
+		return domain.SyncProviderModelsResponse{}, err
 	}
 
 	saved, err := f.db.AgentProvider.UpdateOneID(id).

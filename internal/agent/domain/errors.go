@@ -5,9 +5,10 @@ import "github.com/paroki/domus/internal/platform/errx"
 // Sentinel errors for the agent feature.
 var (
 	ErrProviderNotFound       = errx.NotFound("AGENT_PROVIDER_NOT_FOUND", "Agent provider configuration not found.")
+	ErrProviderInUse          = errx.Conflict("AGENT_PROVIDER_IN_USE", "AI provider is currently assigned to an active agent model setting.")
 	ErrProviderUnavailable    = errx.Invalid("AGENT_PROVIDER_UNAVAILABLE", "The configured AI provider is unavailable or missing an API key.")
 	ErrProviderAuthFailed     = errx.Invalid("AGENT_PROVIDER_AUTH_FAILED", "AI provider authentication failed.")
-	ErrProviderRateLimited    = errx.Invalid("AGENT_PROVIDER_RATE_LIMITED", "AI provider rate limit exceeded.")
+	ErrProviderRateLimited    = errx.RateLimited("AGENT_PROVIDER_RATE_LIMITED", "AI provider rate limit exceeded.")
 	ErrProviderOverloaded     = errx.Invalid("AGENT_PROVIDER_OVERLOADED", "AI provider is temporarily overloaded due to high demand.")
 	ErrProviderRequestInvalid = errx.Invalid("AGENT_PROVIDER_REQUEST_INVALID", "AI provider rejected the request.")
 )

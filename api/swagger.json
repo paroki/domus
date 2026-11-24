@@ -3103,6 +3103,12 @@
                     "label": {
                         "type": "string"
                     },
+                    "multiline": {
+                        "type": "boolean"
+                    },
+                    "overridden": {
+                        "type": "boolean"
+                    },
                     "placeholder": {
                         "type": "string"
                     },
@@ -3314,6 +3320,16 @@
                             }
                         },
                         "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
                     }
                 },
                 "summary": "Delete AI provider config",
@@ -3481,6 +3497,16 @@
                             }
                         },
                         "description": "Not Found"
+                    },
+                    "429": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Too Many Requests"
                     }
                 },
                 "summary": "Sync provider models",
