@@ -11,6 +11,8 @@ import (
 	"github.com/paroki/domus/internal/agent/domain"
 	"github.com/paroki/domus/internal/agent/driver"
 	"github.com/paroki/domus/internal/agent/handler"
+	"github.com/paroki/domus/internal/agent/repo"
+	"github.com/paroki/domus/internal/agent/service"
 	"github.com/paroki/domus/internal/platform/authz"
 	"github.com/paroki/domus/internal/platform/crypt"
 	"github.com/paroki/domus/internal/platform/setting"
@@ -23,9 +25,11 @@ var (
 	PermChat      = domain.PermChat
 )
 
-// Feature wires LLM provider configuration and model discovery for the agent feature.
+// Feature wires LLM provider configuration, model discovery, and session/memory persistence for the agent feature.
 type Feature struct {
 	drivers   *driver.Registry
+	repo      *repo.Repository
+	service   *service.Service
 	handler   *handler.Handler
 	db        *ent.Client
 	sqlDB     *sql.DB
@@ -106,7 +110,9 @@ func New(drivers *driver.Registry, logger *slog.Logger, opts ...Option) *Feature
 		logger:   logger,
 	}
 	if f.db != nil {
-		f.handler = handler.New(f)
+		f.repo = repo.New(f.db, f.sqlDB)
+		f.service = service.New(f.repo, f.db, f.drivers, f.cipher, f.settings, f.logger)
+		f.handler = handler.New(f, f.service, f.service)
 	}
 	return f
 }
@@ -148,16 +154,25 @@ func (f *Feature) RegisterPermissions(ctx context.Context, e *authz.Enforcer) er
 	return e.AddPermissionForRole(ctx, user.RoleUser, authz.DomainGlobal, PermChat, authz.ActionWrite)
 }
 
-// Register mounts /agent/providers routes under /api.
+// Register mounts /agent/* routes under /api.
 func (f *Feature) Register(api fiber.Router) {
 	if f.handler == nil || f.users == nil {
 		return
+	}
+	requireTenant := func(c fiber.Ctx) error {
+		if _, err := user.RequireTenant(c.Context()); err != nil {
+			return err
+		}
+		return c.Next()
 	}
 	f.handler.Register(
 		api,
 		f.users.AuthenticateMiddleware(),
 		f.users.RequireAuth(),
+		requireTenant,
 		f.users.Require(PermProviders, authz.ActionRead),
 		f.users.Require(PermProviders, authz.ActionWrite),
+		f.users.Require(PermChat, authz.ActionRead),
+		f.users.Require(PermChat, authz.ActionWrite),
 	)
 }

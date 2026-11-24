@@ -360,6 +360,25 @@
                 ],
                 "type": "object"
             },
+            "domain.CreateMemoryRequest": {
+                "properties": {
+                    "category": {
+                        "enum": [
+                            "preference",
+                            "fact",
+                            "context"
+                        ],
+                        "type": "string"
+                    },
+                    "content": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "content"
+                ],
+                "type": "object"
+            },
             "domain.CreateOrgInviteRequest": {
                 "properties": {
                     "defaultPosition": {
@@ -868,6 +887,100 @@
                             "global",
                             "parish"
                         ],
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.MemoryResponse": {
+                "properties": {
+                    "category": {
+                        "type": "string"
+                    },
+                    "content": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "parishId": {
+                        "type": "string"
+                    },
+                    "score": {
+                        "type": "number"
+                    },
+                    "sourceSessionId": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    },
+                    "userId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.MemorySearchFilter": {
+                "properties": {
+                    "category": {
+                        "enum": [
+                            "preference",
+                            "fact",
+                            "context"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.MessageResponse": {
+                "properties": {
+                    "agentName": {
+                        "type": "string"
+                    },
+                    "content": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "meta": {
+                        "additionalProperties": {},
+                        "type": "object"
+                    },
+                    "parishId": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "type": "string"
+                    },
+                    "sessionId": {
+                        "type": "string"
+                    },
+                    "toolCallId": {
+                        "type": "string"
+                    },
+                    "toolCalls": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.ToolCallRecord"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "toolName": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    },
+                    "userId": {
                         "type": "string"
                     }
                 },
@@ -1434,6 +1547,25 @@
                 },
                 "type": "object"
             },
+            "domain.SearchMemoriesRequest": {
+                "properties": {
+                    "cursor": {
+                        "type": "string"
+                    },
+                    "filter": {
+                        "$ref": "#/components/schemas/domain.MemorySearchFilter"
+                    },
+                    "limit": {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "q": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.SearchOrgInvitesRequest": {
                 "properties": {
                     "cursor": {
@@ -1545,19 +1677,6 @@
                 },
                 "type": "object"
             },
-            "domain.SearchSessionsRequest": {
-                "properties": {
-                    "cursor": {
-                        "type": "string"
-                    },
-                    "limit": {
-                        "maximum": 100,
-                        "minimum": 1,
-                        "type": "integer"
-                    }
-                },
-                "type": "object"
-            },
             "domain.SearchUsersRequest": {
                 "properties": {
                     "cursor": {
@@ -1615,6 +1734,83 @@
                 },
                 "type": "object"
             },
+            "domain.SessionDetailResponse": {
+                "properties": {
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "effectiveModelId": {
+                        "type": "string"
+                    },
+                    "effectiveProviderId": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "lastMessageAt": {
+                        "type": "string"
+                    },
+                    "messages": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.MessageResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "modelId": {
+                        "type": "string"
+                    },
+                    "parishId": {
+                        "type": "string"
+                    },
+                    "providerId": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    },
+                    "userId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.SessionResponse": {
+                "properties": {
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "lastMessageAt": {
+                        "type": "string"
+                    },
+                    "modelId": {
+                        "type": "string"
+                    },
+                    "parishId": {
+                        "type": "string"
+                    },
+                    "providerId": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    },
+                    "userId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.SwitchSessionParishRequest": {
                 "properties": {
                     "activeParishId": {
@@ -1654,6 +1850,20 @@
                     },
                     "expiresInSeconds": {
                         "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.ToolCallRecord": {
+                "properties": {
+                    "arguments": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
                     }
                 },
                 "type": "object"
@@ -1804,6 +2014,22 @@
                         "type": "boolean"
                     },
                     "phone": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.UpdateMemoryRequest": {
+                "properties": {
+                    "category": {
+                        "enum": [
+                            "preference",
+                            "fact",
+                            "context"
+                        ],
+                        "type": "string"
+                    },
+                    "content": {
                         "type": "string"
                     }
                 },
@@ -1992,6 +2218,20 @@
                             "open",
                             "closed"
                         ],
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.UpdateSessionRequest": {
+                "properties": {
+                    "modelId": {
+                        "type": "string"
+                    },
+                    "providerId": {
+                        "type": "string"
+                    },
+                    "title": {
                         "type": "string"
                     }
                 },
@@ -2362,6 +2602,35 @@
                 },
                 "type": "object"
             },
+            "github_com_paroki_domus_internal_agent_domain.SearchSessionsRequest": {
+                "properties": {
+                    "cursor": {
+                        "type": "string"
+                    },
+                    "limit": {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "q": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "github_com_paroki_domus_internal_user_domain.SearchSessionsRequest": {
+                "properties": {
+                    "cursor": {
+                        "type": "string"
+                    },
+                    "limit": {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
             "httpx.Envelope-any": {
                 "properties": {
                     "data": {},
@@ -2496,6 +2765,24 @@
                 },
                 "type": "object"
             },
+            "httpx.Envelope-array_domain_MemoryResponse": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.MemoryResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
             "httpx.Envelope-array_domain_OrgInviteResponse": {
                 "properties": {
                     "data": {
@@ -2591,6 +2878,24 @@
                     "data": {
                         "items": {
                             "$ref": "#/components/schemas/domain.PeriodResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-array_domain_SessionResponse": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.SessionResponse"
                         },
                         "type": "array",
                         "uniqueItems": false
@@ -2824,6 +3129,20 @@
                 },
                 "type": "object"
             },
+            "httpx.Envelope-domain_MemoryResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.MemoryResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
             "httpx.Envelope-domain_OrgInvitePreviewResponse": {
                 "properties": {
                     "data": {
@@ -2940,6 +3259,34 @@
                 "properties": {
                     "data": {
                         "$ref": "#/components/schemas/domain.RequestOTPResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_SessionDetailResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.SessionDetailResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_SessionResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.SessionResponse"
                     },
                     "error": {
                         "$ref": "#/components/schemas/httpx.ErrorPayload"
@@ -3144,6 +3491,313 @@
         "url": ""
     },
     "paths": {
+        "/agent/memories": {
+            "post": {
+                "description": "Creates a new AI memory item and best-effort computes its 768-dim embedding.",
+                "operationId": "createAgentMemory",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.CreateMemoryRequest",
+                                "summary": "body",
+                                "description": "Memory payload"
+                            }
+                        }
+                    },
+                    "description": "Memory payload",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_MemoryResponse"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Create AI memory",
+                "tags": [
+                    "Agent"
+                ]
+            }
+        },
+        "/agent/memories/search": {
+            "post": {
+                "description": "Lists memories by keyset cursor when q is empty, or runs ParadeDB RRF hybrid / BM25 search when q is provided.",
+                "operationId": "searchAgentMemories",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.SearchMemoriesRequest",
+                                "summary": "body",
+                                "description": "Search params"
+                            }
+                        }
+                    },
+                    "description": "Search params",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_MemoryResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    }
+                },
+                "summary": "Search AI memories",
+                "tags": [
+                    "Agent"
+                ]
+            }
+        },
+        "/agent/memories/{memoryId}": {
+            "delete": {
+                "description": "Hard-deletes an AI memory item owned by the caller.",
+                "operationId": "deleteAgentMemory",
+                "parameters": [
+                    {
+                        "description": "Memory UUID",
+                        "in": "path",
+                        "name": "memoryId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Delete AI memory",
+                "tags": [
+                    "Agent"
+                ]
+            },
+            "patch": {
+                "description": "Updates an AI memory item's content and/or category and re-computes its embedding when content changes.",
+                "operationId": "updateAgentMemory",
+                "parameters": [
+                    {
+                        "description": "Memory UUID",
+                        "in": "path",
+                        "name": "memoryId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.UpdateMemoryRequest",
+                                "summary": "body",
+                                "description": "Update payload"
+                            }
+                        }
+                    },
+                    "description": "Update payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_MemoryResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Update AI memory",
+                "tags": [
+                    "Agent"
+                ]
+            }
+        },
         "/agent/providers": {
             "get": {
                 "description": "Lists all configured LLM provider entries with masked API keys and synced models.",
@@ -3510,6 +4164,309 @@
                     }
                 },
                 "summary": "Sync provider models",
+                "tags": [
+                    "Agent"
+                ]
+            }
+        },
+        "/agent/sessions/search": {
+            "post": {
+                "description": "Returns keyset-paginated AI conversation sessions owned by the caller in the active parish.",
+                "operationId": "searchAgentSessions",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/github_com_paroki_domus_internal_agent_domain.SearchSessionsRequest",
+                                "summary": "body",
+                                "description": "Search params"
+                            }
+                        }
+                    },
+                    "description": "Search params",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_SessionResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    }
+                },
+                "summary": "Search AI sessions",
+                "tags": [
+                    "Agent"
+                ]
+            }
+        },
+        "/agent/sessions/{sessionId}": {
+            "delete": {
+                "description": "Soft-deletes an AI conversation session owned by the caller.",
+                "operationId": "deleteAgentSession",
+                "parameters": [
+                    {
+                        "description": "Session UUID",
+                        "in": "path",
+                        "name": "sessionId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Delete AI session",
+                "tags": [
+                    "Agent"
+                ]
+            },
+            "get": {
+                "description": "Returns an AI conversation session owned by the caller with its chronological messages.",
+                "operationId": "getAgentSession",
+                "parameters": [
+                    {
+                        "description": "Session UUID",
+                        "in": "path",
+                        "name": "sessionId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_SessionDetailResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Get AI session",
+                "tags": [
+                    "Agent"
+                ]
+            },
+            "patch": {
+                "description": "Updates session title and/or provider/model override (empty string clears override to default).",
+                "operationId": "updateAgentSession",
+                "parameters": [
+                    {
+                        "description": "Session UUID",
+                        "in": "path",
+                        "name": "sessionId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.UpdateSessionRequest",
+                                "summary": "body",
+                                "description": "Update payload"
+                            }
+                        }
+                    },
+                    "description": "Update payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_SessionResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Update AI session",
                 "tags": [
                     "Agent"
                 ]
@@ -5102,7 +6059,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/domain.SearchSessionsRequest",
+                                "$ref": "#/components/schemas/github_com_paroki_domus_internal_user_domain.SearchSessionsRequest",
                                 "summary": "body",
                                 "description": "Pagination parameters"
                             }

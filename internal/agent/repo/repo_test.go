@@ -45,14 +45,14 @@ func TestSessionAndMessageIsolationAndKeyset(t *testing.T) {
 	require.ErrorIs(t, err, domain.ErrSessionNotFound)
 
 	// Keyset pagination
-	page1, hasMore, err := r.SearchSessions(ctx, parishA, user1, nil, nil, 2)
+	page1, hasMore, err := r.SearchSessions(ctx, parishA, user1, "", nil, nil, 2)
 	require.NoError(t, err)
 	require.True(t, hasMore)
 	require.Len(t, page1, 2)
 	require.Equal(t, s3.ID, page1[0].ID)
 	require.Equal(t, s2.ID, page1[1].ID)
 
-	page2, hasMore, err := r.SearchSessions(ctx, parishA, user1, &page1[1].LastMessageAt, &page1[1].ID, 2)
+	page2, hasMore, err := r.SearchSessions(ctx, parishA, user1, "", &page1[1].LastMessageAt, &page1[1].ID, 2)
 	require.NoError(t, err)
 	require.False(t, hasMore)
 	require.Len(t, page2, 1)

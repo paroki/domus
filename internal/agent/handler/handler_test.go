@@ -2,7 +2,9 @@ package handler_test
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
+	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -16,8 +18,10 @@ import (
 	"github.com/paroki/domus/internal/agent"
 	"github.com/paroki/domus/internal/agent/domain"
 	"github.com/paroki/domus/internal/agent/driver"
+	"github.com/paroki/domus/internal/agent/repo"
 	"github.com/paroki/domus/internal/platform/authz"
 	"github.com/paroki/domus/internal/platform/crypt"
+	"github.com/paroki/domus/internal/platform/setting"
 	"github.com/paroki/domus/internal/user"
 	userdomain "github.com/paroki/domus/internal/user/domain"
 	"github.com/paroki/domus/testutil"
@@ -36,10 +40,12 @@ func (s *stubOTPSender) SendOTP(_ context.Context, _, _ string, code string) err
 type AgentHandlerSuite struct {
 	testutil.ApiTestSuite[any]
 	client       *ent.Client
+	sqlDB        *sql.DB
 	enforcer     *authz.Enforcer
 	otpSender    *stubOTPSender
 	userFeature  *user.Feature
 	agentFeature *agent.Feature
+	settings     *setting.Store
 	llmServer    *httptest.Server
 	llmHandler   http.HandlerFunc
 	llmMu        sync.RWMutex
@@ -51,7 +57,8 @@ func TestAgentHandlerSuite(t *testing.T) {
 
 func (s *AgentHandlerSuite) SetupTest() {
 	s.ApiTestSuite.SetupTest()
-	s.client = testutil.NewEntClient(s.T())
+	s.client, s.sqlDB, _ = testutil.NewEntClientWithDB(s.T())
+	s.Require().NoError(repo.EnsureMemorySearchSchema(context.Background(), s.sqlDB))
 	enforcer, err := authz.NewEnforcer(s.client)
 	s.Require().NoError(err)
 	s.enforcer = enforcer
@@ -84,16 +91,21 @@ func (s *AgentHandlerSuite) SetupTest() {
 	cipher, err := crypt.New("0123456789abcdef0123456789abcdef")
 	s.Require().NoError(err)
 
+	s.settings = setting.NewStore(s.client, setting.WithCipher(cipher))
 	s.agentFeature = agent.New(
 		driver.NewRegistry(s.llmServer.Client()),
 		logger,
 		agent.WithDB(s.client),
+		agent.WithSQLDB(s.sqlDB),
 		agent.WithUsers(s.userFeature),
 		agent.WithCipher(cipher),
+		agent.WithSettings(s.settings),
 	)
 
 	ctx := context.Background()
 	s.Require().NoError(authz.RegisterFeatures(ctx, s.enforcer, s.userFeature, s.agentFeature))
+	setting.RegisterFeatures(s.settings, s.agentFeature)
+	s.Require().NoError(s.settings.Load(ctx))
 	s.Require().NoError(s.userFeature.Bootstrap(ctx))
 
 	s.WithFeatures(s.userFeature, s.agentFeature)
@@ -220,5 +232,201 @@ func (s *AgentHandlerSuite) TestProvidersCRUD_RBAC_AndSyncModels() {
 
 	// Delete provider succeeds
 	s.Request("/api/agent/providers/"+second.ID.String(), http.MethodDelete, nil)
+	s.NoContent()
+}
+
+func (s *AgentHandlerSuite) TestSessionsAndMemoriesHTTP() {
+	ctx := context.Background()
+	diocese, err := s.client.Diocese.Create().SetCode("kaj").SetName("KAJ").Save(ctx)
+	s.Require().NoError(err)
+	parish1, err := s.client.Parish.Create().SetDioceseID(diocese.ID).SetCode("p1").SetName("Paroki 1").Save(ctx)
+	s.Require().NoError(err)
+	parish2, err := s.client.Parish.Create().SetDioceseID(diocese.ID).SetCode("p2").SetName("Paroki 2").Save(ctx)
+	s.Require().NoError(err)
+
+	superCookie := s.login("super@paroki.org")
+	s.SetCookie(superCookie)
+
+	s.setLLMHandler(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if strings.HasSuffix(r.URL.Path, "/models") {
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"data": []map[string]any{{"id": "gpt-4o", "name": "GPT-4o"}},
+			})
+			return
+		}
+		if strings.HasSuffix(r.URL.Path, "/embeddings") {
+			body, _ := io.ReadAll(r.Body)
+			if strings.Contains(string(body), "fallback-trigger") {
+				w.WriteHeader(http.StatusServiceUnavailable)
+				return
+			}
+			vec := make([]float64, driver.EmbeddingDimensions)
+			vec[0] = 0.5
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"object": "list",
+				"data":   []map[string]any{{"object": "embedding", "index": 0, "embedding": vec}},
+			})
+			return
+		}
+		http.NotFound(w, r)
+	})
+
+	s.Request("/api/agent/providers", http.MethodPost, domain.CreateAgentProviderRequest{
+		Name:     "OpenAI",
+		Provider: "openai",
+		APIKey:   "sk-123",
+		BaseURL:  s.llmServer.URL,
+	})
+	s.Created()
+	prov := testutil.DecodeAs[domain.AgentProviderResponse](&s.ApiTestSuite).Data
+
+	s.Request("/api/agent/providers", http.MethodPost, domain.CreateAgentProviderRequest{
+		Name:     "OpenAI Extra",
+		Provider: "openai",
+		APIKey:   "sk-456",
+		BaseURL:  s.llmServer.URL,
+	})
+	s.Created()
+	extraProv := testutil.DecodeAs[domain.AgentProviderResponse](&s.ApiTestSuite).Data
+
+	_, err = s.settings.Update(ctx, map[string]string{
+		agent.SettingModelGabriel:   prov.ID.String() + ":gpt-4o",
+		agent.SettingModelEmbedding: prov.ID.String() + ":text-embedding-3-small",
+	})
+	s.Require().NoError(err)
+
+	memberCookie := s.login("member@paroki.org")
+	otherCookie := s.login("other@paroki.org")
+
+	memberUser, err := s.userFeature.EnsureUser(ctx, "member@paroki.org", "Member", "", "email", "member@paroki.org")
+	s.Require().NoError(err)
+	otherUser, err := s.userFeature.EnsureUser(ctx, "other@paroki.org", "Other", "", "email", "other@paroki.org")
+	s.Require().NoError(err)
+
+	_, err = s.client.ParishMember.Create().SetParishID(parish1.ID).SetUserID(memberUser.ID).Save(ctx)
+	s.Require().NoError(err)
+	_, err = s.client.ParishMember.Create().SetParishID(parish2.ID).SetUserID(memberUser.ID).Save(ctx)
+	s.Require().NoError(err)
+	_, err = s.client.ParishMember.Create().SetParishID(parish1.ID).SetUserID(otherUser.ID).Save(ctx)
+	s.Require().NoError(err)
+
+	// Without X-Parish-Id -> 400 TENANT_REQUIRED
+	s.ClearCookies()
+	s.SetCookie(memberCookie)
+	s.Request("/api/agent/sessions/search", http.MethodPost, domain.SearchSessionsRequest{})
+	s.BadRequest()
+	s.Equal("TENANT_REQUIRED", s.GetErrorResponse().Error.Code)
+
+	// Seed session directly for member in parish1
+	r := repo.New(s.client, s.sqlDB)
+	sess, err := r.CreateSession(ctx, parish1.ID, memberUser.ID, "Sesi Awal", nil, nil)
+	s.Require().NoError(err)
+	_, err = r.AppendMessages(ctx, parish1.ID, memberUser.ID, sess.ID, []domain.AppendMessageInput{
+		{Role: "user", Content: "Halo"},
+	})
+	s.Require().NoError(err)
+
+	// Cross-user isolation -> 404
+	s.ClearCookies()
+	s.SetCookie(otherCookie)
+	s.SetHeader("X-Parish-Id", parish1.ID.String())
+	s.Request("/api/agent/sessions/"+sess.ID.String(), http.MethodGet, nil)
+	s.NotFound()
+
+	// Cross-parish isolation -> 404
+	s.ClearCookies()
+	s.SetCookie(memberCookie)
+	s.SetHeader("X-Parish-Id", parish2.ID.String())
+	s.Request("/api/agent/sessions/"+sess.ID.String(), http.MethodGet, nil)
+	s.NotFound()
+
+	// Owner in parish1 -> 200
+	s.SetHeader("X-Parish-Id", parish1.ID.String())
+	s.Request("/api/agent/sessions/search", http.MethodPost, domain.SearchSessionsRequest{Q: "awal"})
+	s.OK()
+	sessList := testutil.DecodeAs[[]domain.SessionResponse](&s.ApiTestSuite).Data
+	s.Len(sessList, 1)
+
+	// Set override on session -> then clear with "" -> then verify deleted provider fallback
+	newTitle := "Sesi Baru"
+	pidStr := extraProv.ID.String()
+	midStr := "gpt-4o-mini"
+	s.Request("/api/agent/sessions/"+sess.ID.String(), http.MethodPatch, domain.UpdateSessionRequest{
+		Title:      &newTitle,
+		ProviderID: &pidStr,
+		ModelID:    &midStr,
+	})
+	s.OK()
+	updSess := testutil.DecodeAs[domain.SessionResponse](&s.ApiTestSuite).Data
+	s.Equal("Sesi Baru", updSess.Title)
+	s.Require().NotNil(updSess.ProviderID)
+
+	emptyStr := ""
+	s.Request("/api/agent/sessions/"+sess.ID.String(), http.MethodPatch, domain.UpdateSessionRequest{
+		ProviderID: &emptyStr,
+	})
+	s.OK()
+	clearedSess := testutil.DecodeAs[domain.SessionResponse](&s.ApiTestSuite).Data
+	s.Nil(clearedSess.ProviderID)
+	s.Nil(clearedSess.ModelID)
+
+	// Re-bind to extraProv, delete extraProv, GET session falls back cleanly to Gabriel
+	s.Request("/api/agent/sessions/"+sess.ID.String(), http.MethodPatch, domain.UpdateSessionRequest{
+		ProviderID: &pidStr,
+		ModelID:    &midStr,
+	})
+	s.OK()
+	s.Require().NoError(s.client.AgentProvider.DeleteOneID(extraProv.ID).Exec(ctx))
+	s.Request("/api/agent/sessions/"+sess.ID.String(), http.MethodGet, nil)
+	s.OK()
+	detail := testutil.DecodeAs[domain.SessionDetailResponse](&s.ApiTestSuite).Data
+	s.Require().NotNil(detail.EffectiveProviderID)
+	s.Equal(prov.ID, *detail.EffectiveProviderID)
+	s.Equal("gpt-4o", detail.EffectiveModelID)
+	s.Len(detail.Messages, 1)
+
+	// Delete session -> 204
+	s.Request("/api/agent/sessions/"+sess.ID.String(), http.MethodDelete, nil)
+	s.NoContent()
+	s.Request("/api/agent/sessions/"+sess.ID.String(), http.MethodGet, nil)
+	s.NotFound()
+
+	// Memories: > 2000 chars rejected with 422
+	s.Request("/api/agent/memories", http.MethodPost, domain.CreateMemoryRequest{
+		Content: strings.Repeat("a", 2001),
+	})
+	s.UnprocessableEntity()
+
+	// Valid memory creation + hybrid search + BM25 fallback
+	s.Request("/api/agent/memories", http.MethodPost, domain.CreateMemoryRequest{
+		Content:  "Jadwal misa pagi jam 6",
+		Category: "fact",
+	})
+	s.Created()
+	mem := testutil.DecodeAs[domain.MemoryResponse](&s.ApiTestSuite).Data
+
+	s.Request("/api/agent/memories/search", http.MethodPost, domain.SearchMemoriesRequest{
+		Q: "jadwal misa",
+	})
+	s.OK()
+	memHits := testutil.DecodeAs[[]domain.MemoryResponse](&s.ApiTestSuite).Data
+	s.NotEmpty(memHits)
+
+	// Fallback to BM25 when embedding returns 503
+	s.Request("/api/agent/memories/search", http.MethodPost, domain.SearchMemoriesRequest{
+		Q: "misa fallback-trigger",
+	})
+	s.OK()
+	bm25Hits := testutil.DecodeAs[[]domain.MemoryResponse](&s.ApiTestSuite).Data
+	s.NotEmpty(bm25Hits)
+
+	// Patch & Delete memory
+	updContent := "Jadwal misa pagi pukul 06:00"
+	s.Request("/api/agent/memories/"+mem.ID.String(), http.MethodPatch, domain.UpdateMemoryRequest{
+		Content: &updContent,
+	})
+	s.OK()
+	s.Request("/api/agent/memories/"+mem.ID.String(), http.MethodDelete, nil)
 	s.NoContent()
 }

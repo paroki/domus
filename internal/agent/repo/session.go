@@ -9,6 +9,7 @@ import (
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/ent/agentmessage"
 	"github.com/paroki/domus/ent/agentsession"
+	"github.com/paroki/domus/ent/schema"
 	"github.com/paroki/domus/internal/agent/domain"
 )
 
@@ -59,14 +60,33 @@ func (r *Repository) GetSession(ctx context.Context, parishID, userID, sessionID
 	return toSessionResponse(row), nil
 }
 
-// UpdateSessionTitle updates the title of an active AgentSession scoped to (parishID, userID).
-func (r *Repository) UpdateSessionTitle(ctx context.Context, parishID, userID, sessionID uuid.UUID, title string) (domain.SessionResponse, error) {
+// UpdateSession updates title and/or provider/model override on an active AgentSession scoped to (parishID, userID).
+func (r *Repository) UpdateSession(
+	ctx context.Context,
+	parishID, userID, sessionID uuid.UUID,
+	title *string,
+	clearModel bool,
+	providerID *uuid.UUID,
+	modelID *string,
+) (domain.SessionResponse, error) {
 	if _, err := r.GetSession(ctx, parishID, userID, sessionID); err != nil {
 		return domain.SessionResponse{}, err
 	}
-	row, err := r.client.AgentSession.UpdateOneID(sessionID).
-		SetTitle(strings.TrimSpace(title)).
-		Save(ctx)
+	upd := r.client.AgentSession.UpdateOneID(sessionID)
+	if title != nil {
+		upd.SetTitle(strings.TrimSpace(*title))
+	}
+	if clearModel {
+		upd.ClearProviderID().ClearModelID()
+	} else {
+		if providerID != nil {
+			upd.SetProviderID(*providerID)
+		}
+		if modelID != nil {
+			upd.SetModelID(strings.TrimSpace(*modelID))
+		}
+	}
+	row, err := upd.Save(ctx)
 	if err != nil {
 		return domain.SessionResponse{}, err
 	}
@@ -97,6 +117,7 @@ func (r *Repository) SoftDeleteSession(ctx context.Context, parishID, userID, se
 func (r *Repository) SearchSessions(
 	ctx context.Context,
 	parishID, userID uuid.UUID,
+	q string,
 	cursorLastMessageAt *time.Time,
 	cursorID *uuid.UUID,
 	limit int,
@@ -108,14 +129,17 @@ func (r *Repository) SearchSessions(
 		limit = 100
 	}
 
-	q := r.client.AgentSession.Query().
+	query := r.client.AgentSession.Query().
 		Where(
 			agentsession.ParishIDEQ(parishID),
 			agentsession.UserIDEQ(userID),
 			agentsession.DeletedAtIsNil(),
 		)
+	if trimmedQ := strings.TrimSpace(q); trimmedQ != "" {
+		query = query.Where(agentsession.TitleContainsFold(trimmedQ))
+	}
 	if cursorLastMessageAt != nil && cursorID != nil {
-		q = q.Where(agentsession.Or(
+		query = query.Where(agentsession.Or(
 			agentsession.LastMessageAtLT(*cursorLastMessageAt),
 			agentsession.And(
 				agentsession.LastMessageAtEQ(*cursorLastMessageAt),
@@ -124,7 +148,7 @@ func (r *Repository) SearchSessions(
 		))
 	}
 
-	rows, err := q.
+	rows, err := query.
 		Order(ent.Desc(agentsession.FieldLastMessageAt), ent.Desc(agentsession.FieldID)).
 		Limit(limit + 1).
 		All(ctx)
@@ -174,7 +198,11 @@ func (r *Repository) AppendMessages(
 			b.SetAgentName(strings.TrimSpace(m.AgentName))
 		}
 		if len(m.ToolCalls) > 0 {
-			b.SetToolCalls(m.ToolCalls)
+			tc := make([]schema.ToolCallRecord, len(m.ToolCalls))
+			for i, t := range m.ToolCalls {
+				tc[i] = schema.ToolCallRecord(t)
+			}
+			b.SetToolCalls(tc)
 		}
 		if m.ToolCallID != nil {
 			b.SetToolCallID(*m.ToolCallID)
@@ -250,6 +278,13 @@ func toSessionResponse(row *ent.AgentSession) domain.SessionResponse {
 }
 
 func toMessageResponse(row *ent.AgentMessage) domain.MessageResponse {
+	var toolCalls []domain.ToolCallRecord
+	if len(row.ToolCalls) > 0 {
+		toolCalls = make([]domain.ToolCallRecord, len(row.ToolCalls))
+		for i, t := range row.ToolCalls {
+			toolCalls[i] = domain.ToolCallRecord(t)
+		}
+	}
 	return domain.MessageResponse{
 		ID:         row.ID,
 		SessionID:  row.SessionID,
@@ -258,7 +293,7 @@ func toMessageResponse(row *ent.AgentMessage) domain.MessageResponse {
 		AgentName:  row.AgentName,
 		Role:       string(row.Role),
 		Content:    row.Content,
-		ToolCalls:  row.ToolCalls,
+		ToolCalls:  toolCalls,
 		ToolCallID: row.ToolCallID,
 		ToolName:   row.ToolName,
 		Meta:       row.Meta,

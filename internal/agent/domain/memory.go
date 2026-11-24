@@ -34,3 +34,28 @@ type CreateMemoryInput struct {
 	Content         string
 	SourceSessionID *uuid.UUID
 }
+
+// MemorySearchFilter filters memory search results.
+type MemorySearchFilter struct {
+	Category string `json:"category,omitempty" validate:"omitempty,oneof=preference fact context"`
+}
+
+// SearchMemoriesRequest searches or lists caller's long-term AI memories.
+type SearchMemoriesRequest struct {
+	Q      string              `json:"q,omitempty"`
+	Filter *MemorySearchFilter `json:"filter,omitempty"`
+	Cursor string              `json:"cursor,omitempty"`
+	Limit  int                 `json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
+}
+
+// CreateMemoryRequest creates a new AgentMemory item.
+type CreateMemoryRequest struct {
+	Content  string `json:"content" validate:"required"`
+	Category string `json:"category,omitempty" validate:"omitempty,oneof=preference fact context"`
+}
+
+// UpdateMemoryRequest updates an existing AgentMemory item.
+type UpdateMemoryRequest struct {
+	Content  *string `json:"content,omitempty"`
+	Category *string `json:"category,omitempty" validate:"omitempty,oneof=preference fact context"`
+}
