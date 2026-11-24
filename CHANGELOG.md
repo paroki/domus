@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.0.0-alpha.6](https://github.com/paroki/domus/compare/v1.0.0-alpha.5...v1.0.0-alpha.6) (2026-11-24)
+
+### 📦 Dependencies
+
+- **deps:** remove unused a2ui and markdown packages ([173d37d](https://github.com/paroki/domus/commit/173d37dd3aa68d1728928cfced85f648987844b0))
+- **deps:** update dependency atlas to v1.4.0 (#164) ([82558d4](https://github.com/paroki/domus/commit/82558d496e70f689280b857a3fd0050c36da9e70))
+- **deps:** update dependency typescript to v7 (#166) ([c32dd3c](https://github.com/paroki/domus/commit/c32dd3c22dd015ba3c007690e3d1ef755e41ab68))
+
 ## [v1.0.0-alpha.5](https://github.com/paroki/domus/compare/v1.0.0-alpha.4...v1.0.0-alpha.5) (2026-11-23)
 
 ### ⚙️ API
