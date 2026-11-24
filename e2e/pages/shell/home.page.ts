@@ -2,17 +2,7 @@ import assert from "node:assert/strict";
 import { BasePage } from "../base.page";
 
 export class HomePage extends BasePage {
-  private async ensureMenuTab(): Promise<void> {
-    if (!this.page.url().includes("tab=menu")) {
-      await this.page
-        .getByRole("navigation", { name: "Navigasi utama" })
-        .getByRole("link", { name: "Menu" })
-        .click();
-    }
-  }
-
   async expectRendered(): Promise<void> {
-    await this.ensureMenuTab();
     await this.page
       .getByRole("heading", { name: "Selamat datang di Domus" })
       .waitFor({ state: "visible", timeout: 10_000 });
@@ -26,7 +16,6 @@ export class HomePage extends BasePage {
   }
 
   async expectVisibleTiles(labels: string[]): Promise<void> {
-    await this.ensureMenuTab();
     await this.page
       .getByRole("heading", { name: "Selamat datang di Domus" })
       .waitFor({ state: "visible", timeout: 10_000 });
