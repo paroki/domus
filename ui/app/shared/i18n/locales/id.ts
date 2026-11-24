@@ -589,6 +589,7 @@ const id = {
       "Tanyakan jadwal kegiatan, organisasi, atau informasi paroki…",
     send: "Kirim",
     stop: "Hentikan",
+    retry: "Coba Lagi",
     thinkingLabel: "💭 Penalaran ({{agent}})",
     subagentThinkingLabel: "{{agent}}: Penalaran",
     emptyChatTitle: "Halo, ada yang bisa Gabriel bantu?",

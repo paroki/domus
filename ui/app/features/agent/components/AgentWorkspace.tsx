@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { Brain, Menu } from "lucide-react";
+import { Brain, Menu, RotateCcw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
@@ -34,6 +34,7 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [memoryOpen, setMemoryOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [lastFailedMsg, setLastFailedMsg] = useState<string | null>(null);
 
   const [streaming, setStreaming] = useState(false);
   const [pendingUserMsg, setPendingUserMsg] = useState<string | null>(null);
@@ -67,8 +68,9 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
     abortRef.current = null;
   }
 
-  async function handleSend(message: string) {
+  async function handleSend(message: string, isRetry = false) {
     setErrorMsg(null);
+    setLastFailedMsg(null);
     setPendingUserMsg(message);
     setStreaming(true);
     setStreamingAgent("gabriel");
@@ -84,6 +86,7 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
         body: {
           sessionId,
           message,
+          ...(isRetry && sessionId ? { retry: true } : {}),
         },
         signal: controller.signal,
         onFrame: (frame) => {
@@ -138,6 +141,7 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
             }
             case "error": {
               setErrorMsg(frame.data.message);
+              setLastFailedMsg(message);
               break;
             }
             case "done": {
@@ -151,8 +155,10 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
         // User clicked Hentikan; exit streaming cleanly without error banner
       } else if (err instanceof ApiError || err instanceof Error) {
         setErrorMsg(err.message);
+        setLastFailedMsg(message);
       } else {
         setErrorMsg("Terjadi kesalahan saat menghubungi asisten AI.");
+        setLastFailedMsg(message);
       }
     } finally {
       const targetSid = activeStreamSessionRef.current ?? sessionId;
@@ -193,6 +199,7 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
           setSessionId(undefined);
           activeStreamSessionRef.current = undefined;
           setErrorMsg(null);
+          setLastFailedMsg(null);
           navigate("/agent");
         }}
       />
@@ -226,9 +233,19 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
         {errorMsg ? (
           <div
             role="alert"
-            className="mx-4 mt-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-xs text-red-700 dark:text-red-300 sm:mx-6"
+            className="mx-4 mt-3 flex items-center justify-between gap-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-xs text-red-700 dark:text-red-300 sm:mx-6"
           >
-            {errorMsg}
+            <span className="min-w-0 flex-1">{errorMsg}</span>
+            {lastFailedMsg && !streaming ? (
+              <button
+                type="button"
+                onClick={() => void handleSend(lastFailedMsg, true)}
+                className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-red-500/30 bg-red-500/15 px-2.5 py-1 font-medium text-red-700 hover:bg-red-500/25 dark:text-red-200"
+              >
+                <RotateCcw aria-hidden className="size-3" />
+                {t("agent.retry")}
+              </button>
+            ) : null}
           </div>
         ) : null}
 
@@ -240,6 +257,11 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
           streamingText={streamingText}
           liveTransfers={liveTransfers}
           liveTools={liveTools}
+          onRetry={
+            !streaming && !errorMsg
+              ? (msg) => void handleSend(msg, true)
+              : undefined
+          }
         />
 
         <ChatComposer

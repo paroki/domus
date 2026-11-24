@@ -1,4 +1,11 @@
-import { ArrowRight, Bot, CheckCircle2, Loader2, XCircle } from "lucide-react";
+import {
+  ArrowRight,
+  Bot,
+  CheckCircle2,
+  Loader2,
+  RotateCcw,
+  XCircle,
+} from "lucide-react";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import type { MessageResponse } from "../api/types";
@@ -25,6 +32,7 @@ interface ChatTimelineProps {
   streamingText: string;
   liveTransfers: LiveTransfer[];
   liveTools: LiveToolCall[];
+  onRetry?: (message: string) => void;
 }
 
 export function ChatTimeline({
@@ -35,6 +43,7 @@ export function ChatTimeline({
   streamingText,
   liveTransfers,
   liveTools,
+  onRetry,
 }: ChatTimelineProps) {
   const { t } = useTranslation();
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -67,14 +76,25 @@ export function ChatTimeline({
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
       <div className="mx-auto flex max-w-3xl flex-col gap-4">
-        {messages.map((msg) => {
+        {messages.map((msg, idx) => {
+          const isLastMessage = idx === messages.length - 1;
           if (msg.role === "user") {
             prevAssistantAgent = "gabriel";
             return (
-              <div key={msg.id} className="flex justify-end">
+              <div key={msg.id} className="flex flex-col items-end gap-1">
                 <div className="max-w-[85%] rounded-2xl rounded-br-sm bg-primary px-4 py-2.5 text-sm whitespace-pre-wrap text-on-primary shadow-xs">
                   {msg.content}
                 </div>
+                {isLastMessage && !streaming && onRetry ? (
+                  <button
+                    type="button"
+                    onClick={() => onRetry(msg.content)}
+                    className="inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-xs font-medium text-muted hover:bg-fg/8 hover:text-fg"
+                  >
+                    <RotateCcw aria-hidden className="size-3" />
+                    {t("agent.retry")}
+                  </button>
+                ) : null}
               </div>
             );
           }

@@ -84,4 +84,5 @@ export interface AgentProviderResponse {
 export interface ChatRequest {
   sessionId?: string;
   message: string;
+  retry?: boolean;
 }
