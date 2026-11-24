@@ -109,17 +109,39 @@ func WithOAuthProvider(p domain.OAuthProvider) Option {
 	}
 }
 
+// ParishMemberItem is a minimal parish member record returned by ParishMemberDirectory.
+type ParishMemberItem struct {
+	ID       string  `json:"id"`
+	ParishID string  `json:"parishId"`
+	UserID   string  `json:"userId"`
+	Email    string  `json:"email"`
+	Name     string  `json:"name"`
+	Phone    *string `json:"phone,omitempty"`
+	Role     string  `json:"role"`
+}
+
+// ParishMemberDirectory lists members of an active parish for authorized MCP callers.
+type ParishMemberDirectory interface {
+	ListParishMembers(ctx context.Context, p Principal, parishID uuid.UUID, query, role string, limit int) ([]ParishMemberItem, error)
+}
+
 // Feature wires the user and authentication feature.
 type Feature struct {
 	service         *service.Service
 	handler         *handler.Handler
 	enforcer        *authz.Enforcer
 	compositeSender *service.CompositeOTPSender
+	parishMembers   ParishMemberDirectory
 	otpTTL          time.Duration
 	cookieName      string
 	clientMu        sync.RWMutex
 	tgClient        *telegram.Client
 	gowaClient      *gowa.Client
+}
+
+// SetParishMemberDirectory wires the ParishMemberDirectory used by user_list_parish_members MCP tool.
+func (f *Feature) SetParishMemberDirectory(d ParishMemberDirectory) {
+	f.parishMembers = d
 }
 
 // New constructs the user Feature with Ent persistence, Casbin enforcer, config, and options.

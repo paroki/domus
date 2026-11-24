@@ -47,9 +47,10 @@ func (a userEnsurerAdapter) EnsureUser(ctx context.Context, email, name, phone, 
 
 // Feature wires reference master data (dioceses, parishes, members) and cross-feature helpers.
 type Feature struct {
-	service *service.Service
-	handler *handler.Handler
-	users   *user.Feature
+	service  *service.Service
+	handler  *handler.Handler
+	enforcer *authz.Enforcer
+	users    *user.Feature
 }
 
 // New constructs the ref Feature.
@@ -62,9 +63,10 @@ func New(db *ent.Client, enforcer *authz.Enforcer, users *user.Feature) *Feature
 	svc := service.New(r, enforcer, ensurer)
 	h := handler.New(svc)
 	return &Feature{
-		service: svc,
-		handler: h,
-		users:   users,
+		service:  svc,
+		handler:  h,
+		enforcer: enforcer,
+		users:    users,
 	}
 }
 
@@ -146,6 +148,39 @@ func (f *Feature) ValidatePeriodInParish(ctx context.Context, parishID, periodID
 // EnsureParishMember idempotently ensures userID is a member of parishID.
 func (f *Feature) EnsureParishMember(ctx context.Context, parishID, userID uuid.UUID) (*ParishMember, error) {
 	return f.service.EnsureParishMember(ctx, parishID, userID)
+}
+
+// ListParishMembers implements user.ParishMemberDirectory for MCP tools.
+func (f *Feature) ListParishMembers(ctx context.Context, p user.Principal, parishID uuid.UUID, query, role string, limit int) ([]user.ParishMemberItem, error) {
+	var filter *domain.ParishMemberSearchFilter
+	if role != "" {
+		filter = &domain.ParishMemberSearchFilter{Role: role}
+	}
+	rows, _, err := f.service.SearchParishMembers(
+		ctx,
+		p,
+		parishID,
+		domain.SearchParishMembersRequest{Q: query, Filter: filter},
+		nil,
+		nil,
+		limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]user.ParishMemberItem, 0, len(rows))
+	for _, m := range rows {
+		out = append(out, user.ParishMemberItem{
+			ID:       m.ID.String(),
+			ParishID: m.ParishID.String(),
+			UserID:   m.UserID.String(),
+			Email:    m.Email,
+			Name:     m.Name,
+			Phone:    m.Phone,
+			Role:     m.Role,
+		})
+	}
+	return out, nil
 }
 
 func requireTenantMiddleware() fiber.Handler {

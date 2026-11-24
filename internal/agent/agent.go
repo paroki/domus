@@ -2,9 +2,11 @@ package agent
 
 import (
 	"context"
+	"database/sql"
 	"log/slog"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/internal/agent/domain"
 	"github.com/paroki/domus/internal/agent/driver"
@@ -23,17 +25,20 @@ var (
 
 // Feature wires LLM provider configuration and model discovery for the agent feature.
 type Feature struct {
-	drivers  *driver.Registry
-	handler  *handler.Handler
-	db       *ent.Client
-	cipher   *crypt.Cipher
-	users    *user.Feature
-	settings *setting.Store
-	logger   *slog.Logger
+	drivers   *driver.Registry
+	handler   *handler.Handler
+	db        *ent.Client
+	sqlDB     *sql.DB
+	mcpServer *mcp.Server
+	cipher    *crypt.Cipher
+	users     *user.Feature
+	settings  *setting.Store
+	logger    *slog.Logger
 }
 
 type featureOptions struct {
 	db       *ent.Client
+	sqlDB    *sql.DB
 	users    *user.Feature
 	cipher   *crypt.Cipher
 	settings *setting.Store
@@ -46,6 +51,13 @@ type Option func(*featureOptions)
 func WithDB(db *ent.Client) Option {
 	return func(o *featureOptions) {
 		o.db = db
+	}
+}
+
+// WithSQLDB wires the raw *sql.DB pool for agent database operations.
+func WithSQLDB(sqlDB *sql.DB) Option {
+	return func(o *featureOptions) {
+		o.sqlDB = sqlDB
 	}
 }
 
@@ -87,6 +99,7 @@ func New(drivers *driver.Registry, logger *slog.Logger, opts ...Option) *Feature
 	f := &Feature{
 		drivers:  drivers,
 		db:       cfgOpts.db,
+		sqlDB:    cfgOpts.sqlDB,
 		cipher:   cfgOpts.cipher,
 		users:    cfgOpts.users,
 		settings: cfgOpts.settings,
@@ -96,6 +109,21 @@ func New(drivers *driver.Registry, logger *slog.Logger, opts ...Option) *Feature
 		f.handler = handler.New(f)
 	}
 	return f
+}
+
+// SQLDB returns the wired *sql.DB pool, or nil if unconfigured.
+func (f *Feature) SQLDB() *sql.DB {
+	return f.sqlDB
+}
+
+// SetMCPServer binds the shared MCP server instance (invoked by app.GetFiber).
+func (f *Feature) SetMCPServer(s *mcp.Server) {
+	f.mcpServer = s
+}
+
+// MCPServer returns the bound MCP server, or nil if unset.
+func (f *Feature) MCPServer() *mcp.Server {
+	return f.mcpServer
 }
 
 // Drivers returns the multi-provider model discovery Registry.

@@ -54,7 +54,7 @@ func newServeCmd() *cobra.Command {
 				return err
 			}
 
-			db, _, _, err := app.OpenDBPool(ctx, cfg)
+			db, sqlDB, _, err := app.OpenDBPool(ctx, cfg)
 			if err != nil {
 				return err
 			}
@@ -81,6 +81,7 @@ func newServeCmd() *cobra.Command {
 			}
 			userFeature := user.New(db, enforcer, userCfg, logger, userOpts...)
 			refFeature := ref.New(db, enforcer, userFeature)
+			userFeature.SetParishMemberDirectory(refFeature)
 			orgCfg, err := org.GetConfig(ctx)
 			if err != nil {
 				return err
@@ -97,6 +98,7 @@ func newServeCmd() *cobra.Command {
 				nil,
 				logger,
 				agent.WithDB(db),
+				agent.WithSQLDB(sqlDB),
 				agent.WithUsers(userFeature),
 				agent.WithCipher(cipher),
 				agent.WithSettings(settingStore),
