@@ -54,3 +54,36 @@ Then(
     await this.pages.settings.expectProviderModelsCatalog(label, ids);
   },
 );
+
+When(
+  "I bind AI agent models gabriel {string}, mikael {string}, rafael {string}, embedding {string}",
+  async function (
+    this: DomusWorld,
+    gabriel: string,
+    mikael: string,
+    rafael: string,
+    embedding: string,
+  ) {
+    await this.pages.aiAgent.expectLoaded();
+    await this.pages.aiAgent.bindModels({ gabriel, mikael, rafael, embedding });
+  },
+);
+
+When(
+  "I customize Gabriel prompt to {string}",
+  async function (this: DomusWorld, text: string) {
+    await this.pages.aiAgent.customizeGabrielPrompt(text);
+  },
+);
+
+When("I reset Gabriel prompt to default", async function (this: DomusWorld) {
+  await this.pages.aiAgent.resetGabrielPromptToDefault();
+});
+
+Then(
+  "deleting provider {string} is blocked because it is in use",
+  async function (this: DomusWorld, label: string) {
+    await this.pages.aiProvider.expectLoaded();
+    await this.pages.aiProvider.deleteProviderExpectConflict(label);
+  },
+);

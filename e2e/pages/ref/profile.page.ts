@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import type { Locator } from "playwright";
 import { BasePage } from "../base.page";
 
 export interface ParishProfileInput {
@@ -54,46 +55,58 @@ export class ParishProfilePage extends BasePage {
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
+  private async assertInputValue(
+    locator: Locator,
+    expected: string,
+  ): Promise<void> {
+    const deadline = Date.now() + 10_000;
+    while (Date.now() < deadline) {
+      if ((await locator.inputValue()) === expected) return;
+      await this.page.waitForTimeout(100);
+    }
+    assert.equal(await locator.inputValue(), expected);
+  }
+
   async expectProfileValues(expected: ParishProfileInput): Promise<void> {
     if (expected.name !== undefined) {
-      assert.equal(
-        await this.page.getByLabel("Nama", { exact: true }).inputValue(),
+      await this.assertInputValue(
+        this.page.getByLabel("Nama", { exact: true }),
         expected.name,
       );
     }
     if (expected.patronSaint !== undefined) {
-      assert.equal(
-        await this.page.getByLabel("Santo/Santa Pelindung").inputValue(),
+      await this.assertInputValue(
+        this.page.getByLabel("Santo/Santa Pelindung"),
         expected.patronSaint,
       );
     }
     if (expected.pastorName !== undefined) {
-      assert.equal(
-        await this.page.getByLabel("Pastor Paroki").inputValue(),
+      await this.assertInputValue(
+        this.page.getByLabel("Pastor Paroki"),
         expected.pastorName,
       );
     }
     if (expected.phone !== undefined) {
-      assert.equal(
-        await this.page.getByLabel("Telepon").inputValue(),
+      await this.assertInputValue(
+        this.page.getByLabel("Telepon"),
         expected.phone,
       );
     }
     if (expected.email !== undefined) {
-      assert.equal(
-        await this.page.getByLabel("Email", { exact: true }).inputValue(),
+      await this.assertInputValue(
+        this.page.getByLabel("Email", { exact: true }),
         expected.email,
       );
     }
     if (expected.website !== undefined) {
-      assert.equal(
-        await this.page.getByLabel("Situs Web").inputValue(),
+      await this.assertInputValue(
+        this.page.getByLabel("Situs Web"),
         expected.website,
       );
     }
     if (expected.address !== undefined) {
-      assert.equal(
-        await this.page.getByLabel("Alamat").inputValue(),
+      await this.assertInputValue(
+        this.page.getByLabel("Alamat"),
         expected.address,
       );
     }
