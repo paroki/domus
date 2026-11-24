@@ -33,7 +33,7 @@ type Service struct {
 	mcpServer    *mcp.Server
 	logger       *slog.Logger
 	sessionMu    sync.Mutex
-	busySessions map[uuid.UUID]bool
+	busySessions map[uuid.UUID]*sessionLock
 	extractSem   chan struct{}
 }
 
@@ -56,7 +56,7 @@ func New(
 		cipher:       cipher,
 		settings:     settings,
 		logger:       logger,
-		busySessions: make(map[uuid.UUID]bool),
+		busySessions: make(map[uuid.UUID]*sessionLock),
 		extractSem:   make(chan struct{}, 2),
 	}
 }

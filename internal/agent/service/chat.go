@@ -59,14 +59,54 @@ type ChatTurnPrep struct {
 	SkipAppendUser  bool
 }
 
+type sessionLock struct {
+	cancelling bool
+	done       chan struct{}
+}
+
+func (s *Service) acquireSessionLock(ctx context.Context, id uuid.UUID) bool {
+	for {
+		s.sessionMu.Lock()
+		lock, busy := s.busySessions[id]
+		if !busy {
+			s.busySessions[id] = &sessionLock{done: make(chan struct{})}
+			s.sessionMu.Unlock()
+			return true
+		}
+		if !lock.cancelling {
+			s.sessionMu.Unlock()
+			return false
+		}
+		done := lock.done
+		s.sessionMu.Unlock()
+
+		select {
+		case <-done:
+		case <-ctx.Done():
+			return false
+		}
+	}
+}
+
 func (s *Service) tryLockSession(id uuid.UUID) bool {
 	s.sessionMu.Lock()
 	defer s.sessionMu.Unlock()
-	if s.busySessions[id] {
+	if _, busy := s.busySessions[id]; busy {
 		return false
 	}
-	s.busySessions[id] = true
+	s.busySessions[id] = &sessionLock{done: make(chan struct{})}
 	return true
+}
+
+func (s *Service) markSessionCancelling(id uuid.UUID) {
+	if id == uuid.Nil {
+		return
+	}
+	s.sessionMu.Lock()
+	if lock, ok := s.busySessions[id]; ok {
+		lock.cancelling = true
+	}
+	s.sessionMu.Unlock()
 }
 
 func (s *Service) unlockSession(id uuid.UUID) {
@@ -74,7 +114,10 @@ func (s *Service) unlockSession(id uuid.UUID) {
 		return
 	}
 	s.sessionMu.Lock()
-	delete(s.busySessions, id)
+	if lock, ok := s.busySessions[id]; ok {
+		delete(s.busySessions, id)
+		close(lock.done)
+	}
 	s.sessionMu.Unlock()
 }
 
@@ -97,7 +140,7 @@ func (s *Service) PrepareChat(ctx context.Context, p authx.Principal, req domain
 		if err != nil {
 			return nil, err
 		}
-		if !s.tryLockSession(sess.ID) {
+		if !s.acquireSessionLock(ctx, sess.ID) {
 			return nil, domain.ErrSessionBusy
 		}
 		lockedID = sess.ID
@@ -402,6 +445,7 @@ func (s *Service) ExecuteChatStream(prep *ChatTurnPrep, writeEvent func(StreamEv
 	}()
 	onDisconnect := func() {
 		clientDisconnected = true
+		s.markSessionCancelling(sessionID)
 		cancelFn(
 			adk.WithAgentCancelMode(adk.CancelAfterToolCalls),
 			adk.WithAgentCancelTimeout(3*time.Second),
