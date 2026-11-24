@@ -7,6 +7,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
+	"github.com/paroki/domus/ent/agentmemory"
+	"github.com/paroki/domus/ent/agentsession"
 	"github.com/paroki/domus/ent/event"
 	"github.com/paroki/domus/ent/lookup"
 	"github.com/paroki/domus/ent/organization"
@@ -211,7 +213,13 @@ func (r *Repository) HasParishChildren(ctx context.Context, parishID uuid.UUID) 
 	if has, err := r.client.Event.Query().Where(event.ParishIDEQ(parishID), event.DeletedAtIsNil()).Exist(ctx); err != nil || has {
 		return has, err
 	}
-	return r.client.Period.Query().Where(period.ParishIDEQ(parishID), period.DeletedAtIsNil()).Exist(ctx)
+	if has, err := r.client.Period.Query().Where(period.ParishIDEQ(parishID), period.DeletedAtIsNil()).Exist(ctx); err != nil || has {
+		return has, err
+	}
+	if has, err := r.client.AgentSession.Query().Where(agentsession.ParishIDEQ(parishID), agentsession.DeletedAtIsNil()).Exist(ctx); err != nil || has {
+		return has, err
+	}
+	return r.client.AgentMemory.Query().Where(agentmemory.ParishIDEQ(parishID)).Exist(ctx)
 }
 
 // SearchParishMembers returns paginated ParishMember rows along with a User lookup map.

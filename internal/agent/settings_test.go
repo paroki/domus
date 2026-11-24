@@ -9,6 +9,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent/agentprovider"
 	"github.com/paroki/domus/internal/agent"
+	"github.com/paroki/domus/internal/agent/domain"
+	"github.com/paroki/domus/internal/agent/repo"
 	"github.com/paroki/domus/internal/platform/authz"
 	"github.com/paroki/domus/internal/platform/setting"
 	"github.com/paroki/domus/internal/user"
@@ -131,4 +133,65 @@ func TestRegisterPermissions(t *testing.T) {
 	ok, err = enforcer.Enforce(authz.UserSubject(userID), authz.DomainGlobal, agent.PermChat, authz.ActionWrite)
 	require.NoError(t, err)
 	require.True(t, ok)
+}
+
+func TestRegisterSettings_EmbeddingResetTransitionOnly(t *testing.T) {
+	ctx := context.Background()
+	db, sqlDB, _ := testutil.NewEntClientWithDB(t)
+	require.NoError(t, repo.EnsureMemorySearchSchema(ctx, sqlDB))
+
+	prov1, err := db.AgentProvider.Create().
+		SetName("Gemini 1").
+		SetProvider(agentprovider.ProviderGemini).
+		SetAPIKey("enc-1").
+		Save(ctx)
+	require.NoError(t, err)
+	prov2, err := db.AgentProvider.Create().
+		SetName("OpenAI 2").
+		SetProvider(agentprovider.ProviderOpenai).
+		SetAPIKey("enc-2").
+		Save(ctx)
+	require.NoError(t, err)
+
+	r := repo.New(db, sqlDB)
+	vec := make([]float32, repo.EmbeddingDimensions)
+	vec[0] = 0.5
+	mem, err := r.CreateMemory(ctx, domain.CreateMemoryInput{
+		ParishID: uuid.New(),
+		UserID:   uuid.New(),
+		Category: domain.MemoryCategoryFact,
+		Content:  "Umat aktif lingkungan",
+	}, vec)
+	require.NoError(t, err)
+
+	// Pre-populate embedding setting in DB before Load
+	_, err = db.Setting.Create().
+		SetKey(agent.SettingModelEmbedding).
+		SetValue(prov1.ID.String() + ":gemini-embedding-001").
+		Save(ctx)
+	require.NoError(t, err)
+
+	store := setting.NewStore(db)
+	feat := agent.New(
+		nil,
+		slog.New(slog.DiscardHandler),
+		agent.WithDB(db),
+		agent.WithSQLDB(sqlDB),
+		agent.WithSettings(store),
+	)
+	feat.RegisterSettings(store)
+
+	// Initial Load must preserve existing embeddings
+	require.NoError(t, store.Load(ctx))
+	var isNull bool
+	require.NoError(t, sqlDB.QueryRowContext(ctx, `SELECT embedding IS NULL FROM agent_memories WHERE id = $1`, mem.ID).Scan(&isNull))
+	require.False(t, isNull, "initial Load must not clear existing embeddings")
+
+	// Transitioning to a different embedding model must reset embeddings to NULL
+	_, err = store.Update(ctx, map[string]string{
+		agent.SettingModelEmbedding: prov2.ID.String() + ":text-embedding-3-small",
+	})
+	require.NoError(t, err)
+	require.NoError(t, sqlDB.QueryRowContext(ctx, `SELECT embedding IS NULL FROM agent_memories WHERE id = $1`, mem.ID).Scan(&isNull))
+	require.True(t, isNull, "changing embedding model must reset embeddings to NULL")
 }

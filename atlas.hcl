@@ -9,6 +9,12 @@ env "local" {
   migration {
     dir = "file://migrations"
   }
+  diff {
+    skip {
+      drop_column = true
+      drop_index  = true
+    }
+  }
 }
 
 env "ci" {
@@ -16,5 +22,11 @@ env "ci" {
   dev = var.dev_url
   migration {
     dir = "file://migrations"
+  }
+  diff {
+    skip {
+      drop_column = true
+      drop_index  = true
+    }
   }
 }

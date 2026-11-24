@@ -12,8 +12,14 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// AgentMemory is the client for interacting with the AgentMemory builders.
+	AgentMemory *AgentMemoryClient
+	// AgentMessage is the client for interacting with the AgentMessage builders.
+	AgentMessage *AgentMessageClient
 	// AgentProvider is the client for interacting with the AgentProvider builders.
 	AgentProvider *AgentProviderClient
+	// AgentSession is the client for interacting with the AgentSession builders.
+	AgentSession *AgentSessionClient
 	// CasbinRule is the client for interacting with the CasbinRule builders.
 	CasbinRule *CasbinRuleClient
 	// Diocese is the client for interacting with the Diocese builders.
@@ -181,7 +187,10 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.AgentMemory = NewAgentMemoryClient(tx.config)
+	tx.AgentMessage = NewAgentMessageClient(tx.config)
 	tx.AgentProvider = NewAgentProviderClient(tx.config)
+	tx.AgentSession = NewAgentSessionClient(tx.config)
 	tx.CasbinRule = NewCasbinRuleClient(tx.config)
 	tx.Diocese = NewDioceseClient(tx.config)
 	tx.Event = NewEventClient(tx.config)
@@ -209,7 +218,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: AgentProvider.QueryXXX(), the query will be executed
+// applies a query, for example: AgentMemory.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

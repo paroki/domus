@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent/agentprovider"
@@ -109,6 +110,12 @@ func (f *Feature) RegisterSettings(s *setting.Store) {
 		DefaultValue: strings.TrimSpace(prompts.MemoryExtractor),
 	})
 
+	var (
+		embMu              sync.Mutex
+		initialized        bool
+		prevEmbeddingModel string
+	)
+
 	s.OnChange(func(ctx context.Context, values map[string]string) error {
 		for _, key := range modelSettingKeys {
 			val := strings.TrimSpace(values[key])
@@ -131,6 +138,21 @@ func (f *Feature) RegisterSettings(s *setting.Store) {
 				if !exists {
 					return fmt.Errorf("konfigurasi AI provider %s untuk %s tidak ditemukan", providerID, key)
 				}
+			}
+		}
+
+		nextEmbedding := strings.TrimSpace(values[SettingModelEmbedding])
+		embMu.Lock()
+		shouldReset := initialized && prevEmbeddingModel != "" && prevEmbeddingModel != nextEmbedding
+		if !initialized {
+			initialized = true
+		}
+		prevEmbeddingModel = nextEmbedding
+		embMu.Unlock()
+
+		if shouldReset && f.sqlDB != nil {
+			if _, err := f.sqlDB.ExecContext(ctx, `UPDATE "agent_memories" SET "embedding" = NULL`); err != nil {
+				return err
 			}
 		}
 		return nil

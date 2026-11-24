@@ -9,6 +9,72 @@ import (
 )
 
 var (
+	// AgentMemoriesColumns holds the columns for the "agent_memories" table.
+	AgentMemoriesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "parish_id", Type: field.TypeUUID},
+		{Name: "user_id", Type: field.TypeUUID},
+		{Name: "category", Type: field.TypeEnum, Enums: []string{"preference", "fact", "context"}, Default: "fact"},
+		{Name: "content", Type: field.TypeString, Size: 2147483647},
+		{Name: "source_session_id", Type: field.TypeUUID, Nullable: true},
+	}
+	// AgentMemoriesTable holds the schema information for the "agent_memories" table.
+	AgentMemoriesTable = &schema.Table{
+		Name:       "agent_memories",
+		Columns:    AgentMemoriesColumns,
+		PrimaryKey: []*schema.Column{AgentMemoriesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "agentmemory_parish_id_user_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{AgentMemoriesColumns[3], AgentMemoriesColumns[4], AgentMemoriesColumns[1]},
+			},
+		},
+	}
+	// AgentMessagesColumns holds the columns for the "agent_messages" table.
+	AgentMessagesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "parish_id", Type: field.TypeUUID},
+		{Name: "user_id", Type: field.TypeUUID},
+		{Name: "agent_name", Type: field.TypeString, Default: "gabriel"},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"user", "assistant", "tool"}},
+		{Name: "content", Type: field.TypeString, Size: 2147483647, Default: ""},
+		{Name: "tool_calls", Type: field.TypeJSON, Nullable: true},
+		{Name: "tool_call_id", Type: field.TypeString, Nullable: true},
+		{Name: "tool_name", Type: field.TypeString, Nullable: true},
+		{Name: "meta", Type: field.TypeJSON, Nullable: true},
+		{Name: "session_id", Type: field.TypeUUID},
+	}
+	// AgentMessagesTable holds the schema information for the "agent_messages" table.
+	AgentMessagesTable = &schema.Table{
+		Name:       "agent_messages",
+		Columns:    AgentMessagesColumns,
+		PrimaryKey: []*schema.Column{AgentMessagesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "agent_messages_agent_sessions_messages",
+				Columns:    []*schema.Column{AgentMessagesColumns[12]},
+				RefColumns: []*schema.Column{AgentSessionsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "agentmessage_session_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{AgentMessagesColumns[12], AgentMessagesColumns[1]},
+			},
+			{
+				Name:    "agentmessage_parish_id_user_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{AgentMessagesColumns[3], AgentMessagesColumns[4], AgentMessagesColumns[1]},
+			},
+		},
+	}
 	// AgentProvidersColumns holds the columns for the "agent_providers" table.
 	AgentProvidersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -26,6 +92,32 @@ var (
 		Name:       "agent_providers",
 		Columns:    AgentProvidersColumns,
 		PrimaryKey: []*schema.Column{AgentProvidersColumns[0]},
+	}
+	// AgentSessionsColumns holds the columns for the "agent_sessions" table.
+	AgentSessionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "parish_id", Type: field.TypeUUID},
+		{Name: "user_id", Type: field.TypeUUID},
+		{Name: "title", Type: field.TypeString, Default: "Percakapan Baru"},
+		{Name: "provider_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "model_id", Type: field.TypeString, Nullable: true},
+		{Name: "last_message_at", Type: field.TypeTime},
+	}
+	// AgentSessionsTable holds the schema information for the "agent_sessions" table.
+	AgentSessionsTable = &schema.Table{
+		Name:       "agent_sessions",
+		Columns:    AgentSessionsColumns,
+		PrimaryKey: []*schema.Column{AgentSessionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "agentsession_parish_id_user_id_last_message_at",
+				Unique:  false,
+				Columns: []*schema.Column{AgentSessionsColumns[4], AgentSessionsColumns[5], AgentSessionsColumns[9]},
+			},
+		},
 	}
 	// CasbinRulesColumns holds the columns for the "casbin_rules" table.
 	CasbinRulesColumns = []*schema.Column{
@@ -742,7 +834,10 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		AgentMemoriesTable,
+		AgentMessagesTable,
 		AgentProvidersTable,
+		AgentSessionsTable,
 		CasbinRulesTable,
 		DiocesesTable,
 		EventsTable,
@@ -765,8 +860,18 @@ var (
 )
 
 func init() {
+	AgentMemoriesTable.Annotation = &entsql.Annotation{
+		Table: "agent_memories",
+	}
+	AgentMessagesTable.ForeignKeys[0].RefTable = AgentSessionsTable
+	AgentMessagesTable.Annotation = &entsql.Annotation{
+		Table: "agent_messages",
+	}
 	AgentProvidersTable.Annotation = &entsql.Annotation{
 		Table: "agent_providers",
+	}
+	AgentSessionsTable.Annotation = &entsql.Annotation{
+		Table: "agent_sessions",
 	}
 	EventRsvpsTable.ForeignKeys[0].RefTable = EventsTable
 	EventRsvpsTable.Annotation = &entsql.Annotation{
