@@ -613,6 +613,16 @@ const id = {
     verboseMode: "Verbose",
     toolArgsLabel: "Argumen",
     toolOutputLabel: "Hasil",
+    copyMessage: "Salin",
+    copiedMessage: "Tersalin",
+    copyCode: "Salin kode",
+    scrollToBottom: "Ke pesan terbaru",
+    composerHint: "Enter untuk kirim · Shift+Enter baris baru",
+    confirmDeleteSession: "Hapus sesi ini?",
+    typingLabel: "Mengetik…",
+    starterPrompt1: "Jadwal kegiatan paroki minggu ini",
+    starterPrompt2: "Daftar organisasi & pengurus aktif",
+    starterPrompt3: "Catat preferensi saya",
   },
 } as const;
 

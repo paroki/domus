@@ -1,5 +1,5 @@
 import { Pencil, Plus, Search, Trash2, X } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "~/shared/ui/Button";
 import {
@@ -38,6 +38,15 @@ export function MemoryDrawer({ open, onClose }: MemoryDrawerProps) {
   const createMemory = useCreateAgentMemory();
   const updateMemory = useUpdateAgentMemory();
   const deleteMemory = useDeleteAgentMemory();
+
+  useEffect(() => {
+    if (!open) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, onClose]);
 
   if (!open) return null;
 
@@ -147,6 +156,11 @@ export function MemoryDrawer({ open, onClose }: MemoryDrawerProps) {
             placeholder={t("agent.memoryContentPlaceholder")}
             className="w-full rounded-lg border border-line bg-bg px-3 py-2 text-xs text-fg placeholder:text-muted/70 focus:border-accent focus:outline-none"
           />
+          {draftContent.length > MAX_MEMORY_CHARS * 0.8 ? (
+            <p className="text-right text-[11px] tabular-nums text-muted">
+              {draftContent.length} / {MAX_MEMORY_CHARS}
+            </p>
+          ) : null}
           {formErr ? <p className="text-xs text-red-600">{formErr}</p> : null}
           <Button
             type="submit"
@@ -221,8 +235,9 @@ export function MemoryDrawer({ open, onClose }: MemoryDrawerProps) {
                       <button
                         type="button"
                         aria-label={t("agent.deleteSession")}
+                        disabled={deleteMemory.isPending}
                         onClick={() => void deleteMemory.mutateAsync(mem.id)}
-                        className="rounded p-1 text-muted hover:text-red-600"
+                        className="rounded p-1 text-muted hover:text-red-600 disabled:opacity-50"
                       >
                         <Trash2 aria-hidden className="size-3.5" />
                       </button>

@@ -57,7 +57,7 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
 
   const hasParish = Boolean(me?.activeParishId);
   const canManageProviders = isSuperAdmin(me?.roles);
-  const { data: sessionDetail } = useAgentSession(
+  const { data: sessionDetail, isLoading: isLoadingSession } = useAgentSession(
     sessionId,
     hasParish && Boolean(sessionId),
   );
@@ -227,6 +227,11 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
           </div>
 
           <div className="flex items-center gap-2">
+            {sessionDetail?.modelId || sessionDetail?.effectiveModelId ? (
+              <span className="hidden max-w-44 truncate rounded-full border border-line bg-canvas px-2.5 py-1 text-[11px] font-medium text-muted md:inline-flex">
+                {sessionDetail.modelId || sessionDetail.effectiveModelId}
+              </span>
+            ) : null}
             <button
               type="button"
               aria-pressed={verbose}
@@ -242,20 +247,20 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
                   return next;
                 });
               }}
-              className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3 ${
                 verbose
                   ? "border-primary/40 bg-primary/10 text-primary"
                   : "border-line bg-bg text-muted hover:bg-fg/6 hover:text-fg"
               }`}
             >
               <Terminal aria-hidden className="size-3.5" />
-              {t("agent.verboseMode")}
+              <span className="hidden sm:inline">{t("agent.verboseMode")}</span>
             </button>
 
             <button
               type="button"
               onClick={() => setMemoryOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-bg px-3 py-1.5 text-xs font-medium text-fg hover:bg-fg/6"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-bg px-2.5 py-1.5 text-xs font-medium text-fg hover:bg-fg/6 sm:px-3"
             >
               <Brain aria-hidden className="size-3.5 text-primary" />
               {t("agent.memoryButton")}
@@ -284,6 +289,7 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
 
         <ChatTimeline
           messages={sessionDetail?.messages ?? []}
+          loading={Boolean(sessionId) && isLoadingSession}
           pendingUserMessage={pendingUserMsg}
           streaming={streaming}
           streamingAgent={streamingAgent}
@@ -296,11 +302,15 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
               ? (msg) => void handleSend(msg, true)
               : undefined
           }
+          onSelectPrompt={
+            !streaming ? (prompt) => void handleSend(prompt) : undefined
+          }
         />
 
         <ChatComposer
           streaming={streaming}
           disabled={!hasParish}
+          focusKey={sessionId ?? "new"}
           onSend={(msg) => void handleSend(msg)}
           onStop={handleStop}
         />
