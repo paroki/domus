@@ -1,4 +1,4 @@
-import { Cpu, type LucideIcon, MessageCircle, Send } from "lucide-react";
+import { Bot, Cpu, type LucideIcon, MessageCircle, Send } from "lucide-react";
 import type {
   AgentProviderResponse,
   ProviderModelItem,
@@ -8,7 +8,7 @@ import type {
 export const ROLE_SUPER_ADMIN = "user:super-admin";
 
 export interface SettingsLauncherItem {
-  id: "telegram" | "whatsapp" | "aiProvider";
+  id: "telegram" | "whatsapp" | "aiProvider" | "aiAgent";
   path: string;
   plate: 1 | 2 | 3 | 4 | 5 | 6;
   icon: LucideIcon;
@@ -23,7 +23,23 @@ export const SETTINGS_LAUNCHERS: SettingsLauncherItem[] = [
     icon: MessageCircle,
   },
   { id: "aiProvider", path: "/settings/ai-provider", plate: 3, icon: Cpu },
+  { id: "aiAgent", path: "/settings/ai-agent", plate: 4, icon: Bot },
 ];
+
+export const AGENT_MODEL_KEYS = [
+  "agent.model.gabriel",
+  "agent.model.mikael",
+  "agent.model.rafael",
+  "agent.model.memory_extractor",
+  "agent.model.embedding",
+] as const;
+
+export const AGENT_PROMPT_KEYS = [
+  "agent.prompt.gabriel",
+  "agent.prompt.mikael",
+  "agent.prompt.rafael",
+  "agent.prompt.memory_extractor",
+] as const;
 
 export const CHANNEL_GROUP_NAMES = {
   telegram: "Telegram Bot",
@@ -163,6 +179,50 @@ export function buildSettingsDraft(
     }
   }
   return next;
+}
+
+export interface ProviderModelOption {
+  value: string;
+  label: string;
+  providerId: string;
+  modelId: string;
+}
+
+export function buildProviderModelOptions(
+  providers: AgentProviderResponse[],
+  capability: "chat" | "embedding",
+): ProviderModelOption[] {
+  const options: ProviderModelOption[] = [];
+  for (const provider of providers) {
+    if (!provider.id) continue;
+    const models = filterModelsByCapability(
+      (provider.models ?? []) as ProviderModelItem[],
+      capability,
+    );
+    for (const model of models) {
+      if (!model.id) continue;
+      options.push({
+        value: `${provider.id}:${model.id}`,
+        label: `${provider.name ?? provider.provider ?? provider.id} — ${model.name || model.id}`,
+        providerId: provider.id,
+        modelId: model.id,
+      });
+    }
+  }
+  return options;
+}
+
+export function parseModelSelection(value?: string): {
+  providerId: string;
+  modelId: string;
+} {
+  if (!value) return { providerId: "", modelId: "" };
+  const idx = value.indexOf(":");
+  if (idx === -1) return { providerId: "", modelId: value };
+  return {
+    providerId: value.slice(0, idx),
+    modelId: value.slice(idx + 1),
+  };
 }
 
 export type { AgentProviderResponse };

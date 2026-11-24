@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   buildClearValues,
+  buildProviderModelOptions,
   buildSettingsDraft,
   CHANNEL_GROUP_NAMES,
   filterModelsByCapability,
@@ -9,6 +10,7 @@ import {
   groupSettings,
   indexSettingsByKey,
   isSuperAdmin,
+  parseModelSelection,
   parseProviderModels,
   SETTINGS_LAUNCHERS,
 } from "./model";
@@ -105,7 +107,7 @@ test("parseProviderModels and filterModelsByCapability handle valid and malforme
 test("SETTINGS_LAUNCHERS, indexSettingsByKey, and buildSettingsDraft work", () => {
   assert.deepEqual(
     SETTINGS_LAUNCHERS.map((item) => item.id),
-    ["telegram", "whatsapp", "aiProvider"],
+    ["telegram", "whatsapp", "aiProvider", "aiAgent"],
   );
   const items = [
     { key: "user.telegram.bot_token", value: "tok", configured: true },
@@ -117,4 +119,39 @@ test("SETTINGS_LAUNCHERS, indexSettingsByKey, and buildSettingsDraft work", () =
   assert.deepEqual(buildSettingsDraft(items), {
     "user.telegram.bot_token": "tok",
   });
+});
+
+test("buildProviderModelOptions and parseModelSelection work", () => {
+  const providers = [
+    {
+      id: "prov-1",
+      name: "Gemini",
+      provider: "gemini",
+      models: [
+        {
+          id: "gemini-2.5-flash",
+          name: "Gemini 2.5 Flash",
+          capabilities: ["chat"],
+        },
+        {
+          id: "gemini-embedding-001",
+          name: "Gemini Embedding 001",
+          capabilities: ["embedding"],
+        },
+      ],
+    },
+  ];
+  assert.deepEqual(
+    buildProviderModelOptions(providers, "chat").map((o) => o.value),
+    ["prov-1:gemini-2.5-flash"],
+  );
+  assert.deepEqual(
+    buildProviderModelOptions(providers, "embedding").map((o) => o.value),
+    ["prov-1:gemini-embedding-001"],
+  );
+  assert.deepEqual(parseModelSelection("prov-1:gemini-2.5-flash"), {
+    providerId: "prov-1",
+    modelId: "gemini-2.5-flash",
+  });
+  assert.deepEqual(parseModelSelection(""), { providerId: "", modelId: "" });
 });
