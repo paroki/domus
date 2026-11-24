@@ -96,6 +96,11 @@ export class AgentWorkspacePage extends BasePage {
       .first();
     await row.hover();
     await row.getByRole("button", { name: "Hapus" }).click();
+    const confirmRow = this.page
+      .locator("aside li")
+      .filter({ hasText: "Hapus sesi ini?" })
+      .first();
+    await confirmRow.getByRole("button", { name: "Hapus" }).click();
     await this.page.waitForURL(/\/agent$/, { timeout: 10_000 });
   }
 
