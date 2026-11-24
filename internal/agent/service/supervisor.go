@@ -66,6 +66,13 @@ func newToolEventMiddleware(agentName string, emit func(StreamEvent), subAgents 
 		isErr := err != nil ||
 			(strings.HasPrefix(out, "Tool ") && strings.Contains(out, " error: ")) ||
 			strings.HasPrefix(out, "Error: ")
+		output := out
+		if err != nil && output == "" {
+			output = err.Error()
+		}
+		if runes := []rune(output); len(runes) > 2000 {
+			output = string(runes[:2000]) + "…"
+		}
 		emit(StreamEvent{
 			Event: "tool_end",
 			Data: map[string]any{
@@ -73,6 +80,7 @@ func newToolEventMiddleware(agentName string, emit func(StreamEvent), subAgents 
 				"toolCallId": input.CallID,
 				"toolName":   input.Name,
 				"isError":    isErr,
+				"output":     output,
 			},
 		})
 	}
@@ -181,20 +189,17 @@ func buildSupervisorRunner(ctx context.Context, cfg supervisorConfig) (*adk.Runn
 }
 
 // consumeStreamMessage reads a single AgentEvent's MessageOutput stream, closing it on return.
-func consumeStreamMessage(mv *adk.MessageVariant, agentName string, emit func(StreamEvent)) (string, []*schema.ToolCall, error) {
+// Only the supervisor ("gabriel" or unnamed root) emits user-facing token deltas.
+func consumeStreamMessage(mv *adk.MessageVariant, agentName string, emit func(StreamEvent)) (*schema.Message, error) {
 	if mv == nil {
-		return "", nil, nil
+		return nil, nil
 	}
+	isSupervisor := agentName == "" || agentName == "gabriel"
 	if !mv.IsStreaming || mv.MessageStream == nil {
 		if mv.Message == nil {
-			return "", nil, nil
+			return nil, nil
 		}
-		var tcs []*schema.ToolCall
-		for i := range mv.Message.ToolCalls {
-			tc := mv.Message.ToolCalls[i]
-			tcs = append(tcs, &tc)
-		}
-		if mv.Role == schema.Assistant && mv.Message.Content != "" && emit != nil {
+		if mv.Role == schema.Assistant && isSupervisor && mv.Message.Content != "" && emit != nil {
 			emit(StreamEvent{
 				Event: "token",
 				Data: map[string]string{
@@ -203,39 +208,35 @@ func consumeStreamMessage(mv *adk.MessageVariant, agentName string, emit func(St
 				},
 			})
 		}
-		return mv.Message.Content, tcs, nil
+		return mv.Message, nil
 	}
 
 	defer mv.MessageStream.Close()
-	var content strings.Builder
-	var toolCalls []*schema.ToolCall
+	var chunks []*schema.Message
 	for {
 		chunk, err := mv.MessageStream.Recv()
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				break
 			}
-			return content.String(), toolCalls, err
+			return nil, err
 		}
 		if chunk == nil {
 			continue
 		}
-		if mv.Role == schema.Assistant && chunk.Content != "" {
-			content.WriteString(chunk.Content)
-			if emit != nil {
-				emit(StreamEvent{
-					Event: "token",
-					Data: map[string]string{
-						"agent": agentName,
-						"delta": chunk.Content,
-					},
-				})
-			}
-		}
-		for i := range chunk.ToolCalls {
-			tc := chunk.ToolCalls[i]
-			toolCalls = append(toolCalls, &tc)
+		chunks = append(chunks, chunk)
+		if mv.Role == schema.Assistant && isSupervisor && chunk.Content != "" && emit != nil {
+			emit(StreamEvent{
+				Event: "token",
+				Data: map[string]string{
+					"agent": agentName,
+					"delta": chunk.Content,
+				},
+			})
 		}
 	}
-	return content.String(), toolCalls, nil
+	if len(chunks) == 0 {
+		return nil, nil
+	}
+	return schema.ConcatMessages(chunks)
 }

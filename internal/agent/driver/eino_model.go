@@ -51,16 +51,16 @@ func (r *Registry) NewChatModel(ctx context.Context, provider, baseURL, apiKey, 
 		})
 	case domain.ProviderAnthropic:
 		cfg := &claude.Config{
-			APIKey:     key,
-			HTTPClient: r.httpClient,
-			Model:      mid,
-			MaxTokens:  defaultClaudeMaxTokens,
+			APIKey:           key,
+			HTTPClient:       r.httpClient,
+			Model:            mid,
+			MaxTokens:        defaultClaudeMaxTokens,
+			AutoCacheControl: &claude.CacheControl{},
 		}
 		if burl != "" {
 			cfg.BaseURL = &burl
 		}
 		cm, err = claude.NewChatModel(ctx, cfg)
-		defaultOpts = append(defaultOpts, claude.WithAutoCacheControl(nil))
 	case domain.ProviderOpenAI:
 		cm, err = openai.NewChatModel(ctx, &openai.ChatModelConfig{
 			APIKey:     key,

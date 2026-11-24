@@ -13,12 +13,12 @@ import (
 )
 
 type rememberInput struct {
-	Content  string `json:"content" jsonschema:"required,description=Durable preference, fact, or parish context to remember (1-2000 chars)"`
-	Category string `json:"category,omitempty" jsonschema:"enum=preference,enum=fact,enum=context,description=Memory category (default: fact)"`
+	Content  string `json:"content" jsonschema:"required" jsonschema_description:"Durable preference, fact, or parish context to remember (1-2000 chars)"`
+	Category string `json:"category,omitempty" jsonschema:"enum=preference,enum=fact,enum=context" jsonschema_description:"Memory category (default: fact)"`
 }
 
 type forgetInput struct {
-	MemoryID string `json:"memoryId" jsonschema:"required,description=UUID of the memory item to delete"`
+	MemoryID string `json:"memoryId" jsonschema:"required" jsonschema_description:"UUID of the memory item to delete"`
 }
 
 // NewMemoryTools constructs internal agent_remember and agent_forget tools for gabriel.

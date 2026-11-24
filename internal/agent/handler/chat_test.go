@@ -327,12 +327,19 @@ func (s *ChatSuite) TestStreamingDelegationBusyLockAndCancel() {
 	events := parseSSEEvents(s.T(), chatResp.Body)
 	var eventNames []string
 	var sessionID string
+	var streamedText strings.Builder
 	for _, ev := range events {
 		eventNames = append(eventNames, ev.name)
 		if ev.name == "session" {
 			var payload map[string]any
 			_ = json.Unmarshal([]byte(ev.data), &payload)
 			sessionID, _ = payload["sessionId"].(string)
+		}
+		if ev.name == "token" {
+			var payload map[string]string
+			_ = json.Unmarshal([]byte(ev.data), &payload)
+			s.Equal("gabriel", payload["agent"])
+			streamedText.WriteString(payload["delta"])
 		}
 	}
 	s.Require().NotEmpty(sessionID)
@@ -342,6 +349,7 @@ func (s *ChatSuite) TestStreamingDelegationBusyLockAndCancel() {
 	s.Contains(eventNames, "tool_end")
 	s.Contains(eventNames, "token")
 	s.Contains(eventNames, "done")
+	s.Equal("Paroki aktif Anda adalah Paroki Katedral.", streamedText.String())
 
 	// Verify persisted messages in DB
 	sid, err := uuid.Parse(sessionID)
@@ -690,21 +698,43 @@ func parseSSEEvents(t *testing.T, r io.Reader) []sseEvent {
 }
 
 func writeOpenAIToolChunk(w io.Writer, callID, name, args string) {
-	chunk := map[string]any{
-		"id": "chatcmpl-1", "object": "chat.completion.chunk", "created": 1, "model": "gpt-4o",
-		"choices": []map[string]any{
-			{
-				"index": 0,
-				"delta": map[string]any{
-					"role": "assistant",
-					"tool_calls": []map[string]any{
-						{
-							"index": 0,
-							"id":    callID,
-							"type":  "function",
-							"function": map[string]any{
-								"name":      name,
-								"arguments": args,
+	mid := len(args) / 2
+	part1, part2 := args[:mid], args[mid:]
+	chunks := []map[string]any{
+		{
+			"id": "chatcmpl-1", "object": "chat.completion.chunk", "created": 1, "model": "gpt-4o",
+			"choices": []map[string]any{
+				{
+					"index": 0,
+					"delta": map[string]any{
+						"role": "assistant",
+						"tool_calls": []map[string]any{
+							{
+								"index": 0,
+								"id":    callID,
+								"type":  "function",
+								"function": map[string]any{
+									"name":      name,
+									"arguments": part1,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			"id": "chatcmpl-1", "object": "chat.completion.chunk", "created": 1, "model": "gpt-4o",
+			"choices": []map[string]any{
+				{
+					"index": 0,
+					"delta": map[string]any{
+						"tool_calls": []map[string]any{
+							{
+								"index": 0,
+								"function": map[string]any{
+									"arguments": part2,
+								},
 							},
 						},
 					},
@@ -712,8 +742,10 @@ func writeOpenAIToolChunk(w io.Writer, callID, name, args string) {
 			},
 		},
 	}
-	b, _ := json.Marshal(chunk)
-	_, _ = fmt.Fprintf(w, "data: %s\n\n", b)
+	for _, chunk := range chunks {
+		b, _ := json.Marshal(chunk)
+		_, _ = fmt.Fprintf(w, "data: %s\n\n", b)
+	}
 	_, _ = fmt.Fprintf(w, "data: [DONE]\n\n")
 }
 

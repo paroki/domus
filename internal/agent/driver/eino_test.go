@@ -66,6 +66,7 @@ func TestEinoNewChatModel_AllProvidersAnd4xxErrors(t *testing.T) {
 	claudeServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
 		require.Contains(t, string(body), `"max_tokens":4096`)
+		require.Contains(t, string(body), `"cache_control":{"type":"ephemeral"}`)
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"id":          "msg_1",

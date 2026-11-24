@@ -16,6 +16,7 @@ import (
 	"github.com/paroki/domus/ent/parish"
 	entuser "github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/internal/agent/domain"
+	"github.com/paroki/domus/internal/agent/driver"
 	"github.com/paroki/domus/internal/agent/prompts"
 	"github.com/paroki/domus/internal/platform/authx"
 	"github.com/paroki/domus/internal/platform/mcpx"
@@ -184,6 +185,7 @@ func (s *Service) PrepareChat(ctx context.Context, p authx.Principal, req domain
 		PromptContext: PromptContext{
 			UserName:          userName,
 			ParishName:        parishName,
+			UserRoles:         p.Roles,
 			CurrentTime:       time.Now().UTC().Format(time.RFC3339),
 			RetrievedMemories: memories,
 		},
@@ -335,16 +337,19 @@ func (s *Service) ExecuteChatStream(prep *ChatTurnPrep, writeEvent func(StreamEv
 			}
 			if ev.Output != nil && ev.Output.MessageOutput != nil {
 				mv := ev.Output.MessageOutput
-				text, tcs, err := consumeStreamMessage(mv, ev.AgentName, emitAsync)
+				msg, err := consumeStreamMessage(mv, ev.AgentName, emitAsync)
 				if err != nil {
 					res.err = err
 					break
 				}
+				if msg == nil {
+					continue
+				}
 				switch mv.Role {
 				case schema.Assistant:
-					if len(tcs) > 0 {
-						records := make([]domain.ToolCallRecord, 0, len(tcs))
-						for _, tc := range tcs {
+					if len(msg.ToolCalls) > 0 {
+						records := make([]domain.ToolCallRecord, 0, len(msg.ToolCalls))
+						for _, tc := range msg.ToolCalls {
 							records = append(records, domain.ToolCallRecord{
 								ID:        tc.ID,
 								Name:      tc.Function.Name,
@@ -354,19 +359,17 @@ func (s *Service) ExecuteChatStream(prep *ChatTurnPrep, writeEvent func(StreamEv
 						res.completedTools = append(res.completedTools, domain.AppendMessageInput{
 							AgentName: ev.AgentName,
 							Role:      "assistant",
-							Content:   text,
+							Content:   msg.Content,
 							ToolCalls: records,
 						})
-					} else if text != "" {
-						finalBuilder.WriteString(text)
-						if ev.AgentName != "" {
-							res.finalAgent = ev.AgentName
-						}
+					} else if msg.Content != "" && (ev.AgentName == "" || ev.AgentName == "gabriel") {
+						finalBuilder.WriteString(msg.Content)
+						res.finalAgent = "gabriel"
 					}
 				case schema.Tool:
 					var tcID, tName *string
-					if mv.Message != nil && mv.Message.ToolCallID != "" {
-						v := mv.Message.ToolCallID
+					if msg.ToolCallID != "" {
+						v := msg.ToolCallID
 						tcID = &v
 					}
 					if mv.ToolName != "" {
@@ -376,7 +379,7 @@ func (s *Service) ExecuteChatStream(prep *ChatTurnPrep, writeEvent func(StreamEv
 					res.completedTools = append(res.completedTools, domain.AppendMessageInput{
 						AgentName:  ev.AgentName,
 						Role:       "tool",
-						Content:    text,
+						Content:    msg.Content,
 						ToolCallID: tcID,
 						ToolName:   tName,
 					})
@@ -391,6 +394,21 @@ func (s *Service) ExecuteChatStream(prep *ChatTurnPrep, writeEvent func(StreamEv
 	defer ticker.Stop()
 
 	clientDisconnected := false
+	var cancelFallback *time.Timer
+	defer func() {
+		if cancelFallback != nil {
+			cancelFallback.Stop()
+		}
+	}()
+	onDisconnect := func() {
+		clientDisconnected = true
+		cancelFn(
+			adk.WithAgentCancelMode(adk.CancelAfterToolCalls),
+			adk.WithAgentCancelTimeout(3*time.Second),
+			adk.WithRecursive(),
+		)
+		cancelFallback = time.AfterFunc(4*time.Second, turnCancel)
+	}
 	var res runnerResult
 
 loop:
@@ -399,25 +417,13 @@ loop:
 		case ev := <-eventCh:
 			if !clientDisconnected {
 				if err := writeEvent(ev); err != nil {
-					clientDisconnected = true
-					cancelFn(
-						adk.WithAgentCancelMode(adk.CancelAfterToolCalls),
-						adk.WithAgentCancelTimeout(3*time.Second),
-						adk.WithRecursive(),
-					)
-					turnCancel()
+					onDisconnect()
 				}
 			}
 		case <-ticker.C:
 			if !clientDisconnected {
 				if err := writeEvent(StreamEvent{Event: "ping"}); err != nil {
-					clientDisconnected = true
-					cancelFn(
-						adk.WithAgentCancelMode(adk.CancelAfterToolCalls),
-						adk.WithAgentCancelTimeout(3*time.Second),
-						adk.WithRecursive(),
-					)
-					turnCancel()
+					onDisconnect()
 				}
 			}
 		case res = <-doneCh:
@@ -453,11 +459,14 @@ loop:
 		if len(res.completedTools) > 0 {
 			_, _ = s.repo.AppendMessages(persistCtx, prep.Principal.ParishID, prep.Principal.UserID, sessionID, res.completedTools)
 		}
+		wrappedErr := driver.WrapProviderError(res.err, prep.GabrielModel.plainKey)
+		wrappedErr = driver.WrapProviderError(wrappedErr, prep.MikaelModel.plainKey)
+		wrappedErr = driver.WrapProviderError(wrappedErr, prep.RafaelModel.plainKey)
 		_ = writeEvent(StreamEvent{
 			Event: "error",
 			Data: map[string]string{
 				"code":    "AGENT_STREAM_ERROR",
-				"message": res.err.Error(),
+				"message": wrappedErr.Error(),
 			},
 		})
 		return
