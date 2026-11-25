@@ -73,9 +73,12 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          bun .github/scripts/generate-changelog.ts --stdout > /tmp/release-notes.md
-          gh release edit "${{ steps.release.outputs.tag_name }}" -F /tmp/release-notes.md
+          TAG="${{ steps.release.outputs.tag_name }}"
+          git fetch origin --tags --force
+          git checkout "refs/tags/${TAG}"
+          bun .github/scripts/generate-changelog.ts --stdout --version "${TAG#v}" > /tmp/release-notes.md
+          gh release edit "${TAG}" -F /tmp/release-notes.md
           # Versions with a prerelease suffix (e.g. 0.1.0-rc.1) are previews.
-          if [[ "${{ steps.release.outputs.tag_name }}" == *-* ]]; then
-            gh release edit "${{ steps.release.outputs.tag_name }}" --prerelease
+          if [[ "${TAG}" == *-* ]]; then
+            gh release edit "${TAG}" --prerelease
           fi
