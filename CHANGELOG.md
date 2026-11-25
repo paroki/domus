@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.0.0-alpha.7](https://github.com/paroki/domus/compare/v1.0.0-alpha.6...v1.0.0-alpha.7) (2026-11-25)
+
+### 📦 Dependencies
+
+- **deps:** update dependency @cucumber/cucumber to v13 (#165) ([cf342a1](https://github.com/paroki/domus/commit/cf342a1d746b61167091858a41d33f3779123b21))
+
 ## [v1.0.0-alpha.6](https://github.com/paroki/domus/compare/v1.0.0-alpha.5...v1.0.0-alpha.6) (2026-11-25)
 
 ### ⚙️ API
