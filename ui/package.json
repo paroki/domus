@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "api:types": "openapi-typescript ../api/swagger.json -o app/shared/api/schema.d.ts",
+    "api:types": "(cd /tmp && npm exec --yes --package=openapi-typescript@7.13.0 --package=typescript@5.9.3 -- openapi-typescript \"$OLDPWD/../api/swagger.json\" -o \"$OLDPWD/app/shared/api/schema.d.ts\")",
     "build": "react-router build",
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
