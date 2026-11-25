@@ -969,6 +969,142 @@ export interface paths {
     patch: operations["updateOrgMember"];
     trace?: never;
   };
+  "/ref/kecamatan": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create kecamatan
+     * @description Creates a kecamatan or reactivates a soft-deleted kecamatan with the same kotaId and kode.
+     */
+    post: operations["createKecamatan"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/ref/kecamatan/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Search kecamatan
+     * @description Searches kecamatan with optional query, kotaId/active filters, and cursor pagination.
+     */
+    post: operations["searchKecamatan"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/ref/kecamatan/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get kecamatan
+     * @description Returns a single non-deleted kecamatan by ID.
+     */
+    get: operations["getKecamatan"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete kecamatan
+     * @description Soft-deletes a kecamatan when no non-deleted kelurahan reference it.
+     */
+    delete: operations["deleteKecamatan"];
+    options?: never;
+    head?: never;
+    /**
+     * Update kecamatan
+     * @description Updates mutable fields of a kecamatan.
+     */
+    patch: operations["updateKecamatan"];
+    trace?: never;
+  };
+  "/ref/kelurahan": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create kelurahan
+     * @description Creates a kelurahan or reactivates a soft-deleted kelurahan with the same kecamatanId and kode.
+     */
+    post: operations["createKelurahan"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/ref/kelurahan/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Search kelurahan
+     * @description Searches kelurahan with optional query, kecamatanId/active filters, and cursor pagination.
+     */
+    post: operations["searchKelurahan"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/ref/kelurahan/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get kelurahan
+     * @description Returns a single non-deleted kelurahan by ID.
+     */
+    get: operations["getKelurahan"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete kelurahan
+     * @description Soft-deletes a kelurahan.
+     */
+    delete: operations["deleteKelurahan"];
+    options?: never;
+    head?: never;
+    /**
+     * Update kelurahan
+     * @description Updates mutable fields of a kelurahan.
+     */
+    patch: operations["updateKelurahan"];
+    trace?: never;
+  };
   "/ref/keuskupan": {
     parameters: {
       query?: never;
@@ -1035,6 +1171,142 @@ export interface paths {
      * @description Updates mutable fields of a keuskupan.
      */
     patch: operations["updateKeuskupan"];
+    trace?: never;
+  };
+  "/ref/kevikepan": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create kevikepan
+     * @description Creates a kevikepan or reactivates a soft-deleted kevikepan with the same keuskupanId and kode.
+     */
+    post: operations["createKevikepan"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/ref/kevikepan/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Search kevikepan
+     * @description Searches kevikepan with optional query, keuskupanId/active filters, and cursor pagination.
+     */
+    post: operations["searchKevikepan"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/ref/kevikepan/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get kevikepan
+     * @description Returns a single non-deleted kevikepan by ID.
+     */
+    get: operations["getKevikepan"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete kevikepan
+     * @description Soft-deletes a kevikepan.
+     */
+    delete: operations["deleteKevikepan"];
+    options?: never;
+    head?: never;
+    /**
+     * Update kevikepan
+     * @description Updates mutable fields of a kevikepan.
+     */
+    patch: operations["updateKevikepan"];
+    trace?: never;
+  };
+  "/ref/kota": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create kota
+     * @description Creates a kota or reactivates a soft-deleted kota with the same kode.
+     */
+    post: operations["createKota"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/ref/kota/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Search kota
+     * @description Searches kota with optional query, active filter, and cursor pagination.
+     */
+    post: operations["searchKota"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/ref/kota/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get kota
+     * @description Returns a single non-deleted kota by ID.
+     */
+    get: operations["getKota"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete kota
+     * @description Soft-deletes a kota when no non-deleted kecamatan reference it.
+     */
+    delete: operations["deleteKota"];
+    options?: never;
+    head?: never;
+    /**
+     * Update kota
+     * @description Updates mutable fields of a kota.
+     */
+    patch: operations["updateKota"];
     trace?: never;
   };
   "/ref/lingkungan": {
@@ -1673,6 +1945,19 @@ export interface components {
       /** @enum {string} */
       visibility?: "public" | "private";
     };
+    "domain.CreateKecamatanRequest": {
+      active?: boolean;
+      kode: string;
+      kotaId: string;
+      nama: string;
+    };
+    "domain.CreateKelurahanRequest": {
+      active?: boolean;
+      kecamatanId: string;
+      kode: string;
+      kodePos?: string;
+      nama: string;
+    };
     "domain.CreateKeuskupanRequest": {
       active?: boolean;
       alamat?: string;
@@ -1682,6 +1967,18 @@ export interface components {
       telepon?: string;
       uskup?: string;
       website?: string;
+    };
+    "domain.CreateKevikepanRequest": {
+      active?: boolean;
+      keuskupanId: string;
+      kode: string;
+      nama: string;
+      vikep?: string;
+    };
+    "domain.CreateKotaRequest": {
+      active?: boolean;
+      kode: string;
+      nama: string;
     };
     "domain.CreateLingkunganRequest": {
       ketua?: string;
@@ -1837,6 +2134,33 @@ export interface components {
       /** @enum {string} */
       visibility?: "public" | "private";
     };
+    "domain.KecamatanResponse": {
+      active?: boolean;
+      createdAt?: string;
+      id?: string;
+      kode?: string;
+      kotaId?: string;
+      nama?: string;
+      updatedAt?: string;
+    };
+    "domain.KecamatanSearchFilter": {
+      active?: boolean;
+      kotaId?: string;
+    };
+    "domain.KelurahanResponse": {
+      active?: boolean;
+      createdAt?: string;
+      id?: string;
+      kecamatanId?: string;
+      kode?: string;
+      kodePos?: string;
+      nama?: string;
+      updatedAt?: string;
+    };
+    "domain.KelurahanSearchFilter": {
+      active?: boolean;
+      kecamatanId?: string;
+    };
     "domain.KeuskupanResponse": {
       active?: boolean;
       alamat?: string;
@@ -1851,6 +2175,31 @@ export interface components {
       website?: string;
     };
     "domain.KeuskupanSearchFilter": {
+      active?: boolean;
+    };
+    "domain.KevikepanResponse": {
+      active?: boolean;
+      createdAt?: string;
+      id?: string;
+      keuskupanId?: string;
+      kode?: string;
+      nama?: string;
+      updatedAt?: string;
+      vikep?: string;
+    };
+    "domain.KevikepanSearchFilter": {
+      active?: boolean;
+      keuskupanId?: string;
+    };
+    "domain.KotaResponse": {
+      active?: boolean;
+      createdAt?: string;
+      id?: string;
+      kode?: string;
+      nama?: string;
+      updatedAt?: string;
+    };
+    "domain.KotaSearchFilter": {
       active?: boolean;
     };
     "domain.LingkunganResponse": {
@@ -2104,9 +2453,33 @@ export interface components {
       limit?: number;
       q?: string;
     };
+    "domain.SearchKecamatanRequest": {
+      cursor?: string;
+      filter?: components["schemas"]["domain.KecamatanSearchFilter"];
+      limit?: number;
+      q?: string;
+    };
+    "domain.SearchKelurahanRequest": {
+      cursor?: string;
+      filter?: components["schemas"]["domain.KelurahanSearchFilter"];
+      limit?: number;
+      q?: string;
+    };
     "domain.SearchKeuskupanRequest": {
       cursor?: string;
       filter?: components["schemas"]["domain.KeuskupanSearchFilter"];
+      limit?: number;
+      q?: string;
+    };
+    "domain.SearchKevikepanRequest": {
+      cursor?: string;
+      filter?: components["schemas"]["domain.KevikepanSearchFilter"];
+      limit?: number;
+      q?: string;
+    };
+    "domain.SearchKotaRequest": {
+      cursor?: string;
+      filter?: components["schemas"]["domain.KotaSearchFilter"];
       limit?: number;
       q?: string;
     };
@@ -2244,6 +2617,19 @@ export interface components {
       /** @enum {string} */
       visibility?: "public" | "private";
     };
+    "domain.UpdateKecamatanRequest": {
+      active?: boolean;
+      kode?: string;
+      kotaId?: string;
+      nama?: string;
+    };
+    "domain.UpdateKelurahanRequest": {
+      active?: boolean;
+      kecamatanId?: string;
+      kode?: string;
+      kodePos?: string;
+      nama?: string;
+    };
     "domain.UpdateKeuskupanRequest": {
       active?: boolean;
       alamat?: string;
@@ -2253,6 +2639,18 @@ export interface components {
       telepon?: string;
       uskup?: string;
       website?: string;
+    };
+    "domain.UpdateKevikepanRequest": {
+      active?: boolean;
+      keuskupanId?: string;
+      kode?: string;
+      nama?: string;
+      vikep?: string;
+    };
+    "domain.UpdateKotaRequest": {
+      active?: boolean;
+      kode?: string;
+      nama?: string;
     };
     "domain.UpdateLingkunganRequest": {
       active?: boolean;
@@ -2492,8 +2890,28 @@ export interface components {
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
+    "httpx.Envelope-array_domain_KecamatanResponse": {
+      data?: components["schemas"]["domain.KecamatanResponse"][];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-array_domain_KelurahanResponse": {
+      data?: components["schemas"]["domain.KelurahanResponse"][];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
     "httpx.Envelope-array_domain_KeuskupanResponse": {
       data?: components["schemas"]["domain.KeuskupanResponse"][];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-array_domain_KevikepanResponse": {
+      data?: components["schemas"]["domain.KevikepanResponse"][];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-array_domain_KotaResponse": {
+      data?: components["schemas"]["domain.KotaResponse"][];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -2612,8 +3030,28 @@ export interface components {
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
+    "httpx.Envelope-domain_KecamatanResponse": {
+      data?: components["schemas"]["domain.KecamatanResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_KelurahanResponse": {
+      data?: components["schemas"]["domain.KelurahanResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
     "httpx.Envelope-domain_KeuskupanResponse": {
       data?: components["schemas"]["domain.KeuskupanResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_KevikepanResponse": {
+      data?: components["schemas"]["domain.KevikepanResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_KotaResponse": {
+      data?: components["schemas"]["domain.KotaResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -6075,6 +6513,673 @@ export interface operations {
       };
     };
   };
+  createKecamatan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Kecamatan creation payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.CreateKecamatanRequest"];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_KecamatanResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  searchKecamatan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Search parameters */
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["domain.SearchKecamatanRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_KecamatanResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  getKecamatan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Kecamatan UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_KecamatanResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  deleteKecamatan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Kecamatan UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  updateKecamatan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Kecamatan UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Kecamatan update payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UpdateKecamatanRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_KecamatanResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  createKelurahan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Kelurahan creation payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.CreateKelurahanRequest"];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_KelurahanResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  searchKelurahan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Search parameters */
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["domain.SearchKelurahanRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_KelurahanResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  getKelurahan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Kelurahan UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_KelurahanResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  deleteKelurahan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Kelurahan UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  updateKelurahan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Kelurahan UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Kelurahan update payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UpdateKelurahanRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_KelurahanResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
   createKeuskupan: {
     parameters: {
       query?: never;
@@ -6337,6 +7442,664 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["httpx.Envelope-domain_KeuskupanResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  createKevikepan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Kevikepan creation payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.CreateKevikepanRequest"];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_KevikepanResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  searchKevikepan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Search parameters */
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["domain.SearchKevikepanRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_KevikepanResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  getKevikepan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Kevikepan UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_KevikepanResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  deleteKevikepan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Kevikepan UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  updateKevikepan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Kevikepan UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Kevikepan update payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UpdateKevikepanRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_KevikepanResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  createKota: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Kota creation payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.CreateKotaRequest"];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_KotaResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  searchKota: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Search parameters */
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["domain.SearchKotaRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_KotaResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  getKota: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Kota UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_KotaResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  deleteKota: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Kota UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  updateKota: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Kota UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Kota update payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UpdateKotaRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_KotaResponse"];
         };
       };
       /** @description Bad Request */
