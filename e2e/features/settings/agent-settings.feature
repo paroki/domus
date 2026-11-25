@@ -1,13 +1,13 @@
 Feature: Super Admin system settings for communication channels and LLM providers
 
   @paroki-admin
-  Scenario: Non-Super Admin sees restriction banner on /settings
-    When I open "/settings"
+  Scenario: Non-Super Admin sees restriction banner on /settings/system
+    When I open "/settings/system"
     Then I see the system settings forbidden banner
 
   @super-admin
   Scenario: Super Admin navigates launcher routes, configures channels, and syncs OpenAI models
-    When I open "/settings"
+    When I open "/settings/system"
     Then I see the system settings page
     When I open settings launcher "Telegram"
     Then I see channel groups "Telegram Bot" without raw agent keys

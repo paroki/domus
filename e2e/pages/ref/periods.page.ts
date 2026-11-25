@@ -90,6 +90,10 @@ export class PeriodsPage extends BasePage {
 
   async deletePeriod(name: string): Promise<void> {
     await this.page.getByRole("button", { name: `Hapus ${name}` }).click();
+    await this.page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Ya, Hapus" })
+      .click();
   }
 
   async expectPeriodVisible(

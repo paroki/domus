@@ -1,21 +1,9 @@
 import { BasePage } from "../base.page";
 
 export class WilayahPage extends BasePage {
-  private wilayahSection() {
-    return this.page.locator("section").filter({
-      has: this.page.getByRole("heading", { name: "Wilayah / Stasi" }),
-    });
-  }
-
-  private lingkunganSection() {
-    return this.page.locator("section").filter({
-      has: this.page.getByRole("heading", { name: "Lingkungan" }),
-    });
-  }
-
   async expectLoaded(): Promise<void> {
     await this.page
-      .getByRole("heading", { name: "Wilayah & Lingkungan" })
+      .getByRole("heading", { name: "Wilayah & Stasi" })
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
@@ -26,69 +14,56 @@ export class WilayahPage extends BasePage {
     coordinatorName?: string;
     coordinatorPhone?: string;
   }): Promise<void> {
-    const section = this.wilayahSection();
+    await this.goto("/settings/paroki/wilayah/new");
     if (input.jenis) {
-      await section.locator("form select").selectOption(input.jenis);
+      await this.page.locator("#wilayah-jenis").selectOption(input.jenis);
     }
-    await section.getByPlaceholder("Kode (mis. wil-01)").fill(input.code);
-    await section.getByPlaceholder("Nama wilayah / stasi").fill(input.name);
+    await this.page.locator("#wilayah-kode").fill(input.code);
+    await this.page.locator("#wilayah-nama").fill(input.name);
     if (input.coordinatorName) {
-      await section
-        .getByPlaceholder("Koordinator (opsional)")
+      await this.page
+        .locator("#wilayah-koordinator")
         .fill(input.coordinatorName);
     }
     if (input.coordinatorPhone) {
-      await section.getByPlaceholder("Telepon").fill(input.coordinatorPhone);
+      await this.page.locator("#wilayah-telp").fill(input.coordinatorPhone);
     }
-    await section.getByRole("button", { name: "Tambah Wilayah" }).click();
-  }
-
-  async editWilayah(
-    currentName: string,
-    input: { code?: string; name?: string; coordinatorName?: string },
-  ): Promise<void> {
-    const section = this.wilayahSection();
-    await section.getByRole("button", { name: `Ubah ${currentName}` }).click();
-    if (input.code !== undefined) {
-      await section.getByPlaceholder("Kode (mis. wil-01)").fill(input.code);
-    }
-    if (input.name !== undefined) {
-      await section.getByPlaceholder("Nama wilayah / stasi").fill(input.name);
-    }
-    if (input.coordinatorName !== undefined) {
-      await section
-        .getByPlaceholder("Koordinator (opsional)")
-        .fill(input.coordinatorName);
-    }
-    await section.getByRole("button", { name: "Simpan Perubahan" }).click();
-  }
-
-  async toggleWilayahActive(name: string): Promise<void> {
-    const row = this.wilayahSection()
-      .locator("div.divide-y > div")
-      .filter({ hasText: name });
-    await row.locator("button[title]").first().click();
+    await this.page.getByRole("button", { name: "Simpan Wilayah" }).click();
+    await this.page.waitForURL(/\/settings\/paroki\/wilayah$/, {
+      timeout: 10_000,
+    });
   }
 
   async deleteWilayah(name: string): Promise<void> {
-    await this.wilayahSection()
-      .getByRole("button", { name: `Hapus ${name}` })
+    await this.goto("/settings/paroki/wilayah");
+    const card = this.page
+      .locator("div.rounded-xl")
+      .filter({ hasText: name })
+      .first();
+    await card.getByRole("link", { name: "Ubah" }).click();
+    await this.page.getByRole("button", { name: "Hapus Wilayah" }).click();
+    await this.page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Ya, Hapus" })
       .click();
   }
 
   async expectWilayahVisible(name: string, code: string): Promise<void> {
-    const section = this.wilayahSection();
-    await section
-      .locator("div.divide-y > div")
+    await this.goto("/settings/paroki/wilayah");
+    await this.page
+      .locator("div.rounded-xl")
       .filter({ hasText: name })
       .filter({ hasText: code })
+      .first()
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
   async expectWilayahNotVisible(name: string): Promise<void> {
-    await this.wilayahSection()
-      .locator("div.divide-y > div")
-      .filter({ hasText: name })
+    await this.page.waitForURL(/\/settings\/paroki\/wilayah$/, {
+      timeout: 10_000,
+    });
+    await this.page
+      .getByText(name, { exact: true })
       .waitFor({ state: "detached", timeout: 10_000 });
   }
 
@@ -100,77 +75,61 @@ export class WilayahPage extends BasePage {
     headName?: string;
     headPhone?: string;
   }): Promise<void> {
-    const section = this.lingkunganSection();
+    await this.goto("/settings/paroki/lingkungan/new");
     if (input.wilayahName) {
-      const select = section.locator("form select");
+      const select = this.page.locator("#lingkungan-wilayah");
       await select
         .locator("option", { hasText: input.wilayahName })
         .waitFor({ state: "attached", timeout: 10_000 });
       await select.selectOption({ label: input.wilayahName });
     }
-    await section.getByPlaceholder("Kode (mis. ling-01)").fill(input.code);
-    await section.getByPlaceholder("Nama lingkungan").fill(input.name);
+    await this.page.locator("#lingkungan-kode").fill(input.code);
+    await this.page.locator("#lingkungan-nama").fill(input.name);
     if (input.patronSaint) {
-      await section
-        .getByPlaceholder("Santo/Santa Pelindung")
-        .fill(input.patronSaint);
+      await this.page.locator("#lingkungan-pelindung").fill(input.patronSaint);
     }
     if (input.headName) {
-      await section
-        .getByPlaceholder("Ketua lingkungan (opsional)")
-        .fill(input.headName);
+      await this.page.locator("#lingkungan-ketua").fill(input.headName);
     }
     if (input.headPhone) {
-      await section.getByPlaceholder("Telepon").fill(input.headPhone);
+      await this.page.locator("#lingkungan-telp").fill(input.headPhone);
     }
-    await section.getByRole("button", { name: "Tambah Lingkungan" }).click();
-  }
-
-  async editLingkungan(
-    currentName: string,
-    input: { code?: string; name?: string; headName?: string },
-  ): Promise<void> {
-    const section = this.lingkunganSection();
-    await section.getByRole("button", { name: `Ubah ${currentName}` }).click();
-    if (input.code !== undefined) {
-      await section.getByPlaceholder("Kode (mis. ling-01)").fill(input.code);
-    }
-    if (input.name !== undefined) {
-      await section.getByPlaceholder("Nama lingkungan").fill(input.name);
-    }
-    if (input.headName !== undefined) {
-      await section
-        .getByPlaceholder("Ketua lingkungan (opsional)")
-        .fill(input.headName);
-    }
-    await section.getByRole("button", { name: "Simpan Perubahan" }).click();
-  }
-
-  async toggleLingkunganActive(name: string): Promise<void> {
-    const row = this.lingkunganSection()
-      .locator("div.divide-y > div")
-      .filter({ hasText: name });
-    await row.locator("button[title]").first().click();
+    await this.page.getByRole("button", { name: "Simpan Lingkungan" }).click();
+    await this.page.waitForURL(/\/settings\/paroki\/lingkungan/, {
+      timeout: 10_000,
+    });
   }
 
   async deleteLingkungan(name: string): Promise<void> {
-    await this.lingkunganSection()
-      .getByRole("button", { name: `Hapus ${name}` })
+    await this.goto("/settings/paroki/lingkungan");
+    const card = this.page
+      .locator("div.rounded-xl")
+      .filter({ hasText: name })
+      .first();
+    await card.getByRole("link", { name: "Ubah" }).click();
+    await this.page.getByRole("button", { name: "Hapus Lingkungan" }).click();
+    await this.page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Ya, Hapus" })
       .click();
+    await this.page.waitForURL(/\/settings\/paroki\/lingkungan$/, {
+      timeout: 10_000,
+    });
   }
 
   async expectLingkunganVisible(name: string, code: string): Promise<void> {
-    await this.lingkunganSection()
-      .locator("div.divide-y > div")
+    await this.goto("/settings/paroki/lingkungan");
+    await this.page
+      .locator("div.rounded-xl")
       .filter({ hasText: name })
       .filter({ hasText: code })
+      .first()
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
   async expectLingkunganNotVisible(name: string): Promise<void> {
-    await this.lingkunganSection()
-      .locator("div.divide-y > div")
-      .filter({ hasText: name })
+    await this.page
+      .getByText(name, { exact: true })
       .waitFor({ state: "detached", timeout: 10_000 });
   }
 

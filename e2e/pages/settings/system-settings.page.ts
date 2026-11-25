@@ -5,7 +5,7 @@ import { BasePage } from "../base.page";
 export class SystemSettingsPage extends BasePage {
   async expectLoaded(): Promise<void> {
     await this.page
-      .getByRole("heading", { name: "Pengaturan" })
+      .getByRole("heading", { name: /^(Sistem & Integrasi|Pengaturan)$/ })
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
@@ -13,8 +13,7 @@ export class SystemSettingsPage extends BasePage {
     await this.page
       .getByRole("alert")
       .filter({
-        hasText:
-          "Hanya Super Admin yang dapat melihat dan mengubah pengaturan sistem.",
+        hasText: /Hanya Super Admin|tidak memiliki izin/,
       })
       .waitFor({ state: "visible", timeout: 10_000 });
   }

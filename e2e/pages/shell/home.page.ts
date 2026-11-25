@@ -7,7 +7,7 @@ export class HomePage extends BasePage {
       .getByRole("heading", { name: "Selamat datang di Domus" })
       .waitFor({ state: "visible", timeout: 10_000 });
 
-    const menus = ["Organisasi", "Kegiatan", "Referensi", "Pengguna"];
+    const menus = ["Organisasi", "Kegiatan", "Pengguna"];
     for (const label of menus) {
       await this.page
         .getByRole("link", { name: new RegExp(label) })

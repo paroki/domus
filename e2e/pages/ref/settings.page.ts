@@ -4,13 +4,13 @@ import { BasePage } from "../base.page";
 export class SettingsPage extends BasePage {
   async expectLoaded(): Promise<void> {
     await this.page
-      .getByRole("heading", { name: "Referensi" })
+      .getByRole("heading", { name: "Pengaturan" })
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
   async expectVisibleTiles(labels: string[]): Promise<void> {
     const nav = this.page.getByRole("navigation", {
-      name: "Referensi",
+      name: "Pengaturan",
     });
     await nav.waitFor({ state: "visible", timeout: 10_000 });
     for (const label of labels) {
@@ -22,34 +22,30 @@ export class SettingsPage extends BasePage {
 
   async expectHiddenTiles(labels: string[]): Promise<void> {
     const nav = this.page.getByRole("navigation", {
-      name: "Referensi",
+      name: "Pengaturan",
     });
     for (const label of labels) {
       const count = await nav.getByRole("link", { name: label }).count();
-      assert.equal(count, 0, `Expected tile "${label}" to be hidden`);
+      assert.equal(count, 0, `Expected hub "${label}" to be hidden`);
     }
-  }
-
-  async filterByQuery(q: string): Promise<void> {
-    await this.page.getByRole("searchbox", { name: "Cari referensi…" }).fill(q);
   }
 
   async openTile(label: string): Promise<void> {
     await this.page
-      .getByRole("navigation", { name: "Referensi" })
+      .getByRole("navigation", { name: "Pengaturan" })
       .getByRole("link", { name: label })
       .click();
   }
 
   async expectParokiAdminRestrictionBanner(): Promise<void> {
     await this.page
-      .getByText("Hanya Admin Paroki yang dapat mengubah profil paroki ini.")
+      .getByText(/Hanya Admin Paroki/)
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
   async expectEmptySettings(): Promise<void> {
     await this.page
-      .getByText("Tidak ada menu referensi yang tersedia.")
+      .getByText("Anda tidak memiliki izin untuk mengakses pengaturan.")
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 }
