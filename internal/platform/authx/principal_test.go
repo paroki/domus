@@ -24,16 +24,16 @@ func TestPrincipalMethods(t *testing.T) {
 	}
 	assert.Equal(t, "user:"+uid.String(), noTenant.Subject())
 	assert.False(t, noTenant.HasTenant())
-	assert.Empty(t, noTenant.ParishDomain())
+	assert.Empty(t, noTenant.ParokiDomain())
 
 	withTenant := authx.Principal{
 		UserID:   uid,
-		ParishID: pid,
-		Roles:    []string{"ref:parish-admin"},
+		ParokiID: pid,
+		Roles:    []string{"ref:paroki-admin"},
 		Channel:  "mcp",
 	}
 	assert.True(t, withTenant.HasTenant())
-	assert.Equal(t, "parish:"+pid.String(), withTenant.ParishDomain())
+	assert.Equal(t, "paroki:"+pid.String(), withTenant.ParokiDomain())
 }
 
 func TestPrincipalContext(t *testing.T) {
@@ -72,9 +72,9 @@ func TestRequireTenant(t *testing.T) {
 	require.ErrorIs(t, err, authx.ErrTenantRequired)
 
 	pid := uuid.Must(uuid.NewV7())
-	tenantCtx := authx.WithPrincipal(context.Background(), authx.Principal{UserID: uid, ParishID: pid})
+	tenantCtx := authx.WithPrincipal(context.Background(), authx.Principal{UserID: uid, ParokiID: pid})
 	p, err := authx.RequireTenant(tenantCtx)
 	require.NoError(t, err)
 	assert.Equal(t, uid, p.UserID)
-	assert.Equal(t, pid, p.ParishID)
+	assert.Equal(t, pid, p.ParokiID)
 }

@@ -174,7 +174,7 @@ func TestConnectInMemory_PrincipalPropagation(t *testing.T) {
 	pid := uuid.New()
 	ctx := authx.WithPrincipal(context.Background(), authx.Principal{
 		UserID:   uid,
-		ParishID: pid,
+		ParokiID: pid,
 	})
 
 	srv := mcpx.NewServer("test-inmem")

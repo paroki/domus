@@ -16,7 +16,7 @@ import (
 )
 
 // ResolveSession validates a raw session token, refreshes sliding expiry, and returns an authx.Principal.
-func (s *Service) ResolveSession(ctx context.Context, rawToken string, headerParishID uuid.UUID) (authx.Principal, error) {
+func (s *Service) ResolveSession(ctx context.Context, rawToken string, headerParokiID uuid.UUID) (authx.Principal, error) {
 	if rawToken == "" {
 		return authx.Principal{}, domain.ErrSessionInvalid
 	}
@@ -40,28 +40,28 @@ func (s *Service) ResolveSession(ctx context.Context, rawToken string, headerPar
 		return authx.Principal{}, domain.ErrUserDisabled
 	}
 
-	if headerParishID != uuid.Nil {
+	if headerParokiID != uuid.Nil {
 		isSuper, err := s.hasSuperAdminRole(u.ID)
 		if err != nil {
 			return authx.Principal{}, err
 		}
 		if !isSuper {
-			ok, err := s.repo.IsActiveParishMember(ctx, u.ID, headerParishID)
+			ok, err := s.repo.IsActiveParokiMember(ctx, u.ID, headerParokiID)
 			if err != nil {
 				return authx.Principal{}, err
 			}
 			if !ok {
-				return authx.Principal{}, errx.Forbidden("FORBIDDEN", "User is not a member of this parish.")
+				return authx.Principal{}, errx.Forbidden("FORBIDDEN", "User is not a member of this paroki.")
 			}
 		}
 	}
 
-	parishID := resolveParishID(headerParishID, sess.ActiveParishID, u.DefaultParishID)
+	parokiID := resolveParokiID(headerParokiID, sess.ActiveParokiID, u.DefaultParokiID)
 	if err := s.repo.RefreshSession(ctx, sess.ID, now, now.Add(s.cfg.SessionTTL)); err != nil {
 		return authx.Principal{}, err
 	}
 
-	roles, err := s.loadRoles(ctx, u.ID, parishID)
+	roles, err := s.loadRoles(ctx, u.ID, parokiID)
 	if err != nil {
 		return authx.Principal{}, err
 	}
@@ -71,14 +71,14 @@ func (s *Service) ResolveSession(ctx context.Context, rawToken string, headerPar
 		SessionID: sess.ID,
 		Email:     u.Email,
 		Name:      u.Name,
-		ParishID:  parishID,
+		ParokiID:  parokiID,
 		Roles:     roles,
 		Channel:   "web",
 	}, nil
 }
 
 // ResolveByChannel resolves a linked channel identity (e.g. telegram, whatsapp) into an authx.Principal.
-func (s *Service) ResolveByChannel(ctx context.Context, provider, subject string, overrideParishID uuid.UUID) (authx.Principal, error) {
+func (s *Service) ResolveByChannel(ctx context.Context, provider, subject string, overrideParokiID uuid.UUID) (authx.Principal, error) {
 	normSubject, err := normalizeChannelSubject(provider, subject)
 	if err != nil {
 		return authx.Principal{}, err
@@ -101,8 +101,8 @@ func (s *Service) ResolveByChannel(ctx context.Context, provider, subject string
 		return authx.Principal{}, err
 	}
 
-	parishID := resolveParishID(overrideParishID, acc.ActiveParishID, u.DefaultParishID)
-	roles, err := s.loadRoles(ctx, u.ID, parishID)
+	parokiID := resolveParokiID(overrideParokiID, acc.ActiveParokiID, u.DefaultParokiID)
+	roles, err := s.loadRoles(ctx, u.ID, parokiID)
 	if err != nil {
 		return authx.Principal{}, err
 	}
@@ -111,14 +111,14 @@ func (s *Service) ResolveByChannel(ctx context.Context, provider, subject string
 		UserID:   u.ID,
 		Email:    u.Email,
 		Name:     u.Name,
-		ParishID: parishID,
+		ParokiID: parokiID,
 		Roles:    roles,
 		Channel:  provider,
 	}, nil
 }
 
-// SwitchChannelParish persists the active parish for a linked channel account (and initializes user default if nil).
-func (s *Service) SwitchChannelParish(ctx context.Context, provider, subject string, parishID uuid.UUID) error {
+// SwitchChannelParoki persists the active paroki for a linked channel account (and initializes user default if nil).
+func (s *Service) SwitchChannelParoki(ctx context.Context, provider, subject string, parokiID uuid.UUID) error {
 	normSubject, err := normalizeChannelSubject(provider, subject)
 	if err != nil {
 		return err
@@ -132,10 +132,10 @@ func (s *Service) SwitchChannelParish(ctx context.Context, provider, subject str
 	}
 
 	return s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
-		if err := txRepo.UpdateAccountActiveParish(ctx, acc.ID, parishID); err != nil {
+		if err := txRepo.UpdateAccountActiveParoki(ctx, acc.ID, parokiID); err != nil {
 			return err
 		}
-		return txRepo.SetUserDefaultParishIfNil(ctx, acc.UserID, parishID)
+		return txRepo.SetUserDefaultParokiIfNil(ctx, acc.UserID, parokiID)
 	})
 }
 
@@ -191,27 +191,27 @@ func (s *Service) hasSuperAdminRole(userID uuid.UUID) (bool, error) {
 	return s.enforcer.HasRoleInDomain(authz.UserSubject(userID), domain.RoleSuperAdmin, authz.DomainGlobal)
 }
 
-func (s *Service) guardParishAccess(ctx context.Context, userID, parishID uuid.UUID) error {
+func (s *Service) guardParokiAccess(ctx context.Context, userID, parokiID uuid.UUID) error {
 	isSuper, err := s.hasSuperAdminRole(userID)
 	if err != nil {
 		return err
 	}
 	if isSuper {
-		ok, err := s.repo.IsActiveParish(ctx, parishID)
+		ok, err := s.repo.IsActiveParoki(ctx, parokiID)
 		if err != nil {
 			return err
 		}
 		if !ok {
-			return errx.Forbidden("FORBIDDEN", "Parish not found or inactive.")
+			return errx.Forbidden("FORBIDDEN", "Paroki not found or inactive.")
 		}
 		return nil
 	}
-	ok, err := s.repo.IsActiveParishMember(ctx, userID, parishID)
+	ok, err := s.repo.IsActiveParokiMember(ctx, userID, parokiID)
 	if err != nil {
 		return err
 	}
 	if !ok {
-		return errx.Forbidden("FORBIDDEN", "User is not a member of this parish.")
+		return errx.Forbidden("FORBIDDEN", "User is not a member of this paroki.")
 	}
 	return nil
 }
@@ -223,24 +223,24 @@ func (s *Service) loadGlobalRoles(userID uuid.UUID) ([]string, error) {
 	return s.enforcer.RolesForUserInDomain(authz.UserSubject(userID), authz.DomainGlobal)
 }
 
-func (s *Service) loadRoles(ctx context.Context, userID, parishID uuid.UUID) ([]string, error) {
+func (s *Service) loadRoles(ctx context.Context, userID, parokiID uuid.UUID) ([]string, error) {
 	globalRoles, err := s.loadGlobalRoles(userID)
 	if err != nil {
 		return nil, err
 	}
-	if s.enforcer == nil || parishID == uuid.Nil {
+	if s.enforcer == nil || parokiID == uuid.Nil {
 		return globalRoles, nil
 	}
-	parishRoles, err := s.enforcer.RolesForUserInDomain(authz.UserSubject(userID), authz.ParishDomain(parishID))
+	parokiRoles, err := s.enforcer.RolesForUserInDomain(authz.UserSubject(userID), authz.ParokiDomain(parokiID))
 	if err != nil {
 		return nil, err
 	}
-	isOrgAdmin, err := s.repo.IsActiveOrgAdminInParish(ctx, userID, parishID)
+	isOrgAdmin, err := s.repo.IsActiveOrgAdminInParoki(ctx, userID, parokiID)
 	if err != nil {
 		return nil, err
 	}
-	seen := make(map[string]struct{}, len(globalRoles)+len(parishRoles)+1)
-	merged := make([]string, 0, len(globalRoles)+len(parishRoles)+1)
+	seen := make(map[string]struct{}, len(globalRoles)+len(parokiRoles)+1)
+	merged := make([]string, 0, len(globalRoles)+len(parokiRoles)+1)
 	appendRole := func(r string) {
 		if _, ok := seen[r]; !ok {
 			seen[r] = struct{}{}
@@ -250,7 +250,7 @@ func (s *Service) loadRoles(ctx context.Context, userID, parishID uuid.UUID) ([]
 	for _, r := range globalRoles {
 		appendRole(r)
 	}
-	for _, r := range parishRoles {
+	for _, r := range parokiRoles {
 		appendRole(r)
 	}
 	if isOrgAdmin {
@@ -267,7 +267,7 @@ func normalizeChannelSubject(provider, rawSubject string) (string, error) {
 	return subject, nil
 }
 
-func resolveParishID(override uuid.UUID, scoped, fallback *uuid.UUID) uuid.UUID {
+func resolveParokiID(override uuid.UUID, scoped, fallback *uuid.UUID) uuid.UUID {
 	if override != uuid.Nil {
 		return override
 	}

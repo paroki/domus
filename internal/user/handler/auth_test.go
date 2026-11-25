@@ -411,9 +411,9 @@ func (s *AuthHandlerSuite) TestOTP_RequestVerifyAndLogoutFlow() {
 	s.Equal("USER_DISABLED", s.GetErrorResponse().Error.Code)
 
 	// Active user -> 200 and hashed OTP stored
-	parishID := uuid.New()
+	parokiID := uuid.New()
 	u := s.createTestUser("alice@paroki.org", "Alice", entuser.StatusActive)
-	u, err := s.client.User.UpdateOneID(u.ID).SetDefaultParishID(parishID).Save(context.Background())
+	u, err := s.client.User.UpdateOneID(u.ID).SetDefaultParokiID(parokiID).Save(context.Background())
 	s.Require().NoError(err)
 	err = s.enforcer.AssignRole(context.Background(), authz.UserSubject(u.ID), user.RoleUser, authz.DomainGlobal)
 	s.Require().NoError(err)
@@ -462,8 +462,8 @@ func (s *AuthHandlerSuite) TestOTP_RequestVerifyAndLogoutFlow() {
 	s.Equal(u.ID, sessionRes.Data.User.ID)
 	s.NotNil(sessionRes.Data.User.LastLoginAt)
 	s.Contains(sessionRes.Data.User.Roles, user.RoleUser)
-	s.Require().NotNil(sessionRes.Data.User.ActiveParishID)
-	s.Equal(parishID, *sessionRes.Data.User.ActiveParishID)
+	s.Require().NotNil(sessionRes.Data.User.ActiveParokiID)
+	s.Equal(parokiID, *sessionRes.Data.User.ActiveParokiID)
 
 	var sessionCookie *http.Cookie
 	for _, c := range s.GetHttpResponse().Cookies() {

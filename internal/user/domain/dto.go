@@ -50,8 +50,8 @@ type UserResponse struct {
 	Status          string                 `json:"status"`
 	Onboarded       bool                   `json:"onboarded"`
 	LinkedProviders []string               `json:"linkedProviders,omitempty"`
-	ActiveParishID  *uuid.UUID             `json:"activeParishId,omitempty"`
-	DefaultParishID *uuid.UUID             `json:"defaultParishId,omitempty"`
+	ActiveParokiID  *uuid.UUID             `json:"activeParokiId,omitempty"`
+	DefaultParokiID *uuid.UUID             `json:"defaultParokiId,omitempty"`
 	Roles           []string               `json:"roles,omitempty"`
 	RoleDetails     []authz.RoleDescriptor `json:"roleDetails,omitempty"`
 	LastLoginAt     *time.Time             `json:"lastLoginAt,omitempty"`
@@ -62,7 +62,7 @@ type UserResponse struct {
 // AuthSessionResponse is returned upon successful OTP verification.
 type AuthSessionResponse struct {
 	User           UserResponse `json:"user"`
-	ActiveParishID *uuid.UUID   `json:"activeParishId,omitempty"`
+	ActiveParokiID *uuid.UUID   `json:"activeParokiId,omitempty"`
 	ExpiresAt      time.Time    `json:"expiresAt"`
 }
 
@@ -73,7 +73,7 @@ type UpdateMeRequest struct {
 	Gender          *string    `json:"gender,omitempty"`
 	BirthDate       *string    `json:"birthDate,omitempty"`
 	AvatarURL       *string    `json:"avatarUrl,omitempty" validate:"omitempty,url"`
-	DefaultParishID *uuid.UUID `json:"defaultParishId,omitempty"`
+	DefaultParokiID *uuid.UUID `json:"defaultParokiId,omitempty"`
 	Onboarded       *bool      `json:"onboarded,omitempty"`
 }
 
@@ -97,9 +97,9 @@ type TelegramLinkTokenResponse struct {
 	ExpiresInSeconds int    `json:"expiresInSeconds"`
 }
 
-// SwitchSessionParishRequest updates the active parish on the current web session.
-type SwitchSessionParishRequest struct {
-	ActiveParishID uuid.UUID `json:"activeParishId" validate:"required"`
+// SwitchSessionParokiRequest updates the active paroki on the current web session.
+type SwitchSessionParokiRequest struct {
+	ActiveParokiID uuid.UUID `json:"activeParokiId" validate:"required"`
 }
 
 // UserSessionResponse is the public API representation of an active UserSession (never exposes token_hash).
@@ -107,7 +107,7 @@ type UserSessionResponse struct {
 	ID             uuid.UUID  `json:"id"`
 	UserAgent      string     `json:"userAgent"`
 	IPAddress      string     `json:"ipAddress"`
-	ActiveParishID *uuid.UUID `json:"activeParishId,omitempty"`
+	ActiveParokiID *uuid.UUID `json:"activeParokiId,omitempty"`
 	IsCurrent      bool       `json:"isCurrent"`
 	LastActiveAt   time.Time  `json:"lastActiveAt"`
 	ExpiresAt      time.Time  `json:"expiresAt"`
@@ -128,7 +128,7 @@ type UserAccountResponse struct {
 	Email          *string    `json:"email,omitempty"`
 	DisplayName    *string    `json:"displayName,omitempty"`
 	AvatarURL      *string    `json:"avatarUrl,omitempty"`
-	ActiveParishID *uuid.UUID `json:"activeParishId,omitempty"`
+	ActiveParokiID *uuid.UUID `json:"activeParokiId,omitempty"`
 	LastUsedAt     *time.Time `json:"lastUsedAt,omitempty"`
 	CreatedAt      time.Time  `json:"createdAt"`
 }

@@ -109,10 +109,10 @@ func WithOAuthProvider(p domain.OAuthProvider) Option {
 	}
 }
 
-// ParishMemberItem is a minimal parish member record returned by ParishMemberDirectory.
-type ParishMemberItem struct {
+// ParokiMemberItem is a minimal paroki member record returned by ParokiMemberDirectory.
+type ParokiMemberItem struct {
 	ID       string  `json:"id"`
-	ParishID string  `json:"parishId"`
+	ParokiID string  `json:"parokiId"`
 	UserID   string  `json:"userId"`
 	Email    string  `json:"email"`
 	Name     string  `json:"name"`
@@ -120,9 +120,9 @@ type ParishMemberItem struct {
 	Role     string  `json:"role"`
 }
 
-// ParishMemberDirectory lists members of an active parish for authorized MCP callers.
-type ParishMemberDirectory interface {
-	ListParishMembers(ctx context.Context, p Principal, parishID uuid.UUID, query, role string, limit int) ([]ParishMemberItem, error)
+// ParokiMemberDirectory lists members of an active paroki for authorized MCP callers.
+type ParokiMemberDirectory interface {
+	ListParokiMembers(ctx context.Context, p Principal, parokiID uuid.UUID, query, role string, limit int) ([]ParokiMemberItem, error)
 }
 
 // Feature wires the user and authentication feature.
@@ -131,7 +131,7 @@ type Feature struct {
 	handler         *handler.Handler
 	enforcer        *authz.Enforcer
 	compositeSender *service.CompositeOTPSender
-	parishMembers   ParishMemberDirectory
+	parokiMembers   ParokiMemberDirectory
 	otpTTL          time.Duration
 	cookieName      string
 	clientMu        sync.RWMutex
@@ -139,9 +139,9 @@ type Feature struct {
 	gowaClient      *gowa.Client
 }
 
-// SetParishMemberDirectory wires the ParishMemberDirectory used by user_list_parish_members MCP tool.
-func (f *Feature) SetParishMemberDirectory(d ParishMemberDirectory) {
-	f.parishMembers = d
+// SetParokiMemberDirectory wires the ParokiMemberDirectory used by user_list_paroki_members MCP tool.
+func (f *Feature) SetParokiMemberDirectory(d ParokiMemberDirectory) {
+	f.parokiMembers = d
 }
 
 // New constructs the user Feature with Ent persistence, Casbin enforcer, config, and options.
@@ -365,16 +365,16 @@ func (f *Feature) AuthenticateMiddleware() fiber.Handler {
 			return c.Next()
 		}
 
-		var headerParishID uuid.UUID
-		if rawParish := strings.TrimSpace(c.Get("X-Parish-Id")); rawParish != "" {
-			parsed, err := uuid.Parse(rawParish)
+		var headerParokiID uuid.UUID
+		if rawParoki := strings.TrimSpace(c.Get("X-Paroki-Id")); rawParoki != "" {
+			parsed, err := uuid.Parse(rawParoki)
 			if err != nil {
-				return httpx.BadRequest("Invalid X-Parish-Id header.")
+				return httpx.BadRequest("Invalid X-Paroki-Id header.")
 			}
-			headerParishID = parsed
+			headerParokiID = parsed
 		}
 
-		p, err := f.service.ResolveSession(c.Context(), token, headerParishID)
+		p, err := f.service.ResolveSession(c.Context(), token, headerParokiID)
 		if err != nil {
 			if errors.Is(err, domain.ErrUserDisabled) {
 				return err
@@ -422,15 +422,15 @@ func (f *Feature) PrincipalResolver() mcpx.PrincipalResolver {
 		if token == "" {
 			return authx.Principal{}, false
 		}
-		var headerParishID uuid.UUID
-		if rawParish := strings.TrimSpace(c.Get("X-Parish-Id")); rawParish != "" {
-			parsed, err := uuid.Parse(rawParish)
+		var headerParokiID uuid.UUID
+		if rawParoki := strings.TrimSpace(c.Get("X-Paroki-Id")); rawParoki != "" {
+			parsed, err := uuid.Parse(rawParoki)
 			if err != nil {
 				return authx.Principal{}, false
 			}
-			headerParishID = parsed
+			headerParokiID = parsed
 		}
-		p, err := f.service.ResolveSession(c.Context(), token, headerParishID)
+		p, err := f.service.ResolveSession(c.Context(), token, headerParokiID)
 		if err != nil {
 			return authx.Principal{}, false
 		}
@@ -445,13 +445,13 @@ func (f *Feature) RegisterOAuthProvider(p domain.OAuthProvider) {
 }
 
 // ResolveByChannel resolves a linked messaging/bot channel identity into an authenticated Principal.
-func (f *Feature) ResolveByChannel(ctx context.Context, provider, subject string, overrideParishID uuid.UUID) (Principal, error) {
-	return f.service.ResolveByChannel(ctx, provider, subject, overrideParishID)
+func (f *Feature) ResolveByChannel(ctx context.Context, provider, subject string, overrideParokiID uuid.UUID) (Principal, error) {
+	return f.service.ResolveByChannel(ctx, provider, subject, overrideParokiID)
 }
 
-// SwitchChannelParish updates the active parish for a linked channel identity.
-func (f *Feature) SwitchChannelParish(ctx context.Context, provider, subject string, parishID uuid.UUID) error {
-	return f.service.SwitchChannelParish(ctx, provider, subject, parishID)
+// SwitchChannelParoki updates the active paroki for a linked channel identity.
+func (f *Feature) SwitchChannelParoki(ctx context.Context, provider, subject string, parokiID uuid.UUID) error {
+	return f.service.SwitchChannelParoki(ctx, provider, subject, parokiID)
 }
 
 // EnsureUser finds or creates a user for invite-based onboarding and links the provider account.
@@ -467,12 +467,12 @@ func (f *Feature) SetInviteJoiner(j InviteJoiner) {
 	f.service.SetInviteJoiner(j)
 }
 
-// SwitchSessionParish updates the active parish on sessionID for userID.
-func (f *Feature) SwitchSessionParish(ctx context.Context, userID, sessionID, parishID uuid.UUID) error {
-	return f.service.SwitchSessionParish(ctx, authx.Principal{
+// SwitchSessionParoki updates the active paroki on sessionID for userID.
+func (f *Feature) SwitchSessionParoki(ctx context.Context, userID, sessionID, parokiID uuid.UUID) error {
+	return f.service.SwitchSessionParoki(ctx, authx.Principal{
 		UserID:    userID,
 		SessionID: sessionID,
-	}, parishID)
+	}, parokiID)
 }
 
 // CompleteTelegramLink consumes a Telegram deep-link token and links chatID to the owning user.

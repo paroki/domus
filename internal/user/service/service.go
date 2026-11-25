@@ -87,7 +87,7 @@ func (s *MailOTPSender) SendOTP(ctx context.Context, channel, target, code strin
 // InviteJoiner validates and redeems organization invite codes during guest auth onboarding.
 type InviteJoiner interface {
 	ValidateInviteCode(ctx context.Context, code string) error
-	RedeemInviteForUser(ctx context.Context, code string, userID, sessionID uuid.UUID) (parishID uuid.UUID, err error)
+	RedeemInviteForUser(ctx context.Context, code string, userID, sessionID uuid.UUID) (parokiID uuid.UUID, err error)
 }
 
 // Service implements user identity, OTP, OAuth2, and session business logic.
@@ -245,24 +245,24 @@ func (s *Service) createSessionWithID(ctx context.Context, r *repo.Repository, u
 		return "", uuid.Nil, nil, err
 	}
 	expiresAt := time.Now().UTC().Add(s.cfg.SessionTTL)
-	sess, err := r.CreateSession(ctx, u.ID, sha256Hex(rawToken), userAgent, ipAddress, u.DefaultParishID, expiresAt)
+	sess, err := r.CreateSession(ctx, u.ID, sha256Hex(rawToken), userAgent, ipAddress, u.DefaultParokiID, expiresAt)
 	if err != nil {
 		return "", uuid.Nil, nil, err
 	}
-	resp, err := s.buildAuthSessionResponse(ctx, r, u, u.DefaultParishID, expiresAt)
+	resp, err := s.buildAuthSessionResponse(ctx, r, u, u.DefaultParokiID, expiresAt)
 	if err != nil {
 		return "", uuid.Nil, nil, err
 	}
 	return rawToken, sess.ID, resp, nil
 }
 
-func (s *Service) buildAuthSessionResponse(ctx context.Context, r *repo.Repository, u *ent.User, parishIDPtr *uuid.UUID, expiresAt time.Time) (*domain.AuthSessionResponse, error) {
+func (s *Service) buildAuthSessionResponse(ctx context.Context, r *repo.Repository, u *ent.User, parokiIDPtr *uuid.UUID, expiresAt time.Time) (*domain.AuthSessionResponse, error) {
 	userResp := toUserResponse(u)
-	var activeParishID uuid.UUID
-	if parishIDPtr != nil {
-		activeParishID = *parishIDPtr
+	var activeParokiID uuid.UUID
+	if parokiIDPtr != nil {
+		activeParokiID = *parokiIDPtr
 	}
-	roles, err := s.loadRoles(ctx, u.ID, activeParishID)
+	roles, err := s.loadRoles(ctx, u.ID, activeParokiID)
 	if err != nil {
 		return nil, err
 	}
@@ -273,10 +273,10 @@ func (s *Service) buildAuthSessionResponse(ctx context.Context, r *repo.Reposito
 	userResp.Roles = roles
 	userResp.RoleDetails = s.describeRoles(roles)
 	userResp.LinkedProviders = providers
-	userResp.ActiveParishID = parishIDPtr
+	userResp.ActiveParokiID = parokiIDPtr
 	return &domain.AuthSessionResponse{
 		User:           userResp,
-		ActiveParishID: parishIDPtr,
+		ActiveParokiID: parokiIDPtr,
 		ExpiresAt:      expiresAt,
 	}, nil
 }
@@ -342,7 +342,7 @@ func toUserResponse(u *ent.User) domain.UserResponse {
 		AvatarURL:       u.AvatarURL,
 		Status:          string(u.Status),
 		Onboarded:       u.Onboarded,
-		DefaultParishID: u.DefaultParishID,
+		DefaultParokiID: u.DefaultParokiID,
 		LastLoginAt:     u.LastLoginAt,
 		CreatedAt:       u.CreatedAt,
 		UpdatedAt:       u.UpdatedAt,

@@ -11,7 +11,7 @@ import (
 // GetMe returns the authenticated user's profile.
 //
 //	@Summary		Get current user profile
-//	@Description	Returns the authenticated user's profile, active parish, and global roles.
+//	@Description	Returns the authenticated user's profile, active paroki, and global roles.
 //	@ID				getMe
 //	@Tags			Me
 //	@Produce		json
@@ -33,7 +33,7 @@ func (h *Handler) GetMe(c fiber.Ctx) error {
 // UpdateMe updates the authenticated user's profile fields.
 //
 //	@Summary		Update current user profile
-//	@Description	Updates name, phone (normalized to E.164), gender, birthDate, avatarUrl, defaultParishId, or onboarded status.
+//	@Description	Updates name, phone (normalized to E.164), gender, birthDate, avatarUrl, defaultParokiId, or onboarded status.
 //	@ID				updateMe
 //	@Tags			Me
 //	@Accept			json
@@ -60,31 +60,31 @@ func (h *Handler) UpdateMe(c fiber.Ctx) error {
 	return httpx.OK(c, res)
 }
 
-// SwitchSessionParish updates the active parish for the current browser session.
+// SwitchSessionParoki updates the active paroki for the current browser session.
 //
-//	@Summary		Switch active session parish
-//	@Description	Updates activeParishId on the current session and initializes user defaultParishId if unset.
-//	@ID				switchMeSessionParish
+//	@Summary		Switch active session paroki
+//	@Description	Updates activeParokiId on the current session and initializes user defaultParokiId if unset.
+//	@ID				switchMeSessionParoki
 //	@Tags			Me
 //	@Accept			json
 //	@Produce		json
-//	@Param			body	body		domain.SwitchSessionParishRequest	true	"Active parish payload"
+//	@Param			body	body		domain.SwitchSessionParokiRequest	true	"Active paroki payload"
 //	@Success		204
 //	@Failure		400	{object}	httpx.Envelope[any]
 //	@Failure		401	{object}	httpx.Envelope[any]
 //	@Failure		404	{object}	httpx.Envelope[any]
 //	@Failure		422	{object}	httpx.Envelope[any]
 //	@Router			/me/session [patch]
-func (h *Handler) SwitchSessionParish(c fiber.Ctx) error {
+func (h *Handler) SwitchSessionParoki(c fiber.Ctx) error {
 	p, ok := authx.FromContext(c.Context())
 	if !ok {
 		return httpx.Unauthorized("Authentication is required.")
 	}
-	var req domain.SwitchSessionParishRequest
+	var req domain.SwitchSessionParokiRequest
 	if err := decodeStrictJSON(c, &req); err != nil {
 		return err
 	}
-	if err := h.service.SwitchSessionParish(c.Context(), p, req.ActiveParishID); err != nil {
+	if err := h.service.SwitchSessionParoki(c.Context(), p, req.ActiveParokiID); err != nil {
 		return err
 	}
 	return httpx.NoContent(c)

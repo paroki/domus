@@ -19,19 +19,19 @@ import (
 type sampleFeature struct{}
 
 func (sampleFeature) RegisterPermissions(ctx context.Context, e *authz.Enforcer) error {
-	parishAdmin := authz.Role("ref", "parish-admin")
+	parokiAdmin := authz.Role("ref", "paroki-admin")
 	orgAdmin := authz.Role("org", "admin")
 	orgMember := authz.Role("org", "member")
 
-	parishObj := authz.Permission("ref", "parishes")
+	parokiObj := authz.Permission("ref", "paroki")
 	eventObj := authz.Permission("org", "events")
 
 	for _, p := range []struct {
 		role, dom, obj string
 		act            authz.Action
 	}{
-		{parishAdmin, authz.DomainGlobal, parishObj, authz.ActionWrite},
-		{parishAdmin, authz.DomainGlobal, eventObj, authz.ActionWrite},
+		{parokiAdmin, authz.DomainGlobal, parokiObj, authz.ActionWrite},
+		{parokiAdmin, authz.DomainGlobal, eventObj, authz.ActionWrite},
 		{orgAdmin, authz.DomainGlobal, eventObj, authz.ActionWrite},
 		{orgMember, authz.DomainGlobal, eventObj, authz.ActionRead},
 	} {
@@ -45,9 +45,9 @@ func (sampleFeature) RegisterPermissions(ctx context.Context, e *authz.Enforcer)
 func TestNamingHelpers(t *testing.T) {
 	id := uuid.Must(uuid.NewV7())
 	assert.Equal(t, "user:"+id.String(), authz.UserSubject(id))
-	assert.Equal(t, "parish:"+id.String(), authz.ParishDomain(id))
+	assert.Equal(t, "paroki:"+id.String(), authz.ParokiDomain(id))
 	assert.Equal(t, "org:"+id.String(), authz.OrgDomain(id))
-	assert.Equal(t, "org:parish-admin", authz.Role("org", "parish-admin"))
+	assert.Equal(t, "org:paroki-admin", authz.Role("org", "paroki-admin"))
 	assert.Equal(t, "user:profile_read", authz.Permission("user", "profile_read"))
 
 	assert.Panics(t, func() { authz.Role("Org", "admin") })
@@ -69,13 +69,13 @@ func TestAuthzLeastPrivilegeAndPersistence(t *testing.T) {
 	bob := authz.UserSubject(uuid.Must(uuid.NewV7()))
 	carol := authz.UserSubject(uuid.Must(uuid.NewV7()))
 
-	parishA := uuid.Must(uuid.NewV7())
-	parishB := uuid.Must(uuid.NewV7())
+	parokiA := uuid.Must(uuid.NewV7())
+	parokiB := uuid.Must(uuid.NewV7())
 	orgX := uuid.Must(uuid.NewV7())
 
 	// Assign roles directly in their explicit domains.
 	require.NoError(t, enforcer.AssignRole(ctx, superAdmin, "user:super-admin", authz.DomainGlobal))
-	require.NoError(t, enforcer.AssignRole(ctx, alice, authz.Role("ref", "parish-admin"), authz.ParishDomain(parishA)))
+	require.NoError(t, enforcer.AssignRole(ctx, alice, authz.Role("ref", "paroki-admin"), authz.ParokiDomain(parokiA)))
 	require.NoError(t, enforcer.AssignRole(ctx, bob, authz.Role("org", "admin"), authz.OrgDomain(orgX)))
 	require.NoError(t, enforcer.AssignRole(ctx, carol, authz.Role("org", "member"), authz.OrgDomain(orgX)))
 
@@ -88,16 +88,16 @@ func TestAuthzLeastPrivilegeAndPersistence(t *testing.T) {
 	require.NoError(t, err)
 	assert.False(t, ok)
 
-	// Parish Admin of parishA is authorized on parishA, denied on parishB and unlinked orgX.
-	ok, err = enforcer.Enforce(alice, authz.ParishDomain(parishA), "ref:parishes", authz.ActionWrite)
+	// Paroki Admin of parokiA is authorized on parokiA, denied on parokiB and unlinked orgX.
+	ok, err = enforcer.Enforce(alice, authz.ParokiDomain(parokiA), "ref:paroki", authz.ActionWrite)
 	require.NoError(t, err)
 	assert.True(t, ok)
 
-	ok, err = enforcer.Enforce(alice, authz.ParishDomain(parishB), "ref:parishes", authz.ActionWrite)
+	ok, err = enforcer.Enforce(alice, authz.ParokiDomain(parokiB), "ref:paroki", authz.ActionWrite)
 	require.NoError(t, err)
 	assert.False(t, ok)
 
-	// No implicit parish:<id> -> org:<id> domain inheritance.
+	// No implicit paroki:<id> -> org:<id> domain inheritance.
 	ok, err = enforcer.Enforce(alice, authz.OrgDomain(orgX), "org:events", authz.ActionWrite)
 	require.NoError(t, err)
 	assert.False(t, ok)
@@ -120,7 +120,7 @@ func TestAuthzLeastPrivilegeAndPersistence(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, []string{authz.Role("org", "admin")}, roles)
 
-	emptyRoles, err := enforcer.RolesForUserInDomain(bob, authz.ParishDomain(parishB))
+	emptyRoles, err := enforcer.RolesForUserInDomain(bob, authz.ParokiDomain(parokiB))
 	require.NoError(t, err)
 	assert.NotNil(t, emptyRoles)
 	assert.Empty(t, emptyRoles)
@@ -129,7 +129,7 @@ func TestAuthzLeastPrivilegeAndPersistence(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, []string{carol}, users)
 
-	emptyUsers, err := enforcer.UsersForRoleInDomain(authz.Role("org", "member"), authz.ParishDomain(parishB))
+	emptyUsers, err := enforcer.UsersForRoleInDomain(authz.Role("org", "member"), authz.ParokiDomain(parokiB))
 	require.NoError(t, err)
 	assert.NotNil(t, emptyUsers)
 	assert.Empty(t, emptyUsers)
@@ -148,7 +148,7 @@ func TestAuthzLeastPrivilegeAndPersistence(t *testing.T) {
 	reloaded, err := authz.NewEnforcer(client)
 	require.NoError(t, err)
 
-	ok, err = reloaded.Enforce(alice, authz.ParishDomain(parishA), "ref:parishes", authz.ActionWrite)
+	ok, err = reloaded.Enforce(alice, authz.ParokiDomain(parokiA), "ref:paroki", authz.ActionWrite)
 	require.NoError(t, err)
 	assert.True(t, ok)
 
@@ -177,14 +177,14 @@ func TestRequireMiddleware(t *testing.T) {
 	require.NoError(t, err)
 
 	userID := uuid.Must(uuid.NewV7())
-	parishID := uuid.Must(uuid.NewV7())
-	otherParishID := uuid.Must(uuid.NewV7())
+	parokiID := uuid.Must(uuid.NewV7())
+	otherParokiID := uuid.Must(uuid.NewV7())
 
 	require.NoError(t, e.AddPermissionForRole(ctx, "user:global-reader", authz.DomainGlobal, "user:users", authz.ActionRead))
-	require.NoError(t, e.AddPermissionForRole(ctx, "ref:parish-admin", authz.DomainGlobal, "ref:parishes", authz.ActionWrite))
+	require.NoError(t, e.AddPermissionForRole(ctx, "ref:paroki-admin", authz.DomainGlobal, "ref:paroki", authz.ActionWrite))
 
 	require.NoError(t, e.AssignRole(ctx, authz.UserSubject(userID), "user:global-reader", authz.DomainGlobal))
-	require.NoError(t, e.AssignRole(ctx, authz.UserSubject(userID), "ref:parish-admin", authz.ParishDomain(parishID)))
+	require.NoError(t, e.AssignRole(ctx, authz.UserSubject(userID), "ref:paroki-admin", authz.ParokiDomain(parokiID)))
 
 	app := fiber.New(fiber.Config{
 		ErrorHandler: httpx.ErrorHandler(nil),
@@ -205,12 +205,12 @@ func TestRequireMiddleware(t *testing.T) {
 	app.Post("/users", e.Require("user:users", authz.ActionWrite), func(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusOK)
 	})
-	app.Post("/parishes/:id", e.Require("ref:parishes", authz.ActionWrite, func(c fiber.Ctx) (string, error) {
+	app.Post("/paroki/:id", e.Require("ref:paroki", authz.ActionWrite, func(c fiber.Ctx) (string, error) {
 		id, err := uuid.Parse(c.Params("id"))
 		if err != nil {
-			return "", httpx.BadRequest("invalid parish id")
+			return "", httpx.BadRequest("invalid paroki id")
 		}
-		return authz.ParishDomain(id), nil
+		return authz.ParokiDomain(id), nil
 	}), func(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusOK)
 	})
@@ -235,22 +235,22 @@ func TestRequireMiddleware(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, fiber.StatusForbidden, resp.StatusCode)
 
-	// 4. Custom domFn allowed parish -> 200
-	req = httptest.NewRequest(http.MethodPost, "/parishes/"+parishID.String(), nil)
+	// 4. Custom domFn allowed paroki -> 200
+	req = httptest.NewRequest(http.MethodPost, "/paroki/"+parokiID.String(), nil)
 	req.Header.Set("X-User-ID", userID.String())
 	resp, err = app.Test(req)
 	require.NoError(t, err)
 	assert.Equal(t, fiber.StatusOK, resp.StatusCode)
 
-	// 5. Custom domFn denied parish -> 403
-	req = httptest.NewRequest(http.MethodPost, "/parishes/"+otherParishID.String(), nil)
+	// 5. Custom domFn denied paroki -> 403
+	req = httptest.NewRequest(http.MethodPost, "/paroki/"+otherParokiID.String(), nil)
 	req.Header.Set("X-User-ID", userID.String())
 	resp, err = app.Test(req)
 	require.NoError(t, err)
 	assert.Equal(t, fiber.StatusForbidden, resp.StatusCode)
 
 	// 6. Custom domFn error -> 400
-	req = httptest.NewRequest(http.MethodPost, "/parishes/not-a-uuid", nil)
+	req = httptest.NewRequest(http.MethodPost, "/paroki/not-a-uuid", nil)
 	req.Header.Set("X-User-ID", userID.String())
 	resp, err = app.Test(req)
 	require.NoError(t, err)

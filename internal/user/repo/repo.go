@@ -10,8 +10,8 @@ import (
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orgmember"
-	"github.com/paroki/domus/ent/parish"
-	"github.com/paroki/domus/ent/parishmember"
+	"github.com/paroki/domus/ent/paroki"
+	"github.com/paroki/domus/ent/parokimember"
 	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/useraccount"
 	"github.com/paroki/domus/ent/userotp"
@@ -68,7 +68,7 @@ func (r *Repository) ReactivateUser(ctx context.Context, id uuid.UUID, name stri
 		ClearGender().
 		ClearBirthDate().
 		ClearAvatarURL().
-		ClearDefaultParishID().
+		ClearDefaultParokiID().
 		ClearLastLoginAt()
 	if phone != nil && *phone != "" {
 		upd.SetPhone(*phone)
@@ -214,7 +214,7 @@ func (r *Repository) CreateSession(
 	ctx context.Context,
 	userID uuid.UUID,
 	tokenHash, userAgent, ipAddress string,
-	activeParishID *uuid.UUID,
+	activeParokiID *uuid.UUID,
 	expiresAt time.Time,
 ) (*ent.UserSession, error) {
 	cre := r.client.UserSession.Create().
@@ -223,8 +223,8 @@ func (r *Repository) CreateSession(
 		SetUserAgent(userAgent).
 		SetIPAddress(ipAddress).
 		SetExpiresAt(expiresAt)
-	if activeParishID != nil {
-		cre.SetActiveParishID(*activeParishID)
+	if activeParokiID != nil {
+		cre.SetActiveParokiID(*activeParokiID)
 	}
 	return cre.Save(ctx)
 }
@@ -289,40 +289,40 @@ func (r *Repository) UpdateAccountLastUsed(ctx context.Context, id uuid.UUID, at
 		Exec(ctx)
 }
 
-// UpdateAccountActiveParish sets active_parish_id on a UserAccount.
-func (r *Repository) UpdateAccountActiveParish(ctx context.Context, id, parishID uuid.UUID) error {
+// UpdateAccountActiveParoki sets active_paroki_id on a UserAccount.
+func (r *Repository) UpdateAccountActiveParoki(ctx context.Context, id, parokiID uuid.UUID) error {
 	return r.client.UserAccount.UpdateOneID(id).
-		SetActiveParishID(parishID).
+		SetActiveParokiID(parokiID).
 		Exec(ctx)
 }
 
-// SetUserDefaultParishIfNil sets default_parish_id on User only if currently nil.
-func (r *Repository) SetUserDefaultParishIfNil(ctx context.Context, userID, parishID uuid.UUID) error {
+// SetUserDefaultParokiIfNil sets default_paroki_id on User only if currently nil.
+func (r *Repository) SetUserDefaultParokiIfNil(ctx context.Context, userID, parokiID uuid.UUID) error {
 	_, err := r.client.User.Update().
-		Where(user.IDEQ(userID), user.DefaultParishIDIsNil()).
-		SetDefaultParishID(parishID).
+		Where(user.IDEQ(userID), user.DefaultParokiIDIsNil()).
+		SetDefaultParokiID(parokiID).
 		Save(ctx)
 	return err
 }
 
-// IsActiveParish reports whether parishID refers to an active, non-deleted Parish.
-func (r *Repository) IsActiveParish(ctx context.Context, parishID uuid.UUID) (bool, error) {
-	return r.client.Parish.Query().
+// IsActiveParoki reports whether parokiID refers to an active, non-deleted Paroki.
+func (r *Repository) IsActiveParoki(ctx context.Context, parokiID uuid.UUID) (bool, error) {
+	return r.client.Paroki.Query().
 		Where(
-			parish.IDEQ(parishID),
-			parish.DeletedAtIsNil(),
-			parish.ActiveEQ(true),
+			paroki.IDEQ(parokiID),
+			paroki.DeletedAtIsNil(),
+			paroki.ActiveEQ(true),
 		).
 		Exist(ctx)
 }
 
-// IsActiveParishMember reports whether userID is a member of an active, non-deleted Parish.
-func (r *Repository) IsActiveParishMember(ctx context.Context, userID, parishID uuid.UUID) (bool, error) {
-	return r.client.ParishMember.Query().
+// IsActiveParokiMember reports whether userID is a member of an active, non-deleted Paroki.
+func (r *Repository) IsActiveParokiMember(ctx context.Context, userID, parokiID uuid.UUID) (bool, error) {
+	return r.client.ParokiMember.Query().
 		Where(
-			parishmember.UserIDEQ(userID),
-			parishmember.ParishIDEQ(parishID),
-			parishmember.HasParishWith(parish.DeletedAtIsNil(), parish.ActiveEQ(true)),
+			parokimember.UserIDEQ(userID),
+			parokimember.ParokiIDEQ(parokiID),
+			parokimember.HasParokiWith(paroki.DeletedAtIsNil(), paroki.ActiveEQ(true)),
 		).
 		Exist(ctx)
 }
@@ -388,7 +388,7 @@ func (r *Repository) UpdateUser(
 	gender *user.Gender,
 	birthDate *string,
 	avatarURL *string,
-	defaultParishID *uuid.UUID,
+	defaultParokiID *uuid.UUID,
 	status *user.Status,
 	onboarded *bool,
 ) (*ent.User, error) {
@@ -424,11 +424,11 @@ func (r *Repository) UpdateUser(
 			upd.SetAvatarURL(*avatarURL)
 		}
 	}
-	if defaultParishID != nil {
-		if *defaultParishID == uuid.Nil {
-			upd.ClearDefaultParishID()
+	if defaultParokiID != nil {
+		if *defaultParokiID == uuid.Nil {
+			upd.ClearDefaultParokiID()
 		} else {
-			upd.SetDefaultParishID(*defaultParishID)
+			upd.SetDefaultParokiID(*defaultParokiID)
 		}
 	}
 	if status != nil {
@@ -447,11 +447,11 @@ func (r *Repository) SoftDeleteUser(ctx context.Context, id uuid.UUID, deletedAt
 		Exec(ctx)
 }
 
-// UpdateSessionActiveParish updates active_parish_id on a UserSession owned by userID.
-func (r *Repository) UpdateSessionActiveParish(ctx context.Context, sessionID, userID, parishID uuid.UUID) error {
+// UpdateSessionActiveParoki updates active_paroki_id on a UserSession owned by userID.
+func (r *Repository) UpdateSessionActiveParoki(ctx context.Context, sessionID, userID, parokiID uuid.UUID) error {
 	n, err := r.client.UserSession.Update().
 		Where(usersession.IDEQ(sessionID), usersession.UserIDEQ(userID)).
-		SetActiveParishID(parishID).
+		SetActiveParokiID(parokiID).
 		Save(ctx)
 	if err != nil {
 		return err
@@ -581,19 +581,19 @@ func (r *Repository) CountActiveUsersByIDs(ctx context.Context, ids []uuid.UUID)
 		Count(ctx)
 }
 
-// IsActiveOrgAdminInParish reports whether userID is an active org:admin in any active organization of parishID.
-func (r *Repository) IsActiveOrgAdminInParish(ctx context.Context, userID, parishID uuid.UUID) (bool, error) {
-	if userID == uuid.Nil || parishID == uuid.Nil {
+// IsActiveOrgAdminInParoki reports whether userID is an active org:admin in any active organization of parokiID.
+func (r *Repository) IsActiveOrgAdminInParoki(ctx context.Context, userID, parokiID uuid.UUID) (bool, error) {
+	if userID == uuid.Nil || parokiID == uuid.Nil {
 		return false, nil
 	}
 	return r.client.OrgMember.Query().
 		Where(
 			orgmember.UserIDEQ(userID),
-			orgmember.ParishIDEQ(parishID),
+			orgmember.ParokiIDEQ(parokiID),
 			orgmember.RoleEQ(orgmember.RoleAdmin),
 			orgmember.StatusEQ(orgmember.StatusActive),
 			orgmember.HasOrganizationWith(
-				organization.ParishIDEQ(parishID),
+				organization.ParokiIDEQ(parokiID),
 				organization.ActiveEQ(true),
 				organization.DeletedAtIsNil(),
 			),

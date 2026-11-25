@@ -76,7 +76,7 @@ func (h *Handler) Register(
 	me := api.Group("/me", authMW, requireAuth)
 	me.Get("", h.GetMe)
 	me.Patch("", h.UpdateMe)
-	me.Patch("/session", h.SwitchSessionParish)
+	me.Patch("/session", h.SwitchSessionParoki)
 	me.Post("/sessions/search", h.SearchMySessions)
 	me.Delete("/sessions/:id", h.RevokeMySession)
 	me.Post("/accounts/search", h.SearchMyAccounts)

@@ -172,27 +172,27 @@ func (s *UserFeatureSuite) TestMiddleware_CookieBearerTenantAndDisabled() {
 	s.RequestWithToken("/api/test/whoami", http.MethodGet, nil, cookie.Value)
 	s.OK()
 
-	// RequireTenant without parish -> 400 TENANT_REQUIRED
+	// RequireTenant without paroki -> 400 TENANT_REQUIRED
 	s.RequestWithToken("/api/test/tenant", http.MethodGet, nil, cookie.Value)
 	s.BadRequest()
 	s.Equal("TENANT_REQUIRED", s.GetErrorResponse().Error.Code)
 
-	// Invalid X-Parish-Id -> 400 BAD_REQUEST
-	s.SetHeader("X-Parish-Id", "not-a-uuid")
+	// Invalid X-Paroki-Id -> 400 BAD_REQUEST
+	s.SetHeader("X-Paroki-Id", "not-a-uuid")
 	s.RequestWithToken("/api/test/tenant", http.MethodGet, nil, cookie.Value)
 	s.BadRequest()
 	s.Equal("BAD_REQUEST", s.GetErrorResponse().Error.Code)
 
-	// Valid X-Parish-Id -> 200 with ParishID
-	parishID := uuid.Must(uuid.NewV7())
-	s.SetHeader("X-Parish-Id", parishID.String())
+	// Valid X-Paroki-Id -> 200 with ParokiID
+	parokiID := uuid.Must(uuid.NewV7())
+	s.SetHeader("X-Paroki-Id", parokiID.String())
 	s.RequestWithToken("/api/test/tenant", http.MethodGet, nil, cookie.Value)
 	s.OK()
 	pTenant := testutil.DecodeAs[authx.Principal](&s.ApiTestSuite).Data
-	s.Equal(parishID, pTenant.ParishID)
+	s.Equal(parokiID, pTenant.ParokiID)
 
 	// Disable user -> 403 USER_DISABLED & all sessions hard-deleted
-	s.Headers.Del("X-Parish-Id")
+	s.Headers.Del("X-Paroki-Id")
 	_, err := s.client.User.Update().
 		Where(entuser.EmailEQ("admin@paroki.org")).
 		SetStatus(entuser.StatusDisabled).
@@ -211,7 +211,7 @@ func (s *UserFeatureSuite) TestMiddleware_CookieBearerTenantAndDisabled() {
 	s.Equal(0, sessCount)
 }
 
-func (s *UserFeatureSuite) TestChannelResolution_AndSwitchChannelParish() {
+func (s *UserFeatureSuite) TestChannelResolution_AndSwitchChannelParoki() {
 	ctx := context.Background()
 	uResp, err := s.feature.EnsureUser(ctx, "botuser@paroki.org", "Bot User", "08123456789", "telegram", "tg-999")
 	s.Require().NoError(err)
@@ -232,23 +232,23 @@ func (s *UserFeatureSuite) TestChannelResolution_AndSwitchChannelParish() {
 	_, err = s.feature.ResolveByChannel(ctx, "telegram", "unknown-id", uuid.Nil)
 	s.ErrorIs(err, domain.ErrUserNotFound)
 
-	// SwitchChannelParish updates account active_parish_id and initializes user default_parish_id
-	parish1 := uuid.Must(uuid.NewV7())
-	s.Require().NoError(s.feature.SwitchChannelParish(ctx, "telegram", "tg-999", parish1))
+	// SwitchChannelParoki updates account active_paroki_id and initializes user default_paroki_id
+	paroki1 := uuid.Must(uuid.NewV7())
+	s.Require().NoError(s.feature.SwitchChannelParoki(ctx, "telegram", "tg-999", paroki1))
 
 	pTg, err := s.feature.ResolveByChannel(ctx, "telegram", "tg-999", uuid.Nil)
 	s.Require().NoError(err)
 	s.Equal(uResp.ID, pTg.UserID)
 	s.Equal("telegram", pTg.Channel)
-	s.Equal(parish1, pTg.ParishID)
+	s.Equal(paroki1, pTg.ParokiID)
 
-	// Local WhatsApp subject normalizes to E.164 on SwitchChannelParish and ResolveByChannel
-	parish2 := uuid.Must(uuid.NewV7())
-	s.Require().NoError(s.feature.SwitchChannelParish(ctx, "whatsapp", "08123456789", parish2))
+	// Local WhatsApp subject normalizes to E.164 on SwitchChannelParoki and ResolveByChannel
+	paroki2 := uuid.Must(uuid.NewV7())
+	s.Require().NoError(s.feature.SwitchChannelParoki(ctx, "whatsapp", "08123456789", paroki2))
 	pWa, err := s.feature.ResolveByChannel(ctx, "whatsapp", "08123456789", uuid.Nil)
 	s.Require().NoError(err)
 	s.Equal("whatsapp", pWa.Channel)
-	s.Equal(parish2, pWa.ParishID)
+	s.Equal(paroki2, pWa.ParokiID)
 
 	// Disabled user -> 403 USER_DISABLED on ResolveByChannel
 	_, err = s.client.User.UpdateOneID(uResp.ID).SetStatus(entuser.StatusDisabled).Save(ctx)
@@ -438,39 +438,39 @@ func (s *UserFeatureSuite) TestAuthRolesAndMeOrgAdminResolution() {
 	s.Equal(user.RoleUser, catalog[1].Code)
 	s.Equal("org:admin", catalog[2].Code)
 
-	// 2. Create user + parish + active org membership as admin
+	// 2. Create user + paroki + active org membership as admin
 	uResp, err := s.feature.EnsureUser(ctx, "orgadmin@paroki.org", "Org Admin", "", "email", "orgadmin@paroki.org")
 	s.Require().NoError(err)
 
-	diocese, err := s.client.Diocese.Create().
-		SetCode("KAJ").
-		SetName("Keuskupan Agung Jakarta").
+	keuskupan, err := s.client.Keuskupan.Create().
+		SetKode("KAJ").
+		SetNama("Keuskupan Agung Jakarta").
 		Save(ctx)
 	s.Require().NoError(err)
-	parish1, err := s.client.Parish.Create().
-		SetDioceseID(diocese.ID).
-		SetCode("P1").
-		SetName("Paroki 1").
+	paroki1, err := s.client.Paroki.Create().
+		SetKeuskupanID(keuskupan.ID).
+		SetKode("P1").
+		SetNama("Paroki 1").
 		Save(ctx)
 	s.Require().NoError(err)
-	parish2, err := s.client.Parish.Create().
-		SetDioceseID(diocese.ID).
-		SetCode("P2").
-		SetName("Paroki 2").
+	paroki2, err := s.client.Paroki.Create().
+		SetKeuskupanID(keuskupan.ID).
+		SetKode("P2").
+		SetNama("Paroki 2").
 		Save(ctx)
 	s.Require().NoError(err)
-	parishID := parish1.ID
-	otherParishID := parish2.ID
-	for _, pid := range []uuid.UUID{parishID, otherParishID} {
-		_, err = s.client.ParishMember.Create().
-			SetParishID(pid).
+	parokiID := paroki1.ID
+	otherParokiID := paroki2.ID
+	for _, pid := range []uuid.UUID{parokiID, otherParokiID} {
+		_, err = s.client.ParokiMember.Create().
+			SetParokiID(pid).
 			SetUserID(uResp.ID).
 			SetRole("member").
 			Save(ctx)
 		s.Require().NoError(err)
 	}
 	org, err := s.client.Organization.Create().
-		SetParishID(parishID).
+		SetParokiID(parokiID).
 		SetKind("section").
 		SetCode("OMK").
 		SetName("Orang Muda Katolik").
@@ -479,7 +479,7 @@ func (s *UserFeatureSuite) TestAuthRolesAndMeOrgAdminResolution() {
 	s.Require().NoError(err)
 
 	_, err = s.client.OrgMember.Create().
-		SetParishID(parishID).
+		SetParokiID(parokiID).
 		SetOrgID(org.ID).
 		SetUserID(uResp.ID).
 		SetRole(orgmember.RoleAdmin).
@@ -490,23 +490,23 @@ func (s *UserFeatureSuite) TestAuthRolesAndMeOrgAdminResolution() {
 	cookie := s.issueSessionFor("orgadmin@paroki.org")
 	s.SetCookie(cookie)
 
-	// Without active parish -> only user:user
+	// Without active paroki -> only user:user
 	s.Request("/api/me", http.MethodGet, nil)
 	s.OK()
-	meNoParish := testutil.DecodeAs[domain.UserResponse](&s.ApiTestSuite).Data
-	s.Equal([]string{user.RoleUser}, meNoParish.Roles)
-	s.Require().Len(meNoParish.RoleDetails, 1)
-	s.Equal(user.RoleUser, meNoParish.RoleDetails[0].Code)
+	meNoParoki := testutil.DecodeAs[domain.UserResponse](&s.ApiTestSuite).Data
+	s.Equal([]string{user.RoleUser}, meNoParoki.Roles)
+	s.Require().Len(meNoParoki.RoleDetails, 1)
+	s.Equal(user.RoleUser, meNoParoki.RoleDetails[0].Code)
 
-	// With other parish -> no org:admin
-	s.SetHeader("X-Parish-Id", otherParishID.String())
+	// With other paroki -> no org:admin
+	s.SetHeader("X-Paroki-Id", otherParokiID.String())
 	s.Request("/api/me", http.MethodGet, nil)
 	s.OK()
 	meOther := testutil.DecodeAs[domain.UserResponse](&s.ApiTestSuite).Data
 	s.NotContains(meOther.Roles, "org:admin")
 
-	// With active parish where user is active org:admin -> includes org:admin in roles & roleDetails
-	s.SetHeader("X-Parish-Id", parishID.String())
+	// With active paroki where user is active org:admin -> includes org:admin in roles & roleDetails
+	s.SetHeader("X-Paroki-Id", parokiID.String())
 	s.Request("/api/me", http.MethodGet, nil)
 	s.OK()
 	meActive := testutil.DecodeAs[domain.UserResponse](&s.ApiTestSuite).Data

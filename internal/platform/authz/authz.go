@@ -45,8 +45,8 @@ type RoleScope string
 const (
 	// RoleScopeGlobal applies across the entire application.
 	RoleScopeGlobal RoleScope = "global"
-	// RoleScopeParish applies within a specific parish tenant.
-	RoleScopeParish RoleScope = "parish"
+	// RoleScopeParoki applies within a specific paroki tenant.
+	RoleScopeParoki RoleScope = "paroki"
 	// RoleScopeOrg applies within a specific organization.
 	RoleScopeOrg RoleScope = "org"
 )
@@ -77,9 +77,9 @@ func UserSubject(userID uuid.UUID) string {
 	return "user:" + userID.String()
 }
 
-// ParishDomain formats a parish UUID as a Casbin domain ("parish:<uuid>").
-func ParishDomain(parishID uuid.UUID) string {
-	return "parish:" + parishID.String()
+// ParokiDomain formats a paroki UUID as a Casbin domain ("paroki:<uuid>").
+func ParokiDomain(parokiID uuid.UUID) string {
+	return "paroki:" + parokiID.String()
 }
 
 // OrgDomain formats an organization UUID as a Casbin domain ("org:<uuid>").

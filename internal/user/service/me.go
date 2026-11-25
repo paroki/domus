@@ -13,7 +13,7 @@ import (
 	"github.com/paroki/domus/internal/user/repo"
 )
 
-// GetMe returns the authenticated user's profile with active parish and global roles.
+// GetMe returns the authenticated user's profile with active paroki and global roles.
 func (s *Service) GetMe(ctx context.Context, p authx.Principal) (domain.UserResponse, error) {
 	u, err := guardActiveUser(s.repo.FindUserByID(ctx, p.UserID))
 	if err != nil {
@@ -111,7 +111,7 @@ func (s *Service) UpdateMe(ctx context.Context, p authx.Principal, req domain.Up
 		avatarPtr = &trimmed
 	}
 
-	u, err := s.repo.UpdateUser(ctx, p.UserID, namePtr, phonePtr, genderPtr, birthDatePtr, avatarPtr, req.DefaultParishID, nil, req.Onboarded)
+	u, err := s.repo.UpdateUser(ctx, p.UserID, namePtr, phonePtr, genderPtr, birthDatePtr, avatarPtr, req.DefaultParokiID, nil, req.Onboarded)
 	if ent.IsNotFound(err) {
 		return domain.UserResponse{}, domain.ErrUserNotFound
 	}
@@ -122,7 +122,7 @@ func (s *Service) UpdateMe(ctx context.Context, p authx.Principal, req domain.Up
 }
 
 func (s *Service) enrichMeResponse(ctx context.Context, u *ent.User, p authx.Principal) (domain.UserResponse, error) {
-	roles, err := s.loadRoles(ctx, u.ID, p.ParishID)
+	roles, err := s.loadRoles(ctx, u.ID, p.ParokiID)
 	if err != nil {
 		return domain.UserResponse{}, err
 	}
@@ -134,29 +134,29 @@ func (s *Service) enrichMeResponse(ctx context.Context, u *ent.User, p authx.Pri
 	res.Roles = roles
 	res.RoleDetails = s.describeRoles(roles)
 	res.LinkedProviders = providers
-	if p.ParishID != uuid.Nil {
-		pid := p.ParishID
-		res.ActiveParishID = &pid
+	if p.ParokiID != uuid.Nil {
+		pid := p.ParokiID
+		res.ActiveParokiID = &pid
 	}
 	return res, nil
 }
 
-// SwitchSessionParish updates active_parish_id on the current session and initializes User.default_parish_id if nil.
-func (s *Service) SwitchSessionParish(ctx context.Context, p authx.Principal, parishID uuid.UUID) error {
+// SwitchSessionParoki updates active_paroki_id on the current session and initializes User.default_paroki_id if nil.
+func (s *Service) SwitchSessionParoki(ctx context.Context, p authx.Principal, parokiID uuid.UUID) error {
 	if p.SessionID == uuid.Nil {
 		return domain.ErrSessionNotFound
 	}
-	if err := s.guardParishAccess(ctx, p.UserID, parishID); err != nil {
+	if err := s.guardParokiAccess(ctx, p.UserID, parokiID); err != nil {
 		return err
 	}
 	return s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
-		if err := txRepo.UpdateSessionActiveParish(ctx, p.SessionID, p.UserID, parishID); err != nil {
+		if err := txRepo.UpdateSessionActiveParoki(ctx, p.SessionID, p.UserID, parokiID); err != nil {
 			if ent.IsNotFound(err) {
 				return domain.ErrSessionNotFound
 			}
 			return err
 		}
-		return txRepo.SetUserDefaultParishIfNil(ctx, p.UserID, parishID)
+		return txRepo.SetUserDefaultParokiIfNil(ctx, p.UserID, parokiID)
 	})
 }
 
@@ -182,7 +182,7 @@ func (s *Service) SearchMySessions(
 			ID:             row.ID,
 			UserAgent:      row.UserAgent,
 			IPAddress:      row.IPAddress,
-			ActiveParishID: row.ActiveParishID,
+			ActiveParokiID: row.ActiveParokiID,
 			IsCurrent:      p.SessionID != uuid.Nil && row.ID == p.SessionID,
 			LastActiveAt:   row.LastActiveAt,
 			ExpiresAt:      row.ExpiresAt,
@@ -235,7 +235,7 @@ func toUserAccountResponse(row *ent.UserAccount) domain.UserAccountResponse {
 		Email:          row.Email,
 		DisplayName:    row.DisplayName,
 		AvatarURL:      row.AvatarURL,
-		ActiveParishID: row.ActiveParishID,
+		ActiveParokiID: row.ActiveParokiID,
 		LastUsedAt:     row.LastUsedAt,
 		CreatedAt:      row.CreatedAt,
 	}

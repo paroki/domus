@@ -10,8 +10,8 @@ import (
 
 type ctxKey struct{}
 
-// ErrTenantRequired is returned when an endpoint requires an active parish tenant.
-var ErrTenantRequired = httpx.NewError(fiber.StatusBadRequest, "TENANT_REQUIRED", "An active parish tenant is required.")
+// ErrTenantRequired is returned when an endpoint requires an active paroki tenant.
+var ErrTenantRequired = httpx.NewError(fiber.StatusBadRequest, "TENANT_REQUIRED", "An active paroki tenant is required.")
 
 // Principal represents an authenticated user across HTTP, MCP, and bot channels.
 type Principal struct {
@@ -19,7 +19,7 @@ type Principal struct {
 	SessionID uuid.UUID `json:"sessionId,omitempty"`
 	Email     string    `json:"email"`
 	Name      string    `json:"name"`
-	ParishID  uuid.UUID `json:"parishId,omitempty"`
+	ParokiID  uuid.UUID `json:"parokiId,omitempty"`
 	Roles     []string  `json:"roles,omitempty"`
 	Channel   string    `json:"channel,omitempty"`
 }
@@ -29,17 +29,17 @@ func (p Principal) Subject() string {
 	return "user:" + p.UserID.String()
 }
 
-// HasTenant reports whether a parish tenant is selected on this Principal.
+// HasTenant reports whether a paroki tenant is selected on this Principal.
 func (p Principal) HasTenant() bool {
-	return p.ParishID != uuid.Nil
+	return p.ParokiID != uuid.Nil
 }
 
-// ParishDomain returns the Casbin parish domain ("parish:<uuid>") or "" if unset.
-func (p Principal) ParishDomain() string {
-	if p.ParishID == uuid.Nil {
+// ParokiDomain returns the Casbin paroki domain ("paroki:<uuid>") or "" if unset.
+func (p Principal) ParokiDomain() string {
+	if p.ParokiID == uuid.Nil {
 		return ""
 	}
-	return "parish:" + p.ParishID.String()
+	return "paroki:" + p.ParokiID.String()
 }
 
 // WithPrincipal attaches p to ctx.
@@ -61,13 +61,13 @@ func UserContext(ctx context.Context) (Principal, bool) {
 	return FromContext(ctx)
 }
 
-// RequireTenant returns the authenticated Principal if it has an active ParishID.
+// RequireTenant returns the authenticated Principal if it has an active ParokiID.
 func RequireTenant(ctx context.Context) (Principal, error) {
 	p, ok := FromContext(ctx)
 	if !ok || p.UserID == uuid.Nil {
 		return Principal{}, httpx.Unauthorized("Authentication is required.")
 	}
-	if p.ParishID == uuid.Nil {
+	if p.ParokiID == uuid.Nil {
 		return Principal{}, ErrTenantRequired
 	}
 	return p, nil

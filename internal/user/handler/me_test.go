@@ -12,7 +12,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
-	"github.com/paroki/domus/ent/parishmember"
+	"github.com/paroki/domus/ent/parokimember"
 	entuser "github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/useraccount"
 	"github.com/paroki/domus/ent/userotp"
@@ -115,29 +115,29 @@ func (s *MeHandlerSuite) TestGetAndUpdateMe_PhoneE164AndStrictJSON() {
 	s.Equal("+6281234567890", *updated.Phone)
 }
 
-func (s *MeHandlerSuite) TestSwitchSessionParish_AndMultiDeviceSessions() {
+func (s *MeHandlerSuite) TestSwitchSessionParoki_AndMultiDeviceSessions() {
 	ctx := context.Background()
 	u, cookie1 := s.loginUser("multi@paroki.org", "Multi Device", "Firefox/130")
 	_, cookie2 := s.loginUser("multi@paroki.org", "Multi Device", "Mobile/1.0")
 
-	d, err := s.client.Diocese.Create().SetCode("kaj").SetName("KAJ").Save(ctx)
+	d, err := s.client.Keuskupan.Create().SetKode("kaj").SetNama("KAJ").Save(ctx)
 	s.Require().NoError(err)
-	p, err := s.client.Parish.Create().SetDioceseID(d.ID).SetCode("p-01").SetName("Paroki 1").Save(ctx)
+	p, err := s.client.Paroki.Create().SetKeuskupanID(d.ID).SetKode("p-01").SetNama("Paroki 1").Save(ctx)
 	s.Require().NoError(err)
-	_, err = s.client.ParishMember.Create().SetParishID(p.ID).SetUserID(u.ID).SetRole(parishmember.RoleMember).Save(ctx)
+	_, err = s.client.ParokiMember.Create().SetParokiID(p.ID).SetUserID(u.ID).SetRole(parokimember.RoleMember).Save(ctx)
 	s.Require().NoError(err)
 
-	// Switch session parish on device 1
-	parishID := p.ID
+	// Switch session paroki on device 1
+	parokiID := p.ID
 	s.SetCookie(cookie1)
-	s.Request("/api/me/session", http.MethodPatch, domain.SwitchSessionParishRequest{ActiveParishID: parishID})
+	s.Request("/api/me/session", http.MethodPatch, domain.SwitchSessionParokiRequest{ActiveParokiID: parokiID})
 	s.NoContent()
 
-	// Verify User.default_parish_id initialized
+	// Verify User.default_paroki_id initialized
 	entU, err := s.client.User.Query().Where(entuser.IDEQ(u.ID)).Only(context.Background())
 	s.Require().NoError(err)
-	s.Require().NotNil(entU.DefaultParishID)
-	s.Equal(parishID, *entU.DefaultParishID)
+	s.Require().NotNil(entU.DefaultParokiID)
+	s.Equal(parokiID, *entU.DefaultParokiID)
 
 	// Search sessions as device 1 -> 2 sessions, only device 1 has isCurrent=true
 	s.Request("/api/me/sessions/search", http.MethodPost, domain.SearchSessionsRequest{Limit: 10})
@@ -213,54 +213,54 @@ func (s *MeHandlerSuite) TestSearchAndUnlinkAccounts_LastAccountGuard() {
 	s.NoContent()
 }
 
-func (s *MeHandlerSuite) TestParishMembershipEnforcement_SwitchAndHeader() {
+func (s *MeHandlerSuite) TestParokiMembershipEnforcement_SwitchAndHeader() {
 	ctx := context.Background()
-	d, err := s.client.Diocese.Create().SetCode("kaj").SetName("KAJ").Save(ctx)
+	d, err := s.client.Keuskupan.Create().SetKode("kaj").SetNama("KAJ").Save(ctx)
 	s.Require().NoError(err)
-	memberParish, err := s.client.Parish.Create().SetDioceseID(d.ID).SetCode("p-mem").SetName("Member Parish").Save(ctx)
+	memberParoki, err := s.client.Paroki.Create().SetKeuskupanID(d.ID).SetKode("p-mem").SetNama("Member Paroki").Save(ctx)
 	s.Require().NoError(err)
-	otherParish, err := s.client.Parish.Create().SetDioceseID(d.ID).SetCode("p-oth").SetName("Other Parish").Save(ctx)
+	otherParoki, err := s.client.Paroki.Create().SetKeuskupanID(d.ID).SetKode("p-oth").SetNama("Other Paroki").Save(ctx)
 	s.Require().NoError(err)
-	inactiveParish, err := s.client.Parish.Create().SetDioceseID(d.ID).SetCode("p-ina").SetName("Inactive Parish").SetActive(false).Save(ctx)
+	inactiveParoki, err := s.client.Paroki.Create().SetKeuskupanID(d.ID).SetKode("p-ina").SetNama("Inactive Paroki").SetActive(false).Save(ctx)
 	s.Require().NoError(err)
 
 	regularUser, regularCookie := s.loginUser("regular@paroki.org", "Regular User", "Browser/1")
-	_, err = s.client.ParishMember.Create().SetParishID(memberParish.ID).SetUserID(regularUser.ID).SetRole(parishmember.RoleMember).Save(ctx)
+	_, err = s.client.ParokiMember.Create().SetParokiID(memberParoki.ID).SetUserID(regularUser.ID).SetRole(parokimember.RoleMember).Save(ctx)
 	s.Require().NoError(err)
-	_, err = s.client.ParishMember.Create().SetParishID(inactiveParish.ID).SetUserID(regularUser.ID).SetRole(parishmember.RoleMember).Save(ctx)
+	_, err = s.client.ParokiMember.Create().SetParokiID(inactiveParoki.ID).SetUserID(regularUser.ID).SetRole(parokimember.RoleMember).Save(ctx)
 	s.Require().NoError(err)
 
 	s.SetCookie(regularCookie)
 
-	// Non-member parish switch -> 403
-	s.Request("/api/me/session", http.MethodPatch, domain.SwitchSessionParishRequest{ActiveParishID: otherParish.ID})
+	// Non-member paroki switch -> 403
+	s.Request("/api/me/session", http.MethodPatch, domain.SwitchSessionParokiRequest{ActiveParokiID: otherParoki.ID})
 	s.Forbidden()
 
-	// Inactive parish switch -> 403
-	s.Request("/api/me/session", http.MethodPatch, domain.SwitchSessionParishRequest{ActiveParishID: inactiveParish.ID})
+	// Inactive paroki switch -> 403
+	s.Request("/api/me/session", http.MethodPatch, domain.SwitchSessionParokiRequest{ActiveParokiID: inactiveParoki.ID})
 	s.Forbidden()
 
-	// Member of active parish switch -> 204
-	s.Request("/api/me/session", http.MethodPatch, domain.SwitchSessionParishRequest{ActiveParishID: memberParish.ID})
+	// Member of active paroki switch -> 204
+	s.Request("/api/me/session", http.MethodPatch, domain.SwitchSessionParokiRequest{ActiveParokiID: memberParoki.ID})
 	s.NoContent()
 
-	// X-Parish-Id for non-member parish -> 403
-	s.SetHeader("X-Parish-Id", otherParish.ID.String())
+	// X-Paroki-Id for non-member paroki -> 403
+	s.SetHeader("X-Paroki-Id", otherParoki.ID.String())
 	s.Request("/api/me", http.MethodGet, nil)
 	s.Forbidden()
 
-	// X-Parish-Id for member parish -> 200
-	s.SetHeader("X-Parish-Id", memberParish.ID.String())
+	// X-Paroki-Id for member paroki -> 200
+	s.SetHeader("X-Paroki-Id", memberParoki.ID.String())
 	s.Request("/api/me", http.MethodGet, nil)
 	s.OK()
 
-	// Super-admin can switch to any active parish -> 204
-	s.Headers.Del("X-Parish-Id")
+	// Super-admin can switch to any active paroki -> 204
+	s.Headers.Del("X-Paroki-Id")
 	s.ClearCookies()
 	adminUser, adminCookie := s.loginUser("super@paroki.org", "Super Admin", "Browser/1")
 	s.Require().NoError(s.enforcer.AssignRole(ctx, authz.UserSubject(adminUser.ID), domain.RoleSuperAdmin, authz.DomainGlobal))
 	s.SetCookie(adminCookie)
-	s.Request("/api/me/session", http.MethodPatch, domain.SwitchSessionParishRequest{ActiveParishID: otherParish.ID})
+	s.Request("/api/me/session", http.MethodPatch, domain.SwitchSessionParokiRequest{ActiveParokiID: otherParoki.ID})
 	s.NoContent()
 }
 

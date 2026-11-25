@@ -10,7 +10,7 @@ import (
 	"github.com/paroki/domus/internal/platform/httpx"
 )
 
-const roleParishAdmin = "ref:parish-admin"
+const roleParokiAdmin = "ref:paroki-admin"
 
 // UserGetMeInput is the input schema for user_get_me.
 type UserGetMeInput struct{}
@@ -23,33 +23,33 @@ type MCPUserMe struct {
 	Phone          *string  `json:"phone,omitempty"`
 	Gender         *string  `json:"gender,omitempty"`
 	BirthDate      *string  `json:"birthDate,omitempty"`
-	ActiveParishID *string  `json:"activeParishId,omitempty"`
+	ActiveParokiID *string  `json:"activeParokiId,omitempty"`
 	Roles          []string `json:"roles,omitempty"`
 }
 
-// UserListParishMembersInput is the input schema for user_list_parish_members.
-type UserListParishMembersInput struct {
+// UserListParokiMembersInput is the input schema for user_list_paroki_members.
+type UserListParokiMembersInput struct {
 	Query string `json:"query,omitempty"`
 	Role  string `json:"role,omitempty"`
 	Limit int    `json:"limit,omitempty"`
 }
 
-// UserListParishMembersOutput is the output schema for user_list_parish_members.
-type UserListParishMembersOutput struct {
-	Members []ParishMemberItem `json:"members"`
+// UserListParokiMembersOutput is the output schema for user_list_paroki_members.
+type UserListParokiMembersOutput struct {
+	Members []ParokiMemberItem `json:"members"`
 }
 
 // RegisterMCP registers user_* tools on the MCP server.
 func (f *Feature) RegisterMCP(s *mcp.Server) {
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "user_get_me",
-		Description: "Get the authenticated caller's own profile, active parish ID, and roles.",
+		Description: "Get the authenticated caller's own profile, active paroki ID, and roles.",
 	}, f.mcpUserGetMe)
 
 	mcp.AddTool(s, &mcp.Tool{
-		Name:        "user_list_parish_members",
-		Description: "List members of the caller's active parish (requires user:super-admin or ref:parish-admin).",
-	}, f.mcpUserListParishMembers)
+		Name:        "user_list_paroki_members",
+		Description: "List members of the caller's active paroki (requires user:super-admin or ref:paroki-admin).",
+	}, f.mcpUserListParokiMembers)
 }
 
 func (f *Feature) mcpUserGetMe(ctx context.Context, _ *mcp.CallToolRequest, _ UserGetMeInput) (*mcp.CallToolResult, MCPUserMe, error) {
@@ -61,10 +61,10 @@ func (f *Feature) mcpUserGetMe(ctx context.Context, _ *mcp.CallToolRequest, _ Us
 	if err != nil {
 		return nil, MCPUserMe{}, err
 	}
-	var activeParishID *string
-	if res.ActiveParishID != nil {
-		s := res.ActiveParishID.String()
-		activeParishID = &s
+	var activeParokiID *string
+	if res.ActiveParokiID != nil {
+		s := res.ActiveParokiID.String()
+		activeParokiID = &s
 	}
 	return nil, MCPUserMe{
 		ID:             res.ID.String(),
@@ -73,35 +73,35 @@ func (f *Feature) mcpUserGetMe(ctx context.Context, _ *mcp.CallToolRequest, _ Us
 		Phone:          res.Phone,
 		Gender:         res.Gender,
 		BirthDate:      res.BirthDate,
-		ActiveParishID: activeParishID,
+		ActiveParokiID: activeParokiID,
 		Roles:          res.Roles,
 	}, nil
 }
 
-func (f *Feature) mcpUserListParishMembers(ctx context.Context, _ *mcp.CallToolRequest, in UserListParishMembersInput) (*mcp.CallToolResult, UserListParishMembersOutput, error) {
+func (f *Feature) mcpUserListParokiMembers(ctx context.Context, _ *mcp.CallToolRequest, in UserListParokiMembersInput) (*mcp.CallToolResult, UserListParokiMembersOutput, error) {
 	p, ok := UserContext(ctx)
 	if !ok || p.UserID == uuid.Nil {
-		return nil, UserListParishMembersOutput{}, httpx.Unauthorized("Authentication is required.")
+		return nil, UserListParokiMembersOutput{}, httpx.Unauthorized("Authentication is required.")
 	}
 	tp, err := RequireTenant(ctx)
 	if err != nil {
-		return nil, UserListParishMembersOutput{}, err
+		return nil, UserListParokiMembersOutput{}, err
 	}
 
 	sub := authz.UserSubject(tp.UserID)
 	isSuperAdmin, err := f.enforcer.HasRoleInDomain(sub, RoleSuperAdmin, authz.DomainGlobal)
 	if err != nil {
-		return nil, UserListParishMembersOutput{}, err
+		return nil, UserListParokiMembersOutput{}, err
 	}
-	isParishAdmin, err := f.enforcer.HasRoleInDomain(sub, roleParishAdmin, authz.ParishDomain(tp.ParishID))
+	isParokiAdmin, err := f.enforcer.HasRoleInDomain(sub, roleParokiAdmin, authz.ParokiDomain(tp.ParokiID))
 	if err != nil {
-		return nil, UserListParishMembersOutput{}, err
+		return nil, UserListParokiMembersOutput{}, err
 	}
-	if !isSuperAdmin && !isParishAdmin {
-		return nil, UserListParishMembersOutput{}, httpx.Forbidden("Forbidden.")
+	if !isSuperAdmin && !isParokiAdmin {
+		return nil, UserListParokiMembersOutput{}, httpx.Forbidden("Forbidden.")
 	}
-	if f.parishMembers == nil {
-		return nil, UserListParishMembersOutput{}, errors.New("parish member directory is not configured")
+	if f.parokiMembers == nil {
+		return nil, UserListParokiMembersOutput{}, errors.New("paroki member directory is not configured")
 	}
 
 	limit := in.Limit
@@ -112,9 +112,9 @@ func (f *Feature) mcpUserListParishMembers(ctx context.Context, _ *mcp.CallToolR
 		limit = 100
 	}
 
-	members, err := f.parishMembers.ListParishMembers(ctx, tp, tp.ParishID, in.Query, in.Role, limit)
+	members, err := f.parokiMembers.ListParokiMembers(ctx, tp, tp.ParokiID, in.Query, in.Role, limit)
 	if err != nil {
-		return nil, UserListParishMembersOutput{}, err
+		return nil, UserListParokiMembersOutput{}, err
 	}
-	return nil, UserListParishMembersOutput{Members: members}, nil
+	return nil, UserListParokiMembersOutput{Members: members}, nil
 }
