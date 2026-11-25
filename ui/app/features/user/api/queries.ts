@@ -55,6 +55,17 @@ export function useMySessions(limit = 20) {
   });
 }
 
+export function useMyTokens(limit = 20) {
+  return useQuery({
+    queryKey: userKeys.tokens({ limit }),
+    queryFn: () =>
+      unwrapMeta(
+        api.POST("/me/tokens/search", { body: { limit } }),
+        USER_ERRORS,
+      ),
+  });
+}
+
 export function useMyAccounts(limit = 20) {
   return useQuery({
     queryKey: userKeys.accounts({ limit }),

@@ -39,3 +39,7 @@ export type VerifyLinkAccountRequest =
   Schemas["domain.VerifyLinkAccountRequest"];
 export type TelegramLinkTokenResponse =
   Schemas["domain.TelegramLinkTokenResponse"];
+export type UserToken = Schemas["domain.UserTokenResponse"];
+export type CreateUserTokenRequest = Schemas["domain.CreateUserTokenRequest"];
+export type CreateUserTokenResponse = Schemas["domain.CreateUserTokenResponse"];
+export type SearchTokensRequest = Schemas["domain.SearchTokensRequest"];

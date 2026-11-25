@@ -677,6 +677,66 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/me/tokens": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create a personal access token
+     * @description Creates a new personal access token and returns the plaintext token once.
+     */
+    post: operations["createMeToken"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/me/tokens/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Search my personal access tokens
+     * @description Lists active non-expired personal access tokens for the current user with cursor pagination.
+     */
+    post: operations["searchMeTokens"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/me/tokens/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Revoke a personal access token
+     * @description Hard-deletes the specified personal access token owned by the current user.
+     */
+    delete: operations["revokeMeToken"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/orgs": {
     parameters: {
       query?: never;
@@ -1694,6 +1754,19 @@ export interface components {
       /** @enum {string} */
       type?: "fiscal" | "liturgical";
     };
+    "domain.CreateUserTokenRequest": {
+      expiresInDays?: number;
+      name: string;
+    };
+    "domain.CreateUserTokenResponse": {
+      createdAt?: string;
+      expiresAt?: string;
+      id?: string;
+      lastUsedAt?: string;
+      name?: string;
+      token?: string;
+      tokenPrefix?: string;
+    };
     "domain.CreateWilayahRequest": {
       /** @enum {string} */
       jenis?: "wilayah" | "stasi";
@@ -2090,6 +2163,10 @@ export interface components {
       limit?: number;
       q?: string;
     };
+    "domain.SearchTokensRequest": {
+      cursor?: string;
+      limit?: number;
+    };
     "domain.SearchUsersRequest": {
       cursor?: string;
       filter?: components["schemas"]["domain.UserSearchFilter"];
@@ -2336,6 +2413,14 @@ export interface components {
       lastActiveAt?: string;
       userAgent?: string;
     };
+    "domain.UserTokenResponse": {
+      createdAt?: string;
+      expiresAt?: string;
+      id?: string;
+      lastUsedAt?: string;
+      name?: string;
+      tokenPrefix?: string;
+    };
     "domain.VerifyLinkAccountRequest": {
       /** @enum {string} */
       channel: "whatsapp";
@@ -2477,6 +2562,11 @@ export interface components {
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
+    "httpx.Envelope-array_domain_UserTokenResponse": {
+      data?: components["schemas"]["domain.UserTokenResponse"][];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
     "httpx.Envelope-array_domain_WilayahResponse": {
       data?: components["schemas"]["domain.WilayahResponse"][];
       error?: components["schemas"]["httpx.ErrorPayload"];
@@ -2499,6 +2589,11 @@ export interface components {
     };
     "httpx.Envelope-domain_AuthSessionResponse": {
       data?: components["schemas"]["domain.AuthSessionResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_CreateUserTokenResponse": {
+      data?: components["schemas"]["domain.CreateUserTokenResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -4881,6 +4976,149 @@ export interface operations {
       header?: never;
       path: {
         /** @description Session UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  createMeToken: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Token creation parameters */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.CreateUserTokenRequest"];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_CreateUserTokenResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  searchMeTokens: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Pagination parameters */
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["domain.SearchTokensRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_UserTokenResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  revokeMeToken: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Token UUID */
         id: string;
       };
       cookie?: never;

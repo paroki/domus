@@ -10,6 +10,7 @@ import { useLogout, useUpdateMe } from "../api/actions";
 import { useMe } from "../api/queries";
 import { AccountList } from "../components/AccountList";
 import { SessionList } from "../components/SessionList";
+import { TokenList } from "../components/TokenList";
 import { getBirthDateBounds, USER_GENDERS } from "../model";
 import type { Route } from "./+types/MePage";
 
@@ -176,6 +177,7 @@ export default function MePage() {
 
       <SessionList />
       <AccountList />
+      <TokenList />
     </div>
   );
 }

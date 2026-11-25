@@ -12,6 +12,7 @@ export const USER_ERRORS: Record<string, string> = {
   AUTH_OAUTH_PROVIDER_UNKNOWN: "Penyedia login OAuth tidak dikenali.",
   AUTH_OAUTH_EMAIL_UNVERIFIED: "Email dari penyedia OAuth belum terverifikasi.",
   USER_SESSION_NOT_FOUND: "Sesi tidak ditemukan.",
+  USER_TOKEN_NOT_FOUND: "Token akses pribadi tidak ditemukan.",
   USER_ACCOUNT_NOT_FOUND: "Akun tertaut tidak ditemukan.",
   USER_LAST_ACCOUNT_REQUIRED:
     "Minimal satu metode login harus tetap tertaut pada akun Anda.",

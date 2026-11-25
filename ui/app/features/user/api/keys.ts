@@ -3,6 +3,7 @@ import type {
   SearchOrgMembersRequest,
   SearchParokiMembersRequest,
   SearchSessionsRequest,
+  SearchTokensRequest,
   SearchUsersRequest,
 } from "./types";
 
@@ -13,6 +14,8 @@ export const userKeys = {
   me: () => [...userKeys.all, "me"] as const,
   sessions: (params?: SearchSessionsRequest) =>
     [...userKeys.all, "sessions", params ?? {}] as const,
+  tokens: (params?: SearchTokensRequest) =>
+    [...userKeys.all, "tokens", params ?? {}] as const,
   accounts: (params?: SearchAccountsRequest) =>
     [...userKeys.all, "accounts", params ?? {}] as const,
   list: (params?: Omit<SearchUsersRequest, "cursor">) =>

@@ -8,6 +8,7 @@ import type {
   AddParokiMemberRequest,
   AdminCreateUserRequest,
   AdminUpdateUserRequest,
+  CreateUserTokenRequest,
   LinkAccountOTPRequest,
   RequestOTPRequest,
   UpdateMeRequest,
@@ -60,6 +61,27 @@ export function useRevokeSession() {
         qc.invalidateQueries({ queryKey: userKeys.sessions() }),
         qc.invalidateQueries({ queryKey: userKeys.me() }),
       ]),
+  });
+}
+
+export function useCreateToken() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: CreateUserTokenRequest) =>
+      unwrap(api.POST("/me/tokens", { body }), USER_ERRORS),
+    onSuccess: () => qc.invalidateQueries({ queryKey: userKeys.tokens() }),
+  });
+}
+
+export function useRevokeToken() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      unwrapVoid(
+        api.DELETE("/me/tokens/{id}", { params: { path: { id } } }),
+        USER_ERRORS,
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: userKeys.tokens() }),
   });
 }
 
