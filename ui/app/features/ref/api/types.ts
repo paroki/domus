@@ -7,6 +7,26 @@ export type SearchKeuskupanRequest = Schemas["domain.SearchKeuskupanRequest"];
 export type CreateKeuskupanRequest = Schemas["domain.CreateKeuskupanRequest"];
 export type UpdateKeuskupanRequest = Schemas["domain.UpdateKeuskupanRequest"];
 
+export type Kevikepan = Schemas["domain.KevikepanResponse"];
+export type SearchKevikepanRequest = Schemas["domain.SearchKevikepanRequest"];
+export type CreateKevikepanRequest = Schemas["domain.CreateKevikepanRequest"];
+export type UpdateKevikepanRequest = Schemas["domain.UpdateKevikepanRequest"];
+
+export type Kota = Schemas["domain.KotaResponse"];
+export type SearchKotaRequest = Schemas["domain.SearchKotaRequest"];
+export type CreateKotaRequest = Schemas["domain.CreateKotaRequest"];
+export type UpdateKotaRequest = Schemas["domain.UpdateKotaRequest"];
+
+export type Kecamatan = Schemas["domain.KecamatanResponse"];
+export type SearchKecamatanRequest = Schemas["domain.SearchKecamatanRequest"];
+export type CreateKecamatanRequest = Schemas["domain.CreateKecamatanRequest"];
+export type UpdateKecamatanRequest = Schemas["domain.UpdateKecamatanRequest"];
+
+export type Kelurahan = Schemas["domain.KelurahanResponse"];
+export type SearchKelurahanRequest = Schemas["domain.SearchKelurahanRequest"];
+export type CreateKelurahanRequest = Schemas["domain.CreateKelurahanRequest"];
+export type UpdateKelurahanRequest = Schemas["domain.UpdateKelurahanRequest"];
+
 export type Paroki = Schemas["domain.ParokiResponse"];
 export type SearchParokiRequest = Schemas["domain.SearchParokiRequest"];
 export type CreateParokiRequest = Schemas["domain.CreateParokiRequest"];

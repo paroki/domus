@@ -5,13 +5,21 @@ import { REF_ERRORS } from "./errors";
 import { refKeys } from "./keys";
 import type {
   AddParokiMemberRequest,
+  CreateKecamatanRequest,
+  CreateKelurahanRequest,
   CreateKeuskupanRequest,
+  CreateKevikepanRequest,
+  CreateKotaRequest,
   CreateLingkunganRequest,
   CreateLookupRequest,
   CreateParokiRequest,
   CreatePeriodRequest,
   CreateWilayahRequest,
+  UpdateKecamatanRequest,
+  UpdateKelurahanRequest,
   UpdateKeuskupanRequest,
+  UpdateKevikepanRequest,
+  UpdateKotaRequest,
   UpdateLingkunganRequest,
   UpdateLookupRequest,
   UpdateParokiMemberRequest,
@@ -303,6 +311,138 @@ export function useDeletePeriod() {
     mutationFn: (id: string) =>
       unwrapVoid(
         api.DELETE("/ref/periods/{id}", { params: { path: { id } } }),
+        REF_ERRORS,
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
+  });
+}
+
+export function useCreateKevikepan() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: CreateKevikepanRequest) =>
+      unwrap(api.POST("/ref/kevikepan", { body }), REF_ERRORS),
+    onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
+  });
+}
+
+export function useUpdateKevikepan() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string; body: UpdateKevikepanRequest }) =>
+      unwrap(
+        api.PATCH("/ref/kevikepan/{id}", { params: { path: { id } }, body }),
+        REF_ERRORS,
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
+  });
+}
+
+export function useDeleteKevikepan() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      unwrapVoid(
+        api.DELETE("/ref/kevikepan/{id}", { params: { path: { id } } }),
+        REF_ERRORS,
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
+  });
+}
+
+export function useCreateKota() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: CreateKotaRequest) =>
+      unwrap(api.POST("/ref/kota", { body }), REF_ERRORS),
+    onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
+  });
+}
+
+export function useUpdateKota() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string; body: UpdateKotaRequest }) =>
+      unwrap(
+        api.PATCH("/ref/kota/{id}", { params: { path: { id } }, body }),
+        REF_ERRORS,
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
+  });
+}
+
+export function useDeleteKota() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      unwrapVoid(
+        api.DELETE("/ref/kota/{id}", { params: { path: { id } } }),
+        REF_ERRORS,
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
+  });
+}
+
+export function useCreateKecamatan() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: CreateKecamatanRequest) =>
+      unwrap(api.POST("/ref/kecamatan", { body }), REF_ERRORS),
+    onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
+  });
+}
+
+export function useUpdateKecamatan() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string; body: UpdateKecamatanRequest }) =>
+      unwrap(
+        api.PATCH("/ref/kecamatan/{id}", { params: { path: { id } }, body }),
+        REF_ERRORS,
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
+  });
+}
+
+export function useDeleteKecamatan() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      unwrapVoid(
+        api.DELETE("/ref/kecamatan/{id}", { params: { path: { id } } }),
+        REF_ERRORS,
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
+  });
+}
+
+export function useCreateKelurahan() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: CreateKelurahanRequest) =>
+      unwrap(api.POST("/ref/kelurahan", { body }), REF_ERRORS),
+    onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
+  });
+}
+
+export function useUpdateKelurahan() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string; body: UpdateKelurahanRequest }) =>
+      unwrap(
+        api.PATCH("/ref/kelurahan/{id}", { params: { path: { id } }, body }),
+        REF_ERRORS,
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
+  });
+}
+
+export function useDeleteKelurahan() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      unwrapVoid(
+        api.DELETE("/ref/kelurahan/{id}", { params: { path: { id } } }),
         REF_ERRORS,
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),

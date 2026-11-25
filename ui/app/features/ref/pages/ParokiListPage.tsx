@@ -11,8 +11,13 @@ import {
   InductivePageHeader,
 } from "~/shared/ui/iui";
 import { useDebouncedValue } from "~/shared/util/use-debounced-value";
-import { useKeuskupanSearch, useParokiSearch } from "../api/queries";
-import { isSuperAdmin } from "../model";
+import {
+  useKeuskupanSearch,
+  useKevikepanSearch,
+  useLookupsSearch,
+  useParokiSearch,
+} from "../api/queries";
+import { formatParokiTimezone, isSuperAdmin } from "../model";
 
 export function meta() {
   return [{ title: "Paroki — Domus" }];
@@ -23,24 +28,53 @@ export default function ParokiListPage() {
   const canManage = isSuperAdmin(me?.roles);
   const [searchParams, setSearchParams] = useSearchParams();
   const keuskupanId = searchParams.get("keuskupanId") ?? "";
+  const kevikepanId = searchParams.get("kevikepanId") ?? "";
   const [q, setQ] = useState("");
+  const [activeFilter, setActiveFilter] = useState<"" | "true" | "false">("");
   const debouncedQ = useDebouncedValue(q);
 
   const keuskupanQuery = useKeuskupanSearch({}, canManage);
   const keuskupanList =
     keuskupanQuery.data?.pages.flatMap((p) => p.data ?? []) ?? [];
 
+  const kevikepanQuery = useKevikepanSearch(
+    { filter: keuskupanId ? { keuskupanId } : undefined },
+    canManage,
+  );
+  const kevikepanList =
+    kevikepanQuery.data?.pages.flatMap((p) => p.data ?? []) ?? [];
+
+  const statusLookupQuery = useLookupsSearch(
+    { filter: { category: "status_paroki", scope: "all" } },
+    canManage,
+  );
+  const statusMap = new Map(
+    (statusLookupQuery.data?.pages.flatMap((p) => p.data ?? []) ?? []).map(
+      (s) => [s.code, s.label],
+    ),
+  );
+
   const parokiQuery = useParokiSearch(
     {
       q: debouncedQ || undefined,
-      filter: keuskupanId ? { keuskupanId } : undefined,
+      filter:
+        keuskupanId || kevikepanId || activeFilter
+          ? {
+              keuskupanId: keuskupanId || undefined,
+              kevikepanId: kevikepanId || undefined,
+              active: activeFilter === "" ? undefined : activeFilter === "true",
+            }
+          : undefined,
     },
     canManage,
   );
   const items = parokiQuery.data?.pages.flatMap((p) => p.data ?? []) ?? [];
 
-  const newHref = keuskupanId
-    ? `/settings/gerejawi/paroki/new?keuskupanId=${keuskupanId}`
+  const newParams = new URLSearchParams();
+  if (keuskupanId) newParams.set("keuskupanId", keuskupanId);
+  if (kevikepanId) newParams.set("kevikepanId", kevikepanId);
+  const newHref = newParams.toString()
+    ? `/settings/gerejawi/paroki/new?${newParams.toString()}`
     : "/settings/gerejawi/paroki/new";
 
   return (
@@ -76,7 +110,7 @@ export default function ParokiListPage() {
       {canManage ? (
         <>
           <InductiveFilterBar>
-            <div className="flex min-w-56 flex-1 flex-col gap-1.5">
+            <div className="flex min-w-48 flex-1 flex-col gap-1.5">
               <label
                 htmlFor="paroki-search"
                 className="text-xs font-semibold text-muted"
@@ -93,7 +127,7 @@ export default function ParokiListPage() {
               />
             </div>
 
-            <div className="flex min-w-56 flex-col gap-1.5">
+            <div className="flex min-w-44 flex-col gap-1.5">
               <label
                 htmlFor="paroki-keuskupan-filter"
                 className="text-xs font-semibold text-muted"
@@ -110,6 +144,7 @@ export default function ParokiListPage() {
                   } else {
                     next.delete("keuskupanId");
                   }
+                  next.delete("kevikepanId");
                   setSearchParams(next);
                 }}
                 className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
@@ -120,6 +155,57 @@ export default function ParokiListPage() {
                     {k.nama}
                   </option>
                 ))}
+              </select>
+            </div>
+
+            <div className="flex min-w-44 flex-col gap-1.5">
+              <label
+                htmlFor="paroki-kevikepan-filter"
+                className="text-xs font-semibold text-muted"
+              >
+                Filter Kevikepan
+              </label>
+              <select
+                id="paroki-kevikepan-filter"
+                value={kevikepanId}
+                onChange={(e) => {
+                  const next = new URLSearchParams(searchParams);
+                  if (e.target.value) {
+                    next.set("kevikepanId", e.target.value);
+                  } else {
+                    next.delete("kevikepanId");
+                  }
+                  setSearchParams(next);
+                }}
+                className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+              >
+                <option value="">Semua Kevikepan</option>
+                {kevikepanList.map((k) => (
+                  <option key={k.id} value={k.id}>
+                    {k.nama}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex min-w-32 flex-col gap-1.5">
+              <label
+                htmlFor="paroki-status-filter"
+                className="text-xs font-semibold text-muted"
+              >
+                Status
+              </label>
+              <select
+                id="paroki-status-filter"
+                value={activeFilter}
+                onChange={(e) =>
+                  setActiveFilter(e.target.value as "" | "true" | "false")
+                }
+                className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+              >
+                <option value="">Semua</option>
+                <option value="true">Aktif</option>
+                <option value="false">Nonaktif</option>
               </select>
             </div>
           </InductiveFilterBar>
@@ -149,13 +235,22 @@ export default function ParokiListPage() {
                       <span className="text-base font-semibold text-fg">
                         {item.nama}
                       </span>
+                      <Badge tone="neutral">{item.kode}</Badge>
+                      {item.kodeResmi ? (
+                        <Badge tone="neutral">{item.kodeResmi}</Badge>
+                      ) : null}
+                      <Badge tone="neutral">
+                        {formatParokiTimezone(item.timezone)}
+                      </Badge>
                       <Badge tone={item.active ? "success" : "neutral"}>
                         {item.active ? "Aktif" : "Nonaktif"}
                       </Badge>
                     </div>
                     <p className="text-xs text-muted">
-                      Kode: <span className="font-mono">{item.kode}</span>
-                      {item.timezone ? ` · Zona waktu: ${item.timezone}` : ""}
+                      {item.statusParoki
+                        ? `Status: ${statusMap.get(item.statusParoki) ?? item.statusParoki}`
+                        : "Status: —"}
+                      {item.pelindung ? ` · Pelindung: ${item.pelindung}` : ""}
                     </p>
                   </div>
                   <Link

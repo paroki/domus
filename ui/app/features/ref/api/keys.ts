@@ -1,5 +1,9 @@
 import type {
+  SearchKecamatanRequest,
+  SearchKelurahanRequest,
   SearchKeuskupanRequest,
+  SearchKevikepanRequest,
+  SearchKotaRequest,
   SearchLingkunganRequest,
   SearchLookupsRequest,
   SearchParokiMembersRequest,
@@ -14,6 +18,21 @@ export const refKeys = {
     [...refKeys.all, "keuskupan", params ?? {}] as const,
   keuskupanDetail: (id: string) =>
     [...refKeys.all, "keuskupan-detail", id] as const,
+  kevikepan: (params?: Omit<SearchKevikepanRequest, "cursor">) =>
+    [...refKeys.all, "kevikepan", params ?? {}] as const,
+  kevikepanDetail: (id: string) =>
+    [...refKeys.all, "kevikepan-detail", id] as const,
+  kota: (params?: Omit<SearchKotaRequest, "cursor">) =>
+    [...refKeys.all, "kota", params ?? {}] as const,
+  kotaDetail: (id: string) => [...refKeys.all, "kota-detail", id] as const,
+  kecamatan: (params?: Omit<SearchKecamatanRequest, "cursor">) =>
+    [...refKeys.all, "kecamatan", params ?? {}] as const,
+  kecamatanDetail: (id: string) =>
+    [...refKeys.all, "kecamatan-detail", id] as const,
+  kelurahan: (params?: Omit<SearchKelurahanRequest, "cursor">) =>
+    [...refKeys.all, "kelurahan", params ?? {}] as const,
+  kelurahanDetail: (id: string) =>
+    [...refKeys.all, "kelurahan-detail", id] as const,
   paroki: (params?: Omit<SearchParokiRequest, "cursor">) =>
     [...refKeys.all, "paroki", params ?? {}] as const,
   parokiDetail: (id: string) => [...refKeys.all, "paroki-detail", id] as const,

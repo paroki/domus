@@ -1,5 +1,9 @@
 export const REF_ERRORS: Record<string, string> = {
   REF_KEUSKUPAN_NOT_FOUND: "Keuskupan tidak ditemukan.",
+  REF_KEVIKEPAN_NOT_FOUND: "Kevikepan tidak ditemukan.",
+  REF_KOTA_NOT_FOUND: "Kota atau kabupaten tidak ditemukan.",
+  REF_KECAMATAN_NOT_FOUND: "Kecamatan tidak ditemukan.",
+  REF_KELURAHAN_NOT_FOUND: "Kelurahan atau desa tidak ditemukan.",
   REF_PAROKI_NOT_FOUND: "Paroki tidak ditemukan.",
   REF_PAROKI_MEMBER_NOT_FOUND: "Anggota paroki tidak ditemukan.",
   REF_WILAYAH_NOT_FOUND: "Wilayah atau stasi tidak ditemukan.",

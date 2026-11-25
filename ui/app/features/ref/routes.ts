@@ -18,35 +18,62 @@ export default [
   ),
   route(
     "settings/gerejawi/kevikepan",
-    "./features/ref/pages/RefPlaceholderPage.tsx",
-    { id: "ref-kevikepan-placeholder" },
+    "./features/ref/pages/KevikepanListPage.tsx",
+  ),
+  route(
+    "settings/gerejawi/kevikepan/new",
+    "./features/ref/pages/KevikepanFormPage.tsx",
+    { id: "ref-kevikepan-new" },
+  ),
+  route(
+    "settings/gerejawi/kevikepan/:id",
+    "./features/ref/pages/KevikepanFormPage.tsx",
+    { id: "ref-kevikepan-edit" },
   ),
   route("settings/gerejawi/paroki", "./features/ref/pages/ParokiListPage.tsx"),
   route(
     "settings/gerejawi/paroki/new",
-    "./features/ref/pages/ParokiFormPage.tsx",
-    { id: "ref-paroki-new" },
+    "./features/ref/pages/ParokiCreateWizardPage.tsx",
   ),
   route(
     "settings/gerejawi/paroki/:id",
-    "./features/ref/pages/ParokiFormPage.tsx",
-    { id: "ref-paroki-edit" },
+    "./features/ref/pages/ParokiDetailPage.tsx",
   ),
-  route("settings/sipil", "./features/ref/pages/RefPlaceholderPage.tsx", {
-    id: "ref-sipil-placeholder",
+  route("settings/sipil", "./features/ref/pages/SipilHubPage.tsx"),
+  route("settings/sipil/kota", "./features/ref/pages/KotaListPage.tsx"),
+  route("settings/sipil/kota/new", "./features/ref/pages/KotaFormPage.tsx", {
+    id: "ref-kota-new",
   }),
-  route("settings/sipil/kota", "./features/ref/pages/RefPlaceholderPage.tsx", {
-    id: "ref-kota-placeholder",
+  route("settings/sipil/kota/:id", "./features/ref/pages/KotaFormPage.tsx", {
+    id: "ref-kota-edit",
   }),
   route(
     "settings/sipil/kecamatan",
-    "./features/ref/pages/RefPlaceholderPage.tsx",
-    { id: "ref-kecamatan-placeholder" },
+    "./features/ref/pages/KecamatanListPage.tsx",
+  ),
+  route(
+    "settings/sipil/kecamatan/new",
+    "./features/ref/pages/KecamatanFormPage.tsx",
+    { id: "ref-kecamatan-new" },
+  ),
+  route(
+    "settings/sipil/kecamatan/:id",
+    "./features/ref/pages/KecamatanFormPage.tsx",
+    { id: "ref-kecamatan-edit" },
   ),
   route(
     "settings/sipil/kelurahan",
-    "./features/ref/pages/RefPlaceholderPage.tsx",
-    { id: "ref-kelurahan-placeholder" },
+    "./features/ref/pages/KelurahanListPage.tsx",
+  ),
+  route(
+    "settings/sipil/kelurahan/new",
+    "./features/ref/pages/KelurahanFormPage.tsx",
+    { id: "ref-kelurahan-new" },
+  ),
+  route(
+    "settings/sipil/kelurahan/:id",
+    "./features/ref/pages/KelurahanFormPage.tsx",
+    { id: "ref-kelurahan-edit" },
   ),
   route("settings/paroki", "./features/ref/pages/ParokiHubPage.tsx"),
   route(

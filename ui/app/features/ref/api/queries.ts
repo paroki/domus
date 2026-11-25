@@ -9,7 +9,11 @@ import { useMe } from "~/shared/api/session";
 import { REF_ERRORS } from "./errors";
 import { refKeys } from "./keys";
 import type {
+  SearchKecamatanRequest,
+  SearchKelurahanRequest,
   SearchKeuskupanRequest,
+  SearchKevikepanRequest,
+  SearchKotaRequest,
   SearchLingkunganRequest,
   SearchLookupsRequest,
   SearchParokiMembersRequest,
@@ -253,6 +257,150 @@ export function useLookupDetail(id: string, enabled = true) {
       queryFn: () =>
         unwrap(
           api.GET("/ref/lookups/{id}", { params: { path: { id } } }),
+          REF_ERRORS,
+        ),
+    }),
+  );
+}
+
+export function useKevikepanSearch(
+  filter: Omit<SearchKevikepanRequest, "cursor"> = {},
+  enabled = true,
+) {
+  return useInfiniteQuery(
+    infiniteQueryOptions({
+      queryKey: refKeys.kevikepan(filter),
+      initialPageParam: undefined as string | undefined,
+      enabled,
+      queryFn: ({ pageParam }) =>
+        unwrapMeta(
+          api.POST("/ref/kevikepan/search", {
+            body: { ...filter, cursor: pageParam, limit: filter.limit ?? 50 },
+          }),
+          REF_ERRORS,
+        ),
+      getNextPageParam: (lastPage) =>
+        lastPage.meta?.hasMore ? lastPage.meta.nextCursor : undefined,
+    }),
+  );
+}
+
+export function useKevikepanDetail(id: string, enabled = true) {
+  return useQuery(
+    queryOptions({
+      queryKey: refKeys.kevikepanDetail(id),
+      enabled: enabled && Boolean(id),
+      queryFn: () =>
+        unwrap(
+          api.GET("/ref/kevikepan/{id}", { params: { path: { id } } }),
+          REF_ERRORS,
+        ),
+    }),
+  );
+}
+
+export function useKotaSearch(
+  filter: Omit<SearchKotaRequest, "cursor"> = {},
+  enabled = true,
+) {
+  return useInfiniteQuery(
+    infiniteQueryOptions({
+      queryKey: refKeys.kota(filter),
+      initialPageParam: undefined as string | undefined,
+      enabled,
+      queryFn: ({ pageParam }) =>
+        unwrapMeta(
+          api.POST("/ref/kota/search", {
+            body: { ...filter, cursor: pageParam, limit: filter.limit ?? 50 },
+          }),
+          REF_ERRORS,
+        ),
+      getNextPageParam: (lastPage) =>
+        lastPage.meta?.hasMore ? lastPage.meta.nextCursor : undefined,
+    }),
+  );
+}
+
+export function useKotaDetail(id: string, enabled = true) {
+  return useQuery(
+    queryOptions({
+      queryKey: refKeys.kotaDetail(id),
+      enabled: enabled && Boolean(id),
+      queryFn: () =>
+        unwrap(
+          api.GET("/ref/kota/{id}", { params: { path: { id } } }),
+          REF_ERRORS,
+        ),
+    }),
+  );
+}
+
+export function useKecamatanSearch(
+  filter: Omit<SearchKecamatanRequest, "cursor"> = {},
+  enabled = true,
+) {
+  return useInfiniteQuery(
+    infiniteQueryOptions({
+      queryKey: refKeys.kecamatan(filter),
+      initialPageParam: undefined as string | undefined,
+      enabled,
+      queryFn: ({ pageParam }) =>
+        unwrapMeta(
+          api.POST("/ref/kecamatan/search", {
+            body: { ...filter, cursor: pageParam, limit: filter.limit ?? 50 },
+          }),
+          REF_ERRORS,
+        ),
+      getNextPageParam: (lastPage) =>
+        lastPage.meta?.hasMore ? lastPage.meta.nextCursor : undefined,
+    }),
+  );
+}
+
+export function useKecamatanDetail(id: string, enabled = true) {
+  return useQuery(
+    queryOptions({
+      queryKey: refKeys.kecamatanDetail(id),
+      enabled: enabled && Boolean(id),
+      queryFn: () =>
+        unwrap(
+          api.GET("/ref/kecamatan/{id}", { params: { path: { id } } }),
+          REF_ERRORS,
+        ),
+    }),
+  );
+}
+
+export function useKelurahanSearch(
+  filter: Omit<SearchKelurahanRequest, "cursor"> = {},
+  enabled = true,
+) {
+  return useInfiniteQuery(
+    infiniteQueryOptions({
+      queryKey: refKeys.kelurahan(filter),
+      initialPageParam: undefined as string | undefined,
+      enabled,
+      queryFn: ({ pageParam }) =>
+        unwrapMeta(
+          api.POST("/ref/kelurahan/search", {
+            body: { ...filter, cursor: pageParam, limit: filter.limit ?? 50 },
+          }),
+          REF_ERRORS,
+        ),
+      getNextPageParam: (lastPage) =>
+        lastPage.meta?.hasMore ? lastPage.meta.nextCursor : undefined,
+    }),
+  );
+}
+
+export function useKelurahanDetail(id: string, enabled = true) {
+  return useQuery(
+    queryOptions({
+      queryKey: refKeys.kelurahanDetail(id),
+      enabled: enabled && Boolean(id),
+      queryFn: () =>
+        unwrap(
+          api.GET("/ref/kelurahan/{id}", { params: { path: { id } } }),
           REF_ERRORS,
         ),
     }),

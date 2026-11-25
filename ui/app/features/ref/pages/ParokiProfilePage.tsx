@@ -1,9 +1,16 @@
-import { type FormEvent, useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { InductivePageHeader } from "~/shared/ui/iui";
-
 import { useUpdateCurrentParokiProfile } from "../api/actions";
 import { useCurrentIdentity, useCurrentParoki } from "../api/queries";
+import type { UpdateParokiProfileRequest } from "../api/types";
+import {
+  ParokiDomisiliCard,
+  ParokiIdentitasCard,
+  ParokiKontakCard,
+  type ParokiSectionKey,
+  ParokiStrukturReadOnlyCard,
+} from "../components/ParokiSectionCards";
 import { isParokiAdmin } from "../model";
 
 export function meta() {
@@ -21,41 +28,18 @@ export default function ParokiProfilePage() {
   } = useCurrentParoki(Boolean(me?.activeParokiId));
   const updateProfile = useUpdateCurrentParokiProfile();
 
-  const [nama, setNama] = useState("");
-  const [pelindung, setPelindung] = useState("");
-  const [pastor, setPastor] = useState("");
-  const [telepon, setTelepon] = useState("");
-  const [email, setEmail] = useState("");
-  const [alamat, setAlamat] = useState("");
-  const [website, setWebsite] = useState("");
+  const [editingSection, setEditingSection] = useState<ParokiSectionKey | null>(
+    null,
+  );
   const [profileSaved, setProfileSaved] = useState(false);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!paroki) return;
-    setNama(paroki.nama ?? "");
-    setPelindung(paroki.pelindung ?? "");
-    setPastor(paroki.pastor ?? "");
-    setTelepon(paroki.telepon ?? "");
-    setEmail(paroki.email ?? "");
-    setAlamat(paroki.alamat ?? "");
-    setWebsite(paroki.website ?? "");
-  }, [paroki]);
-
-  async function handleSaveProfile(e: FormEvent) {
-    e.preventDefault();
+  async function handleSaveSection(body: UpdateParokiProfileRequest) {
     setFeedbackError(null);
     setProfileSaved(false);
     try {
-      await updateProfile.mutateAsync({
-        nama: nama.trim(),
-        pelindung: pelindung.trim(),
-        pastor: pastor.trim(),
-        telepon: telepon.trim(),
-        email: email.trim(),
-        alamat: alamat.trim(),
-        website: website.trim(),
-      });
+      await updateProfile.mutateAsync(body);
+      setEditingSection(null);
       setProfileSaved(true);
     } catch (err) {
       setFeedbackError(err instanceof Error ? err.message : "Gagal menyimpan.");
@@ -63,7 +47,7 @@ export default function ParokiProfilePage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-8 sm:px-6">
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8 sm:px-6">
       <InductivePageHeader
         breadcrumbs={[
           { label: "Beranda", to: "/" },
@@ -76,7 +60,10 @@ export default function ParokiProfilePage() {
       />
 
       {!canManage ? (
-        <div className="rounded-xl border border-line bg-surface p-6 text-sm text-muted">
+        <div
+          role="alert"
+          className="rounded-xl border border-warning-fg/30 bg-warning-bg px-4 py-3 text-sm text-warning-fg"
+        >
           {t("ref.forbiddenParishAdmin")}
         </div>
       ) : !me?.activeParokiId ? (
@@ -84,127 +71,66 @@ export default function ParokiProfilePage() {
           {t("ref.noActiveParish")}
         </div>
       ) : isLoading ? (
-        <p className="text-sm text-muted">{t("auth.loading")}</p>
+        <p className="text-sm text-muted">{t("ref.loading")}</p>
       ) : parokiError ? (
-        <p className="text-sm text-danger">{parokiError.message}</p>
-      ) : (
+        <div
+          role="alert"
+          className="rounded-xl border border-danger-fg/30 bg-danger-bg p-4 text-sm text-danger-fg"
+        >
+          {parokiError instanceof Error
+            ? parokiError.message
+            : "Gagal memuat paroki."}
+        </div>
+      ) : paroki ? (
         <>
-          {feedbackError && (
+          {feedbackError ? (
             <div
               role="alert"
-              className="rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger"
+              className="rounded-xl border border-danger-fg/30 bg-danger-bg px-4 py-3 text-sm text-danger-fg"
             >
               {feedbackError}
             </div>
-          )}
+          ) : null}
 
-          <form
-            onSubmit={handleSaveProfile}
-            className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-6"
-          >
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-fg">
-                {paroki?.nama} ({paroki?.kode})
-              </h2>
-              {profileSaved && (
-                <span className="text-xs font-medium text-primary">
-                  {t("ref.saved")}
-                </span>
-              )}
+          {profileSaved ? (
+            <div
+              role="status"
+              className="rounded-xl border border-success-fg/30 bg-success-bg px-4 py-3 text-sm text-success-fg"
+            >
+              {t("ref.saved")}
             </div>
+          ) : null}
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="flex flex-col gap-1 text-sm">
-                <span className="font-medium text-fg">
-                  {t("ref.nameLabel")}
-                </span>
-                <input
-                  required
-                  value={nama}
-                  onChange={(e) => setNama(e.target.value)}
-                  className="h-10 rounded-lg border border-line bg-canvas px-3 text-fg"
-                />
-              </label>
-              <label className="flex flex-col gap-1 text-sm">
-                <span className="font-medium text-fg">
-                  {t("ref.patronSaintLabel")}
-                </span>
-                <input
-                  value={pelindung}
-                  onChange={(e) => setPelindung(e.target.value)}
-                  className="h-10 rounded-lg border border-line bg-canvas px-3 text-fg"
-                />
-              </label>
-              <label className="flex flex-col gap-1 text-sm">
-                <span className="font-medium text-fg">
-                  {t("ref.pastorNameLabel")}
-                </span>
-                <input
-                  value={pastor}
-                  onChange={(e) => setPastor(e.target.value)}
-                  className="h-10 rounded-lg border border-line bg-canvas px-3 text-fg"
-                />
-              </label>
-              <label className="flex flex-col gap-1 text-sm">
-                <span className="font-medium text-fg">
-                  {t("ref.phoneLabel")}
-                </span>
-                <input
-                  value={telepon}
-                  onChange={(e) => setTelepon(e.target.value)}
-                  placeholder="+62812..."
-                  className="h-10 rounded-lg border border-line bg-canvas px-3 text-fg"
-                />
-              </label>
-              <label className="flex flex-col gap-1 text-sm">
-                <span className="font-medium text-fg">
-                  {t("ref.emailLabel")}
-                </span>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="h-10 rounded-lg border border-line bg-canvas px-3 text-fg"
-                />
-              </label>
-              <label className="flex flex-col gap-1 text-sm">
-                <span className="font-medium text-fg">
-                  {t("ref.websiteLabel")}
-                </span>
-                <input
-                  value={website}
-                  onChange={(e) => setWebsite(e.target.value)}
-                  className="h-10 rounded-lg border border-line bg-canvas px-3 text-fg"
-                />
-              </label>
-            </div>
+          <ParokiStrukturReadOnlyCard paroki={paroki} />
 
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="font-medium text-fg">
-                {t("ref.addressLabel")}
-              </span>
-              <textarea
-                rows={2}
-                value={alamat}
-                onChange={(e) => setAlamat(e.target.value)}
-                className="rounded-lg border border-line bg-canvas p-3 text-fg"
-              />
-            </label>
+          <ParokiIdentitasCard
+            paroki={paroki}
+            editing={editingSection === "identitas"}
+            pending={updateProfile.isPending}
+            onEdit={() => setEditingSection("identitas")}
+            onCancel={() => setEditingSection(null)}
+            onSave={handleSaveSection}
+          />
 
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                disabled={updateProfile.isPending}
-                className="h-10 rounded-lg bg-primary px-5 text-sm font-semibold text-on-primary disabled:opacity-50"
-              >
-                {updateProfile.isPending
-                  ? t("ref.saving")
-                  : t("ref.saveProfile")}
-              </button>
-            </div>
-          </form>
+          <ParokiDomisiliCard
+            paroki={paroki}
+            editing={editingSection === "domisili"}
+            pending={updateProfile.isPending}
+            onEdit={() => setEditingSection("domisili")}
+            onCancel={() => setEditingSection(null)}
+            onSave={handleSaveSection}
+          />
+
+          <ParokiKontakCard
+            paroki={paroki}
+            editing={editingSection === "kontak"}
+            pending={updateProfile.isPending}
+            onEdit={() => setEditingSection("kontak")}
+            onCancel={() => setEditingSection(null)}
+            onSave={handleSaveSection}
+          />
         </>
-      )}
+      ) : null}
     </div>
   );
 }

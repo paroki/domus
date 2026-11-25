@@ -204,3 +204,75 @@ export const PAROKI_STEPS: HubStepDef[] = [
     plate: 5,
   },
 ];
+
+export const SIPIL_STEPS: HubStepDef[] = [
+  {
+    id: "kota",
+    path: "/settings/sipil/kota",
+    title: "Kota / Kabupaten",
+    description: "Data referensi kota dan kabupaten tingkat II.",
+    icon: Building2,
+    plate: 1,
+  },
+  {
+    id: "kecamatan",
+    path: "/settings/sipil/kecamatan",
+    title: "Kecamatan",
+    description: "Data referensi kecamatan di bawah kota/kabupaten.",
+    icon: MapPin,
+    plate: 2,
+  },
+  {
+    id: "kelurahan",
+    path: "/settings/sipil/kelurahan",
+    title: "Kelurahan / Desa",
+    description: "Data referensi kelurahan atau desa beserta kode pos.",
+    icon: Compass,
+    plate: 3,
+  },
+];
+
+export const NIL_UUID = "00000000-0000-0000-0000-000000000000";
+export const DEFAULT_PAROKI_TIMEZONE = "Asia/Makassar";
+
+export const PAROKI_TIMEZONES = [
+  { value: "Asia/Jakarta", label: "Asia/Jakarta (WIB)", short: "WIB" },
+  { value: "Asia/Makassar", label: "Asia/Makassar (WITA)", short: "WITA" },
+  { value: "Asia/Jayapura", label: "Asia/Jayapura (WIT)", short: "WIT" },
+] as const;
+
+export function formatParokiTimezone(tz?: string): string {
+  if (!tz) return "WITA";
+  return PAROKI_TIMEZONES.find((item) => item.value === tz)?.short ?? tz;
+}
+
+export function validateCoordinatePair(
+  latStr: string,
+  lngStr: string,
+): {
+  valid: boolean;
+  latitude?: number;
+  longitude?: number;
+  error?: string;
+} {
+  const latTrim = latStr.trim();
+  const lngTrim = lngStr.trim();
+  if (!latTrim && !lngTrim) {
+    return { valid: true };
+  }
+  if (!latTrim || !lngTrim) {
+    return {
+      valid: false,
+      error: "Latitude dan longitude harus diisi berpasangan.",
+    };
+  }
+  const latitude = Number(latTrim);
+  const longitude = Number(lngTrim);
+  if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90) {
+    return { valid: false, error: "Latitude harus antara -90 dan 90." };
+  }
+  if (!Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
+    return { valid: false, error: "Longitude harus antara -180 dan 180." };
+  }
+  return { valid: true, latitude, longitude };
+}
