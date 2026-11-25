@@ -15,17 +15,16 @@ import {
 } from "~/shared/api/client";
 import type { components } from "~/shared/api/schema";
 
-type SearchParishesRequest =
-  components["schemas"]["domain.SearchParishesRequest"];
-type SwitchSessionParishRequest =
-  components["schemas"]["domain.SwitchSessionParishRequest"];
+type SearchParokiRequest = components["schemas"]["domain.SearchParokiRequest"];
+type SwitchSessionParokiRequest =
+  components["schemas"]["domain.SwitchSessionParokiRequest"];
 
 export const sessionKeys = {
   me: ["user", "me"] as const,
   sessions: ["user", "sessions"] as const,
   ref: ["ref"] as const,
-  parishes: (params: Omit<SearchParishesRequest, "cursor"> = {}) =>
-    ["ref", "parishes", params] as const,
+  parishes: (params: Omit<SearchParokiRequest, "cursor"> = {}) =>
+    ["ref", "paroki", params] as const,
 };
 
 export function meQueryOptions() {
@@ -43,12 +42,12 @@ export function useMe() {
 export function useSwitchParish() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (body: SwitchSessionParishRequest) => {
+    mutationFn: async (body: SwitchSessionParokiRequest) => {
       await unwrapVoid(api.PATCH("/me/session", { body }));
-      return body.activeParishId;
+      return body.activeParokiId;
     },
-    onSuccess: async (parishId) => {
-      setActiveParish(parishId);
+    onSuccess: async (parokiId) => {
+      setActiveParish(parokiId);
       await Promise.all([
         qc.invalidateQueries({ queryKey: sessionKeys.me }),
         qc.invalidateQueries({ queryKey: sessionKeys.sessions }),
@@ -72,7 +71,7 @@ export function useLogout() {
 }
 
 export function useSessionParishes(
-  filter: Omit<SearchParishesRequest, "cursor"> = {},
+  filter: Omit<SearchParokiRequest, "cursor"> = {},
   enabled = true,
 ) {
   return useInfiniteQuery(
@@ -82,7 +81,7 @@ export function useSessionParishes(
       enabled,
       queryFn: ({ pageParam }) =>
         unwrapMeta(
-          api.POST("/ref/parishes/search", {
+          api.POST("/ref/paroki/search", {
             body: { ...filter, cursor: pageParam, limit: filter.limit ?? 50 },
           }),
         ),

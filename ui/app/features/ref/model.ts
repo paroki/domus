@@ -9,7 +9,7 @@ import {
 import type { AppDef } from "~/shared/app-def";
 
 export const ROLE_SUPER_ADMIN = "user:super-admin";
-export const ROLE_PARISH_ADMIN = "ref:parish-admin";
+export const ROLE_PARISH_ADMIN = "ref:paroki-admin";
 
 export const LOOKUP_CATEGORIES = [
   "sacrament",

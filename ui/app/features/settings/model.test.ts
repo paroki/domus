@@ -17,7 +17,7 @@ import {
 
 test("isSuperAdmin checks user:super-admin role", () => {
   assert.equal(isSuperAdmin(["user:super-admin"]), true);
-  assert.equal(isSuperAdmin(["user:user", "ref:parish-admin"]), false);
+  assert.equal(isSuperAdmin(["user:user", "ref:paroki-admin"]), false);
   assert.equal(isSuperAdmin(undefined), false);
 });
 

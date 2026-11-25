@@ -68,7 +68,7 @@ export const api = createClient<paths>({ baseUrl: "/api" });
 api.use({
   onRequest({ request }) {
     if (activeParishId) {
-      request.headers.set("X-Parish-Id", activeParishId);
+      request.headers.set("X-Paroki-Id", activeParishId);
     }
     return request;
   },

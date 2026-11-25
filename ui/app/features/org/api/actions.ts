@@ -141,7 +141,7 @@ export function useRedeemOrgInvite(code: string) {
         }),
       ),
     onSuccess: async (res) => {
-      setActiveParish(res.parishId ?? null);
+      setActiveParish(res.parokiId ?? null);
       await Promise.all([
         qc.invalidateQueries({ queryKey: sessionKeys.me }),
         qc.invalidateQueries({ queryKey: sessionKeys.parishes() }),
@@ -164,7 +164,7 @@ export function useOrgVerifyOTP() {
     mutationFn: (body: VerifyOTPRequest) =>
       unwrap(api.POST("/auth/otp/verify", { body })),
     onSuccess: async (res) => {
-      const parishId = res.activeParishId ?? null;
+      const parishId = res.activeParokiId ?? null;
       if (parishId) {
         setActiveParish(parishId);
       }

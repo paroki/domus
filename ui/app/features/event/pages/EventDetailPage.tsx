@@ -37,7 +37,7 @@ export default function EventDetailPage() {
   const navigate = useNavigate();
   const { eventId = "" } = useParams();
   const { data: me } = useMe();
-  const hasParish = Boolean(me?.activeParishId);
+  const hasParish = Boolean(me?.activeParokiId);
 
   const eventQuery = useEvent(eventId, hasParish);
   const ev = eventQuery.data;

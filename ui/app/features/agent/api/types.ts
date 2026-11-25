@@ -8,7 +8,7 @@ export interface ToolCallRecord {
 
 export interface SessionResponse {
   id: string;
-  parishId: string;
+  parokiId: string;
   userId: string;
   title: string;
   providerId?: string;
@@ -21,7 +21,7 @@ export interface SessionResponse {
 export interface MessageResponse {
   id: string;
   sessionId: string;
-  parishId: string;
+  parokiId: string;
   userId: string;
   agentName: string;
   role: "user" | "assistant" | "tool";
@@ -48,7 +48,7 @@ export interface UpdateSessionRequest {
 
 export interface MemoryResponse {
   id: string;
-  parishId: string;
+  parokiId: string;
   userId: string;
   category: MemoryCategory;
   content: string;

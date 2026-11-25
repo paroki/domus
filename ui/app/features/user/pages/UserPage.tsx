@@ -67,7 +67,7 @@ export default function UserPage() {
   const parishAdminCaller = !superAdminCaller && isParishAdmin(me);
   const orgAdminCaller =
     !superAdminCaller && !parishAdminCaller && isOrgAdmin(me);
-  const activeParishId = me?.activeParishId ?? "";
+  const activeParishId = me?.activeParokiId ?? "";
 
   const usersQuery = useUsersSearch(
     {

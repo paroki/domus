@@ -30,7 +30,7 @@ export default function LookupsPage() {
   const bothRoles = superAdmin && parishAdmin;
 
   const [categoryFilter, setCategoryFilter] = useState("");
-  const [scopeFilter, setScopeFilter] = useState<"all" | "global" | "parish">(
+  const [scopeFilter, setScopeFilter] = useState<"all" | "global" | "paroki">(
     "all",
   );
   const [editing, setEditing] = useState<Lookup | null>(null);
@@ -73,8 +73,8 @@ export default function LookupsPage() {
   }
 
   function canModify(item: Lookup): boolean {
-    if (!item.parishId) return superAdmin;
-    return parishAdmin && Boolean(me?.activeParishId);
+    if (!item.parokiId) return superAdmin;
+    return parishAdmin && Boolean(me?.activeParokiId);
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -197,7 +197,7 @@ export default function LookupsPage() {
               ) : (
                 <span className="text-xs text-muted">
                   {editing
-                    ? editing.parishId
+                    ? editing.parokiId
                       ? t("ref.scopeParish")
                       : t("ref.scopeGlobal")
                     : superAdmin
@@ -249,14 +249,14 @@ export default function LookupsPage() {
                   value={scopeFilter}
                   onChange={(e) =>
                     setScopeFilter(
-                      e.target.value as "all" | "global" | "parish",
+                      e.target.value as "all" | "global" | "paroki",
                     )
                   }
                   className="h-9 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
                 >
                   <option value="all">{t("ref.scopeAll")}</option>
                   <option value="global">{t("ref.scopeGlobal")}</option>
-                  <option value="parish">{t("ref.scopeParish")}</option>
+                  <option value="paroki">{t("ref.scopeParish")}</option>
                 </select>
               </div>
             </div>
@@ -276,12 +276,12 @@ export default function LookupsPage() {
                         </p>
                         <span
                           className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                            item.parishId
+                            item.parokiId
                               ? "bg-primary/15 text-primary"
                               : "bg-fg/10 text-muted"
                           }`}
                         >
-                          {item.parishId
+                          {item.parokiId
                             ? t("ref.scopeParish")
                             : t("ref.scopeGlobal")}
                         </span>

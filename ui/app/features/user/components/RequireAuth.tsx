@@ -12,7 +12,7 @@ export default function RequireAuth() {
 
   useEffect(() => {
     if (me) {
-      setActiveParish(me.activeParishId ?? null);
+      setActiveParish(me.activeParokiId ?? null);
     } else if (error instanceof ApiError && error.status === 401) {
       setActiveParish(null);
     }

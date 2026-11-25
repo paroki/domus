@@ -7,7 +7,7 @@ import type {
 
 export const ROLE_SUPER_ADMIN = "user:super-admin";
 export const ROLE_USER = "user:user";
-export const ROLE_PARISH_ADMIN = "ref:parish-admin";
+export const ROLE_PARISH_ADMIN = "ref:paroki-admin";
 export const ROLE_ORG_ADMIN = "org:admin";
 export const ROLE_ORG_MEMBER = "org:member";
 
@@ -29,7 +29,7 @@ export const ROLE_DESCRIPTORS: RoleDescriptor[] = [
   {
     code: ROLE_PARISH_ADMIN,
     name: "Admin Paroki",
-    scope: "parish",
+    scope: "paroki",
     description:
       "Mengelola profil paroki, wilayah & lingkungan, kamus referensi, periode, dan organisasi paroki.",
   },

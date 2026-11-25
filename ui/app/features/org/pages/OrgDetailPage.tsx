@@ -52,7 +52,7 @@ export default function OrgDetailPage() {
   const { orgId = "" } = useParams();
   const navigate = useNavigate();
   const { data: me, isLoading: meLoading } = useMe();
-  const hasParish = Boolean(me?.activeParishId);
+  const hasParish = Boolean(me?.activeParokiId);
   const parishAdmin = isParishAdmin(me?.roles);
 
   const orgQuery = useOrg(orgId);

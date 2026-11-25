@@ -87,7 +87,7 @@ export default function UserDetailPage() {
   const superAdminCaller = isSuperAdmin(me);
   const parishAdminCaller = isParishAdmin(me);
   const orgAdminCaller = isOrgAdmin(me);
-  const activeParishId = me?.activeParishId ?? "";
+  const activeParishId = me?.activeParokiId ?? "";
 
   const navPreview = (
     location.state as { userPreview?: UserDirectoryPreview } | null
@@ -293,7 +293,7 @@ export default function UserDetailPage() {
   const providers = fullUser?.linkedProviders?.map(providerLabel) ?? [];
   const lastLoginText = formatDate(fullUser?.lastLoginAt);
   const createdAtText = formatDate(fullUser?.createdAt);
-  const activeParishName = parishes.find((p) => p.id === activeParishId)?.name;
+  const activeParishName = parishes.find((p) => p.id === activeParishId)?.nama;
 
   async function handleSaveProfile(e: FormEvent) {
     e.preventDefault();
@@ -811,7 +811,7 @@ export default function UserDetailPage() {
                     >
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-sm font-bold text-fg">
-                          {parish.name}
+                          {parish.nama}
                         </span>
                         <Badge tone={isAdmin ? "warning" : "neutral"}>
                           {isAdmin
@@ -831,7 +831,7 @@ export default function UserDetailPage() {
                               setPendingConfirm({
                                 kind: "demoteParishAdmin",
                                 parishId: parish.id,
-                                parishName: parish.name ?? "",
+                                parishName: parish.nama ?? "",
                               })
                             }
                           >
@@ -861,10 +861,10 @@ export default function UserDetailPage() {
                             setPendingConfirm({
                               kind: "removeParishMember",
                               parishId: parish.id,
-                              parishName: parish.name ?? "",
+                              parishName: parish.nama ?? "",
                             })
                           }
-                          aria-label={`${t("users.deleteUser")} ${parish.name ?? ""}`}
+                          aria-label={`${t("users.deleteUser")} ${parish.nama ?? ""}`}
                         >
                           <Trash2 aria-hidden className="size-4" />
                         </Button>
@@ -894,7 +894,7 @@ export default function UserDetailPage() {
                     >
                       {availableParishes.map((p) => (
                         <option key={p.id} value={p.id}>
-                          {p.name}
+                          {p.nama}
                         </option>
                       ))}
                     </select>

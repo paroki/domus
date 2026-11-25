@@ -5,13 +5,13 @@ type Schemas = components["schemas"];
 export type RoleDescriptor = Schemas["authz.RoleDescriptor"];
 export type User = Schemas["domain.UserResponse"];
 export type AuthProviders = Schemas["domain.AuthProvidersResponse"];
-export type Parish = Schemas["domain.ParishResponse"];
-export type ParishMember = Schemas["domain.ParishMemberResponse"];
-export type AddParishMemberRequest = Schemas["domain.AddParishMemberRequest"];
+export type Parish = Schemas["domain.ParokiResponse"];
+export type ParishMember = Schemas["domain.ParokiMemberResponse"];
+export type AddParishMemberRequest = Schemas["domain.AddParokiMemberRequest"];
 export type UpdateParishMemberRequest =
-  Schemas["domain.UpdateParishMemberRequest"];
+  Schemas["domain.UpdateParokiMemberRequest"];
 export type SearchParishMembersRequest =
-  Schemas["domain.SearchParishMembersRequest"];
+  Schemas["domain.SearchParokiMembersRequest"];
 export type Organization = Schemas["domain.OrganizationResponse"];
 export type OrgMember = Schemas["domain.OrgMemberResponse"];
 export type AddOrgMemberRequest = Schemas["domain.AddOrgMemberRequest"];
@@ -25,9 +25,10 @@ export type RequestOTPResponse = Schemas["domain.RequestOTPResponse"];
 export type VerifyOTPRequest = Schemas["domain.VerifyOTPRequest"];
 export type UpdateMeRequest = Schemas["domain.UpdateMeRequest"];
 export type SwitchSessionParishRequest =
-  Schemas["domain.SwitchSessionParishRequest"];
+  Schemas["domain.SwitchSessionParokiRequest"];
 export type UserSession = Schemas["domain.UserSessionResponse"];
-export type SearchSessionsRequest = Schemas["domain.SearchSessionsRequest"];
+export type SearchSessionsRequest =
+  Schemas["github_com_paroki_domus_internal_user_domain.SearchSessionsRequest"];
 export type UserAccount = Schemas["domain.UserAccountResponse"];
 export type SearchAccountsRequest = Schemas["domain.SearchAccountsRequest"];
 export type SearchUsersRequest = Schemas["domain.SearchUsersRequest"];

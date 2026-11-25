@@ -125,7 +125,7 @@ export function useOrgZones(enabled = true) {
     enabled,
     queryFn: () =>
       unwrap(
-        api.POST("/ref/zones/search", {
+        api.POST("/ref/wilayah/search", {
           body: { filter: { active: true }, limit: 100 },
         }),
       ),
@@ -138,7 +138,7 @@ export function useOrgWards(enabled = true) {
     enabled,
     queryFn: () =>
       unwrap(
-        api.POST("/ref/wards/search", {
+        api.POST("/ref/lingkungan/search", {
           body: { filter: { active: true }, limit: 100 },
         }),
       ),

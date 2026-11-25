@@ -126,7 +126,7 @@ export default function OrgJoinPage() {
             <Building2 aria-hidden className="size-6" />
           </span>
           <h1 className="text-xl font-bold text-fg">{preview.orgName}</h1>
-          <p className="text-sm text-muted">{preview.parishName}</p>
+          <p className="text-sm text-muted">{preview.parokiName}</p>
           <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
             <Badge tone="neutral">{kindLabel(preview.orgKind ?? "")}</Badge>
             <Badge tone={statusMeta.tone}>{statusMeta.label}</Badge>

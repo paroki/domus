@@ -2,34 +2,34 @@ import type { components } from "~/shared/api/schema";
 
 type Schemas = components["schemas"];
 
-export type Diocese = Schemas["domain.DioceseResponse"];
-export type SearchDiocesesRequest = Schemas["domain.SearchDiocesesRequest"];
-export type CreateDioceseRequest = Schemas["domain.CreateDioceseRequest"];
-export type UpdateDioceseRequest = Schemas["domain.UpdateDioceseRequest"];
+export type Diocese = Schemas["domain.KeuskupanResponse"];
+export type SearchDiocesesRequest = Schemas["domain.SearchKeuskupanRequest"];
+export type CreateDioceseRequest = Schemas["domain.CreateKeuskupanRequest"];
+export type UpdateDioceseRequest = Schemas["domain.UpdateKeuskupanRequest"];
 
-export type Parish = Schemas["domain.ParishResponse"];
-export type SearchParishesRequest = Schemas["domain.SearchParishesRequest"];
-export type CreateParishRequest = Schemas["domain.CreateParishRequest"];
-export type UpdateParishRequest = Schemas["domain.UpdateParishRequest"];
+export type Parish = Schemas["domain.ParokiResponse"];
+export type SearchParishesRequest = Schemas["domain.SearchParokiRequest"];
+export type CreateParishRequest = Schemas["domain.CreateParokiRequest"];
+export type UpdateParishRequest = Schemas["domain.UpdateParokiRequest"];
 export type UpdateParishProfileRequest =
-  Schemas["domain.UpdateParishProfileRequest"];
+  Schemas["domain.UpdateParokiProfileRequest"];
 
-export type ParishMember = Schemas["domain.ParishMemberResponse"];
+export type ParishMember = Schemas["domain.ParokiMemberResponse"];
 export type SearchParishMembersRequest =
-  Schemas["domain.SearchParishMembersRequest"];
-export type AddParishMemberRequest = Schemas["domain.AddParishMemberRequest"];
+  Schemas["domain.SearchParokiMembersRequest"];
+export type AddParishMemberRequest = Schemas["domain.AddParokiMemberRequest"];
 export type UpdateParishMemberRequest =
-  Schemas["domain.UpdateParishMemberRequest"];
+  Schemas["domain.UpdateParokiMemberRequest"];
 
-export type Zone = Schemas["domain.ZoneResponse"];
-export type SearchZonesRequest = Schemas["domain.SearchZonesRequest"];
-export type CreateZoneRequest = Schemas["domain.CreateZoneRequest"];
-export type UpdateZoneRequest = Schemas["domain.UpdateZoneRequest"];
+export type Zone = Schemas["domain.WilayahResponse"];
+export type SearchZonesRequest = Schemas["domain.SearchWilayahRequest"];
+export type CreateZoneRequest = Schemas["domain.CreateWilayahRequest"];
+export type UpdateZoneRequest = Schemas["domain.UpdateWilayahRequest"];
 
-export type Ward = Schemas["domain.WardResponse"];
-export type SearchWardsRequest = Schemas["domain.SearchWardsRequest"];
-export type CreateWardRequest = Schemas["domain.CreateWardRequest"];
-export type UpdateWardRequest = Schemas["domain.UpdateWardRequest"];
+export type Ward = Schemas["domain.LingkunganResponse"];
+export type SearchWardsRequest = Schemas["domain.SearchLingkunganRequest"];
+export type CreateWardRequest = Schemas["domain.CreateLingkunganRequest"];
+export type UpdateWardRequest = Schemas["domain.UpdateLingkunganRequest"];
 
 export type Lookup = Schemas["domain.LookupResponse"];
 export type SearchLookupsRequest = Schemas["domain.SearchLookupsRequest"];

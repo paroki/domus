@@ -20,7 +20,7 @@ export default function PeriodsPage() {
   const { t } = useTranslation();
   const { data: me } = useCurrentIdentity();
   const allowed = isParishAdmin(me?.roles);
-  const hasTenant = Boolean(me?.activeParishId);
+  const hasTenant = Boolean(me?.activeParokiId);
   const enabled = allowed && hasTenant;
 
   const [typeFilter, setTypeFilter] = useState<"" | "fiscal" | "liturgical">(

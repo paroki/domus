@@ -26,7 +26,7 @@ export function meta({}: Route.MetaArgs) {
 export default function OrgsPage() {
   const { t } = useTranslation();
   const { data: me } = useMe();
-  const hasParish = Boolean(me?.activeParishId);
+  const hasParish = Boolean(me?.activeParokiId);
   const parishAdmin = isParishAdmin(me?.roles);
 
   const [myOrgsOnly, setMyOrgsOnly] = useState(false);
@@ -55,8 +55,10 @@ export default function OrgsPage() {
     hasParish,
   );
   const allOrgsForParent = useOrgs({ limit: 100 }, hasParish && showCreate);
-  const zonesQuery = useOrgZones(hasParish && showCreate && kind === "zone");
-  const wardsQuery = useOrgWards(hasParish && showCreate && kind === "ward");
+  const zonesQuery = useOrgZones(hasParish && showCreate && kind === "wilayah");
+  const wardsQuery = useOrgWards(
+    hasParish && showCreate && kind === "lingkungan",
+  );
 
   const createOrg = useCreateOrg();
 
@@ -81,8 +83,8 @@ export default function OrgsPage() {
         name: name.trim(),
         description: description.trim() || undefined,
         parentId: parentId || undefined,
-        zoneId: kind === "zone" && zoneId ? zoneId : undefined,
-        wardId: kind === "ward" && wardId ? wardId : undefined,
+        wilayahId: kind === "wilayah" && zoneId ? zoneId : undefined,
+        lingkunganId: kind === "lingkungan" && wardId ? wardId : undefined,
       });
       setName("");
       setCode("");
@@ -200,7 +202,7 @@ export default function OrgsPage() {
               </select>
             </label>
 
-            {kind === "zone" && (
+            {kind === "wilayah" && (
               <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
                 Wilayah / Stasi (opsional)
                 <select
@@ -211,14 +213,14 @@ export default function OrgsPage() {
                   <option value="">Pilih wilayah</option>
                   {(zonesQuery.data ?? []).map((z) => (
                     <option key={z.id} value={z.id}>
-                      {z.name} ({z.code})
+                      {z.nama} ({z.kode})
                     </option>
                   ))}
                 </select>
               </label>
             )}
 
-            {kind === "ward" && (
+            {kind === "lingkungan" && (
               <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
                 Lingkungan (opsional)
                 <select
@@ -229,7 +231,7 @@ export default function OrgsPage() {
                   <option value="">Pilih lingkungan</option>
                   {(wardsQuery.data ?? []).map((w) => (
                     <option key={w.id} value={w.id}>
-                      {w.name} ({w.code})
+                      {w.nama} ({w.kode})
                     </option>
                   ))}
                 </select>

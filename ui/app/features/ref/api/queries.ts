@@ -33,7 +33,7 @@ export function useDiocesesSearch(
       enabled,
       queryFn: ({ pageParam }) =>
         unwrapMeta(
-          api.POST("/ref/dioceses/search", {
+          api.POST("/ref/keuskupan/search", {
             body: { ...filter, cursor: pageParam, limit: filter.limit ?? 50 },
           }),
           REF_ERRORS,
@@ -55,7 +55,7 @@ export function useParishesSearch(
       enabled,
       queryFn: ({ pageParam }) =>
         unwrapMeta(
-          api.POST("/ref/parishes/search", {
+          api.POST("/ref/paroki/search", {
             body: { ...filter, cursor: pageParam, limit: filter.limit ?? 50 },
           }),
           REF_ERRORS,
@@ -71,7 +71,7 @@ export function useCurrentParish(enabled = true) {
     queryOptions({
       queryKey: refKeys.currentParish(),
       enabled,
-      queryFn: () => unwrap(api.GET("/ref/parishes/current"), REF_ERRORS),
+      queryFn: () => unwrap(api.GET("/ref/paroki/current"), REF_ERRORS),
       retry: false,
     }),
   );
@@ -89,7 +89,7 @@ export function useParishMembersSearch(
       enabled: enabled && Boolean(parishId),
       queryFn: ({ pageParam }) =>
         unwrapMeta(
-          api.POST("/ref/parishes/{id}/members/search", {
+          api.POST("/ref/paroki/{id}/members/search", {
             params: { path: { id: parishId } },
             body: { ...filter, cursor: pageParam, limit: filter.limit ?? 50 },
           }),
@@ -112,7 +112,7 @@ export function useZonesSearch(
       enabled,
       queryFn: ({ pageParam }) =>
         unwrapMeta(
-          api.POST("/ref/zones/search", {
+          api.POST("/ref/wilayah/search", {
             body: { ...filter, cursor: pageParam, limit: filter.limit ?? 50 },
           }),
           REF_ERRORS,
@@ -134,7 +134,7 @@ export function useWardsSearch(
       enabled,
       queryFn: ({ pageParam }) =>
         unwrapMeta(
-          api.POST("/ref/wards/search", {
+          api.POST("/ref/lingkungan/search", {
             body: { ...filter, cursor: pageParam, limit: filter.limit ?? 50 },
           }),
           REF_ERRORS,

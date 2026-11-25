@@ -51,9 +51,9 @@ export default function ParishesPage() {
     setErrorMsg(null);
     try {
       const created = await createDiocese.mutateAsync({
-        code: slugifyCode(dCode || dName),
-        name: dName.trim(),
-        bishopName: dBishop.trim() || undefined,
+        kode: slugifyCode(dCode || dName),
+        nama: dName.trim(),
+        uskup: dBishop.trim() || undefined,
       });
       setDCode("");
       setDName("");
@@ -69,20 +69,20 @@ export default function ParishesPage() {
   async function handleCreateParish(e: FormEvent) {
     e.preventDefault();
     setErrorMsg(null);
-    const dioceseId = pDioceseId || dioceses[0]?.id;
-    if (!dioceseId) {
+    const keuskupanId = pDioceseId || dioceses[0]?.id;
+    if (!keuskupanId) {
       setErrorMsg(t("ref.selectDioceseFirst"));
       return;
     }
     try {
       const created = await createParish.mutateAsync({
-        dioceseId,
-        code: slugifyCode(pCode || pName),
-        name: pName.trim(),
+        keuskupanId,
+        kode: slugifyCode(pCode || pName),
+        nama: pName.trim(),
       });
       setPCode("");
       setPName("");
-      if (!me?.activeParishId && created.id) {
+      if (!me?.activeParokiId && created.id) {
         await activateSessionParish.mutateAsync(created.id);
       }
     } catch (err) {
@@ -167,18 +167,16 @@ export default function ParishesPage() {
                 >
                   <div>
                     <p className="text-sm font-semibold text-fg">
-                      {d.name}{" "}
+                      {d.nama}{" "}
                       <span className="text-xs font-normal text-muted">
-                        ({d.code})
+                        ({d.kode})
                       </span>
                     </p>
-                    {d.bishopName && (
-                      <p className="text-xs text-muted">{d.bishopName}</p>
-                    )}
+                    {d.uskup && <p className="text-xs text-muted">{d.uskup}</p>}
                   </div>
                   <button
                     type="button"
-                    aria-label={`${t("users.deleteUser")} ${d.name}`}
+                    aria-label={`${t("users.deleteUser")} ${d.nama}`}
                     onClick={async () => {
                       if (!d.id) return;
                       setErrorMsg(null);
@@ -220,7 +218,7 @@ export default function ParishesPage() {
                 <option value="">{t("ref.selectDiocese")}</option>
                 {dioceses.map((d) => (
                   <option key={d.id} value={d.id}>
-                    {d.name}
+                    {d.nama}
                   </option>
                 ))}
               </select>
@@ -256,15 +254,15 @@ export default function ParishesPage() {
                 >
                   <div>
                     <p className="text-sm font-semibold text-fg">
-                      {p.name}{" "}
+                      {p.nama}{" "}
                       <span className="text-xs font-normal text-muted">
-                        ({p.code})
+                        ({p.kode})
                       </span>
                     </p>
                   </div>
                   <button
                     type="button"
-                    aria-label={`${t("users.deleteUser")} ${p.name}`}
+                    aria-label={`${t("users.deleteUser")} ${p.nama}`}
                     onClick={async () => {
                       if (!p.id) return;
                       setErrorMsg(null);

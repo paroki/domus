@@ -55,7 +55,7 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
     activeStreamSessionRef.current = initialSessionId;
   }, [initialSessionId]);
 
-  const hasParish = Boolean(me?.activeParishId);
+  const hasParish = Boolean(me?.activeParokiId);
   const canManageProviders = isSuperAdmin(me?.roles);
   const { data: sessionDetail, isLoading: isLoadingSession } = useAgentSession(
     sessionId,

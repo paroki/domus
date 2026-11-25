@@ -35,8 +35,8 @@ export type OrgInvitePreviewResponse =
 export type RedeemOrgInviteResponse =
   components["schemas"]["domain.RedeemOrgInviteResponse"];
 
-export type ZoneResponse = components["schemas"]["domain.ZoneResponse"];
-export type WardResponse = components["schemas"]["domain.WardResponse"];
+export type ZoneResponse = components["schemas"]["domain.WilayahResponse"];
+export type WardResponse = components["schemas"]["domain.LingkunganResponse"];
 export type LookupResponse = components["schemas"]["domain.LookupResponse"];
 export type PeriodResponse = components["schemas"]["domain.PeriodResponse"];
 

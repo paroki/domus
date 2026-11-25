@@ -27,18 +27,18 @@ export default function TerritoryPage() {
   const { t } = useTranslation();
   const { data: me } = useCurrentIdentity();
   const allowed = isParishAdmin(me?.roles);
-  const hasTenant = Boolean(me?.activeParishId);
+  const hasTenant = Boolean(me?.activeParokiId);
   const enabled = allowed && hasTenant;
 
-  const [zoneTypeFilter, setZoneTypeFilter] = useState<"" | "zone" | "station">(
-    "",
-  );
+  const [zoneTypeFilter, setZoneTypeFilter] = useState<
+    "" | "wilayah" | "stasi"
+  >("");
   const [selectedZoneId, setSelectedZoneId] = useState<string>("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Zone form state
   const [editingZone, setEditingZone] = useState<Zone | null>(null);
-  const [zType, setZType] = useState<"zone" | "station">("zone");
+  const [zType, setZType] = useState<"wilayah" | "stasi">("wilayah");
   const [zCode, setZCode] = useState("");
   const [zName, setZName] = useState("");
   const [zCoordName, setZCoordName] = useState("");
@@ -54,11 +54,11 @@ export default function TerritoryPage() {
   const [wHeadPhone, setWHeadPhone] = useState("");
 
   const zonesQuery = useZonesSearch(
-    { filter: zoneTypeFilter ? { type: zoneTypeFilter } : undefined },
+    { filter: zoneTypeFilter ? { jenis: zoneTypeFilter } : undefined },
     enabled,
   );
   const wardsQuery = useWardsSearch(
-    { filter: selectedZoneId ? { zoneId: selectedZoneId } : undefined },
+    { filter: selectedZoneId ? { wilayahId: selectedZoneId } : undefined },
     enabled,
   );
   const zones = zonesQuery.data?.pages.flatMap((p) => p.data ?? []) ?? [];
@@ -73,7 +73,7 @@ export default function TerritoryPage() {
 
   function resetZoneForm() {
     setEditingZone(null);
-    setZType("zone");
+    setZType("wilayah");
     setZCode("");
     setZName("");
     setZCoordName("");
@@ -82,11 +82,11 @@ export default function TerritoryPage() {
 
   function startEditZone(z: Zone) {
     setEditingZone(z);
-    setZType((z.type as "zone" | "station") || "zone");
-    setZCode(z.code ?? "");
-    setZName(z.name ?? "");
-    setZCoordName(z.coordinatorName ?? "");
-    setZCoordPhone(z.coordinatorPhone ?? "");
+    setZType((z.jenis as "wilayah" | "stasi") || "wilayah");
+    setZCode(z.kode ?? "");
+    setZName(z.nama ?? "");
+    setZCoordName(z.koordinator ?? "");
+    setZCoordPhone(z.teleponKoordinator ?? "");
   }
 
   function resetWardForm() {
@@ -101,12 +101,12 @@ export default function TerritoryPage() {
 
   function startEditWard(w: Ward) {
     setEditingWard(w);
-    setWZoneId(w.zoneId ?? "");
-    setWCode(w.code ?? "");
-    setWName(w.name ?? "");
-    setWPatron(w.patronSaint ?? "");
-    setWHeadName(w.headName ?? "");
-    setWHeadPhone(w.headPhone ?? "");
+    setWZoneId(w.wilayahId ?? "");
+    setWCode(w.kode ?? "");
+    setWName(w.nama ?? "");
+    setWPatron(w.pelindung ?? "");
+    setWHeadName(w.ketua ?? "");
+    setWHeadPhone(w.teleponKetua ?? "");
   }
 
   async function handleSubmitZone(e: FormEvent) {
@@ -118,20 +118,20 @@ export default function TerritoryPage() {
         await updateZone.mutateAsync({
           id: editingZone.id,
           body: {
-            type: zType,
-            code,
-            name: zName.trim(),
-            coordinatorName: zCoordName.trim(),
-            coordinatorPhone: zCoordPhone.trim(),
+            jenis: zType,
+            kode: code,
+            nama: zName.trim(),
+            koordinator: zCoordName.trim(),
+            teleponKoordinator: zCoordPhone.trim(),
           },
         });
       } else {
         const created = await createZone.mutateAsync({
-          type: zType,
-          code,
-          name: zName.trim(),
-          coordinatorName: zCoordName.trim() || undefined,
-          coordinatorPhone: zCoordPhone.trim() || undefined,
+          jenis: zType,
+          kode: code,
+          nama: zName.trim(),
+          koordinator: zCoordName.trim() || undefined,
+          teleponKoordinator: zCoordPhone.trim() || undefined,
         });
         if (!wZoneId && created.id) setWZoneId(created.id);
       }
@@ -157,22 +157,22 @@ export default function TerritoryPage() {
         await updateWard.mutateAsync({
           id: editingWard.id,
           body: {
-            zoneId: targetZoneId,
-            code,
-            name: wName.trim(),
-            patronSaint: wPatron.trim(),
-            headName: wHeadName.trim(),
-            headPhone: wHeadPhone.trim(),
+            wilayahId: targetZoneId,
+            kode: code,
+            nama: wName.trim(),
+            pelindung: wPatron.trim(),
+            ketua: wHeadName.trim(),
+            teleponKetua: wHeadPhone.trim(),
           },
         });
       } else {
         await createWard.mutateAsync({
-          zoneId: targetZoneId,
-          code,
-          name: wName.trim(),
-          patronSaint: wPatron.trim() || undefined,
-          headName: wHeadName.trim() || undefined,
-          headPhone: wHeadPhone.trim() || undefined,
+          wilayahId: targetZoneId,
+          kode: code,
+          nama: wName.trim(),
+          pelindung: wPatron.trim() || undefined,
+          ketua: wHeadName.trim() || undefined,
+          teleponKetua: wHeadPhone.trim() || undefined,
         });
       }
       resetWardForm();
@@ -183,7 +183,7 @@ export default function TerritoryPage() {
     }
   }
 
-  const zoneNameById = new Map(zones.map((z) => [z.id ?? "", z.name ?? ""]));
+  const zoneNameById = new Map(zones.map((z) => [z.id ?? "", z.nama ?? ""]));
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6">
@@ -231,13 +231,15 @@ export default function TerritoryPage() {
                   aria-label={t("ref.zoneTypeLabel")}
                   value={zoneTypeFilter}
                   onChange={(e) =>
-                    setZoneTypeFilter(e.target.value as "" | "zone" | "station")
+                    setZoneTypeFilter(
+                      e.target.value as "" | "wilayah" | "stasi",
+                    )
                   }
                   className="h-8 rounded-lg border border-line bg-canvas px-2 text-xs text-fg"
                 >
                   <option value="">{t("ref.allTypes")}</option>
-                  <option value="zone">{t("ref.typeZone")}</option>
-                  <option value="station">{t("ref.typeStation")}</option>
+                  <option value="wilayah">{t("ref.typeZone")}</option>
+                  <option value="stasi">{t("ref.typeStation")}</option>
                 </select>
               </div>
 
@@ -248,12 +250,12 @@ export default function TerritoryPage() {
                 <select
                   value={zType}
                   onChange={(e) =>
-                    setZType(e.target.value as "zone" | "station")
+                    setZType(e.target.value as "wilayah" | "stasi")
                   }
                   className="h-9 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
                 >
-                  <option value="zone">{t("ref.typeZone")}</option>
-                  <option value="station">{t("ref.typeStation")}</option>
+                  <option value="wilayah">{t("ref.typeZone")}</option>
+                  <option value="stasi">{t("ref.typeStation")}</option>
                 </select>
                 <input
                   required
@@ -322,19 +324,21 @@ export default function TerritoryPage() {
                       className="flex-1 text-left"
                     >
                       <p className="text-sm font-semibold text-fg">
-                        {z.name}{" "}
+                        {z.nama}{" "}
                         <span className="text-xs font-normal text-muted">
-                          ({z.code} ·{" "}
-                          {z.type === "station"
+                          ({z.kode} ·{" "}
+                          {z.jenis === "stasi"
                             ? t("ref.typeStation")
                             : t("ref.typeZone")}
                           )
                         </span>
                       </p>
-                      {(z.coordinatorName || z.coordinatorPhone) && (
+                      {(z.koordinator || z.teleponKoordinator) && (
                         <p className="text-xs text-muted">
-                          {z.coordinatorName}
-                          {z.coordinatorPhone ? ` · ${z.coordinatorPhone}` : ""}
+                          {z.koordinator}
+                          {z.teleponKoordinator
+                            ? ` · ${z.teleponKoordinator}`
+                            : ""}
                         </p>
                       )}
                     </button>
@@ -366,7 +370,7 @@ export default function TerritoryPage() {
                       </button>
                       <button
                         type="button"
-                        aria-label={`${t("ref.editItem")} ${z.name}`}
+                        aria-label={`${t("ref.editItem")} ${z.nama}`}
                         onClick={() => startEditZone(z)}
                         className="inline-flex size-8 items-center justify-center rounded-lg text-muted hover:bg-fg/8 hover:text-fg"
                       >
@@ -374,7 +378,7 @@ export default function TerritoryPage() {
                       </button>
                       <button
                         type="button"
-                        aria-label={`${t("users.deleteUser")} ${z.name}`}
+                        aria-label={`${t("users.deleteUser")} ${z.nama}`}
                         onClick={async () => {
                           if (!z.id) return;
                           setErrorMsg(null);
@@ -419,7 +423,7 @@ export default function TerritoryPage() {
                   <option value="">{t("ref.allZones")}</option>
                   {zones.map((z) => (
                     <option key={z.id} value={z.id}>
-                      {z.name}
+                      {z.nama}
                     </option>
                   ))}
                 </select>
@@ -437,7 +441,7 @@ export default function TerritoryPage() {
                   <option value="">{t("ref.selectZone")}</option>
                   {zones.map((z) => (
                     <option key={z.id} value={z.id}>
-                      {z.name}
+                      {z.nama}
                     </option>
                   ))}
                 </select>
@@ -502,19 +506,19 @@ export default function TerritoryPage() {
                   >
                     <div>
                       <p className="text-sm font-semibold text-fg">
-                        {w.name}{" "}
+                        {w.nama}{" "}
                         <span className="text-xs font-normal text-muted">
-                          ({w.code}
-                          {w.zoneId && zoneNameById.get(w.zoneId)
-                            ? ` · ${zoneNameById.get(w.zoneId)}`
+                          ({w.kode}
+                          {w.wilayahId && zoneNameById.get(w.wilayahId)
+                            ? ` · ${zoneNameById.get(w.wilayahId)}`
                             : ""}
                           )
                         </span>
                       </p>
-                      {(w.headName || w.headPhone) && (
+                      {(w.ketua || w.teleponKetua) && (
                         <p className="text-xs text-muted">
-                          {w.headName}
-                          {w.headPhone ? ` · ${w.headPhone}` : ""}
+                          {w.ketua}
+                          {w.teleponKetua ? ` · ${w.teleponKetua}` : ""}
                         </p>
                       )}
                     </div>
@@ -546,7 +550,7 @@ export default function TerritoryPage() {
                       </button>
                       <button
                         type="button"
-                        aria-label={`${t("ref.editItem")} ${w.name}`}
+                        aria-label={`${t("ref.editItem")} ${w.nama}`}
                         onClick={() => startEditWard(w)}
                         className="inline-flex size-8 items-center justify-center rounded-lg text-muted hover:bg-fg/8 hover:text-fg"
                       >
@@ -554,7 +558,7 @@ export default function TerritoryPage() {
                       </button>
                       <button
                         type="button"
-                        aria-label={`${t("users.deleteUser")} ${w.name}`}
+                        aria-label={`${t("users.deleteUser")} ${w.nama}`}
                         onClick={async () => {
                           if (!w.id) return;
                           setErrorMsg(null);

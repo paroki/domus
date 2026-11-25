@@ -19,11 +19,11 @@ export const USER_ERRORS: Record<string, string> = {
     "Akun WhatsApp atau Telegram ini sudah terhubung dengan akun Domus lain.",
   AUTH_CHANNEL_DISABLED:
     "Kanal verifikasi yang dipilih belum diaktifkan oleh administrator.",
-  REF_PARISH_NOT_FOUND: "Paroki tidak ditemukan.",
-  REF_PARISH_MEMBER_NOT_FOUND: "Anggota paroki tidak ditemukan.",
-  REF_LAST_PARISH_ADMIN_REQUIRED:
+  REF_PAROKI_NOT_FOUND: "Paroki tidak ditemukan.",
+  REF_PAROKI_MEMBER_NOT_FOUND: "Anggota paroki tidak ditemukan.",
+  REF_LAST_PAROKI_ADMIN_REQUIRED:
     "Minimal harus ada satu Admin Paroki yang tersisa.",
-  REF_PARISH_MEMBER_ALREADY_EXISTS:
+  REF_PAROKI_MEMBER_ALREADY_EXISTS:
     "Pengguna sudah terdaftar sebagai anggota paroki ini.",
   REF_FORBIDDEN: "Anda tidak memiliki izin untuk melakukan tindakan ini.",
   ORG_NOT_FOUND: "Organisasi tidak ditemukan.",

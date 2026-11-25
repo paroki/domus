@@ -25,7 +25,7 @@ export async function streamAgentChat({
   });
   const parishId = getActiveParishId();
   if (parishId) {
-    headers.set("X-Parish-Id", parishId);
+    headers.set("X-Paroki-Id", parishId);
   }
 
   const response = await fetch("/api/agent/chat", {

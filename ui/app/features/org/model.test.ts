@@ -10,7 +10,7 @@ import {
   slugifyCode,
 } from "./model";
 
-test("isParishAdmin checks ref:parish-admin role", () => {
+test("isParishAdmin checks ref:paroki-admin role", () => {
   assert.equal(isParishAdmin([ROLE_PARISH_ADMIN]), true);
   assert.equal(isParishAdmin(["user:user"]), false);
   assert.equal(isParishAdmin(undefined), false);

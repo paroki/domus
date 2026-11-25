@@ -26,9 +26,9 @@ export function useActivateSessionParish() {
   return {
     ...switchParish,
     mutate: (parishId: string) =>
-      switchParish.mutate({ activeParishId: parishId }),
+      switchParish.mutate({ activeParokiId: parishId }),
     mutateAsync: (parishId: string) =>
-      switchParish.mutateAsync({ activeParishId: parishId }),
+      switchParish.mutateAsync({ activeParokiId: parishId }),
   };
 }
 
@@ -36,7 +36,7 @@ export function useCreateDiocese() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: CreateDioceseRequest) =>
-      unwrap(api.POST("/ref/dioceses", { body }), REF_ERRORS),
+      unwrap(api.POST("/ref/keuskupan", { body }), REF_ERRORS),
     onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
   });
 }
@@ -46,7 +46,7 @@ export function useUpdateDiocese() {
   return useMutation({
     mutationFn: ({ id, body }: { id: string; body: UpdateDioceseRequest }) =>
       unwrap(
-        api.PATCH("/ref/dioceses/{id}", { params: { path: { id } }, body }),
+        api.PATCH("/ref/keuskupan/{id}", { params: { path: { id } }, body }),
         REF_ERRORS,
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
@@ -58,7 +58,7 @@ export function useDeleteDiocese() {
   return useMutation({
     mutationFn: (id: string) =>
       unwrapVoid(
-        api.DELETE("/ref/dioceses/{id}", { params: { path: { id } } }),
+        api.DELETE("/ref/keuskupan/{id}", { params: { path: { id } } }),
         REF_ERRORS,
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
@@ -69,7 +69,7 @@ export function useCreateParish() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: CreateParishRequest) =>
-      unwrap(api.POST("/ref/parishes", { body }), REF_ERRORS),
+      unwrap(api.POST("/ref/paroki", { body }), REF_ERRORS),
     onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
   });
 }
@@ -79,7 +79,7 @@ export function useUpdateParish() {
   return useMutation({
     mutationFn: ({ id, body }: { id: string; body: UpdateParishRequest }) =>
       unwrap(
-        api.PATCH("/ref/parishes/{id}", { params: { path: { id } }, body }),
+        api.PATCH("/ref/paroki/{id}", { params: { path: { id } }, body }),
         REF_ERRORS,
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
@@ -90,7 +90,7 @@ export function useUpdateCurrentParishProfile() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: UpdateParishProfileRequest) =>
-      unwrap(api.PATCH("/ref/parishes/current", { body }), REF_ERRORS),
+      unwrap(api.PATCH("/ref/paroki/current", { body }), REF_ERRORS),
     onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
   });
 }
@@ -100,7 +100,7 @@ export function useDeleteParish() {
   return useMutation({
     mutationFn: (id: string) =>
       unwrapVoid(
-        api.DELETE("/ref/parishes/{id}", { params: { path: { id } } }),
+        api.DELETE("/ref/paroki/{id}", { params: { path: { id } } }),
         REF_ERRORS,
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
@@ -118,7 +118,7 @@ export function useAddParishMember() {
       body: AddParishMemberRequest;
     }) =>
       unwrap(
-        api.POST("/ref/parishes/{id}/members", {
+        api.POST("/ref/paroki/{id}/members", {
           params: { path: { id: parishId } },
           body,
         }),
@@ -145,7 +145,7 @@ export function useUpdateParishMember() {
       body: UpdateParishMemberRequest;
     }) =>
       unwrap(
-        api.PATCH("/ref/parishes/{id}/members/{userId}", {
+        api.PATCH("/ref/paroki/{id}/members/{userId}", {
           params: { path: { id: parishId, userId } },
           body,
         }),
@@ -164,7 +164,7 @@ export function useRemoveParishMember() {
   return useMutation({
     mutationFn: ({ parishId, userId }: { parishId: string; userId: string }) =>
       unwrapVoid(
-        api.DELETE("/ref/parishes/{id}/members/{userId}", {
+        api.DELETE("/ref/paroki/{id}/members/{userId}", {
           params: { path: { id: parishId, userId } },
         }),
         REF_ERRORS,
@@ -181,7 +181,7 @@ export function useCreateZone() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: CreateZoneRequest) =>
-      unwrap(api.POST("/ref/zones", { body }), REF_ERRORS),
+      unwrap(api.POST("/ref/wilayah", { body }), REF_ERRORS),
     onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
   });
 }
@@ -191,7 +191,7 @@ export function useUpdateZone() {
   return useMutation({
     mutationFn: ({ id, body }: { id: string; body: UpdateZoneRequest }) =>
       unwrap(
-        api.PATCH("/ref/zones/{id}", { params: { path: { id } }, body }),
+        api.PATCH("/ref/wilayah/{id}", { params: { path: { id } }, body }),
         REF_ERRORS,
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
@@ -203,7 +203,7 @@ export function useDeleteZone() {
   return useMutation({
     mutationFn: (id: string) =>
       unwrapVoid(
-        api.DELETE("/ref/zones/{id}", { params: { path: { id } } }),
+        api.DELETE("/ref/wilayah/{id}", { params: { path: { id } } }),
         REF_ERRORS,
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
@@ -214,7 +214,7 @@ export function useCreateWard() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: CreateWardRequest) =>
-      unwrap(api.POST("/ref/wards", { body }), REF_ERRORS),
+      unwrap(api.POST("/ref/lingkungan", { body }), REF_ERRORS),
     onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
   });
 }
@@ -224,7 +224,7 @@ export function useUpdateWard() {
   return useMutation({
     mutationFn: ({ id, body }: { id: string; body: UpdateWardRequest }) =>
       unwrap(
-        api.PATCH("/ref/wards/{id}", { params: { path: { id } }, body }),
+        api.PATCH("/ref/lingkungan/{id}", { params: { path: { id } }, body }),
         REF_ERRORS,
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
@@ -236,7 +236,7 @@ export function useDeleteWard() {
   return useMutation({
     mutationFn: (id: string) =>
       unwrapVoid(
-        api.DELETE("/ref/wards/{id}", { params: { path: { id } } }),
+        api.DELETE("/ref/lingkungan/{id}", { params: { path: { id } } }),
         REF_ERRORS,
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),

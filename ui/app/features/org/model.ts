@@ -1,14 +1,14 @@
 import type { BadgeTone } from "~/shared/ui/Badge";
 
-export const ROLE_PARISH_ADMIN = "ref:parish-admin";
+export const ROLE_PARISH_ADMIN = "ref:paroki-admin";
 
 export type OrgKind =
   | "dpp"
   | "bgkp"
   | "section"
   | "categorical"
-  | "zone"
-  | "ward"
+  | "wilayah"
+  | "lingkungan"
   | "community";
 
 export const ORG_KINDS: { value: OrgKind; label: string }[] = [
@@ -16,8 +16,8 @@ export const ORG_KINDS: { value: OrgKind; label: string }[] = [
   { value: "bgkp", label: "BGKP" },
   { value: "section", label: "Bidang / Seksi" },
   { value: "categorical", label: "Kategorial" },
-  { value: "zone", label: "Wilayah / Stasi" },
-  { value: "ward", label: "Lingkungan" },
+  { value: "wilayah", label: "Wilayah / Stasi" },
+  { value: "lingkungan", label: "Lingkungan" },
   { value: "community", label: "Komunitas" },
 ];
 

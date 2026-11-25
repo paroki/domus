@@ -32,7 +32,7 @@ export function useVerifyOTP() {
     mutationFn: (body: VerifyOTPRequest) =>
       unwrap(api.POST("/auth/otp/verify", { body }), USER_ERRORS),
     onSuccess: async (data) => {
-      setActiveParish(data.activeParishId ?? null);
+      setActiveParish(data.activeParokiId ?? null);
       await qc.invalidateQueries({ queryKey: userKeys.me() });
     },
   });
@@ -150,7 +150,7 @@ export function useAddParishMember() {
       body: AddParishMemberRequest;
     }) =>
       unwrap(
-        api.POST("/ref/parishes/{id}/members", {
+        api.POST("/ref/paroki/{id}/members", {
           params: { path: { id: parishId } },
           body,
         }),
@@ -177,7 +177,7 @@ export function useUpdateParishMember() {
       body: UpdateParishMemberRequest;
     }) =>
       unwrap(
-        api.PATCH("/ref/parishes/{id}/members/{userId}", {
+        api.PATCH("/ref/paroki/{id}/members/{userId}", {
           params: { path: { id: parishId, userId } },
           body,
         }),
@@ -196,7 +196,7 @@ export function useRemoveParishMember() {
   return useMutation({
     mutationFn: ({ parishId, userId }: { parishId: string; userId: string }) =>
       unwrapVoid(
-        api.DELETE("/ref/parishes/{id}/members/{userId}", {
+        api.DELETE("/ref/paroki/{id}/members/{userId}", {
           params: { path: { id: parishId, userId } },
         }),
         USER_ERRORS,

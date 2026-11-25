@@ -14,8 +14,8 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Chat with AI agent (SSE)
-     * @description Streams a multi-agent ReAct conversation turn over Server-Sent Events. Pre-stream validation and session lock errors return JSON envelopes.
+     * Chat with AI assistant (SSE)
+     * @description Validates request, resolves active model/session, and streams SSE events (session, agent_transfer, tool_start, tool_end, token, done, error).
      */
     post: operations["chatWithAgent"];
     delete?: never;
@@ -34,8 +34,8 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Create agent memory
-     * @description Creates a new long-term agent memory fact. Parish-scoped memories require ref:parish-admin.
+     * Create AI memory
+     * @description Creates a new AI memory item and best-effort computes its 768-dim embedding.
      */
     post: operations["createAgentMemory"];
     delete?: never;
@@ -54,8 +54,8 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Search agent memories
-     * @description Searches personal and active parish long-term memories with optional filters and cursor pagination.
+     * Search AI memories
+     * @description Lists memories by keyset cursor when q is empty, or runs ParadeDB RRF hybrid / BM25 search when q is provided.
      */
     post: operations["searchAgentMemories"];
     delete?: never;
@@ -75,15 +75,15 @@ export interface paths {
     put?: never;
     post?: never;
     /**
-     * Delete agent memory
-     * @description Soft-deletes an existing long-term memory fact. Parish-scoped memories require ref:parish-admin.
+     * Delete AI memory
+     * @description Hard-deletes an AI memory item owned by the caller.
      */
     delete: operations["deleteAgentMemory"];
     options?: never;
     head?: never;
     /**
-     * Update agent memory
-     * @description Updates an existing long-term memory fact. Parish-scoped memories require ref:parish-admin.
+     * Update AI memory
+     * @description Updates an AI memory item's content and/or category and re-computes its embedding when content changes.
      */
     patch: operations["updateAgentMemory"];
     trace?: never;
@@ -124,7 +124,7 @@ export interface paths {
     post?: never;
     /**
      * Delete AI provider config
-     * @description Deletes an LLM provider configuration if not referenced by any agent or embedding.
+     * @description Deletes an LLM provider configuration.
      */
     delete: operations["deleteAgentProvider"];
     options?: never;
@@ -156,26 +156,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/agent/sessions": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Create agent session
-     * @description Creates a new web channel agent conversation session for the caller in the active parish.
-     */
-    post: operations["createAgentSession"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   "/agent/sessions/search": {
     parameters: {
       query?: never;
@@ -186,8 +166,8 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Search agent sessions
-     * @description Lists non-deleted agent conversation sessions owned by the caller with cursor pagination.
+     * Search AI sessions
+     * @description Returns keyset-paginated AI conversation sessions owned by the caller in the active parish.
      */
     post: operations["searchAgentSessions"];
     delete?: never;
@@ -204,64 +184,24 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get agent session
-     * @description Returns a non-deleted agent conversation session owned by the caller in the active parish.
+     * Get AI session
+     * @description Returns an AI conversation session owned by the caller with its chronological messages.
      */
     get: operations["getAgentSession"];
     put?: never;
     post?: never;
     /**
-     * Delete agent session
-     * @description Soft-deletes an existing agent conversation session owned by the caller.
+     * Delete AI session
+     * @description Soft-deletes an AI conversation session owned by the caller.
      */
     delete: operations["deleteAgentSession"];
     options?: never;
     head?: never;
     /**
-     * Update agent session
-     * @description Updates the title of an existing agent conversation session owned by the caller.
+     * Update AI session
+     * @description Updates session title and/or provider/model override (empty string clears override to default).
      */
     patch: operations["updateAgentSession"];
-    trace?: never;
-  };
-  "/agent/sessions/{sessionId}/messages/search": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Search agent session messages
-     * @description Lists messages in a caller-owned session with keyset pagination or BM25 full-text search.
-     */
-    post: operations["searchAgentSessionMessages"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/agent/webhooks/whatsapp": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * GOWA WhatsApp agent webhook
-     * @description Verifies X-Hub-Signature-256 and routes inbound WhatsApp messages to the AI agent.
-     */
-    post: operations["whatsAppAgentWebhook"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
     trace?: never;
   };
   "/auth/logout": {
@@ -562,7 +502,7 @@ export interface paths {
     };
     /**
      * Get current user profile
-     * @description Returns the authenticated user's profile, active parish, and global roles.
+     * @description Returns the authenticated user's profile, active paroki, and global roles.
      */
     get: operations["getMe"];
     put?: never;
@@ -572,7 +512,7 @@ export interface paths {
     head?: never;
     /**
      * Update current user profile
-     * @description Updates name, phone (normalized to E.164), gender, birthDate, avatarUrl, defaultParishId, or onboarded status.
+     * @description Updates name, phone (normalized to E.164), gender, birthDate, avatarUrl, defaultParokiId, or onboarded status.
      */
     patch: operations["updateMe"];
     trace?: never;
@@ -691,10 +631,10 @@ export interface paths {
     options?: never;
     head?: never;
     /**
-     * Switch active session parish
-     * @description Updates activeParishId on the current session and initializes user defaultParishId if unset.
+     * Switch active session paroki
+     * @description Updates activeParokiId on the current session and initializes user defaultParokiId if unset.
      */
-    patch: operations["switchMeSessionParish"];
+    patch: operations["switchMeSessionParoki"];
     trace?: never;
   };
   "/me/sessions/search": {
@@ -748,7 +688,7 @@ export interface paths {
     put?: never;
     /**
      * Create organization
-     * @description Creates an organization (or reactivates a soft-deleted one) in the active parish (requires ref:parish-admin).
+     * @description Creates an organization (or reactivates a soft-deleted one) in the active paroki (requires ref:paroki-admin).
      */
     post: operations["createOrganization"];
     delete?: never;
@@ -788,7 +728,7 @@ export interface paths {
     put?: never;
     /**
      * Redeem organization invite
-     * @description Idempotently redeems an invite code, ensures parish/org membership, syncs Casbin, and switches active parish.
+     * @description Idempotently redeems an invite code, ensures paroki/org membership, syncs Casbin, and switches active paroki.
      */
     post: operations["redeemOrgInvite"];
     delete?: never;
@@ -808,7 +748,7 @@ export interface paths {
     put?: never;
     /**
      * Search organizations
-     * @description Searches organizations within the active parish with optional filters and cursor pagination.
+     * @description Searches organizations within the active paroki with optional filters and cursor pagination.
      */
     post: operations["searchOrganizations"];
     delete?: never;
@@ -826,21 +766,21 @@ export interface paths {
     };
     /**
      * Get organization
-     * @description Returns a single non-deleted organization in the active parish.
+     * @description Returns a single non-deleted organization in the active paroki.
      */
     get: operations["getOrganization"];
     put?: never;
     post?: never;
     /**
      * Delete organization
-     * @description Soft-deletes an organization if it has no active child organizations (requires ref:parish-admin).
+     * @description Soft-deletes an organization if it has no active child organizations (requires ref:paroki-admin).
      */
     delete: operations["deleteOrganization"];
     options?: never;
     head?: never;
     /**
      * Update organization
-     * @description Updates an organization in the active parish (requires org:admin or ref:parish-admin).
+     * @description Updates an organization in the active paroki (requires org:admin or ref:paroki-admin).
      */
     patch: operations["updateOrganization"];
     trace?: never;
@@ -916,7 +856,7 @@ export interface paths {
     put?: never;
     /**
      * Add organization member
-     * @description Adds a member to an organization with optional user onboarding (requires org:admin, or ref:parish-admin appointing admin).
+     * @description Adds a member to an organization with optional user onboarding (requires org:admin, or ref:paroki-admin appointing admin).
      */
     post: operations["addOrgMember"];
     delete?: never;
@@ -969,7 +909,7 @@ export interface paths {
     patch: operations["updateOrgMember"];
     trace?: never;
   };
-  "/ref/dioceses": {
+  "/ref/keuskupan": {
     parameters: {
       query?: never;
       header?: never;
@@ -979,17 +919,17 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Create diocese
-     * @description Creates a diocese or reactivates a soft-deleted diocese with the same code.
+     * Create keuskupan
+     * @description Creates a keuskupan or reactivates a soft-deleted keuskupan with the same kode.
      */
-    post: operations["createDiocese"];
+    post: operations["createKeuskupan"];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/ref/dioceses/search": {
+  "/ref/keuskupan/search": {
     parameters: {
       query?: never;
       header?: never;
@@ -999,17 +939,17 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Search dioceses
-     * @description Searches dioceses with optional query, active filter, and cursor pagination.
+     * Search keuskupan
+     * @description Searches keuskupan with optional query, active filter, and cursor pagination.
      */
-    post: operations["searchDioceses"];
+    post: operations["searchKeuskupan"];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/ref/dioceses/{id}": {
+  "/ref/keuskupan/{id}": {
     parameters: {
       query?: never;
       header?: never;
@@ -1017,24 +957,92 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get diocese
-     * @description Returns a single non-deleted diocese by ID.
+     * Get keuskupan
+     * @description Returns a single non-deleted keuskupan by ID.
      */
-    get: operations["getDiocese"];
+    get: operations["getKeuskupan"];
     put?: never;
     post?: never;
     /**
-     * Delete diocese
-     * @description Soft-deletes a diocese when no active parishes reference it.
+     * Delete keuskupan
+     * @description Soft-deletes a keuskupan when no active paroki reference it.
      */
-    delete: operations["deleteDiocese"];
+    delete: operations["deleteKeuskupan"];
     options?: never;
     head?: never;
     /**
-     * Update diocese
-     * @description Updates mutable fields of a diocese.
+     * Update keuskupan
+     * @description Updates mutable fields of a keuskupan.
      */
-    patch: operations["updateDiocese"];
+    patch: operations["updateKeuskupan"];
+    trace?: never;
+  };
+  "/ref/lingkungan": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create lingkungan
+     * @description Creates a lingkungan or reactivates a soft-deleted match in the active paroki.
+     */
+    post: operations["createLingkungan"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/ref/lingkungan/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Search lingkungan
+     * @description Searches lingkungan in the active paroki with optional query, wilayah/active filters, and cursor pagination.
+     */
+    post: operations["searchLingkungan"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/ref/lingkungan/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get lingkungan
+     * @description Returns a single non-deleted lingkungan in the active paroki.
+     */
+    get: operations["getLingkungan"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete lingkungan
+     * @description Soft-deletes a lingkungan in the active paroki.
+     */
+    delete: operations["deleteLingkungan"];
+    options?: never;
+    head?: never;
+    /**
+     * Update lingkungan
+     * @description Updates mutable fields of a lingkungan in the active paroki.
+     */
+    patch: operations["updateLingkungan"];
     trace?: never;
   };
   "/ref/lookups": {
@@ -1105,7 +1113,7 @@ export interface paths {
     patch: operations["updateLookup"];
     trace?: never;
   };
-  "/ref/parishes": {
+  "/ref/paroki": {
     parameters: {
       query?: never;
       header?: never;
@@ -1115,17 +1123,17 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Create parish
-     * @description Creates a parish or reactivates a soft-deleted parish with the same code.
+     * Create paroki
+     * @description Creates a paroki or reactivates a soft-deleted paroki with the same kode.
      */
-    post: operations["createParish"];
+    post: operations["createParoki"];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/ref/parishes/current": {
+  "/ref/paroki/current": {
     parameters: {
       query?: never;
       header?: never;
@@ -1133,23 +1141,23 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get current parish
-     * @description Returns the parish resolved from the active session or X-Parish-Id header.
+     * Get current paroki
+     * @description Returns the paroki resolved from the active session or X-Paroki-Id header.
      */
-    get: operations["getCurrentParish"];
+    get: operations["getCurrentParoki"];
     put?: never;
     post?: never;
     delete?: never;
     options?: never;
     head?: never;
     /**
-     * Update current parish profile
-     * @description Updates mutable profile fields of the active parish (requires ref:parish-admin).
+     * Update current paroki profile
+     * @description Updates mutable profile fields of the active paroki (requires ref:paroki-admin).
      */
-    patch: operations["updateCurrentParishProfile"];
+    patch: operations["updateCurrentParokiProfile"];
     trace?: never;
   };
-  "/ref/parishes/search": {
+  "/ref/paroki/search": {
     parameters: {
       query?: never;
       header?: never;
@@ -1159,17 +1167,17 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Search parishes
-     * @description Searches parishes with optional query, diocese/active/memberOnly filters, and cursor pagination.
+     * Search paroki
+     * @description Searches paroki with optional query, keuskupan/active/memberOnly filters, and cursor pagination.
      */
-    post: operations["searchParishes"];
+    post: operations["searchParoki"];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/ref/parishes/{id}": {
+  "/ref/paroki/{id}": {
     parameters: {
       query?: never;
       header?: never;
@@ -1177,27 +1185,27 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get parish
-     * @description Returns a single non-deleted parish by ID.
+     * Get paroki
+     * @description Returns a single non-deleted paroki by ID.
      */
-    get: operations["getParish"];
+    get: operations["getParoki"];
     put?: never;
     post?: never;
     /**
-     * Delete parish
-     * @description Soft-deletes a parish when no zones, wards, lookups, or periods reference it.
+     * Delete paroki
+     * @description Soft-deletes a paroki when no wilayah, lingkungan, lookups, or periods reference it.
      */
-    delete: operations["deleteParish"];
+    delete: operations["deleteParoki"];
     options?: never;
     head?: never;
     /**
-     * Update parish
-     * @description Updates parish fields (super-admin) or profile fields (parish-admin).
+     * Update paroki
+     * @description Updates paroki fields (super-admin) or profile fields (paroki-admin).
      */
-    patch: operations["updateParish"];
+    patch: operations["updateParoki"];
     trace?: never;
   };
-  "/ref/parishes/{id}/members": {
+  "/ref/paroki/{id}/members": {
     parameters: {
       query?: never;
       header?: never;
@@ -1207,17 +1215,17 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Add parish member
-     * @description Adds a user (or creates/invites via email) as a member or admin of a parish.
+     * Add paroki member
+     * @description Adds a user (or creates/invites via email) as a member or admin of a paroki.
      */
-    post: operations["addParishMember"];
+    post: operations["addParokiMember"];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/ref/parishes/{id}/members/search": {
+  "/ref/paroki/{id}/members/search": {
     parameters: {
       query?: never;
       header?: never;
@@ -1227,17 +1235,17 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Search parish members
-     * @description Searches members of a parish with optional query, role filter, and cursor pagination.
+     * Search paroki members
+     * @description Searches members of a paroki with optional query, role filter, and cursor pagination.
      */
-    post: operations["searchParishMembers"];
+    post: operations["searchParokiMembers"];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/ref/parishes/{id}/members/{userId}": {
+  "/ref/paroki/{id}/members/{userId}": {
     parameters: {
       query?: never;
       header?: never;
@@ -1248,17 +1256,17 @@ export interface paths {
     put?: never;
     post?: never;
     /**
-     * Remove parish member
-     * @description Removes a member from a parish and revokes Casbin parish-admin policy.
+     * Remove paroki member
+     * @description Removes a member from a paroki and revokes Casbin paroki-admin policy.
      */
-    delete: operations["removeParishMember"];
+    delete: operations["removeParokiMember"];
     options?: never;
     head?: never;
     /**
-     * Update parish member
-     * @description Updates a parish member role and syncs Casbin parish-admin policy.
+     * Update paroki member
+     * @description Updates a paroki member role and syncs Casbin paroki-admin policy.
      */
-    patch: operations["updateParishMember"];
+    patch: operations["updateParokiMember"];
     trace?: never;
   };
   "/ref/periods": {
@@ -1329,7 +1337,7 @@ export interface paths {
     patch: operations["updatePeriod"];
     trace?: never;
   };
-  "/ref/wards": {
+  "/ref/wilayah": {
     parameters: {
       query?: never;
       header?: never;
@@ -1339,17 +1347,17 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Create ward
-     * @description Creates a ward or reactivates a soft-deleted match in the active parish.
+     * Create wilayah
+     * @description Creates a wilayah/stasi or reactivates a soft-deleted match in the active paroki.
      */
-    post: operations["createWard"];
+    post: operations["createWilayah"];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/ref/wards/search": {
+  "/ref/wilayah/search": {
     parameters: {
       query?: never;
       header?: never;
@@ -1359,17 +1367,17 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Search wards
-     * @description Searches wards in the active parish with optional query, zone/active filters, and cursor pagination.
+     * Search wilayah
+     * @description Searches wilayah/stasi in the active paroki with optional query, jenis/active filters, and cursor pagination.
      */
-    post: operations["searchWards"];
+    post: operations["searchWilayah"];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/ref/wards/{id}": {
+  "/ref/wilayah/{id}": {
     parameters: {
       query?: never;
       header?: never;
@@ -1377,92 +1385,24 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get ward
-     * @description Returns a single non-deleted ward in the active parish.
+     * Get wilayah
+     * @description Returns a single non-deleted wilayah in the active paroki.
      */
-    get: operations["getWard"];
+    get: operations["getWilayah"];
     put?: never;
     post?: never;
     /**
-     * Delete ward
-     * @description Soft-deletes a ward in the active parish.
+     * Delete wilayah
+     * @description Soft-deletes a wilayah when no non-deleted lingkungan reference it.
      */
-    delete: operations["deleteWard"];
+    delete: operations["deleteWilayah"];
     options?: never;
     head?: never;
     /**
-     * Update ward
-     * @description Updates mutable fields of a ward in the active parish.
+     * Update wilayah
+     * @description Updates mutable fields of a wilayah/stasi in the active paroki.
      */
-    patch: operations["updateWard"];
-    trace?: never;
-  };
-  "/ref/zones": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Create zone
-     * @description Creates a zone/station or reactivates a soft-deleted match in the active parish.
-     */
-    post: operations["createZone"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/ref/zones/search": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Search zones
-     * @description Searches zones/stations in the active parish with optional query, type/active filters, and cursor pagination.
-     */
-    post: operations["searchZones"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/ref/zones/{id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get zone
-     * @description Returns a single non-deleted zone in the active parish.
-     */
-    get: operations["getZone"];
-    put?: never;
-    post?: never;
-    /**
-     * Delete zone
-     * @description Soft-deletes a zone when no non-deleted wards reference it.
-     */
-    delete: operations["deleteZone"];
-    options?: never;
-    head?: never;
-    /**
-     * Update zone
-     * @description Updates mutable fields of a zone/station in the active parish.
-     */
-    patch: operations["updateZone"];
+    patch: operations["updateWilayah"];
     trace?: never;
   };
   "/settings": {
@@ -1591,7 +1531,7 @@ export interface components {
       scope?: components["schemas"]["authz.RoleScope"];
     };
     /** @enum {string} */
-    "authz.RoleScope": "global" | "parish" | "org";
+    "authz.RoleScope": "global" | "paroki" | "org";
     "domain.AddOrgMemberRequest": {
       email?: string;
       endDate?: string;
@@ -1606,7 +1546,7 @@ export interface components {
       status?: "active" | "inactive";
       userId?: string;
     };
-    "domain.AddParishMemberRequest": {
+    "domain.AddParokiMemberRequest": {
       email?: string;
       name?: string;
       phone?: string;
@@ -1627,42 +1567,6 @@ export interface components {
       /** @enum {string} */
       status?: "active" | "disabled";
     };
-    "domain.AgentChatRequest": {
-      continue?: boolean;
-      message?: string;
-      sessionId?: string;
-    };
-    "domain.AgentMemoryResponse": {
-      category?: string;
-      content?: string;
-      createdAt?: string;
-      id?: string;
-      isPinned?: boolean;
-      parishId?: string;
-      scope?: string;
-      sourceSessionId?: string;
-      updatedAt?: string;
-      userId?: string;
-    };
-    "domain.AgentMemorySearchFilter": {
-      /** @enum {string} */
-      category?: "profile" | "preference" | "ministry" | "parish_faq";
-      isPinned?: boolean;
-      /** @enum {string} */
-      scope?: "user" | "parish";
-    };
-    "domain.AgentMessageResponse": {
-      agentName?: string;
-      content?: string;
-      createdAt?: string;
-      id?: string;
-      role?: string;
-      sessionId?: string;
-      thinking?: string;
-      toolCallId?: string;
-      toolCalls?: components["schemas"]["domain.AgentToolCallDTO"][];
-      toolName?: string;
-    };
     "domain.AgentProviderResponse": {
       apiKeyMasked?: string;
       baseUrl?: string;
@@ -1675,43 +1579,19 @@ export interface components {
       provider?: string;
       updatedAt?: string;
     };
-    "domain.AgentSessionResponse": {
-      channel?: string;
-      createdAt?: string;
-      id?: string;
-      lastMessageAt?: string;
-      parishId?: string;
-      title?: string;
-      updatedAt?: string;
-      userId?: string;
-    };
-    "domain.AgentSessionSearchFilter": {
-      /** @enum {string} */
-      channel?: "web" | "telegram" | "whatsapp";
-    };
-    "domain.AgentToolCallDTO": {
-      agentName?: string;
-      arguments?: string;
-      id?: string;
-      name?: string;
-    };
     "domain.AuthProvidersResponse": {
       otpChannels?: string[];
       providers?: string[];
     };
     "domain.AuthSessionResponse": {
-      activeParishId?: string;
+      activeParokiId?: string;
       expiresAt?: string;
       user?: components["schemas"]["domain.UserResponse"];
     };
-    "domain.CreateAgentMemoryRequest": {
-      /** @enum {string} */
-      category: "profile" | "preference" | "ministry" | "parish_faq";
-      content: string;
-      isPinned?: boolean;
-      /** @enum {string} */
-      scope: "user" | "parish";
-      supersedeId?: string;
+    "domain.ChatRequest": {
+      message: string;
+      retry?: boolean;
+      sessionId?: string;
     };
     "domain.CreateAgentProviderRequest": {
       apiKey: string;
@@ -1720,19 +1600,6 @@ export interface components {
       name: string;
       /** @enum {string} */
       provider: "gemini" | "anthropic" | "openai" | "openrouter";
-    };
-    "domain.CreateAgentSessionRequest": {
-      title?: string;
-    };
-    "domain.CreateDioceseRequest": {
-      active?: boolean;
-      address?: string;
-      bishopName?: string;
-      code: string;
-      email?: string;
-      name: string;
-      phone?: string;
-      website?: string;
     };
     "domain.CreateEventRequest": {
       description?: string;
@@ -1746,12 +1613,35 @@ export interface components {
       /** @enum {string} */
       visibility?: "public" | "private";
     };
+    "domain.CreateKeuskupanRequest": {
+      active?: boolean;
+      alamat?: string;
+      email?: string;
+      kode: string;
+      nama: string;
+      telepon?: string;
+      uskup?: string;
+      website?: string;
+    };
+    "domain.CreateLingkunganRequest": {
+      ketua?: string;
+      kode: string;
+      nama: string;
+      pelindung?: string;
+      teleponKetua?: string;
+      wilayahId: string;
+    };
     "domain.CreateLookupRequest": {
       category: string;
       code: string;
       global?: boolean;
       label: string;
       sortOrder?: number;
+    };
+    "domain.CreateMemoryRequest": {
+      /** @enum {string} */
+      category?: "preference" | "fact" | "context";
+      content: string;
     };
     "domain.CreateOrgInviteRequest": {
       defaultPosition?: string;
@@ -1773,26 +1663,26 @@ export interface components {
         | "bgkp"
         | "section"
         | "categorical"
-        | "zone"
-        | "ward"
+        | "wilayah"
+        | "lingkungan"
         | "community";
+      lingkunganId?: string;
       name: string;
       parentId?: string;
-      wardId?: string;
-      zoneId?: string;
+      wilayahId?: string;
     };
-    "domain.CreateParishRequest": {
+    "domain.CreateParokiRequest": {
       active?: boolean;
-      address?: string;
-      code: string;
-      dioceseId: string;
+      alamat?: string;
       email?: string;
-      letterhead?: string;
+      keuskupanId: string;
+      kode: string;
+      kopSurat?: string;
       logoUrl?: string;
-      name: string;
-      pastorName?: string;
-      patronSaint?: string;
-      phone?: string;
+      nama: string;
+      pastor?: string;
+      pelindung?: string;
+      telepon?: string;
       website?: string;
     };
     "domain.CreatePeriodRequest": {
@@ -1804,37 +1694,13 @@ export interface components {
       /** @enum {string} */
       type?: "fiscal" | "liturgical";
     };
-    "domain.CreateWardRequest": {
-      code: string;
-      headName?: string;
-      headPhone?: string;
-      name: string;
-      patronSaint?: string;
-      zoneId: string;
-    };
-    "domain.CreateZoneRequest": {
-      code: string;
-      coordinatorName?: string;
-      coordinatorPhone?: string;
-      name: string;
+    "domain.CreateWilayahRequest": {
       /** @enum {string} */
-      type?: "zone" | "station";
-    };
-    "domain.DioceseResponse": {
-      active?: boolean;
-      address?: string;
-      bishopName?: string;
-      code?: string;
-      createdAt?: string;
-      email?: string;
-      id?: string;
-      name?: string;
-      phone?: string;
-      updatedAt?: string;
-      website?: string;
-    };
-    "domain.DioceseSearchFilter": {
-      active?: boolean;
+      jenis?: "wilayah" | "stasi";
+      kode: string;
+      koordinator?: string;
+      nama: string;
+      teleponKoordinator?: string;
     };
     "domain.EventRSVPResponse": {
       createdAt?: string;
@@ -1845,7 +1711,7 @@ export interface components {
       note?: string;
       orgPosition?: string;
       orgRole?: string;
-      parishId?: string;
+      parokiId?: string;
       phone?: string;
       status?: string;
       updatedAt?: string;
@@ -1877,7 +1743,7 @@ export interface components {
       orgId?: string;
       orgKind?: string;
       orgName?: string;
-      parishId?: string;
+      parokiId?: string;
       rsvpDeadline?: string;
       rsvpEnabled?: boolean;
       rsvpOpen?: boolean;
@@ -1898,6 +1764,39 @@ export interface components {
       /** @enum {string} */
       visibility?: "public" | "private";
     };
+    "domain.KeuskupanResponse": {
+      active?: boolean;
+      alamat?: string;
+      createdAt?: string;
+      email?: string;
+      id?: string;
+      kode?: string;
+      nama?: string;
+      telepon?: string;
+      updatedAt?: string;
+      uskup?: string;
+      website?: string;
+    };
+    "domain.KeuskupanSearchFilter": {
+      active?: boolean;
+    };
+    "domain.LingkunganResponse": {
+      active?: boolean;
+      createdAt?: string;
+      id?: string;
+      ketua?: string;
+      kode?: string;
+      nama?: string;
+      parokiId?: string;
+      pelindung?: string;
+      teleponKetua?: string;
+      updatedAt?: string;
+      wilayahId?: string;
+    };
+    "domain.LingkunganSearchFilter": {
+      active?: boolean;
+      wilayahId?: string;
+    };
     "domain.LinkAccountOTPRequest": {
       /** @enum {string} */
       channel: "whatsapp";
@@ -1910,7 +1809,7 @@ export interface components {
       createdAt?: string;
       id?: string;
       label?: string;
-      parishId?: string;
+      parokiId?: string;
       sortOrder?: number;
       updatedAt?: string;
     };
@@ -1918,7 +1817,39 @@ export interface components {
       active?: boolean;
       category?: string;
       /** @enum {string} */
-      scope?: "all" | "global" | "parish";
+      scope?: "all" | "global" | "paroki";
+    };
+    "domain.MemoryResponse": {
+      category?: string;
+      content?: string;
+      createdAt?: string;
+      id?: string;
+      parokiId?: string;
+      score?: number;
+      sourceSessionId?: string;
+      updatedAt?: string;
+      userId?: string;
+    };
+    "domain.MemorySearchFilter": {
+      /** @enum {string} */
+      category?: "preference" | "fact" | "context";
+    };
+    "domain.MessageResponse": {
+      agentName?: string;
+      content?: string;
+      createdAt?: string;
+      id?: string;
+      meta?: {
+        [key: string]: unknown;
+      };
+      parokiId?: string;
+      role?: string;
+      sessionId?: string;
+      toolCallId?: string;
+      toolCalls?: components["schemas"]["domain.ToolCallRecord"][];
+      toolName?: string;
+      updatedAt?: string;
+      userId?: string;
     };
     "domain.OrgInvitePreviewResponse": {
       code?: string;
@@ -1928,9 +1859,9 @@ export interface components {
       orgId?: string;
       orgKind?: string;
       orgName?: string;
-      parishCode?: string;
-      parishId?: string;
-      parishName?: string;
+      parokiCode?: string;
+      parokiId?: string;
+      parokiName?: string;
       role?: string;
       status?: string;
       valid?: boolean;
@@ -1944,7 +1875,7 @@ export interface components {
       id?: string;
       maxUses?: number;
       orgId?: string;
-      parishId?: string;
+      parokiId?: string;
       revokedAt?: string;
       role?: string;
       updatedAt?: string;
@@ -1961,7 +1892,7 @@ export interface components {
       id?: string;
       name?: string;
       orgId?: string;
-      parishId?: string;
+      parokiId?: string;
       periodId?: string;
       phone?: string;
       position?: string;
@@ -1985,13 +1916,13 @@ export interface components {
       description?: string;
       id?: string;
       kind?: string;
+      lingkunganId?: string;
       myRole?: string;
       name?: string;
       parentId?: string;
-      parishId?: string;
+      parokiId?: string;
       updatedAt?: string;
-      wardId?: string;
-      zoneId?: string;
+      wilayahId?: string;
     };
     "domain.OrganizationSearchFilter": {
       active?: boolean;
@@ -2001,47 +1932,47 @@ export interface components {
         | "bgkp"
         | "section"
         | "categorical"
-        | "zone"
-        | "ward"
+        | "wilayah"
+        | "lingkungan"
         | "community";
       myOrgsOnly?: boolean;
       parentId?: string;
     };
-    "domain.ParishMemberResponse": {
+    "domain.ParokiMemberResponse": {
       createdAt?: string;
       email?: string;
       id?: string;
       name?: string;
-      parishId?: string;
+      parokiId?: string;
       phone?: string;
       role?: string;
       updatedAt?: string;
       userId?: string;
     };
-    "domain.ParishMemberSearchFilter": {
+    "domain.ParokiMemberSearchFilter": {
       /** @enum {string} */
       role?: "admin" | "member";
     };
-    "domain.ParishResponse": {
+    "domain.ParokiResponse": {
       active?: boolean;
-      address?: string;
-      code?: string;
+      alamat?: string;
       createdAt?: string;
-      dioceseId?: string;
       email?: string;
       id?: string;
-      letterhead?: string;
+      keuskupanId?: string;
+      kode?: string;
+      kopSurat?: string;
       logoUrl?: string;
-      name?: string;
-      pastorName?: string;
-      patronSaint?: string;
-      phone?: string;
+      nama?: string;
+      pastor?: string;
+      pelindung?: string;
+      telepon?: string;
       updatedAt?: string;
       website?: string;
     };
-    "domain.ParishSearchFilter": {
+    "domain.ParokiSearchFilter": {
       active?: boolean;
-      dioceseId?: string;
+      keuskupanId?: string;
       memberOnly?: boolean;
     };
     "domain.PeriodResponse": {
@@ -2051,7 +1982,7 @@ export interface components {
       id?: string;
       isCurrent?: boolean;
       name?: string;
-      parishId?: string;
+      parokiId?: string;
       startDate?: string;
       status?: string;
       type?: string;
@@ -2072,7 +2003,7 @@ export interface components {
     "domain.RedeemOrgInviteResponse": {
       membership?: components["schemas"]["domain.OrgMemberResponse"];
       organization?: components["schemas"]["domain.OrganizationResponse"];
-      parishId?: string;
+      parokiId?: string;
     };
     "domain.RequestOTPRequest": {
       channel?: string;
@@ -2088,28 +2019,6 @@ export interface components {
       cursor?: string;
       limit?: number;
     };
-    "domain.SearchAgentMemoriesRequest": {
-      cursor?: string;
-      filter?: components["schemas"]["domain.AgentMemorySearchFilter"];
-      limit?: number;
-      q?: string;
-    };
-    "domain.SearchAgentMessagesRequest": {
-      cursor?: string;
-      limit?: number;
-      q?: string;
-    };
-    "domain.SearchAgentSessionsRequest": {
-      cursor?: string;
-      filter?: components["schemas"]["domain.AgentSessionSearchFilter"];
-      limit?: number;
-    };
-    "domain.SearchDiocesesRequest": {
-      cursor?: string;
-      filter?: components["schemas"]["domain.DioceseSearchFilter"];
-      limit?: number;
-      q?: string;
-    };
     "domain.SearchEventRSVPsRequest": {
       cursor?: string;
       filter?: components["schemas"]["domain.EventRSVPSearchFilter"];
@@ -2122,9 +2031,27 @@ export interface components {
       limit?: number;
       q?: string;
     };
+    "domain.SearchKeuskupanRequest": {
+      cursor?: string;
+      filter?: components["schemas"]["domain.KeuskupanSearchFilter"];
+      limit?: number;
+      q?: string;
+    };
+    "domain.SearchLingkunganRequest": {
+      cursor?: string;
+      filter?: components["schemas"]["domain.LingkunganSearchFilter"];
+      limit?: number;
+      q?: string;
+    };
     "domain.SearchLookupsRequest": {
       cursor?: string;
       filter?: components["schemas"]["domain.LookupSearchFilter"];
+      limit?: number;
+      q?: string;
+    };
+    "domain.SearchMemoriesRequest": {
+      cursor?: string;
+      filter?: components["schemas"]["domain.MemorySearchFilter"];
       limit?: number;
       q?: string;
     };
@@ -2145,15 +2072,15 @@ export interface components {
       limit?: number;
       q?: string;
     };
-    "domain.SearchParishMembersRequest": {
+    "domain.SearchParokiMembersRequest": {
       cursor?: string;
-      filter?: components["schemas"]["domain.ParishMemberSearchFilter"];
+      filter?: components["schemas"]["domain.ParokiMemberSearchFilter"];
       limit?: number;
       q?: string;
     };
-    "domain.SearchParishesRequest": {
+    "domain.SearchParokiRequest": {
       cursor?: string;
-      filter?: components["schemas"]["domain.ParishSearchFilter"];
+      filter?: components["schemas"]["domain.ParokiSearchFilter"];
       limit?: number;
       q?: string;
     };
@@ -2163,30 +2090,45 @@ export interface components {
       limit?: number;
       q?: string;
     };
-    "domain.SearchSessionsRequest": {
-      cursor?: string;
-      limit?: number;
-    };
     "domain.SearchUsersRequest": {
       cursor?: string;
       filter?: components["schemas"]["domain.UserSearchFilter"];
       limit?: number;
       q?: string;
     };
-    "domain.SearchWardsRequest": {
+    "domain.SearchWilayahRequest": {
       cursor?: string;
-      filter?: components["schemas"]["domain.WardSearchFilter"];
+      filter?: components["schemas"]["domain.WilayahSearchFilter"];
       limit?: number;
       q?: string;
     };
-    "domain.SearchZonesRequest": {
-      cursor?: string;
-      filter?: components["schemas"]["domain.ZoneSearchFilter"];
-      limit?: number;
-      q?: string;
+    "domain.SessionDetailResponse": {
+      createdAt?: string;
+      effectiveModelId?: string;
+      effectiveProviderId?: string;
+      id?: string;
+      lastMessageAt?: string;
+      messages?: components["schemas"]["domain.MessageResponse"][];
+      modelId?: string;
+      parokiId?: string;
+      providerId?: string;
+      title?: string;
+      updatedAt?: string;
+      userId?: string;
     };
-    "domain.SwitchSessionParishRequest": {
-      activeParishId: string;
+    "domain.SessionResponse": {
+      createdAt?: string;
+      id?: string;
+      lastMessageAt?: string;
+      modelId?: string;
+      parokiId?: string;
+      providerId?: string;
+      title?: string;
+      updatedAt?: string;
+      userId?: string;
+    };
+    "domain.SwitchSessionParokiRequest": {
+      activeParokiId: string;
     };
     "domain.SyncProviderModelsResponse": {
       id?: string;
@@ -2198,11 +2140,10 @@ export interface components {
       deepLinkUrl?: string;
       expiresInSeconds?: number;
     };
-    "domain.UpdateAgentMemoryRequest": {
-      /** @enum {string} */
-      category?: "profile" | "preference" | "ministry" | "parish_faq";
-      content?: string;
-      isPinned?: boolean;
+    "domain.ToolCallRecord": {
+      arguments?: string;
+      id?: string;
+      name?: string;
     };
     "domain.UpdateAgentProviderRequest": {
       apiKey?: string;
@@ -2211,19 +2152,6 @@ export interface components {
       name?: string;
       /** @enum {string} */
       provider?: "gemini" | "anthropic" | "openai" | "openrouter";
-    };
-    "domain.UpdateAgentSessionRequest": {
-      title: string;
-    };
-    "domain.UpdateDioceseRequest": {
-      active?: boolean;
-      address?: string;
-      bishopName?: string;
-      code?: string;
-      email?: string;
-      name?: string;
-      phone?: string;
-      website?: string;
     };
     "domain.UpdateEventRequest": {
       clearRsvpDeadline?: boolean;
@@ -2239,6 +2167,25 @@ export interface components {
       /** @enum {string} */
       visibility?: "public" | "private";
     };
+    "domain.UpdateKeuskupanRequest": {
+      active?: boolean;
+      alamat?: string;
+      email?: string;
+      kode?: string;
+      nama?: string;
+      telepon?: string;
+      uskup?: string;
+      website?: string;
+    };
+    "domain.UpdateLingkunganRequest": {
+      active?: boolean;
+      ketua?: string;
+      kode?: string;
+      nama?: string;
+      pelindung?: string;
+      teleponKetua?: string;
+      wilayahId?: string;
+    };
     "domain.UpdateLookupRequest": {
       active?: boolean;
       category?: string;
@@ -2249,11 +2196,16 @@ export interface components {
     "domain.UpdateMeRequest": {
       avatarUrl?: string;
       birthDate?: string;
-      defaultParishId?: string;
+      defaultParokiId?: string;
       gender?: string;
       name?: string;
       onboarded?: boolean;
       phone?: string;
+    };
+    "domain.UpdateMemoryRequest": {
+      /** @enum {string} */
+      category?: "preference" | "fact" | "context";
+      content?: string;
     };
     "domain.UpdateOrgMemberRequest": {
       endDate?: string;
@@ -2275,41 +2227,41 @@ export interface components {
         | "bgkp"
         | "section"
         | "categorical"
-        | "zone"
-        | "ward"
+        | "wilayah"
+        | "lingkungan"
         | "community";
+      lingkunganId?: string;
       name?: string;
       parentId?: string;
-      wardId?: string;
-      zoneId?: string;
+      wilayahId?: string;
     };
-    "domain.UpdateParishMemberRequest": {
+    "domain.UpdateParokiMemberRequest": {
       /** @enum {string} */
       role: "admin" | "member";
     };
-    "domain.UpdateParishProfileRequest": {
-      address?: string;
+    "domain.UpdateParokiProfileRequest": {
+      alamat?: string;
       email?: string;
-      letterhead?: string;
+      kopSurat?: string;
       logoUrl?: string;
-      name?: string;
-      pastorName?: string;
-      patronSaint?: string;
-      phone?: string;
+      nama?: string;
+      pastor?: string;
+      pelindung?: string;
+      telepon?: string;
       website?: string;
     };
-    "domain.UpdateParishRequest": {
+    "domain.UpdateParokiRequest": {
       active?: boolean;
-      address?: string;
-      code?: string;
-      dioceseId?: string;
+      alamat?: string;
       email?: string;
-      letterhead?: string;
+      keuskupanId?: string;
+      kode?: string;
+      kopSurat?: string;
       logoUrl?: string;
-      name?: string;
-      pastorName?: string;
-      patronSaint?: string;
-      phone?: string;
+      nama?: string;
+      pastor?: string;
+      pelindung?: string;
+      telepon?: string;
       website?: string;
     };
     "domain.UpdatePeriodRequest": {
@@ -2321,23 +2273,19 @@ export interface components {
       /** @enum {string} */
       status?: "open" | "closed";
     };
-    "domain.UpdateWardRequest": {
-      active?: boolean;
-      code?: string;
-      headName?: string;
-      headPhone?: string;
-      name?: string;
-      patronSaint?: string;
-      zoneId?: string;
+    "domain.UpdateSessionRequest": {
+      modelId?: string;
+      providerId?: string;
+      title?: string;
     };
-    "domain.UpdateZoneRequest": {
+    "domain.UpdateWilayahRequest": {
       active?: boolean;
-      code?: string;
-      coordinatorName?: string;
-      coordinatorPhone?: string;
-      name?: string;
       /** @enum {string} */
-      type?: "zone" | "station";
+      jenis?: "wilayah" | "stasi";
+      kode?: string;
+      koordinator?: string;
+      nama?: string;
+      teleponKoordinator?: string;
     };
     "domain.UpsertEventRSVPRequest": {
       note?: string;
@@ -2345,7 +2293,7 @@ export interface components {
       status: "going" | "maybe" | "not_going";
     };
     "domain.UserAccountResponse": {
-      activeParishId?: string;
+      activeParokiId?: string;
       avatarUrl?: string;
       createdAt?: string;
       displayName?: string;
@@ -2356,11 +2304,11 @@ export interface components {
       subject?: string;
     };
     "domain.UserResponse": {
-      activeParishId?: string;
+      activeParokiId?: string;
       avatarUrl?: string;
       birthDate?: string;
       createdAt?: string;
-      defaultParishId?: string;
+      defaultParokiId?: string;
       email?: string;
       gender?: string;
       id?: string;
@@ -2379,7 +2327,7 @@ export interface components {
       status?: "active" | "disabled";
     };
     "domain.UserSessionResponse": {
-      activeParishId?: string;
+      activeParokiId?: string;
       createdAt?: string;
       expiresAt?: string;
       id?: string;
@@ -2403,39 +2351,31 @@ export interface components {
       phone?: string;
       target?: string;
     };
-    "domain.WardResponse": {
+    "domain.WilayahResponse": {
       active?: boolean;
-      code?: string;
-      createdAt?: string;
-      headName?: string;
-      headPhone?: string;
-      id?: string;
-      name?: string;
-      parishId?: string;
-      patronSaint?: string;
-      updatedAt?: string;
-      zoneId?: string;
-    };
-    "domain.WardSearchFilter": {
-      active?: boolean;
-      zoneId?: string;
-    };
-    "domain.ZoneResponse": {
-      active?: boolean;
-      code?: string;
-      coordinatorName?: string;
-      coordinatorPhone?: string;
       createdAt?: string;
       id?: string;
-      name?: string;
-      parishId?: string;
-      type?: string;
+      jenis?: string;
+      kode?: string;
+      koordinator?: string;
+      nama?: string;
+      parokiId?: string;
+      teleponKoordinator?: string;
       updatedAt?: string;
     };
-    "domain.ZoneSearchFilter": {
+    "domain.WilayahSearchFilter": {
       active?: boolean;
       /** @enum {string} */
-      type?: "zone" | "station";
+      jenis?: "wilayah" | "stasi";
+    };
+    "github_com_paroki_domus_internal_agent_domain.SearchSessionsRequest": {
+      cursor?: string;
+      limit?: number;
+      q?: string;
+    };
+    "github_com_paroki_domus_internal_user_domain.SearchSessionsRequest": {
+      cursor?: string;
+      limit?: number;
     };
     "httpx.Envelope-any": {
       data?: unknown;
@@ -2452,28 +2392,8 @@ export interface components {
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
-    "httpx.Envelope-array_domain_AgentMemoryResponse": {
-      data?: components["schemas"]["domain.AgentMemoryResponse"][];
-      error?: components["schemas"]["httpx.ErrorPayload"];
-      meta?: components["schemas"]["httpx.Meta"];
-    };
-    "httpx.Envelope-array_domain_AgentMessageResponse": {
-      data?: components["schemas"]["domain.AgentMessageResponse"][];
-      error?: components["schemas"]["httpx.ErrorPayload"];
-      meta?: components["schemas"]["httpx.Meta"];
-    };
     "httpx.Envelope-array_domain_AgentProviderResponse": {
       data?: components["schemas"]["domain.AgentProviderResponse"][];
-      error?: components["schemas"]["httpx.ErrorPayload"];
-      meta?: components["schemas"]["httpx.Meta"];
-    };
-    "httpx.Envelope-array_domain_AgentSessionResponse": {
-      data?: components["schemas"]["domain.AgentSessionResponse"][];
-      error?: components["schemas"]["httpx.ErrorPayload"];
-      meta?: components["schemas"]["httpx.Meta"];
-    };
-    "httpx.Envelope-array_domain_DioceseResponse": {
-      data?: components["schemas"]["domain.DioceseResponse"][];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -2487,8 +2407,23 @@ export interface components {
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
+    "httpx.Envelope-array_domain_KeuskupanResponse": {
+      data?: components["schemas"]["domain.KeuskupanResponse"][];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-array_domain_LingkunganResponse": {
+      data?: components["schemas"]["domain.LingkunganResponse"][];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
     "httpx.Envelope-array_domain_LookupResponse": {
       data?: components["schemas"]["domain.LookupResponse"][];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-array_domain_MemoryResponse": {
+      data?: components["schemas"]["domain.MemoryResponse"][];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -2507,18 +2442,23 @@ export interface components {
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
-    "httpx.Envelope-array_domain_ParishMemberResponse": {
-      data?: components["schemas"]["domain.ParishMemberResponse"][];
+    "httpx.Envelope-array_domain_ParokiMemberResponse": {
+      data?: components["schemas"]["domain.ParokiMemberResponse"][];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
-    "httpx.Envelope-array_domain_ParishResponse": {
-      data?: components["schemas"]["domain.ParishResponse"][];
+    "httpx.Envelope-array_domain_ParokiResponse": {
+      data?: components["schemas"]["domain.ParokiResponse"][];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
     "httpx.Envelope-array_domain_PeriodResponse": {
       data?: components["schemas"]["domain.PeriodResponse"][];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-array_domain_SessionResponse": {
+      data?: components["schemas"]["domain.SessionResponse"][];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -2537,13 +2477,8 @@ export interface components {
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
-    "httpx.Envelope-array_domain_WardResponse": {
-      data?: components["schemas"]["domain.WardResponse"][];
-      error?: components["schemas"]["httpx.ErrorPayload"];
-      meta?: components["schemas"]["httpx.Meta"];
-    };
-    "httpx.Envelope-array_domain_ZoneResponse": {
-      data?: components["schemas"]["domain.ZoneResponse"][];
+    "httpx.Envelope-array_domain_WilayahResponse": {
+      data?: components["schemas"]["domain.WilayahResponse"][];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -2552,18 +2487,8 @@ export interface components {
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
-    "httpx.Envelope-domain_AgentMemoryResponse": {
-      data?: components["schemas"]["domain.AgentMemoryResponse"];
-      error?: components["schemas"]["httpx.ErrorPayload"];
-      meta?: components["schemas"]["httpx.Meta"];
-    };
     "httpx.Envelope-domain_AgentProviderResponse": {
       data?: components["schemas"]["domain.AgentProviderResponse"];
-      error?: components["schemas"]["httpx.ErrorPayload"];
-      meta?: components["schemas"]["httpx.Meta"];
-    };
-    "httpx.Envelope-domain_AgentSessionResponse": {
-      data?: components["schemas"]["domain.AgentSessionResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -2574,11 +2499,6 @@ export interface components {
     };
     "httpx.Envelope-domain_AuthSessionResponse": {
       data?: components["schemas"]["domain.AuthSessionResponse"];
-      error?: components["schemas"]["httpx.ErrorPayload"];
-      meta?: components["schemas"]["httpx.Meta"];
-    };
-    "httpx.Envelope-domain_DioceseResponse": {
-      data?: components["schemas"]["domain.DioceseResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -2597,8 +2517,23 @@ export interface components {
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
+    "httpx.Envelope-domain_KeuskupanResponse": {
+      data?: components["schemas"]["domain.KeuskupanResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_LingkunganResponse": {
+      data?: components["schemas"]["domain.LingkunganResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
     "httpx.Envelope-domain_LookupResponse": {
       data?: components["schemas"]["domain.LookupResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_MemoryResponse": {
+      data?: components["schemas"]["domain.MemoryResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -2622,13 +2557,13 @@ export interface components {
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
-    "httpx.Envelope-domain_ParishMemberResponse": {
-      data?: components["schemas"]["domain.ParishMemberResponse"];
+    "httpx.Envelope-domain_ParokiMemberResponse": {
+      data?: components["schemas"]["domain.ParokiMemberResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
-    "httpx.Envelope-domain_ParishResponse": {
-      data?: components["schemas"]["domain.ParishResponse"];
+    "httpx.Envelope-domain_ParokiResponse": {
+      data?: components["schemas"]["domain.ParokiResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -2644,6 +2579,16 @@ export interface components {
     };
     "httpx.Envelope-domain_RequestOTPResponse": {
       data?: components["schemas"]["domain.RequestOTPResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_SessionDetailResponse": {
+      data?: components["schemas"]["domain.SessionDetailResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_SessionResponse": {
+      data?: components["schemas"]["domain.SessionResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -2667,13 +2612,8 @@ export interface components {
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
-    "httpx.Envelope-domain_WardResponse": {
-      data?: components["schemas"]["domain.WardResponse"];
-      error?: components["schemas"]["httpx.ErrorPayload"];
-      meta?: components["schemas"]["httpx.Meta"];
-    };
-    "httpx.Envelope-domain_ZoneResponse": {
-      data?: components["schemas"]["domain.ZoneResponse"];
+    "httpx.Envelope-domain_WilayahResponse": {
+      data?: components["schemas"]["domain.WilayahResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -2700,6 +2640,8 @@ export interface components {
       group?: string;
       key?: string;
       label?: string;
+      multiline?: boolean;
+      overridden?: boolean;
       placeholder?: string;
       secret?: boolean;
       value?: string;
@@ -2728,11 +2670,11 @@ export interface operations {
     /** @description Chat request */
     requestBody: {
       content: {
-        "application/json": components["schemas"]["domain.AgentChatRequest"];
+        "application/json": components["schemas"]["domain.ChatRequest"];
       };
     };
     responses: {
-      /** @description Named SSE stream (session, thinking, tool_call, tool_result, delta, done, error) */
+      /** @description text/event-stream */
       200: {
         headers: {
           [name: string]: unknown;
@@ -2786,6 +2728,15 @@ export interface operations {
           "text/event-stream": components["schemas"]["httpx.Envelope-any"];
         };
       };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "text/event-stream": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
     };
   };
   createAgentMemory: {
@@ -2795,10 +2746,10 @@ export interface operations {
       path?: never;
       cookie?: never;
     };
-    /** @description Create memory request */
+    /** @description Memory payload */
     requestBody: {
       content: {
-        "application/json": components["schemas"]["domain.CreateAgentMemoryRequest"];
+        "application/json": components["schemas"]["domain.CreateMemoryRequest"];
       };
     };
     responses: {
@@ -2808,7 +2759,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["httpx.Envelope-domain_AgentMemoryResponse"];
+          "application/json": components["schemas"]["httpx.Envelope-domain_MemoryResponse"];
         };
       };
       /** @description Bad Request */
@@ -2856,10 +2807,10 @@ export interface operations {
       path?: never;
       cookie?: never;
     };
-    /** @description Search parameters */
-    requestBody?: {
+    /** @description Search params */
+    requestBody: {
       content: {
-        "application/json": components["schemas"]["domain.SearchAgentMemoriesRequest"];
+        "application/json": components["schemas"]["domain.SearchMemoriesRequest"];
       };
     };
     responses: {
@@ -2869,7 +2820,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["httpx.Envelope-array_domain_AgentMemoryResponse"];
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_MemoryResponse"];
         };
       };
       /** @description Bad Request */
@@ -2918,7 +2869,9 @@ export interface operations {
         headers: {
           [name: string]: unknown;
         };
-        content?: never;
+        content: {
+          "application/json": string;
+        };
       };
       /** @description Bad Request */
       400: {
@@ -2968,10 +2921,10 @@ export interface operations {
       };
       cookie?: never;
     };
-    /** @description Update memory request */
+    /** @description Update payload */
     requestBody: {
       content: {
-        "application/json": components["schemas"]["domain.UpdateAgentMemoryRequest"];
+        "application/json": components["schemas"]["domain.UpdateMemoryRequest"];
       };
     };
     responses: {
@@ -2981,7 +2934,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["httpx.Envelope-domain_AgentMemoryResponse"];
+          "application/json": components["schemas"]["httpx.Envelope-domain_MemoryResponse"];
         };
       };
       /** @description Bad Request */
@@ -3328,60 +3281,8 @@ export interface operations {
           "application/json": components["schemas"]["httpx.Envelope-any"];
         };
       };
-    };
-  };
-  createAgentSession: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** @description Create session request */
-    requestBody?: {
-      content: {
-        "application/json": components["schemas"]["domain.CreateAgentSessionRequest"];
-      };
-    };
-    responses: {
-      /** @description Created */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-domain_AgentSessionResponse"];
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Forbidden */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
+      /** @description Too Many Requests */
+      429: {
         headers: {
           [name: string]: unknown;
         };
@@ -3398,10 +3299,10 @@ export interface operations {
       path?: never;
       cookie?: never;
     };
-    /** @description Search parameters */
-    requestBody?: {
+    /** @description Search params */
+    requestBody: {
       content: {
-        "application/json": components["schemas"]["domain.SearchAgentSessionsRequest"];
+        "application/json": components["schemas"]["github_com_paroki_domus_internal_agent_domain.SearchSessionsRequest"];
       };
     };
     responses: {
@@ -3411,7 +3312,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["httpx.Envelope-array_domain_AgentSessionResponse"];
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_SessionResponse"];
         };
       };
       /** @description Bad Request */
@@ -3461,7 +3362,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["httpx.Envelope-domain_AgentSessionResponse"];
+          "application/json": components["schemas"]["httpx.Envelope-domain_SessionDetailResponse"];
         };
       };
       /** @description Bad Request */
@@ -3519,7 +3420,9 @@ export interface operations {
         headers: {
           [name: string]: unknown;
         };
-        content?: never;
+        content: {
+          "application/json": string;
+        };
       };
       /** @description Bad Request */
       400: {
@@ -3569,10 +3472,10 @@ export interface operations {
       };
       cookie?: never;
     };
-    /** @description Update session request */
+    /** @description Update payload */
     requestBody: {
       content: {
-        "application/json": components["schemas"]["domain.UpdateAgentSessionRequest"];
+        "application/json": components["schemas"]["domain.UpdateSessionRequest"];
       };
     };
     responses: {
@@ -3582,7 +3485,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["httpx.Envelope-domain_AgentSessionResponse"];
+          "application/json": components["schemas"]["httpx.Envelope-domain_SessionResponse"];
         };
       };
       /** @description Bad Request */
@@ -3623,117 +3526,6 @@ export interface operations {
       };
       /** @description Unprocessable Entity */
       422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-    };
-  };
-  searchAgentSessionMessages: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description Session UUID */
-        sessionId: string;
-      };
-      cookie?: never;
-    };
-    /** @description Search parameters */
-    requestBody?: {
-      content: {
-        "application/json": components["schemas"]["domain.SearchAgentMessagesRequest"];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-array_domain_AgentMessageResponse"];
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Forbidden */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-    };
-  };
-  whatsAppAgentWebhook: {
-    parameters: {
-      query?: never;
-      header: {
-        /** @description GOWA HMAC-SHA256 signature */
-        "X-Hub-Signature-256": string;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    /** @description GOWA webhook payload */
-    requestBody: {
-      content: {
-        "application/json": Record<string, never>;
-        "text/plain": Record<string, never>;
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
         headers: {
           [name: string]: unknown;
         };
@@ -4981,17 +4773,17 @@ export interface operations {
       };
     };
   };
-  switchMeSessionParish: {
+  switchMeSessionParoki: {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    /** @description Active parish payload */
+    /** @description Active paroki payload */
     requestBody: {
       content: {
-        "application/json": components["schemas"]["domain.SwitchSessionParishRequest"];
+        "application/json": components["schemas"]["domain.SwitchSessionParokiRequest"];
       };
     };
     responses: {
@@ -5050,7 +4842,7 @@ export interface operations {
     /** @description Pagination parameters */
     requestBody?: {
       content: {
-        "application/json": components["schemas"]["domain.SearchSessionsRequest"];
+        "application/json": components["schemas"]["github_com_paroki_domus_internal_user_domain.SearchSessionsRequest"];
       };
     };
     responses: {
@@ -6045,17 +5837,17 @@ export interface operations {
       };
     };
   };
-  createDiocese: {
+  createKeuskupan: {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    /** @description Diocese creation payload */
+    /** @description Keuskupan creation payload */
     requestBody: {
       content: {
-        "application/json": components["schemas"]["domain.CreateDioceseRequest"];
+        "application/json": components["schemas"]["domain.CreateKeuskupanRequest"];
       };
     };
     responses: {
@@ -6065,7 +5857,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["httpx.Envelope-domain_DioceseResponse"];
+          "application/json": components["schemas"]["httpx.Envelope-domain_KeuskupanResponse"];
         };
       };
       /** @description Bad Request */
@@ -6115,7 +5907,7 @@ export interface operations {
       };
     };
   };
-  searchDioceses: {
+  searchKeuskupan: {
     parameters: {
       query?: never;
       header?: never;
@@ -6125,7 +5917,7 @@ export interface operations {
     /** @description Search parameters */
     requestBody?: {
       content: {
-        "application/json": components["schemas"]["domain.SearchDiocesesRequest"];
+        "application/json": components["schemas"]["domain.SearchKeuskupanRequest"];
       };
     };
     responses: {
@@ -6135,7 +5927,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["httpx.Envelope-array_domain_DioceseResponse"];
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_KeuskupanResponse"];
         };
       };
       /** @description Bad Request */
@@ -6167,12 +5959,12 @@ export interface operations {
       };
     };
   };
-  getDiocese: {
+  getKeuskupan: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        /** @description Diocese UUID */
+        /** @description Keuskupan UUID */
         id: string;
       };
       cookie?: never;
@@ -6185,7 +5977,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["httpx.Envelope-domain_DioceseResponse"];
+          "application/json": components["schemas"]["httpx.Envelope-domain_KeuskupanResponse"];
         };
       };
       /** @description Bad Request */
@@ -6217,12 +6009,12 @@ export interface operations {
       };
     };
   };
-  deleteDiocese: {
+  deleteKeuskupan: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        /** @description Diocese UUID */
+        /** @description Keuskupan UUID */
         id: string;
       };
       cookie?: never;
@@ -6283,20 +6075,20 @@ export interface operations {
       };
     };
   };
-  updateDiocese: {
+  updateKeuskupan: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        /** @description Diocese UUID */
+        /** @description Keuskupan UUID */
         id: string;
       };
       cookie?: never;
     };
-    /** @description Diocese update payload */
+    /** @description Keuskupan update payload */
     requestBody: {
       content: {
-        "application/json": components["schemas"]["domain.UpdateDioceseRequest"];
+        "application/json": components["schemas"]["domain.UpdateKeuskupanRequest"];
       };
     };
     responses: {
@@ -6306,7 +6098,327 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["httpx.Envelope-domain_DioceseResponse"];
+          "application/json": components["schemas"]["httpx.Envelope-domain_KeuskupanResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  createLingkungan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Lingkungan creation payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.CreateLingkunganRequest"];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_LingkunganResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  searchLingkungan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Search parameters */
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["domain.SearchLingkunganRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_LingkunganResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  getLingkungan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Lingkungan UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_LingkunganResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  deleteLingkungan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Lingkungan UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  updateLingkungan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Lingkungan UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Lingkungan update payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UpdateLingkunganRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_LingkunganResponse"];
         };
       };
       /** @description Bad Request */
@@ -6676,17 +6788,17 @@ export interface operations {
       };
     };
   };
-  createParish: {
+  createParoki: {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    /** @description Parish creation payload */
+    /** @description Paroki creation payload */
     requestBody: {
       content: {
-        "application/json": components["schemas"]["domain.CreateParishRequest"];
+        "application/json": components["schemas"]["domain.CreateParokiRequest"];
       };
     };
     responses: {
@@ -6696,7 +6808,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["httpx.Envelope-domain_ParishResponse"];
+          "application/json": components["schemas"]["httpx.Envelope-domain_ParokiResponse"];
         };
       };
       /** @description Bad Request */
@@ -6755,7 +6867,7 @@ export interface operations {
       };
     };
   };
-  getCurrentParish: {
+  getCurrentParoki: {
     parameters: {
       query?: never;
       header?: never;
@@ -6770,7 +6882,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["httpx.Envelope-domain_ParishResponse"];
+          "application/json": components["schemas"]["httpx.Envelope-domain_ParokiResponse"];
         };
       };
       /** @description Bad Request */
@@ -6802,17 +6914,17 @@ export interface operations {
       };
     };
   };
-  updateCurrentParishProfile: {
+  updateCurrentParokiProfile: {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    /** @description Parish profile payload */
+    /** @description Paroki profile payload */
     requestBody: {
       content: {
-        "application/json": components["schemas"]["domain.UpdateParishProfileRequest"];
+        "application/json": components["schemas"]["domain.UpdateParokiProfileRequest"];
       };
     };
     responses: {
@@ -6822,7 +6934,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["httpx.Envelope-domain_ParishResponse"];
+          "application/json": components["schemas"]["httpx.Envelope-domain_ParokiResponse"];
         };
       };
       /** @description Bad Request */
@@ -6872,7 +6984,7 @@ export interface operations {
       };
     };
   };
-  searchParishes: {
+  searchParoki: {
     parameters: {
       query?: never;
       header?: never;
@@ -6882,7 +6994,7 @@ export interface operations {
     /** @description Search parameters */
     requestBody?: {
       content: {
-        "application/json": components["schemas"]["domain.SearchParishesRequest"];
+        "application/json": components["schemas"]["domain.SearchParokiRequest"];
       };
     };
     responses: {
@@ -6892,7 +7004,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["httpx.Envelope-array_domain_ParishResponse"];
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_ParokiResponse"];
         };
       };
       /** @description Bad Request */
@@ -6924,12 +7036,12 @@ export interface operations {
       };
     };
   };
-  getParish: {
+  getParoki: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        /** @description Parish UUID */
+        /** @description Paroki UUID */
         id: string;
       };
       cookie?: never;
@@ -6942,7 +7054,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["httpx.Envelope-domain_ParishResponse"];
+          "application/json": components["schemas"]["httpx.Envelope-domain_ParokiResponse"];
         };
       };
       /** @description Bad Request */
@@ -6974,12 +7086,12 @@ export interface operations {
       };
     };
   };
-  deleteParish: {
+  deleteParoki: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        /** @description Parish UUID */
+        /** @description Paroki UUID */
         id: string;
       };
       cookie?: never;
@@ -7040,20 +7152,20 @@ export interface operations {
       };
     };
   };
-  updateParish: {
+  updateParoki: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        /** @description Parish UUID */
+        /** @description Paroki UUID */
         id: string;
       };
       cookie?: never;
     };
-    /** @description Parish update payload */
+    /** @description Paroki update payload */
     requestBody: {
       content: {
-        "application/json": components["schemas"]["domain.UpdateParishRequest"];
+        "application/json": components["schemas"]["domain.UpdateParokiRequest"];
       };
     };
     responses: {
@@ -7063,7 +7175,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["httpx.Envelope-domain_ParishResponse"];
+          "application/json": components["schemas"]["httpx.Envelope-domain_ParokiResponse"];
         };
       };
       /** @description Bad Request */
@@ -7122,12 +7234,12 @@ export interface operations {
       };
     };
   };
-  addParishMember: {
+  addParokiMember: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        /** @description Parish UUID */
+        /** @description Paroki UUID */
         id: string;
       };
       cookie?: never;
@@ -7135,7 +7247,7 @@ export interface operations {
     /** @description Member payload */
     requestBody: {
       content: {
-        "application/json": components["schemas"]["domain.AddParishMemberRequest"];
+        "application/json": components["schemas"]["domain.AddParokiMemberRequest"];
       };
     };
     responses: {
@@ -7145,7 +7257,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["httpx.Envelope-domain_ParishMemberResponse"];
+          "application/json": components["schemas"]["httpx.Envelope-domain_ParokiMemberResponse"];
         };
       };
       /** @description Bad Request */
@@ -7204,12 +7316,12 @@ export interface operations {
       };
     };
   };
-  searchParishMembers: {
+  searchParokiMembers: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        /** @description Parish UUID */
+        /** @description Paroki UUID */
         id: string;
       };
       cookie?: never;
@@ -7217,7 +7329,7 @@ export interface operations {
     /** @description Search parameters */
     requestBody?: {
       content: {
-        "application/json": components["schemas"]["domain.SearchParishMembersRequest"];
+        "application/json": components["schemas"]["domain.SearchParokiMembersRequest"];
       };
     };
     responses: {
@@ -7227,7 +7339,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["httpx.Envelope-array_domain_ParishMemberResponse"];
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_ParokiMemberResponse"];
         };
       };
       /** @description Bad Request */
@@ -7268,12 +7380,12 @@ export interface operations {
       };
     };
   };
-  removeParishMember: {
+  removeParokiMember: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        /** @description Parish UUID */
+        /** @description Paroki UUID */
         id: string;
         /** @description User UUID */
         userId: string;
@@ -7336,12 +7448,12 @@ export interface operations {
       };
     };
   };
-  updateParishMember: {
+  updateParokiMember: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        /** @description Parish UUID */
+        /** @description Paroki UUID */
         id: string;
         /** @description User UUID */
         userId: string;
@@ -7351,7 +7463,7 @@ export interface operations {
     /** @description Role update payload */
     requestBody: {
       content: {
-        "application/json": components["schemas"]["domain.UpdateParishMemberRequest"];
+        "application/json": components["schemas"]["domain.UpdateParokiMemberRequest"];
       };
     };
     responses: {
@@ -7361,7 +7473,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["httpx.Envelope-domain_ParishMemberResponse"];
+          "application/json": components["schemas"]["httpx.Envelope-domain_ParokiMemberResponse"];
         };
       };
       /** @description Bad Request */
@@ -7731,17 +7843,17 @@ export interface operations {
       };
     };
   };
-  createWard: {
+  createWilayah: {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    /** @description Ward creation payload */
+    /** @description Wilayah creation payload */
     requestBody: {
       content: {
-        "application/json": components["schemas"]["domain.CreateWardRequest"];
+        "application/json": components["schemas"]["domain.CreateWilayahRequest"];
       };
     };
     responses: {
@@ -7751,7 +7863,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["httpx.Envelope-domain_WardResponse"];
+          "application/json": components["schemas"]["httpx.Envelope-domain_WilayahResponse"];
         };
       };
       /** @description Bad Request */
@@ -7781,15 +7893,6 @@ export interface operations {
           "application/json": components["schemas"]["httpx.Envelope-any"];
         };
       };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
       /** @description Conflict */
       409: {
         headers: {
@@ -7810,7 +7913,7 @@ export interface operations {
       };
     };
   };
-  searchWards: {
+  searchWilayah: {
     parameters: {
       query?: never;
       header?: never;
@@ -7820,7 +7923,7 @@ export interface operations {
     /** @description Search parameters */
     requestBody?: {
       content: {
-        "application/json": components["schemas"]["domain.SearchWardsRequest"];
+        "application/json": components["schemas"]["domain.SearchWilayahRequest"];
       };
     };
     responses: {
@@ -7830,7 +7933,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["httpx.Envelope-array_domain_WardResponse"];
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_WilayahResponse"];
         };
       };
       /** @description Bad Request */
@@ -7862,12 +7965,12 @@ export interface operations {
       };
     };
   };
-  getWard: {
+  getWilayah: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        /** @description Ward UUID */
+        /** @description Wilayah UUID */
         id: string;
       };
       cookie?: never;
@@ -7880,7 +7983,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["httpx.Envelope-domain_WardResponse"];
+          "application/json": components["schemas"]["httpx.Envelope-domain_WilayahResponse"];
         };
       };
       /** @description Bad Request */
@@ -7912,323 +8015,12 @@ export interface operations {
       };
     };
   };
-  deleteWard: {
+  deleteWilayah: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        /** @description Ward UUID */
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description No Content */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Forbidden */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-    };
-  };
-  updateWard: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description Ward UUID */
-        id: string;
-      };
-      cookie?: never;
-    };
-    /** @description Ward update payload */
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["domain.UpdateWardRequest"];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-domain_WardResponse"];
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Forbidden */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Conflict */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-    };
-  };
-  createZone: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** @description Zone creation payload */
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["domain.CreateZoneRequest"];
-      };
-    };
-    responses: {
-      /** @description Created */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-domain_ZoneResponse"];
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Forbidden */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Conflict */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-    };
-  };
-  searchZones: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** @description Search parameters */
-    requestBody?: {
-      content: {
-        "application/json": components["schemas"]["domain.SearchZonesRequest"];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-array_domain_ZoneResponse"];
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Forbidden */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-    };
-  };
-  getZone: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description Zone UUID */
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-domain_ZoneResponse"];
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-    };
-  };
-  deleteZone: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description Zone UUID */
+        /** @description Wilayah UUID */
         id: string;
       };
       cookie?: never;
@@ -8289,20 +8081,20 @@ export interface operations {
       };
     };
   };
-  updateZone: {
+  updateWilayah: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        /** @description Zone UUID */
+        /** @description Wilayah UUID */
         id: string;
       };
       cookie?: never;
     };
-    /** @description Zone update payload */
+    /** @description Wilayah update payload */
     requestBody: {
       content: {
-        "application/json": components["schemas"]["domain.UpdateZoneRequest"];
+        "application/json": components["schemas"]["domain.UpdateWilayahRequest"];
       };
     };
     responses: {
@@ -8312,7 +8104,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["httpx.Envelope-domain_ZoneResponse"];
+          "application/json": components["schemas"]["httpx.Envelope-domain_WilayahResponse"];
         };
       };
       /** @description Bad Request */

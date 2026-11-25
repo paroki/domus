@@ -110,7 +110,7 @@ export function useDirectoryParishes(enabled = true) {
     enabled,
     queryFn: () =>
       unwrap(
-        api.POST("/ref/parishes/search", { body: { limit: 100 } }),
+        api.POST("/ref/paroki/search", { body: { limit: 100 } }),
         USER_ERRORS,
       ),
   });
@@ -133,7 +133,7 @@ export function useUserParishMemberships(
       enabled: Boolean(enabled && userId && email && parish.id),
       queryFn: () =>
         unwrap(
-          api.POST("/ref/parishes/{id}/members/search", {
+          api.POST("/ref/paroki/{id}/members/search", {
             params: { path: { id: parish.id ?? "" } },
             body: { q: email, limit: 20 },
           }),
@@ -167,7 +167,7 @@ export function useDirectoryParishMembers(
       initialPageParam: undefined as string | undefined,
       queryFn: ({ pageParam }) =>
         unwrapMeta(
-          api.POST("/ref/parishes/{id}/members/search", {
+          api.POST("/ref/paroki/{id}/members/search", {
             params: { path: { id: parishId ?? "" } },
             body: {
               ...filter,

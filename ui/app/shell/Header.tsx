@@ -36,7 +36,7 @@ export function Header() {
   );
   const parishes =
     parishesQuery.data?.pages.flatMap((page) => page.data ?? []) ?? [];
-  const activeParish = parishes.find((p) => p.id === me?.activeParishId);
+  const activeParish = parishes.find((p) => p.id === me?.activeParokiId);
   const [parishOpen, setParishOpen] = useState(false);
   const parishRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
@@ -98,7 +98,7 @@ export function Header() {
             >
               <Church aria-hidden className="size-3.5 shrink-0 text-muted" />
               <span className="truncate">
-                {activeParish?.name ?? t("header.selectParish")}
+                {activeParish?.nama ?? t("header.selectParish")}
               </span>
               <ChevronDown
                 aria-hidden
@@ -126,17 +126,17 @@ export function Header() {
                         if (!p.id) return;
                         setParishOpen(false);
                         await switchParish.mutateAsync({
-                          activeParishId: p.id,
+                          activeParokiId: p.id,
                         });
                       }}
                       className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm hover:bg-fg/8 ${
-                        p.id === me.activeParishId
+                        p.id === me.activeParokiId
                           ? "font-semibold text-primary"
                           : "text-fg"
                       }`}
                     >
-                      <span className="truncate">{p.name}</span>
-                      <span className="ml-2 text-xs text-muted">{p.code}</span>
+                      <span className="truncate">{p.nama}</span>
+                      <span className="ml-2 text-xs text-muted">{p.kode}</span>
                     </button>
                   ))
                 )}

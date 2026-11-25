@@ -19,7 +19,7 @@ export default function ParishProfilePage() {
     data: parish,
     isLoading,
     error: parishError,
-  } = useCurrentParish(Boolean(me?.activeParishId));
+  } = useCurrentParish(Boolean(me?.activeParokiId));
   const updateProfile = useUpdateCurrentParishProfile();
 
   const [name, setName] = useState("");
@@ -34,12 +34,12 @@ export default function ParishProfilePage() {
 
   useEffect(() => {
     if (!parish) return;
-    setName(parish.name ?? "");
-    setPatronSaint(parish.patronSaint ?? "");
-    setPastorName(parish.pastorName ?? "");
-    setPhone(parish.phone ?? "");
+    setName(parish.nama ?? "");
+    setPatronSaint(parish.pelindung ?? "");
+    setPastorName(parish.pastor ?? "");
+    setPhone(parish.telepon ?? "");
     setEmail(parish.email ?? "");
-    setAddress(parish.address ?? "");
+    setAddress(parish.alamat ?? "");
     setWebsite(parish.website ?? "");
   }, [parish]);
 
@@ -49,12 +49,12 @@ export default function ParishProfilePage() {
     setProfileSaved(false);
     try {
       await updateProfile.mutateAsync({
-        name: name.trim(),
-        patronSaint: patronSaint.trim(),
-        pastorName: pastorName.trim(),
-        phone: phone.trim(),
+        nama: name.trim(),
+        pelindung: patronSaint.trim(),
+        pastor: pastorName.trim(),
+        telepon: phone.trim(),
         email: email.trim(),
-        address: address.trim(),
+        alamat: address.trim(),
         website: website.trim(),
       });
       setProfileSaved(true);
@@ -79,7 +79,7 @@ export default function ParishProfilePage() {
         <p className="text-sm text-muted">{t("ref.profileSubtitle")}</p>
       </div>
 
-      {!me?.activeParishId ? (
+      {!me?.activeParokiId ? (
         <div className="rounded-xl border border-line bg-surface p-6 text-sm text-muted">
           {t("ref.noActiveParish")}
         </div>
@@ -108,7 +108,7 @@ export default function ParishProfilePage() {
           >
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-fg">
-                {parish?.name} ({parish?.code})
+                {parish?.nama} ({parish?.kode})
               </h2>
               {profileSaved && (
                 <span className="text-xs font-medium text-primary">

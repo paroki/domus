@@ -30,7 +30,7 @@ export function meta({}: Route.MetaArgs) {
 export default function EventsPage() {
   const { t } = useTranslation();
   const { data: me } = useMe();
-  const hasParish = Boolean(me?.activeParishId);
+  const hasParish = Boolean(me?.activeParokiId);
 
   const [myOrgsOnly, setMyOrgsOnly] = useState(false);
   const [orgFilter, setOrgFilter] = useState("");

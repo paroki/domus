@@ -137,11 +137,11 @@ test("throws ApiError with structured details on 4xx and 5xx", async () => {
   assert.equal(caught500.message, "Friendly feature message");
 });
 
-test("injects X-Parish-Id header when active parish is set", async () => {
+test("injects X-Paroki-Id header when active parish is set", async () => {
   const seenHeaders: (string | null)[] = [];
   const mockFetch = (async (input: RequestInfo | URL) => {
     const req = input as Request;
-    seenHeaders.push(req.headers.get("X-Parish-Id"));
+    seenHeaders.push(req.headers.get("X-Paroki-Id"));
     return new Response(
       JSON.stringify({ data: { status: "ok" }, meta: null, error: null }),
       { status: 200, headers: { "Content-Type": "application/json" } },
