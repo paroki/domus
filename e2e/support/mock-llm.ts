@@ -98,8 +98,8 @@ function pickToolCall(
   if (names.includes("org_list")) {
     return { name: "org_list", arguments: "{}" };
   }
-  if (names.includes("ref_get_parish")) {
-    return { name: "ref_get_parish", arguments: "{}" };
+  if (names.includes("ref_get_paroki")) {
+    return { name: "ref_get_paroki", arguments: "{}" };
   }
   return null;
 }

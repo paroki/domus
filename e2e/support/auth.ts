@@ -71,7 +71,7 @@ export async function loginAsUser(options: {
 
     const rawToken = randomBytes(32).toString("base64url");
     await db`
-      INSERT INTO user_sessions (id, created_at, updated_at, token_hash, user_agent, ip_address, active_parish_id, last_active_at, expires_at, user_id)
+      INSERT INTO user_sessions (id, created_at, updated_at, token_hash, user_agent, ip_address, active_paroki_id, last_active_at, expires_at, user_id)
       VALUES (${randomUUID()}, ${now}, ${now}, ${sha256Hex(rawToken)}, 'Playwright E2E', '127.0.0.1', ${options.activeParishId ?? null}, ${now}, ${expiresAt}, ${userId})
     `;
 
@@ -133,10 +133,10 @@ export async function bootstrapParishAdminSession(
   const dioceseCode = `e2e-d-${suffix}`;
   const dioceseName = `Keuskupan E2E ${suffix}`;
   const dioceseRes = await client.post<{
-    data?: { id?: string; code?: string; name?: string };
-  }>("/ref/dioceses", {
-    code: dioceseCode,
-    name: dioceseName,
+    data?: { id?: string; kode?: string; nama?: string };
+  }>("/ref/keuskupan", {
+    kode: dioceseCode,
+    nama: dioceseName,
   });
   if (dioceseRes.status !== 201 || !dioceseRes.data?.data?.id) {
     throw new Error(
@@ -148,11 +148,11 @@ export async function bootstrapParishAdminSession(
   const parishCode = `e2e-p-${suffix}`;
   const parishName = `Paroki E2E ${suffix}`;
   const parishRes = await client.post<{
-    data?: { id?: string; code?: string; name?: string };
-  }>("/ref/parishes", {
-    dioceseId,
-    code: parishCode,
-    name: parishName,
+    data?: { id?: string; kode?: string; nama?: string };
+  }>("/ref/paroki", {
+    keuskupanId: dioceseId,
+    kode: parishCode,
+    nama: parishName,
   });
   if (parishRes.status !== 201 || !parishRes.data?.data?.id) {
     throw new Error(
@@ -163,7 +163,7 @@ export async function bootstrapParishAdminSession(
 
   const email = options?.email ?? "parishadmin.e2e@domus.test";
   const name = options?.name ?? "Admin Paroki E2E";
-  const memberRes = await client.post(`/ref/parishes/${parishId}/members`, {
+  const memberRes = await client.post(`/ref/paroki/${parishId}/members`, {
     email,
     name,
     role: "admin",

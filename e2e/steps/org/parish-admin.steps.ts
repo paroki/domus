@@ -35,7 +35,7 @@ Given(
   async function (this: DomusWorld, email: string, name: string) {
     assert.ok(this.activeParishId, "Expected activeParishId");
     const res = await this.client.post(
-      `/ref/parishes/${this.activeParishId}/members`,
+      `/ref/paroki/${this.activeParishId}/members`,
       {
         email,
         name,
@@ -100,10 +100,10 @@ Then(
 Given(
   "a zone with code {string} and name {string} exists in the active parish",
   async function (this: DomusWorld, code: string, name: string) {
-    const res = await this.client.post("/ref/zones", {
-      type: "zone",
-      code,
-      name,
+    const res = await this.client.post("/ref/wilayah", {
+      jenis: "wilayah",
+      kode: code,
+      nama: name,
     });
     assert.ok(
       res.status === 201 || res.status === 409,

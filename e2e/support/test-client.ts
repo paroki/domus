@@ -24,7 +24,7 @@ export class TestClient {
       headers.Authorization = `Bearer ${this.token}`;
     }
     if (this.parishId) {
-      headers["X-Parish-Id"] = this.parishId;
+      headers["X-Paroki-Id"] = this.parishId;
     }
     if (body !== undefined) {
       headers["Content-Type"] = "application/json";

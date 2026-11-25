@@ -20,7 +20,7 @@ export class TerritoryPage extends BasePage {
   }
 
   async createZone(input: {
-    type?: "zone" | "station";
+    type?: "wilayah" | "stasi";
     code: string;
     name: string;
     coordinatorName?: string;

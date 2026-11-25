@@ -105,10 +105,10 @@ Given(
   async function (this: DomusWorld, dioceseName: string, parishName: string) {
     const suffix = Date.now().toString(36);
     const dioceseRes = await this.client.post<{ data?: { id?: string } }>(
-      "/ref/dioceses",
+      "/ref/keuskupan",
       {
-        code: `e2e-d-${suffix}`,
-        name: dioceseName,
+        kode: `e2e-d-${suffix}`,
+        nama: dioceseName,
       },
     );
     assert.equal(dioceseRes.status, 201);
@@ -116,11 +116,11 @@ Given(
     assert.ok(dioceseId, "Expected created diocese ID");
 
     const parishRes = await this.client.post<{ data?: { id?: string } }>(
-      "/ref/parishes",
+      "/ref/paroki",
       {
-        dioceseId,
-        code: `e2e-p-${suffix}`,
-        name: parishName,
+        keuskupanId: dioceseId,
+        kode: `e2e-p-${suffix}`,
+        nama: parishName,
       },
     );
     assert.equal(parishRes.status, 201);
