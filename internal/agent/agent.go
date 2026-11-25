@@ -25,6 +25,12 @@ var (
 	PermChat      = domain.PermChat
 )
 
+// EnsureMemorySearchSchema idempotently adds the halfvec(768) embedding column and
+// ParadeDB BM25 + HNSW indexes on agent_memories.
+func EnsureMemorySearchSchema(ctx context.Context, sqlDB *sql.DB) error {
+	return repo.EnsureMemorySearchSchema(ctx, sqlDB)
+}
+
 // Feature wires LLM provider configuration, model discovery, and session/memory persistence for the agent feature.
 type Feature struct {
 	drivers   *driver.Registry

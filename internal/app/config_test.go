@@ -2,6 +2,7 @@ package app
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"log/slog"
 	"strings"
@@ -10,6 +11,18 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestGetConfig_AutoMigrateDefaultAndOptIn(t *testing.T) {
+	t.Setenv("APP_AUTO_MIGRATE", "")
+	cfg, err := GetConfig(context.Background())
+	require.NoError(t, err)
+	assert.False(t, cfg.AutoMigrate)
+
+	t.Setenv("APP_AUTO_MIGRATE", "true")
+	cfg, err = GetConfig(context.Background())
+	require.NoError(t, err)
+	assert.True(t, cfg.AutoMigrate)
+}
 
 const testAppSecret = "0123456789abcdef0123456789abcdef"
 

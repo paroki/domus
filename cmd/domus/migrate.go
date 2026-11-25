@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/paroki/domus/internal/agent"
 	"github.com/paroki/domus/internal/app"
 	"github.com/spf13/cobra"
 )
@@ -16,7 +17,7 @@ func newMigrateCmd() *cobra.Command {
 				return err
 			}
 			logger := app.GetLogger(cfg)
-			return app.RunMigrations(ctx, cfg, logger)
+			return app.RunMigrations(ctx, cfg, logger, agent.EnsureMemorySearchSchema)
 		},
 	}
 }

@@ -72,17 +72,16 @@ func newTestPostgresSchemaDSN(t *testing.T) (string, *sql.DB) {
 	return schemaDSN, db
 }
 
-func TestRunMigrations_Idempotent(t *testing.T) {
+func TestRunMigrations_DefaultNoOpOnEmptyFS(t *testing.T) {
 	ctx := context.Background()
 	dsn, db := newTestPostgresSchemaDSN(t)
 
-	cfg := Config{DatabaseURL: dsn}
+	cfg := Config{DatabaseURL: dsn} // AutoMigrate defaults to false
 	logger := slog.New(slog.DiscardHandler)
 
 	if err := RunMigrations(ctx, cfg, logger); err != nil {
 		t.Fatalf("first RunMigrations failed: %v", err)
 	}
-	// Second run must be idempotent.
 	if err := RunMigrations(ctx, cfg, logger); err != nil {
 		t.Fatalf("second RunMigrations failed: %v", err)
 	}
@@ -91,19 +90,80 @@ func TestRunMigrations_Idempotent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("glob migrations: %v", err)
 	}
+	if len(sqlFiles) != 0 {
+		t.Fatalf("expected 0 embedded sql files, got %v", sqlFiles)
+	}
+
 	var count int
 	if err := db.QueryRowContext(ctx, "SELECT COUNT(*) FROM schema_migrations").Scan(&count); err != nil {
 		t.Fatalf("query schema_migrations: %v", err)
 	}
-	if count != len(sqlFiles) {
-		t.Fatalf("expected %d applied migrations, got %d", len(sqlFiles), count)
+	if count != 0 {
+		t.Fatalf("expected 0 applied migrations, got %d", count)
+	}
+}
+
+func TestRunMigrations_FromFS_Idempotent(t *testing.T) {
+	ctx := context.Background()
+	dsn, db := newTestPostgresSchemaDSN(t)
+
+	cfg := Config{DatabaseURL: dsn}
+	logger := slog.New(slog.DiscardHandler)
+	fsys := fstest.MapFS{
+		"001_init.sql": &fstest.MapFile{Data: []byte("CREATE TABLE t1 (id TEXT PRIMARY KEY);")},
 	}
 
-	for _, tbl := range []string{"settings", "agent_providers"} {
+	if err := runMigrationsFromFS(ctx, cfg, logger, fsys); err != nil {
+		t.Fatalf("first runMigrationsFromFS failed: %v", err)
+	}
+	if err := runMigrationsFromFS(ctx, cfg, logger, fsys); err != nil {
+		t.Fatalf("second runMigrationsFromFS failed: %v", err)
+	}
+
+	var count int
+	if err := db.QueryRowContext(ctx, "SELECT COUNT(*) FROM schema_migrations").Scan(&count); err != nil {
+		t.Fatalf("query schema_migrations: %v", err)
+	}
+	if count != 1 {
+		t.Fatalf("expected 1 applied migration, got %d", count)
+	}
+}
+
+func TestRunMigrations_AutoMigrate(t *testing.T) {
+	ctx := context.Background()
+	dsn, db := newTestPostgresSchemaDSN(t)
+
+	cfg := Config{DatabaseURL: dsn, AutoMigrate: true}
+	logger := slog.New(slog.DiscardHandler)
+
+	var hookCalls int
+	hook := func(ctx context.Context, sqlDB *sql.DB) error {
+		hookCalls++
+		_, err := sqlDB.ExecContext(ctx, `ALTER TABLE "agent_memories" ADD COLUMN IF NOT EXISTS "embedding" halfvec(768) NULL`)
+		return err
+	}
+
+	if err := RunMigrations(ctx, cfg, logger, nil, hook); err != nil {
+		t.Fatalf("first AutoMigrate RunMigrations failed: %v", err)
+	}
+	// Second run must be idempotent.
+	if err := RunMigrations(ctx, cfg, logger, nil, hook); err != nil {
+		t.Fatalf("second AutoMigrate RunMigrations failed: %v", err)
+	}
+	if hookCalls != 2 {
+		t.Fatalf("expected hook to be called twice, got %d", hookCalls)
+	}
+
+	for _, tbl := range []string{"users", "settings", "agent_providers", "agent_memories"} {
 		var found string
 		if err := db.QueryRowContext(ctx, "SELECT table_name FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = $1", tbl).Scan(&found); err != nil {
 			t.Fatalf("expected %s table to exist: %v", tbl, err)
 		}
+	}
+
+	var colName string
+	if err := db.QueryRowContext(ctx, "SELECT column_name FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'agent_memories' AND column_name = 'embedding'").Scan(&colName); err != nil {
+		t.Fatalf("expected agent_memories.embedding column to exist: %v", err)
 	}
 
 	client, err := OpenDB(ctx, cfg)

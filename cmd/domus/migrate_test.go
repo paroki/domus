@@ -62,8 +62,44 @@ func TestRootCmd_SubcommandsAndMigrateCLI(t *testing.T) {
 
 	t.Setenv("APP_DB_URL", u.String())
 
+	// Default (APP_AUTO_MIGRATE=false) is a no-op when migrations.FS has no SQL files.
+	t.Setenv("APP_AUTO_MIGRATE", "")
 	root.SetArgs([]string{"migrate"})
 	if err := root.ExecuteContext(ctx); err != nil {
-		t.Fatalf("domus migrate failed: %v", err)
+		t.Fatalf("domus migrate (default) failed: %v", err)
+	}
+
+	// Opt-in auto-migrate creates Ent tables + agent memory search schema idempotently.
+	t.Setenv("APP_AUTO_MIGRATE", "true")
+	for i := range 2 {
+		root.SetArgs([]string{"migrate"})
+		if err := root.ExecuteContext(ctx); err != nil {
+			t.Fatalf("domus migrate (auto-migrate run %d) failed: %v", i+1, err)
+		}
+	}
+
+	schemaDB, err := sql.Open("pgx", u.String())
+	if err != nil {
+		t.Fatalf("open schema db: %v", err)
+	}
+	defer func() { _ = schemaDB.Close() }()
+
+	for _, tbl := range []string{"users", "settings", "agent_providers", "agent_memories"} {
+		var found string
+		if err := schemaDB.QueryRowContext(ctx, "SELECT table_name FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = $1", tbl).Scan(&found); err != nil {
+			t.Fatalf("expected %s table to exist: %v", tbl, err)
+		}
+	}
+
+	var colName string
+	if err := schemaDB.QueryRowContext(ctx, "SELECT column_name FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'agent_memories' AND column_name = 'embedding'").Scan(&colName); err != nil {
+		t.Fatalf("expected agent_memories.embedding column to exist: %v", err)
+	}
+
+	for _, idx := range []string{"agent_memories_bm25_idx", "agent_memories_embedding_hnsw_idx"} {
+		var found string
+		if err := schemaDB.QueryRowContext(ctx, "SELECT indexname FROM pg_indexes WHERE schemaname = current_schema() AND tablename = 'agent_memories' AND indexname = $1", idx).Scan(&found); err != nil {
+			t.Fatalf("expected index %s to exist: %v", idx, err)
+		}
 	}
 }

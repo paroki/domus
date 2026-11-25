@@ -16,8 +16,37 @@ import (
 	"github.com/paroki/domus/migrations"
 )
 
-// RunMigrations applies embedded SQL migrations in lexicographical order and tracks checksums.
-func RunMigrations(ctx context.Context, cfg Config, logger *slog.Logger) error {
+// SchemaHook runs custom DDL after Ent auto-migration (e.g. ParadeDB/pgvector indexes).
+type SchemaHook func(ctx context.Context, sqlDB *sql.DB) error
+
+// RunMigrations applies database schema updates. When cfg.AutoMigrate is true,
+// it runs Ent's Schema.Create (non-destructive) followed by any SchemaHooks.
+// Otherwise it applies embedded SQL migrations from migrations.FS.
+func RunMigrations(ctx context.Context, cfg Config, logger *slog.Logger, hooks ...SchemaHook) error {
+	if logger == nil {
+		logger = slog.New(slog.DiscardHandler)
+	}
+	if cfg.AutoMigrate {
+		client, sqlDB, _, err := OpenDBPool(ctx, cfg)
+		if err != nil {
+			return err
+		}
+		defer func() { _ = client.Close() }()
+
+		if err := client.Schema.Create(ctx); err != nil {
+			return fmt.Errorf("auto-migrate ent schema: %w", err)
+		}
+		for _, hook := range hooks {
+			if hook == nil {
+				continue
+			}
+			if err := hook(ctx, sqlDB); err != nil {
+				return fmt.Errorf("run schema hook: %w", err)
+			}
+		}
+		logger.InfoContext(ctx, "auto-migrated database schema")
+		return nil
+	}
 	return runMigrationsFromFS(ctx, cfg, logger, migrations.FS)
 }
 

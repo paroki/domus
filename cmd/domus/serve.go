@@ -49,8 +49,7 @@ func newServeCmd() *cobra.Command {
 				return err
 			}
 			defer flush()
-			// ponytail: always auto-migrate on serve; add APP_AUTO_MIGRATE to Config when separate migration job needed.
-			if err := app.RunMigrations(ctx, cfg, logger); err != nil {
+			if err := app.RunMigrations(ctx, cfg, logger, agent.EnsureMemorySearchSchema); err != nil {
 				return err
 			}
 

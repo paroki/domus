@@ -15,6 +15,7 @@ type Config struct {
 	Port        string     `env:"APP_PORT, default=8080"`
 	LogLevel    slog.Level `env:"APP_LOG_LEVEL, default=info"`
 	DatabaseURL string     `env:"APP_DB_URL, default=postgres://domus:domus@localhost:5432/domus?sslmode=disable"`
+	AutoMigrate bool       `env:"APP_AUTO_MIGRATE, default=false"`
 	Secret      string     `env:"APP_SECRET"`
 
 	// Sentry is disabled when APP_SENTRY_DSN is empty.

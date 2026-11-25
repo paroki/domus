@@ -2,7 +2,8 @@ package migrations
 
 import "embed"
 
-// FS embeds all versioned SQL migration files and atlas.sum.
+// FS embeds versioned SQL migration files and atlas.sum when present.
+// During pre-release development only embed.go exists, so fs.Glob(FS, "*.sql") returns empty.
 //
-//go:embed *.sql atlas.sum
+//go:embed *
 var FS embed.FS
