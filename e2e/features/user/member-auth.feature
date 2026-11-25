@@ -41,5 +41,10 @@ Feature: Invite-only login guard, guest invite sign-up, onboarding, and profile 
     And I see current device session in active sessions
     When I revoke the secondary session
     Then I see last linked account protection
+    When I create a personal access token named "CLI Exporter E2E" with expiry "30"
+    Then I see the one-time personal access token banner and token "CLI Exporter E2E" in the list
+    And I can authenticate GET "/api/me" with the personal access token
+    When I revoke the personal access token "CLI Exporter E2E"
+    Then the personal access token "CLI Exporter E2E" is rejected by "/api/me"
     When I log out from header menu
     Then I am on "/login"

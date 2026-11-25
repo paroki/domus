@@ -100,4 +100,38 @@ export class MePage extends BasePage {
     await this.page.getByRole("menuitem", { name: "Keluar" }).click();
     await this.expectPath("/login");
   }
+
+  async createToken(name: string, expiryValue = "30"): Promise<string> {
+    await this.page.getByLabel("Nama token").fill(name);
+    await this.page.getByLabel("Masa berlaku").selectOption(expiryValue);
+    await this.page.getByRole("button", { name: "Buat Token" }).click();
+    const banner = this.page.getByTestId("pat-created-banner");
+    await banner.waitFor({ state: "visible", timeout: 10_000 });
+    const raw = (
+      (await this.page.getByTestId("pat-plaintext-token").textContent()) ?? ""
+    ).trim();
+    assert.ok(raw.startsWith("dms_"), `Expected dms_ prefix, got ${raw}`);
+    return raw;
+  }
+
+  async expectTokenVisible(name: string): Promise<void> {
+    await this.page
+      .getByTestId(`pat-row-${name}`)
+      .waitFor({ state: "visible", timeout: 10_000 });
+  }
+
+  async revokeToken(name: string): Promise<void> {
+    const row = this.page.getByTestId(`pat-row-${name}`);
+    await row.waitFor({ state: "visible", timeout: 10_000 });
+    await Promise.all([
+      this.page.waitForResponse(
+        (r) =>
+          r.url().includes("/api/me/tokens/search") &&
+          r.request().method() === "POST" &&
+          r.status() === 200,
+      ),
+      row.getByRole("button", { name: "Cabut token" }).click(),
+    ]);
+    await row.waitFor({ state: "detached", timeout: 10_000 });
+  }
 }

@@ -9,6 +9,7 @@ import { TestClient } from "../../support/test-client";
 import type { DomusWorld } from "../../support/world";
 
 let currentInviteCode = "";
+let lastCreatedPat = "";
 
 When(
   "I request email OTP on login for {string}",
@@ -218,3 +219,55 @@ Then("I see last linked account protection", async function (this: DomusWorld) {
 When("I log out from header menu", async function (this: DomusWorld) {
   await this.pages.user.me.logout();
 });
+
+When(
+  "I create a personal access token named {string} with expiry {string}",
+  async function (this: DomusWorld, name: string, expiry: string) {
+    lastCreatedPat = await this.pages.user.me.createToken(name, expiry);
+  },
+);
+
+Then(
+  "I see the one-time personal access token banner and token {string} in the list",
+  async function (this: DomusWorld, name: string) {
+    assert.ok(lastCreatedPat.startsWith("dms_"));
+    await this.pages.user.me.expectTokenVisible(name);
+  },
+);
+
+Then(
+  "I can authenticate GET {string} with the personal access token",
+  async function (this: DomusWorld, apiPath: string) {
+    const url = new URL(apiPath, this.page.url()).toString();
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${lastCreatedPat}` },
+    });
+    assert.equal(
+      res.status,
+      200,
+      `Expected 200 from ${url}, got ${res.status}`,
+    );
+  },
+);
+
+When(
+  "I revoke the personal access token {string}",
+  async function (this: DomusWorld, name: string) {
+    await this.pages.user.me.revokeToken(name);
+  },
+);
+
+Then(
+  "the personal access token {string} is rejected by {string}",
+  async function (this: DomusWorld, _name: string, apiPath: string) {
+    const url = new URL(apiPath, this.page.url()).toString();
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${lastCreatedPat}` },
+    });
+    assert.equal(
+      res.status,
+      401,
+      `Expected 401 from ${url}, got ${res.status}`,
+    );
+  },
+);
