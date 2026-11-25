@@ -61,6 +61,7 @@ Format: `<type>(<scope>): <subject>`, enforced by Commitlint (header and body li
 - UI: feature code under `ui/app/features/<feature>/` must not import sibling features. Shared code goes in `ui/app/shared/`.
 - After changing handler annotations or DTOs, run `mise run api`. Never hand-edit `api/swagger.json` or `ui/app/shared/api/schema.d.ts`.
 - After changing mockable interfaces, run `mise run mock` and commit the generated files.
+- After changing `ent/schema/`, run `mise run ent` only. Do **not** run `mise run migrate:diff` or generate/edit `migrations/*.sql` (set `APP_AUTO_MIGRATE=true` locally; SQL migrations are generated manually by a maintainer prior to release).
 
 ## Verification
 

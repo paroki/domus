@@ -88,6 +88,10 @@ Domain units across both backend and frontend are called **features** (never "mo
 
 - **Fiber v3**: Register feature routes under the `/api` group in `internal/app/fiber.go` via `<feature>.Register(api)`. Use `fiber.Ctx` (v3 signature: `func(c fiber.Ctx) error`).
 - **Entgo (`ent/`)**: All database schemas live in `ent/schema/`. Share the generated `*ent.Client` across features via dependency injection in `Register` / `New`. Domus uses **ParadeDB** (`paradedb/paradedb:latest-pg18`) exclusively for runtime, local testing (`TEST_DSN` / `domus_test`), and CI.
+- **Database Migrations (`migrations/` & `APP_AUTO_MIGRATE`)**:
+  - `APP_AUTO_MIGRATE` defaults to `false`. Pre-release development, CI, E2E, and staging opt in via `APP_AUTO_MIGRATE=true` (Ent `Schema.Create` + `agent.EnsureMemorySearchSchema`).
+  - AI agents and contributors MUST NOT run `mise run migrate:diff` or generate/edit `migrations/*.sql` automatically when changing `ent/schema/`; only run `mise run ent` to regenerate the Ent client.
+  - Versioned SQL migrations in `migrations/` are generated manually by a human maintainer prior to release.
 - **Strict DTO Boundary**:
   - NEVER expose generated `ent` models directly in HTTP responses or Swag annotations.
   - ALL request/response DTOs are defined in `internal/<feature>/domain/dto.go`. Handlers, services, and Swag annotations reference `domain.<Dto>`; NEVER define DTOs in `handler/`.
