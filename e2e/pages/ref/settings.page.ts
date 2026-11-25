@@ -41,7 +41,7 @@ export class SettingsPage extends BasePage {
       .click();
   }
 
-  async expectParishAdminRestrictionBanner(): Promise<void> {
+  async expectParokiAdminRestrictionBanner(): Promise<void> {
     await this.page
       .getByText("Hanya Admin Paroki yang dapat mengubah profil paroki ini.")
       .waitFor({ state: "visible", timeout: 10_000 });

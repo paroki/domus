@@ -31,11 +31,11 @@ Then(
 );
 
 Given(
-  "a parish member with email {string} name {string} exists in the active parish",
+  "a paroki member with email {string} name {string} exists in the active paroki",
   async function (this: DomusWorld, email: string, name: string) {
-    assert.ok(this.activeParishId, "Expected activeParishId");
+    assert.ok(this.activeParokiId, "Expected activeParokiId");
     const res = await this.client.post(
-      `/ref/paroki/${this.activeParishId}/members`,
+      `/ref/paroki/${this.activeParokiId}/members`,
       {
         email,
         name,
@@ -44,49 +44,49 @@ Given(
     );
     assert.ok(
       res.status === 201 || res.status === 409,
-      `Expected 201 or 409 creating parish member, got ${res.status}`,
+      `Expected 201 or 409 creating paroki member, got ${res.status}`,
     );
   },
 );
 
 When(
-  "I demote parish membership in the active parish",
+  "I demote paroki membership in the active paroki",
   async function (this: DomusWorld) {
-    assert.ok(this.activeParishName, "Expected activeParishName");
-    await this.pages.user.users.changeParishMembershipRole(
-      this.activeParishName,
+    assert.ok(this.activeParokiName, "Expected activeParokiName");
+    await this.pages.user.users.changeParokiMembershipRole(
+      this.activeParokiName,
       "Anggota",
     );
   },
 );
 
 When(
-  "I promote parish membership in the active parish",
+  "I promote paroki membership in the active paroki",
   async function (this: DomusWorld) {
-    assert.ok(this.activeParishName, "Expected activeParishName");
-    await this.pages.user.users.changeParishMembershipRole(
-      this.activeParishName,
+    assert.ok(this.activeParokiName, "Expected activeParokiName");
+    await this.pages.user.users.changeParokiMembershipRole(
+      this.activeParokiName,
       "Admin Paroki",
     );
   },
 );
 
 Then(
-  "I see active parish membership with role {string}",
+  "I see active paroki membership with role {string}",
   async function (this: DomusWorld, roleLabel: string) {
-    assert.ok(this.activeParishName, "Expected activeParishName");
-    await this.pages.user.users.expectParishMembershipVisible(
-      this.activeParishName,
+    assert.ok(this.activeParokiName, "Expected activeParokiName");
+    await this.pages.user.users.expectParokiMembershipVisible(
+      this.activeParokiName,
       roleLabel as "Admin Paroki" | "Anggota",
     );
   },
 );
 
 When(
-  "I remove parish membership in the active parish",
+  "I remove paroki membership in the active paroki",
   async function (this: DomusWorld) {
-    assert.ok(this.activeParishName, "Expected activeParishName");
-    await this.pages.user.users.removeParishMembership(this.activeParishName);
+    assert.ok(this.activeParokiName, "Expected activeParokiName");
+    await this.pages.user.users.removeParokiMembership(this.activeParokiName);
   },
 );
 
@@ -98,7 +98,7 @@ Then(
 );
 
 Given(
-  "a zone with code {string} and name {string} exists in the active parish",
+  "a wilayah with code {string} and name {string} exists in the active paroki",
   async function (this: DomusWorld, code: string, name: string) {
     const res = await this.client.post("/ref/wilayah", {
       jenis: "wilayah",
@@ -107,7 +107,7 @@ Given(
     });
     assert.ok(
       res.status === 201 || res.status === 409,
-      `Expected 201 or 409 creating zone, got ${res.status}`,
+      `Expected 201 or 409 creating wilayah, got ${res.status}`,
     );
   },
 );
@@ -147,19 +147,19 @@ When(
 );
 
 When(
-  "I create organization with kind {string} name {string} code {string} zone {string}",
+  "I create organization with kind {string} name {string} code {string} wilayah {string}",
   async function (
     this: DomusWorld,
     kindLabel: string,
     name: string,
     code: string,
-    zoneLabel: string,
+    wilayahLabel: string,
   ) {
     await this.pages.org.orgs.createOrg({
       kindLabel,
       name,
       code,
-      zoneLabel,
+      wilayahLabel,
     });
   },
 );

@@ -28,10 +28,10 @@ Given(
   "an organization {string} has an active member invite with position {string}",
   async function (this: DomusWorld, orgName: string, defaultPosition: string) {
     const setupClient = new TestClient();
-    const { parish, org } = await bootstrapOrgAdminSession(setupClient, {
+    const { paroki, org } = await bootstrapOrgAdminSession(setupClient, {
       orgName,
     });
-    setupClient.setParishId(parish.id);
+    setupClient.setParokiId(paroki.id);
     const invRes = await setupClient.post<{
       data?: { id?: string; code?: string };
     }>(`/orgs/${org.id}/invites`, {
@@ -52,10 +52,10 @@ Given(
   "an organization {string} has a revoked invite",
   async function (this: DomusWorld, orgName: string) {
     const setupClient = new TestClient();
-    const { parish, org } = await bootstrapOrgAdminSession(setupClient, {
+    const { paroki, org } = await bootstrapOrgAdminSession(setupClient, {
       orgName,
     });
-    setupClient.setParishId(parish.id);
+    setupClient.setParokiId(paroki.id);
     const invRes = await setupClient.post<{
       data?: { id?: string; code?: string };
     }>(`/orgs/${org.id}/invites`, {

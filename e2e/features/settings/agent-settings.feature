@@ -1,6 +1,6 @@
 Feature: Super Admin system settings for communication channels and LLM providers
 
-  @parish-admin
+  @paroki-admin
   Scenario: Non-Super Admin sees restriction banner on /settings
     When I open "/settings"
     Then I see the system settings forbidden banner

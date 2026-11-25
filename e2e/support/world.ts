@@ -12,10 +12,10 @@ export class DomusWorld extends World {
   page!: Page;
   pages!: AppPages;
   readonly client: TestClient;
-  activeDioceseId?: string;
-  activeParishId?: string;
-  activeParishName?: string;
-  activeParishCode?: string;
+  activeKeuskupanId?: string;
+  activeParokiId?: string;
+  activeParokiName?: string;
+  activeParokiCode?: string;
   activeOrgId?: string;
   activeOrgName?: string;
   activeOrgCode?: string;
@@ -23,7 +23,7 @@ export class DomusWorld extends World {
   otherOrgId?: string;
   otherOrgName?: string;
   orgAdminToken?: string;
-  parishAdminToken?: string;
+  parokiAdminToken?: string;
   mockLlmBaseUrl?: string;
 
   constructor(options: IWorldOptions) {

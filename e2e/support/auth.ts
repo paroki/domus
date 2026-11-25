@@ -30,7 +30,7 @@ export async function loginAsUser(options: {
   email: string;
   name?: string;
   onboarded?: boolean;
-  activeParishId?: string;
+  activeParokiId?: string;
 }): Promise<AuthSession> {
   const db = openDb();
   try {
@@ -72,7 +72,7 @@ export async function loginAsUser(options: {
     const rawToken = randomBytes(32).toString("base64url");
     await db`
       INSERT INTO user_sessions (id, created_at, updated_at, token_hash, user_agent, ip_address, active_paroki_id, last_active_at, expires_at, user_id)
-      VALUES (${randomUUID()}, ${now}, ${now}, ${sha256Hex(rawToken)}, 'Playwright E2E', '127.0.0.1', ${options.activeParishId ?? null}, ${now}, ${expiresAt}, ${userId})
+      VALUES (${randomUUID()}, ${now}, ${now}, ${sha256Hex(rawToken)}, 'Playwright E2E', '127.0.0.1', ${options.activeParokiId ?? null}, ${now}, ${expiresAt}, ${userId})
     `;
 
     return {
@@ -98,79 +98,79 @@ export async function loginAsSuperAdmin(options?: {
   email?: string;
   name?: string;
   onboarded?: boolean;
-  activeParishId?: string;
+  activeParokiId?: string;
 }): Promise<AuthSession> {
   return loginAsUser({
     email: options?.email ?? config.superAdminEmail,
     name: options?.name ?? config.superAdminName,
     onboarded: options?.onboarded ?? true,
-    activeParishId: options?.activeParishId,
+    activeParokiId: options?.activeParokiId,
   });
 }
 
-let parishBootstrapCounter = 0;
+let parokiBootstrapCounter = 0;
 
-export async function bootstrapParishAdminSession(
+export async function bootstrapParokiAdminSession(
   client: TestClient,
   options?: {
     email?: string;
     name?: string;
-    parishCodeSuffix?: string;
+    parokiCodeSuffix?: string;
   },
 ): Promise<{
   session: AuthSession;
-  diocese: { id: string; code: string; name: string };
-  parish: { id: string; code: string; name: string };
+  keuskupan: { id: string; kode: string; nama: string };
+  paroki: { id: string; kode: string; nama: string };
 }> {
-  parishBootstrapCounter += 1;
+  parokiBootstrapCounter += 1;
   const suffix =
-    options?.parishCodeSuffix ??
-    `${Date.now().toString(36)}-${parishBootstrapCounter}`;
+    options?.parokiCodeSuffix ??
+    `${Date.now().toString(36)}-${parokiBootstrapCounter}`;
 
   const superAdmin = await loginAsSuperAdmin();
   client.setToken(superAdmin.rawToken);
 
-  const dioceseCode = `e2e-d-${suffix}`;
-  const dioceseName = `Keuskupan E2E ${suffix}`;
-  const dioceseRes = await client.post<{
+  const keuskupanKode = `e2e-d-${suffix}`;
+  const keuskupanNama = `Keuskupan E2E ${suffix}`;
+  const keuskupanRes = await client.post<{
     data?: { id?: string; kode?: string; nama?: string };
   }>("/ref/keuskupan", {
-    kode: dioceseCode,
-    nama: dioceseName,
+    kode: keuskupanKode,
+    nama: keuskupanNama,
   });
-  if (dioceseRes.status !== 201 || !dioceseRes.data?.data?.id) {
+  if (keuskupanRes.status !== 201 || !keuskupanRes.data?.data?.id) {
     throw new Error(
-      `Failed to bootstrap diocese: ${dioceseRes.status} ${JSON.stringify(dioceseRes.data)}`,
+      `Failed to bootstrap keuskupan: ${keuskupanRes.status} ${JSON.stringify(keuskupanRes.data)}`,
     );
   }
-  const dioceseId = dioceseRes.data.data.id;
+  const keuskupanId = keuskupanRes.data.data.id;
 
-  const parishCode = `e2e-p-${suffix}`;
-  const parishName = `Paroki E2E ${suffix}`;
-  const parishRes = await client.post<{
+  const parokiKode = `e2e-p-${suffix}`;
+  const parokiNama = `Paroki E2E ${suffix}`;
+  const parokiRes = await client.post<{
     data?: { id?: string; kode?: string; nama?: string };
   }>("/ref/paroki", {
-    keuskupanId: dioceseId,
-    kode: parishCode,
-    nama: parishName,
+    keuskupanId,
+    kode: parokiKode,
+    nama: parokiNama,
   });
-  if (parishRes.status !== 201 || !parishRes.data?.data?.id) {
+  if (parokiRes.status !== 201 || !parokiRes.data?.data?.id) {
     throw new Error(
-      `Failed to bootstrap parish: ${parishRes.status} ${JSON.stringify(parishRes.data)}`,
+      `Failed to bootstrap paroki: ${parokiRes.status} ${JSON.stringify(parokiRes.data)}`,
     );
   }
-  const parishId = parishRes.data.data.id;
+  const parokiId = parokiRes.data.data.id;
 
-  const email = options?.email ?? "parishadmin.e2e@domus.test";
+  const email = options?.email ?? "parokiadmin.e2e@domus.test";
   const name = options?.name ?? "Admin Paroki E2E";
-  const memberRes = await client.post(`/ref/paroki/${parishId}/members`, {
+  const memberRes = await client.post(`/ref/paroki/${parokiId}/members`, {
     email,
     name,
     role: "admin",
   });
   if (memberRes.status !== 201 && memberRes.status !== 409) {
     throw new Error(
-      `Failed to appoint parish admin: ${memberRes.status} ${JSON.stringify(memberRes.data)}`,
+      `Failed to appoint paroki admin: ${memberRes.status} ${JSON.stringify(memberRes.data)}`,
     );
   }
 
@@ -178,14 +178,14 @@ export async function bootstrapParishAdminSession(
     email,
     name,
     onboarded: true,
-    activeParishId: parishId,
+    activeParokiId: parokiId,
   });
   client.setToken(session.rawToken);
 
   return {
     session,
-    diocese: { id: dioceseId, code: dioceseCode, name: dioceseName },
-    parish: { id: parishId, code: parishCode, name: parishName },
+    keuskupan: { id: keuskupanId, kode: keuskupanKode, nama: keuskupanNama },
+    paroki: { id: parokiId, kode: parokiKode, nama: parokiNama },
   };
 }
 
@@ -199,15 +199,15 @@ export async function bootstrapOrgAdminSession(
   },
 ): Promise<{
   session: AuthSession;
-  parish: { id: string; code: string; name: string };
+  paroki: { id: string; kode: string; nama: string };
   org: { id: string; code: string; name: string };
   period: { id: string; name: string };
-  parishAdminToken: string;
+  parokiAdminToken: string;
 }> {
-  const { session: parishAdminSession, parish } =
-    await bootstrapParishAdminSession(client);
-  client.setParishId(parish.id);
-  const suffix = `${Date.now().toString(36)}-${parishBootstrapCounter}`;
+  const { session: parokiAdminSession, paroki } =
+    await bootstrapParokiAdminSession(client);
+  client.setParokiId(paroki.id);
+  const suffix = `${Date.now().toString(36)}-${parokiBootstrapCounter}`;
 
   const periodName = options?.periodName ?? "Periode 2025-2028";
   const periodRes = await client.post<{
@@ -272,16 +272,16 @@ export async function bootstrapOrgAdminSession(
     email,
     name,
     onboarded: true,
-    activeParishId: parish.id,
+    activeParokiId: paroki.id,
   });
   client.setToken(session.rawToken);
 
   return {
     session,
-    parish,
+    paroki,
     org: { id: orgId, code: orgCode, name: orgName },
     period: { id: periodRes.data.data.id, name: periodName },
-    parishAdminToken: parishAdminSession.rawToken,
+    parokiAdminToken: parokiAdminSession.rawToken,
   };
 }
 
@@ -295,19 +295,19 @@ export async function bootstrapOrgMemberSession(
   },
 ): Promise<{
   session: AuthSession;
-  parish: { id: string; code: string; name: string };
+  paroki: { id: string; kode: string; nama: string };
   orgA: { id: string; code: string; name: string };
   orgB: { id: string; code: string; name: string };
   orgAdminToken: string;
-  parishAdminToken: string;
+  parokiAdminToken: string;
 }> {
   const adminBoot = await bootstrapOrgAdminSession(client, {
     orgName: options?.orgName,
   });
   const orgAdminToken = adminBoot.session.rawToken;
-  const parishAdminToken = adminBoot.parishAdminToken;
+  const parokiAdminToken = adminBoot.parokiAdminToken;
 
-  client.setParishId(adminBoot.parish.id);
+  client.setParokiId(adminBoot.paroki.id);
   client.setToken(orgAdminToken);
 
   const email = options?.email ?? "member.e2e@domus.test";
@@ -324,8 +324,8 @@ export async function bootstrapOrgMemberSession(
     );
   }
 
-  client.setToken(parishAdminToken);
-  const suffix = `${Date.now().toString(36)}-${parishBootstrapCounter}`;
+  client.setToken(parokiAdminToken);
+  const suffix = `${Date.now().toString(36)}-${parokiBootstrapCounter}`;
   const orgBCode = `katekese-e2e-${suffix}`;
   const orgBName = options?.otherOrgName ?? "Seksi Katekese E2E";
   const orgBRes = await client.post<{
@@ -357,17 +357,17 @@ export async function bootstrapOrgMemberSession(
     email,
     name,
     onboarded: true,
-    activeParishId: adminBoot.parish.id,
+    activeParokiId: adminBoot.paroki.id,
   });
   client.setToken(session.rawToken);
 
   return {
     session,
-    parish: adminBoot.parish,
+    paroki: adminBoot.paroki,
     orgA: adminBoot.org,
     orgB: { id: orgBId, code: orgBCode, name: orgBName },
     orgAdminToken,
-    parishAdminToken,
+    parokiAdminToken,
   };
 }
 

@@ -101,47 +101,47 @@ Then(
 );
 
 Given(
-  "a diocese {string} and parish {string} exist",
-  async function (this: DomusWorld, dioceseName: string, parishName: string) {
+  "a keuskupan {string} and paroki {string} exist",
+  async function (this: DomusWorld, keuskupanName: string, parokiName: string) {
     const suffix = Date.now().toString(36);
-    const dioceseRes = await this.client.post<{ data?: { id?: string } }>(
+    const keuskupanRes = await this.client.post<{ data?: { id?: string } }>(
       "/ref/keuskupan",
       {
         kode: `e2e-d-${suffix}`,
-        nama: dioceseName,
+        nama: keuskupanName,
       },
     );
-    assert.equal(dioceseRes.status, 201);
-    const dioceseId = dioceseRes.data?.data?.id;
-    assert.ok(dioceseId, "Expected created diocese ID");
+    assert.equal(keuskupanRes.status, 201);
+    const keuskupanId = keuskupanRes.data?.data?.id;
+    assert.ok(keuskupanId, "Expected created keuskupan ID");
 
-    const parishRes = await this.client.post<{ data?: { id?: string } }>(
+    const parokiRes = await this.client.post<{ data?: { id?: string } }>(
       "/ref/paroki",
       {
-        keuskupanId: dioceseId,
+        keuskupanId,
         kode: `e2e-p-${suffix}`,
-        nama: parishName,
+        nama: parokiName,
       },
     );
-    assert.equal(parishRes.status, 201);
+    assert.equal(parokiRes.status, 201);
   },
 );
 
 When(
-  "I add user to parish {string} with role {string}",
-  async function (this: DomusWorld, parishName: string, roleLabel: string) {
-    await this.pages.user.users.addToParish(
-      parishName,
+  "I add user to paroki {string} with role {string}",
+  async function (this: DomusWorld, parokiName: string, roleLabel: string) {
+    await this.pages.user.users.addToParoki(
+      parokiName,
       roleLabel as "Admin Paroki" | "Anggota",
     );
   },
 );
 
 Then(
-  "I see user parish membership {string} with role {string}",
-  async function (this: DomusWorld, parishName: string, roleLabel: string) {
-    await this.pages.user.users.expectParishMembershipVisible(
-      parishName,
+  "I see user paroki membership {string} with role {string}",
+  async function (this: DomusWorld, parokiName: string, roleLabel: string) {
+    await this.pages.user.users.expectParokiMembershipVisible(
+      parokiName,
       roleLabel as "Admin Paroki" | "Anggota",
     );
   },

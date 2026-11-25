@@ -1,6 +1,6 @@
 import { BasePage } from "../base.page";
 
-export class ParishesPage extends BasePage {
+export class ParokiPage extends BasePage {
   async expectLoaded(): Promise<void> {
     await this.page
       .getByRole("heading", { name: "Keuskupan & Paroki" })
@@ -13,7 +13,7 @@ export class ParishesPage extends BasePage {
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
-  async createDiocese(input: {
+  async createKeuskupan(input: {
     code: string;
     name: string;
     bishopName?: string;
@@ -32,7 +32,7 @@ export class ParishesPage extends BasePage {
     await section.getByRole("button", { name: "Tambah Keuskupan" }).click();
   }
 
-  async expectDioceseVisible(name: string, code: string): Promise<void> {
+  async expectKeuskupanVisible(name: string, code: string): Promise<void> {
     const section = this.page
       .locator("section")
       .filter({ has: this.page.getByRole("heading", { name: "Keuskupan" }) });
@@ -41,11 +41,11 @@ export class ParishesPage extends BasePage {
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
-  async deleteDiocese(name: string): Promise<void> {
+  async deleteKeuskupan(name: string): Promise<void> {
     await this.page.getByRole("button", { name: `Hapus ${name}` }).click();
   }
 
-  async expectDioceseNotVisible(name: string): Promise<void> {
+  async expectKeuskupanNotVisible(name: string): Promise<void> {
     const section = this.page
       .locator("section")
       .filter({ has: this.page.getByRole("heading", { name: "Keuskupan" }) });
@@ -54,8 +54,8 @@ export class ParishesPage extends BasePage {
       .waitFor({ state: "detached", timeout: 10_000 });
   }
 
-  async createParish(input: {
-    dioceseName?: string;
+  async createParoki(input: {
+    keuskupanName?: string;
     code: string;
     name: string;
   }): Promise<void> {
@@ -63,10 +63,10 @@ export class ParishesPage extends BasePage {
       has: this.page.getByRole("heading", { name: "Paroki", exact: true }),
     });
 
-    if (input.dioceseName) {
+    if (input.keuskupanName) {
       await section
         .locator("select")
-        .selectOption({ label: input.dioceseName });
+        .selectOption({ label: input.keuskupanName });
     }
     await section.getByPlaceholder("Kode (mis. kaj)").fill(input.code);
     await section.getByPlaceholder("Nama paroki").fill(input.name);
@@ -79,11 +79,11 @@ export class ParishesPage extends BasePage {
       )
       .catch(() => null);
     await section.getByRole("button", { name: "Tambah Paroki" }).click();
-    await this.expectParishVisible(input.name, input.code);
+    await this.expectParokiVisible(input.name, input.code);
     await sessionPatchPromise;
   }
 
-  async expectParishVisible(name: string, code: string): Promise<void> {
+  async expectParokiVisible(name: string, code: string): Promise<void> {
     const section = this.page.locator("section").filter({
       has: this.page.getByRole("heading", { name: "Paroki", exact: true }),
     });
@@ -92,11 +92,11 @@ export class ParishesPage extends BasePage {
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
-  async deleteParish(name: string): Promise<void> {
+  async deleteParoki(name: string): Promise<void> {
     await this.page.getByRole("button", { name: `Hapus ${name}` }).click();
   }
 
-  async expectParishNotVisible(name: string): Promise<void> {
+  async expectParokiNotVisible(name: string): Promise<void> {
     const section = this.page.locator("section").filter({
       has: this.page.getByRole("heading", { name: "Paroki", exact: true }),
     });

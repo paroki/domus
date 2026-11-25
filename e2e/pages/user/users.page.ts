@@ -10,10 +10,10 @@ export class UsersPage extends BasePage {
       .filter({ hasText: nameOrEmail });
   }
 
-  private parishMembershipRow(parishName: string) {
+  private parokiMembershipRow(parokiName: string) {
     return this.page
-      .locator("#user-tabpanel-parish div.divide-y > div")
-      .filter({ hasText: parishName });
+      .locator("#user-tabpanel-paroki div.divide-y > div")
+      .filter({ hasText: parokiName });
   }
 
   private orgMembershipRow(orgName: string) {
@@ -199,36 +199,36 @@ export class UsersPage extends BasePage {
     });
   }
 
-  async addToParish(
-    parishName: string,
+  async addToParoki(
+    parokiName: string,
     roleLabel: "Admin Paroki" | "Anggota",
   ): Promise<void> {
-    const panel = this.page.locator("#user-tabpanel-parish");
+    const panel = this.page.locator("#user-tabpanel-paroki");
     const select = panel.getByLabel("Pilih paroki");
     await select
-      .locator("option", { hasText: parishName })
+      .locator("option", { hasText: parokiName })
       .waitFor({ state: "attached", timeout: 10_000 });
-    await select.selectOption({ label: parishName });
+    await select.selectOption({ label: parokiName });
     await panel.getByLabel("Peran").selectOption({ label: roleLabel });
     await panel.getByRole("button", { name: "Tambahkan ke Paroki" }).click();
   }
 
-  async expectParishMembershipVisible(
-    parishName: string,
+  async expectParokiMembershipVisible(
+    parokiName: string,
     roleLabel: "Admin Paroki" | "Anggota",
   ): Promise<void> {
-    const row = this.parishMembershipRow(parishName);
+    const row = this.parokiMembershipRow(parokiName);
     await row.waitFor({ state: "visible", timeout: 10_000 });
     await row
       .locator("span", { hasText: new RegExp(`^${roleLabel}$`) })
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
-  async changeParishMembershipRole(
-    parishName: string,
+  async changeParokiMembershipRole(
+    parokiName: string,
     roleLabel: "Admin Paroki" | "Anggota",
   ): Promise<void> {
-    const row = this.parishMembershipRow(parishName);
+    const row = this.parokiMembershipRow(parokiName);
     if (roleLabel === "Anggota") {
       await row.getByRole("button", { name: "Turunkan ke Anggota" }).click();
       await this.page
@@ -243,22 +243,22 @@ export class UsersPage extends BasePage {
     }
   }
 
-  async removeParishMembership(parishName: string): Promise<void> {
+  async removeParokiMembership(parokiName: string): Promise<void> {
     await this.page
-      .getByRole("button", { name: `Hapus ${parishName}` })
+      .getByRole("button", { name: `Hapus ${parokiName}` })
       .click();
     await this.page
       .getByRole("dialog")
       .getByRole("button", { name: "Hapus", exact: true })
       .click();
-    await this.parishMembershipRow(parishName).waitFor({
+    await this.parokiMembershipRow(parokiName).waitFor({
       state: "detached",
       timeout: 10_000,
     });
   }
 
-  async expectParishMembershipNotVisible(parishName: string): Promise<void> {
-    await this.parishMembershipRow(parishName).waitFor({
+  async expectParokiMembershipNotVisible(parokiName: string): Promise<void> {
+    await this.parokiMembershipRow(parokiName).waitFor({
       state: "detached",
       timeout: 10_000,
     });

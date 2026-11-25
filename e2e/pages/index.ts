@@ -7,11 +7,11 @@ import { OrgDetailPage } from "./org/org-detail.page";
 import { OrgJoinPage } from "./org/org-join.page";
 import { OrgsPage } from "./org/orgs.page";
 import { LookupsPage } from "./ref/lookups.page";
-import { ParishesPage } from "./ref/parishes.page";
+import { ParokiPage } from "./ref/paroki.page";
+import { ParokiProfilePage } from "./ref/paroki-profile.page";
 import { PeriodsPage } from "./ref/periods.page";
-import { ParishProfilePage } from "./ref/profile.page";
 import { SettingsPage } from "./ref/settings.page";
-import { TerritoryPage } from "./ref/territory.page";
+import { WilayahPage } from "./ref/wilayah.page";
 import { AIAgentSettingsPage } from "./settings/ai-agent.page";
 import { AIProviderSettingsPage } from "./settings/ai-provider.page";
 import { SystemSettingsPage } from "./settings/system-settings.page";
@@ -35,10 +35,10 @@ export function createPages(page: Page) {
     },
     ref: {
       settings: new SettingsPage(page),
-      parishes: new ParishesPage(page),
+      paroki: new ParokiPage(page),
       lookups: new LookupsPage(page),
-      profile: new ParishProfilePage(page),
-      territory: new TerritoryPage(page),
+      profile: new ParokiProfilePage(page),
+      wilayah: new WilayahPage(page),
       periods: new PeriodsPage(page),
     },
     shell: {

@@ -2,7 +2,7 @@ import { config } from "./config";
 
 export class TestClient {
   private token: string | null = null;
-  private parishId: string | null = null;
+  private parokiId: string | null = null;
 
   constructor(private readonly baseUrl = config.apiBaseUrl) {}
 
@@ -10,8 +10,8 @@ export class TestClient {
     this.token = token;
   }
 
-  setParishId(parishId: string | null): void {
-    this.parishId = parishId;
+  setParokiId(parokiId: string | null): void {
+    this.parokiId = parokiId;
   }
 
   async request<T = unknown>(
@@ -23,8 +23,8 @@ export class TestClient {
     if (this.token) {
       headers.Authorization = `Bearer ${this.token}`;
     }
-    if (this.parishId) {
-      headers["X-Paroki-Id"] = this.parishId;
+    if (this.parokiId) {
+      headers["X-Paroki-Id"] = this.parokiId;
     }
     if (body !== undefined) {
       headers["Content-Type"] = "application/json";

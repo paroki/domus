@@ -28,8 +28,8 @@ export class OrgsPage extends BasePage {
     name: string;
     code?: string;
     parentLabel?: string;
-    zoneLabel?: string;
-    wardLabel?: string;
+    wilayahLabel?: string;
+    lingkunganLabel?: string;
     description?: string;
   }): Promise<void> {
     const createHeading = this.page.getByRole("heading", {
@@ -68,19 +68,19 @@ export class OrgsPage extends BasePage {
         .waitFor({ state: "attached", timeout: 10_000 });
       await parentSelect.selectOption({ label: input.parentLabel });
     }
-    if (input.zoneLabel) {
-      const zoneSelect = this.page.getByLabel("Wilayah / Stasi (opsional)");
-      await zoneSelect
-        .locator("option", { hasText: input.zoneLabel })
+    if (input.wilayahLabel) {
+      const wilayahSelect = this.page.getByLabel("Wilayah / Stasi (opsional)");
+      await wilayahSelect
+        .locator("option", { hasText: input.wilayahLabel })
         .waitFor({ state: "attached", timeout: 10_000 });
-      await zoneSelect.selectOption({ label: input.zoneLabel });
+      await wilayahSelect.selectOption({ label: input.wilayahLabel });
     }
-    if (input.wardLabel) {
-      const wardSelect = this.page.getByLabel("Lingkungan (opsional)");
-      await wardSelect
-        .locator("option", { hasText: input.wardLabel })
+    if (input.lingkunganLabel) {
+      const lingkunganSelect = this.page.getByLabel("Lingkungan (opsional)");
+      await lingkunganSelect
+        .locator("option", { hasText: input.lingkunganLabel })
         .waitFor({ state: "attached", timeout: 10_000 });
-      await wardSelect.selectOption({ label: input.wardLabel });
+      await lingkunganSelect.selectOption({ label: input.lingkunganLabel });
     }
     if (input.description) {
       await this.page

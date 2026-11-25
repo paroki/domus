@@ -1,18 +1,18 @@
 import assert from "node:assert/strict";
 import { type DataTable, Given, Then, When } from "@cucumber/cucumber";
-import type { ParishProfileInput } from "../../pages/ref/profile.page";
+import type { ParokiProfileInput } from "../../pages/ref/paroki-profile.page";
 import { loginAsSuperAdmin } from "../../support/auth";
 import { TestClient } from "../../support/test-client";
 import type { DomusWorld } from "../../support/world";
 
-Then("I see the parish profile page", async function (this: DomusWorld) {
+Then("I see the paroki profile page", async function (this: DomusWorld) {
   await this.pages.ref.profile.expectLoaded();
 });
 
 When(
-  "I update the parish profile with:",
+  "I update the paroki profile with:",
   async function (this: DomusWorld, table: DataTable) {
-    const raw = table.rowsHash() as ParishProfileInput;
+    const raw = table.rowsHash() as ParokiProfileInput;
     await this.pages.ref.profile.updateProfile(raw);
   },
 );
@@ -22,76 +22,82 @@ Then("I see the profile saved banner", async function (this: DomusWorld) {
 });
 
 Then(
-  "I see the parish profile fields match:",
+  "I see the paroki profile fields match:",
   async function (this: DomusWorld, table: DataTable) {
-    const raw = table.rowsHash() as ParishProfileInput;
+    const raw = table.rowsHash() as ParokiProfileInput;
     await this.pages.ref.profile.expectProfileValues(raw);
   },
 );
 
-Then("I see the territory page", async function (this: DomusWorld) {
-  await this.pages.ref.territory.expectLoaded();
+Then("I see the wilayah page", async function (this: DomusWorld) {
+  await this.pages.ref.wilayah.expectLoaded();
 });
 
 When(
-  "I create a zone with code {string} and name {string}",
+  "I create a wilayah with code {string} and name {string}",
   async function (this: DomusWorld, code: string, name: string) {
-    await this.pages.ref.territory.createZone({ code, name });
+    await this.pages.ref.wilayah.createWilayah({ code, name });
   },
 );
 
 Then(
-  "I see zone {string} with code {string}",
+  "I see wilayah {string} with code {string}",
   async function (this: DomusWorld, name: string, code: string) {
-    await this.pages.ref.territory.expectZoneVisible(name, code);
+    await this.pages.ref.wilayah.expectWilayahVisible(name, code);
   },
 );
 
 When(
-  "I create a ward under zone {string} with code {string} and name {string}",
+  "I create a lingkungan under wilayah {string} with code {string} and name {string}",
   async function (
     this: DomusWorld,
-    zoneName: string,
+    wilayahName: string,
     code: string,
     name: string,
   ) {
-    await this.pages.ref.territory.createWard({ zoneName, code, name });
+    await this.pages.ref.wilayah.createLingkungan({ wilayahName, code, name });
   },
 );
 
 Then(
-  "I see ward {string} with code {string}",
+  "I see lingkungan {string} with code {string}",
   async function (this: DomusWorld, name: string, code: string) {
-    await this.pages.ref.territory.expectWardVisible(name, code);
+    await this.pages.ref.wilayah.expectLingkunganVisible(name, code);
   },
 );
 
-When("I delete zone {string}", async function (this: DomusWorld, name: string) {
-  await this.pages.ref.territory.deleteZone(name);
-});
-
-Then(
-  "I do not see zone {string}",
+When(
+  "I delete wilayah {string}",
   async function (this: DomusWorld, name: string) {
-    await this.pages.ref.territory.expectZoneNotVisible(name);
+    await this.pages.ref.wilayah.deleteWilayah(name);
   },
 );
 
-When("I delete ward {string}", async function (this: DomusWorld, name: string) {
-  await this.pages.ref.territory.deleteWard(name);
-});
-
 Then(
-  "I do not see ward {string}",
+  "I do not see wilayah {string}",
   async function (this: DomusWorld, name: string) {
-    await this.pages.ref.territory.expectWardNotVisible(name);
+    await this.pages.ref.wilayah.expectWilayahNotVisible(name);
+  },
+);
+
+When(
+  "I delete lingkungan {string}",
+  async function (this: DomusWorld, name: string) {
+    await this.pages.ref.wilayah.deleteLingkungan(name);
   },
 );
 
 Then(
-  "I see territory error {string}",
+  "I do not see lingkungan {string}",
+  async function (this: DomusWorld, name: string) {
+    await this.pages.ref.wilayah.expectLingkunganNotVisible(name);
+  },
+);
+
+Then(
+  "I see wilayah error {string}",
   async function (this: DomusWorld, message: string) {
-    await this.pages.ref.territory.expectErrorAlert(message);
+    await this.pages.ref.wilayah.expectErrorAlert(message);
   },
 );
 
@@ -128,7 +134,7 @@ Then(
 );
 
 When(
-  "I create a parish lookup in category {string} with code {string} and label {string}",
+  "I create a paroki lookup in category {string} with code {string} and label {string}",
   async function (
     this: DomusWorld,
     category: string,

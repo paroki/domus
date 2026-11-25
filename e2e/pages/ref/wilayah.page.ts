@@ -1,13 +1,13 @@
 import { BasePage } from "../base.page";
 
-export class TerritoryPage extends BasePage {
-  private zonesSection() {
+export class WilayahPage extends BasePage {
+  private wilayahSection() {
     return this.page.locator("section").filter({
       has: this.page.getByRole("heading", { name: "Wilayah / Stasi" }),
     });
   }
 
-  private wardsSection() {
+  private lingkunganSection() {
     return this.page.locator("section").filter({
       has: this.page.getByRole("heading", { name: "Lingkungan" }),
     });
@@ -19,16 +19,16 @@ export class TerritoryPage extends BasePage {
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
-  async createZone(input: {
-    type?: "wilayah" | "stasi";
+  async createWilayah(input: {
+    jenis?: "wilayah" | "stasi";
     code: string;
     name: string;
     coordinatorName?: string;
     coordinatorPhone?: string;
   }): Promise<void> {
-    const section = this.zonesSection();
-    if (input.type) {
-      await section.locator("form select").selectOption(input.type);
+    const section = this.wilayahSection();
+    if (input.jenis) {
+      await section.locator("form select").selectOption(input.jenis);
     }
     await section.getByPlaceholder("Kode (mis. wil-01)").fill(input.code);
     await section.getByPlaceholder("Nama wilayah / stasi").fill(input.name);
@@ -43,11 +43,11 @@ export class TerritoryPage extends BasePage {
     await section.getByRole("button", { name: "Tambah Wilayah" }).click();
   }
 
-  async editZone(
+  async editWilayah(
     currentName: string,
     input: { code?: string; name?: string; coordinatorName?: string },
   ): Promise<void> {
-    const section = this.zonesSection();
+    const section = this.wilayahSection();
     await section.getByRole("button", { name: `Ubah ${currentName}` }).click();
     if (input.code !== undefined) {
       await section.getByPlaceholder("Kode (mis. wil-01)").fill(input.code);
@@ -63,21 +63,21 @@ export class TerritoryPage extends BasePage {
     await section.getByRole("button", { name: "Simpan Perubahan" }).click();
   }
 
-  async toggleZoneActive(name: string): Promise<void> {
-    const row = this.zonesSection()
+  async toggleWilayahActive(name: string): Promise<void> {
+    const row = this.wilayahSection()
       .locator("div.divide-y > div")
       .filter({ hasText: name });
     await row.locator("button[title]").first().click();
   }
 
-  async deleteZone(name: string): Promise<void> {
-    await this.zonesSection()
+  async deleteWilayah(name: string): Promise<void> {
+    await this.wilayahSection()
       .getByRole("button", { name: `Hapus ${name}` })
       .click();
   }
 
-  async expectZoneVisible(name: string, code: string): Promise<void> {
-    const section = this.zonesSection();
+  async expectWilayahVisible(name: string, code: string): Promise<void> {
+    const section = this.wilayahSection();
     await section
       .locator("div.divide-y > div")
       .filter({ hasText: name })
@@ -85,28 +85,28 @@ export class TerritoryPage extends BasePage {
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
-  async expectZoneNotVisible(name: string): Promise<void> {
-    await this.zonesSection()
+  async expectWilayahNotVisible(name: string): Promise<void> {
+    await this.wilayahSection()
       .locator("div.divide-y > div")
       .filter({ hasText: name })
       .waitFor({ state: "detached", timeout: 10_000 });
   }
 
-  async createWard(input: {
-    zoneName?: string;
+  async createLingkungan(input: {
+    wilayahName?: string;
     code: string;
     name: string;
     patronSaint?: string;
     headName?: string;
     headPhone?: string;
   }): Promise<void> {
-    const section = this.wardsSection();
-    if (input.zoneName) {
+    const section = this.lingkunganSection();
+    if (input.wilayahName) {
       const select = section.locator("form select");
       await select
-        .locator("option", { hasText: input.zoneName })
+        .locator("option", { hasText: input.wilayahName })
         .waitFor({ state: "attached", timeout: 10_000 });
-      await select.selectOption({ label: input.zoneName });
+      await select.selectOption({ label: input.wilayahName });
     }
     await section.getByPlaceholder("Kode (mis. ling-01)").fill(input.code);
     await section.getByPlaceholder("Nama lingkungan").fill(input.name);
@@ -126,11 +126,11 @@ export class TerritoryPage extends BasePage {
     await section.getByRole("button", { name: "Tambah Lingkungan" }).click();
   }
 
-  async editWard(
+  async editLingkungan(
     currentName: string,
     input: { code?: string; name?: string; headName?: string },
   ): Promise<void> {
-    const section = this.wardsSection();
+    const section = this.lingkunganSection();
     await section.getByRole("button", { name: `Ubah ${currentName}` }).click();
     if (input.code !== undefined) {
       await section.getByPlaceholder("Kode (mis. ling-01)").fill(input.code);
@@ -146,29 +146,29 @@ export class TerritoryPage extends BasePage {
     await section.getByRole("button", { name: "Simpan Perubahan" }).click();
   }
 
-  async toggleWardActive(name: string): Promise<void> {
-    const row = this.wardsSection()
+  async toggleLingkunganActive(name: string): Promise<void> {
+    const row = this.lingkunganSection()
       .locator("div.divide-y > div")
       .filter({ hasText: name });
     await row.locator("button[title]").first().click();
   }
 
-  async deleteWard(name: string): Promise<void> {
-    await this.wardsSection()
+  async deleteLingkungan(name: string): Promise<void> {
+    await this.lingkunganSection()
       .getByRole("button", { name: `Hapus ${name}` })
       .click();
   }
 
-  async expectWardVisible(name: string, code: string): Promise<void> {
-    await this.wardsSection()
+  async expectLingkunganVisible(name: string, code: string): Promise<void> {
+    await this.lingkunganSection()
       .locator("div.divide-y > div")
       .filter({ hasText: name })
       .filter({ hasText: code })
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
-  async expectWardNotVisible(name: string): Promise<void> {
-    await this.wardsSection()
+  async expectLingkunganNotVisible(name: string): Promise<void> {
+    await this.lingkunganSection()
       .locator("div.divide-y > div")
       .filter({ hasText: name })
       .waitFor({ state: "detached", timeout: 10_000 });

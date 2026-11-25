@@ -32,12 +32,12 @@ Feature: Super Admin users directory and parish admin appointment
     Then I do not see user "petugas.e2e@domus.test"
 
   @super-admin
-  Scenario: Super Admin appoints a Parish Admin via user detail Paroki tab
-    Given a diocese "Keuskupan Users E2E" and parish "Paroki Users E2E" exist
-    And a global user with email "parishadmin.e2e@domus.test" name "Admin Paroki E2E" phone "+6281234567891" exists
+  Scenario: Super Admin appoints a Paroki Admin via user detail Paroki tab
+    Given a keuskupan "Keuskupan Users E2E" and paroki "Paroki Users E2E" exist
+    And a global user with email "parokiadmin.e2e@domus.test" name "Admin Paroki E2E" phone "+6281234567891" exists
     When I open "/users"
-    And I search users for "parishadmin.e2e@domus.test"
-    And I open user detail "parishadmin.e2e@domus.test"
+    And I search users for "parokiadmin.e2e@domus.test"
+    And I open user detail "parokiadmin.e2e@domus.test"
     And I switch user detail tab to "Paroki"
-    And I add user to parish "Paroki Users E2E" with role "Admin Paroki"
-    Then I see user parish membership "Paroki Users E2E" with role "Admin Paroki"
+    And I add user to paroki "Paroki Users E2E" with role "Admin Paroki"
+    Then I see user paroki membership "Paroki Users E2E" with role "Admin Paroki"

@@ -15,7 +15,7 @@ import { createPages } from "../pages";
 import {
   bootstrapOrgAdminSession,
   bootstrapOrgMemberSession,
-  bootstrapParishAdminSession,
+  bootstrapParokiAdminSession,
   loginAsSuperAdmin,
   loginAsUser,
 } from "./auth";
@@ -58,25 +58,25 @@ Before({ tags: "@authenticated" }, async function (this: DomusWorld) {
   this.client.setToken(session.rawToken);
 });
 
-Before({ tags: "@parish-admin" }, async function (this: DomusWorld) {
-  const result = await bootstrapParishAdminSession(this.client);
+Before({ tags: "@paroki-admin" }, async function (this: DomusWorld) {
+  const result = await bootstrapParokiAdminSession(this.client);
   await this.context.addCookies(result.session.cookies);
   this.client.setToken(result.session.rawToken);
-  this.client.setParishId(result.parish.id);
-  this.activeDioceseId = result.diocese.id;
-  this.activeParishId = result.parish.id;
-  this.activeParishName = result.parish.name;
-  this.activeParishCode = result.parish.code;
+  this.client.setParokiId(result.paroki.id);
+  this.activeKeuskupanId = result.keuskupan.id;
+  this.activeParokiId = result.paroki.id;
+  this.activeParokiName = result.paroki.nama;
+  this.activeParokiCode = result.paroki.kode;
 });
 
 Before({ tags: "@org-admin" }, async function (this: DomusWorld) {
   const result = await bootstrapOrgAdminSession(this.client);
   await this.context.addCookies(result.session.cookies);
   this.client.setToken(result.session.rawToken);
-  this.client.setParishId(result.parish.id);
-  this.activeParishId = result.parish.id;
-  this.activeParishName = result.parish.name;
-  this.activeParishCode = result.parish.code;
+  this.client.setParokiId(result.paroki.id);
+  this.activeParokiId = result.paroki.id;
+  this.activeParokiName = result.paroki.nama;
+  this.activeParokiCode = result.paroki.kode;
   this.activeOrgId = result.org.id;
   this.activeOrgName = result.org.name;
   this.activeOrgCode = result.org.code;
@@ -87,16 +87,16 @@ Before({ tags: "@org-member" }, async function (this: DomusWorld) {
   const result = await bootstrapOrgMemberSession(this.client);
   await this.context.addCookies(result.session.cookies);
   this.client.setToken(result.session.rawToken);
-  this.client.setParishId(result.parish.id);
-  this.activeParishId = result.parish.id;
-  this.activeParishName = result.parish.name;
-  this.activeParishCode = result.parish.code;
+  this.client.setParokiId(result.paroki.id);
+  this.activeParokiId = result.paroki.id;
+  this.activeParokiName = result.paroki.nama;
+  this.activeParokiCode = result.paroki.kode;
   this.activeOrgId = result.orgA.id;
   this.activeOrgName = result.orgA.name;
   this.otherOrgId = result.orgB.id;
   this.otherOrgName = result.orgB.name;
   this.orgAdminToken = result.orgAdminToken;
-  this.parishAdminToken = result.parishAdminToken;
+  this.parokiAdminToken = result.parokiAdminToken;
 });
 
 After(async function (this: DomusWorld) {

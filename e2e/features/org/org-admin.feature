@@ -7,10 +7,10 @@ Feature: Organization Admin menu visibility, /users roster CRUD, profile, and in
     And I do not see launcher tiles "Referensi, Pengaturan"
     When I open "/ref"
     Then I see empty settings message
-    When I open "/ref/parishes"
-    Then I see the super admin restriction banner on parishes page
+    When I open "/ref/paroki"
+    Then I see the super admin restriction banner on paroki page
     When I open "/ref/profile"
-    Then I see the parish admin restriction banner
+    Then I see the paroki admin restriction banner
     When I open "/users"
     Then I see the users directory page
     And I do not see users directory controls "Pengguna Global, Admin & Anggota Paroki, Semua status, Semua Peran"

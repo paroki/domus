@@ -13,10 +13,10 @@ async function seedEvent(
   title: string,
   rsvpEnabled: boolean,
 ): Promise<string> {
-  assert.ok(world.activeParishId, "activeParishId must be set");
+  assert.ok(world.activeParokiId, "activeParokiId must be set");
   const adminClient = new TestClient();
   adminClient.setToken(token);
-  adminClient.setParishId(world.activeParishId);
+  adminClient.setParokiId(world.activeParokiId);
   const start = new Date(Date.now() + 24 * 60 * 60 * 1000);
   const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
   const res = await adminClient.post<{ data?: { id?: string } }>("/events", {
@@ -181,12 +181,12 @@ When(
   "the organization admin cancels the seeded event via API",
   async function (this: DomusWorld) {
     assert.ok(this.orgAdminToken, "orgAdminToken must be set");
-    assert.ok(this.activeParishId, "activeParishId must be set");
+    assert.ok(this.activeParokiId, "activeParokiId must be set");
     const eventId = lastSeededEventIds.get(this);
     assert.ok(eventId, "seeded event id must be set");
     const adminClient = new TestClient();
     adminClient.setToken(this.orgAdminToken);
-    adminClient.setParishId(this.activeParishId);
+    adminClient.setParokiId(this.activeParokiId);
     const res = await adminClient.patch(`/events/${eventId}`, {
       status: "cancelled",
     });

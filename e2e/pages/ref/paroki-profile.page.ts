@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import type { Locator } from "playwright";
 import { BasePage } from "../base.page";
 
-export interface ParishProfileInput {
+export interface ParokiProfileInput {
   name?: string;
   patronSaint?: string;
   pastorName?: string;
@@ -12,7 +12,7 @@ export interface ParishProfileInput {
   address?: string;
 }
 
-export class ParishProfilePage extends BasePage {
+export class ParokiProfilePage extends BasePage {
   async expectLoaded(): Promise<void> {
     await this.page
       .getByRole("heading", { name: "Profil Paroki" })
@@ -22,7 +22,7 @@ export class ParishProfilePage extends BasePage {
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
-  async updateProfile(input: ParishProfileInput): Promise<void> {
+  async updateProfile(input: ParokiProfileInput): Promise<void> {
     if (input.name !== undefined) {
       await this.page.getByLabel("Nama", { exact: true }).fill(input.name);
     }
@@ -67,7 +67,7 @@ export class ParishProfilePage extends BasePage {
     assert.equal(await locator.inputValue(), expected);
   }
 
-  async expectProfileValues(expected: ParishProfileInput): Promise<void> {
+  async expectProfileValues(expected: ParokiProfileInput): Promise<void> {
     if (expected.name !== undefined) {
       await this.assertInputValue(
         this.page.getByLabel("Nama", { exact: true }),
@@ -112,7 +112,7 @@ export class ParishProfilePage extends BasePage {
     }
   }
 
-  expectFieldValues(expected: ParishProfileInput): Promise<void> {
+  expectFieldValues(expected: ParokiProfileInput): Promise<void> {
     return this.expectProfileValues(expected);
   }
 }

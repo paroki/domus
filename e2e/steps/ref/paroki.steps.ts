@@ -27,81 +27,81 @@ Then(
 );
 
 Then(
-  "I see the parish admin restriction banner",
+  "I see the paroki admin restriction banner",
   async function (this: DomusWorld) {
-    await this.pages.ref.settings.expectParishAdminRestrictionBanner();
+    await this.pages.ref.settings.expectParokiAdminRestrictionBanner();
   },
 );
 
-Then("I see the parishes page", async function (this: DomusWorld) {
-  await this.pages.ref.parishes.expectLoaded();
+Then("I see the paroki page", async function (this: DomusWorld) {
+  await this.pages.ref.paroki.expectLoaded();
 });
 
 Then(
-  "I see the super admin restriction banner on parishes page",
+  "I see the super admin restriction banner on paroki page",
   async function (this: DomusWorld) {
-    await this.pages.ref.parishes.expectForbiddenBanner();
+    await this.pages.ref.paroki.expectForbiddenBanner();
   },
 );
 
 When(
-  "I create a diocese with code {string} and name {string}",
+  "I create a keuskupan with code {string} and name {string}",
   async function (this: DomusWorld, code: string, name: string) {
-    await this.pages.ref.parishes.createDiocese({ code, name });
+    await this.pages.ref.paroki.createKeuskupan({ code, name });
   },
 );
 
 Then(
-  "I see diocese {string} with code {string}",
+  "I see keuskupan {string} with code {string}",
   async function (this: DomusWorld, name: string, code: string) {
-    await this.pages.ref.parishes.expectDioceseVisible(name, code);
+    await this.pages.ref.paroki.expectKeuskupanVisible(name, code);
   },
 );
 
 When(
-  "I create a parish under diocese {string} with code {string} and name {string}",
+  "I create a paroki under keuskupan {string} with code {string} and name {string}",
   async function (
     this: DomusWorld,
-    dioceseName: string,
+    keuskupanName: string,
     code: string,
     name: string,
   ) {
-    await this.pages.ref.parishes.createParish({ dioceseName, code, name });
+    await this.pages.ref.paroki.createParoki({ keuskupanName, code, name });
   },
 );
 
 Then(
-  "I see parish {string} with code {string}",
+  "I see paroki {string} with code {string}",
   async function (this: DomusWorld, name: string, code: string) {
-    await this.pages.ref.parishes.expectParishVisible(name, code);
+    await this.pages.ref.paroki.expectParokiVisible(name, code);
   },
 );
 
 When(
-  "I delete parish {string}",
+  "I delete paroki {string}",
   async function (this: DomusWorld, name: string) {
-    await this.pages.ref.parishes.deleteParish(name);
+    await this.pages.ref.paroki.deleteParoki(name);
   },
 );
 
 Then(
-  "I do not see parish {string}",
+  "I do not see paroki {string}",
   async function (this: DomusWorld, name: string) {
-    await this.pages.ref.parishes.expectParishNotVisible(name);
+    await this.pages.ref.paroki.expectParokiNotVisible(name);
   },
 );
 
 When(
-  "I delete diocese {string}",
+  "I delete keuskupan {string}",
   async function (this: DomusWorld, name: string) {
-    await this.pages.ref.parishes.deleteDiocese(name);
+    await this.pages.ref.paroki.deleteKeuskupan(name);
   },
 );
 
 Then(
-  "I do not see diocese {string}",
+  "I do not see keuskupan {string}",
   async function (this: DomusWorld, name: string) {
-    await this.pages.ref.parishes.expectDioceseNotVisible(name);
+    await this.pages.ref.paroki.expectKeuskupanNotVisible(name);
   },
 );
 
