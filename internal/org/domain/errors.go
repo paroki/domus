@@ -5,7 +5,7 @@ import "github.com/paroki/domus/internal/platform/errx"
 // Sentinel errors for the org feature.
 var (
 	ErrOrgNotFound          = errx.NotFound("ORG_NOT_FOUND", "Organization not found.")
-	ErrCodeConflict         = errx.Conflict("ORG_CODE_CONFLICT", "Organization code is already in use in this parish.")
+	ErrCodeConflict         = errx.Conflict("ORG_CODE_CONFLICT", "Organization code is already in use in this paroki.")
 	ErrInUse                = errx.Conflict("ORG_IN_USE", "Organization has active child organizations or records and cannot be deleted.")
 	ErrForbidden            = errx.Forbidden("ORG_FORBIDDEN", "You do not have permission to perform this organization action.")
 	ErrMemberNotFound       = errx.NotFound("ORG_MEMBER_NOT_FOUND", "Organization member not found.")

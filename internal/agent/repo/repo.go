@@ -36,7 +36,7 @@ func EnsureMemorySearchSchema(ctx context.Context, sqlDB *sql.DB) error {
 	}
 	stmts := []string{
 		`ALTER TABLE "agent_memories" ADD COLUMN IF NOT EXISTS "embedding" halfvec(768) NULL`,
-		`CREATE INDEX IF NOT EXISTS "agent_memories_bm25_idx" ON "agent_memories" USING bm25 ("id", "content", "category", "parish_id", "user_id") WITH (key_field = 'id')`,
+		`CREATE INDEX IF NOT EXISTS "agent_memories_bm25_idx" ON "agent_memories" USING bm25 ("id", "content", "category", "paroki_id", "user_id") WITH (key_field = 'id')`,
 		`CREATE INDEX IF NOT EXISTS "agent_memories_embedding_hnsw_idx" ON "agent_memories" USING hnsw ("embedding" halfvec_cosine_ops) WITH (m = 16, ef_construction = 64) WHERE "embedding" IS NOT NULL`,
 	}
 	for _, stmt := range stmts {

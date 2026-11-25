@@ -13,7 +13,7 @@ import (
 
 // CreateEventInput holds fields for creating an Event.
 type CreateEventInput struct {
-	ParishID     uuid.UUID
+	ParokiID     uuid.UUID
 	OrgID        uuid.UUID
 	CreatedBy    uuid.UUID
 	Title        string
@@ -28,7 +28,7 @@ type CreateEventInput struct {
 
 // SearchEventsInput holds query filters and pagination for SearchEvents.
 type SearchEventsInput struct {
-	ParishID     uuid.UUID
+	ParokiID     uuid.UUID
 	MemberOrgIDs []uuid.UUID
 	OrgID        *uuid.UUID
 	Visibility   string
@@ -42,10 +42,10 @@ type SearchEventsInput struct {
 	Limit        int
 }
 
-// SearchEvents returns paginated non-deleted events visible to the caller in parishID.
+// SearchEvents returns paginated non-deleted events visible to the caller in parokiID.
 func (r *Repository) SearchEvents(ctx context.Context, in SearchEventsInput) ([]*ent.Event, error) {
 	query := r.client.Event.Query().
-		Where(event.ParishIDEQ(in.ParishID), event.DeletedAtIsNil())
+		Where(event.ParokiIDEQ(in.ParokiID), event.DeletedAtIsNil())
 
 	if in.MyOrgsOnly {
 		if len(in.MemberOrgIDs) == 0 {
@@ -96,17 +96,17 @@ func (r *Repository) SearchEvents(ctx context.Context, in SearchEventsInput) ([]
 		All(ctx)
 }
 
-// FindEventInParish returns a non-deleted Event belonging to parishID.
-func (r *Repository) FindEventInParish(ctx context.Context, parishID, eventID uuid.UUID) (*ent.Event, error) {
+// FindEventInParoki returns a non-deleted Event belonging to parokiID.
+func (r *Repository) FindEventInParoki(ctx context.Context, parokiID, eventID uuid.UUID) (*ent.Event, error) {
 	return r.client.Event.Query().
-		Where(event.IDEQ(eventID), event.ParishIDEQ(parishID), event.DeletedAtIsNil()).
+		Where(event.IDEQ(eventID), event.ParokiIDEQ(parokiID), event.DeletedAtIsNil()).
 		Only(ctx)
 }
 
 // CreateEvent inserts a new Event row.
 func (r *Repository) CreateEvent(ctx context.Context, in CreateEventInput) (*ent.Event, error) {
 	q := r.client.Event.Create().
-		SetParishID(in.ParishID).
+		SetParokiID(in.ParokiID).
 		SetOrgID(in.OrgID).
 		SetCreatedBy(in.CreatedBy).
 		SetTitle(in.Title).

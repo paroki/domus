@@ -8,10 +8,10 @@ import (
 	"github.com/paroki/domus/internal/platform/httpx"
 )
 
-// SearchOrganizations searches non-deleted organizations in the active parish.
+// SearchOrganizations searches non-deleted organizations in the active paroki.
 //
 //	@Summary		Search organizations
-//	@Description	Searches organizations within the active parish with optional filters and cursor pagination.
+//	@Description	Searches organizations within the active paroki with optional filters and cursor pagination.
 //	@ID				searchOrganizations
 //	@Tags			Org
 //	@Accept			json
@@ -51,10 +51,10 @@ func (h *Handler) SearchOrganizations(c fiber.Ctx) error {
 	})
 }
 
-// GetOrganization fetches a single Organization in the active parish by ID.
+// GetOrganization fetches a single Organization in the active paroki by ID.
 //
 //	@Summary		Get organization
-//	@Description	Returns a single non-deleted organization in the active parish.
+//	@Description	Returns a single non-deleted organization in the active paroki.
 //	@ID				getOrganization
 //	@Tags			Org
 //	@Produce		json
@@ -80,10 +80,10 @@ func (h *Handler) GetOrganization(c fiber.Ctx) error {
 	return httpx.OK(c, res)
 }
 
-// CreateOrganization creates a new Organization in the active parish.
+// CreateOrganization creates a new Organization in the active paroki.
 //
 //	@Summary		Create organization
-//	@Description	Creates an organization (or reactivates a soft-deleted one) in the active parish (requires ref:parish-admin).
+//	@Description	Creates an organization (or reactivates a soft-deleted one) in the active paroki (requires ref:paroki-admin).
 //	@ID				createOrganization
 //	@Tags			Org
 //	@Accept			json
@@ -113,10 +113,10 @@ func (h *Handler) CreateOrganization(c fiber.Ctx) error {
 	return httpx.Created(c, res)
 }
 
-// UpdateOrganization updates an existing Organization in the active parish.
+// UpdateOrganization updates an existing Organization in the active paroki.
 //
 //	@Summary		Update organization
-//	@Description	Updates an organization in the active parish (requires org:admin or ref:parish-admin).
+//	@Description	Updates an organization in the active paroki (requires org:admin or ref:paroki-admin).
 //	@ID				updateOrganization
 //	@Tags			Org
 //	@Accept			json
@@ -151,10 +151,10 @@ func (h *Handler) UpdateOrganization(c fiber.Ctx) error {
 	return httpx.OK(c, res)
 }
 
-// DeleteOrganization soft-deletes an Organization in the active parish.
+// DeleteOrganization soft-deletes an Organization in the active paroki.
 //
 //	@Summary		Delete organization
-//	@Description	Soft-deletes an organization if it has no active child organizations (requires ref:parish-admin).
+//	@Description	Soft-deletes an organization if it has no active child organizations (requires ref:paroki-admin).
 //	@ID				deleteOrganization
 //	@Tags			Org
 //	@Produce		json

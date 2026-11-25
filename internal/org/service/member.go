@@ -23,7 +23,7 @@ func (s *Service) SearchOrgMembers(
 	cursorID *uuid.UUID,
 	limit int,
 ) ([]domain.OrgMemberResponse, bool, error) {
-	if _, err := s.repo.FindOrgInParish(ctx, p.ParishID, orgID); ent.IsNotFound(err) {
+	if _, err := s.repo.FindOrgInParoki(ctx, p.ParokiID, orgID); ent.IsNotFound(err) {
 		return nil, false, domain.ErrOrgNotFound
 	} else if err != nil {
 		return nil, false, err
@@ -82,7 +82,7 @@ func (s *Service) AddOrgMember(
 	orgID uuid.UUID,
 	req domain.AddOrgMemberRequest,
 ) (domain.OrgMemberResponse, error) {
-	orgRow, err := s.repo.FindOrgInParish(ctx, p.ParishID, orgID)
+	orgRow, err := s.repo.FindOrgInParoki(ctx, p.ParokiID, orgID)
 	if ent.IsNotFound(err) {
 		return domain.OrgMemberResponse{}, domain.ErrOrgNotFound
 	}
@@ -94,11 +94,11 @@ func (s *Service) AddOrgMember(
 	if err != nil {
 		return domain.OrgMemberResponse{}, err
 	}
-	isParishAdm, err := s.isParishAdmin(p, orgRow.ParishID)
+	isParokiAdm, err := s.isParokiAdmin(p, orgRow.ParokiID)
 	if err != nil {
 		return domain.OrgMemberResponse{}, err
 	}
-	if !isOrgAdm && !isParishAdm {
+	if !isOrgAdm && !isParokiAdm {
 		return domain.OrgMemberResponse{}, domain.ErrForbidden
 	}
 
@@ -106,7 +106,7 @@ func (s *Service) AddOrgMember(
 	if req.Role != "" {
 		role = orgmember.Role(req.Role)
 	}
-	// Parish admin without org:admin may ONLY appoint org:admin.
+	// Paroki admin without org:admin may ONLY appoint org:admin.
 	if !isOrgAdm && role != orgmember.RoleAdmin {
 		return domain.OrgMemberResponse{}, domain.ErrForbidden
 	}
@@ -117,12 +117,12 @@ func (s *Service) AddOrgMember(
 	}
 
 	if req.PeriodID != nil && *req.PeriodID != uuid.Nil && s.refs != nil {
-		if err := s.refs.ValidatePeriodInParish(ctx, orgRow.ParishID, *req.PeriodID); err != nil {
+		if err := s.refs.ValidatePeriodInParoki(ctx, orgRow.ParokiID, *req.PeriodID); err != nil {
 			return domain.OrgMemberResponse{}, err
 		}
 	}
 
-	targetUserID, err := s.resolveOrEnsureMemberUser(ctx, orgRow.ParishID, req)
+	targetUserID, err := s.resolveOrEnsureMemberUser(ctx, orgRow.ParokiID, req)
 	if err != nil {
 		return domain.OrgMemberResponse{}, err
 	}
@@ -150,8 +150,8 @@ func (s *Service) AddOrgMember(
 				saved = upd
 				return nil
 			}
-			if !isOrgAdm && isParishAdm {
-				// Idempotent upgrade to active admin by parish-admin.
+			if !isOrgAdm && isParokiAdm {
+				// Idempotent upgrade to active admin by paroki-admin.
 				adminRole := orgmember.RoleAdmin
 				activeStatus := orgmember.StatusActive
 				upd, updErr := txRepo.UpdateOrgMember(
@@ -176,7 +176,7 @@ func (s *Service) AddOrgMember(
 		}
 
 		created, createErr := txRepo.CreateOrgMember(ctx, repo.OrgMemberInput{
-			ParishID:  orgRow.ParishID,
+			ParokiID:  orgRow.ParokiID,
 			OrgID:     orgID,
 			UserID:    targetUserID,
 			Role:      role,
@@ -217,7 +217,7 @@ func (s *Service) UpdateOrgMember(
 	orgID, targetUserID uuid.UUID,
 	req domain.UpdateOrgMemberRequest,
 ) (domain.OrgMemberResponse, error) {
-	orgRow, err := s.repo.FindOrgInParish(ctx, p.ParishID, orgID)
+	orgRow, err := s.repo.FindOrgInParoki(ctx, p.ParokiID, orgID)
 	if ent.IsNotFound(err) {
 		return domain.OrgMemberResponse{}, domain.ErrOrgNotFound
 	}
@@ -230,18 +230,18 @@ func (s *Service) UpdateOrgMember(
 		return domain.OrgMemberResponse{}, err
 	}
 	if !isOrgAdm {
-		isParishAdm, err := s.isParishAdmin(p, orgRow.ParishID)
+		isParokiAdm, err := s.isParokiAdmin(p, orgRow.ParokiID)
 		if err != nil {
 			return domain.OrgMemberResponse{}, err
 		}
 		promotingToAdmin := req.Role != nil && *req.Role == string(orgmember.RoleAdmin)
-		if !isParishAdm || !promotingToAdmin {
+		if !isParokiAdm || !promotingToAdmin {
 			return domain.OrgMemberResponse{}, domain.ErrForbidden
 		}
 	}
 
 	if req.PeriodID != nil && *req.PeriodID != uuid.Nil && s.refs != nil {
-		if err := s.refs.ValidatePeriodInParish(ctx, orgRow.ParishID, *req.PeriodID); err != nil {
+		if err := s.refs.ValidatePeriodInParoki(ctx, orgRow.ParokiID, *req.PeriodID); err != nil {
 			return domain.OrgMemberResponse{}, err
 		}
 	}
@@ -317,7 +317,7 @@ func (s *Service) UpdateOrgMember(
 
 // RemoveOrgMember removes a member from orgID (org:admin or self-leave) and revokes Casbin roles.
 func (s *Service) RemoveOrgMember(ctx context.Context, p authx.Principal, orgID, targetUserID uuid.UUID) error {
-	if _, err := s.repo.FindOrgInParish(ctx, p.ParishID, orgID); ent.IsNotFound(err) {
+	if _, err := s.repo.FindOrgInParoki(ctx, p.ParokiID, orgID); ent.IsNotFound(err) {
 		return domain.ErrOrgNotFound
 	} else if err != nil {
 		return err
@@ -355,7 +355,7 @@ func (s *Service) RemoveOrgMember(ctx context.Context, p authx.Principal, orgID,
 	return s.revokeMemberCasbin(ctx, orgID, targetUserID)
 }
 
-func (s *Service) resolveOrEnsureMemberUser(ctx context.Context, parishID uuid.UUID, req domain.AddOrgMemberRequest) (uuid.UUID, error) {
+func (s *Service) resolveOrEnsureMemberUser(ctx context.Context, parokiID uuid.UUID, req domain.AddOrgMemberRequest) (uuid.UUID, error) {
 	var targetUserID uuid.UUID
 	if req.UserID != nil && *req.UserID != uuid.Nil {
 		u, err := s.repo.FindUserByID(ctx, *req.UserID)
@@ -401,7 +401,7 @@ func (s *Service) resolveOrEnsureMemberUser(ctx context.Context, parishID uuid.U
 	}
 
 	if s.refs != nil {
-		if err := s.refs.EnsureParishMember(ctx, parishID, targetUserID); err != nil {
+		if err := s.refs.EnsureParokiMember(ctx, parokiID, targetUserID); err != nil {
 			return uuid.Nil, err
 		}
 	}

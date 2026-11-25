@@ -13,7 +13,7 @@ import (
 
 // OrgMemberInput holds fields for creating an OrgMember.
 type OrgMemberInput struct {
-	ParishID  uuid.UUID
+	ParokiID  uuid.UUID
 	OrgID     uuid.UUID
 	UserID    uuid.UUID
 	Role      orgmember.Role
@@ -138,7 +138,7 @@ func (r *Repository) ListActiveOrgRolesForUser(ctx context.Context, userID uuid.
 // CreateOrgMember inserts a new OrgMember row.
 func (r *Repository) CreateOrgMember(ctx context.Context, in OrgMemberInput) (*ent.OrgMember, error) {
 	q := r.client.OrgMember.Create().
-		SetParishID(in.ParishID).
+		SetParokiID(in.ParokiID).
 		SetOrgID(in.OrgID).
 		SetUserID(in.UserID).
 		SetRole(in.Role).

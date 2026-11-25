@@ -150,7 +150,7 @@ func (h *Handler) PreviewOrgInvite(c fiber.Ctx) error {
 // RedeemOrgInvite redeems an organization invite code for the authenticated user.
 //
 //	@Summary		Redeem organization invite
-//	@Description	Idempotently redeems an invite code, ensures parish/org membership, syncs Casbin, and switches active parish.
+//	@Description	Idempotently redeems an invite code, ensures paroki/org membership, syncs Casbin, and switches active paroki.
 //	@ID				redeemOrgInvite
 //	@Tags			Org
 //	@Produce		json

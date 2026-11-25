@@ -60,7 +60,7 @@ func (h *Handler) SearchOrgMembers(c fiber.Ctx) error {
 // AddOrgMember adds or appoints a member to an Organization.
 //
 //	@Summary		Add organization member
-//	@Description	Adds a member to an organization with optional user onboarding (requires org:admin, or ref:parish-admin appointing admin).
+//	@Description	Adds a member to an organization with optional user onboarding (requires org:admin, or ref:paroki-admin appointing admin).
 //	@ID				addOrgMember
 //	@Tags			Org
 //	@Accept			json

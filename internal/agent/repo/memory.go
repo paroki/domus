@@ -19,7 +19,7 @@ func (r *Repository) CreateMemory(ctx context.Context, in domain.CreateMemoryInp
 		cat = agentmemory.Category(strings.TrimSpace(in.Category))
 	}
 	b := r.client.AgentMemory.Create().
-		SetParishID(in.ParishID).
+		SetParokiID(in.ParokiID).
 		SetUserID(in.UserID).
 		SetCategory(cat).
 		SetContent(strings.TrimSpace(in.Content))
@@ -37,8 +37,8 @@ func (r *Repository) CreateMemory(ctx context.Context, in domain.CreateMemoryInp
 		}
 		if _, err := r.sqlDB.ExecContext(
 			ctx,
-			`UPDATE "agent_memories" SET "embedding" = $1::halfvec(768) WHERE "id" = $2 AND "parish_id" = $3 AND "user_id" = $4`,
-			lit, row.ID, in.ParishID, in.UserID,
+			`UPDATE "agent_memories" SET "embedding" = $1::halfvec(768) WHERE "id" = $2 AND "paroki_id" = $3 AND "user_id" = $4`,
+			lit, row.ID, in.ParokiID, in.UserID,
 		); err != nil {
 			return domain.MemoryResponse{}, err
 		}
@@ -46,16 +46,16 @@ func (r *Repository) CreateMemory(ctx context.Context, in domain.CreateMemoryInp
 	return toMemoryResponse(row), nil
 }
 
-// UpdateMemory updates an existing AgentMemory scoped to (parishID, userID) and updates or clears its embedding.
+// UpdateMemory updates an existing AgentMemory scoped to (parokiID, userID) and updates or clears its embedding.
 func (r *Repository) UpdateMemory(
 	ctx context.Context,
-	parishID, userID, memoryID uuid.UUID,
+	parokiID, userID, memoryID uuid.UUID,
 	category, content *string,
 	embedding []float32,
 	clearEmbedding bool,
 ) (domain.MemoryResponse, error) {
 	existing, err := r.client.AgentMemory.Query().
-		Where(agentmemory.IDEQ(memoryID), agentmemory.ParishIDEQ(parishID), agentmemory.UserIDEQ(userID)).
+		Where(agentmemory.IDEQ(memoryID), agentmemory.ParokiIDEQ(parokiID), agentmemory.UserIDEQ(userID)).
 		Only(ctx)
 	if ent.IsNotFound(err) {
 		return domain.MemoryResponse{}, domain.ErrMemoryNotFound
@@ -85,16 +85,16 @@ func (r *Repository) UpdateMemory(
 			}
 			if _, err := r.sqlDB.ExecContext(
 				ctx,
-				`UPDATE "agent_memories" SET "embedding" = $1::halfvec(768) WHERE "id" = $2 AND "parish_id" = $3 AND "user_id" = $4`,
-				lit, row.ID, parishID, userID,
+				`UPDATE "agent_memories" SET "embedding" = $1::halfvec(768) WHERE "id" = $2 AND "paroki_id" = $3 AND "user_id" = $4`,
+				lit, row.ID, parokiID, userID,
 			); err != nil {
 				return domain.MemoryResponse{}, err
 			}
 		case clearEmbedding:
 			if _, err := r.sqlDB.ExecContext(
 				ctx,
-				`UPDATE "agent_memories" SET "embedding" = NULL WHERE "id" = $1 AND "parish_id" = $2 AND "user_id" = $3`,
-				row.ID, parishID, userID,
+				`UPDATE "agent_memories" SET "embedding" = NULL WHERE "id" = $1 AND "paroki_id" = $2 AND "user_id" = $3`,
+				row.ID, parokiID, userID,
 			); err != nil {
 				return domain.MemoryResponse{}, err
 			}
@@ -103,10 +103,10 @@ func (r *Repository) UpdateMemory(
 	return toMemoryResponse(row), nil
 }
 
-// DeleteMemory hard-deletes an AgentMemory scoped to (parishID, userID).
-func (r *Repository) DeleteMemory(ctx context.Context, parishID, userID, memoryID uuid.UUID) error {
+// DeleteMemory hard-deletes an AgentMemory scoped to (parokiID, userID).
+func (r *Repository) DeleteMemory(ctx context.Context, parokiID, userID, memoryID uuid.UUID) error {
 	affected, err := r.client.AgentMemory.Delete().
-		Where(agentmemory.IDEQ(memoryID), agentmemory.ParishIDEQ(parishID), agentmemory.UserIDEQ(userID)).
+		Where(agentmemory.IDEQ(memoryID), agentmemory.ParokiIDEQ(parokiID), agentmemory.UserIDEQ(userID)).
 		Exec(ctx)
 	if err != nil {
 		return err
@@ -126,12 +126,12 @@ func (r *Repository) ClearAllEmbeddings(ctx context.Context) error {
 	return err
 }
 
-// SearchMemories lists or searches AgentMemory rows for (parishID, userID).
+// SearchMemories lists or searches AgentMemory rows for (parokiID, userID).
 // When q is empty, it uses deterministic keyset pagination ordered by (created_at DESC, id DESC).
 // When q is non-empty, it executes ParadeDB BM25-only search, or RRF (k=60) hybrid search when len(vec) == 768.
 func (r *Repository) SearchMemories(
 	ctx context.Context,
-	parishID, userID uuid.UUID,
+	parokiID, userID uuid.UUID,
 	q, category string,
 	vec []float32,
 	cursorCreatedAt *time.Time,
@@ -148,26 +148,26 @@ func (r *Repository) SearchMemories(
 	trimmedQ := strings.TrimSpace(q)
 	trimmedCat := strings.TrimSpace(category)
 	if trimmedQ == "" {
-		return r.listMemoriesKeyset(ctx, parishID, userID, trimmedCat, cursorCreatedAt, cursorID, limit)
+		return r.listMemoriesKeyset(ctx, parokiID, userID, trimmedCat, cursorCreatedAt, cursorID, limit)
 	}
 	if len(vec) == EmbeddingDimensions {
-		items, err := r.searchMemoriesRRF(ctx, parishID, userID, trimmedQ, trimmedCat, vec, limit)
+		items, err := r.searchMemoriesRRF(ctx, parokiID, userID, trimmedQ, trimmedCat, vec, limit)
 		return items, false, err
 	}
-	items, err := r.searchMemoriesBM25(ctx, parishID, userID, trimmedQ, trimmedCat, limit)
+	items, err := r.searchMemoriesBM25(ctx, parokiID, userID, trimmedQ, trimmedCat, limit)
 	return items, false, err
 }
 
 func (r *Repository) listMemoriesKeyset(
 	ctx context.Context,
-	parishID, userID uuid.UUID,
+	parokiID, userID uuid.UUID,
 	category string,
 	cursorCreatedAt *time.Time,
 	cursorID *uuid.UUID,
 	limit int,
 ) ([]domain.MemoryResponse, bool, error) {
 	q := r.client.AgentMemory.Query().
-		Where(agentmemory.ParishIDEQ(parishID), agentmemory.UserIDEQ(userID))
+		Where(agentmemory.ParokiIDEQ(parokiID), agentmemory.UserIDEQ(userID))
 	if category != "" {
 		q = q.Where(agentmemory.CategoryEQ(agentmemory.Category(category)))
 	}
@@ -200,15 +200,15 @@ func (r *Repository) listMemoriesKeyset(
 
 func (r *Repository) searchMemoriesBM25(
 	ctx context.Context,
-	parishID, userID uuid.UUID,
+	parokiID, userID uuid.UUID,
 	q, category string,
 	limit int,
 ) ([]domain.MemoryResponse, error) {
 	const query = `
-		SELECT id, parish_id, user_id, category, content, source_session_id,
+		SELECT id, paroki_id, user_id, category, content, source_session_id,
 		       paradedb.score(id)::double precision AS score, created_at, updated_at
 		FROM agent_memories
-		WHERE parish_id = $1
+		WHERE paroki_id = $1
 		  AND user_id = $2
 		  AND ($3 = '' OR category = $3)
 		  AND id @@@ paradedb.boolean(should => ARRAY[
@@ -218,7 +218,7 @@ func (r *Repository) searchMemoriesBM25(
 		ORDER BY score DESC, created_at DESC, id DESC
 		LIMIT $5
 	`
-	rows, err := r.sqlDB.QueryContext(ctx, query, parishID, userID, category, q, limit)
+	rows, err := r.sqlDB.QueryContext(ctx, query, parokiID, userID, category, q, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -228,7 +228,7 @@ func (r *Repository) searchMemoriesBM25(
 
 func (r *Repository) searchMemoriesRRF(
 	ctx context.Context,
-	parishID, userID uuid.UUID,
+	parokiID, userID uuid.UUID,
 	q, category string,
 	vec []float32,
 	limit int,
@@ -243,7 +243,7 @@ func (r *Repository) searchMemoriesRRF(
 			SELECT id,
 			       ROW_NUMBER() OVER (ORDER BY paradedb.score(id) DESC, created_at DESC, id DESC) AS r
 			FROM agent_memories
-			WHERE parish_id = $1
+			WHERE paroki_id = $1
 			  AND user_id = $2
 			  AND ($3 = '' OR category = $3)
 			  AND id @@@ paradedb.boolean(should => ARRAY[
@@ -257,7 +257,7 @@ func (r *Repository) searchMemoriesRRF(
 			SELECT id,
 			       ROW_NUMBER() OVER (ORDER BY embedding <=> $6::halfvec(768) ASC, created_at DESC, id DESC) AS r
 			FROM agent_memories
-			WHERE parish_id = $1
+			WHERE paroki_id = $1
 			  AND user_id = $2
 			  AND ($3 = '' OR category = $3)
 			  AND embedding IS NOT NULL
@@ -270,14 +270,14 @@ func (r *Repository) searchMemoriesRRF(
 			FROM bm25
 			FULL OUTER JOIN vec ON bm25.id = vec.id
 		)
-		SELECT m.id, m.parish_id, m.user_id, m.category, m.content, m.source_session_id,
+		SELECT m.id, m.paroki_id, m.user_id, m.category, m.content, m.source_session_id,
 		       rrf.score::double precision AS score, m.created_at, m.updated_at
 		FROM rrf
 		JOIN agent_memories m ON m.id = rrf.id
 		ORDER BY rrf.score DESC, m.created_at DESC, m.id DESC
 		LIMIT $7
 	`
-	rows, err := r.sqlDB.QueryContext(ctx, query, parishID, userID, category, q, candidateLimit, lit, limit)
+	rows, err := r.sqlDB.QueryContext(ctx, query, parokiID, userID, category, q, candidateLimit, lit, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -292,7 +292,7 @@ func scanMemoryRows(rows *sql.Rows) ([]domain.MemoryResponse, error) {
 		var sourceSessionID sql.NullString
 		if err := rows.Scan(
 			&m.ID,
-			&m.ParishID,
+			&m.ParokiID,
 			&m.UserID,
 			&m.Category,
 			&m.Content,
@@ -318,7 +318,7 @@ func scanMemoryRows(rows *sql.Rows) ([]domain.MemoryResponse, error) {
 func toMemoryResponse(row *ent.AgentMemory) domain.MemoryResponse {
 	return domain.MemoryResponse{
 		ID:              row.ID,
-		ParishID:        row.ParishID,
+		ParokiID:        row.ParokiID,
 		UserID:          row.UserID,
 		Category:        string(row.Category),
 		Content:         row.Content,

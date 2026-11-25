@@ -16,7 +16,7 @@ const (
 // MemoryResponse represents a persisted long-term AI memory item.
 type MemoryResponse struct {
 	ID              uuid.UUID  `json:"id"`
-	ParishID        uuid.UUID  `json:"parishId"`
+	ParokiID        uuid.UUID  `json:"parokiId"`
 	UserID          uuid.UUID  `json:"userId"`
 	Category        string     `json:"category"`
 	Content         string     `json:"content"`
@@ -28,7 +28,7 @@ type MemoryResponse struct {
 
 // CreateMemoryInput describes a new AgentMemory record.
 type CreateMemoryInput struct {
-	ParishID        uuid.UUID
+	ParokiID        uuid.UUID
 	UserID          uuid.UUID
 	Category        string
 	Content         string

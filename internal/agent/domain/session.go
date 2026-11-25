@@ -16,7 +16,7 @@ type ToolCallRecord struct {
 // SessionResponse represents a persisted AI conversation session.
 type SessionResponse struct {
 	ID            uuid.UUID  `json:"id"`
-	ParishID      uuid.UUID  `json:"parishId"`
+	ParokiID      uuid.UUID  `json:"parokiId"`
 	UserID        uuid.UUID  `json:"userId"`
 	Title         string     `json:"title"`
 	ProviderID    *uuid.UUID `json:"providerId,omitempty"`
@@ -30,7 +30,7 @@ type SessionResponse struct {
 type MessageResponse struct {
 	ID         uuid.UUID        `json:"id"`
 	SessionID  uuid.UUID        `json:"sessionId"`
-	ParishID   uuid.UUID        `json:"parishId"`
+	ParokiID   uuid.UUID        `json:"parokiId"`
 	UserID     uuid.UUID        `json:"userId"`
 	AgentName  string           `json:"agentName"`
 	Role       string           `json:"role"`
@@ -64,7 +64,7 @@ type SearchSessionsRequest struct {
 // SessionDetailResponse returns a session with its chronological messages and resolved effective model.
 type SessionDetailResponse struct {
 	ID                  uuid.UUID         `json:"id"`
-	ParishID            uuid.UUID         `json:"parishId"`
+	ParokiID            uuid.UUID         `json:"parokiId"`
 	UserID              uuid.UUID         `json:"userId"`
 	Title               string            `json:"title"`
 	ProviderID          *uuid.UUID        `json:"providerId,omitempty"`

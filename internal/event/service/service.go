@@ -22,10 +22,10 @@ type OrgInfo struct {
 
 // OrgReader reads organization metadata and membership roles from the org feature.
 type OrgReader interface {
-	GetOrganization(ctx context.Context, parishID, orgID uuid.UUID) (*OrgInfo, error)
+	GetOrganization(ctx context.Context, parokiID, orgID uuid.UUID) (*OrgInfo, error)
 	IsMember(ctx context.Context, orgID, userID uuid.UUID) (bool, error)
 	IsAdmin(ctx context.Context, orgID, userID uuid.UUID) (bool, error)
-	ListUserOrgs(ctx context.Context, parishID, userID uuid.UUID) ([]OrgInfo, error)
+	ListUserOrgs(ctx context.Context, parokiID, userID uuid.UUID) ([]OrgInfo, error)
 }
 
 // Config holds runtime configuration for the event service.

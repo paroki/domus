@@ -32,8 +32,8 @@ type orgReaderAdapter struct {
 	orgs *org.Feature
 }
 
-func (a orgReaderAdapter) GetOrganization(ctx context.Context, parishID, orgID uuid.UUID) (*service.OrgInfo, error) {
-	o, err := a.orgs.GetOrganization(ctx, parishID, orgID)
+func (a orgReaderAdapter) GetOrganization(ctx context.Context, parokiID, orgID uuid.UUID) (*service.OrgInfo, error) {
+	o, err := a.orgs.GetOrganization(ctx, parokiID, orgID)
 	if err != nil {
 		return nil, err
 	}
@@ -53,8 +53,8 @@ func (a orgReaderAdapter) IsAdmin(ctx context.Context, orgID, userID uuid.UUID) 
 	return a.orgs.IsAdmin(ctx, orgID, userID)
 }
 
-func (a orgReaderAdapter) ListUserOrgs(ctx context.Context, parishID, userID uuid.UUID) ([]service.OrgInfo, error) {
-	rows, err := a.orgs.ListUserOrgs(ctx, parishID, userID)
+func (a orgReaderAdapter) ListUserOrgs(ctx context.Context, parokiID, userID uuid.UUID) ([]service.OrgInfo, error) {
+	rows, err := a.orgs.ListUserOrgs(ctx, parokiID, userID)
 	if err != nil {
 		return nil, err
 	}

@@ -13,7 +13,7 @@ import (
 	"github.com/paroki/domus/internal/platform/authx"
 )
 
-// SearchEvents returns paginated visible events in the caller's active parish.
+// SearchEvents returns paginated visible events in the caller's active paroki.
 func (s *Service) SearchEvents(
 	ctx context.Context,
 	p authx.Principal,
@@ -22,7 +22,7 @@ func (s *Service) SearchEvents(
 	cursorID *uuid.UUID,
 	limit int,
 ) ([]domain.EventResponse, bool, error) {
-	myOrgs, err := s.orgs.ListUserOrgs(ctx, p.ParishID, p.UserID)
+	myOrgs, err := s.orgs.ListUserOrgs(ctx, p.ParokiID, p.UserID)
 	if err != nil {
 		return nil, false, err
 	}
@@ -35,7 +35,7 @@ func (s *Service) SearchEvents(
 	}
 
 	in := repo.SearchEventsInput{
-		ParishID:     p.ParishID,
+		ParokiID:     p.ParokiID,
 		MemberOrgIDs: memberOrgIDs,
 		Q:            strings.TrimSpace(req.Q),
 		CursorAt:     cursorAt,
@@ -73,7 +73,7 @@ func (s *Service) SearchEvents(
 	for _, row := range rows {
 		info, ok := orgMap[row.OrgID]
 		if !ok {
-			fetched, err := s.orgs.GetOrganization(ctx, p.ParishID, row.OrgID)
+			fetched, err := s.orgs.GetOrganization(ctx, p.ParokiID, row.OrgID)
 			if err != nil {
 				return nil, false, err
 			}
@@ -140,9 +140,9 @@ func (s *Service) SearchEvents(
 	return out, hasMore, nil
 }
 
-// GetEvent returns a single non-deleted Event in the caller's active parish, enforcing private visibility.
+// GetEvent returns a single non-deleted Event in the caller's active paroki, enforcing private visibility.
 func (s *Service) GetEvent(ctx context.Context, p authx.Principal, eventID uuid.UUID) (domain.EventResponse, error) {
-	row, err := s.repo.FindEventInParish(ctx, p.ParishID, eventID)
+	row, err := s.repo.FindEventInParoki(ctx, p.ParokiID, eventID)
 	if ent.IsNotFound(err) {
 		return domain.EventResponse{}, domain.ErrEventNotFound
 	}
@@ -158,7 +158,7 @@ func (s *Service) GetEvent(ctx context.Context, p authx.Principal, eventID uuid.
 		return domain.EventResponse{}, domain.ErrForbidden
 	}
 
-	info, err := s.orgs.GetOrganization(ctx, p.ParishID, row.OrgID)
+	info, err := s.orgs.GetOrganization(ctx, p.ParokiID, row.OrgID)
 	if err != nil {
 		return domain.EventResponse{}, err
 	}
@@ -190,7 +190,7 @@ func (s *Service) GetEvent(ctx context.Context, p authx.Principal, eventID uuid.
 
 // CreateEvent creates a new Event owned by req.OrgID (requires org:admin of req.OrgID).
 func (s *Service) CreateEvent(ctx context.Context, p authx.Principal, req domain.CreateEventRequest) (domain.EventResponse, error) {
-	info, err := s.orgs.GetOrganization(ctx, p.ParishID, req.OrgID)
+	info, err := s.orgs.GetOrganization(ctx, p.ParokiID, req.OrgID)
 	if err != nil {
 		return domain.EventResponse{}, err
 	}
@@ -229,7 +229,7 @@ func (s *Service) CreateEvent(ctx context.Context, p authx.Principal, req domain
 	}
 
 	created, err := s.repo.CreateEvent(ctx, repo.CreateEventInput{
-		ParishID:     p.ParishID,
+		ParokiID:     p.ParokiID,
 		OrgID:        req.OrgID,
 		CreatedBy:    p.UserID,
 		Title:        title,
@@ -249,9 +249,9 @@ func (s *Service) CreateEvent(ctx context.Context, p authx.Principal, req domain
 	return s.toEventResponse(created, *info, &adminRole, time.Now().UTC()), nil
 }
 
-// UpdateEvent updates an existing Event in the active parish (requires org:admin of owning org).
+// UpdateEvent updates an existing Event in the active paroki (requires org:admin of owning org).
 func (s *Service) UpdateEvent(ctx context.Context, p authx.Principal, eventID uuid.UUID, req domain.UpdateEventRequest) (domain.EventResponse, error) {
-	existing, err := s.repo.FindEventInParish(ctx, p.ParishID, eventID)
+	existing, err := s.repo.FindEventInParoki(ctx, p.ParokiID, eventID)
 	if ent.IsNotFound(err) {
 		return domain.EventResponse{}, domain.ErrEventNotFound
 	}
@@ -319,7 +319,7 @@ func (s *Service) UpdateEvent(ctx context.Context, p authx.Principal, eventID uu
 		return domain.EventResponse{}, err
 	}
 
-	info, err := s.orgs.GetOrganization(ctx, p.ParishID, updated.OrgID)
+	info, err := s.orgs.GetOrganization(ctx, p.ParokiID, updated.OrgID)
 	if err != nil {
 		return domain.EventResponse{}, err
 	}
@@ -328,9 +328,9 @@ func (s *Service) UpdateEvent(ctx context.Context, p authx.Principal, eventID uu
 	return s.toEventResponse(updated, *info, &adminRole, time.Now().UTC()), nil
 }
 
-// DeleteEvent soft-deletes an Event in the active parish (requires org:admin of owning org).
+// DeleteEvent soft-deletes an Event in the active paroki (requires org:admin of owning org).
 func (s *Service) DeleteEvent(ctx context.Context, p authx.Principal, eventID uuid.UUID) error {
-	existing, err := s.repo.FindEventInParish(ctx, p.ParishID, eventID)
+	existing, err := s.repo.FindEventInParoki(ctx, p.ParokiID, eventID)
 	if ent.IsNotFound(err) {
 		return domain.ErrEventNotFound
 	}
@@ -406,7 +406,7 @@ func (s *Service) toEventResponse(row *ent.Event, info OrgInfo, myRole *string, 
 
 	return domain.EventResponse{
 		ID:           row.ID,
-		ParishID:     row.ParishID,
+		ParokiID:     row.ParokiID,
 		OrgID:        row.OrgID,
 		OrgCode:      info.Code,
 		OrgName:      info.Name,

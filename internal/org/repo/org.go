@@ -14,21 +14,21 @@ import (
 
 // OrgInput holds fields for creating or reactivating an Organization.
 type OrgInput struct {
-	ParishID    uuid.UUID
-	ParentID    *uuid.UUID
-	ZoneID      *uuid.UUID
-	WardID      *uuid.UUID
-	Kind        organization.Kind
-	Code        string
-	Name        string
-	Description *string
-	Active      bool
+	ParokiID     uuid.UUID
+	ParentID     *uuid.UUID
+	WilayahID    *uuid.UUID
+	LingkunganID *uuid.UUID
+	Kind         organization.Kind
+	Code         string
+	Name         string
+	Description  *string
+	Active       bool
 }
 
-// SearchOrgs returns paginated non-deleted organizations in parishID.
+// SearchOrgs returns paginated non-deleted organizations in parokiID.
 func (r *Repository) SearchOrgs(
 	ctx context.Context,
-	parishID uuid.UUID,
+	parokiID uuid.UUID,
 	q, kind string,
 	active *bool,
 	parentID, memberUserID *uuid.UUID,
@@ -37,7 +37,7 @@ func (r *Repository) SearchOrgs(
 	limit int,
 ) ([]*ent.Organization, error) {
 	query := r.client.Organization.Query().
-		Where(organization.ParishIDEQ(parishID), organization.DeletedAtIsNil())
+		Where(organization.ParokiIDEQ(parokiID), organization.DeletedAtIsNil())
 	if q != "" {
 		query = query.Where(organization.Or(
 			organization.NameContainsFold(q),
@@ -71,24 +71,24 @@ func (r *Repository) SearchOrgs(
 		All(ctx)
 }
 
-// FindOrgInParish returns a non-deleted Organization belonging to parishID.
-func (r *Repository) FindOrgInParish(ctx context.Context, parishID, orgID uuid.UUID) (*ent.Organization, error) {
+// FindOrgInParoki returns a non-deleted Organization belonging to parokiID.
+func (r *Repository) FindOrgInParoki(ctx context.Context, parokiID, orgID uuid.UUID) (*ent.Organization, error) {
 	return r.client.Organization.Query().
-		Where(organization.IDEQ(orgID), organization.ParishIDEQ(parishID), organization.DeletedAtIsNil()).
+		Where(organization.IDEQ(orgID), organization.ParokiIDEQ(parokiID), organization.DeletedAtIsNil()).
 		Only(ctx)
 }
 
-// FindOrgByCodeIncludeDeleted returns an Organization in parishID by code, including soft-deleted rows.
-func (r *Repository) FindOrgByCodeIncludeDeleted(ctx context.Context, parishID uuid.UUID, code string) (*ent.Organization, error) {
+// FindOrgByCodeIncludeDeleted returns an Organization in parokiID by code, including soft-deleted rows.
+func (r *Repository) FindOrgByCodeIncludeDeleted(ctx context.Context, parokiID uuid.UUID, code string) (*ent.Organization, error) {
 	return r.client.Organization.Query().
-		Where(organization.ParishIDEQ(parishID), organization.CodeEQ(code)).
+		Where(organization.ParokiIDEQ(parokiID), organization.CodeEQ(code)).
 		Only(ctx)
 }
 
 // CreateOrg inserts a new Organization row.
 func (r *Repository) CreateOrg(ctx context.Context, in OrgInput) (*ent.Organization, error) {
 	q := r.client.Organization.Create().
-		SetParishID(in.ParishID).
+		SetParokiID(in.ParokiID).
 		SetKind(in.Kind).
 		SetCode(in.Code).
 		SetName(in.Name).
@@ -96,11 +96,11 @@ func (r *Repository) CreateOrg(ctx context.Context, in OrgInput) (*ent.Organizat
 	if in.ParentID != nil {
 		q.SetParentID(*in.ParentID)
 	}
-	if in.ZoneID != nil {
-		q.SetZoneID(*in.ZoneID)
+	if in.WilayahID != nil {
+		q.SetWilayahID(*in.WilayahID)
 	}
-	if in.WardID != nil {
-		q.SetWardID(*in.WardID)
+	if in.LingkunganID != nil {
+		q.SetLingkunganID(*in.LingkunganID)
 	}
 	if in.Description != nil && *in.Description != "" {
 		q.SetDescription(*in.Description)
@@ -116,8 +116,8 @@ func (r *Repository) ReactivateOrg(ctx context.Context, id uuid.UUID, in OrgInpu
 		SetName(in.Name).
 		SetActive(in.Active)
 	setOrClearOrgUUID(in.ParentID, upd.SetParentID, upd.ClearParentID)
-	setOrClearOrgUUID(in.ZoneID, upd.SetZoneID, upd.ClearZoneID)
-	setOrClearOrgUUID(in.WardID, upd.SetWardID, upd.ClearWardID)
+	setOrClearOrgUUID(in.WilayahID, upd.SetWilayahID, upd.ClearWilayahID)
+	setOrClearOrgUUID(in.LingkunganID, upd.SetLingkunganID, upd.ClearLingkunganID)
 	setOrClearOrgString(in.Description, upd.SetDescription, upd.ClearDescription)
 	return upd.Save(ctx)
 }
@@ -126,7 +126,7 @@ func (r *Repository) ReactivateOrg(ctx context.Context, id uuid.UUID, in OrgInpu
 func (r *Repository) UpdateOrg(
 	ctx context.Context,
 	id uuid.UUID,
-	parentID, zoneID, wardID *uuid.UUID,
+	parentID, wilayahID, lingkunganID *uuid.UUID,
 	kind *organization.Kind,
 	code, name, description *string,
 	active *bool,
@@ -135,11 +135,11 @@ func (r *Repository) UpdateOrg(
 	if parentID != nil {
 		setOrClearOrgUUID(parentID, upd.SetParentID, upd.ClearParentID)
 	}
-	if zoneID != nil {
-		setOrClearOrgUUID(zoneID, upd.SetZoneID, upd.ClearZoneID)
+	if wilayahID != nil {
+		setOrClearOrgUUID(wilayahID, upd.SetWilayahID, upd.ClearWilayahID)
 	}
-	if wardID != nil {
-		setOrClearOrgUUID(wardID, upd.SetWardID, upd.ClearWardID)
+	if lingkunganID != nil {
+		setOrClearOrgUUID(lingkunganID, upd.SetLingkunganID, upd.ClearLingkunganID)
 	}
 	if kind != nil {
 		upd.SetKind(*kind)
@@ -181,11 +181,11 @@ func (r *Repository) HasOrgEvents(ctx context.Context, orgID uuid.UUID) (bool, e
 		Exist(ctx)
 }
 
-// ListUserOrgsInParish returns all active, non-deleted Organizations in parishID where userID is an active member.
-func (r *Repository) ListUserOrgsInParish(ctx context.Context, parishID, userID uuid.UUID) ([]*ent.Organization, error) {
+// ListUserOrgsInParoki returns all active, non-deleted Organizations in parokiID where userID is an active member.
+func (r *Repository) ListUserOrgsInParoki(ctx context.Context, parokiID, userID uuid.UUID) ([]*ent.Organization, error) {
 	return r.client.Organization.Query().
 		Where(
-			organization.ParishIDEQ(parishID),
+			organization.ParokiIDEQ(parokiID),
 			organization.ActiveEQ(true),
 			organization.DeletedAtIsNil(),
 			organization.HasMembersWith(

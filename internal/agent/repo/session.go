@@ -13,16 +13,16 @@ import (
 	"github.com/paroki/domus/internal/agent/domain"
 )
 
-// CreateSession creates a new AgentSession scoped to (parishID, userID).
+// CreateSession creates a new AgentSession scoped to (parokiID, userID).
 func (r *Repository) CreateSession(
 	ctx context.Context,
-	parishID, userID uuid.UUID,
+	parokiID, userID uuid.UUID,
 	title string,
 	providerID *uuid.UUID,
 	modelID *string,
 ) (domain.SessionResponse, error) {
 	q := r.client.AgentSession.Create().
-		SetParishID(parishID).
+		SetParokiID(parokiID).
 		SetUserID(userID).
 		SetLastMessageAt(time.Now().UTC())
 	if trimmed := strings.TrimSpace(title); trimmed != "" {
@@ -41,12 +41,12 @@ func (r *Repository) CreateSession(
 	return toSessionResponse(row), nil
 }
 
-// GetSession returns an active AgentSession scoped to (parishID, userID).
-func (r *Repository) GetSession(ctx context.Context, parishID, userID, sessionID uuid.UUID) (domain.SessionResponse, error) {
+// GetSession returns an active AgentSession scoped to (parokiID, userID).
+func (r *Repository) GetSession(ctx context.Context, parokiID, userID, sessionID uuid.UUID) (domain.SessionResponse, error) {
 	row, err := r.client.AgentSession.Query().
 		Where(
 			agentsession.IDEQ(sessionID),
-			agentsession.ParishIDEQ(parishID),
+			agentsession.ParokiIDEQ(parokiID),
 			agentsession.UserIDEQ(userID),
 			agentsession.DeletedAtIsNil(),
 		).
@@ -60,16 +60,16 @@ func (r *Repository) GetSession(ctx context.Context, parishID, userID, sessionID
 	return toSessionResponse(row), nil
 }
 
-// UpdateSession updates title and/or provider/model override on an active AgentSession scoped to (parishID, userID).
+// UpdateSession updates title and/or provider/model override on an active AgentSession scoped to (parokiID, userID).
 func (r *Repository) UpdateSession(
 	ctx context.Context,
-	parishID, userID, sessionID uuid.UUID,
+	parokiID, userID, sessionID uuid.UUID,
 	title *string,
 	clearModel bool,
 	providerID *uuid.UUID,
 	modelID *string,
 ) (domain.SessionResponse, error) {
-	if _, err := r.GetSession(ctx, parishID, userID, sessionID); err != nil {
+	if _, err := r.GetSession(ctx, parokiID, userID, sessionID); err != nil {
 		return domain.SessionResponse{}, err
 	}
 	upd := r.client.AgentSession.UpdateOneID(sessionID)
@@ -93,12 +93,12 @@ func (r *Repository) UpdateSession(
 	return toSessionResponse(row), nil
 }
 
-// SoftDeleteSession soft-deletes an active AgentSession scoped to (parishID, userID).
-func (r *Repository) SoftDeleteSession(ctx context.Context, parishID, userID, sessionID uuid.UUID) error {
+// SoftDeleteSession soft-deletes an active AgentSession scoped to (parokiID, userID).
+func (r *Repository) SoftDeleteSession(ctx context.Context, parokiID, userID, sessionID uuid.UUID) error {
 	affected, err := r.client.AgentSession.Update().
 		Where(
 			agentsession.IDEQ(sessionID),
-			agentsession.ParishIDEQ(parishID),
+			agentsession.ParokiIDEQ(parokiID),
 			agentsession.UserIDEQ(userID),
 			agentsession.DeletedAtIsNil(),
 		).
@@ -113,10 +113,10 @@ func (r *Repository) SoftDeleteSession(ctx context.Context, parishID, userID, se
 	return nil
 }
 
-// SearchSessions returns keyset-paginated active sessions for (parishID, userID) ordered by last_message_at DESC, id DESC.
+// SearchSessions returns keyset-paginated active sessions for (parokiID, userID) ordered by last_message_at DESC, id DESC.
 func (r *Repository) SearchSessions(
 	ctx context.Context,
-	parishID, userID uuid.UUID,
+	parokiID, userID uuid.UUID,
 	q string,
 	cursorLastMessageAt *time.Time,
 	cursorID *uuid.UUID,
@@ -131,7 +131,7 @@ func (r *Repository) SearchSessions(
 
 	query := r.client.AgentSession.Query().
 		Where(
-			agentsession.ParishIDEQ(parishID),
+			agentsession.ParokiIDEQ(parokiID),
 			agentsession.UserIDEQ(userID),
 			agentsession.DeletedAtIsNil(),
 		)
@@ -167,14 +167,14 @@ func (r *Repository) SearchSessions(
 	return out, hasMore, nil
 }
 
-// AppendMessages appends a batch of messages to an active session scoped to (parishID, userID)
+// AppendMessages appends a batch of messages to an active session scoped to (parokiID, userID)
 // and updates session.last_message_at.
 func (r *Repository) AppendMessages(
 	ctx context.Context,
-	parishID, userID, sessionID uuid.UUID,
+	parokiID, userID, sessionID uuid.UUID,
 	msgs []domain.AppendMessageInput,
 ) ([]domain.MessageResponse, error) {
-	if _, err := r.GetSession(ctx, parishID, userID, sessionID); err != nil {
+	if _, err := r.GetSession(ctx, parokiID, userID, sessionID); err != nil {
 		return nil, err
 	}
 	if len(msgs) == 0 {
@@ -190,7 +190,7 @@ func (r *Repository) AppendMessages(
 	for _, m := range msgs {
 		b := tx.AgentMessage.Create().
 			SetSessionID(sessionID).
-			SetParishID(parishID).
+			SetParokiID(parokiID).
 			SetUserID(userID).
 			SetRole(agentmessage.Role(m.Role)).
 			SetContent(m.Content)
@@ -237,15 +237,15 @@ func (r *Repository) AppendMessages(
 	return out, nil
 }
 
-// ListMessages lists messages in chronological order for an active session scoped to (parishID, userID).
-func (r *Repository) ListMessages(ctx context.Context, parishID, userID, sessionID uuid.UUID, limit int) ([]domain.MessageResponse, error) {
-	if _, err := r.GetSession(ctx, parishID, userID, sessionID); err != nil {
+// ListMessages lists messages in chronological order for an active session scoped to (parokiID, userID).
+func (r *Repository) ListMessages(ctx context.Context, parokiID, userID, sessionID uuid.UUID, limit int) ([]domain.MessageResponse, error) {
+	if _, err := r.GetSession(ctx, parokiID, userID, sessionID); err != nil {
 		return nil, err
 	}
 	q := r.client.AgentMessage.Query().
 		Where(
 			agentmessage.SessionIDEQ(sessionID),
-			agentmessage.ParishIDEQ(parishID),
+			agentmessage.ParokiIDEQ(parokiID),
 			agentmessage.UserIDEQ(userID),
 		).
 		Order(ent.Asc(agentmessage.FieldCreatedAt), ent.Asc(agentmessage.FieldID))
@@ -266,7 +266,7 @@ func (r *Repository) ListMessages(ctx context.Context, parishID, userID, session
 func toSessionResponse(row *ent.AgentSession) domain.SessionResponse {
 	return domain.SessionResponse{
 		ID:            row.ID,
-		ParishID:      row.ParishID,
+		ParokiID:      row.ParokiID,
 		UserID:        row.UserID,
 		Title:         row.Title,
 		ProviderID:    row.ProviderID,
@@ -288,7 +288,7 @@ func toMessageResponse(row *ent.AgentMessage) domain.MessageResponse {
 	return domain.MessageResponse{
 		ID:         row.ID,
 		SessionID:  row.SessionID,
-		ParishID:   row.ParishID,
+		ParokiID:   row.ParokiID,
 		UserID:     row.UserID,
 		AgentName:  row.AgentName,
 		Role:       string(row.Role),

@@ -157,7 +157,7 @@ func TestRegisterSettings_EmbeddingResetTransitionOnly(t *testing.T) {
 	vec := make([]float32, repo.EmbeddingDimensions)
 	vec[0] = 0.5
 	mem, err := r.CreateMemory(ctx, domain.CreateMemoryInput{
-		ParishID: uuid.New(),
+		ParokiID: uuid.New(),
 		UserID:   uuid.New(),
 		Category: domain.MemoryCategoryFact,
 		Content:  "Umat aktif lingkungan",

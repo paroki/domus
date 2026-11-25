@@ -33,7 +33,7 @@ func (s *Service) CreateOrgInvite(
 		return domain.OrgInviteResponse{}, domain.ErrForbidden
 	}
 
-	orgRow, err := s.repo.FindOrgInParish(ctx, p.ParishID, orgID)
+	orgRow, err := s.repo.FindOrgInParoki(ctx, p.ParokiID, orgID)
 	if ent.IsNotFound(err) {
 		return domain.OrgInviteResponse{}, domain.ErrOrgNotFound
 	}
@@ -60,7 +60,7 @@ func (s *Service) CreateOrgInvite(
 	}
 
 	inv, err := s.repo.CreateOrgInvite(ctx, repo.OrgInviteInput{
-		ParishID:        orgRow.ParishID,
+		ParokiID:        orgRow.ParokiID,
 		OrgID:           orgID,
 		Code:            code,
 		Role:            role,
@@ -93,7 +93,7 @@ func (s *Service) SearchOrgInvites(
 		return nil, false, domain.ErrForbidden
 	}
 
-	if _, err := s.repo.FindOrgInParish(ctx, p.ParishID, orgID); ent.IsNotFound(err) {
+	if _, err := s.repo.FindOrgInParoki(ctx, p.ParokiID, orgID); ent.IsNotFound(err) {
 		return nil, false, domain.ErrOrgNotFound
 	} else if err != nil {
 		return nil, false, err
@@ -129,7 +129,7 @@ func (s *Service) RevokeOrgInvite(ctx context.Context, p authx.Principal, orgID,
 		return domain.ErrForbidden
 	}
 
-	if _, err := s.repo.FindOrgInParish(ctx, p.ParishID, orgID); ent.IsNotFound(err) {
+	if _, err := s.repo.FindOrgInParoki(ctx, p.ParokiID, orgID); ent.IsNotFound(err) {
 		return domain.ErrOrgNotFound
 	} else if err != nil {
 		return err
@@ -162,7 +162,7 @@ func (s *Service) PreviewOrgInvite(ctx context.Context, code string) (domain.Org
 		return domain.OrgInvitePreviewResponse{}, err
 	}
 
-	orgRow, parishRow, err := s.repo.FindActiveOrgAndParish(ctx, inv.OrgID, inv.ParishID)
+	orgRow, parokiRow, err := s.repo.FindActiveOrgAndParoki(ctx, inv.OrgID, inv.ParokiID)
 	if ent.IsNotFound(err) {
 		return domain.OrgInvitePreviewResponse{}, domain.ErrInviteNotFound
 	}
@@ -177,9 +177,9 @@ func (s *Service) PreviewOrgInvite(ctx context.Context, code string) (domain.Org
 		OrgCode:         orgRow.Code,
 		OrgName:         orgRow.Name,
 		OrgKind:         string(orgRow.Kind),
-		ParishID:        parishRow.ID,
-		ParishCode:      parishRow.Code,
-		ParishName:      parishRow.Name,
+		ParokiID:        parokiRow.ID,
+		ParokiCode:      parokiRow.Kode,
+		ParokiName:      parokiRow.Nama,
 		Role:            string(inv.Role),
 		DefaultPosition: inv.DefaultPosition,
 		ExpiresAt:       inv.ExpiresAt,
@@ -199,13 +199,13 @@ func (s *Service) RedeemInvite(ctx context.Context, p authx.Principal, code stri
 	return s.redeemInviteInternal(ctx, code, p.UserID, p.SessionID)
 }
 
-// RedeemInviteForUser redeems an invite code for userID and switches sessionID's active parish if non-nil.
+// RedeemInviteForUser redeems an invite code for userID and switches sessionID's active paroki if non-nil.
 func (s *Service) RedeemInviteForUser(ctx context.Context, code string, userID, sessionID uuid.UUID) (uuid.UUID, error) {
 	res, err := s.redeemInviteInternal(ctx, code, userID, sessionID)
 	if err != nil {
 		return uuid.Nil, err
 	}
-	return res.ParishID, nil
+	return res.ParokiID, nil
 }
 
 func (s *Service) redeemInviteInternal(ctx context.Context, code string, userID, sessionID uuid.UUID) (domain.RedeemOrgInviteResponse, error) {
@@ -215,7 +215,7 @@ func (s *Service) redeemInviteInternal(ctx context.Context, code string, userID,
 	}
 
 	if s.refs != nil {
-		if err := s.refs.EnsureParishMember(ctx, inv.ParishID, userID); err != nil {
+		if err := s.refs.EnsureParokiMember(ctx, inv.ParokiID, userID); err != nil {
 			return domain.RedeemOrgInviteResponse{}, err
 		}
 	}
@@ -269,7 +269,7 @@ func (s *Service) redeemInviteInternal(ctx context.Context, code string, userID,
 
 		case ent.IsNotFound(findErr):
 			created, createErr := txRepo.CreateOrgMember(ctx, repo.OrgMemberInput{
-				ParishID: txInv.ParishID,
+				ParokiID: txInv.ParokiID,
 				OrgID:    txInv.OrgID,
 				UserID:   userID,
 				Role:     orgmember.Role(txInv.Role),
@@ -295,7 +295,7 @@ func (s *Service) redeemInviteInternal(ctx context.Context, code string, userID,
 	}
 
 	if sessionID != uuid.Nil && s.sessions != nil {
-		if err := s.sessions.SwitchSessionParish(ctx, userID, sessionID, inv.ParishID); err != nil {
+		if err := s.sessions.SwitchSessionParoki(ctx, userID, sessionID, inv.ParokiID); err != nil {
 			return domain.RedeemOrgInviteResponse{}, err
 		}
 	}
@@ -308,11 +308,11 @@ func (s *Service) redeemInviteInternal(ctx context.Context, code string, userID,
 	return domain.RedeemOrgInviteResponse{
 		Organization: toOrgResponse(orgRow, &myRole),
 		Membership:   toOrgMemberResponse(savedMember, u),
-		ParishID:     inv.ParishID,
+		ParokiID:     inv.ParokiID,
 	}, nil
 }
 
-func (s *Service) validateUsableInvite(ctx context.Context, r *repo.Repository, code string, now time.Time) (*ent.OrgInvite, *ent.Organization, *ent.Parish, error) {
+func (s *Service) validateUsableInvite(ctx context.Context, r *repo.Repository, code string, now time.Time) (*ent.OrgInvite, *ent.Organization, *ent.Paroki, error) {
 	normCode := strings.TrimSpace(code)
 	if normCode == "" {
 		return nil, nil, nil, domain.ErrInviteNotFound
@@ -324,7 +324,7 @@ func (s *Service) validateUsableInvite(ctx context.Context, r *repo.Repository, 
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	orgRow, parishRow, err := r.FindActiveOrgAndParish(ctx, inv.OrgID, inv.ParishID)
+	orgRow, parokiRow, err := r.FindActiveOrgAndParoki(ctx, inv.OrgID, inv.ParokiID)
 	if ent.IsNotFound(err) {
 		return nil, nil, nil, domain.ErrInviteNotFound
 	}
@@ -340,7 +340,7 @@ func (s *Service) validateUsableInvite(ctx context.Context, r *repo.Repository, 
 	if inv.MaxUses != nil && inv.UsedCount >= *inv.MaxUses {
 		return nil, nil, nil, domain.ErrInviteMaxUsesReached
 	}
-	return inv, orgRow, parishRow, nil
+	return inv, orgRow, parokiRow, nil
 }
 
 func computeInviteStatus(inv *ent.OrgInvite, now time.Time) string {
@@ -373,7 +373,7 @@ func generateInviteCode() (string, error) {
 func toOrgInviteResponse(inv *ent.OrgInvite) domain.OrgInviteResponse {
 	return domain.OrgInviteResponse{
 		ID:              inv.ID,
-		ParishID:        inv.ParishID,
+		ParokiID:        inv.ParokiID,
 		OrgID:           inv.OrgID,
 		Code:            inv.Code,
 		Role:            string(inv.Role),

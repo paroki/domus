@@ -50,7 +50,7 @@ type ChatSuite struct {
 	llmServer    *httptest.Server
 	llmHandler   http.HandlerFunc
 	llmMu        sync.RWMutex
-	parishID     uuid.UUID
+	parokiID     uuid.UUID
 	memberCookie *http.Cookie
 	superCookie  *http.Cookie
 }
@@ -94,7 +94,7 @@ func (s *ChatSuite) SetupTest() {
 	}
 	s.userFeature = user.New(db, enforcer, userCfg, logger, user.WithOTPSender(s.otpSender))
 	s.refFeature = ref.New(db, enforcer, s.userFeature)
-	s.userFeature.SetParishMemberDirectory(s.refFeature)
+	s.userFeature.SetParokiMemberDirectory(s.refFeature)
 
 	cipher, err := crypt.New("0123456789abcdef0123456789abcdef")
 	s.Require().NoError(err)
@@ -117,15 +117,15 @@ func (s *ChatSuite) SetupTest() {
 
 	s.fiberApp = app.GetFiber(app.Config{}, logger, s.userFeature, s.refFeature, s.agentFeature)
 
-	diocese, err := db.Diocese.Create().SetCode("kaj").SetName("KAJ").Save(ctx)
+	keuskupan, err := db.Keuskupan.Create().SetKode("kaj").SetNama("KAJ").Save(ctx)
 	s.Require().NoError(err)
-	parish, err := db.Parish.Create().SetDioceseID(diocese.ID).SetCode("p1").SetName("Paroki Katedral").Save(ctx)
+	paroki, err := db.Paroki.Create().SetKeuskupanID(keuskupan.ID).SetKode("p1").SetNama("Paroki Katedral").Save(ctx)
 	s.Require().NoError(err)
-	s.parishID = parish.ID
+	s.parokiID = paroki.ID
 
 	memberUser, err := s.userFeature.EnsureUser(ctx, "member@paroki.org", "Member", "", "email", "member@paroki.org")
 	s.Require().NoError(err)
-	_, err = db.ParishMember.Create().SetParishID(parish.ID).SetUserID(memberUser.ID).Save(ctx)
+	_, err = db.ParokiMember.Create().SetParokiID(paroki.ID).SetUserID(memberUser.ID).Save(ctx)
 	s.Require().NoError(err)
 
 	s.superCookie = s.login("super@paroki.org")
@@ -170,7 +170,7 @@ func (s *ChatSuite) TestPreStreamValidationErrors() {
 	_ = resp.Body.Close()
 	s.Equal(http.StatusUnauthorized, resp.StatusCode)
 
-	// 2. Missing X-Parish-Id -> 400 TENANT_REQUIRED
+	// 2. Missing X-Paroki-Id -> 400 TENANT_REQUIRED
 	req = httptest.NewRequest(http.MethodPost, "/api/agent/chat", strings.NewReader(`{"message":"hi"}`))
 	req.Header.Set("Content-Type", "application/json")
 	req.AddCookie(s.memberCookie)
@@ -185,7 +185,7 @@ func (s *ChatSuite) TestPreStreamValidationErrors() {
 		req = httptest.NewRequest(http.MethodPost, "/api/agent/chat", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 		req.AddCookie(s.memberCookie)
-		req.Header.Set("X-Parish-Id", s.parishID.String())
+		req.Header.Set("X-Paroki-Id", s.parokiID.String())
 		resp, err = s.fiberApp.Test(req)
 		s.Require().NoError(err)
 		_ = resp.Body.Close()
@@ -196,7 +196,7 @@ func (s *ChatSuite) TestPreStreamValidationErrors() {
 	req = httptest.NewRequest(http.MethodPost, "/api/agent/chat", strings.NewReader(`{"message":"halo"}`))
 	req.Header.Set("Content-Type", "application/json")
 	req.AddCookie(s.memberCookie)
-	req.Header.Set("X-Parish-Id", s.parishID.String())
+	req.Header.Set("X-Paroki-Id", s.parokiID.String())
 	resp, err = s.fiberApp.Test(req)
 	s.Require().NoError(err)
 	raw, _ := io.ReadAll(resp.Body)
@@ -212,7 +212,7 @@ func (s *ChatSuite) TestPreStreamValidationErrors() {
 	req = httptest.NewRequest(http.MethodPost, "/api/agent/chat", bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	req.AddCookie(s.memberCookie)
-	req.Header.Set("X-Parish-Id", s.parishID.String())
+	req.Header.Set("X-Paroki-Id", s.parokiID.String())
 	resp, err = s.fiberApp.Test(req)
 	s.Require().NoError(err)
 	_ = resp.Body.Close()
@@ -259,8 +259,8 @@ func (s *ChatSuite) TestStreamingDelegationBusyLockAndCancel() {
 					flusher.Flush()
 				}
 			case 2:
-				// Rafael calls ref_get_parish
-				writeOpenAIToolChunk(w, "call_ref", "ref_get_parish", `{}`)
+				// Rafael calls ref_get_paroki
+				writeOpenAIToolChunk(w, "call_ref", "ref_get_paroki", `{}`)
 				if flusher != nil {
 					flusher.Flush()
 				}
@@ -318,7 +318,7 @@ func (s *ChatSuite) TestStreamingDelegationBusyLockAndCancel() {
 	chatReq := httptest.NewRequest(http.MethodPost, "/api/agent/chat", strings.NewReader(`{"message":"Paroki apa yang aktif?"}`))
 	chatReq.Header.Set("Content-Type", "application/json")
 	chatReq.AddCookie(s.memberCookie)
-	chatReq.Header.Set("X-Parish-Id", s.parishID.String())
+	chatReq.Header.Set("X-Paroki-Id", s.parokiID.String())
 	chatResp, err := s.fiberApp.Test(chatReq, fiber.TestConfig{Timeout: 10 * time.Second})
 	s.Require().NoError(err)
 	defer func() { _ = chatResp.Body.Close() }()
@@ -368,7 +368,7 @@ func (s *ChatSuite) TestStreamingDelegationBusyLockAndCancel() {
 		r := httptest.NewRequest(http.MethodPost, "/api/agent/chat", bytes.NewReader(b))
 		r.Header.Set("Content-Type", "application/json")
 		r.AddCookie(s.memberCookie)
-		r.Header.Set("X-Parish-Id", s.parishID.String())
+		r.Header.Set("X-Paroki-Id", s.parokiID.String())
 		resp, err := s.fiberApp.Test(r, fiber.TestConfig{Timeout: 10 * time.Second})
 		if err == nil {
 			_ = resp.Body.Close()
@@ -381,7 +381,7 @@ func (s *ChatSuite) TestStreamingDelegationBusyLockAndCancel() {
 	rBusy := httptest.NewRequest(http.MethodPost, "/api/agent/chat", bytes.NewReader(bBusy))
 	rBusy.Header.Set("Content-Type", "application/json")
 	rBusy.AddCookie(s.memberCookie)
-	rBusy.Header.Set("X-Parish-Id", s.parishID.String())
+	rBusy.Header.Set("X-Paroki-Id", s.parokiID.String())
 	respBusy, err := s.fiberApp.Test(rBusy)
 	s.Require().NoError(err)
 	_ = respBusy.Body.Close()
@@ -497,7 +497,7 @@ func (s *ChatSuite) TestAbortMidStreamCancelsAndPersistsCompletedTools() {
 	s.Require().NoError(err)
 	req.Header.Set("Content-Type", "application/json")
 	req.AddCookie(s.memberCookie)
-	req.Header.Set("X-Parish-Id", s.parishID.String())
+	req.Header.Set("X-Paroki-Id", s.parokiID.String())
 
 	resp, err := (&http.Client{}).Do(req)
 	s.Require().NoError(err)
@@ -544,7 +544,7 @@ func (s *ChatSuite) TestAbortMidStreamCancelsAndPersistsCompletedTools() {
 	followReq, _ := http.NewRequestWithContext(ctx, http.MethodPost, "http://"+ln.Addr().String()+"/api/agent/chat", strings.NewReader(fmt.Sprintf(`{"sessionId":%q,"message":"Lanjut"}`, sid.String())))
 	followReq.Header.Set("Content-Type", "application/json")
 	followReq.AddCookie(s.memberCookie)
-	followReq.Header.Set("X-Parish-Id", s.parishID.String())
+	followReq.Header.Set("X-Paroki-Id", s.parokiID.String())
 	followResp, err := (&http.Client{}).Do(followReq)
 	s.Require().NoError(err)
 	_ = followResp.Body.Close()
@@ -607,7 +607,7 @@ func (s *ChatSuite) TestChatRetryDoesNotDuplicateUserMessage() {
 	req1 := httptest.NewRequest(http.MethodPost, "/api/agent/chat", strings.NewReader(`{"message":"Cek jadwal misa"}`))
 	req1.Header.Set("Content-Type", "application/json")
 	req1.AddCookie(s.memberCookie)
-	req1.Header.Set("X-Parish-Id", s.parishID.String())
+	req1.Header.Set("X-Paroki-Id", s.parokiID.String())
 	resp1, err := s.fiberApp.Test(req1, fiber.TestConfig{Timeout: 10 * time.Second})
 	s.Require().NoError(err)
 	events1 := parseSSEEvents(s.T(), resp1.Body)
@@ -633,7 +633,7 @@ func (s *ChatSuite) TestChatRetryDoesNotDuplicateUserMessage() {
 	req2 := httptest.NewRequest(http.MethodPost, "/api/agent/chat", strings.NewReader(retryBody))
 	req2.Header.Set("Content-Type", "application/json")
 	req2.AddCookie(s.memberCookie)
-	req2.Header.Set("X-Parish-Id", s.parishID.String())
+	req2.Header.Set("X-Paroki-Id", s.parokiID.String())
 	resp2, err := s.fiberApp.Test(req2, fiber.TestConfig{Timeout: 10 * time.Second})
 	s.Require().NoError(err)
 	events2 := parseSSEEvents(s.T(), resp2.Body)

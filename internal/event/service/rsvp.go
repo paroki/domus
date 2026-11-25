@@ -21,7 +21,7 @@ func (s *Service) UpsertRSVP(
 	eventID uuid.UUID,
 	req domain.UpsertEventRSVPRequest,
 ) (domain.EventRSVPResponse, error) {
-	ev, err := s.repo.FindEventInParish(ctx, p.ParishID, eventID)
+	ev, err := s.repo.FindEventInParoki(ctx, p.ParokiID, eventID)
 	if ent.IsNotFound(err) {
 		return domain.EventRSVPResponse{}, domain.ErrEventNotFound
 	}
@@ -50,7 +50,7 @@ func (s *Service) UpsertRSVP(
 	var saved *ent.EventRSVP
 	if err := s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
 		var txErr error
-		saved, txErr = txRepo.UpsertRSVP(ctx, p.ParishID, eventID, p.UserID, eventrsvp.Status(req.Status), note)
+		saved, txErr = txRepo.UpsertRSVP(ctx, p.ParokiID, eventID, p.UserID, eventrsvp.Status(req.Status), note)
 		return txErr
 	}); err != nil {
 		return domain.EventRSVPResponse{}, err
@@ -66,7 +66,7 @@ func (s *Service) UpsertRSVP(
 
 // DeleteRSVP hard-deletes the caller's RSVP for eventID (requires active org membership and open RSVP).
 func (s *Service) DeleteRSVP(ctx context.Context, p authx.Principal, eventID uuid.UUID) error {
-	ev, err := s.repo.FindEventInParish(ctx, p.ParishID, eventID)
+	ev, err := s.repo.FindEventInParoki(ctx, p.ParokiID, eventID)
 	if ent.IsNotFound(err) {
 		return domain.ErrEventNotFound
 	}
@@ -91,7 +91,7 @@ func (s *Service) DeleteRSVP(ctx context.Context, p authx.Principal, eventID uui
 
 // GetRSVPSummary returns RSVP attendance summary counts for eventID (requires active org membership).
 func (s *Service) GetRSVPSummary(ctx context.Context, p authx.Principal, eventID uuid.UUID) (domain.EventRSVPSummaryResponse, error) {
-	ev, err := s.repo.FindEventInParish(ctx, p.ParishID, eventID)
+	ev, err := s.repo.FindEventInParoki(ctx, p.ParokiID, eventID)
 	if ent.IsNotFound(err) {
 		return domain.EventRSVPSummaryResponse{}, domain.ErrEventNotFound
 	}
@@ -124,7 +124,7 @@ func (s *Service) SearchRSVPs(
 	cursorID *uuid.UUID,
 	limit int,
 ) ([]domain.EventRSVPResponse, bool, error) {
-	ev, err := s.repo.FindEventInParish(ctx, p.ParishID, eventID)
+	ev, err := s.repo.FindEventInParoki(ctx, p.ParokiID, eventID)
 	if ent.IsNotFound(err) {
 		return nil, false, domain.ErrEventNotFound
 	}
@@ -186,7 +186,7 @@ func (s *Service) isRSVPOpen(ev *ent.Event, now time.Time) bool {
 func toRSVPResponse(row *ent.EventRSVP, u *ent.User, m *ent.OrgMember) domain.EventRSVPResponse {
 	res := domain.EventRSVPResponse{
 		ID:        row.ID,
-		ParishID:  row.ParishID,
+		ParokiID:  row.ParokiID,
 		EventID:   row.EventID,
 		UserID:    row.UserID,
 		Status:    string(row.Status),

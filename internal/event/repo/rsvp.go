@@ -23,7 +23,7 @@ type RSVPSummaryCounts struct {
 // UpsertRSVP inserts or updates the caller's RSVP row for eventID.
 func (r *Repository) UpsertRSVP(
 	ctx context.Context,
-	parishID, eventID, userID uuid.UUID,
+	parokiID, eventID, userID uuid.UUID,
 	status eventrsvp.Status,
 	note *string,
 ) (*ent.EventRSVP, error) {
@@ -35,7 +35,7 @@ func (r *Repository) UpsertRSVP(
 	}
 	if ent.IsNotFound(err) {
 		q := r.client.EventRSVP.Create().
-			SetParishID(parishID).
+			SetParokiID(parokiID).
 			SetEventID(eventID).
 			SetUserID(userID).
 			SetStatus(status)

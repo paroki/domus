@@ -13,7 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/paroki/domus/ent"
-	"github.com/paroki/domus/ent/parish"
+	"github.com/paroki/domus/ent/paroki"
 	entuser "github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/internal/agent/domain"
 	"github.com/paroki/domus/internal/agent/driver"
@@ -136,7 +136,7 @@ func (s *Service) PrepareChat(ctx context.Context, p authx.Principal, req domain
 	var existingSess *domain.SessionResponse
 	var lockedID uuid.UUID
 	if req.SessionID != nil {
-		sess, err := s.repo.GetSession(ctx, p.ParishID, p.UserID, *req.SessionID)
+		sess, err := s.repo.GetSession(ctx, p.ParokiID, p.UserID, *req.SessionID)
 		if err != nil {
 			return nil, err
 		}
@@ -182,13 +182,13 @@ func (s *Service) PrepareChat(ctx context.Context, p authx.Principal, req domain
 	mikPrompt := s.resolvePrompt(settingPromptMik, prompts.Mikael)
 	rafPrompt := s.resolvePrompt(settingPromptRaf, prompts.Rafael)
 
-	var userName, parishName string
+	var userName, parokiName string
 	if s.db != nil {
 		if u, err := s.db.User.Query().Where(entuser.IDEQ(p.UserID)).Only(ctx); err == nil {
 			userName = u.Name
 		}
-		if pr, err := s.db.Parish.Query().Where(parish.IDEQ(p.ParishID)).Only(ctx); err == nil {
-			parishName = pr.Name
+		if pr, err := s.db.Paroki.Query().Where(paroki.IDEQ(p.ParokiID)).Only(ctx); err == nil {
+			parokiName = pr.Nama
 		}
 	}
 
@@ -199,7 +199,7 @@ func (s *Service) PrepareChat(ctx context.Context, p authx.Principal, req domain
 	skipAppendUser := false
 	if existingSess != nil {
 		title = existingSess.Title
-		rows, err := s.repo.ListMessages(ctx, p.ParishID, p.UserID, existingSess.ID, 0)
+		rows, err := s.repo.ListMessages(ctx, p.ParokiID, p.UserID, existingSess.ID, 0)
 		if err != nil {
 			releaseOnError()
 			return nil, err
@@ -227,7 +227,7 @@ func (s *Service) PrepareChat(ctx context.Context, p authx.Principal, req domain
 		RafaelPrompt:    rafPrompt,
 		PromptContext: PromptContext{
 			UserName:          userName,
-			ParishName:        parishName,
+			ParokiName:        parokiName,
 			UserRoles:         p.Roles,
 			CurrentTime:       time.Now().UTC().Format(time.RFC3339),
 			RetrievedMemories: memories,
@@ -250,7 +250,7 @@ func (s *Service) ExecuteChatStream(prep *ChatTurnPrep, writeEvent func(StreamEv
 	isNew := false
 	var sessionID uuid.UUID
 	if prep.SessionID == nil {
-		created, err := s.repo.CreateSession(bgCtx, prep.Principal.ParishID, prep.Principal.UserID, prep.SessionTitle, nil, nil)
+		created, err := s.repo.CreateSession(bgCtx, prep.Principal.ParokiID, prep.Principal.UserID, prep.SessionTitle, nil, nil)
 		if err != nil {
 			_ = writeEvent(StreamEvent{Event: "error", Data: map[string]string{"code": "INTERNAL_ERROR", "message": err.Error()}})
 			return
@@ -264,7 +264,7 @@ func (s *Service) ExecuteChatStream(prep *ChatTurnPrep, writeEvent func(StreamEv
 	}
 
 	if !prep.SkipAppendUser {
-		if _, err := s.repo.AppendMessages(bgCtx, prep.Principal.ParishID, prep.Principal.UserID, sessionID, []domain.AppendMessageInput{
+		if _, err := s.repo.AppendMessages(bgCtx, prep.Principal.ParokiID, prep.Principal.UserID, sessionID, []domain.AppendMessageInput{
 			{Role: "user", Content: prep.Message},
 		}); err != nil {
 			_ = writeEvent(StreamEvent{Event: "error", Data: map[string]string{"code": "INTERNAL_ERROR", "message": err.Error()}})
@@ -494,14 +494,14 @@ loop:
 	if clientDisconnected || errors.As(res.err, &cancelErr) {
 		// Persist any completed assistant(tool_calls) + tool pairs; discard partial incomplete assistant text.
 		if len(res.completedTools) > 0 {
-			_, _ = s.repo.AppendMessages(persistCtx, prep.Principal.ParishID, prep.Principal.UserID, sessionID, res.completedTools)
+			_, _ = s.repo.AppendMessages(persistCtx, prep.Principal.ParokiID, prep.Principal.UserID, sessionID, res.completedTools)
 		}
 		return
 	}
 
 	if res.err != nil {
 		if len(res.completedTools) > 0 {
-			_, _ = s.repo.AppendMessages(persistCtx, prep.Principal.ParishID, prep.Principal.UserID, sessionID, res.completedTools)
+			_, _ = s.repo.AppendMessages(persistCtx, prep.Principal.ParokiID, prep.Principal.UserID, sessionID, res.completedTools)
 		}
 		wrappedErr := driver.WrapProviderError(res.err, prep.GabrielModel.plainKey)
 		wrappedErr = driver.WrapProviderError(wrappedErr, prep.MikaelModel.plainKey)
@@ -522,7 +522,7 @@ loop:
 		Role:      "assistant",
 		Content:   res.finalText,
 	})
-	persisted, err := s.repo.AppendMessages(persistCtx, prep.Principal.ParishID, prep.Principal.UserID, sessionID, toPersist)
+	persisted, err := s.repo.AppendMessages(persistCtx, prep.Principal.ParokiID, prep.Principal.UserID, sessionID, toPersist)
 	if err != nil {
 		_ = writeEvent(StreamEvent{Event: "error", Data: map[string]string{"code": "INTERNAL_ERROR", "message": err.Error()}})
 		return

@@ -98,41 +98,41 @@ func (s *EventFeatureSuite) loginViaOTP(email string) {
 	s.Cookies = s.HttpResponse.Cookies()
 }
 
-func (s *EventFeatureSuite) seedParishAndOrg() (parishID, orgID uuid.UUID) {
+func (s *EventFeatureSuite) seedParokiAndOrg() (parokiID, orgID uuid.UUID) {
 	s.loginViaOTP("super@paroki.org")
 
-	s.Request("/api/ref/dioceses", http.MethodPost, refdomain.CreateDioceseRequest{
-		Code: "kaj",
-		Name: "Keuskupan Agung Jakarta",
+	s.Request("/api/ref/keuskupan", http.MethodPost, refdomain.CreateKeuskupanRequest{
+		Kode: "kaj",
+		Nama: "Keuskupan Agung Jakarta",
 	})
 	s.Created()
-	diocese := testutil.DecodeAs[refdomain.DioceseResponse](s).Data
+	keuskupan := testutil.DecodeAs[refdomain.KeuskupanResponse](s).Data
 
-	s.Request("/api/ref/parishes", http.MethodPost, refdomain.CreateParishRequest{
-		DioceseID: diocese.ID,
-		Code:      "p-kaj-01",
-		Name:      "Paroki Katedral",
+	s.Request("/api/ref/paroki", http.MethodPost, refdomain.CreateParokiRequest{
+		KeuskupanID: keuskupan.ID,
+		Kode:        "p-kaj-01",
+		Nama:        "Paroki Katedral",
 	})
 	s.Created()
-	parishID = testutil.DecodeAs[refdomain.ParishResponse](s).Data.ID
+	parokiID = testutil.DecodeAs[refdomain.ParokiResponse](s).Data.ID
 
-	s.Request(fmt.Sprintf("/api/ref/parishes/%s/members", parishID), http.MethodPost, refdomain.AddParishMemberRequest{
+	s.Request(fmt.Sprintf("/api/ref/paroki/%s/members", parokiID), http.MethodPost, refdomain.AddParokiMemberRequest{
 		Email: "padmin@paroki.org",
-		Name:  "Parish Admin",
+		Name:  "Paroki Admin",
 		Role:  "admin",
 	})
 	s.Created()
 
-	s.Request(fmt.Sprintf("/api/ref/parishes/%s/members", parishID), http.MethodPost, refdomain.AddParishMemberRequest{
+	s.Request(fmt.Sprintf("/api/ref/paroki/%s/members", parokiID), http.MethodPost, refdomain.AddParokiMemberRequest{
 		Email: "outsider@paroki.org",
-		Name:  "Parish User",
+		Name:  "Paroki User",
 		Role:  "member",
 	})
 	s.Created()
 
-	// Parish admin creates org with orgadmin@paroki.org as initial admin, then adds orgmember@paroki.org.
+	// Paroki admin creates org with orgadmin@paroki.org as initial admin, then adds orgmember@paroki.org.
 	s.loginViaOTP("padmin@paroki.org")
-	s.SetHeader("X-Parish-Id", parishID.String())
+	s.SetHeader("X-Paroki-Id", parokiID.String())
 
 	s.Request("/api/orgs", http.MethodPost, orgdomain.CreateOrganizationRequest{
 		Kind:              "section",
@@ -145,7 +145,7 @@ func (s *EventFeatureSuite) seedParishAndOrg() (parishID, orgID uuid.UUID) {
 	orgID = testutil.DecodeAs[orgdomain.OrganizationResponse](s).Data.ID
 
 	s.loginViaOTP("orgadmin@paroki.org")
-	s.SetHeader("X-Parish-Id", parishID.String())
+	s.SetHeader("X-Paroki-Id", parokiID.String())
 	s.Request(fmt.Sprintf("/api/orgs/%s/members", orgID), http.MethodPost, orgdomain.AddOrgMemberRequest{
 		Email: "orgmember@paroki.org",
 		Name:  "OMK Member",
@@ -153,11 +153,11 @@ func (s *EventFeatureSuite) seedParishAndOrg() (parishID, orgID uuid.UUID) {
 	})
 	s.Created()
 
-	return parishID, orgID
+	return parokiID, orgID
 }
 
 func (s *EventFeatureSuite) TestEventCRUD_VisibilityAndRBAC() {
-	parishID, orgID := s.seedParishAndOrg()
+	parokiID, orgID := s.seedParokiAndOrg()
 
 	startAt := time.Now().UTC().Add(48 * time.Hour).Truncate(time.Second)
 	endAt := startAt.Add(2 * time.Hour)
@@ -165,14 +165,14 @@ func (s *EventFeatureSuite) TestEventCRUD_VisibilityAndRBAC() {
 
 	// Missing tenant header returns 400 TENANT_REQUIRED (when active parish is unset).
 	s.loginViaOTP("super@paroki.org")
-	s.SetHeader("X-Parish-Id", "")
+	s.SetHeader("X-Paroki-Id", "")
 	s.Request("/api/events/search", http.MethodPost, domain.SearchEventsRequest{})
 	s.BadRequest()
 	s.Equal("TENANT_REQUIRED", s.GetErrorResponse().Error.Code)
 
 	// Non-member ref:parish-admin CANNOT create events (403 EVENT_FORBIDDEN).
 	s.loginViaOTP("padmin@paroki.org")
-	s.SetHeader("X-Parish-Id", parishID.String())
+	s.SetHeader("X-Paroki-Id", parokiID.String())
 	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
 		OrgID:   orgID,
 		Title:   "Unauthorized Parish Admin Event",
@@ -184,7 +184,7 @@ func (s *EventFeatureSuite) TestEventCRUD_VisibilityAndRBAC() {
 
 	// org:member CANNOT create events (403 EVENT_FORBIDDEN).
 	s.loginViaOTP("orgmember@paroki.org")
-	s.SetHeader("X-Parish-Id", parishID.String())
+	s.SetHeader("X-Paroki-Id", parokiID.String())
 	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
 		OrgID:   orgID,
 		Title:   "Unauthorized Member Event",
@@ -196,7 +196,7 @@ func (s *EventFeatureSuite) TestEventCRUD_VisibilityAndRBAC() {
 
 	// org:admin creates public and private events; invalid time range returns 400 EVENT_INVALID_TIME_RANGE.
 	s.loginViaOTP("orgadmin@paroki.org")
-	s.SetHeader("X-Parish-Id", parishID.String())
+	s.SetHeader("X-Paroki-Id", parokiID.String())
 
 	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
 		OrgID:   orgID,
@@ -238,7 +238,7 @@ func (s *EventFeatureSuite) TestEventCRUD_VisibilityAndRBAC() {
 
 	// Non-member parish user sees ONLY public event in search, and gets 403 on private GET.
 	s.loginViaOTP("outsider@paroki.org")
-	s.SetHeader("X-Parish-Id", parishID.String())
+	s.SetHeader("X-Paroki-Id", parokiID.String())
 	s.Request("/api/events/search", http.MethodPost, domain.SearchEventsRequest{})
 	s.OK()
 	outsiderList := testutil.DecodeAs[[]domain.EventResponse](s).Data
@@ -252,7 +252,7 @@ func (s *EventFeatureSuite) TestEventCRUD_VisibilityAndRBAC() {
 
 	// Non-member ref:parish-admin ALSO sees only public event (no implicit private access).
 	s.loginViaOTP("padmin@paroki.org")
-	s.SetHeader("X-Parish-Id", parishID.String())
+	s.SetHeader("X-Paroki-Id", parokiID.String())
 	s.Request("/api/events/search", http.MethodPost, domain.SearchEventsRequest{})
 	s.OK()
 	padminList := testutil.DecodeAs[[]domain.EventResponse](s).Data
@@ -261,7 +261,7 @@ func (s *EventFeatureSuite) TestEventCRUD_VisibilityAndRBAC() {
 
 	// org:member sees BOTH public and private events with myOrgRole="member".
 	s.loginViaOTP("orgmember@paroki.org")
-	s.SetHeader("X-Parish-Id", parishID.String())
+	s.SetHeader("X-Paroki-Id", parokiID.String())
 	s.Request("/api/events/search", http.MethodPost, domain.SearchEventsRequest{})
 	s.OK()
 	memberList := testutil.DecodeAs[[]domain.EventResponse](s).Data
@@ -275,7 +275,7 @@ func (s *EventFeatureSuite) TestEventCRUD_VisibilityAndRBAC() {
 
 	// org:admin updates & cancels public event, then soft-deletes private event.
 	s.loginViaOTP("orgadmin@paroki.org")
-	s.SetHeader("X-Parish-Id", parishID.String())
+	s.SetHeader("X-Paroki-Id", parokiID.String())
 	cancelled := "cancelled"
 	clearDL := true
 	newTitle := "Misa OMK (Cancelled)"
@@ -300,11 +300,11 @@ func (s *EventFeatureSuite) TestEventCRUD_VisibilityAndRBAC() {
 }
 
 func (s *EventFeatureSuite) TestEventRSVP_UpsertDeleteCutoffSummaryAndRoster() {
-	parishID, orgID := s.seedParishAndOrg()
+	parokiID, orgID := s.seedParokiAndOrg()
 
 	// Add a 3rd active member so totalActiveMembers == 3.
 	s.loginViaOTP("orgadmin@paroki.org")
-	s.SetHeader("X-Parish-Id", parishID.String())
+	s.SetHeader("X-Paroki-Id", parokiID.String())
 	s.Request(fmt.Sprintf("/api/orgs/%s/members", orgID), http.MethodPost, orgdomain.AddOrgMemberRequest{
 		Email:    "member2@paroki.org",
 		Name:     "OMK Member 2",
@@ -328,7 +328,7 @@ func (s *EventFeatureSuite) TestEventRSVP_UpsertDeleteCutoffSummaryAndRoster() {
 	// Non-member (outsider & ref:parish-admin) cannot RSVP, delete RSVP, or view summary/roster -> 403 EVENT_FORBIDDEN.
 	for _, nonMember := range []string{"outsider@paroki.org", "padmin@paroki.org"} {
 		s.loginViaOTP(nonMember)
-		s.SetHeader("X-Parish-Id", parishID.String())
+		s.SetHeader("X-Paroki-Id", parokiID.String())
 		s.Request(fmt.Sprintf("/api/events/%s/rsvp", ev.ID), http.MethodPost, domain.UpsertEventRSVPRequest{Status: "going"})
 		s.Forbidden()
 		s.Equal("EVENT_FORBIDDEN", s.GetErrorResponse().Error.Code)
@@ -345,7 +345,7 @@ func (s *EventFeatureSuite) TestEventRSVP_UpsertDeleteCutoffSummaryAndRoster() {
 
 	// org:member upserts RSVP with note, then updates status and clears note.
 	s.loginViaOTP("orgmember@paroki.org")
-	s.SetHeader("X-Parish-Id", parishID.String())
+	s.SetHeader("X-Paroki-Id", parokiID.String())
 	s.Request(fmt.Sprintf("/api/events/%s/rsvp", ev.ID), http.MethodPost, domain.UpsertEventRSVPRequest{
 		Status: "going",
 		Note:   new("  Hadir tepat waktu  "),
@@ -371,7 +371,7 @@ func (s *EventFeatureSuite) TestEventRSVP_UpsertDeleteCutoffSummaryAndRoster() {
 
 	// member2 RSVPs "going", orgadmin RSVPs "not_going".
 	s.loginViaOTP("member2@paroki.org")
-	s.SetHeader("X-Parish-Id", parishID.String())
+	s.SetHeader("X-Paroki-Id", parokiID.String())
 	s.Request(fmt.Sprintf("/api/events/%s/rsvp", ev.ID), http.MethodPost, domain.UpsertEventRSVPRequest{
 		Status: "going",
 		Note:   new("Bawa gitar"),
@@ -447,7 +447,7 @@ func (s *EventFeatureSuite) TestEventRSVP_UpsertDeleteCutoffSummaryAndRoster() {
 
 	// Cutoff tests: within grace period (startAt 10m ago, grace 30m) -> allowed!
 	s.loginViaOTP("orgadmin@paroki.org")
-	s.SetHeader("X-Parish-Id", parishID.String())
+	s.SetHeader("X-Paroki-Id", parokiID.String())
 	graceStart := time.Now().UTC().Add(-10 * time.Minute)
 	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
 		OrgID:   orgID,

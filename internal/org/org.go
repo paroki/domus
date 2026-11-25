@@ -52,27 +52,27 @@ type sessionSwitcherAdapter struct {
 	users *user.Feature
 }
 
-func (a sessionSwitcherAdapter) SwitchSessionParish(ctx context.Context, userID, sessionID, parishID uuid.UUID) error {
-	return a.users.SwitchSessionParish(ctx, userID, sessionID, parishID)
+func (a sessionSwitcherAdapter) SwitchSessionParoki(ctx context.Context, userID, sessionID, parokiID uuid.UUID) error {
+	return a.users.SwitchSessionParoki(ctx, userID, sessionID, parokiID)
 }
 
-func (a refValidatorAdapter) ValidateZoneInParish(ctx context.Context, parishID, zoneID uuid.UUID) error {
-	_, err := a.refs.ValidateZoneInParish(ctx, parishID, zoneID)
+func (a refValidatorAdapter) ValidateWilayahInParoki(ctx context.Context, parokiID, wilayahID uuid.UUID) error {
+	_, err := a.refs.ValidateWilayahInParoki(ctx, parokiID, wilayahID)
 	return err
 }
 
-func (a refValidatorAdapter) ValidateWardInParish(ctx context.Context, parishID, wardID uuid.UUID) error {
-	_, err := a.refs.ValidateWardInParish(ctx, parishID, wardID)
+func (a refValidatorAdapter) ValidateLingkunganInParoki(ctx context.Context, parokiID, lingkunganID uuid.UUID) error {
+	_, err := a.refs.ValidateLingkunganInParoki(ctx, parokiID, lingkunganID)
 	return err
 }
 
-func (a refValidatorAdapter) ValidatePeriodInParish(ctx context.Context, parishID, periodID uuid.UUID) error {
-	_, err := a.refs.ValidatePeriodInParish(ctx, parishID, periodID)
+func (a refValidatorAdapter) ValidatePeriodInParoki(ctx context.Context, parokiID, periodID uuid.UUID) error {
+	_, err := a.refs.ValidatePeriodInParoki(ctx, parokiID, periodID)
 	return err
 }
 
-func (a refValidatorAdapter) EnsureParishMember(ctx context.Context, parishID, userID uuid.UUID) error {
-	_, err := a.refs.EnsureParishMember(ctx, parishID, userID)
+func (a refValidatorAdapter) EnsureParokiMember(ctx context.Context, parokiID, userID uuid.UUID) error {
+	_, err := a.refs.EnsureParokiMember(ctx, parokiID, userID)
 	return err
 }
 
@@ -144,8 +144,8 @@ func (f *Feature) RegisterPermissions(ctx context.Context, e *authz.Enforcer) er
 		act  authz.Action
 	}{
 		{user.RoleUser, PermOrgs, authz.ActionRead},
-		{ref.RoleParishAdmin, PermOrgs, authz.ActionRead},
-		{ref.RoleParishAdmin, PermOrgs, authz.ActionWrite},
+		{ref.RoleParokiAdmin, PermOrgs, authz.ActionRead},
+		{ref.RoleParokiAdmin, PermOrgs, authz.ActionWrite},
 		{RoleAdmin, PermOrgs, authz.ActionRead},
 		{RoleAdmin, PermOrgs, authz.ActionWrite},
 		{RoleAdmin, PermMembers, authz.ActionRead},
@@ -163,9 +163,9 @@ func (f *Feature) RegisterPermissions(ctx context.Context, e *authz.Enforcer) er
 	return nil
 }
 
-// GetOrganization returns a non-deleted Organization in parishID.
-func (f *Feature) GetOrganization(ctx context.Context, parishID, orgID uuid.UUID) (*Organization, error) {
-	return f.service.GetOrganization(ctx, parishID, orgID)
+// GetOrganization returns a non-deleted Organization in parokiID.
+func (f *Feature) GetOrganization(ctx context.Context, parokiID, orgID uuid.UUID) (*Organization, error) {
+	return f.service.GetOrganization(ctx, parokiID, orgID)
 }
 
 // IsMember reports whether userID is an active member of orgID.
@@ -178,9 +178,9 @@ func (f *Feature) IsAdmin(ctx context.Context, orgID, userID uuid.UUID) (bool, e
 	return f.service.IsAdmin(ctx, orgID, userID)
 }
 
-// ListUserOrgs returns active, non-deleted Organizations in parishID where userID is an active member.
-func (f *Feature) ListUserOrgs(ctx context.Context, parishID, userID uuid.UUID) ([]Organization, error) {
-	return f.service.ListUserOrgs(ctx, parishID, userID)
+// ListUserOrgs returns active, non-deleted Organizations in parokiID where userID is an active member.
+func (f *Feature) ListUserOrgs(ctx context.Context, parokiID, userID uuid.UUID) ([]Organization, error) {
+	return f.service.ListUserOrgs(ctx, parokiID, userID)
 }
 
 // ValidateInviteCode verifies that code refers to an active, usable organization invite.
@@ -188,7 +188,7 @@ func (f *Feature) ValidateInviteCode(ctx context.Context, code string) error {
 	return f.service.ValidateInviteCode(ctx, code)
 }
 
-// RedeemInviteForUser redeems an organization invite code for userID and updates sessionID's active parish.
+// RedeemInviteForUser redeems an organization invite code for userID and updates sessionID's active paroki.
 func (f *Feature) RedeemInviteForUser(ctx context.Context, code string, userID, sessionID uuid.UUID) (uuid.UUID, error) {
 	return f.service.RedeemInviteForUser(ctx, code, userID, sessionID)
 }

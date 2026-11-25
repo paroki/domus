@@ -94,7 +94,7 @@ func (s *OrgMCPSuite) loginCookies(email string) []*http.Cookie {
 	return resp2.Cookies()
 }
 
-func (s *OrgMCPSuite) apiJSON(method, path string, body any, cookies []*http.Cookie, parishID string, out any) int {
+func (s *OrgMCPSuite) apiJSON(method, path string, body any, cookies []*http.Cookie, parokiID string, out any) int {
 	s.T().Helper()
 	var reader io.Reader
 	if body != nil {
@@ -109,8 +109,8 @@ func (s *OrgMCPSuite) apiJSON(method, path string, body any, cookies []*http.Coo
 	for _, ck := range cookies {
 		req.AddCookie(ck)
 	}
-	if parishID != "" {
-		req.Header.Set("X-Parish-Id", parishID)
+	if parokiID != "" {
+		req.Header.Set("X-Paroki-Id", parokiID)
 	}
 	resp, err := s.fiberApp.Test(req)
 	s.Require().NoError(err)
@@ -122,7 +122,7 @@ func (s *OrgMCPSuite) apiJSON(method, path string, body any, cookies []*http.Coo
 	return resp.StatusCode
 }
 
-func (s *OrgMCPSuite) mcpPost(sessionID string, cookies []*http.Cookie, parishID string, payload any) (*http.Response, string) {
+func (s *OrgMCPSuite) mcpPost(sessionID string, cookies []*http.Cookie, parokiID string, payload any) (*http.Response, string) {
 	s.T().Helper()
 	raw, err := json.Marshal(payload)
 	s.Require().NoError(err)
@@ -135,8 +135,8 @@ func (s *OrgMCPSuite) mcpPost(sessionID string, cookies []*http.Cookie, parishID
 	for _, ck := range cookies {
 		req.AddCookie(ck)
 	}
-	if parishID != "" {
-		req.Header.Set("X-Parish-Id", parishID)
+	if parokiID != "" {
+		req.Header.Set("X-Paroki-Id", parokiID)
 	}
 	resp, err := s.fiberApp.Test(req)
 	s.Require().NoError(err)
@@ -145,8 +145,8 @@ func (s *OrgMCPSuite) mcpPost(sessionID string, cookies []*http.Cookie, parishID
 	return resp, string(bodyBytes)
 }
 
-func (s *OrgMCPSuite) initMCPSession(cookies []*http.Cookie, parishID string) string {
-	resp, _ := s.mcpPost("", cookies, parishID, map[string]any{
+func (s *OrgMCPSuite) initMCPSession(cookies []*http.Cookie, parokiID string) string {
+	resp, _ := s.mcpPost("", cookies, parokiID, map[string]any{
 		"jsonrpc": "2.0",
 		"id":      1,
 		"method":  "initialize",
@@ -160,7 +160,7 @@ func (s *OrgMCPSuite) initMCPSession(cookies []*http.Cookie, parishID string) st
 	sessionID := resp.Header.Get("Mcp-Session-Id")
 	s.Require().NotEmpty(sessionID)
 
-	nResp, _ := s.mcpPost(sessionID, cookies, parishID, map[string]any{
+	nResp, _ := s.mcpPost(sessionID, cookies, parokiID, map[string]any{
 		"jsonrpc": "2.0",
 		"method":  "notifications/initialized",
 	})
@@ -171,23 +171,23 @@ func (s *OrgMCPSuite) initMCPSession(cookies []*http.Cookie, parishID string) st
 func (s *OrgMCPSuite) TestOrgMCP_DiscoveryToolsAndRBAC() {
 	superCookies := s.loginCookies("super@paroki.org")
 
-	var dioEnv struct{ Data refdomain.DioceseResponse }
-	s.Equal(http.StatusCreated, s.apiJSON(http.MethodPost, "/api/ref/dioceses", refdomain.CreateDioceseRequest{
-		Code: "kas",
-		Name: "Keuskupan Agung Semarang",
+	var dioEnv struct{ Data refdomain.KeuskupanResponse }
+	s.Equal(http.StatusCreated, s.apiJSON(http.MethodPost, "/api/ref/keuskupan", refdomain.CreateKeuskupanRequest{
+		Kode: "kas",
+		Nama: "Keuskupan Agung Semarang",
 	}, superCookies, "", &dioEnv))
 
-	var parEnv struct{ Data refdomain.ParishResponse }
-	s.Equal(http.StatusCreated, s.apiJSON(http.MethodPost, "/api/ref/parishes", refdomain.CreateParishRequest{
-		DioceseID: dioEnv.Data.ID,
-		Code:      "p-kas-01",
-		Name:      "Paroki Kotabaru",
+	var parEnv struct{ Data refdomain.ParokiResponse }
+	s.Equal(http.StatusCreated, s.apiJSON(http.MethodPost, "/api/ref/paroki", refdomain.CreateParokiRequest{
+		KeuskupanID: dioEnv.Data.ID,
+		Kode:        "p-kas-01",
+		Nama:        "Paroki Kotabaru",
 	}, superCookies, "", &parEnv))
-	parishID := parEnv.Data.ID.String()
+	parokiID := parEnv.Data.ID.String()
 
-	s.Equal(http.StatusCreated, s.apiJSON(http.MethodPost, "/api/ref/parishes/"+parishID+"/members", refdomain.AddParishMemberRequest{
+	s.Equal(http.StatusCreated, s.apiJSON(http.MethodPost, "/api/ref/paroki/"+parokiID+"/members", refdomain.AddParokiMemberRequest{
 		Email: "padmin@paroki.org",
-		Name:  "Parish Admin",
+		Name:  "Paroki Admin",
 		Role:  "admin",
 	}, superCookies, "", nil))
 
@@ -199,14 +199,14 @@ func (s *OrgMCPSuite) TestOrgMCP_DiscoveryToolsAndRBAC() {
 		Name:              "Seksi Katekese",
 		InitialAdminEmail: "orgadmin@paroki.org",
 		InitialAdminName:  "Org Admin",
-	}, pAdminCookies, parishID, &orgEnv))
+	}, pAdminCookies, parokiID, &orgEnv))
 	orgID := orgEnv.Data.ID.String()
 
 	orgAdminCookies := s.loginCookies("orgadmin@paroki.org")
-	sessionID := s.initMCPSession(orgAdminCookies, parishID)
+	sessionID := s.initMCPSession(orgAdminCookies, parokiID)
 
 	// 1. tools/list discovers all 7 org_* tools.
-	listResp, listBody := s.mcpPost(sessionID, orgAdminCookies, parishID, map[string]any{
+	listResp, listBody := s.mcpPost(sessionID, orgAdminCookies, parokiID, map[string]any{
 		"jsonrpc": "2.0",
 		"id":      2,
 		"method":  "tools/list",
@@ -225,7 +225,7 @@ func (s *OrgMCPSuite) TestOrgMCP_DiscoveryToolsAndRBAC() {
 	}
 
 	// 2. org_list & org_get.
-	_, callBody := s.mcpPost(sessionID, orgAdminCookies, parishID, map[string]any{
+	_, callBody := s.mcpPost(sessionID, orgAdminCookies, parokiID, map[string]any{
 		"jsonrpc": "2.0",
 		"id":      3,
 		"method":  "tools/call",
@@ -236,7 +236,7 @@ func (s *OrgMCPSuite) TestOrgMCP_DiscoveryToolsAndRBAC() {
 	})
 	s.Contains(callBody, "sek-katekese")
 
-	_, getBody := s.mcpPost(sessionID, orgAdminCookies, parishID, map[string]any{
+	_, getBody := s.mcpPost(sessionID, orgAdminCookies, parokiID, map[string]any{
 		"jsonrpc": "2.0",
 		"id":      4,
 		"method":  "tools/call",
@@ -248,7 +248,7 @@ func (s *OrgMCPSuite) TestOrgMCP_DiscoveryToolsAndRBAC() {
 	s.Contains(getBody, "Seksi Katekese")
 
 	// 3. org_update_member (onboard new member) & org_list_members.
-	_, addMemBody := s.mcpPost(sessionID, orgAdminCookies, parishID, map[string]any{
+	_, addMemBody := s.mcpPost(sessionID, orgAdminCookies, parokiID, map[string]any{
 		"jsonrpc": "2.0",
 		"id":      5,
 		"method":  "tools/call",
@@ -265,7 +265,7 @@ func (s *OrgMCPSuite) TestOrgMCP_DiscoveryToolsAndRBAC() {
 	})
 	s.Contains(addMemBody, "katekis@paroki.org")
 
-	_, listMemBody := s.mcpPost(sessionID, orgAdminCookies, parishID, map[string]any{
+	_, listMemBody := s.mcpPost(sessionID, orgAdminCookies, parokiID, map[string]any{
 		"jsonrpc": "2.0",
 		"id":      6,
 		"method":  "tools/call",
@@ -277,7 +277,7 @@ func (s *OrgMCPSuite) TestOrgMCP_DiscoveryToolsAndRBAC() {
 	s.Contains(listMemBody, "katekis@paroki.org")
 
 	// 4. org_create_invite.
-	_, invBody := s.mcpPost(sessionID, orgAdminCookies, parishID, map[string]any{
+	_, invBody := s.mcpPost(sessionID, orgAdminCookies, parokiID, map[string]any{
 		"jsonrpc": "2.0",
 		"id":      7,
 		"method":  "tools/call",
@@ -313,8 +313,8 @@ func (s *OrgMCPSuite) TestOrgMCP_DiscoveryToolsAndRBAC() {
 	s.Contains(redeemBody, orgID)
 
 	// 6. RBAC rejection: non-admin member cannot revoke invite.
-	guestParishSessionID := s.initMCPSession(guestCookies, parishID)
-	_, rbacBody := s.mcpPost(guestParishSessionID, guestCookies, parishID, map[string]any{
+	guestParishSessionID := s.initMCPSession(guestCookies, parokiID)
+	_, rbacBody := s.mcpPost(guestParishSessionID, guestCookies, parokiID, map[string]any{
 		"jsonrpc": "2.0",
 		"id":      9,
 		"method":  "tools/call",
@@ -327,7 +327,7 @@ func (s *OrgMCPSuite) TestOrgMCP_DiscoveryToolsAndRBAC() {
 	s.Contains(rbacBody, domain.ErrForbidden.Error())
 
 	// 7. org:admin revokes invite via org_revoke_invite.
-	_, revBody := s.mcpPost(sessionID, orgAdminCookies, parishID, map[string]any{
+	_, revBody := s.mcpPost(sessionID, orgAdminCookies, parokiID, map[string]any{
 		"jsonrpc": "2.0",
 		"id":      10,
 		"method":  "tools/call",
@@ -339,26 +339,26 @@ func (s *OrgMCPSuite) TestOrgMCP_DiscoveryToolsAndRBAC() {
 	s.Contains(revBody, `"revoked":true`)
 
 	// 8. org_create: non-parish-admin rejected, ref:parish-admin succeeds.
-	_, createDeniedBody := s.mcpPost(sessionID, orgAdminCookies, parishID, map[string]any{
+	_, createDeniedBody := s.mcpPost(sessionID, orgAdminCookies, parokiID, map[string]any{
 		"jsonrpc": "2.0",
 		"id":      11,
 		"method":  "tools/call",
 		"params": map[string]any{
 			"name":      "org_create",
-			"arguments": map[string]any{"kind": "ward", "code": "ling-st-yusuf", "name": "Lingkungan St. Yusuf"},
+			"arguments": map[string]any{"kind": "lingkungan", "code": "ling-st-yusuf", "name": "Lingkungan St. Yusuf"},
 		},
 	})
 	s.Contains(createDeniedBody, `"isError":true`)
 	s.Contains(createDeniedBody, domain.ErrForbidden.Error())
 
-	pAdminSessionID := s.initMCPSession(pAdminCookies, parishID)
-	_, createOKBody := s.mcpPost(pAdminSessionID, pAdminCookies, parishID, map[string]any{
+	pAdminSessionID := s.initMCPSession(pAdminCookies, parokiID)
+	_, createOKBody := s.mcpPost(pAdminSessionID, pAdminCookies, parokiID, map[string]any{
 		"jsonrpc": "2.0",
 		"id":      12,
 		"method":  "tools/call",
 		"params": map[string]any{
 			"name":      "org_create",
-			"arguments": map[string]any{"kind": "ward", "code": "ling-st-yusuf", "name": "Lingkungan St. Yusuf"},
+			"arguments": map[string]any{"kind": "lingkungan", "code": "ling-st-yusuf", "name": "Lingkungan St. Yusuf"},
 		},
 	})
 	s.NotContains(createOKBody, `"isError":true`)

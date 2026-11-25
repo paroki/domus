@@ -8,30 +8,30 @@ import (
 
 // OrganizationResponse is the public API representation of an Organization.
 type OrganizationResponse struct {
-	ID          uuid.UUID  `json:"id"`
-	ParishID    uuid.UUID  `json:"parishId"`
-	ParentID    *uuid.UUID `json:"parentId,omitempty"`
-	ZoneID      *uuid.UUID `json:"zoneId,omitempty"`
-	WardID      *uuid.UUID `json:"wardId,omitempty"`
-	Kind        string     `json:"kind"`
-	Code        string     `json:"code"`
-	Name        string     `json:"name"`
-	Description *string    `json:"description,omitempty"`
-	Active      bool       `json:"active"`
-	MyRole      *string    `json:"myRole,omitempty"`
-	CreatedAt   time.Time  `json:"createdAt"`
-	UpdatedAt   time.Time  `json:"updatedAt"`
+	ID           uuid.UUID  `json:"id"`
+	ParokiID     uuid.UUID  `json:"parokiId"`
+	ParentID     *uuid.UUID `json:"parentId,omitempty"`
+	WilayahID    *uuid.UUID `json:"wilayahId,omitempty"`
+	LingkunganID *uuid.UUID `json:"lingkunganId,omitempty"`
+	Kind         string     `json:"kind"`
+	Code         string     `json:"code"`
+	Name         string     `json:"name"`
+	Description  *string    `json:"description,omitempty"`
+	Active       bool       `json:"active"`
+	MyRole       *string    `json:"myRole,omitempty"`
+	CreatedAt    time.Time  `json:"createdAt"`
+	UpdatedAt    time.Time  `json:"updatedAt"`
 }
 
 // OrganizationSearchFilter filters organization search results.
 type OrganizationSearchFilter struct {
-	Kind       string     `json:"kind,omitempty" validate:"omitempty,oneof=dpp bgkp section categorical zone ward community"`
+	Kind       string     `json:"kind,omitempty" validate:"omitempty,oneof=dpp bgkp section categorical wilayah lingkungan community"`
 	Active     *bool      `json:"active,omitempty"`
 	ParentID   *uuid.UUID `json:"parentId,omitempty"`
 	MyOrgsOnly *bool      `json:"myOrgsOnly,omitempty"`
 }
 
-// SearchOrganizationsRequest searches organizations within the active parish.
+// SearchOrganizationsRequest searches organizations within the active paroki.
 type SearchOrganizationsRequest struct {
 	Q      string                    `json:"q,omitempty"`
 	Filter *OrganizationSearchFilter `json:"filter,omitempty"`
@@ -39,12 +39,12 @@ type SearchOrganizationsRequest struct {
 	Limit  int                       `json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
 }
 
-// CreateOrganizationRequest creates a new Organization in the active parish.
+// CreateOrganizationRequest creates a new Organization in the active paroki.
 type CreateOrganizationRequest struct {
 	ParentID           *uuid.UUID `json:"parentId,omitempty"`
-	ZoneID             *uuid.UUID `json:"zoneId,omitempty"`
-	WardID             *uuid.UUID `json:"wardId,omitempty"`
-	Kind               string     `json:"kind,omitempty" validate:"omitempty,oneof=dpp bgkp section categorical zone ward community"`
+	WilayahID          *uuid.UUID `json:"wilayahId,omitempty"`
+	LingkunganID       *uuid.UUID `json:"lingkunganId,omitempty"`
+	Kind               string     `json:"kind,omitempty" validate:"omitempty,oneof=dpp bgkp section categorical wilayah lingkungan community"`
 	Code               string     `json:"code" validate:"required"`
 	Name               string     `json:"name" validate:"required,min=1"`
 	Description        *string    `json:"description,omitempty"`
@@ -56,20 +56,20 @@ type CreateOrganizationRequest struct {
 
 // UpdateOrganizationRequest updates an existing Organization.
 type UpdateOrganizationRequest struct {
-	ParentID    *uuid.UUID `json:"parentId,omitempty"`
-	ZoneID      *uuid.UUID `json:"zoneId,omitempty"`
-	WardID      *uuid.UUID `json:"wardId,omitempty"`
-	Kind        *string    `json:"kind,omitempty" validate:"omitempty,oneof=dpp bgkp section categorical zone ward community"`
-	Code        *string    `json:"code,omitempty"`
-	Name        *string    `json:"name,omitempty" validate:"omitempty,min=1"`
-	Description *string    `json:"description,omitempty"`
-	Active      *bool      `json:"active,omitempty"`
+	ParentID     *uuid.UUID `json:"parentId,omitempty"`
+	WilayahID    *uuid.UUID `json:"wilayahId,omitempty"`
+	LingkunganID *uuid.UUID `json:"lingkunganId,omitempty"`
+	Kind         *string    `json:"kind,omitempty" validate:"omitempty,oneof=dpp bgkp section categorical wilayah lingkungan community"`
+	Code         *string    `json:"code,omitempty"`
+	Name         *string    `json:"name,omitempty" validate:"omitempty,min=1"`
+	Description  *string    `json:"description,omitempty"`
+	Active       *bool      `json:"active,omitempty"`
 }
 
 // OrgMemberResponse is the public API representation of an OrgMember joined with user info.
 type OrgMemberResponse struct {
 	ID        uuid.UUID  `json:"id"`
-	ParishID  uuid.UUID  `json:"parishId"`
+	ParokiID  uuid.UUID  `json:"parokiId"`
 	OrgID     uuid.UUID  `json:"orgId"`
 	UserID    uuid.UUID  `json:"userId"`
 	Email     string     `json:"email"`
@@ -127,7 +127,7 @@ type UpdateOrgMemberRequest struct {
 // OrgInviteResponse is the public API representation of an OrgInvite.
 type OrgInviteResponse struct {
 	ID              uuid.UUID  `json:"id"`
-	ParishID        uuid.UUID  `json:"parishId"`
+	ParokiID        uuid.UUID  `json:"parokiId"`
 	OrgID           uuid.UUID  `json:"orgId"`
 	Code            string     `json:"code"`
 	Role            string     `json:"role"`
@@ -148,9 +148,9 @@ type OrgInvitePreviewResponse struct {
 	OrgCode         string    `json:"orgCode"`
 	OrgName         string    `json:"orgName"`
 	OrgKind         string    `json:"orgKind"`
-	ParishID        uuid.UUID `json:"parishId"`
-	ParishCode      string    `json:"parishCode"`
-	ParishName      string    `json:"parishName"`
+	ParokiID        uuid.UUID `json:"parokiId"`
+	ParokiCode      string    `json:"parokiCode"`
+	ParokiName      string    `json:"parokiName"`
 	Role            string    `json:"role"`
 	DefaultPosition *string   `json:"defaultPosition,omitempty"`
 	ExpiresAt       time.Time `json:"expiresAt"`
@@ -182,5 +182,5 @@ type SearchOrgInvitesRequest struct {
 type RedeemOrgInviteResponse struct {
 	Organization OrganizationResponse `json:"organization"`
 	Membership   OrgMemberResponse    `json:"membership"`
-	ParishID     uuid.UUID            `json:"parishId"`
+	ParokiID     uuid.UUID            `json:"parokiId"`
 }

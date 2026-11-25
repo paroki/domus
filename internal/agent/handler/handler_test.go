@@ -237,11 +237,11 @@ func (s *AgentHandlerSuite) TestProvidersCRUD_RBAC_AndSyncModels() {
 
 func (s *AgentHandlerSuite) TestSessionsAndMemoriesHTTP() {
 	ctx := context.Background()
-	diocese, err := s.client.Diocese.Create().SetCode("kaj").SetName("KAJ").Save(ctx)
+	keuskupan, err := s.client.Keuskupan.Create().SetKode("kaj").SetNama("KAJ").Save(ctx)
 	s.Require().NoError(err)
-	parish1, err := s.client.Parish.Create().SetDioceseID(diocese.ID).SetCode("p1").SetName("Paroki 1").Save(ctx)
+	paroki1, err := s.client.Paroki.Create().SetKeuskupanID(keuskupan.ID).SetKode("p1").SetNama("Paroki 1").Save(ctx)
 	s.Require().NoError(err)
-	parish2, err := s.client.Parish.Create().SetDioceseID(diocese.ID).SetCode("p2").SetName("Paroki 2").Save(ctx)
+	paroki2, err := s.client.Paroki.Create().SetKeuskupanID(keuskupan.ID).SetKode("p2").SetNama("Paroki 2").Save(ctx)
 	s.Require().NoError(err)
 
 	superCookie := s.login("super@paroki.org")
@@ -304,25 +304,25 @@ func (s *AgentHandlerSuite) TestSessionsAndMemoriesHTTP() {
 	otherUser, err := s.userFeature.EnsureUser(ctx, "other@paroki.org", "Other", "", "email", "other@paroki.org")
 	s.Require().NoError(err)
 
-	_, err = s.client.ParishMember.Create().SetParishID(parish1.ID).SetUserID(memberUser.ID).Save(ctx)
+	_, err = s.client.ParokiMember.Create().SetParokiID(paroki1.ID).SetUserID(memberUser.ID).Save(ctx)
 	s.Require().NoError(err)
-	_, err = s.client.ParishMember.Create().SetParishID(parish2.ID).SetUserID(memberUser.ID).Save(ctx)
+	_, err = s.client.ParokiMember.Create().SetParokiID(paroki2.ID).SetUserID(memberUser.ID).Save(ctx)
 	s.Require().NoError(err)
-	_, err = s.client.ParishMember.Create().SetParishID(parish1.ID).SetUserID(otherUser.ID).Save(ctx)
+	_, err = s.client.ParokiMember.Create().SetParokiID(paroki1.ID).SetUserID(otherUser.ID).Save(ctx)
 	s.Require().NoError(err)
 
-	// Without X-Parish-Id -> 400 TENANT_REQUIRED
+	// Without X-Paroki-Id -> 400 TENANT_REQUIRED
 	s.ClearCookies()
 	s.SetCookie(memberCookie)
 	s.Request("/api/agent/sessions/search", http.MethodPost, domain.SearchSessionsRequest{})
 	s.BadRequest()
 	s.Equal("TENANT_REQUIRED", s.GetErrorResponse().Error.Code)
 
-	// Seed session directly for member in parish1
+	// Seed session directly for member in paroki1
 	r := repo.New(s.client, s.sqlDB)
-	sess, err := r.CreateSession(ctx, parish1.ID, memberUser.ID, "Sesi Awal", nil, nil)
+	sess, err := r.CreateSession(ctx, paroki1.ID, memberUser.ID, "Sesi Awal", nil, nil)
 	s.Require().NoError(err)
-	_, err = r.AppendMessages(ctx, parish1.ID, memberUser.ID, sess.ID, []domain.AppendMessageInput{
+	_, err = r.AppendMessages(ctx, paroki1.ID, memberUser.ID, sess.ID, []domain.AppendMessageInput{
 		{Role: "user", Content: "Halo"},
 	})
 	s.Require().NoError(err)
@@ -330,19 +330,19 @@ func (s *AgentHandlerSuite) TestSessionsAndMemoriesHTTP() {
 	// Cross-user isolation -> 404
 	s.ClearCookies()
 	s.SetCookie(otherCookie)
-	s.SetHeader("X-Parish-Id", parish1.ID.String())
+	s.SetHeader("X-Paroki-Id", paroki1.ID.String())
 	s.Request("/api/agent/sessions/"+sess.ID.String(), http.MethodGet, nil)
 	s.NotFound()
 
 	// Cross-parish isolation -> 404
 	s.ClearCookies()
 	s.SetCookie(memberCookie)
-	s.SetHeader("X-Parish-Id", parish2.ID.String())
+	s.SetHeader("X-Paroki-Id", paroki2.ID.String())
 	s.Request("/api/agent/sessions/"+sess.ID.String(), http.MethodGet, nil)
 	s.NotFound()
 
-	// Owner in parish1 -> 200
-	s.SetHeader("X-Parish-Id", parish1.ID.String())
+	// Owner in paroki1 -> 200
+	s.SetHeader("X-Paroki-Id", paroki1.ID.String())
 	s.Request("/api/agent/sessions/search", http.MethodPost, domain.SearchSessionsRequest{Q: "awal"})
 	s.OK()
 	sessList := testutil.DecodeAs[[]domain.SessionResponse](&s.ApiTestSuite).Data

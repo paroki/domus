@@ -34,15 +34,15 @@ func TestLoadMCPTools_RoutingAndTenantIsolation(t *testing.T) {
 	}
 	userFeature := user.New(db, enforcer, userCfg, slog.New(slog.DiscardHandler))
 	refFeature := ref.New(db, enforcer, userFeature)
-	userFeature.SetParishMemberDirectory(refFeature)
+	userFeature.SetParokiMemberDirectory(refFeature)
 	require.NoError(t, authz.RegisterFeatures(ctx, enforcer, userFeature, refFeature))
 	require.NoError(t, userFeature.Bootstrap(ctx))
 
 	u, err := userFeature.EnsureUser(ctx, "umat@paroki.org", "Umat", "", "email", "umat@paroki.org")
 	require.NoError(t, err)
-	diocese, err := db.Diocese.Create().SetCode("kaj").SetName("KAJ").Save(ctx)
+	keuskupan, err := db.Keuskupan.Create().SetKode("kaj").SetNama("KAJ").Save(ctx)
 	require.NoError(t, err)
-	parish, err := db.Parish.Create().SetDioceseID(diocese.ID).SetCode("p1").SetName("Paroki Satu").Save(ctx)
+	paroki, err := db.Paroki.Create().SetKeuskupanID(keuskupan.ID).SetKode("p1").SetNama("Paroki Satu").Save(ctx)
 	require.NoError(t, err)
 
 	srv := mcpx.NewServer("domus", userFeature, refFeature)
@@ -51,7 +51,7 @@ func TestLoadMCPTools_RoutingAndTenantIsolation(t *testing.T) {
 		return nil, map[string]string{"ok": "1"}, nil
 	})
 
-	turnCtx := authx.WithPrincipal(ctx, authx.Principal{UserID: u.ID, ParishID: parish.ID})
+	turnCtx := authx.WithPrincipal(ctx, authx.Principal{UserID: u.ID, ParokiID: paroki.ID})
 	sess, err := mcpx.ConnectInMemory(turnCtx, srv)
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = sess.Close() })
@@ -66,23 +66,23 @@ func TestLoadMCPTools_RoutingAndTenantIsolation(t *testing.T) {
 		require.NoError(t, err)
 		gabrielNames = append(gabrielNames, info.Name)
 	}
-	var refGetParish tool.InvokableTool
+	var refGetParoki tool.InvokableTool
 	for _, tl := range rafael {
 		info, err := tl.Info(turnCtx)
 		require.NoError(t, err)
 		rafaelNames = append(rafaelNames, info.Name)
-		if info.Name == "ref_get_parish" {
-			refGetParish = tl.(tool.InvokableTool)
+		if info.Name == "ref_get_paroki" {
+			refGetParoki = tl.(tool.InvokableTool)
 		}
 	}
 
 	require.Equal(t, []string{"cantus_search"}, gabrielNames)
-	require.Contains(t, rafaelNames, "ref_get_parish")
+	require.Contains(t, rafaelNames, "ref_get_paroki")
 	require.Contains(t, rafaelNames, "user_get_me")
 	require.NotContains(t, rafaelNames, "agent_remember")
 
-	require.NotNil(t, refGetParish)
-	out, err := refGetParish.InvokableRun(turnCtx, `{}`)
+	require.NotNil(t, refGetParoki)
+	out, err := refGetParoki.InvokableRun(turnCtx, `{}`)
 	require.NoError(t, err)
-	require.Contains(t, out, parish.ID.String())
+	require.Contains(t, out, paroki.ID.String())
 }

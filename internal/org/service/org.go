@@ -14,7 +14,7 @@ import (
 	"github.com/paroki/domus/internal/platform/authx"
 )
 
-// SearchOrganizations returns paginated non-deleted organizations in p.ParishID.
+// SearchOrganizations returns paginated non-deleted organizations in p.ParokiID.
 func (s *Service) SearchOrganizations(
 	ctx context.Context,
 	p authx.Principal,
@@ -38,7 +38,7 @@ func (s *Service) SearchOrganizations(
 
 	rows, err := s.repo.SearchOrgs(
 		ctx,
-		p.ParishID,
+		p.ParokiID,
 		strings.TrimSpace(req.Q),
 		kind,
 		active,
@@ -76,9 +76,9 @@ func (s *Service) SearchOrganizations(
 	return items, hasMore, nil
 }
 
-// GetOrganizationForCaller returns a single non-deleted Organization in p.ParishID with myRole populated.
+// GetOrganizationForCaller returns a single non-deleted Organization in p.ParokiID with myRole populated.
 func (s *Service) GetOrganizationForCaller(ctx context.Context, p authx.Principal, orgID uuid.UUID) (domain.OrganizationResponse, error) {
-	row, err := s.repo.FindOrgInParish(ctx, p.ParishID, orgID)
+	row, err := s.repo.FindOrgInParoki(ctx, p.ParokiID, orgID)
 	if ent.IsNotFound(err) {
 		return domain.OrganizationResponse{}, domain.ErrOrgNotFound
 	}
@@ -97,11 +97,11 @@ func (s *Service) GetOrganizationForCaller(ctx context.Context, p authx.Principa
 
 // CreateOrganization creates an Organization (or reactivates a soft-deleted one with the same code).
 func (s *Service) CreateOrganization(ctx context.Context, p authx.Principal, req domain.CreateOrganizationRequest) (domain.OrganizationResponse, error) {
-	isParishAdm, err := s.isParishAdmin(p, p.ParishID)
+	isParokiAdm, err := s.isParokiAdmin(p, p.ParokiID)
 	if err != nil {
 		return domain.OrganizationResponse{}, err
 	}
-	if !isParishAdm {
+	if !isParokiAdm {
 		return domain.OrganizationResponse{}, domain.ErrForbidden
 	}
 
@@ -114,7 +114,7 @@ func (s *Service) CreateOrganization(ctx context.Context, p authx.Principal, req
 		return domain.OrganizationResponse{}, domain.ValidationError("name", "REQUIRED", "Name cannot be empty.")
 	}
 
-	if err := s.validateOrgRefs(ctx, p.ParishID, uuid.Nil, req.ParentID, req.ZoneID, req.WardID); err != nil {
+	if err := s.validateOrgRefs(ctx, p.ParokiID, uuid.Nil, req.ParentID, req.WilayahID, req.LingkunganID); err != nil {
 		return domain.OrganizationResponse{}, err
 	}
 
@@ -150,7 +150,7 @@ func (s *Service) CreateOrganization(ctx context.Context, p authx.Principal, req
 		}
 	}
 	if initialAdminID != uuid.Nil && s.refs != nil {
-		if err := s.refs.EnsureParishMember(ctx, p.ParishID, initialAdminID); err != nil {
+		if err := s.refs.EnsureParokiMember(ctx, p.ParokiID, initialAdminID); err != nil {
 			return domain.OrganizationResponse{}, err
 		}
 	}
@@ -164,20 +164,20 @@ func (s *Service) CreateOrganization(ctx context.Context, p authx.Principal, req
 		active = *req.Active
 	}
 	in := repo.OrgInput{
-		ParishID:    p.ParishID,
-		ParentID:    req.ParentID,
-		ZoneID:      req.ZoneID,
-		WardID:      req.WardID,
-		Kind:        kind,
-		Code:        code,
-		Name:        name,
-		Description: trimOptString(req.Description),
-		Active:      active,
+		ParokiID:     p.ParokiID,
+		ParentID:     req.ParentID,
+		WilayahID:    req.WilayahID,
+		LingkunganID: req.LingkunganID,
+		Kind:         kind,
+		Code:         code,
+		Name:         name,
+		Description:  trimOptString(req.Description),
+		Active:       active,
 	}
 
 	var out *ent.Organization
 	err = s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
-		existing, findErr := txRepo.FindOrgByCodeIncludeDeleted(ctx, p.ParishID, code)
+		existing, findErr := txRepo.FindOrgByCodeIncludeDeleted(ctx, p.ParokiID, code)
 		switch {
 		case findErr == nil && existing.DeletedAt == nil:
 			return domain.ErrCodeConflict
@@ -203,7 +203,7 @@ func (s *Service) CreateOrganization(ctx context.Context, p authx.Principal, req
 			switch {
 			case ent.IsNotFound(err):
 				if _, err := txRepo.CreateOrgMember(ctx, repo.OrgMemberInput{
-					ParishID: p.ParishID,
+					ParokiID: p.ParokiID,
 					OrgID:    out.ID,
 					UserID:   initialAdminID,
 					Role:     orgmember.RoleAdmin,
@@ -240,9 +240,9 @@ func (s *Service) CreateOrganization(ctx context.Context, p authx.Principal, req
 	return toOrgResponse(out, myRole), nil
 }
 
-// UpdateOrganization updates mutable fields of an Organization (requires org:admin or ref:parish-admin).
+// UpdateOrganization updates mutable fields of an Organization (requires org:admin or ref:paroki-admin).
 func (s *Service) UpdateOrganization(ctx context.Context, p authx.Principal, id uuid.UUID, req domain.UpdateOrganizationRequest) (domain.OrganizationResponse, error) {
-	existing, err := s.repo.FindOrgInParish(ctx, p.ParishID, id)
+	existing, err := s.repo.FindOrgInParoki(ctx, p.ParokiID, id)
 	if ent.IsNotFound(err) {
 		return domain.OrganizationResponse{}, domain.ErrOrgNotFound
 	}
@@ -254,15 +254,15 @@ func (s *Service) UpdateOrganization(ctx context.Context, p authx.Principal, id 
 	if err != nil {
 		return domain.OrganizationResponse{}, err
 	}
-	isParishAdm, err := s.isParishAdmin(p, p.ParishID)
+	isParokiAdm, err := s.isParokiAdmin(p, p.ParokiID)
 	if err != nil {
 		return domain.OrganizationResponse{}, err
 	}
-	if !isOrgAdm && !isParishAdm {
+	if !isOrgAdm && !isParokiAdm {
 		return domain.OrganizationResponse{}, domain.ErrForbidden
 	}
 
-	if err := s.validateOrgRefs(ctx, p.ParishID, id, req.ParentID, req.ZoneID, req.WardID); err != nil {
+	if err := s.validateOrgRefs(ctx, p.ParokiID, id, req.ParentID, req.WilayahID, req.LingkunganID); err != nil {
 		return domain.OrganizationResponse{}, err
 	}
 
@@ -278,7 +278,7 @@ func (s *Service) UpdateOrganization(ctx context.Context, p authx.Principal, id 
 			return domain.OrganizationResponse{}, err
 		}
 		if normCode != existing.Code {
-			if _, findErr := s.repo.FindOrgByCodeIncludeDeleted(ctx, p.ParishID, normCode); findErr == nil {
+			if _, findErr := s.repo.FindOrgByCodeIncludeDeleted(ctx, p.ParokiID, normCode); findErr == nil {
 				return domain.OrganizationResponse{}, domain.ErrCodeConflict
 			} else if !ent.IsNotFound(findErr) {
 				return domain.OrganizationResponse{}, findErr
@@ -299,8 +299,8 @@ func (s *Service) UpdateOrganization(ctx context.Context, p authx.Principal, id 
 		ctx,
 		id,
 		req.ParentID,
-		req.ZoneID,
-		req.WardID,
+		req.WilayahID,
+		req.LingkunganID,
 		kindPtr,
 		codePtr,
 		namePtr,
@@ -326,15 +326,15 @@ func (s *Service) UpdateOrganization(ctx context.Context, p authx.Principal, id 
 
 // DeleteOrganization soft-deletes an Organization if it has no non-deleted child organizations or events.
 func (s *Service) DeleteOrganization(ctx context.Context, p authx.Principal, id uuid.UUID) error {
-	isParishAdm, err := s.isParishAdmin(p, p.ParishID)
+	isParokiAdm, err := s.isParokiAdmin(p, p.ParokiID)
 	if err != nil {
 		return err
 	}
-	if !isParishAdm {
+	if !isParokiAdm {
 		return domain.ErrForbidden
 	}
 
-	if _, err := s.repo.FindOrgInParish(ctx, p.ParishID, id); ent.IsNotFound(err) {
+	if _, err := s.repo.FindOrgInParoki(ctx, p.ParokiID, id); ent.IsNotFound(err) {
 		return domain.ErrOrgNotFound
 	} else if err != nil {
 		return err
@@ -356,12 +356,12 @@ func (s *Service) DeleteOrganization(ctx context.Context, p authx.Principal, id 
 	return s.repo.SoftDeleteOrg(ctx, id, time.Now().UTC())
 }
 
-func (s *Service) validateOrgRefs(ctx context.Context, parishID, selfID uuid.UUID, parentID, zoneID, wardID *uuid.UUID) error {
+func (s *Service) validateOrgRefs(ctx context.Context, parokiID, selfID uuid.UUID, parentID, wilayahID, lingkunganID *uuid.UUID) error {
 	if parentID != nil && *parentID != uuid.Nil {
 		if selfID != uuid.Nil && *parentID == selfID {
 			return domain.ValidationError("parentId", "INVALID_PARENT", "Organization cannot be its own parent.")
 		}
-		parent, err := s.repo.FindOrgInParish(ctx, parishID, *parentID)
+		parent, err := s.repo.FindOrgInParoki(ctx, parokiID, *parentID)
 		if ent.IsNotFound(err) {
 			return domain.ErrOrgNotFound
 		} else if err != nil {
@@ -378,7 +378,7 @@ func (s *Service) validateOrgRefs(ctx context.Context, parishID, selfID uuid.UUI
 					break
 				}
 				visited[*cur] = struct{}{}
-				anc, err := s.repo.FindOrgInParish(ctx, parishID, *cur)
+				anc, err := s.repo.FindOrgInParoki(ctx, parokiID, *cur)
 				if ent.IsNotFound(err) {
 					break
 				}
@@ -389,13 +389,13 @@ func (s *Service) validateOrgRefs(ctx context.Context, parishID, selfID uuid.UUI
 			}
 		}
 	}
-	if zoneID != nil && *zoneID != uuid.Nil && s.refs != nil {
-		if err := s.refs.ValidateZoneInParish(ctx, parishID, *zoneID); err != nil {
+	if wilayahID != nil && *wilayahID != uuid.Nil && s.refs != nil {
+		if err := s.refs.ValidateWilayahInParoki(ctx, parokiID, *wilayahID); err != nil {
 			return err
 		}
 	}
-	if wardID != nil && *wardID != uuid.Nil && s.refs != nil {
-		if err := s.refs.ValidateWardInParish(ctx, parishID, *wardID); err != nil {
+	if lingkunganID != nil && *lingkunganID != uuid.Nil && s.refs != nil {
+		if err := s.refs.ValidateLingkunganInParoki(ctx, parokiID, *lingkunganID); err != nil {
 			return err
 		}
 	}

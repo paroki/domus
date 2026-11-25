@@ -44,7 +44,7 @@ func TestProjectHistory_CoalesceAndCap(t *testing.T) {
 func TestBuildGenModelInput_PreservesCurlyBraces(t *testing.T) {
 	fn := service.BuildGenModelInput("Always reply politely. Note: {User} {Time} {curly_braces}", service.PromptContext{
 		UserName:    "Budi",
-		ParishName:  "Paroki Katedral",
+		ParokiName:  "Paroki Katedral",
 		UserRoles:   []string{"user:user"},
 		CurrentTime: "2026-11-24T12:00:00Z",
 		RetrievedMemories: []domain.MemoryResponse{

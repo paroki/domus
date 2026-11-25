@@ -94,50 +94,50 @@ func (s *OrgFeatureSuite) loginViaOTP(email string) {
 	s.Cookies = s.HttpResponse.Cookies()
 }
 
-func (s *OrgFeatureSuite) seedParishWithAdmin(parishAdminEmail string) (parishID, zoneID, wardID, periodID, parishAdminUserID uuid.UUID) {
+func (s *OrgFeatureSuite) seedParokiWithAdmin(parokiAdminEmail string) (parokiID, wilayahID, lingkunganID, periodID, parokiAdminUserID uuid.UUID) {
 	s.loginViaOTP("super@paroki.org")
 
-	s.Request("/api/ref/dioceses", http.MethodPost, refdomain.CreateDioceseRequest{
-		Code: "kaj",
-		Name: "Keuskupan Agung Jakarta",
+	s.Request("/api/ref/keuskupan", http.MethodPost, refdomain.CreateKeuskupanRequest{
+		Kode: "kaj",
+		Nama: "Keuskupan Agung Jakarta",
 	})
 	s.Created()
-	diocese := testutil.DecodeAs[refdomain.DioceseResponse](s).Data
+	keuskupan := testutil.DecodeAs[refdomain.KeuskupanResponse](s).Data
 
-	s.Request("/api/ref/parishes", http.MethodPost, refdomain.CreateParishRequest{
-		DioceseID: diocese.ID,
-		Code:      "p-kaj-01",
-		Name:      "Paroki Katedral",
+	s.Request("/api/ref/paroki", http.MethodPost, refdomain.CreateParokiRequest{
+		KeuskupanID: keuskupan.ID,
+		Kode:        "p-kaj-01",
+		Nama:        "Paroki Katedral",
 	})
 	s.Created()
-	parish := testutil.DecodeAs[refdomain.ParishResponse](s).Data
-	parishID = parish.ID
+	paroki := testutil.DecodeAs[refdomain.ParokiResponse](s).Data
+	parokiID = paroki.ID
 
-	s.Request(fmt.Sprintf("/api/ref/parishes/%s/members", parishID), http.MethodPost, refdomain.AddParishMemberRequest{
-		Email: parishAdminEmail,
-		Name:  "Parish Admin",
+	s.Request(fmt.Sprintf("/api/ref/paroki/%s/members", parokiID), http.MethodPost, refdomain.AddParokiMemberRequest{
+		Email: parokiAdminEmail,
+		Name:  "Paroki Admin",
 		Role:  "admin",
 	})
 	s.Created()
-	pm := testutil.DecodeAs[refdomain.ParishMemberResponse](s).Data
-	parishAdminUserID = pm.UserID
+	pm := testutil.DecodeAs[refdomain.ParokiMemberResponse](s).Data
+	parokiAdminUserID = pm.UserID
 
-	s.loginViaOTP(parishAdminEmail)
+	s.loginViaOTP(parokiAdminEmail)
 
-	s.Request("/api/ref/zones", http.MethodPost, refdomain.CreateZoneRequest{
-		Code: "wil-01",
-		Name: "Wilayah 1",
+	s.Request("/api/ref/wilayah", http.MethodPost, refdomain.CreateWilayahRequest{
+		Kode: "wil-01",
+		Nama: "Wilayah 1",
 	})
 	s.Created()
-	zoneID = testutil.DecodeAs[refdomain.ZoneResponse](s).Data.ID
+	wilayahID = testutil.DecodeAs[refdomain.WilayahResponse](s).Data.ID
 
-	s.Request("/api/ref/wards", http.MethodPost, refdomain.CreateWardRequest{
-		ZoneID: zoneID,
-		Code:   "ling-01",
-		Name:   "Lingkungan 1",
+	s.Request("/api/ref/lingkungan", http.MethodPost, refdomain.CreateLingkunganRequest{
+		WilayahID: wilayahID,
+		Kode:      "ling-01",
+		Nama:      "Lingkungan 1",
 	})
 	s.Created()
-	wardID = testutil.DecodeAs[refdomain.WardResponse](s).Data.ID
+	lingkunganID = testutil.DecodeAs[refdomain.LingkunganResponse](s).Data.ID
 
 	s.Request("/api/ref/periods", http.MethodPost, refdomain.CreatePeriodRequest{
 		Type:      "fiscal",
@@ -149,19 +149,19 @@ func (s *OrgFeatureSuite) seedParishWithAdmin(parishAdminEmail string) (parishID
 	s.Created()
 	periodID = testutil.DecodeAs[refdomain.PeriodResponse](s).Data.ID
 
-	return parishID, zoneID, wardID, periodID, parishAdminUserID
+	return parokiID, wilayahID, lingkunganID, periodID, parokiAdminUserID
 }
 
 func (s *OrgFeatureSuite) TestOrgCRUD_SearchGetUpdateDeleteAndReactivation() {
-	parishID, zoneID, wardID, _, _ := s.seedParishWithAdmin("padmin@paroki.org")
+	parokiID, wilayahID, lingkunganID, _, _ := s.seedParokiWithAdmin("padmin@paroki.org")
 
-	// Regular parish member (not ref:parish-admin) cannot create org.
+	// Regular paroki member (not ref:paroki-admin) cannot create org.
 	plainUser, err := s.userFeature.EnsureUser(context.Background(), "plain@paroki.org", "Plain User", "", "email", "plain@paroki.org")
 	s.Require().NoError(err)
-	_, err = s.refFeature.EnsureParishMember(context.Background(), parishID, plainUser.ID)
+	_, err = s.refFeature.EnsureParokiMember(context.Background(), parokiID, plainUser.ID)
 	s.Require().NoError(err)
 	s.loginViaOTP("plain@paroki.org")
-	s.SetHeader("X-Parish-Id", parishID.String())
+	s.SetHeader("X-Paroki-Id", parokiID.String())
 	s.Request("/api/orgs", http.MethodPost, domain.CreateOrganizationRequest{
 		Code: "sec-1",
 		Name: "Seksi 1",
@@ -169,15 +169,15 @@ func (s *OrgFeatureSuite) TestOrgCRUD_SearchGetUpdateDeleteAndReactivation() {
 	s.Forbidden()
 	s.Equal("ORG_FORBIDDEN", s.GetErrorResponse().Error.Code)
 
-	// Parish admin creates parent org with initialAdminEmail onboarding.
+	// Paroki admin creates parent org with initialAdminEmail onboarding.
 	s.loginViaOTP("padmin@paroki.org")
-	s.SetHeader("X-Parish-Id", parishID.String())
+	s.SetHeader("X-Paroki-Id", parokiID.String())
 	s.Request("/api/orgs", http.MethodPost, domain.CreateOrganizationRequest{
 		Kind:              "dpp",
 		Code:              "  DPP-01  ",
 		Name:              "Dewan Pastoral Paroki",
-		ZoneID:            &zoneID,
-		WardID:            &wardID,
+		WilayahID:         &wilayahID,
+		LingkunganID:      &lingkunganID,
 		InitialAdminEmail: "orgadmin@paroki.org",
 		InitialAdminName:  "Org Admin",
 	})
@@ -214,7 +214,7 @@ func (s *OrgFeatureSuite) TestOrgCRUD_SearchGetUpdateDeleteAndReactivation() {
 
 	// org:admin (not parish-admin) can GET (with myRole="admin"), PATCH, and search with myOrgsOnly=true.
 	s.loginViaOTP("orgadmin@paroki.org")
-	s.SetHeader("X-Parish-Id", parishID.String())
+	s.SetHeader("X-Paroki-Id", parokiID.String())
 	s.Request(fmt.Sprintf("/api/orgs/%s", parent.ID), http.MethodGet, nil)
 	s.OK()
 	gotParent := testutil.DecodeAs[domain.OrganizationResponse](s).Data
@@ -239,7 +239,7 @@ func (s *OrgFeatureSuite) TestOrgCRUD_SearchGetUpdateDeleteAndReactivation() {
 
 	// Parish admin deletes child then parent -> 204, then reactivates code "sek-lit".
 	s.loginViaOTP("padmin@paroki.org")
-	s.SetHeader("X-Parish-Id", parishID.String())
+	s.SetHeader("X-Paroki-Id", parokiID.String())
 	s.Request(fmt.Sprintf("/api/orgs/%s", child.ID), http.MethodDelete, nil)
 	s.NoContent()
 	s.Request(fmt.Sprintf("/api/orgs/%s", parent.ID), http.MethodDelete, nil)
@@ -257,8 +257,8 @@ func (s *OrgFeatureSuite) TestOrgCRUD_SearchGetUpdateDeleteAndReactivation() {
 }
 
 func (s *OrgFeatureSuite) TestOrgMemberCRUD_LeastPrivilegeCasbinAndLastAdminGuard() {
-	parishID, _, _, periodID, parishAdminID := s.seedParishWithAdmin("padmin@paroki.org")
-	s.SetHeader("X-Parish-Id", parishID.String())
+	parokiID, _, _, periodID, parokiAdminID := s.seedParokiWithAdmin("padmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
 
 	// Create org without initial admin.
 	s.Request("/api/orgs", http.MethodPost, domain.CreateOrganizationRequest{
@@ -285,14 +285,14 @@ func (s *OrgFeatureSuite) TestOrgMemberCRUD_LeastPrivilegeCasbinAndLastAdminGuar
 
 	// Parish admin self-assigns as org:admin -> 201.
 	s.Request(fmt.Sprintf("/api/orgs/%s/members", orgRow.ID), http.MethodPost, domain.AddOrgMemberRequest{
-		UserID: &parishAdminID,
+		UserID: &parokiAdminID,
 		Role:   "admin",
 	})
 	s.Created()
 
 	// Duplicate add by org:admin returns 409 ORG_MEMBER_ALREADY_EXISTS.
 	s.Request(fmt.Sprintf("/api/orgs/%s/members", orgRow.ID), http.MethodPost, domain.AddOrgMemberRequest{
-		UserID: &parishAdminID,
+		UserID: &parokiAdminID,
 		Role:   "admin",
 	})
 	s.Conflict()
@@ -323,20 +323,20 @@ func (s *OrgFeatureSuite) TestOrgMemberCRUD_LeastPrivilegeCasbinAndLastAdminGuar
 
 	// Last admin guard on PATCH (demote or deactivate) and DELETE.
 	memberRole := "member"
-	s.Request(fmt.Sprintf("/api/orgs/%s/members/%s", orgRow.ID, parishAdminID), http.MethodPatch, domain.UpdateOrgMemberRequest{
+	s.Request(fmt.Sprintf("/api/orgs/%s/members/%s", orgRow.ID, parokiAdminID), http.MethodPatch, domain.UpdateOrgMemberRequest{
 		Role: &memberRole,
 	})
 	s.Conflict()
 	s.Equal("ORG_LAST_ADMIN_REQUIRED", s.GetErrorResponse().Error.Code)
 
 	inactiveStatus := "inactive"
-	s.Request(fmt.Sprintf("/api/orgs/%s/members/%s", orgRow.ID, parishAdminID), http.MethodPatch, domain.UpdateOrgMemberRequest{
+	s.Request(fmt.Sprintf("/api/orgs/%s/members/%s", orgRow.ID, parokiAdminID), http.MethodPatch, domain.UpdateOrgMemberRequest{
 		Status: &inactiveStatus,
 	})
 	s.Conflict()
 	s.Equal("ORG_LAST_ADMIN_REQUIRED", s.GetErrorResponse().Error.Code)
 
-	s.Request(fmt.Sprintf("/api/orgs/%s/members/%s", orgRow.ID, parishAdminID), http.MethodDelete, nil)
+	s.Request(fmt.Sprintf("/api/orgs/%s/members/%s", orgRow.ID, parokiAdminID), http.MethodDelete, nil)
 	s.Conflict()
 	s.Equal("ORG_LAST_ADMIN_REQUIRED", s.GetErrorResponse().Error.Code)
 
@@ -366,50 +366,50 @@ func (s *OrgFeatureSuite) TestOrgMemberCRUD_LeastPrivilegeCasbinAndLastAdminGuar
 	s.OK()
 
 	s.loginViaOTP("member1@paroki.org")
-	s.SetHeader("X-Parish-Id", parishID.String())
+	s.SetHeader("X-Paroki-Id", parokiID.String())
 	s.Request(fmt.Sprintf("/api/orgs/%s/members/%s", orgRow.ID, mem1.UserID), http.MethodDelete, nil)
 	s.NoContent()
 }
 
 func (s *OrgFeatureSuite) TestOrgFacadeHelpersAndRefDeleteGuards() {
-	parishID, zoneID, wardID, periodID, parishAdminID := s.seedParishWithAdmin("padmin@paroki.org")
-	s.SetHeader("X-Parish-Id", parishID.String())
+	parokiID, wilayahID, lingkunganID, periodID, parokiAdminID := s.seedParokiWithAdmin("padmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
 
 	s.Request("/api/orgs", http.MethodPost, domain.CreateOrganizationRequest{
-		Kind:               "ward",
+		Kind:               "lingkungan",
 		Code:               "org-ling-01",
 		Name:               "Pengurus Lingkungan 1",
-		ZoneID:             &zoneID,
-		WardID:             &wardID,
-		InitialAdminUserID: &parishAdminID,
+		WilayahID:          &wilayahID,
+		LingkunganID:       &lingkunganID,
+		InitialAdminUserID: &parokiAdminID,
 	})
 	s.Created()
 	orgRow := testutil.DecodeAs[domain.OrganizationResponse](s).Data
 
 	ctx := context.Background()
-	got, err := s.orgFeature.GetOrganization(ctx, parishID, orgRow.ID)
+	got, err := s.orgFeature.GetOrganization(ctx, parokiID, orgRow.ID)
 	s.Require().NoError(err)
 	s.Equal(orgRow.ID, got.ID)
 
-	isMem, err := s.orgFeature.IsMember(ctx, orgRow.ID, parishAdminID)
+	isMem, err := s.orgFeature.IsMember(ctx, orgRow.ID, parokiAdminID)
 	s.Require().NoError(err)
 	s.True(isMem)
 
-	isAdm, err := s.orgFeature.IsAdmin(ctx, orgRow.ID, parishAdminID)
+	isAdm, err := s.orgFeature.IsAdmin(ctx, orgRow.ID, parokiAdminID)
 	s.Require().NoError(err)
 	s.True(isAdm)
 
-	list, err := s.orgFeature.ListUserOrgs(ctx, parishID, parishAdminID)
+	list, err := s.orgFeature.ListUserOrgs(ctx, parokiID, parokiAdminID)
 	s.Require().NoError(err)
 	s.Len(list, 1)
 	s.Equal(orgRow.ID, list[0].ID)
 
-	// Ward & Zone cannot be deleted while referenced by non-deleted Organization.
-	s.Request(fmt.Sprintf("/api/ref/wards/%s", wardID), http.MethodDelete, nil)
+	// Lingkungan & Wilayah cannot be deleted while referenced by non-deleted Organization.
+	s.Request(fmt.Sprintf("/api/ref/lingkungan/%s", lingkunganID), http.MethodDelete, nil)
 	s.Conflict()
 	s.Equal("REF_IN_USE", s.GetErrorResponse().Error.Code)
 
-	s.Request(fmt.Sprintf("/api/ref/zones/%s", zoneID), http.MethodDelete, nil)
+	s.Request(fmt.Sprintf("/api/ref/wilayah/%s", wilayahID), http.MethodDelete, nil)
 	s.Conflict()
 	s.Equal("REF_IN_USE", s.GetErrorResponse().Error.Code)
 
@@ -442,8 +442,8 @@ func (p *stubOAuthProvider) Exchange(_ context.Context, _, _ string) (userdomain
 }
 
 func (s *OrgFeatureSuite) TestOrgInvites_LifecycleRedeemAndGuestOnboarding() {
-	parishID, _, _, _, parishAdminID := s.seedParishWithAdmin("padmin@paroki.org")
-	s.SetHeader("X-Parish-Id", parishID.String())
+	parokiID, _, _, _, parokiAdminID := s.seedParokiWithAdmin("padmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
 
 	// Create org with separate initial org:admin.
 	s.Request("/api/orgs", http.MethodPost, domain.CreateOrganizationRequest{
@@ -467,7 +467,7 @@ func (s *OrgFeatureSuite) TestOrgInvites_LifecycleRedeemAndGuestOnboarding() {
 
 	// Login as org:admin.
 	s.loginViaOTP("omkadmin@paroki.org")
-	s.SetHeader("X-Parish-Id", parishID.String())
+	s.SetHeader("X-Paroki-Id", parokiID.String())
 
 	// TTL exceeding InviteMaxTTL (168h) returns 422 VALIDATION_ERROR.
 	tooLongTTL := 169 * 3600
@@ -507,7 +507,7 @@ func (s *OrgFeatureSuite) TestOrgInvites_LifecycleRedeemAndGuestOnboarding() {
 
 	// Public preview works without auth for active and revoked invites.
 	s.ClearCookies()
-	s.SetHeader("X-Parish-Id", "")
+	s.SetHeader("X-Paroki-Id", "")
 	s.Request(fmt.Sprintf("/api/orgs/invites/%s", invRevoked.Code), http.MethodGet, nil)
 	s.OK()
 	revPreview := testutil.DecodeAs[domain.OrgInvitePreviewResponse](s).Data
@@ -520,7 +520,7 @@ func (s *OrgFeatureSuite) TestOrgInvites_LifecycleRedeemAndGuestOnboarding() {
 	s.True(actPreview.Valid)
 	s.Equal("active", actPreview.Status)
 	s.Equal(orgRow.ID, actPreview.OrgID)
-	s.Equal(parishID, actPreview.ParishID)
+	s.Equal(parokiID, actPreview.ParokiID)
 
 	// Unauthenticated guest OTP onboarding with inv1 (unregistered user).
 	s.Request("/api/auth/otp", http.MethodPost, userdomain.RequestOTPRequest{
@@ -536,8 +536,8 @@ func (s *OrgFeatureSuite) TestOrgInvites_LifecycleRedeemAndGuestOnboarding() {
 	})
 	s.OK()
 	otpSess := testutil.DecodeAs[userdomain.AuthSessionResponse](s).Data
-	s.Require().NotNil(otpSess.ActiveParishID)
-	s.Equal(parishID, *otpSess.ActiveParishID)
+	s.Require().NotNil(otpSess.ActiveParokiID)
+	s.Equal(parokiID, *otpSess.ActiveParokiID)
 	s.Cookies = s.HttpResponse.Cookies()
 
 	// Second user trying to redeem exhausted inv1 gets 409 ORG_INVITE_MAX_USES_REACHED.
@@ -556,7 +556,7 @@ func (s *OrgFeatureSuite) TestOrgInvites_LifecycleRedeemAndGuestOnboarding() {
 
 	// Idempotent redeem by an already-active member does NOT increment used_count.
 	s.loginViaOTP("omkadmin@paroki.org")
-	s.SetHeader("X-Parish-Id", parishID.String())
+	s.SetHeader("X-Paroki-Id", parokiID.String())
 	maxTwo := 2
 	s.Request(fmt.Sprintf("/api/orgs/%s/invites", orgRow.ID), http.MethodPost, domain.CreateOrgInviteRequest{
 		Role:    "member",
@@ -569,11 +569,11 @@ func (s *OrgFeatureSuite) TestOrgInvites_LifecycleRedeemAndGuestOnboarding() {
 	s.Request(fmt.Sprintf("/api/orgs/invites/%s/redeem", invMulti.Code), http.MethodPost, nil)
 	s.OK()
 	redeemRes := testutil.DecodeAs[domain.RedeemOrgInviteResponse](s).Data
-	s.Equal(parishID, redeemRes.ParishID)
+	s.Equal(parokiID, redeemRes.ParokiID)
 	s.Equal("member", redeemRes.Membership.Role)
 
 	s.loginViaOTP("omkadmin@paroki.org")
-	s.SetHeader("X-Parish-Id", parishID.String())
+	s.SetHeader("X-Paroki-Id", parokiID.String())
 	s.Request(fmt.Sprintf("/api/orgs/%s/invites/search", orgRow.ID), http.MethodPost, domain.SearchOrgInvitesRequest{})
 	s.OK()
 	for _, it := range testutil.DecodeAs[[]domain.OrgInviteResponse](s).Data {
@@ -584,12 +584,12 @@ func (s *OrgFeatureSuite) TestOrgInvites_LifecycleRedeemAndGuestOnboarding() {
 
 	// Expired invite returns 410 ORG_INVITE_EXPIRED.
 	expiredInv, err := s.client.OrgInvite.Create().
-		SetParishID(parishID).
+		SetParokiID(parokiID).
 		SetOrgID(orgRow.ID).
 		SetCode("EXPIRED12345").
 		SetRole(orginvite.RoleMember).
 		SetExpiresAt(time.Now().UTC().Add(-1 * time.Hour)).
-		SetCreatedBy(parishAdminID).
+		SetCreatedBy(parokiAdminID).
 		Save(context.Background())
 	s.Require().NoError(err)
 
@@ -602,7 +602,7 @@ func (s *OrgFeatureSuite) TestOrgInvites_LifecycleRedeemAndGuestOnboarding() {
 
 	// OAuth guest onboarding with inviteCode.
 	s.loginViaOTP("omkadmin@paroki.org")
-	s.SetHeader("X-Parish-Id", parishID.String())
+	s.SetHeader("X-Paroki-Id", parokiID.String())
 	s.Request(fmt.Sprintf("/api/orgs/%s/invites", orgRow.ID), http.MethodPost, domain.CreateOrgInviteRequest{
 		Role: "admin",
 	})
@@ -619,7 +619,7 @@ func (s *OrgFeatureSuite) TestOrgInvites_LifecycleRedeemAndGuestOnboarding() {
 	})
 
 	s.ClearCookies()
-	s.SetHeader("X-Parish-Id", "")
+	s.SetHeader("X-Paroki-Id", "")
 	s.Request(fmt.Sprintf("/api/auth/stub?redirect=/org/join/%s&inviteCode=%s", invOAuth.Code, invOAuth.Code), http.MethodGet, nil)
 	s.Equal(http.StatusFound, s.HttpResponse.StatusCode)
 	s.Cookies = s.HttpResponse.Cookies()
@@ -646,8 +646,8 @@ func (s *OrgFeatureSuite) TestOrgInvites_LifecycleRedeemAndGuestOnboarding() {
 }
 
 func (s *OrgFeatureSuite) TestIssue94_ReactivationInactiveMemberCycleMaxUsesAndOTPPhone() {
-	parishID, _, _, _, parishAdminID := s.seedParishWithAdmin("padmin@paroki.org")
-	s.SetHeader("X-Parish-Id", parishID.String())
+	parokiID, _, _, _, parokiAdminID := s.seedParokiWithAdmin("padmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
 	ctx := context.Background()
 
 	// Pre-create an existing user with a distinct display name.
@@ -670,7 +670,7 @@ func (s *OrgFeatureSuite) TestIssue94_ReactivationInactiveMemberCycleMaxUsesAndO
 
 	// Demote & deactivate Budi's OrgMember row, then soft-delete Org A.
 	s.Request(fmt.Sprintf("/api/orgs/%s/members", orgA.ID), http.MethodPost, domain.AddOrgMemberRequest{
-		UserID: &parishAdminID,
+		UserID: &parokiAdminID,
 		Role:   "admin",
 	})
 	s.Created()
@@ -777,7 +777,7 @@ func (s *OrgFeatureSuite) TestIssue94_ReactivationInactiveMemberCycleMaxUsesAndO
 	openInv := testutil.DecodeAs[domain.OrgInviteResponse](s).Data
 
 	s.ClearCookies()
-	s.SetHeader("X-Parish-Id", "")
+	s.SetHeader("X-Paroki-Id", "")
 	s.Request("/api/auth/otp", http.MethodPost, userdomain.RequestOTPRequest{
 		Email:      "phoneguest@paroki.org",
 		InviteCode: openInv.Code,
@@ -810,8 +810,8 @@ func (s *OrgFeatureSuite) TestIssue94_ReactivationInactiveMemberCycleMaxUsesAndO
 }
 
 func (s *OrgFeatureSuite) TestDeleteOrganization_InUseWithEvent() {
-	parishID, _, _, _, parishAdminID := s.seedParishWithAdmin("padmin@paroki.org")
-	s.SetHeader("X-Parish-Id", parishID.String())
+	parokiID, _, _, _, parokiAdminID := s.seedParokiWithAdmin("padmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
 
 	s.Request("/api/orgs", http.MethodPost, domain.CreateOrganizationRequest{
 		Kind: "section",
@@ -824,9 +824,9 @@ func (s *OrgFeatureSuite) TestDeleteOrganization_InUseWithEvent() {
 	ctx := context.Background()
 	startAt := time.Now().UTC().Add(24 * time.Hour)
 	ev, err := s.client.Event.Create().
-		SetParishID(parishID).
+		SetParokiID(parokiID).
 		SetOrgID(orgRow.ID).
-		SetCreatedBy(parishAdminID).
+		SetCreatedBy(parokiAdminID).
 		SetTitle("Rapat Persiapan").
 		SetStartAt(startAt).
 		SetEndAt(startAt.Add(time.Hour)).

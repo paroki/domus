@@ -102,7 +102,7 @@ func (s *Service) runMemoryExtraction(
 		return nil
 	}
 
-	existing, _, err := s.repo.SearchMemories(ctx, p.ParishID, p.UserID, "", "", nil, nil, nil, 100)
+	existing, _, err := s.repo.SearchMemories(ctx, p.ParokiID, p.UserID, "", "", nil, nil, nil, 100)
 	if err != nil {
 		return err
 	}
@@ -126,7 +126,7 @@ func (s *Service) runMemoryExtraction(
 		}
 		vec := s.embedTextBestEffort(ctx, content)
 		if _, err := s.repo.CreateMemory(ctx, domain.CreateMemoryInput{
-			ParishID:        p.ParishID,
+			ParokiID:        p.ParokiID,
 			UserID:          p.UserID,
 			Category:        cat,
 			Content:         content,

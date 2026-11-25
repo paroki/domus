@@ -9,7 +9,7 @@ import (
 // EventResponse is the public API representation of an Event.
 type EventResponse struct {
 	ID           uuid.UUID                 `json:"id"`
-	ParishID     uuid.UUID                 `json:"parishId"`
+	ParokiID     uuid.UUID                 `json:"parokiId"`
 	OrgID        uuid.UUID                 `json:"orgId"`
 	OrgCode      string                    `json:"orgCode"`
 	OrgName      string                    `json:"orgName"`
@@ -42,7 +42,7 @@ type EventSearchFilter struct {
 	To         *time.Time `json:"to,omitempty"`
 }
 
-// SearchEventsRequest searches visible events within the active parish.
+// SearchEventsRequest searches visible events within the active paroki.
 type SearchEventsRequest struct {
 	Q      string             `json:"q,omitempty"`
 	Filter *EventSearchFilter `json:"filter,omitempty"`
@@ -50,7 +50,7 @@ type SearchEventsRequest struct {
 	Limit  int                `json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
 }
 
-// CreateEventRequest creates a new Event owned by an organization in the active parish.
+// CreateEventRequest creates a new Event owned by an organization in the active paroki.
 type CreateEventRequest struct {
 	OrgID        uuid.UUID  `json:"orgId" validate:"required"`
 	Title        string     `json:"title" validate:"required,min=1"`
@@ -80,7 +80,7 @@ type UpdateEventRequest struct {
 // EventRSVPResponse is the public API representation of an EventRSVP.
 type EventRSVPResponse struct {
 	ID          uuid.UUID `json:"id"`
-	ParishID    uuid.UUID `json:"parishId"`
+	ParokiID    uuid.UUID `json:"parokiId"`
 	EventID     uuid.UUID `json:"eventId"`
 	UserID      uuid.UUID `json:"userId"`
 	Name        string    `json:"name"`

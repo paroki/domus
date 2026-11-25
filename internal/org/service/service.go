@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	roleParishAdmin = "ref:parish-admin"
+	roleParokiAdmin = "ref:paroki-admin"
 	roleOrgAdmin    = "org:admin"
 	roleOrgMember   = "org:member"
 )
@@ -31,17 +31,17 @@ type UserEnsurer interface {
 	EnsureUser(ctx context.Context, email, name, phone, provider, subject string) (uuid.UUID, error)
 }
 
-// RefValidator validates cross-feature reference entities within a parish.
+// RefValidator validates cross-feature reference entities within a paroki.
 type RefValidator interface {
-	ValidateZoneInParish(ctx context.Context, parishID, zoneID uuid.UUID) error
-	ValidateWardInParish(ctx context.Context, parishID, wardID uuid.UUID) error
-	ValidatePeriodInParish(ctx context.Context, parishID, periodID uuid.UUID) error
-	EnsureParishMember(ctx context.Context, parishID, userID uuid.UUID) error
+	ValidateWilayahInParoki(ctx context.Context, parokiID, wilayahID uuid.UUID) error
+	ValidateLingkunganInParoki(ctx context.Context, parokiID, lingkunganID uuid.UUID) error
+	ValidatePeriodInParoki(ctx context.Context, parokiID, periodID uuid.UUID) error
+	EnsureParokiMember(ctx context.Context, parokiID, userID uuid.UUID) error
 }
 
-// SessionSwitcher switches the active parish on an existing user session.
+// SessionSwitcher switches the active paroki on an existing user session.
 type SessionSwitcher interface {
-	SwitchSessionParish(ctx context.Context, userID, sessionID, parishID uuid.UUID) error
+	SwitchSessionParoki(ctx context.Context, userID, sessionID, parokiID uuid.UUID) error
 }
 
 // InviteConfig holds invite TTL configuration.
@@ -78,9 +78,9 @@ func New(r *repo.Repository, enforcer *authz.Enforcer, users UserEnsurer, refs R
 	}
 }
 
-// GetOrganization returns a non-deleted Organization in parishID.
-func (s *Service) GetOrganization(ctx context.Context, parishID, orgID uuid.UUID) (*domain.OrganizationResponse, error) {
-	row, err := s.repo.FindOrgInParish(ctx, parishID, orgID)
+// GetOrganization returns a non-deleted Organization in parokiID.
+func (s *Service) GetOrganization(ctx context.Context, parokiID, orgID uuid.UUID) (*domain.OrganizationResponse, error) {
+	row, err := s.repo.FindOrgInParoki(ctx, parokiID, orgID)
 	if ent.IsNotFound(err) {
 		return nil, domain.ErrOrgNotFound
 	}
@@ -115,9 +115,9 @@ func (s *Service) IsAdmin(ctx context.Context, orgID, userID uuid.UUID) (bool, e
 	return m.Role == orgmember.RoleAdmin, nil
 }
 
-// ListUserOrgs returns active, non-deleted Organizations in parishID where userID is an active member.
-func (s *Service) ListUserOrgs(ctx context.Context, parishID, userID uuid.UUID) ([]domain.OrganizationResponse, error) {
-	rows, err := s.repo.ListUserOrgsInParish(ctx, parishID, userID)
+// ListUserOrgs returns active, non-deleted Organizations in parokiID where userID is an active member.
+func (s *Service) ListUserOrgs(ctx context.Context, parokiID, userID uuid.UUID) ([]domain.OrganizationResponse, error) {
+	rows, err := s.repo.ListUserOrgsInParoki(ctx, parokiID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -140,11 +140,11 @@ func (s *Service) ListUserOrgs(ctx context.Context, parishID, userID uuid.UUID) 
 	return out, nil
 }
 
-func (s *Service) isParishAdmin(p authx.Principal, parishID uuid.UUID) (bool, error) {
-	if s.enforcer == nil || p.UserID == uuid.Nil || parishID == uuid.Nil {
+func (s *Service) isParokiAdmin(p authx.Principal, parokiID uuid.UUID) (bool, error) {
+	if s.enforcer == nil || p.UserID == uuid.Nil || parokiID == uuid.Nil {
 		return false, nil
 	}
-	return s.enforcer.HasRoleInDomain(authz.UserSubject(p.UserID), roleParishAdmin, authz.ParishDomain(parishID))
+	return s.enforcer.HasRoleInDomain(authz.UserSubject(p.UserID), roleParokiAdmin, authz.ParokiDomain(parokiID))
 }
 
 func (s *Service) isOrgAdmin(p authx.Principal, orgID uuid.UUID) (bool, error) {
@@ -235,26 +235,26 @@ func trimOptString(raw *string) *string {
 
 func toOrgResponse(o *ent.Organization, myRole *string) domain.OrganizationResponse {
 	return domain.OrganizationResponse{
-		ID:          o.ID,
-		ParishID:    o.ParishID,
-		ParentID:    o.ParentID,
-		ZoneID:      o.ZoneID,
-		WardID:      o.WardID,
-		Kind:        string(o.Kind),
-		Code:        o.Code,
-		Name:        o.Name,
-		Description: o.Description,
-		Active:      o.Active,
-		MyRole:      myRole,
-		CreatedAt:   o.CreatedAt,
-		UpdatedAt:   o.UpdatedAt,
+		ID:           o.ID,
+		ParokiID:     o.ParokiID,
+		ParentID:     o.ParentID,
+		WilayahID:    o.WilayahID,
+		LingkunganID: o.LingkunganID,
+		Kind:         string(o.Kind),
+		Code:         o.Code,
+		Name:         o.Name,
+		Description:  o.Description,
+		Active:       o.Active,
+		MyRole:       myRole,
+		CreatedAt:    o.CreatedAt,
+		UpdatedAt:    o.UpdatedAt,
 	}
 }
 
 func toOrgMemberResponse(m *ent.OrgMember, u *ent.User) domain.OrgMemberResponse {
 	res := domain.OrgMemberResponse{
 		ID:        m.ID,
-		ParishID:  m.ParishID,
+		ParokiID:  m.ParokiID,
 		OrgID:     m.OrgID,
 		UserID:    m.UserID,
 		Role:      string(m.Role),

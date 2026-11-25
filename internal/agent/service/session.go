@@ -12,7 +12,7 @@ import (
 	"github.com/paroki/domus/internal/platform/httpx"
 )
 
-// SearchSessions returns keyset-paginated active sessions for the caller in their active parish.
+// SearchSessions returns keyset-paginated active sessions for the caller in their active paroki.
 func (s *Service) SearchSessions(
 	ctx context.Context,
 	p authx.Principal,
@@ -34,7 +34,7 @@ func (s *Service) SearchSessions(
 		cursorID = &id
 	}
 
-	items, hasMore, err := s.repo.SearchSessions(ctx, p.ParishID, p.UserID, req.Q, cursorAt, cursorID, limit)
+	items, hasMore, err := s.repo.SearchSessions(ctx, p.ParokiID, p.UserID, req.Q, cursorAt, cursorID, limit)
 	if err != nil {
 		return nil, nil, false, err
 	}
@@ -49,11 +49,11 @@ func (s *Service) SearchSessions(
 
 // GetSession returns session metadata, chronological messages, and the effective model (falling back cleanly to Gabriel if provider was deleted).
 func (s *Service) GetSession(ctx context.Context, p authx.Principal, sessionID uuid.UUID) (domain.SessionDetailResponse, error) {
-	sess, err := s.repo.GetSession(ctx, p.ParishID, p.UserID, sessionID)
+	sess, err := s.repo.GetSession(ctx, p.ParokiID, p.UserID, sessionID)
 	if err != nil {
 		return domain.SessionDetailResponse{}, err
 	}
-	msgs, err := s.repo.ListMessages(ctx, p.ParishID, p.UserID, sessionID, 0)
+	msgs, err := s.repo.ListMessages(ctx, p.ParokiID, p.UserID, sessionID, 0)
 	if err != nil {
 		return domain.SessionDetailResponse{}, err
 	}
@@ -73,7 +73,7 @@ func (s *Service) GetSession(ctx context.Context, p authx.Principal, sessionID u
 
 	return domain.SessionDetailResponse{
 		ID:                  sess.ID,
-		ParishID:            sess.ParishID,
+		ParokiID:            sess.ParokiID,
 		UserID:              sess.UserID,
 		Title:               sess.Title,
 		ProviderID:          sess.ProviderID,
@@ -95,7 +95,7 @@ func (s *Service) UpdateSession(
 	sessionID uuid.UUID,
 	req domain.UpdateSessionRequest,
 ) (domain.SessionResponse, error) {
-	existing, err := s.repo.GetSession(ctx, p.ParishID, p.UserID, sessionID)
+	existing, err := s.repo.GetSession(ctx, p.ParokiID, p.UserID, sessionID)
 	if err != nil {
 		return domain.SessionResponse{}, err
 	}
@@ -152,10 +152,10 @@ func (s *Service) UpdateSession(
 		nextModelID = &modelID
 	}
 
-	return s.repo.UpdateSession(ctx, p.ParishID, p.UserID, sessionID, titlePtr, clearModel, nextProvID, nextModelID)
+	return s.repo.UpdateSession(ctx, p.ParokiID, p.UserID, sessionID, titlePtr, clearModel, nextProvID, nextModelID)
 }
 
-// DeleteSession soft-deletes an active session owned by (p.ParishID, p.UserID).
+// DeleteSession soft-deletes an active session owned by (p.ParokiID, p.UserID).
 func (s *Service) DeleteSession(ctx context.Context, p authx.Principal, sessionID uuid.UUID) error {
-	return s.repo.SoftDeleteSession(ctx, p.ParishID, p.UserID, sessionID)
+	return s.repo.SoftDeleteSession(ctx, p.ParokiID, p.UserID, sessionID)
 }

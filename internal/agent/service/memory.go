@@ -42,7 +42,7 @@ func (s *Service) SearchMemories(
 			cursorAt = &cur.CreatedAt
 			cursorID = &id
 		}
-		items, hasMore, err := s.repo.SearchMemories(ctx, p.ParishID, p.UserID, "", cat, nil, cursorAt, cursorID, limit)
+		items, hasMore, err := s.repo.SearchMemories(ctx, p.ParokiID, p.UserID, "", cat, nil, cursorAt, cursorID, limit)
 		if err != nil {
 			return nil, nil, false, err
 		}
@@ -56,7 +56,7 @@ func (s *Service) SearchMemories(
 	}
 
 	vec := s.embedTextBestEffort(ctx, trimmedQ)
-	items, _, err := s.repo.SearchMemories(ctx, p.ParishID, p.UserID, trimmedQ, cat, vec, nil, nil, limit)
+	items, _, err := s.repo.SearchMemories(ctx, p.ParokiID, p.UserID, trimmedQ, cat, vec, nil, nil, limit)
 	if err != nil {
 		return nil, nil, false, err
 	}
@@ -83,7 +83,7 @@ func (s *Service) CreateMemory(
 
 	vec := s.embedTextBestEffort(ctx, content)
 	return s.repo.CreateMemory(ctx, domain.CreateMemoryInput{
-		ParishID: p.ParishID,
+		ParokiID: p.ParokiID,
 		UserID:   p.UserID,
 		Category: cat,
 		Content:  content,
@@ -120,12 +120,12 @@ func (s *Service) UpdateMemory(
 		catPtr = &trimmed
 	}
 
-	return s.repo.UpdateMemory(ctx, p.ParishID, p.UserID, memoryID, catPtr, contentPtr, vec, clearEmbedding)
+	return s.repo.UpdateMemory(ctx, p.ParokiID, p.UserID, memoryID, catPtr, contentPtr, vec, clearEmbedding)
 }
 
-// DeleteMemory hard-deletes an AgentMemory owned by (p.ParishID, p.UserID).
+// DeleteMemory hard-deletes an AgentMemory owned by (p.ParokiID, p.UserID).
 func (s *Service) DeleteMemory(ctx context.Context, p authx.Principal, memoryID uuid.UUID) error {
-	return s.repo.DeleteMemory(ctx, p.ParishID, p.UserID, memoryID)
+	return s.repo.DeleteMemory(ctx, p.ParokiID, p.UserID, memoryID)
 }
 
 func validateMemoryContent(content string) error {

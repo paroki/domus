@@ -22,19 +22,19 @@ type OrgListInput struct {
 
 // MCPOrganization is the MCP-safe representation of an Organization (UUIDs as strings).
 type MCPOrganization struct {
-	ID          string    `json:"id"`
-	ParishID    string    `json:"parishId"`
-	ParentID    *string   `json:"parentId,omitempty"`
-	ZoneID      *string   `json:"zoneId,omitempty"`
-	WardID      *string   `json:"wardId,omitempty"`
-	Kind        string    `json:"kind"`
-	Code        string    `json:"code"`
-	Name        string    `json:"name"`
-	Description *string   `json:"description,omitempty"`
-	Active      bool      `json:"active"`
-	MyRole      *string   `json:"myRole,omitempty"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+	ID           string    `json:"id"`
+	ParokiID     string    `json:"parokiId"`
+	ParentID     *string   `json:"parentId,omitempty"`
+	WilayahID    *string   `json:"wilayahId,omitempty"`
+	LingkunganID *string   `json:"lingkunganId,omitempty"`
+	Kind         string    `json:"kind"`
+	Code         string    `json:"code"`
+	Name         string    `json:"name"`
+	Description  *string   `json:"description,omitempty"`
+	Active       bool      `json:"active"`
+	MyRole       *string   `json:"myRole,omitempty"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
 }
 
 // OrgListOutput is the output schema for org_list.
@@ -50,8 +50,8 @@ type OrgGetInput struct {
 // OrgCreateInput is the input schema for org_create.
 type OrgCreateInput struct {
 	ParentID           *string `json:"parentId,omitempty"`
-	ZoneID             *string `json:"zoneId,omitempty"`
-	WardID             *string `json:"wardId,omitempty"`
+	WilayahID          *string `json:"wilayahId,omitempty"`
+	LingkunganID       *string `json:"lingkunganId,omitempty"`
 	Kind               string  `json:"kind,omitempty"`
 	Code               string  `json:"code"`
 	Name               string  `json:"name"`
@@ -74,7 +74,7 @@ type OrgListMembersInput struct {
 // MCPOrgMember is the MCP-safe representation of an OrgMember (UUIDs as strings).
 type MCPOrgMember struct {
 	ID        string    `json:"id"`
-	ParishID  string    `json:"parishId"`
+	ParokiID  string    `json:"parokiId"`
 	OrgID     string    `json:"orgId"`
 	UserID    string    `json:"userId"`
 	Email     string    `json:"email"`
@@ -120,7 +120,7 @@ type OrgCreateInviteInput struct {
 // MCPOrgInvite is the MCP-safe representation of an OrgInvite (UUIDs as strings).
 type MCPOrgInvite struct {
 	ID              string     `json:"id"`
-	ParishID        string     `json:"parishId"`
+	ParokiID        string     `json:"parokiId"`
 	OrgID           string     `json:"orgId"`
 	Code            string     `json:"code"`
 	Role            string     `json:"role"`
@@ -154,24 +154,24 @@ type OrgRedeemInviteInput struct {
 type MCPRedeemOrgInviteOutput struct {
 	Organization MCPOrganization `json:"organization"`
 	Membership   MCPOrgMember    `json:"membership"`
-	ParishID     string          `json:"parishId"`
+	ParokiID     string          `json:"parokiId"`
 }
 
 // RegisterMCP registers all org_* tools on the MCP server.
 func (f *Feature) RegisterMCP(s *mcp.Server) {
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "org_list",
-		Description: "List organizations in the caller's active parish.",
+		Description: "List organizations in the caller's active paroki.",
 	}, f.mcpOrgList)
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "org_get",
-		Description: "Get details of a single organization in the caller's active parish.",
+		Description: "Get details of a single organization in the caller's active paroki.",
 	}, f.mcpOrgGet)
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "org_create",
-		Description: "Create an organization (or reactivate a soft-deleted one) in the caller's active parish (requires ref:parish-admin).",
+		Description: "Create an organization (or reactivate a soft-deleted one) in the caller's active paroki (requires ref:paroki-admin).",
 	}, f.mcpOrgCreate)
 
 	mcp.AddTool(s, &mcp.Tool{
@@ -181,7 +181,7 @@ func (f *Feature) RegisterMCP(s *mcp.Server) {
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "org_update_member",
-		Description: "Add, onboard, or update an organization member (requires org:admin, or ref:parish-admin for admin appointment).",
+		Description: "Add, onboard, or update an organization member (requires org:admin, or ref:paroki-admin for admin appointment).",
 	}, f.mcpOrgUpdateMember)
 
 	mcp.AddTool(s, &mcp.Tool{
@@ -196,7 +196,7 @@ func (f *Feature) RegisterMCP(s *mcp.Server) {
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "org_redeem_invite",
-		Description: "Redeem an organization invite code to join the organization and its parish.",
+		Description: "Redeem an organization invite code to join the organization and its paroki.",
 	}, f.mcpOrgRedeemInvite)
 }
 
@@ -267,11 +267,11 @@ func (f *Feature) mcpOrgCreate(ctx context.Context, _ *mcp.CallToolRequest, in O
 	if err != nil {
 		return nil, MCPOrganization{}, err
 	}
-	zoneID, err := parseOptionalUUID(in.ZoneID, "zoneId")
+	wilayahID, err := parseOptionalUUID(in.WilayahID, "wilayahId")
 	if err != nil {
 		return nil, MCPOrganization{}, err
 	}
-	wardID, err := parseOptionalUUID(in.WardID, "wardId")
+	lingkunganID, err := parseOptionalUUID(in.LingkunganID, "lingkunganId")
 	if err != nil {
 		return nil, MCPOrganization{}, err
 	}
@@ -281,8 +281,8 @@ func (f *Feature) mcpOrgCreate(ctx context.Context, _ *mcp.CallToolRequest, in O
 	}
 	res, err := f.service.CreateOrganization(ctx, p, domain.CreateOrganizationRequest{
 		ParentID:           parentID,
-		ZoneID:             zoneID,
-		WardID:             wardID,
+		WilayahID:          wilayahID,
+		LingkunganID:       lingkunganID,
 		Kind:               in.Kind,
 		Code:               in.Code,
 		Name:               in.Name,
@@ -453,7 +453,7 @@ func (f *Feature) mcpOrgRedeemInvite(ctx context.Context, _ *mcp.CallToolRequest
 	return nil, MCPRedeemOrgInviteOutput{
 		Organization: toMCPOrganization(res.Organization),
 		Membership:   toMCPOrgMember(res.Membership),
-		ParishID:     res.ParishID.String(),
+		ParokiID:     res.ParokiID.String(),
 	}, nil
 }
 
@@ -485,26 +485,26 @@ func uuidPtrStr(id *uuid.UUID) *string {
 
 func toMCPOrganization(o domain.OrganizationResponse) MCPOrganization {
 	return MCPOrganization{
-		ID:          o.ID.String(),
-		ParishID:    o.ParishID.String(),
-		ParentID:    uuidPtrStr(o.ParentID),
-		ZoneID:      uuidPtrStr(o.ZoneID),
-		WardID:      uuidPtrStr(o.WardID),
-		Kind:        o.Kind,
-		Code:        o.Code,
-		Name:        o.Name,
-		Description: o.Description,
-		Active:      o.Active,
-		MyRole:      o.MyRole,
-		CreatedAt:   o.CreatedAt,
-		UpdatedAt:   o.UpdatedAt,
+		ID:           o.ID.String(),
+		ParokiID:     o.ParokiID.String(),
+		ParentID:     uuidPtrStr(o.ParentID),
+		WilayahID:    uuidPtrStr(o.WilayahID),
+		LingkunganID: uuidPtrStr(o.LingkunganID),
+		Kind:         o.Kind,
+		Code:         o.Code,
+		Name:         o.Name,
+		Description:  o.Description,
+		Active:       o.Active,
+		MyRole:       o.MyRole,
+		CreatedAt:    o.CreatedAt,
+		UpdatedAt:    o.UpdatedAt,
 	}
 }
 
 func toMCPOrgMember(m domain.OrgMemberResponse) MCPOrgMember {
 	return MCPOrgMember{
 		ID:        m.ID.String(),
-		ParishID:  m.ParishID.String(),
+		ParokiID:  m.ParokiID.String(),
 		OrgID:     m.OrgID.String(),
 		UserID:    m.UserID.String(),
 		Email:     m.Email,
@@ -524,7 +524,7 @@ func toMCPOrgMember(m domain.OrgMemberResponse) MCPOrgMember {
 func toMCPOrgInvite(inv domain.OrgInviteResponse) MCPOrgInvite {
 	return MCPOrgInvite{
 		ID:              inv.ID.String(),
-		ParishID:        inv.ParishID.String(),
+		ParokiID:        inv.ParokiID.String(),
 		OrgID:           inv.OrgID.String(),
 		Code:            inv.Code,
 		Role:            inv.Role,

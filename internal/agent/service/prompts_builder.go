@@ -13,7 +13,7 @@ import (
 // PromptContext holds dynamic per-turn context injected into GenModelInput.
 type PromptContext struct {
 	UserName          string
-	ParishName        string
+	ParokiName        string
 	UserRoles         []string
 	CurrentTime       string
 	RetrievedMemories []domain.MemoryResponse
@@ -28,8 +28,8 @@ func BuildGenModelInput(personaText string, pctx PromptContext) adk.TypedGenMode
 	if pctx.UserName != "" {
 		fmt.Fprintf(&b, "- User: %s\n", pctx.UserName)
 	}
-	if pctx.ParishName != "" {
-		fmt.Fprintf(&b, "- Active Parish: %s\n", pctx.ParishName)
+	if pctx.ParokiName != "" {
+		fmt.Fprintf(&b, "- Active Paroki: %s\n", pctx.ParokiName)
 	}
 	if len(pctx.UserRoles) > 0 {
 		fmt.Fprintf(&b, "- User Roles: %s\n", strings.Join(pctx.UserRoles, ", "))

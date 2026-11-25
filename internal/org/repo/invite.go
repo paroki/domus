@@ -9,13 +9,13 @@ import (
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orginvite"
-	"github.com/paroki/domus/ent/parish"
+	"github.com/paroki/domus/ent/paroki"
 	"github.com/paroki/domus/internal/org/domain"
 )
 
 // OrgInviteInput holds fields for creating an OrgInvite.
 type OrgInviteInput struct {
-	ParishID        uuid.UUID
+	ParokiID        uuid.UUID
 	OrgID           uuid.UUID
 	Code            string
 	Role            orginvite.Role
@@ -28,7 +28,7 @@ type OrgInviteInput struct {
 // CreateOrgInvite inserts a new OrgInvite row.
 func (r *Repository) CreateOrgInvite(ctx context.Context, in OrgInviteInput) (*ent.OrgInvite, error) {
 	q := r.client.OrgInvite.Create().
-		SetParishID(in.ParishID).
+		SetParokiID(in.ParokiID).
 		SetOrgID(in.OrgID).
 		SetCode(in.Code).
 		SetRole(in.Role).
@@ -113,21 +113,21 @@ func (r *Repository) FindOrgInviteByCode(ctx context.Context, code string) (*ent
 		Only(ctx)
 }
 
-// FindActiveOrgAndParish returns the active, non-deleted Organization and Parish for an invite.
-func (r *Repository) FindActiveOrgAndParish(ctx context.Context, orgID, parishID uuid.UUID) (*ent.Organization, *ent.Parish, error) {
+// FindActiveOrgAndParoki returns the active, non-deleted Organization and Paroki for an invite.
+func (r *Repository) FindActiveOrgAndParoki(ctx context.Context, orgID, parokiID uuid.UUID) (*ent.Organization, *ent.Paroki, error) {
 	orgRow, err := r.client.Organization.Query().
 		Where(organization.IDEQ(orgID), organization.DeletedAtIsNil(), organization.ActiveEQ(true)).
 		Only(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
-	parishRow, err := r.client.Parish.Query().
-		Where(parish.IDEQ(parishID), parish.DeletedAtIsNil(), parish.ActiveEQ(true)).
+	parokiRow, err := r.client.Paroki.Query().
+		Where(paroki.IDEQ(parokiID), paroki.DeletedAtIsNil(), paroki.ActiveEQ(true)).
 		Only(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
-	return orgRow, parishRow, nil
+	return orgRow, parokiRow, nil
 }
 
 // IncrementOrgInviteUsedCount atomically increments used_count by 1 if max_uses allows.

@@ -14,7 +14,7 @@ import (
 // MCPEventRSVP is the MCP-safe representation of an EventRSVP (UUIDs and timestamps as strings).
 type MCPEventRSVP struct {
 	ID          string  `json:"id"`
-	ParishID    string  `json:"parishId"`
+	ParokiID    string  `json:"parokiId"`
 	EventID     string  `json:"eventId"`
 	UserID      string  `json:"userId"`
 	Name        string  `json:"name"`
@@ -42,7 +42,7 @@ type MCPEventRSVPSummary struct {
 // MCPEvent is the MCP-safe representation of an Event (UUIDs and timestamps as strings).
 type MCPEvent struct {
 	ID           string               `json:"id"`
-	ParishID     string               `json:"parishId"`
+	ParokiID     string               `json:"parokiId"`
 	OrgID        string               `json:"orgId"`
 	OrgCode      string               `json:"orgCode"`
 	OrgName      string               `json:"orgName"`
@@ -140,17 +140,17 @@ type EventListRSVPsOutput struct {
 func (f *Feature) RegisterMCP(s *mcp.Server) {
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "event_list",
-		Description: "List visible events in the caller's active parish (public parish events and private events for caller's organizations).",
+		Description: "List visible events in the caller's active paroki (public paroki events and private events for caller's organizations).",
 	}, f.mcpEventList)
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "event_get",
-		Description: "Get details of a single event in the caller's active parish, including RSVP summary and caller's RSVP if an org member.",
+		Description: "Get details of a single event in the caller's active paroki, including RSVP summary and caller's RSVP if an org member.",
 	}, f.mcpEventGet)
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "event_create",
-		Description: "Create a new organization-owned event in the caller's active parish (requires org:admin of the owning organization).",
+		Description: "Create a new organization-owned event in the caller's active paroki (requires org:admin of the owning organization).",
 	}, f.mcpEventCreate)
 
 	mcp.AddTool(s, &mcp.Tool{
@@ -429,7 +429,7 @@ func toMCPEvent(e domain.EventResponse) MCPEvent {
 	}
 	return MCPEvent{
 		ID:           e.ID.String(),
-		ParishID:     e.ParishID.String(),
+		ParokiID:     e.ParokiID.String(),
 		OrgID:        e.OrgID.String(),
 		OrgCode:      e.OrgCode,
 		OrgName:      e.OrgName,
@@ -456,7 +456,7 @@ func toMCPEvent(e domain.EventResponse) MCPEvent {
 func toMCPEventRSVP(r domain.EventRSVPResponse) MCPEventRSVP {
 	return MCPEventRSVP{
 		ID:          r.ID.String(),
-		ParishID:    r.ParishID.String(),
+		ParokiID:    r.ParokiID.String(),
 		EventID:     r.EventID.String(),
 		UserID:      r.UserID.String(),
 		Name:        r.Name,
