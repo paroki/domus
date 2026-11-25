@@ -33,6 +33,8 @@ const (
 	FieldActive = "active"
 	// EdgeKeuskupan holds the string denoting the keuskupan edge name in mutations.
 	EdgeKeuskupan = "keuskupan"
+	// EdgeParoki holds the string denoting the paroki edge name in mutations.
+	EdgeParoki = "paroki"
 	// Table holds the table name of the kevikepan in the database.
 	Table = "kevikepan"
 	// KeuskupanTable is the table that holds the keuskupan relation/edge.
@@ -42,6 +44,13 @@ const (
 	KeuskupanInverseTable = "keuskupan"
 	// KeuskupanColumn is the table column denoting the keuskupan relation/edge.
 	KeuskupanColumn = "keuskupan_id"
+	// ParokiTable is the table that holds the paroki relation/edge.
+	ParokiTable = "paroki"
+	// ParokiInverseTable is the table name for the Paroki entity.
+	// It exists in this package in order to avoid circular dependency with the "paroki" package.
+	ParokiInverseTable = "paroki"
+	// ParokiColumn is the table column denoting the paroki relation/edge.
+	ParokiColumn = "kevikepan_id"
 )
 
 // Columns holds all SQL columns for kevikepan fields.
@@ -138,10 +147,31 @@ func ByKeuskupanField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newKeuskupanStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByParokiCount orders the results by paroki count.
+func ByParokiCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newParokiStep(), opts...)
+	}
+}
+
+// ByParoki orders the results by paroki terms.
+func ByParoki(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newParokiStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newKeuskupanStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(KeuskupanInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, KeuskupanTable, KeuskupanColumn),
+	)
+}
+func newParokiStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ParokiInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ParokiTable, ParokiColumn),
 	)
 }

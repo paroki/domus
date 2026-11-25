@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent/kecamatan"
 	"github.com/paroki/domus/ent/kelurahan"
+	"github.com/paroki/domus/ent/paroki"
 	"github.com/paroki/domus/ent/predicate"
 )
 
@@ -137,6 +138,21 @@ func (_u *KelurahanUpdate) SetKecamatan(v *Kecamatan) *KelurahanUpdate {
 	return _u.SetKecamatanID(v.ID)
 }
 
+// AddParokiIDs adds the "paroki" edge to the Paroki entity by IDs.
+func (_u *KelurahanUpdate) AddParokiIDs(ids ...uuid.UUID) *KelurahanUpdate {
+	_u.mutation.AddParokiIDs(ids...)
+	return _u
+}
+
+// AddParoki adds the "paroki" edges to the Paroki entity.
+func (_u *KelurahanUpdate) AddParoki(v ...*Paroki) *KelurahanUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddParokiIDs(ids...)
+}
+
 // Mutation returns the KelurahanMutation object of the builder.
 func (_u *KelurahanUpdate) Mutation() *KelurahanMutation {
 	return _u.mutation
@@ -146,6 +162,27 @@ func (_u *KelurahanUpdate) Mutation() *KelurahanMutation {
 func (_u *KelurahanUpdate) ClearKecamatan() *KelurahanUpdate {
 	_u.mutation.ClearKecamatan()
 	return _u
+}
+
+// ClearParoki clears all "paroki" edges to the Paroki entity.
+func (_u *KelurahanUpdate) ClearParoki() *KelurahanUpdate {
+	_u.mutation.ClearParoki()
+	return _u
+}
+
+// RemoveParokiIDs removes the "paroki" edge to Paroki entities by IDs.
+func (_u *KelurahanUpdate) RemoveParokiIDs(ids ...uuid.UUID) *KelurahanUpdate {
+	_u.mutation.RemoveParokiIDs(ids...)
+	return _u
+}
+
+// RemoveParoki removes "paroki" edges to Paroki entities.
+func (_u *KelurahanUpdate) RemoveParoki(v ...*Paroki) *KelurahanUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveParokiIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -260,6 +297,51 @@ func (_u *KelurahanUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(kecamatan.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ParokiCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   kelurahan.ParokiTable,
+			Columns: []string{kelurahan.ParokiColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedParokiIDs(); len(nodes) > 0 && !_u.mutation.ParokiCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   kelurahan.ParokiTable,
+			Columns: []string{kelurahan.ParokiColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ParokiIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   kelurahan.ParokiTable,
+			Columns: []string{kelurahan.ParokiColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -394,6 +476,21 @@ func (_u *KelurahanUpdateOne) SetKecamatan(v *Kecamatan) *KelurahanUpdateOne {
 	return _u.SetKecamatanID(v.ID)
 }
 
+// AddParokiIDs adds the "paroki" edge to the Paroki entity by IDs.
+func (_u *KelurahanUpdateOne) AddParokiIDs(ids ...uuid.UUID) *KelurahanUpdateOne {
+	_u.mutation.AddParokiIDs(ids...)
+	return _u
+}
+
+// AddParoki adds the "paroki" edges to the Paroki entity.
+func (_u *KelurahanUpdateOne) AddParoki(v ...*Paroki) *KelurahanUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddParokiIDs(ids...)
+}
+
 // Mutation returns the KelurahanMutation object of the builder.
 func (_u *KelurahanUpdateOne) Mutation() *KelurahanMutation {
 	return _u.mutation
@@ -403,6 +500,27 @@ func (_u *KelurahanUpdateOne) Mutation() *KelurahanMutation {
 func (_u *KelurahanUpdateOne) ClearKecamatan() *KelurahanUpdateOne {
 	_u.mutation.ClearKecamatan()
 	return _u
+}
+
+// ClearParoki clears all "paroki" edges to the Paroki entity.
+func (_u *KelurahanUpdateOne) ClearParoki() *KelurahanUpdateOne {
+	_u.mutation.ClearParoki()
+	return _u
+}
+
+// RemoveParokiIDs removes the "paroki" edge to Paroki entities by IDs.
+func (_u *KelurahanUpdateOne) RemoveParokiIDs(ids ...uuid.UUID) *KelurahanUpdateOne {
+	_u.mutation.RemoveParokiIDs(ids...)
+	return _u
+}
+
+// RemoveParoki removes "paroki" edges to Paroki entities.
+func (_u *KelurahanUpdateOne) RemoveParoki(v ...*Paroki) *KelurahanUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveParokiIDs(ids...)
 }
 
 // Where appends a list predicates to the KelurahanUpdate builder.
@@ -547,6 +665,51 @@ func (_u *KelurahanUpdateOne) sqlSave(ctx context.Context) (_node *Kelurahan, er
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(kecamatan.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ParokiCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   kelurahan.ParokiTable,
+			Columns: []string{kelurahan.ParokiColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedParokiIDs(); len(nodes) > 0 && !_u.mutation.ParokiCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   kelurahan.ParokiTable,
+			Columns: []string{kelurahan.ParokiColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ParokiIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   kelurahan.ParokiTable,
+			Columns: []string{kelurahan.ParokiColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

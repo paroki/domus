@@ -45,9 +45,11 @@ type Kelurahan struct {
 type KelurahanEdges struct {
 	// Kecamatan holds the value of the kecamatan edge.
 	Kecamatan *Kecamatan `json:"kecamatan,omitempty"`
+	// Paroki holds the value of the paroki edge.
+	Paroki []*Paroki `json:"paroki,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // KecamatanOrErr returns the Kecamatan value or an error if the edge
@@ -59,6 +61,15 @@ func (e KelurahanEdges) KecamatanOrErr() (*Kecamatan, error) {
 		return nil, &NotFoundError{label: kecamatan.Label}
 	}
 	return nil, &NotLoadedError{edge: "kecamatan"}
+}
+
+// ParokiOrErr returns the Paroki value or an error if the edge
+// was not loaded in eager-loading.
+func (e KelurahanEdges) ParokiOrErr() ([]*Paroki, error) {
+	if e.loadedTypes[1] {
+		return e.Paroki, nil
+	}
+	return nil, &NotLoadedError{edge: "paroki"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -161,6 +172,11 @@ func (_m *Kelurahan) Value(name string) (ent.Value, error) {
 // QueryKecamatan queries the "kecamatan" edge of the Kelurahan entity.
 func (_m *Kelurahan) QueryKecamatan() *KecamatanQuery {
 	return NewKelurahanClient(_m.config).QueryKecamatan(_m)
+}
+
+// QueryParoki queries the "paroki" edge of the Kelurahan entity.
+func (_m *Kelurahan) QueryParoki() *ParokiQuery {
+	return NewKelurahanClient(_m.config).QueryParoki(_m)
 }
 
 // Update returns a builder for updating this Kelurahan.

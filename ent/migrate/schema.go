@@ -657,17 +657,28 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "kode", Type: field.TypeString, Unique: true},
+		{Name: "kode_resmi", Type: field.TypeString, Nullable: true},
 		{Name: "nama", Type: field.TypeString},
 		{Name: "pelindung", Type: field.TypeString, Nullable: true},
 		{Name: "pastor", Type: field.TypeString, Nullable: true},
 		{Name: "alamat", Type: field.TypeString, Nullable: true},
+		{Name: "timezone", Type: field.TypeString, Default: "Asia/Makassar"},
 		{Name: "telepon", Type: field.TypeString, Nullable: true},
+		{Name: "fax", Type: field.TypeString, Nullable: true},
 		{Name: "email", Type: field.TypeString, Nullable: true},
 		{Name: "website", Type: field.TypeString, Nullable: true},
 		{Name: "logo_url", Type: field.TypeString, Nullable: true},
 		{Name: "kop_surat", Type: field.TypeString, Nullable: true},
+		{Name: "latitude", Type: field.TypeFloat64, Nullable: true},
+		{Name: "longitude", Type: field.TypeFloat64, Nullable: true},
+		{Name: "status_paroki", Type: field.TypeString, Nullable: true},
 		{Name: "active", Type: field.TypeBool, Default: true},
+		{Name: "kecamatan_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "kelurahan_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "keuskupan_id", Type: field.TypeUUID},
+		{Name: "kevikepan_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "kota_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "induk_id", Type: field.TypeUUID, Nullable: true},
 	}
 	// ParokiTable holds the schema information for the "paroki" table.
 	ParokiTable = &schema.Table{
@@ -676,10 +687,40 @@ var (
 		PrimaryKey: []*schema.Column{ParokiColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
+				Symbol:     "paroki_kecamatan_paroki",
+				Columns:    []*schema.Column{ParokiColumns[21]},
+				RefColumns: []*schema.Column{KecamatanColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "paroki_kelurahan_paroki",
+				Columns:    []*schema.Column{ParokiColumns[22]},
+				RefColumns: []*schema.Column{KelurahanColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
 				Symbol:     "paroki_keuskupan_paroki",
-				Columns:    []*schema.Column{ParokiColumns[15]},
+				Columns:    []*schema.Column{ParokiColumns[23]},
 				RefColumns: []*schema.Column{KeuskupanColumns[0]},
 				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "paroki_kevikepan_paroki",
+				Columns:    []*schema.Column{ParokiColumns[24]},
+				RefColumns: []*schema.Column{KevikepanColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "paroki_kota_paroki",
+				Columns:    []*schema.Column{ParokiColumns[25]},
+				RefColumns: []*schema.Column{KotaColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "paroki_paroki_anak",
+				Columns:    []*schema.Column{ParokiColumns[26]},
+				RefColumns: []*schema.Column{ParokiColumns[0]},
+				OnDelete:   schema.SetNull,
 			},
 		},
 		Indexes: []*schema.Index{
@@ -689,9 +730,14 @@ var (
 				Columns: []*schema.Column{ParokiColumns[4]},
 			},
 			{
-				Name:    "paroki_keuskupan_id_active",
+				Name:    "paroki_keuskupan_id_kevikepan_id_active",
 				Unique:  false,
-				Columns: []*schema.Column{ParokiColumns[15], ParokiColumns[14]},
+				Columns: []*schema.Column{ParokiColumns[23], ParokiColumns[24], ParokiColumns[20]},
+			},
+			{
+				Name:    "paroki_induk_id",
+				Unique:  false,
+				Columns: []*schema.Column{ParokiColumns[26]},
 			},
 		},
 	}
@@ -1088,7 +1134,12 @@ func init() {
 	OrgInvitesTable.ForeignKeys[0].RefTable = OrganizationsTable
 	OrgMembersTable.ForeignKeys[0].RefTable = OrganizationsTable
 	OrganizationsTable.ForeignKeys[0].RefTable = OrganizationsTable
-	ParokiTable.ForeignKeys[0].RefTable = KeuskupanTable
+	ParokiTable.ForeignKeys[0].RefTable = KecamatanTable
+	ParokiTable.ForeignKeys[1].RefTable = KelurahanTable
+	ParokiTable.ForeignKeys[2].RefTable = KeuskupanTable
+	ParokiTable.ForeignKeys[3].RefTable = KevikepanTable
+	ParokiTable.ForeignKeys[4].RefTable = KotaTable
+	ParokiTable.ForeignKeys[5].RefTable = ParokiTable
 	ParokiTable.Annotation = &entsql.Annotation{
 		Table: "paroki",
 	}

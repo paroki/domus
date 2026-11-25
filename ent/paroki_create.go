@@ -11,7 +11,11 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/paroki/domus/ent/kecamatan"
+	"github.com/paroki/domus/ent/kelurahan"
 	"github.com/paroki/domus/ent/keuskupan"
+	"github.com/paroki/domus/ent/kevikepan"
+	"github.com/paroki/domus/ent/kota"
 	"github.com/paroki/domus/ent/lingkungan"
 	"github.com/paroki/domus/ent/lookup"
 	"github.com/paroki/domus/ent/paroki"
@@ -75,9 +79,51 @@ func (_c *ParokiCreate) SetKeuskupanID(v uuid.UUID) *ParokiCreate {
 	return _c
 }
 
+// SetKevikepanID sets the "kevikepan_id" field.
+func (_c *ParokiCreate) SetKevikepanID(v uuid.UUID) *ParokiCreate {
+	_c.mutation.SetKevikepanID(v)
+	return _c
+}
+
+// SetNillableKevikepanID sets the "kevikepan_id" field if the given value is not nil.
+func (_c *ParokiCreate) SetNillableKevikepanID(v *uuid.UUID) *ParokiCreate {
+	if v != nil {
+		_c.SetKevikepanID(*v)
+	}
+	return _c
+}
+
+// SetIndukID sets the "induk_id" field.
+func (_c *ParokiCreate) SetIndukID(v uuid.UUID) *ParokiCreate {
+	_c.mutation.SetIndukID(v)
+	return _c
+}
+
+// SetNillableIndukID sets the "induk_id" field if the given value is not nil.
+func (_c *ParokiCreate) SetNillableIndukID(v *uuid.UUID) *ParokiCreate {
+	if v != nil {
+		_c.SetIndukID(*v)
+	}
+	return _c
+}
+
 // SetKode sets the "kode" field.
 func (_c *ParokiCreate) SetKode(v string) *ParokiCreate {
 	_c.mutation.SetKode(v)
+	return _c
+}
+
+// SetKodeResmi sets the "kode_resmi" field.
+func (_c *ParokiCreate) SetKodeResmi(v string) *ParokiCreate {
+	_c.mutation.SetKodeResmi(v)
+	return _c
+}
+
+// SetNillableKodeResmi sets the "kode_resmi" field if the given value is not nil.
+func (_c *ParokiCreate) SetNillableKodeResmi(v *string) *ParokiCreate {
+	if v != nil {
+		_c.SetKodeResmi(*v)
+	}
 	return _c
 }
 
@@ -129,6 +175,62 @@ func (_c *ParokiCreate) SetNillableAlamat(v *string) *ParokiCreate {
 	return _c
 }
 
+// SetKotaID sets the "kota_id" field.
+func (_c *ParokiCreate) SetKotaID(v uuid.UUID) *ParokiCreate {
+	_c.mutation.SetKotaID(v)
+	return _c
+}
+
+// SetNillableKotaID sets the "kota_id" field if the given value is not nil.
+func (_c *ParokiCreate) SetNillableKotaID(v *uuid.UUID) *ParokiCreate {
+	if v != nil {
+		_c.SetKotaID(*v)
+	}
+	return _c
+}
+
+// SetKecamatanID sets the "kecamatan_id" field.
+func (_c *ParokiCreate) SetKecamatanID(v uuid.UUID) *ParokiCreate {
+	_c.mutation.SetKecamatanID(v)
+	return _c
+}
+
+// SetNillableKecamatanID sets the "kecamatan_id" field if the given value is not nil.
+func (_c *ParokiCreate) SetNillableKecamatanID(v *uuid.UUID) *ParokiCreate {
+	if v != nil {
+		_c.SetKecamatanID(*v)
+	}
+	return _c
+}
+
+// SetKelurahanID sets the "kelurahan_id" field.
+func (_c *ParokiCreate) SetKelurahanID(v uuid.UUID) *ParokiCreate {
+	_c.mutation.SetKelurahanID(v)
+	return _c
+}
+
+// SetNillableKelurahanID sets the "kelurahan_id" field if the given value is not nil.
+func (_c *ParokiCreate) SetNillableKelurahanID(v *uuid.UUID) *ParokiCreate {
+	if v != nil {
+		_c.SetKelurahanID(*v)
+	}
+	return _c
+}
+
+// SetTimezone sets the "timezone" field.
+func (_c *ParokiCreate) SetTimezone(v string) *ParokiCreate {
+	_c.mutation.SetTimezone(v)
+	return _c
+}
+
+// SetNillableTimezone sets the "timezone" field if the given value is not nil.
+func (_c *ParokiCreate) SetNillableTimezone(v *string) *ParokiCreate {
+	if v != nil {
+		_c.SetTimezone(*v)
+	}
+	return _c
+}
+
 // SetTelepon sets the "telepon" field.
 func (_c *ParokiCreate) SetTelepon(v string) *ParokiCreate {
 	_c.mutation.SetTelepon(v)
@@ -139,6 +241,20 @@ func (_c *ParokiCreate) SetTelepon(v string) *ParokiCreate {
 func (_c *ParokiCreate) SetNillableTelepon(v *string) *ParokiCreate {
 	if v != nil {
 		_c.SetTelepon(*v)
+	}
+	return _c
+}
+
+// SetFax sets the "fax" field.
+func (_c *ParokiCreate) SetFax(v string) *ParokiCreate {
+	_c.mutation.SetFax(v)
+	return _c
+}
+
+// SetNillableFax sets the "fax" field if the given value is not nil.
+func (_c *ParokiCreate) SetNillableFax(v *string) *ParokiCreate {
+	if v != nil {
+		_c.SetFax(*v)
 	}
 	return _c
 }
@@ -199,6 +315,48 @@ func (_c *ParokiCreate) SetNillableKopSurat(v *string) *ParokiCreate {
 	return _c
 }
 
+// SetLatitude sets the "latitude" field.
+func (_c *ParokiCreate) SetLatitude(v float64) *ParokiCreate {
+	_c.mutation.SetLatitude(v)
+	return _c
+}
+
+// SetNillableLatitude sets the "latitude" field if the given value is not nil.
+func (_c *ParokiCreate) SetNillableLatitude(v *float64) *ParokiCreate {
+	if v != nil {
+		_c.SetLatitude(*v)
+	}
+	return _c
+}
+
+// SetLongitude sets the "longitude" field.
+func (_c *ParokiCreate) SetLongitude(v float64) *ParokiCreate {
+	_c.mutation.SetLongitude(v)
+	return _c
+}
+
+// SetNillableLongitude sets the "longitude" field if the given value is not nil.
+func (_c *ParokiCreate) SetNillableLongitude(v *float64) *ParokiCreate {
+	if v != nil {
+		_c.SetLongitude(*v)
+	}
+	return _c
+}
+
+// SetStatusParoki sets the "status_paroki" field.
+func (_c *ParokiCreate) SetStatusParoki(v string) *ParokiCreate {
+	_c.mutation.SetStatusParoki(v)
+	return _c
+}
+
+// SetNillableStatusParoki sets the "status_paroki" field if the given value is not nil.
+func (_c *ParokiCreate) SetNillableStatusParoki(v *string) *ParokiCreate {
+	if v != nil {
+		_c.SetStatusParoki(*v)
+	}
+	return _c
+}
+
 // SetActive sets the "active" field.
 func (_c *ParokiCreate) SetActive(v bool) *ParokiCreate {
 	_c.mutation.SetActive(v)
@@ -230,6 +388,46 @@ func (_c *ParokiCreate) SetNillableID(v *uuid.UUID) *ParokiCreate {
 // SetKeuskupan sets the "keuskupan" edge to the Keuskupan entity.
 func (_c *ParokiCreate) SetKeuskupan(v *Keuskupan) *ParokiCreate {
 	return _c.SetKeuskupanID(v.ID)
+}
+
+// SetKevikepan sets the "kevikepan" edge to the Kevikepan entity.
+func (_c *ParokiCreate) SetKevikepan(v *Kevikepan) *ParokiCreate {
+	return _c.SetKevikepanID(v.ID)
+}
+
+// SetInduk sets the "induk" edge to the Paroki entity.
+func (_c *ParokiCreate) SetInduk(v *Paroki) *ParokiCreate {
+	return _c.SetIndukID(v.ID)
+}
+
+// AddAnakIDs adds the "anak" edge to the Paroki entity by IDs.
+func (_c *ParokiCreate) AddAnakIDs(ids ...uuid.UUID) *ParokiCreate {
+	_c.mutation.AddAnakIDs(ids...)
+	return _c
+}
+
+// AddAnak adds the "anak" edges to the Paroki entity.
+func (_c *ParokiCreate) AddAnak(v ...*Paroki) *ParokiCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddAnakIDs(ids...)
+}
+
+// SetKota sets the "kota" edge to the Kota entity.
+func (_c *ParokiCreate) SetKota(v *Kota) *ParokiCreate {
+	return _c.SetKotaID(v.ID)
+}
+
+// SetKecamatan sets the "kecamatan" edge to the Kecamatan entity.
+func (_c *ParokiCreate) SetKecamatan(v *Kecamatan) *ParokiCreate {
+	return _c.SetKecamatanID(v.ID)
+}
+
+// SetKelurahan sets the "kelurahan" edge to the Kelurahan entity.
+func (_c *ParokiCreate) SetKelurahan(v *Kelurahan) *ParokiCreate {
+	return _c.SetKelurahanID(v.ID)
 }
 
 // AddMemberIDs adds the "members" edge to the ParokiMember entity by IDs.
@@ -350,6 +548,10 @@ func (_c *ParokiCreate) defaults() {
 		v := paroki.DefaultUpdatedAt()
 		_c.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := _c.mutation.Timezone(); !ok {
+		v := paroki.DefaultTimezone
+		_c.mutation.SetTimezone(v)
+	}
 	if _, ok := _c.mutation.Active(); !ok {
 		v := paroki.DefaultActive
 		_c.mutation.SetActive(v)
@@ -385,6 +587,14 @@ func (_c *ParokiCreate) check() error {
 	if v, ok := _c.mutation.Nama(); ok {
 		if err := paroki.NamaValidator(v); err != nil {
 			return &ValidationError{Name: "nama", err: fmt.Errorf(`ent: validator failed for field "Paroki.nama": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.Timezone(); !ok {
+		return &ValidationError{Name: "timezone", err: errors.New(`ent: missing required field "Paroki.timezone"`)}
+	}
+	if v, ok := _c.mutation.Timezone(); ok {
+		if err := paroki.TimezoneValidator(v); err != nil {
+			return &ValidationError{Name: "timezone", err: fmt.Errorf(`ent: validator failed for field "Paroki.timezone": %w`, err)}
 		}
 	}
 	if _, ok := _c.mutation.Active(); !ok {
@@ -444,6 +654,10 @@ func (_c *ParokiCreate) createSpec() (*Paroki, *sqlgraph.CreateSpec) {
 		_spec.SetField(paroki.FieldKode, field.TypeString, value)
 		_node.Kode = value
 	}
+	if value, ok := _c.mutation.KodeResmi(); ok {
+		_spec.SetField(paroki.FieldKodeResmi, field.TypeString, value)
+		_node.KodeResmi = &value
+	}
 	if value, ok := _c.mutation.Nama(); ok {
 		_spec.SetField(paroki.FieldNama, field.TypeString, value)
 		_node.Nama = value
@@ -460,9 +674,17 @@ func (_c *ParokiCreate) createSpec() (*Paroki, *sqlgraph.CreateSpec) {
 		_spec.SetField(paroki.FieldAlamat, field.TypeString, value)
 		_node.Alamat = &value
 	}
+	if value, ok := _c.mutation.Timezone(); ok {
+		_spec.SetField(paroki.FieldTimezone, field.TypeString, value)
+		_node.Timezone = value
+	}
 	if value, ok := _c.mutation.Telepon(); ok {
 		_spec.SetField(paroki.FieldTelepon, field.TypeString, value)
 		_node.Telepon = &value
+	}
+	if value, ok := _c.mutation.Fax(); ok {
+		_spec.SetField(paroki.FieldFax, field.TypeString, value)
+		_node.Fax = &value
 	}
 	if value, ok := _c.mutation.Email(); ok {
 		_spec.SetField(paroki.FieldEmail, field.TypeString, value)
@@ -479,6 +701,18 @@ func (_c *ParokiCreate) createSpec() (*Paroki, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.KopSurat(); ok {
 		_spec.SetField(paroki.FieldKopSurat, field.TypeString, value)
 		_node.KopSurat = &value
+	}
+	if value, ok := _c.mutation.Latitude(); ok {
+		_spec.SetField(paroki.FieldLatitude, field.TypeFloat64, value)
+		_node.Latitude = &value
+	}
+	if value, ok := _c.mutation.Longitude(); ok {
+		_spec.SetField(paroki.FieldLongitude, field.TypeFloat64, value)
+		_node.Longitude = &value
+	}
+	if value, ok := _c.mutation.StatusParoki(); ok {
+		_spec.SetField(paroki.FieldStatusParoki, field.TypeString, value)
+		_node.StatusParoki = &value
 	}
 	if value, ok := _c.mutation.Active(); ok {
 		_spec.SetField(paroki.FieldActive, field.TypeBool, value)
@@ -499,6 +733,107 @@ func (_c *ParokiCreate) createSpec() (*Paroki, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.KeuskupanID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.KevikepanIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   paroki.KevikepanTable,
+			Columns: []string{paroki.KevikepanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(kevikepan.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.KevikepanID = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.IndukIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   paroki.IndukTable,
+			Columns: []string{paroki.IndukColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.IndukID = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.AnakIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paroki.AnakTable,
+			Columns: []string{paroki.AnakColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.KotaIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   paroki.KotaTable,
+			Columns: []string{paroki.KotaColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(kota.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.KotaID = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.KecamatanIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   paroki.KecamatanTable,
+			Columns: []string{paroki.KecamatanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(kecamatan.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.KecamatanID = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.KelurahanIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   paroki.KelurahanTable,
+			Columns: []string{paroki.KelurahanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(kelurahan.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.KelurahanID = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := _c.mutation.MembersIDs(); len(nodes) > 0 {

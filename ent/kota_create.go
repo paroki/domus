@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent/kecamatan"
 	"github.com/paroki/domus/ent/kota"
+	"github.com/paroki/domus/ent/paroki"
 )
 
 // KotaCreate is the builder for creating a Kota entity.
@@ -117,6 +118,21 @@ func (_c *KotaCreate) AddKecamatan(v ...*Kecamatan) *KotaCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddKecamatanIDs(ids...)
+}
+
+// AddParokiIDs adds the "paroki" edge to the Paroki entity by IDs.
+func (_c *KotaCreate) AddParokiIDs(ids ...uuid.UUID) *KotaCreate {
+	_c.mutation.AddParokiIDs(ids...)
+	return _c
+}
+
+// AddParoki adds the "paroki" edges to the Paroki entity.
+func (_c *KotaCreate) AddParoki(v ...*Paroki) *KotaCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddParokiIDs(ids...)
 }
 
 // Mutation returns the KotaMutation object of the builder.
@@ -267,6 +283,22 @@ func (_c *KotaCreate) createSpec() (*Kota, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(kecamatan.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.ParokiIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   kota.ParokiTable,
+			Columns: []string{kota.ParokiColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

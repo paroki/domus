@@ -49,7 +49,15 @@ func TestRefMCPTools(t *testing.T) {
 		SetNama("Kevikepan Pusat").
 		Save(ctx)
 	require.NoError(t, err)
-	paroki1, err := db.Paroki.Create().SetKeuskupanID(keuskupan.ID).SetKode("p1").SetNama("Paroki Satu").Save(ctx)
+	paroki1, err := db.Paroki.Create().
+		SetKeuskupanID(keuskupan.ID).
+		SetKevikepanID(kevikepan1.ID).
+		SetKode("p1").
+		SetKodeResmi("KAJ-P1").
+		SetNama("Paroki Satu").
+		SetFax("+62-21-123456").
+		SetStatusParoki("paroki").
+		Save(ctx)
 	require.NoError(t, err)
 	paroki2, err := db.Paroki.Create().SetKeuskupanID(keuskupan.ID).SetKode("p2").SetNama("Paroki Dua").Save(ctx)
 	require.NoError(t, err)
@@ -104,6 +112,13 @@ func TestRefMCPTools(t *testing.T) {
 	var gotParoki ref.MCPRefParoki
 	require.NoError(t, json.Unmarshal([]byte(parokiRes.Content[0].(*mcp.TextContent).Text), &gotParoki))
 	require.Equal(t, paroki1.ID.String(), gotParoki.ID)
+	require.Equal(t, "Asia/Makassar", gotParoki.Timezone)
+	require.NotNil(t, gotParoki.KevikepanID)
+	require.Equal(t, kevikepan1.ID.String(), *gotParoki.KevikepanID)
+	require.NotNil(t, gotParoki.KodeResmi)
+	require.Equal(t, "KAJ-P1", *gotParoki.KodeResmi)
+	require.NotNil(t, gotParoki.StatusParoki)
+	require.Equal(t, "paroki", *gotParoki.StatusParoki)
 
 	wilayahRes, err := sess.CallTool(tenantCtx, &mcp.CallToolParams{Name: "ref_list_wilayah"})
 	require.NoError(t, err)

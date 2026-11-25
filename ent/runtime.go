@@ -591,15 +591,21 @@ func init() {
 	// paroki.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	paroki.UpdateDefaultUpdatedAt = parokiDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// parokiDescKode is the schema descriptor for kode field.
-	parokiDescKode := parokiFields[1].Descriptor()
+	parokiDescKode := parokiFields[3].Descriptor()
 	// paroki.KodeValidator is a validator for the "kode" field. It is called by the builders before save.
 	paroki.KodeValidator = parokiDescKode.Validators[0].(func(string) error)
 	// parokiDescNama is the schema descriptor for nama field.
-	parokiDescNama := parokiFields[2].Descriptor()
+	parokiDescNama := parokiFields[5].Descriptor()
 	// paroki.NamaValidator is a validator for the "nama" field. It is called by the builders before save.
 	paroki.NamaValidator = parokiDescNama.Validators[0].(func(string) error)
+	// parokiDescTimezone is the schema descriptor for timezone field.
+	parokiDescTimezone := parokiFields[12].Descriptor()
+	// paroki.DefaultTimezone holds the default value on creation for the timezone field.
+	paroki.DefaultTimezone = parokiDescTimezone.Default.(string)
+	// paroki.TimezoneValidator is a validator for the "timezone" field. It is called by the builders before save.
+	paroki.TimezoneValidator = parokiDescTimezone.Validators[0].(func(string) error)
 	// parokiDescActive is the schema descriptor for active field.
-	parokiDescActive := parokiFields[11].Descriptor()
+	parokiDescActive := parokiFields[22].Descriptor()
 	// paroki.DefaultActive holds the default value on creation for the active field.
 	paroki.DefaultActive = parokiDescActive.Default.(bool)
 	// parokiDescID is the schema descriptor for id field.

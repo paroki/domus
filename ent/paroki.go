@@ -10,7 +10,11 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
+	"github.com/paroki/domus/ent/kecamatan"
+	"github.com/paroki/domus/ent/kelurahan"
 	"github.com/paroki/domus/ent/keuskupan"
+	"github.com/paroki/domus/ent/kevikepan"
+	"github.com/paroki/domus/ent/kota"
 	"github.com/paroki/domus/ent/paroki"
 )
 
@@ -27,8 +31,14 @@ type Paroki struct {
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 	// KeuskupanID holds the value of the "keuskupan_id" field.
 	KeuskupanID uuid.UUID `json:"keuskupan_id,omitempty"`
+	// KevikepanID holds the value of the "kevikepan_id" field.
+	KevikepanID *uuid.UUID `json:"kevikepan_id,omitempty"`
+	// IndukID holds the value of the "induk_id" field.
+	IndukID *uuid.UUID `json:"induk_id,omitempty"`
 	// Kode holds the value of the "kode" field.
 	Kode string `json:"kode,omitempty"`
+	// KodeResmi holds the value of the "kode_resmi" field.
+	KodeResmi *string `json:"kode_resmi,omitempty"`
 	// Nama holds the value of the "nama" field.
 	Nama string `json:"nama,omitempty"`
 	// Pelindung holds the value of the "pelindung" field.
@@ -37,8 +47,18 @@ type Paroki struct {
 	Pastor *string `json:"pastor,omitempty"`
 	// Alamat holds the value of the "alamat" field.
 	Alamat *string `json:"alamat,omitempty"`
+	// KotaID holds the value of the "kota_id" field.
+	KotaID *uuid.UUID `json:"kota_id,omitempty"`
+	// KecamatanID holds the value of the "kecamatan_id" field.
+	KecamatanID *uuid.UUID `json:"kecamatan_id,omitempty"`
+	// KelurahanID holds the value of the "kelurahan_id" field.
+	KelurahanID *uuid.UUID `json:"kelurahan_id,omitempty"`
+	// Timezone holds the value of the "timezone" field.
+	Timezone string `json:"timezone,omitempty"`
 	// Telepon holds the value of the "telepon" field.
 	Telepon *string `json:"telepon,omitempty"`
+	// Fax holds the value of the "fax" field.
+	Fax *string `json:"fax,omitempty"`
 	// Email holds the value of the "email" field.
 	Email *string `json:"email,omitempty"`
 	// Website holds the value of the "website" field.
@@ -47,6 +67,12 @@ type Paroki struct {
 	LogoURL *string `json:"logo_url,omitempty"`
 	// KopSurat holds the value of the "kop_surat" field.
 	KopSurat *string `json:"kop_surat,omitempty"`
+	// Latitude holds the value of the "latitude" field.
+	Latitude *float64 `json:"latitude,omitempty"`
+	// Longitude holds the value of the "longitude" field.
+	Longitude *float64 `json:"longitude,omitempty"`
+	// StatusParoki holds the value of the "status_paroki" field.
+	StatusParoki *string `json:"status_paroki,omitempty"`
 	// Active holds the value of the "active" field.
 	Active bool `json:"active,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -59,6 +85,18 @@ type Paroki struct {
 type ParokiEdges struct {
 	// Keuskupan holds the value of the keuskupan edge.
 	Keuskupan *Keuskupan `json:"keuskupan,omitempty"`
+	// Kevikepan holds the value of the kevikepan edge.
+	Kevikepan *Kevikepan `json:"kevikepan,omitempty"`
+	// Induk holds the value of the induk edge.
+	Induk *Paroki `json:"induk,omitempty"`
+	// Anak holds the value of the anak edge.
+	Anak []*Paroki `json:"anak,omitempty"`
+	// Kota holds the value of the kota edge.
+	Kota *Kota `json:"kota,omitempty"`
+	// Kecamatan holds the value of the kecamatan edge.
+	Kecamatan *Kecamatan `json:"kecamatan,omitempty"`
+	// Kelurahan holds the value of the kelurahan edge.
+	Kelurahan *Kelurahan `json:"kelurahan,omitempty"`
 	// Members holds the value of the members edge.
 	Members []*ParokiMember `json:"members,omitempty"`
 	// Wilayah holds the value of the wilayah edge.
@@ -71,7 +109,7 @@ type ParokiEdges struct {
 	Periods []*Period `json:"periods,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [6]bool
+	loadedTypes [12]bool
 }
 
 // KeuskupanOrErr returns the Keuskupan value or an error if the edge
@@ -85,10 +123,74 @@ func (e ParokiEdges) KeuskupanOrErr() (*Keuskupan, error) {
 	return nil, &NotLoadedError{edge: "keuskupan"}
 }
 
+// KevikepanOrErr returns the Kevikepan value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e ParokiEdges) KevikepanOrErr() (*Kevikepan, error) {
+	if e.Kevikepan != nil {
+		return e.Kevikepan, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: kevikepan.Label}
+	}
+	return nil, &NotLoadedError{edge: "kevikepan"}
+}
+
+// IndukOrErr returns the Induk value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e ParokiEdges) IndukOrErr() (*Paroki, error) {
+	if e.Induk != nil {
+		return e.Induk, nil
+	} else if e.loadedTypes[2] {
+		return nil, &NotFoundError{label: paroki.Label}
+	}
+	return nil, &NotLoadedError{edge: "induk"}
+}
+
+// AnakOrErr returns the Anak value or an error if the edge
+// was not loaded in eager-loading.
+func (e ParokiEdges) AnakOrErr() ([]*Paroki, error) {
+	if e.loadedTypes[3] {
+		return e.Anak, nil
+	}
+	return nil, &NotLoadedError{edge: "anak"}
+}
+
+// KotaOrErr returns the Kota value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e ParokiEdges) KotaOrErr() (*Kota, error) {
+	if e.Kota != nil {
+		return e.Kota, nil
+	} else if e.loadedTypes[4] {
+		return nil, &NotFoundError{label: kota.Label}
+	}
+	return nil, &NotLoadedError{edge: "kota"}
+}
+
+// KecamatanOrErr returns the Kecamatan value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e ParokiEdges) KecamatanOrErr() (*Kecamatan, error) {
+	if e.Kecamatan != nil {
+		return e.Kecamatan, nil
+	} else if e.loadedTypes[5] {
+		return nil, &NotFoundError{label: kecamatan.Label}
+	}
+	return nil, &NotLoadedError{edge: "kecamatan"}
+}
+
+// KelurahanOrErr returns the Kelurahan value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e ParokiEdges) KelurahanOrErr() (*Kelurahan, error) {
+	if e.Kelurahan != nil {
+		return e.Kelurahan, nil
+	} else if e.loadedTypes[6] {
+		return nil, &NotFoundError{label: kelurahan.Label}
+	}
+	return nil, &NotLoadedError{edge: "kelurahan"}
+}
+
 // MembersOrErr returns the Members value or an error if the edge
 // was not loaded in eager-loading.
 func (e ParokiEdges) MembersOrErr() ([]*ParokiMember, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[7] {
 		return e.Members, nil
 	}
 	return nil, &NotLoadedError{edge: "members"}
@@ -97,7 +199,7 @@ func (e ParokiEdges) MembersOrErr() ([]*ParokiMember, error) {
 // WilayahOrErr returns the Wilayah value or an error if the edge
 // was not loaded in eager-loading.
 func (e ParokiEdges) WilayahOrErr() ([]*Wilayah, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[8] {
 		return e.Wilayah, nil
 	}
 	return nil, &NotLoadedError{edge: "wilayah"}
@@ -106,7 +208,7 @@ func (e ParokiEdges) WilayahOrErr() ([]*Wilayah, error) {
 // LingkunganOrErr returns the Lingkungan value or an error if the edge
 // was not loaded in eager-loading.
 func (e ParokiEdges) LingkunganOrErr() ([]*Lingkungan, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[9] {
 		return e.Lingkungan, nil
 	}
 	return nil, &NotLoadedError{edge: "lingkungan"}
@@ -115,7 +217,7 @@ func (e ParokiEdges) LingkunganOrErr() ([]*Lingkungan, error) {
 // LookupsOrErr returns the Lookups value or an error if the edge
 // was not loaded in eager-loading.
 func (e ParokiEdges) LookupsOrErr() ([]*Lookup, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[10] {
 		return e.Lookups, nil
 	}
 	return nil, &NotLoadedError{edge: "lookups"}
@@ -124,7 +226,7 @@ func (e ParokiEdges) LookupsOrErr() ([]*Lookup, error) {
 // PeriodsOrErr returns the Periods value or an error if the edge
 // was not loaded in eager-loading.
 func (e ParokiEdges) PeriodsOrErr() ([]*Period, error) {
-	if e.loadedTypes[5] {
+	if e.loadedTypes[11] {
 		return e.Periods, nil
 	}
 	return nil, &NotLoadedError{edge: "periods"}
@@ -135,9 +237,13 @@ func (*Paroki) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case paroki.FieldKevikepanID, paroki.FieldIndukID, paroki.FieldKotaID, paroki.FieldKecamatanID, paroki.FieldKelurahanID:
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case paroki.FieldActive:
 			values[i] = new(sql.NullBool)
-		case paroki.FieldKode, paroki.FieldNama, paroki.FieldPelindung, paroki.FieldPastor, paroki.FieldAlamat, paroki.FieldTelepon, paroki.FieldEmail, paroki.FieldWebsite, paroki.FieldLogoURL, paroki.FieldKopSurat:
+		case paroki.FieldLatitude, paroki.FieldLongitude:
+			values[i] = new(sql.NullFloat64)
+		case paroki.FieldKode, paroki.FieldKodeResmi, paroki.FieldNama, paroki.FieldPelindung, paroki.FieldPastor, paroki.FieldAlamat, paroki.FieldTimezone, paroki.FieldTelepon, paroki.FieldFax, paroki.FieldEmail, paroki.FieldWebsite, paroki.FieldLogoURL, paroki.FieldKopSurat, paroki.FieldStatusParoki:
 			values[i] = new(sql.NullString)
 		case paroki.FieldCreatedAt, paroki.FieldUpdatedAt, paroki.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
@@ -189,11 +295,32 @@ func (_m *Paroki) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				_m.KeuskupanID = *value
 			}
+		case paroki.FieldKevikepanID:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field kevikepan_id", values[i])
+			} else if value.Valid {
+				_m.KevikepanID = new(uuid.UUID)
+				*_m.KevikepanID = *value.S.(*uuid.UUID)
+			}
+		case paroki.FieldIndukID:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field induk_id", values[i])
+			} else if value.Valid {
+				_m.IndukID = new(uuid.UUID)
+				*_m.IndukID = *value.S.(*uuid.UUID)
+			}
 		case paroki.FieldKode:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field kode", values[i])
 			} else if value.Valid {
 				_m.Kode = value.String
+			}
+		case paroki.FieldKodeResmi:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field kode_resmi", values[i])
+			} else if value.Valid {
+				_m.KodeResmi = new(string)
+				*_m.KodeResmi = value.String
 			}
 		case paroki.FieldNama:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -222,12 +349,46 @@ func (_m *Paroki) assignValues(columns []string, values []any) error {
 				_m.Alamat = new(string)
 				*_m.Alamat = value.String
 			}
+		case paroki.FieldKotaID:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field kota_id", values[i])
+			} else if value.Valid {
+				_m.KotaID = new(uuid.UUID)
+				*_m.KotaID = *value.S.(*uuid.UUID)
+			}
+		case paroki.FieldKecamatanID:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field kecamatan_id", values[i])
+			} else if value.Valid {
+				_m.KecamatanID = new(uuid.UUID)
+				*_m.KecamatanID = *value.S.(*uuid.UUID)
+			}
+		case paroki.FieldKelurahanID:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field kelurahan_id", values[i])
+			} else if value.Valid {
+				_m.KelurahanID = new(uuid.UUID)
+				*_m.KelurahanID = *value.S.(*uuid.UUID)
+			}
+		case paroki.FieldTimezone:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field timezone", values[i])
+			} else if value.Valid {
+				_m.Timezone = value.String
+			}
 		case paroki.FieldTelepon:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field telepon", values[i])
 			} else if value.Valid {
 				_m.Telepon = new(string)
 				*_m.Telepon = value.String
+			}
+		case paroki.FieldFax:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field fax", values[i])
+			} else if value.Valid {
+				_m.Fax = new(string)
+				*_m.Fax = value.String
 			}
 		case paroki.FieldEmail:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -257,6 +418,27 @@ func (_m *Paroki) assignValues(columns []string, values []any) error {
 				_m.KopSurat = new(string)
 				*_m.KopSurat = value.String
 			}
+		case paroki.FieldLatitude:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field latitude", values[i])
+			} else if value.Valid {
+				_m.Latitude = new(float64)
+				*_m.Latitude = value.Float64
+			}
+		case paroki.FieldLongitude:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field longitude", values[i])
+			} else if value.Valid {
+				_m.Longitude = new(float64)
+				*_m.Longitude = value.Float64
+			}
+		case paroki.FieldStatusParoki:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field status_paroki", values[i])
+			} else if value.Valid {
+				_m.StatusParoki = new(string)
+				*_m.StatusParoki = value.String
+			}
 		case paroki.FieldActive:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field active", values[i])
@@ -279,6 +461,36 @@ func (_m *Paroki) Value(name string) (ent.Value, error) {
 // QueryKeuskupan queries the "keuskupan" edge of the Paroki entity.
 func (_m *Paroki) QueryKeuskupan() *KeuskupanQuery {
 	return NewParokiClient(_m.config).QueryKeuskupan(_m)
+}
+
+// QueryKevikepan queries the "kevikepan" edge of the Paroki entity.
+func (_m *Paroki) QueryKevikepan() *KevikepanQuery {
+	return NewParokiClient(_m.config).QueryKevikepan(_m)
+}
+
+// QueryInduk queries the "induk" edge of the Paroki entity.
+func (_m *Paroki) QueryInduk() *ParokiQuery {
+	return NewParokiClient(_m.config).QueryInduk(_m)
+}
+
+// QueryAnak queries the "anak" edge of the Paroki entity.
+func (_m *Paroki) QueryAnak() *ParokiQuery {
+	return NewParokiClient(_m.config).QueryAnak(_m)
+}
+
+// QueryKota queries the "kota" edge of the Paroki entity.
+func (_m *Paroki) QueryKota() *KotaQuery {
+	return NewParokiClient(_m.config).QueryKota(_m)
+}
+
+// QueryKecamatan queries the "kecamatan" edge of the Paroki entity.
+func (_m *Paroki) QueryKecamatan() *KecamatanQuery {
+	return NewParokiClient(_m.config).QueryKecamatan(_m)
+}
+
+// QueryKelurahan queries the "kelurahan" edge of the Paroki entity.
+func (_m *Paroki) QueryKelurahan() *KelurahanQuery {
+	return NewParokiClient(_m.config).QueryKelurahan(_m)
 }
 
 // QueryMembers queries the "members" edge of the Paroki entity.
@@ -343,8 +555,23 @@ func (_m *Paroki) String() string {
 	builder.WriteString("keuskupan_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.KeuskupanID))
 	builder.WriteString(", ")
+	if v := _m.KevikepanID; v != nil {
+		builder.WriteString("kevikepan_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.IndukID; v != nil {
+		builder.WriteString("induk_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
 	builder.WriteString("kode=")
 	builder.WriteString(_m.Kode)
+	builder.WriteString(", ")
+	if v := _m.KodeResmi; v != nil {
+		builder.WriteString("kode_resmi=")
+		builder.WriteString(*v)
+	}
 	builder.WriteString(", ")
 	builder.WriteString("nama=")
 	builder.WriteString(_m.Nama)
@@ -364,8 +591,31 @@ func (_m *Paroki) String() string {
 		builder.WriteString(*v)
 	}
 	builder.WriteString(", ")
+	if v := _m.KotaID; v != nil {
+		builder.WriteString("kota_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.KecamatanID; v != nil {
+		builder.WriteString("kecamatan_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.KelurahanID; v != nil {
+		builder.WriteString("kelurahan_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	builder.WriteString("timezone=")
+	builder.WriteString(_m.Timezone)
+	builder.WriteString(", ")
 	if v := _m.Telepon; v != nil {
 		builder.WriteString("telepon=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.Fax; v != nil {
+		builder.WriteString("fax=")
 		builder.WriteString(*v)
 	}
 	builder.WriteString(", ")
@@ -386,6 +636,21 @@ func (_m *Paroki) String() string {
 	builder.WriteString(", ")
 	if v := _m.KopSurat; v != nil {
 		builder.WriteString("kop_surat=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.Latitude; v != nil {
+		builder.WriteString("latitude=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.Longitude; v != nil {
+		builder.WriteString("longitude=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.StatusParoki; v != nil {
+		builder.WriteString("status_paroki=")
 		builder.WriteString(*v)
 	}
 	builder.WriteString(", ")

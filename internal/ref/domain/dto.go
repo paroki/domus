@@ -60,26 +60,38 @@ type UpdateKeuskupanRequest struct {
 
 // ParokiResponse is the public API representation of a Paroki.
 type ParokiResponse struct {
-	ID          uuid.UUID `json:"id"`
-	KeuskupanID uuid.UUID `json:"keuskupanId"`
-	Kode        string    `json:"kode"`
-	Nama        string    `json:"nama"`
-	Pelindung   *string   `json:"pelindung,omitempty"`
-	Pastor      *string   `json:"pastor,omitempty"`
-	Alamat      *string   `json:"alamat,omitempty"`
-	Telepon     *string   `json:"telepon,omitempty"`
-	Email       *string   `json:"email,omitempty"`
-	Website     *string   `json:"website,omitempty"`
-	LogoURL     *string   `json:"logoUrl,omitempty"`
-	KopSurat    *string   `json:"kopSurat,omitempty"`
-	Active      bool      `json:"active"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+	ID           uuid.UUID  `json:"id"`
+	KeuskupanID  uuid.UUID  `json:"keuskupanId"`
+	KevikepanID  *uuid.UUID `json:"kevikepanId,omitempty"`
+	IndukID      *uuid.UUID `json:"indukId,omitempty"`
+	Kode         string     `json:"kode"`
+	KodeResmi    *string    `json:"kodeResmi,omitempty"`
+	Nama         string     `json:"nama"`
+	Pelindung    *string    `json:"pelindung,omitempty"`
+	Pastor       *string    `json:"pastor,omitempty"`
+	Alamat       *string    `json:"alamat,omitempty"`
+	KotaID       *uuid.UUID `json:"kotaId,omitempty"`
+	KecamatanID  *uuid.UUID `json:"kecamatanId,omitempty"`
+	KelurahanID  *uuid.UUID `json:"kelurahanId,omitempty"`
+	Timezone     string     `json:"timezone"`
+	Telepon      *string    `json:"telepon,omitempty"`
+	Fax          *string    `json:"fax,omitempty"`
+	Email        *string    `json:"email,omitempty"`
+	Website      *string    `json:"website,omitempty"`
+	LogoURL      *string    `json:"logoUrl,omitempty"`
+	KopSurat     *string    `json:"kopSurat,omitempty"`
+	Latitude     *float64   `json:"latitude,omitempty"`
+	Longitude    *float64   `json:"longitude,omitempty"`
+	StatusParoki *string    `json:"statusParoki,omitempty"`
+	Active       bool       `json:"active"`
+	CreatedAt    time.Time  `json:"createdAt"`
+	UpdatedAt    time.Time  `json:"updatedAt"`
 }
 
 // ParokiSearchFilter filters paroki search results.
 type ParokiSearchFilter struct {
 	KeuskupanID *uuid.UUID `json:"keuskupanId,omitempty"`
+	KevikepanID *uuid.UUID `json:"kevikepanId,omitempty"`
 	Active      *bool      `json:"active,omitempty"`
 	MemberOnly  *bool      `json:"memberOnly,omitempty"`
 }
@@ -94,47 +106,78 @@ type SearchParokiRequest struct {
 
 // CreateParokiRequest creates a new Paroki.
 type CreateParokiRequest struct {
-	KeuskupanID uuid.UUID `json:"keuskupanId" validate:"required"`
-	Kode        string    `json:"kode" validate:"required"`
-	Nama        string    `json:"nama" validate:"required,min=1"`
-	Pelindung   *string   `json:"pelindung,omitempty"`
-	Pastor      *string   `json:"pastor,omitempty"`
-	Alamat      *string   `json:"alamat,omitempty"`
-	Telepon     *string   `json:"telepon,omitempty"`
-	Email       *string   `json:"email,omitempty" validate:"omitempty,email"`
-	Website     *string   `json:"website,omitempty"`
-	LogoURL     *string   `json:"logoUrl,omitempty"`
-	KopSurat    *string   `json:"kopSurat,omitempty"`
-	Active      *bool     `json:"active,omitempty"`
+	KeuskupanID  uuid.UUID  `json:"keuskupanId" validate:"required"`
+	KevikepanID  *uuid.UUID `json:"kevikepanId,omitempty"`
+	IndukID      *uuid.UUID `json:"indukId,omitempty"`
+	Kode         string     `json:"kode" validate:"required"`
+	KodeResmi    *string    `json:"kodeResmi,omitempty"`
+	Nama         string     `json:"nama" validate:"required,min=1"`
+	Pelindung    *string    `json:"pelindung,omitempty"`
+	Pastor       *string    `json:"pastor,omitempty"`
+	Alamat       *string    `json:"alamat,omitempty"`
+	KotaID       *uuid.UUID `json:"kotaId,omitempty"`
+	KecamatanID  *uuid.UUID `json:"kecamatanId,omitempty"`
+	KelurahanID  *uuid.UUID `json:"kelurahanId,omitempty"`
+	Timezone     *string    `json:"timezone,omitempty"`
+	Telepon      *string    `json:"telepon,omitempty"`
+	Fax          *string    `json:"fax,omitempty"`
+	Email        *string    `json:"email,omitempty" validate:"omitempty,email"`
+	Website      *string    `json:"website,omitempty"`
+	LogoURL      *string    `json:"logoUrl,omitempty"`
+	KopSurat     *string    `json:"kopSurat,omitempty"`
+	Latitude     *float64   `json:"latitude,omitempty"`
+	Longitude    *float64   `json:"longitude,omitempty"`
+	StatusParoki *string    `json:"statusParoki,omitempty"`
+	Active       *bool      `json:"active,omitempty"`
 }
 
 // UpdateParokiRequest updates a Paroki (super-admin fields or paroki profile).
 type UpdateParokiRequest struct {
-	KeuskupanID *uuid.UUID `json:"keuskupanId,omitempty"`
-	Kode        *string    `json:"kode,omitempty"`
-	Nama        *string    `json:"nama,omitempty" validate:"omitempty,min=1"`
-	Pelindung   *string    `json:"pelindung,omitempty"`
-	Pastor      *string    `json:"pastor,omitempty"`
-	Alamat      *string    `json:"alamat,omitempty"`
-	Telepon     *string    `json:"telepon,omitempty"`
-	Email       *string    `json:"email,omitempty" validate:"omitempty,email"`
-	Website     *string    `json:"website,omitempty"`
-	LogoURL     *string    `json:"logoUrl,omitempty"`
-	KopSurat    *string    `json:"kopSurat,omitempty"`
-	Active      *bool      `json:"active,omitempty"`
+	KeuskupanID      *uuid.UUID `json:"keuskupanId,omitempty"`
+	KevikepanID      *uuid.UUID `json:"kevikepanId,omitempty"`
+	IndukID          *uuid.UUID `json:"indukId,omitempty"`
+	Kode             *string    `json:"kode,omitempty"`
+	KodeResmi        *string    `json:"kodeResmi,omitempty"`
+	Nama             *string    `json:"nama,omitempty" validate:"omitempty,min=1"`
+	Pelindung        *string    `json:"pelindung,omitempty"`
+	Pastor           *string    `json:"pastor,omitempty"`
+	Alamat           *string    `json:"alamat,omitempty"`
+	KotaID           *uuid.UUID `json:"kotaId,omitempty"`
+	KecamatanID      *uuid.UUID `json:"kecamatanId,omitempty"`
+	KelurahanID      *uuid.UUID `json:"kelurahanId,omitempty"`
+	Timezone         *string    `json:"timezone,omitempty"`
+	Telepon          *string    `json:"telepon,omitempty"`
+	Fax              *string    `json:"fax,omitempty"`
+	Email            *string    `json:"email,omitempty" validate:"omitempty,email"`
+	Website          *string    `json:"website,omitempty"`
+	LogoURL          *string    `json:"logoUrl,omitempty"`
+	KopSurat         *string    `json:"kopSurat,omitempty"`
+	Latitude         *float64   `json:"latitude,omitempty"`
+	Longitude        *float64   `json:"longitude,omitempty"`
+	ClearCoordinates *bool      `json:"clearCoordinates,omitempty"`
+	StatusParoki     *string    `json:"statusParoki,omitempty"`
+	Active           *bool      `json:"active,omitempty"`
 }
 
 // UpdateParokiProfileRequest updates mutable profile fields of the current active Paroki.
 type UpdateParokiProfileRequest struct {
-	Nama      *string `json:"nama,omitempty" validate:"omitempty,min=1"`
-	Pelindung *string `json:"pelindung,omitempty"`
-	Pastor    *string `json:"pastor,omitempty"`
-	Alamat    *string `json:"alamat,omitempty"`
-	Telepon   *string `json:"telepon,omitempty"`
-	Email     *string `json:"email,omitempty" validate:"omitempty,email"`
-	Website   *string `json:"website,omitempty"`
-	LogoURL   *string `json:"logoUrl,omitempty"`
-	KopSurat  *string `json:"kopSurat,omitempty"`
+	Nama             *string    `json:"nama,omitempty" validate:"omitempty,min=1"`
+	Pelindung        *string    `json:"pelindung,omitempty"`
+	Pastor           *string    `json:"pastor,omitempty"`
+	Alamat           *string    `json:"alamat,omitempty"`
+	KotaID           *uuid.UUID `json:"kotaId,omitempty"`
+	KecamatanID      *uuid.UUID `json:"kecamatanId,omitempty"`
+	KelurahanID      *uuid.UUID `json:"kelurahanId,omitempty"`
+	Timezone         *string    `json:"timezone,omitempty"`
+	Telepon          *string    `json:"telepon,omitempty"`
+	Fax              *string    `json:"fax,omitempty"`
+	Email            *string    `json:"email,omitempty" validate:"omitempty,email"`
+	Website          *string    `json:"website,omitempty"`
+	LogoURL          *string    `json:"logoUrl,omitempty"`
+	KopSurat         *string    `json:"kopSurat,omitempty"`
+	Latitude         *float64   `json:"latitude,omitempty"`
+	Longitude        *float64   `json:"longitude,omitempty"`
+	ClearCoordinates *bool      `json:"clearCoordinates,omitempty"`
 }
 
 // ParokiMemberResponse is the public API representation of a ParokiMember joined with user info.

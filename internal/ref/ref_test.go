@@ -926,3 +926,203 @@ func (s *RefFeatureSuite) TestSipilCRUD_KotaKecamatanKelurahanHierarchyAndFacade
 	})
 	s.Forbidden()
 }
+
+func (s *RefFeatureSuite) TestParokiEnrichment_TimezoneHierarchyClearingAndDeleteGuards() {
+	s.loginViaOTP("admin@paroki.org")
+
+	// Setup Keuskupan, Kevikepan, and Sipil hierarchy.
+	s.Request("/api/ref/keuskupan", http.MethodPost, domain.CreateKeuskupanRequest{Kode: "kaj", Nama: "KAJ"})
+	s.Created()
+	kaj := testutil.DecodeAs[domain.KeuskupanResponse](s).Data
+
+	s.Request("/api/ref/keuskupan", http.MethodPost, domain.CreateKeuskupanRequest{Kode: "kas", Nama: "KAS"})
+	s.Created()
+	kas := testutil.DecodeAs[domain.KeuskupanResponse](s).Data
+
+	s.Request("/api/ref/kevikepan", http.MethodPost, domain.CreateKevikepanRequest{KeuskupanID: kaj.ID, Kode: "pusat", Nama: "Pusat"})
+	s.Created()
+	kevKaj := testutil.DecodeAs[domain.KevikepanResponse](s).Data
+
+	s.Request("/api/ref/kevikepan", http.MethodPost, domain.CreateKevikepanRequest{KeuskupanID: kas.ID, Kode: "semarang", Nama: "Semarang"})
+	s.Created()
+	kevKas := testutil.DecodeAs[domain.KevikepanResponse](s).Data
+
+	s.Request("/api/ref/kota", http.MethodPost, domain.CreateKotaRequest{Kode: "3171", Nama: "Jakarta Pusat"})
+	s.Created()
+	kota := testutil.DecodeAs[domain.KotaResponse](s).Data
+
+	s.Request("/api/ref/kecamatan", http.MethodPost, domain.CreateKecamatanRequest{KotaID: kota.ID, Kode: "317101", Nama: "Gambir"})
+	s.Created()
+	kec := testutil.DecodeAs[domain.KecamatanResponse](s).Data
+
+	s.Request("/api/ref/kelurahan", http.MethodPost, domain.CreateKelurahanRequest{KecamatanID: kec.ID, Kode: "31710101", Nama: "Gambir"})
+	s.Created()
+	kel := testutil.DecodeAs[domain.KelurahanResponse](s).Data
+
+	// Invalid timezone -> 422.
+	badTZ := "Invalid/Zone"
+	s.Request("/api/ref/paroki", http.MethodPost, domain.CreateParokiRequest{
+		KeuskupanID: kaj.ID,
+		Kode:        "p-bad-tz",
+		Nama:        "Bad TZ",
+		Timezone:    &badTZ,
+	})
+	s.UnprocessableEntity()
+
+	// Kevikepan from different Keuskupan -> 422.
+	s.Request("/api/ref/paroki", http.MethodPost, domain.CreateParokiRequest{
+		KeuskupanID: kaj.ID,
+		KevikepanID: &kevKas.ID,
+		Kode:        "p-bad-kev",
+		Nama:        "Bad Kev",
+	})
+	s.UnprocessableEntity()
+
+	// Create parent Paroki with default timezone ("Asia/Makassar").
+	lat := -6.1695
+	lng := 106.8331
+	kodeResmi := "KAJ-001"
+	status := "paroki"
+	s.Request("/api/ref/paroki", http.MethodPost, domain.CreateParokiRequest{
+		KeuskupanID:  kaj.ID,
+		KevikepanID:  &kevKaj.ID,
+		Kode:         "p-katedral",
+		KodeResmi:    &kodeResmi,
+		Nama:         "Paroki Katedral",
+		KotaID:       &kota.ID,
+		KecamatanID:  &kec.ID,
+		KelurahanID:  &kel.ID,
+		Latitude:     &lat,
+		Longitude:    &lng,
+		StatusParoki: &status,
+	})
+	s.Created()
+	parent := testutil.DecodeAs[domain.ParokiResponse](s).Data
+	s.Equal("Asia/Makassar", parent.Timezone)
+	s.Require().NotNil(parent.KevikepanID)
+	s.Equal(kevKaj.ID, *parent.KevikepanID)
+	s.Require().NotNil(parent.KodeResmi)
+	s.Equal("KAJ-001", *parent.KodeResmi)
+
+	// Search by KevikepanID filter.
+	s.Request("/api/ref/paroki/search", http.MethodPost, domain.SearchParokiRequest{
+		Filter: &domain.ParokiSearchFilter{KevikepanID: &kevKaj.ID},
+	})
+	s.OK()
+	s.Len(testutil.DecodeAs[[]domain.ParokiResponse](s).Data, 1)
+
+	// Delete guards: Kevikepan, Kota, Kecamatan, Kelurahan in use -> 409 REF_IN_USE.
+	s.Request("/api/ref/kevikepan/"+kevKaj.ID.String(), http.MethodDelete, nil)
+	s.Conflict()
+	s.Equal("REF_IN_USE", s.GetErrorResponse().Error.Code)
+
+	s.Request("/api/ref/kelurahan/"+kel.ID.String(), http.MethodDelete, nil)
+	s.Conflict()
+	s.Equal("REF_IN_USE", s.GetErrorResponse().Error.Code)
+
+	// Create child Paroki under parent.
+	wib := "Asia/Jakarta"
+	s.Request("/api/ref/paroki", http.MethodPost, domain.CreateParokiRequest{
+		KeuskupanID: kaj.ID,
+		IndukID:     &parent.ID,
+		Kode:        "p-stasi",
+		Nama:        "Stasi Katedral",
+		Timezone:    &wib,
+	})
+	s.Created()
+	child := testutil.DecodeAs[domain.ParokiResponse](s).Data
+	s.Equal("Asia/Jakarta", child.Timezone)
+
+	// 1-level induk_id guard: grandchild -> 422, parent becoming child -> 422, self -> 422.
+	s.Request("/api/ref/paroki", http.MethodPost, domain.CreateParokiRequest{
+		KeuskupanID: kaj.ID,
+		IndukID:     &child.ID,
+		Kode:        "p-grandchild",
+		Nama:        "Grandchild",
+	})
+	s.UnprocessableEntity()
+
+	s.Request("/api/ref/paroki/"+parent.ID.String(), http.MethodPatch, domain.UpdateParokiRequest{
+		IndukID: &child.ID,
+	})
+	s.UnprocessableEntity()
+
+	s.Request("/api/ref/paroki/"+parent.ID.String(), http.MethodPatch, domain.UpdateParokiRequest{
+		IndukID: &parent.ID,
+	})
+	s.UnprocessableEntity()
+
+	// Delete parent blocked by child Paroki -> 409 REF_IN_USE.
+	s.Request("/api/ref/paroki/"+parent.ID.String(), http.MethodDelete, nil)
+	s.Conflict()
+	s.Equal("REF_IN_USE", s.GetErrorResponse().Error.Code)
+
+	// PATCH invalid timezone ("", "Local") -> 422.
+	empty := ""
+	s.Request("/api/ref/paroki/"+parent.ID.String(), http.MethodPatch, domain.UpdateParokiRequest{Timezone: &empty})
+	s.UnprocessableEntity()
+	localTZ := "Local"
+	s.Request("/api/ref/paroki/"+parent.ID.String(), http.MethodPatch, domain.UpdateParokiRequest{Timezone: &localTZ})
+	s.UnprocessableEntity()
+
+	// Coordinate validation & clearCoordinates.
+	badLat := 91.0
+	s.Request("/api/ref/paroki/"+parent.ID.String(), http.MethodPatch, domain.UpdateParokiRequest{Latitude: &badLat})
+	s.UnprocessableEntity()
+	clearTrue := true
+	s.Request("/api/ref/paroki/"+parent.ID.String(), http.MethodPatch, domain.UpdateParokiRequest{
+		ClearCoordinates: &clearTrue,
+		Latitude:         &lat,
+	})
+	s.UnprocessableEntity()
+
+	// Cascade clear kotaId via uuid.Nil clears kecamatanId & kelurahanId, plus clearCoordinates.
+	nilID := uuid.Nil
+	s.Request("/api/ref/paroki/"+parent.ID.String(), http.MethodPatch, domain.UpdateParokiRequest{
+		KotaID:           &nilID,
+		ClearCoordinates: &clearTrue,
+	})
+	s.OK()
+	cleared := testutil.DecodeAs[domain.ParokiResponse](s).Data
+	s.Nil(cleared.KotaID)
+	s.Nil(cleared.KecamatanID)
+	s.Nil(cleared.KelurahanID)
+	s.Nil(cleared.Latitude)
+	s.Nil(cleared.Longitude)
+
+	// Role boundary: paroki-admin cannot edit structural fields via PATCH /paroki/:id -> 403 REF_FORBIDDEN.
+	alice, err := s.userFeature.EnsureUser(context.Background(), "alice-200@paroki.org", "Alice", "", "email", "alice-200@paroki.org")
+	s.Require().NoError(err)
+	s.Request("/api/ref/paroki/"+parent.ID.String()+"/members", http.MethodPost, domain.AddParokiMemberRequest{
+		UserID: &alice.ID,
+		Role:   "admin",
+	})
+	s.Created()
+
+	s.loginViaOTP("alice-200@paroki.org")
+	s.Request("/api/ref/paroki/"+parent.ID.String(), http.MethodPatch, domain.UpdateParokiRequest{
+		KodeResmi: &kodeResmi,
+	})
+	s.Forbidden()
+	s.Equal("REF_FORBIDDEN", s.GetErrorResponse().Error.Code)
+
+	// Paroki admin CAN update profile & domicile fields via PATCH /paroki/current.
+	s.SetHeader("X-Paroki-Id", parent.ID.String())
+	defer s.SetHeader("X-Paroki-Id", "")
+	fax := "+62-21-3456789"
+	wit := "Asia/Jayapura"
+	s.Request("/api/ref/paroki/current", http.MethodPatch, domain.UpdateParokiProfileRequest{
+		KotaID:      &kota.ID,
+		KecamatanID: &kec.ID,
+		KelurahanID: &kel.ID,
+		Timezone:    &wit,
+		Fax:         &fax,
+	})
+	s.OK()
+	prof := testutil.DecodeAs[domain.ParokiResponse](s).Data
+	s.Equal("Asia/Jayapura", prof.Timezone)
+	s.Require().NotNil(prof.Fax)
+	s.Equal("+62-21-3456789", *prof.Fax)
+	s.Require().NotNil(prof.KelurahanID)
+	s.Equal(kel.ID, *prof.KelurahanID)
+}

@@ -17,21 +17,32 @@ type RefGetParokiInput struct{}
 
 // MCPRefParoki is the MCP-safe representation of a Paroki.
 type MCPRefParoki struct {
-	ID          string    `json:"id"`
-	KeuskupanID string    `json:"keuskupanId"`
-	Kode        string    `json:"kode"`
-	Nama        string    `json:"nama"`
-	Pelindung   *string   `json:"pelindung,omitempty"`
-	Pastor      *string   `json:"pastor,omitempty"`
-	Alamat      *string   `json:"alamat,omitempty"`
-	Telepon     *string   `json:"telepon,omitempty"`
-	Email       *string   `json:"email,omitempty"`
-	Website     *string   `json:"website,omitempty"`
-	LogoURL     *string   `json:"logoUrl,omitempty"`
-	KopSurat    *string   `json:"kopSurat,omitempty"`
-	Active      bool      `json:"active"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+	ID           string    `json:"id"`
+	KeuskupanID  string    `json:"keuskupanId"`
+	KevikepanID  *string   `json:"kevikepanId,omitempty"`
+	IndukID      *string   `json:"indukId,omitempty"`
+	Kode         string    `json:"kode"`
+	KodeResmi    *string   `json:"kodeResmi,omitempty"`
+	Nama         string    `json:"nama"`
+	Pelindung    *string   `json:"pelindung,omitempty"`
+	Pastor       *string   `json:"pastor,omitempty"`
+	Alamat       *string   `json:"alamat,omitempty"`
+	KotaID       *string   `json:"kotaId,omitempty"`
+	KecamatanID  *string   `json:"kecamatanId,omitempty"`
+	KelurahanID  *string   `json:"kelurahanId,omitempty"`
+	Timezone     string    `json:"timezone"`
+	Telepon      *string   `json:"telepon,omitempty"`
+	Fax          *string   `json:"fax,omitempty"`
+	Email        *string   `json:"email,omitempty"`
+	Website      *string   `json:"website,omitempty"`
+	LogoURL      *string   `json:"logoUrl,omitempty"`
+	KopSurat     *string   `json:"kopSurat,omitempty"`
+	Latitude     *float64  `json:"latitude,omitempty"`
+	Longitude    *float64  `json:"longitude,omitempty"`
+	StatusParoki *string   `json:"statusParoki,omitempty"`
+	Active       bool      `json:"active"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
 }
 
 // RefListWilayahInput is the input schema for ref_list_wilayah.
@@ -210,22 +221,41 @@ func (f *Feature) mcpRefGetParoki(ctx context.Context, _ *mcp.CallToolRequest, _
 		return nil, MCPRefParoki{}, err
 	}
 	return nil, MCPRefParoki{
-		ID:          res.ID.String(),
-		KeuskupanID: res.KeuskupanID.String(),
-		Kode:        res.Kode,
-		Nama:        res.Nama,
-		Pelindung:   res.Pelindung,
-		Pastor:      res.Pastor,
-		Alamat:      res.Alamat,
-		Telepon:     res.Telepon,
-		Email:       res.Email,
-		Website:     res.Website,
-		LogoURL:     res.LogoURL,
-		KopSurat:    res.KopSurat,
-		Active:      res.Active,
-		CreatedAt:   res.CreatedAt,
-		UpdatedAt:   res.UpdatedAt,
+		ID:           res.ID.String(),
+		KeuskupanID:  res.KeuskupanID.String(),
+		KevikepanID:  optUUIDString(res.KevikepanID),
+		IndukID:      optUUIDString(res.IndukID),
+		Kode:         res.Kode,
+		KodeResmi:    res.KodeResmi,
+		Nama:         res.Nama,
+		Pelindung:    res.Pelindung,
+		Pastor:       res.Pastor,
+		Alamat:       res.Alamat,
+		KotaID:       optUUIDString(res.KotaID),
+		KecamatanID:  optUUIDString(res.KecamatanID),
+		KelurahanID:  optUUIDString(res.KelurahanID),
+		Timezone:     res.Timezone,
+		Telepon:      res.Telepon,
+		Fax:          res.Fax,
+		Email:        res.Email,
+		Website:      res.Website,
+		LogoURL:      res.LogoURL,
+		KopSurat:     res.KopSurat,
+		Latitude:     res.Latitude,
+		Longitude:    res.Longitude,
+		StatusParoki: res.StatusParoki,
+		Active:       res.Active,
+		CreatedAt:    res.CreatedAt,
+		UpdatedAt:    res.UpdatedAt,
 	}, nil
+}
+
+func optUUIDString(id *uuid.UUID) *string {
+	if id == nil {
+		return nil
+	}
+	s := id.String()
+	return &s
 }
 
 func (f *Feature) mcpRefListWilayah(ctx context.Context, _ *mcp.CallToolRequest, in RefListWilayahInput) (*mcp.CallToolResult, RefListWilayahOutput, error) {

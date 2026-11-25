@@ -33,6 +33,8 @@ const (
 	EdgeKota = "kota"
 	// EdgeKelurahan holds the string denoting the kelurahan edge name in mutations.
 	EdgeKelurahan = "kelurahan"
+	// EdgeParoki holds the string denoting the paroki edge name in mutations.
+	EdgeParoki = "paroki"
 	// Table holds the table name of the kecamatan in the database.
 	Table = "kecamatan"
 	// KotaTable is the table that holds the kota relation/edge.
@@ -49,6 +51,13 @@ const (
 	KelurahanInverseTable = "kelurahan"
 	// KelurahanColumn is the table column denoting the kelurahan relation/edge.
 	KelurahanColumn = "kecamatan_id"
+	// ParokiTable is the table that holds the paroki relation/edge.
+	ParokiTable = "paroki"
+	// ParokiInverseTable is the table name for the Paroki entity.
+	// It exists in this package in order to avoid circular dependency with the "paroki" package.
+	ParokiInverseTable = "paroki"
+	// ParokiColumn is the table column denoting the paroki relation/edge.
+	ParokiColumn = "kecamatan_id"
 )
 
 // Columns holds all SQL columns for kecamatan fields.
@@ -153,6 +162,20 @@ func ByKelurahan(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newKelurahanStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByParokiCount orders the results by paroki count.
+func ByParokiCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newParokiStep(), opts...)
+	}
+}
+
+// ByParoki orders the results by paroki terms.
+func ByParoki(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newParokiStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newKotaStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -165,5 +188,12 @@ func newKelurahanStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(KelurahanInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, KelurahanTable, KelurahanColumn),
+	)
+}
+func newParokiStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ParokiInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ParokiTable, ParokiColumn),
 	)
 }

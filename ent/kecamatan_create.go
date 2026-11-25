@@ -14,6 +14,7 @@ import (
 	"github.com/paroki/domus/ent/kecamatan"
 	"github.com/paroki/domus/ent/kelurahan"
 	"github.com/paroki/domus/ent/kota"
+	"github.com/paroki/domus/ent/paroki"
 )
 
 // KecamatanCreate is the builder for creating a Kecamatan entity.
@@ -129,6 +130,21 @@ func (_c *KecamatanCreate) AddKelurahan(v ...*Kelurahan) *KecamatanCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddKelurahanIDs(ids...)
+}
+
+// AddParokiIDs adds the "paroki" edge to the Paroki entity by IDs.
+func (_c *KecamatanCreate) AddParokiIDs(ids ...uuid.UUID) *KecamatanCreate {
+	_c.mutation.AddParokiIDs(ids...)
+	return _c
+}
+
+// AddParoki adds the "paroki" edges to the Paroki entity.
+func (_c *KecamatanCreate) AddParoki(v ...*Paroki) *KecamatanCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddParokiIDs(ids...)
 }
 
 // Mutation returns the KecamatanMutation object of the builder.
@@ -302,6 +318,22 @@ func (_c *KecamatanCreate) createSpec() (*Kecamatan, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(kelurahan.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.ParokiIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   kecamatan.ParokiTable,
+			Columns: []string{kecamatan.ParokiColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

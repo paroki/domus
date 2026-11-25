@@ -9,6 +9,7 @@ import (
 	"github.com/paroki/domus/ent/kecamatan"
 	"github.com/paroki/domus/ent/kelurahan"
 	"github.com/paroki/domus/ent/kota"
+	"github.com/paroki/domus/ent/paroki"
 )
 
 // KotaInput holds mutable fields for creating or reactivating a Kota.
@@ -379,4 +380,25 @@ func (r *Repository) SoftDeleteKelurahan(ctx context.Context, id uuid.UUID, at t
 		SetDeletedAt(at).
 		SetActive(false).
 		Exec(ctx)
+}
+
+// HasParokiByKota reports whether any non-deleted Paroki references kotaID.
+func (r *Repository) HasParokiByKota(ctx context.Context, kotaID uuid.UUID) (bool, error) {
+	return r.client.Paroki.Query().
+		Where(paroki.KotaIDEQ(kotaID), paroki.DeletedAtIsNil()).
+		Exist(ctx)
+}
+
+// HasParokiByKecamatan reports whether any non-deleted Paroki references kecamatanID.
+func (r *Repository) HasParokiByKecamatan(ctx context.Context, kecamatanID uuid.UUID) (bool, error) {
+	return r.client.Paroki.Query().
+		Where(paroki.KecamatanIDEQ(kecamatanID), paroki.DeletedAtIsNil()).
+		Exist(ctx)
+}
+
+// HasParokiByKelurahan reports whether any non-deleted Paroki references kelurahanID.
+func (r *Repository) HasParokiByKelurahan(ctx context.Context, kelurahanID uuid.UUID) (bool, error) {
+	return r.client.Paroki.Query().
+		Where(paroki.KelurahanIDEQ(kelurahanID), paroki.DeletedAtIsNil()).
+		Exist(ctx)
 }

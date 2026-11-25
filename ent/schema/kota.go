@@ -43,6 +43,7 @@ func (Kota) Fields() []ent.Field {
 func (Kota) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("kecamatan", Kecamatan.Type),
+		edge.To("paroki", Paroki.Type),
 	}
 }
 

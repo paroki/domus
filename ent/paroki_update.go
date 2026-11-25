@@ -12,7 +12,11 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/paroki/domus/ent/kecamatan"
+	"github.com/paroki/domus/ent/kelurahan"
 	"github.com/paroki/domus/ent/keuskupan"
+	"github.com/paroki/domus/ent/kevikepan"
+	"github.com/paroki/domus/ent/kota"
 	"github.com/paroki/domus/ent/lingkungan"
 	"github.com/paroki/domus/ent/lookup"
 	"github.com/paroki/domus/ent/paroki"
@@ -75,6 +79,46 @@ func (_u *ParokiUpdate) SetNillableKeuskupanID(v *uuid.UUID) *ParokiUpdate {
 	return _u
 }
 
+// SetKevikepanID sets the "kevikepan_id" field.
+func (_u *ParokiUpdate) SetKevikepanID(v uuid.UUID) *ParokiUpdate {
+	_u.mutation.SetKevikepanID(v)
+	return _u
+}
+
+// SetNillableKevikepanID sets the "kevikepan_id" field if the given value is not nil.
+func (_u *ParokiUpdate) SetNillableKevikepanID(v *uuid.UUID) *ParokiUpdate {
+	if v != nil {
+		_u.SetKevikepanID(*v)
+	}
+	return _u
+}
+
+// ClearKevikepanID clears the value of the "kevikepan_id" field.
+func (_u *ParokiUpdate) ClearKevikepanID() *ParokiUpdate {
+	_u.mutation.ClearKevikepanID()
+	return _u
+}
+
+// SetIndukID sets the "induk_id" field.
+func (_u *ParokiUpdate) SetIndukID(v uuid.UUID) *ParokiUpdate {
+	_u.mutation.SetIndukID(v)
+	return _u
+}
+
+// SetNillableIndukID sets the "induk_id" field if the given value is not nil.
+func (_u *ParokiUpdate) SetNillableIndukID(v *uuid.UUID) *ParokiUpdate {
+	if v != nil {
+		_u.SetIndukID(*v)
+	}
+	return _u
+}
+
+// ClearIndukID clears the value of the "induk_id" field.
+func (_u *ParokiUpdate) ClearIndukID() *ParokiUpdate {
+	_u.mutation.ClearIndukID()
+	return _u
+}
+
 // SetKode sets the "kode" field.
 func (_u *ParokiUpdate) SetKode(v string) *ParokiUpdate {
 	_u.mutation.SetKode(v)
@@ -86,6 +130,26 @@ func (_u *ParokiUpdate) SetNillableKode(v *string) *ParokiUpdate {
 	if v != nil {
 		_u.SetKode(*v)
 	}
+	return _u
+}
+
+// SetKodeResmi sets the "kode_resmi" field.
+func (_u *ParokiUpdate) SetKodeResmi(v string) *ParokiUpdate {
+	_u.mutation.SetKodeResmi(v)
+	return _u
+}
+
+// SetNillableKodeResmi sets the "kode_resmi" field if the given value is not nil.
+func (_u *ParokiUpdate) SetNillableKodeResmi(v *string) *ParokiUpdate {
+	if v != nil {
+		_u.SetKodeResmi(*v)
+	}
+	return _u
+}
+
+// ClearKodeResmi clears the value of the "kode_resmi" field.
+func (_u *ParokiUpdate) ClearKodeResmi() *ParokiUpdate {
+	_u.mutation.ClearKodeResmi()
 	return _u
 }
 
@@ -163,6 +227,80 @@ func (_u *ParokiUpdate) ClearAlamat() *ParokiUpdate {
 	return _u
 }
 
+// SetKotaID sets the "kota_id" field.
+func (_u *ParokiUpdate) SetKotaID(v uuid.UUID) *ParokiUpdate {
+	_u.mutation.SetKotaID(v)
+	return _u
+}
+
+// SetNillableKotaID sets the "kota_id" field if the given value is not nil.
+func (_u *ParokiUpdate) SetNillableKotaID(v *uuid.UUID) *ParokiUpdate {
+	if v != nil {
+		_u.SetKotaID(*v)
+	}
+	return _u
+}
+
+// ClearKotaID clears the value of the "kota_id" field.
+func (_u *ParokiUpdate) ClearKotaID() *ParokiUpdate {
+	_u.mutation.ClearKotaID()
+	return _u
+}
+
+// SetKecamatanID sets the "kecamatan_id" field.
+func (_u *ParokiUpdate) SetKecamatanID(v uuid.UUID) *ParokiUpdate {
+	_u.mutation.SetKecamatanID(v)
+	return _u
+}
+
+// SetNillableKecamatanID sets the "kecamatan_id" field if the given value is not nil.
+func (_u *ParokiUpdate) SetNillableKecamatanID(v *uuid.UUID) *ParokiUpdate {
+	if v != nil {
+		_u.SetKecamatanID(*v)
+	}
+	return _u
+}
+
+// ClearKecamatanID clears the value of the "kecamatan_id" field.
+func (_u *ParokiUpdate) ClearKecamatanID() *ParokiUpdate {
+	_u.mutation.ClearKecamatanID()
+	return _u
+}
+
+// SetKelurahanID sets the "kelurahan_id" field.
+func (_u *ParokiUpdate) SetKelurahanID(v uuid.UUID) *ParokiUpdate {
+	_u.mutation.SetKelurahanID(v)
+	return _u
+}
+
+// SetNillableKelurahanID sets the "kelurahan_id" field if the given value is not nil.
+func (_u *ParokiUpdate) SetNillableKelurahanID(v *uuid.UUID) *ParokiUpdate {
+	if v != nil {
+		_u.SetKelurahanID(*v)
+	}
+	return _u
+}
+
+// ClearKelurahanID clears the value of the "kelurahan_id" field.
+func (_u *ParokiUpdate) ClearKelurahanID() *ParokiUpdate {
+	_u.mutation.ClearKelurahanID()
+	return _u
+}
+
+// SetTimezone sets the "timezone" field.
+func (_u *ParokiUpdate) SetTimezone(v string) *ParokiUpdate {
+	_u.mutation.SetTimezone(v)
+	return _u
+}
+
+// SetNillableTimezone sets the "timezone" field if the given value is not nil.
+func (_u *ParokiUpdate) SetNillableTimezone(v *string) *ParokiUpdate {
+	if v != nil {
+		_u.SetTimezone(*v)
+	}
+	return _u
+}
+
 // SetTelepon sets the "telepon" field.
 func (_u *ParokiUpdate) SetTelepon(v string) *ParokiUpdate {
 	_u.mutation.SetTelepon(v)
@@ -180,6 +318,26 @@ func (_u *ParokiUpdate) SetNillableTelepon(v *string) *ParokiUpdate {
 // ClearTelepon clears the value of the "telepon" field.
 func (_u *ParokiUpdate) ClearTelepon() *ParokiUpdate {
 	_u.mutation.ClearTelepon()
+	return _u
+}
+
+// SetFax sets the "fax" field.
+func (_u *ParokiUpdate) SetFax(v string) *ParokiUpdate {
+	_u.mutation.SetFax(v)
+	return _u
+}
+
+// SetNillableFax sets the "fax" field if the given value is not nil.
+func (_u *ParokiUpdate) SetNillableFax(v *string) *ParokiUpdate {
+	if v != nil {
+		_u.SetFax(*v)
+	}
+	return _u
+}
+
+// ClearFax clears the value of the "fax" field.
+func (_u *ParokiUpdate) ClearFax() *ParokiUpdate {
+	_u.mutation.ClearFax()
 	return _u
 }
 
@@ -263,6 +421,80 @@ func (_u *ParokiUpdate) ClearKopSurat() *ParokiUpdate {
 	return _u
 }
 
+// SetLatitude sets the "latitude" field.
+func (_u *ParokiUpdate) SetLatitude(v float64) *ParokiUpdate {
+	_u.mutation.ResetLatitude()
+	_u.mutation.SetLatitude(v)
+	return _u
+}
+
+// SetNillableLatitude sets the "latitude" field if the given value is not nil.
+func (_u *ParokiUpdate) SetNillableLatitude(v *float64) *ParokiUpdate {
+	if v != nil {
+		_u.SetLatitude(*v)
+	}
+	return _u
+}
+
+// AddLatitude adds value to the "latitude" field.
+func (_u *ParokiUpdate) AddLatitude(v float64) *ParokiUpdate {
+	_u.mutation.AddLatitude(v)
+	return _u
+}
+
+// ClearLatitude clears the value of the "latitude" field.
+func (_u *ParokiUpdate) ClearLatitude() *ParokiUpdate {
+	_u.mutation.ClearLatitude()
+	return _u
+}
+
+// SetLongitude sets the "longitude" field.
+func (_u *ParokiUpdate) SetLongitude(v float64) *ParokiUpdate {
+	_u.mutation.ResetLongitude()
+	_u.mutation.SetLongitude(v)
+	return _u
+}
+
+// SetNillableLongitude sets the "longitude" field if the given value is not nil.
+func (_u *ParokiUpdate) SetNillableLongitude(v *float64) *ParokiUpdate {
+	if v != nil {
+		_u.SetLongitude(*v)
+	}
+	return _u
+}
+
+// AddLongitude adds value to the "longitude" field.
+func (_u *ParokiUpdate) AddLongitude(v float64) *ParokiUpdate {
+	_u.mutation.AddLongitude(v)
+	return _u
+}
+
+// ClearLongitude clears the value of the "longitude" field.
+func (_u *ParokiUpdate) ClearLongitude() *ParokiUpdate {
+	_u.mutation.ClearLongitude()
+	return _u
+}
+
+// SetStatusParoki sets the "status_paroki" field.
+func (_u *ParokiUpdate) SetStatusParoki(v string) *ParokiUpdate {
+	_u.mutation.SetStatusParoki(v)
+	return _u
+}
+
+// SetNillableStatusParoki sets the "status_paroki" field if the given value is not nil.
+func (_u *ParokiUpdate) SetNillableStatusParoki(v *string) *ParokiUpdate {
+	if v != nil {
+		_u.SetStatusParoki(*v)
+	}
+	return _u
+}
+
+// ClearStatusParoki clears the value of the "status_paroki" field.
+func (_u *ParokiUpdate) ClearStatusParoki() *ParokiUpdate {
+	_u.mutation.ClearStatusParoki()
+	return _u
+}
+
 // SetActive sets the "active" field.
 func (_u *ParokiUpdate) SetActive(v bool) *ParokiUpdate {
 	_u.mutation.SetActive(v)
@@ -280,6 +512,46 @@ func (_u *ParokiUpdate) SetNillableActive(v *bool) *ParokiUpdate {
 // SetKeuskupan sets the "keuskupan" edge to the Keuskupan entity.
 func (_u *ParokiUpdate) SetKeuskupan(v *Keuskupan) *ParokiUpdate {
 	return _u.SetKeuskupanID(v.ID)
+}
+
+// SetKevikepan sets the "kevikepan" edge to the Kevikepan entity.
+func (_u *ParokiUpdate) SetKevikepan(v *Kevikepan) *ParokiUpdate {
+	return _u.SetKevikepanID(v.ID)
+}
+
+// SetInduk sets the "induk" edge to the Paroki entity.
+func (_u *ParokiUpdate) SetInduk(v *Paroki) *ParokiUpdate {
+	return _u.SetIndukID(v.ID)
+}
+
+// AddAnakIDs adds the "anak" edge to the Paroki entity by IDs.
+func (_u *ParokiUpdate) AddAnakIDs(ids ...uuid.UUID) *ParokiUpdate {
+	_u.mutation.AddAnakIDs(ids...)
+	return _u
+}
+
+// AddAnak adds the "anak" edges to the Paroki entity.
+func (_u *ParokiUpdate) AddAnak(v ...*Paroki) *ParokiUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAnakIDs(ids...)
+}
+
+// SetKota sets the "kota" edge to the Kota entity.
+func (_u *ParokiUpdate) SetKota(v *Kota) *ParokiUpdate {
+	return _u.SetKotaID(v.ID)
+}
+
+// SetKecamatan sets the "kecamatan" edge to the Kecamatan entity.
+func (_u *ParokiUpdate) SetKecamatan(v *Kecamatan) *ParokiUpdate {
+	return _u.SetKecamatanID(v.ID)
+}
+
+// SetKelurahan sets the "kelurahan" edge to the Kelurahan entity.
+func (_u *ParokiUpdate) SetKelurahan(v *Kelurahan) *ParokiUpdate {
+	return _u.SetKelurahanID(v.ID)
 }
 
 // AddMemberIDs adds the "members" edge to the ParokiMember entity by IDs.
@@ -365,6 +637,57 @@ func (_u *ParokiUpdate) Mutation() *ParokiMutation {
 // ClearKeuskupan clears the "keuskupan" edge to the Keuskupan entity.
 func (_u *ParokiUpdate) ClearKeuskupan() *ParokiUpdate {
 	_u.mutation.ClearKeuskupan()
+	return _u
+}
+
+// ClearKevikepan clears the "kevikepan" edge to the Kevikepan entity.
+func (_u *ParokiUpdate) ClearKevikepan() *ParokiUpdate {
+	_u.mutation.ClearKevikepan()
+	return _u
+}
+
+// ClearInduk clears the "induk" edge to the Paroki entity.
+func (_u *ParokiUpdate) ClearInduk() *ParokiUpdate {
+	_u.mutation.ClearInduk()
+	return _u
+}
+
+// ClearAnak clears all "anak" edges to the Paroki entity.
+func (_u *ParokiUpdate) ClearAnak() *ParokiUpdate {
+	_u.mutation.ClearAnak()
+	return _u
+}
+
+// RemoveAnakIDs removes the "anak" edge to Paroki entities by IDs.
+func (_u *ParokiUpdate) RemoveAnakIDs(ids ...uuid.UUID) *ParokiUpdate {
+	_u.mutation.RemoveAnakIDs(ids...)
+	return _u
+}
+
+// RemoveAnak removes "anak" edges to Paroki entities.
+func (_u *ParokiUpdate) RemoveAnak(v ...*Paroki) *ParokiUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAnakIDs(ids...)
+}
+
+// ClearKota clears the "kota" edge to the Kota entity.
+func (_u *ParokiUpdate) ClearKota() *ParokiUpdate {
+	_u.mutation.ClearKota()
+	return _u
+}
+
+// ClearKecamatan clears the "kecamatan" edge to the Kecamatan entity.
+func (_u *ParokiUpdate) ClearKecamatan() *ParokiUpdate {
+	_u.mutation.ClearKecamatan()
+	return _u
+}
+
+// ClearKelurahan clears the "kelurahan" edge to the Kelurahan entity.
+func (_u *ParokiUpdate) ClearKelurahan() *ParokiUpdate {
+	_u.mutation.ClearKelurahan()
 	return _u
 }
 
@@ -521,6 +844,11 @@ func (_u *ParokiUpdate) check() error {
 			return &ValidationError{Name: "nama", err: fmt.Errorf(`ent: validator failed for field "Paroki.nama": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Timezone(); ok {
+		if err := paroki.TimezoneValidator(v); err != nil {
+			return &ValidationError{Name: "timezone", err: fmt.Errorf(`ent: validator failed for field "Paroki.timezone": %w`, err)}
+		}
+	}
 	if _u.mutation.KeuskupanCleared() && len(_u.mutation.KeuskupanIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Paroki.keuskupan"`)
 	}
@@ -551,6 +879,12 @@ func (_u *ParokiUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.Kode(); ok {
 		_spec.SetField(paroki.FieldKode, field.TypeString, value)
 	}
+	if value, ok := _u.mutation.KodeResmi(); ok {
+		_spec.SetField(paroki.FieldKodeResmi, field.TypeString, value)
+	}
+	if _u.mutation.KodeResmiCleared() {
+		_spec.ClearField(paroki.FieldKodeResmi, field.TypeString)
+	}
 	if value, ok := _u.mutation.Nama(); ok {
 		_spec.SetField(paroki.FieldNama, field.TypeString, value)
 	}
@@ -572,11 +906,20 @@ func (_u *ParokiUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if _u.mutation.AlamatCleared() {
 		_spec.ClearField(paroki.FieldAlamat, field.TypeString)
 	}
+	if value, ok := _u.mutation.Timezone(); ok {
+		_spec.SetField(paroki.FieldTimezone, field.TypeString, value)
+	}
 	if value, ok := _u.mutation.Telepon(); ok {
 		_spec.SetField(paroki.FieldTelepon, field.TypeString, value)
 	}
 	if _u.mutation.TeleponCleared() {
 		_spec.ClearField(paroki.FieldTelepon, field.TypeString)
+	}
+	if value, ok := _u.mutation.Fax(); ok {
+		_spec.SetField(paroki.FieldFax, field.TypeString, value)
+	}
+	if _u.mutation.FaxCleared() {
+		_spec.ClearField(paroki.FieldFax, field.TypeString)
 	}
 	if value, ok := _u.mutation.Email(); ok {
 		_spec.SetField(paroki.FieldEmail, field.TypeString, value)
@@ -601,6 +944,30 @@ func (_u *ParokiUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.KopSuratCleared() {
 		_spec.ClearField(paroki.FieldKopSurat, field.TypeString)
+	}
+	if value, ok := _u.mutation.Latitude(); ok {
+		_spec.SetField(paroki.FieldLatitude, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedLatitude(); ok {
+		_spec.AddField(paroki.FieldLatitude, field.TypeFloat64, value)
+	}
+	if _u.mutation.LatitudeCleared() {
+		_spec.ClearField(paroki.FieldLatitude, field.TypeFloat64)
+	}
+	if value, ok := _u.mutation.Longitude(); ok {
+		_spec.SetField(paroki.FieldLongitude, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedLongitude(); ok {
+		_spec.AddField(paroki.FieldLongitude, field.TypeFloat64, value)
+	}
+	if _u.mutation.LongitudeCleared() {
+		_spec.ClearField(paroki.FieldLongitude, field.TypeFloat64)
+	}
+	if value, ok := _u.mutation.StatusParoki(); ok {
+		_spec.SetField(paroki.FieldStatusParoki, field.TypeString, value)
+	}
+	if _u.mutation.StatusParokiCleared() {
+		_spec.ClearField(paroki.FieldStatusParoki, field.TypeString)
 	}
 	if value, ok := _u.mutation.Active(); ok {
 		_spec.SetField(paroki.FieldActive, field.TypeBool, value)
@@ -627,6 +994,196 @@ func (_u *ParokiUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(keuskupan.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.KevikepanCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   paroki.KevikepanTable,
+			Columns: []string{paroki.KevikepanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(kevikepan.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.KevikepanIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   paroki.KevikepanTable,
+			Columns: []string{paroki.KevikepanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(kevikepan.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.IndukCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   paroki.IndukTable,
+			Columns: []string{paroki.IndukColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.IndukIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   paroki.IndukTable,
+			Columns: []string{paroki.IndukColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AnakCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paroki.AnakTable,
+			Columns: []string{paroki.AnakColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAnakIDs(); len(nodes) > 0 && !_u.mutation.AnakCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paroki.AnakTable,
+			Columns: []string{paroki.AnakColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AnakIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paroki.AnakTable,
+			Columns: []string{paroki.AnakColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.KotaCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   paroki.KotaTable,
+			Columns: []string{paroki.KotaColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(kota.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.KotaIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   paroki.KotaTable,
+			Columns: []string{paroki.KotaColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(kota.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.KecamatanCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   paroki.KecamatanTable,
+			Columns: []string{paroki.KecamatanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(kecamatan.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.KecamatanIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   paroki.KecamatanTable,
+			Columns: []string{paroki.KecamatanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(kecamatan.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.KelurahanCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   paroki.KelurahanTable,
+			Columns: []string{paroki.KelurahanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(kelurahan.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.KelurahanIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   paroki.KelurahanTable,
+			Columns: []string{paroki.KelurahanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(kelurahan.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -919,6 +1476,46 @@ func (_u *ParokiUpdateOne) SetNillableKeuskupanID(v *uuid.UUID) *ParokiUpdateOne
 	return _u
 }
 
+// SetKevikepanID sets the "kevikepan_id" field.
+func (_u *ParokiUpdateOne) SetKevikepanID(v uuid.UUID) *ParokiUpdateOne {
+	_u.mutation.SetKevikepanID(v)
+	return _u
+}
+
+// SetNillableKevikepanID sets the "kevikepan_id" field if the given value is not nil.
+func (_u *ParokiUpdateOne) SetNillableKevikepanID(v *uuid.UUID) *ParokiUpdateOne {
+	if v != nil {
+		_u.SetKevikepanID(*v)
+	}
+	return _u
+}
+
+// ClearKevikepanID clears the value of the "kevikepan_id" field.
+func (_u *ParokiUpdateOne) ClearKevikepanID() *ParokiUpdateOne {
+	_u.mutation.ClearKevikepanID()
+	return _u
+}
+
+// SetIndukID sets the "induk_id" field.
+func (_u *ParokiUpdateOne) SetIndukID(v uuid.UUID) *ParokiUpdateOne {
+	_u.mutation.SetIndukID(v)
+	return _u
+}
+
+// SetNillableIndukID sets the "induk_id" field if the given value is not nil.
+func (_u *ParokiUpdateOne) SetNillableIndukID(v *uuid.UUID) *ParokiUpdateOne {
+	if v != nil {
+		_u.SetIndukID(*v)
+	}
+	return _u
+}
+
+// ClearIndukID clears the value of the "induk_id" field.
+func (_u *ParokiUpdateOne) ClearIndukID() *ParokiUpdateOne {
+	_u.mutation.ClearIndukID()
+	return _u
+}
+
 // SetKode sets the "kode" field.
 func (_u *ParokiUpdateOne) SetKode(v string) *ParokiUpdateOne {
 	_u.mutation.SetKode(v)
@@ -930,6 +1527,26 @@ func (_u *ParokiUpdateOne) SetNillableKode(v *string) *ParokiUpdateOne {
 	if v != nil {
 		_u.SetKode(*v)
 	}
+	return _u
+}
+
+// SetKodeResmi sets the "kode_resmi" field.
+func (_u *ParokiUpdateOne) SetKodeResmi(v string) *ParokiUpdateOne {
+	_u.mutation.SetKodeResmi(v)
+	return _u
+}
+
+// SetNillableKodeResmi sets the "kode_resmi" field if the given value is not nil.
+func (_u *ParokiUpdateOne) SetNillableKodeResmi(v *string) *ParokiUpdateOne {
+	if v != nil {
+		_u.SetKodeResmi(*v)
+	}
+	return _u
+}
+
+// ClearKodeResmi clears the value of the "kode_resmi" field.
+func (_u *ParokiUpdateOne) ClearKodeResmi() *ParokiUpdateOne {
+	_u.mutation.ClearKodeResmi()
 	return _u
 }
 
@@ -1007,6 +1624,80 @@ func (_u *ParokiUpdateOne) ClearAlamat() *ParokiUpdateOne {
 	return _u
 }
 
+// SetKotaID sets the "kota_id" field.
+func (_u *ParokiUpdateOne) SetKotaID(v uuid.UUID) *ParokiUpdateOne {
+	_u.mutation.SetKotaID(v)
+	return _u
+}
+
+// SetNillableKotaID sets the "kota_id" field if the given value is not nil.
+func (_u *ParokiUpdateOne) SetNillableKotaID(v *uuid.UUID) *ParokiUpdateOne {
+	if v != nil {
+		_u.SetKotaID(*v)
+	}
+	return _u
+}
+
+// ClearKotaID clears the value of the "kota_id" field.
+func (_u *ParokiUpdateOne) ClearKotaID() *ParokiUpdateOne {
+	_u.mutation.ClearKotaID()
+	return _u
+}
+
+// SetKecamatanID sets the "kecamatan_id" field.
+func (_u *ParokiUpdateOne) SetKecamatanID(v uuid.UUID) *ParokiUpdateOne {
+	_u.mutation.SetKecamatanID(v)
+	return _u
+}
+
+// SetNillableKecamatanID sets the "kecamatan_id" field if the given value is not nil.
+func (_u *ParokiUpdateOne) SetNillableKecamatanID(v *uuid.UUID) *ParokiUpdateOne {
+	if v != nil {
+		_u.SetKecamatanID(*v)
+	}
+	return _u
+}
+
+// ClearKecamatanID clears the value of the "kecamatan_id" field.
+func (_u *ParokiUpdateOne) ClearKecamatanID() *ParokiUpdateOne {
+	_u.mutation.ClearKecamatanID()
+	return _u
+}
+
+// SetKelurahanID sets the "kelurahan_id" field.
+func (_u *ParokiUpdateOne) SetKelurahanID(v uuid.UUID) *ParokiUpdateOne {
+	_u.mutation.SetKelurahanID(v)
+	return _u
+}
+
+// SetNillableKelurahanID sets the "kelurahan_id" field if the given value is not nil.
+func (_u *ParokiUpdateOne) SetNillableKelurahanID(v *uuid.UUID) *ParokiUpdateOne {
+	if v != nil {
+		_u.SetKelurahanID(*v)
+	}
+	return _u
+}
+
+// ClearKelurahanID clears the value of the "kelurahan_id" field.
+func (_u *ParokiUpdateOne) ClearKelurahanID() *ParokiUpdateOne {
+	_u.mutation.ClearKelurahanID()
+	return _u
+}
+
+// SetTimezone sets the "timezone" field.
+func (_u *ParokiUpdateOne) SetTimezone(v string) *ParokiUpdateOne {
+	_u.mutation.SetTimezone(v)
+	return _u
+}
+
+// SetNillableTimezone sets the "timezone" field if the given value is not nil.
+func (_u *ParokiUpdateOne) SetNillableTimezone(v *string) *ParokiUpdateOne {
+	if v != nil {
+		_u.SetTimezone(*v)
+	}
+	return _u
+}
+
 // SetTelepon sets the "telepon" field.
 func (_u *ParokiUpdateOne) SetTelepon(v string) *ParokiUpdateOne {
 	_u.mutation.SetTelepon(v)
@@ -1024,6 +1715,26 @@ func (_u *ParokiUpdateOne) SetNillableTelepon(v *string) *ParokiUpdateOne {
 // ClearTelepon clears the value of the "telepon" field.
 func (_u *ParokiUpdateOne) ClearTelepon() *ParokiUpdateOne {
 	_u.mutation.ClearTelepon()
+	return _u
+}
+
+// SetFax sets the "fax" field.
+func (_u *ParokiUpdateOne) SetFax(v string) *ParokiUpdateOne {
+	_u.mutation.SetFax(v)
+	return _u
+}
+
+// SetNillableFax sets the "fax" field if the given value is not nil.
+func (_u *ParokiUpdateOne) SetNillableFax(v *string) *ParokiUpdateOne {
+	if v != nil {
+		_u.SetFax(*v)
+	}
+	return _u
+}
+
+// ClearFax clears the value of the "fax" field.
+func (_u *ParokiUpdateOne) ClearFax() *ParokiUpdateOne {
+	_u.mutation.ClearFax()
 	return _u
 }
 
@@ -1107,6 +1818,80 @@ func (_u *ParokiUpdateOne) ClearKopSurat() *ParokiUpdateOne {
 	return _u
 }
 
+// SetLatitude sets the "latitude" field.
+func (_u *ParokiUpdateOne) SetLatitude(v float64) *ParokiUpdateOne {
+	_u.mutation.ResetLatitude()
+	_u.mutation.SetLatitude(v)
+	return _u
+}
+
+// SetNillableLatitude sets the "latitude" field if the given value is not nil.
+func (_u *ParokiUpdateOne) SetNillableLatitude(v *float64) *ParokiUpdateOne {
+	if v != nil {
+		_u.SetLatitude(*v)
+	}
+	return _u
+}
+
+// AddLatitude adds value to the "latitude" field.
+func (_u *ParokiUpdateOne) AddLatitude(v float64) *ParokiUpdateOne {
+	_u.mutation.AddLatitude(v)
+	return _u
+}
+
+// ClearLatitude clears the value of the "latitude" field.
+func (_u *ParokiUpdateOne) ClearLatitude() *ParokiUpdateOne {
+	_u.mutation.ClearLatitude()
+	return _u
+}
+
+// SetLongitude sets the "longitude" field.
+func (_u *ParokiUpdateOne) SetLongitude(v float64) *ParokiUpdateOne {
+	_u.mutation.ResetLongitude()
+	_u.mutation.SetLongitude(v)
+	return _u
+}
+
+// SetNillableLongitude sets the "longitude" field if the given value is not nil.
+func (_u *ParokiUpdateOne) SetNillableLongitude(v *float64) *ParokiUpdateOne {
+	if v != nil {
+		_u.SetLongitude(*v)
+	}
+	return _u
+}
+
+// AddLongitude adds value to the "longitude" field.
+func (_u *ParokiUpdateOne) AddLongitude(v float64) *ParokiUpdateOne {
+	_u.mutation.AddLongitude(v)
+	return _u
+}
+
+// ClearLongitude clears the value of the "longitude" field.
+func (_u *ParokiUpdateOne) ClearLongitude() *ParokiUpdateOne {
+	_u.mutation.ClearLongitude()
+	return _u
+}
+
+// SetStatusParoki sets the "status_paroki" field.
+func (_u *ParokiUpdateOne) SetStatusParoki(v string) *ParokiUpdateOne {
+	_u.mutation.SetStatusParoki(v)
+	return _u
+}
+
+// SetNillableStatusParoki sets the "status_paroki" field if the given value is not nil.
+func (_u *ParokiUpdateOne) SetNillableStatusParoki(v *string) *ParokiUpdateOne {
+	if v != nil {
+		_u.SetStatusParoki(*v)
+	}
+	return _u
+}
+
+// ClearStatusParoki clears the value of the "status_paroki" field.
+func (_u *ParokiUpdateOne) ClearStatusParoki() *ParokiUpdateOne {
+	_u.mutation.ClearStatusParoki()
+	return _u
+}
+
 // SetActive sets the "active" field.
 func (_u *ParokiUpdateOne) SetActive(v bool) *ParokiUpdateOne {
 	_u.mutation.SetActive(v)
@@ -1124,6 +1909,46 @@ func (_u *ParokiUpdateOne) SetNillableActive(v *bool) *ParokiUpdateOne {
 // SetKeuskupan sets the "keuskupan" edge to the Keuskupan entity.
 func (_u *ParokiUpdateOne) SetKeuskupan(v *Keuskupan) *ParokiUpdateOne {
 	return _u.SetKeuskupanID(v.ID)
+}
+
+// SetKevikepan sets the "kevikepan" edge to the Kevikepan entity.
+func (_u *ParokiUpdateOne) SetKevikepan(v *Kevikepan) *ParokiUpdateOne {
+	return _u.SetKevikepanID(v.ID)
+}
+
+// SetInduk sets the "induk" edge to the Paroki entity.
+func (_u *ParokiUpdateOne) SetInduk(v *Paroki) *ParokiUpdateOne {
+	return _u.SetIndukID(v.ID)
+}
+
+// AddAnakIDs adds the "anak" edge to the Paroki entity by IDs.
+func (_u *ParokiUpdateOne) AddAnakIDs(ids ...uuid.UUID) *ParokiUpdateOne {
+	_u.mutation.AddAnakIDs(ids...)
+	return _u
+}
+
+// AddAnak adds the "anak" edges to the Paroki entity.
+func (_u *ParokiUpdateOne) AddAnak(v ...*Paroki) *ParokiUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAnakIDs(ids...)
+}
+
+// SetKota sets the "kota" edge to the Kota entity.
+func (_u *ParokiUpdateOne) SetKota(v *Kota) *ParokiUpdateOne {
+	return _u.SetKotaID(v.ID)
+}
+
+// SetKecamatan sets the "kecamatan" edge to the Kecamatan entity.
+func (_u *ParokiUpdateOne) SetKecamatan(v *Kecamatan) *ParokiUpdateOne {
+	return _u.SetKecamatanID(v.ID)
+}
+
+// SetKelurahan sets the "kelurahan" edge to the Kelurahan entity.
+func (_u *ParokiUpdateOne) SetKelurahan(v *Kelurahan) *ParokiUpdateOne {
+	return _u.SetKelurahanID(v.ID)
 }
 
 // AddMemberIDs adds the "members" edge to the ParokiMember entity by IDs.
@@ -1209,6 +2034,57 @@ func (_u *ParokiUpdateOne) Mutation() *ParokiMutation {
 // ClearKeuskupan clears the "keuskupan" edge to the Keuskupan entity.
 func (_u *ParokiUpdateOne) ClearKeuskupan() *ParokiUpdateOne {
 	_u.mutation.ClearKeuskupan()
+	return _u
+}
+
+// ClearKevikepan clears the "kevikepan" edge to the Kevikepan entity.
+func (_u *ParokiUpdateOne) ClearKevikepan() *ParokiUpdateOne {
+	_u.mutation.ClearKevikepan()
+	return _u
+}
+
+// ClearInduk clears the "induk" edge to the Paroki entity.
+func (_u *ParokiUpdateOne) ClearInduk() *ParokiUpdateOne {
+	_u.mutation.ClearInduk()
+	return _u
+}
+
+// ClearAnak clears all "anak" edges to the Paroki entity.
+func (_u *ParokiUpdateOne) ClearAnak() *ParokiUpdateOne {
+	_u.mutation.ClearAnak()
+	return _u
+}
+
+// RemoveAnakIDs removes the "anak" edge to Paroki entities by IDs.
+func (_u *ParokiUpdateOne) RemoveAnakIDs(ids ...uuid.UUID) *ParokiUpdateOne {
+	_u.mutation.RemoveAnakIDs(ids...)
+	return _u
+}
+
+// RemoveAnak removes "anak" edges to Paroki entities.
+func (_u *ParokiUpdateOne) RemoveAnak(v ...*Paroki) *ParokiUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAnakIDs(ids...)
+}
+
+// ClearKota clears the "kota" edge to the Kota entity.
+func (_u *ParokiUpdateOne) ClearKota() *ParokiUpdateOne {
+	_u.mutation.ClearKota()
+	return _u
+}
+
+// ClearKecamatan clears the "kecamatan" edge to the Kecamatan entity.
+func (_u *ParokiUpdateOne) ClearKecamatan() *ParokiUpdateOne {
+	_u.mutation.ClearKecamatan()
+	return _u
+}
+
+// ClearKelurahan clears the "kelurahan" edge to the Kelurahan entity.
+func (_u *ParokiUpdateOne) ClearKelurahan() *ParokiUpdateOne {
+	_u.mutation.ClearKelurahan()
 	return _u
 }
 
@@ -1378,6 +2254,11 @@ func (_u *ParokiUpdateOne) check() error {
 			return &ValidationError{Name: "nama", err: fmt.Errorf(`ent: validator failed for field "Paroki.nama": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Timezone(); ok {
+		if err := paroki.TimezoneValidator(v); err != nil {
+			return &ValidationError{Name: "timezone", err: fmt.Errorf(`ent: validator failed for field "Paroki.timezone": %w`, err)}
+		}
+	}
 	if _u.mutation.KeuskupanCleared() && len(_u.mutation.KeuskupanIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Paroki.keuskupan"`)
 	}
@@ -1425,6 +2306,12 @@ func (_u *ParokiUpdateOne) sqlSave(ctx context.Context) (_node *Paroki, err erro
 	if value, ok := _u.mutation.Kode(); ok {
 		_spec.SetField(paroki.FieldKode, field.TypeString, value)
 	}
+	if value, ok := _u.mutation.KodeResmi(); ok {
+		_spec.SetField(paroki.FieldKodeResmi, field.TypeString, value)
+	}
+	if _u.mutation.KodeResmiCleared() {
+		_spec.ClearField(paroki.FieldKodeResmi, field.TypeString)
+	}
 	if value, ok := _u.mutation.Nama(); ok {
 		_spec.SetField(paroki.FieldNama, field.TypeString, value)
 	}
@@ -1446,11 +2333,20 @@ func (_u *ParokiUpdateOne) sqlSave(ctx context.Context) (_node *Paroki, err erro
 	if _u.mutation.AlamatCleared() {
 		_spec.ClearField(paroki.FieldAlamat, field.TypeString)
 	}
+	if value, ok := _u.mutation.Timezone(); ok {
+		_spec.SetField(paroki.FieldTimezone, field.TypeString, value)
+	}
 	if value, ok := _u.mutation.Telepon(); ok {
 		_spec.SetField(paroki.FieldTelepon, field.TypeString, value)
 	}
 	if _u.mutation.TeleponCleared() {
 		_spec.ClearField(paroki.FieldTelepon, field.TypeString)
+	}
+	if value, ok := _u.mutation.Fax(); ok {
+		_spec.SetField(paroki.FieldFax, field.TypeString, value)
+	}
+	if _u.mutation.FaxCleared() {
+		_spec.ClearField(paroki.FieldFax, field.TypeString)
 	}
 	if value, ok := _u.mutation.Email(); ok {
 		_spec.SetField(paroki.FieldEmail, field.TypeString, value)
@@ -1475,6 +2371,30 @@ func (_u *ParokiUpdateOne) sqlSave(ctx context.Context) (_node *Paroki, err erro
 	}
 	if _u.mutation.KopSuratCleared() {
 		_spec.ClearField(paroki.FieldKopSurat, field.TypeString)
+	}
+	if value, ok := _u.mutation.Latitude(); ok {
+		_spec.SetField(paroki.FieldLatitude, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedLatitude(); ok {
+		_spec.AddField(paroki.FieldLatitude, field.TypeFloat64, value)
+	}
+	if _u.mutation.LatitudeCleared() {
+		_spec.ClearField(paroki.FieldLatitude, field.TypeFloat64)
+	}
+	if value, ok := _u.mutation.Longitude(); ok {
+		_spec.SetField(paroki.FieldLongitude, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedLongitude(); ok {
+		_spec.AddField(paroki.FieldLongitude, field.TypeFloat64, value)
+	}
+	if _u.mutation.LongitudeCleared() {
+		_spec.ClearField(paroki.FieldLongitude, field.TypeFloat64)
+	}
+	if value, ok := _u.mutation.StatusParoki(); ok {
+		_spec.SetField(paroki.FieldStatusParoki, field.TypeString, value)
+	}
+	if _u.mutation.StatusParokiCleared() {
+		_spec.ClearField(paroki.FieldStatusParoki, field.TypeString)
 	}
 	if value, ok := _u.mutation.Active(); ok {
 		_spec.SetField(paroki.FieldActive, field.TypeBool, value)
@@ -1501,6 +2421,196 @@ func (_u *ParokiUpdateOne) sqlSave(ctx context.Context) (_node *Paroki, err erro
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(keuskupan.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.KevikepanCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   paroki.KevikepanTable,
+			Columns: []string{paroki.KevikepanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(kevikepan.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.KevikepanIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   paroki.KevikepanTable,
+			Columns: []string{paroki.KevikepanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(kevikepan.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.IndukCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   paroki.IndukTable,
+			Columns: []string{paroki.IndukColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.IndukIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   paroki.IndukTable,
+			Columns: []string{paroki.IndukColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AnakCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paroki.AnakTable,
+			Columns: []string{paroki.AnakColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAnakIDs(); len(nodes) > 0 && !_u.mutation.AnakCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paroki.AnakTable,
+			Columns: []string{paroki.AnakColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AnakIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paroki.AnakTable,
+			Columns: []string{paroki.AnakColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.KotaCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   paroki.KotaTable,
+			Columns: []string{paroki.KotaColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(kota.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.KotaIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   paroki.KotaTable,
+			Columns: []string{paroki.KotaColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(kota.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.KecamatanCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   paroki.KecamatanTable,
+			Columns: []string{paroki.KecamatanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(kecamatan.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.KecamatanIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   paroki.KecamatanTable,
+			Columns: []string{paroki.KecamatanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(kecamatan.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.KelurahanCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   paroki.KelurahanTable,
+			Columns: []string{paroki.KelurahanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(kelurahan.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.KelurahanIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   paroki.KelurahanTable,
+			Columns: []string{paroki.KelurahanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(kelurahan.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

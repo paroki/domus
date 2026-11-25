@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent/keuskupan"
 	"github.com/paroki/domus/ent/kevikepan"
+	"github.com/paroki/domus/ent/paroki"
 	"github.com/paroki/domus/ent/predicate"
 )
 
@@ -25,6 +27,7 @@ type KevikepanQuery struct {
 	inters        []Interceptor
 	predicates    []predicate.Kevikepan
 	withKeuskupan *KeuskupanQuery
+	withParoki    *ParokiQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -76,6 +79,28 @@ func (_q *KevikepanQuery) QueryKeuskupan() *KeuskupanQuery {
 			sqlgraph.From(kevikepan.Table, kevikepan.FieldID, selector),
 			sqlgraph.To(keuskupan.Table, keuskupan.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, kevikepan.KeuskupanTable, kevikepan.KeuskupanColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryParoki chains the current query on the "paroki" edge.
+func (_q *KevikepanQuery) QueryParoki() *ParokiQuery {
+	query := (&ParokiClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(kevikepan.Table, kevikepan.FieldID, selector),
+			sqlgraph.To(paroki.Table, paroki.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, kevikepan.ParokiTable, kevikepan.ParokiColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -276,6 +301,7 @@ func (_q *KevikepanQuery) Clone() *KevikepanQuery {
 		inters:        append([]Interceptor{}, _q.inters...),
 		predicates:    append([]predicate.Kevikepan{}, _q.predicates...),
 		withKeuskupan: _q.withKeuskupan.Clone(),
+		withParoki:    _q.withParoki.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -290,6 +316,17 @@ func (_q *KevikepanQuery) WithKeuskupan(opts ...func(*KeuskupanQuery)) *Kevikepa
 		opt(query)
 	}
 	_q.withKeuskupan = query
+	return _q
+}
+
+// WithParoki tells the query-builder to eager-load the nodes that are connected to
+// the "paroki" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *KevikepanQuery) WithParoki(opts ...func(*ParokiQuery)) *KevikepanQuery {
+	query := (&ParokiClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withParoki = query
 	return _q
 }
 
@@ -371,8 +408,9 @@ func (_q *KevikepanQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ke
 	var (
 		nodes       = []*Kevikepan{}
 		_spec       = _q.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			_q.withKeuskupan != nil,
+			_q.withParoki != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -396,6 +434,13 @@ func (_q *KevikepanQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ke
 	if query := _q.withKeuskupan; query != nil {
 		if err := _q.loadKeuskupan(ctx, query, nodes, nil,
 			func(n *Kevikepan, e *Keuskupan) { n.Edges.Keuskupan = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withParoki; query != nil {
+		if err := _q.loadParoki(ctx, query, nodes,
+			func(n *Kevikepan) { n.Edges.Paroki = []*Paroki{} },
+			func(n *Kevikepan, e *Paroki) { n.Edges.Paroki = append(n.Edges.Paroki, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -428,6 +473,39 @@ func (_q *KevikepanQuery) loadKeuskupan(ctx context.Context, query *KeuskupanQue
 		for i := range nodes {
 			assign(nodes[i], n)
 		}
+	}
+	return nil
+}
+func (_q *KevikepanQuery) loadParoki(ctx context.Context, query *ParokiQuery, nodes []*Kevikepan, init func(*Kevikepan), assign func(*Kevikepan, *Paroki)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Kevikepan)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(paroki.FieldKevikepanID)
+	}
+	query.Where(predicate.Paroki(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(kevikepan.ParokiColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.KevikepanID
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "kevikepan_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "kevikepan_id" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }

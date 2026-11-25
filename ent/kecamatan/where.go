@@ -427,6 +427,29 @@ func HasKelurahanWith(preds ...predicate.Kelurahan) predicate.Kecamatan {
 	})
 }
 
+// HasParoki applies the HasEdge predicate on the "paroki" edge.
+func HasParoki() predicate.Kecamatan {
+	return predicate.Kecamatan(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ParokiTable, ParokiColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasParokiWith applies the HasEdge predicate on the "paroki" edge with a given conditions (other predicates).
+func HasParokiWith(preds ...predicate.Paroki) predicate.Kecamatan {
+	return predicate.Kecamatan(func(s *sql.Selector) {
+		step := newParokiStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Kecamatan) predicate.Kecamatan {
 	return predicate.Kecamatan(sql.AndPredicates(predicates...))

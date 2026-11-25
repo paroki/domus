@@ -604,17 +604,44 @@
                     "email": {
                         "type": "string"
                     },
+                    "fax": {
+                        "type": "string"
+                    },
+                    "indukId": {
+                        "type": "string"
+                    },
+                    "kecamatanId": {
+                        "type": "string"
+                    },
+                    "kelurahanId": {
+                        "type": "string"
+                    },
                     "keuskupanId": {
+                        "type": "string"
+                    },
+                    "kevikepanId": {
                         "type": "string"
                     },
                     "kode": {
                         "type": "string"
                     },
+                    "kodeResmi": {
+                        "type": "string"
+                    },
                     "kopSurat": {
                         "type": "string"
                     },
+                    "kotaId": {
+                        "type": "string"
+                    },
+                    "latitude": {
+                        "type": "number"
+                    },
                     "logoUrl": {
                         "type": "string"
+                    },
+                    "longitude": {
+                        "type": "number"
                     },
                     "nama": {
                         "minLength": 1,
@@ -626,7 +653,13 @@
                     "pelindung": {
                         "type": "string"
                     },
+                    "statusParoki": {
+                        "type": "string"
+                    },
                     "telepon": {
+                        "type": "string"
+                    },
+                    "timezone": {
                         "type": "string"
                     },
                     "website": {
@@ -1640,20 +1673,47 @@
                     "email": {
                         "type": "string"
                     },
+                    "fax": {
+                        "type": "string"
+                    },
                     "id": {
+                        "type": "string"
+                    },
+                    "indukId": {
+                        "type": "string"
+                    },
+                    "kecamatanId": {
+                        "type": "string"
+                    },
+                    "kelurahanId": {
                         "type": "string"
                     },
                     "keuskupanId": {
                         "type": "string"
                     },
+                    "kevikepanId": {
+                        "type": "string"
+                    },
                     "kode": {
+                        "type": "string"
+                    },
+                    "kodeResmi": {
                         "type": "string"
                     },
                     "kopSurat": {
                         "type": "string"
                     },
+                    "kotaId": {
+                        "type": "string"
+                    },
+                    "latitude": {
+                        "type": "number"
+                    },
                     "logoUrl": {
                         "type": "string"
+                    },
+                    "longitude": {
+                        "type": "number"
                     },
                     "nama": {
                         "type": "string"
@@ -1664,7 +1724,13 @@
                     "pelindung": {
                         "type": "string"
                     },
+                    "statusParoki": {
+                        "type": "string"
+                    },
                     "telepon": {
+                        "type": "string"
+                    },
+                    "timezone": {
                         "type": "string"
                     },
                     "updatedAt": {
@@ -1682,6 +1748,9 @@
                         "type": "boolean"
                     },
                     "keuskupanId": {
+                        "type": "string"
+                    },
+                    "kevikepanId": {
                         "type": "string"
                     },
                     "memberOnly": {
@@ -2668,14 +2737,35 @@
                     "alamat": {
                         "type": "string"
                     },
+                    "clearCoordinates": {
+                        "type": "boolean"
+                    },
                     "email": {
+                        "type": "string"
+                    },
+                    "fax": {
+                        "type": "string"
+                    },
+                    "kecamatanId": {
+                        "type": "string"
+                    },
+                    "kelurahanId": {
                         "type": "string"
                     },
                     "kopSurat": {
                         "type": "string"
                     },
+                    "kotaId": {
+                        "type": "string"
+                    },
+                    "latitude": {
+                        "type": "number"
+                    },
                     "logoUrl": {
                         "type": "string"
+                    },
+                    "longitude": {
+                        "type": "number"
                     },
                     "nama": {
                         "minLength": 1,
@@ -2688,6 +2778,9 @@
                         "type": "string"
                     },
                     "telepon": {
+                        "type": "string"
+                    },
+                    "timezone": {
                         "type": "string"
                     },
                     "website": {
@@ -2704,20 +2797,50 @@
                     "alamat": {
                         "type": "string"
                     },
+                    "clearCoordinates": {
+                        "type": "boolean"
+                    },
                     "email": {
+                        "type": "string"
+                    },
+                    "fax": {
+                        "type": "string"
+                    },
+                    "indukId": {
+                        "type": "string"
+                    },
+                    "kecamatanId": {
+                        "type": "string"
+                    },
+                    "kelurahanId": {
                         "type": "string"
                     },
                     "keuskupanId": {
                         "type": "string"
                     },
+                    "kevikepanId": {
+                        "type": "string"
+                    },
                     "kode": {
+                        "type": "string"
+                    },
+                    "kodeResmi": {
                         "type": "string"
                     },
                     "kopSurat": {
                         "type": "string"
                     },
+                    "kotaId": {
+                        "type": "string"
+                    },
+                    "latitude": {
+                        "type": "number"
+                    },
                     "logoUrl": {
                         "type": "string"
+                    },
+                    "longitude": {
+                        "type": "number"
                     },
                     "nama": {
                         "minLength": 1,
@@ -2729,7 +2852,13 @@
                     "pelindung": {
                         "type": "string"
                     },
+                    "statusParoki": {
+                        "type": "string"
+                    },
                     "telepon": {
+                        "type": "string"
+                    },
+                    "timezone": {
                         "type": "string"
                     },
                     "website": {

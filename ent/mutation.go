@@ -6144,6 +6144,9 @@ type KecamatanMutation struct {
 	kelurahan        map[uuid.UUID]struct{}
 	removedkelurahan map[uuid.UUID]struct{}
 	clearedkelurahan bool
+	paroki           map[uuid.UUID]struct{}
+	removedparoki    map[uuid.UUID]struct{}
+	clearedparoki    bool
 	done             bool
 	oldValue         func(context.Context) (*Kecamatan, error)
 	predicates       []predicate.Kecamatan
@@ -6599,6 +6602,60 @@ func (m *KecamatanMutation) ResetKelurahan() {
 	m.removedkelurahan = nil
 }
 
+// AddParokiIDs adds the "paroki" edge to the Paroki entity by ids.
+func (m *KecamatanMutation) AddParokiIDs(ids ...uuid.UUID) {
+	if m.paroki == nil {
+		m.paroki = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.paroki[ids[i]] = struct{}{}
+	}
+}
+
+// ClearParoki clears the "paroki" edge to the Paroki entity.
+func (m *KecamatanMutation) ClearParoki() {
+	m.clearedparoki = true
+}
+
+// ParokiCleared reports if the "paroki" edge to the Paroki entity was cleared.
+func (m *KecamatanMutation) ParokiCleared() bool {
+	return m.clearedparoki
+}
+
+// RemoveParokiIDs removes the "paroki" edge to the Paroki entity by IDs.
+func (m *KecamatanMutation) RemoveParokiIDs(ids ...uuid.UUID) {
+	if m.removedparoki == nil {
+		m.removedparoki = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.paroki, ids[i])
+		m.removedparoki[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedParoki returns the removed IDs of the "paroki" edge to the Paroki entity.
+func (m *KecamatanMutation) RemovedParokiIDs() (ids []uuid.UUID) {
+	for id := range m.removedparoki {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ParokiIDs returns the "paroki" edge IDs in the mutation.
+func (m *KecamatanMutation) ParokiIDs() (ids []uuid.UUID) {
+	for id := range m.paroki {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetParoki resets all changes to the "paroki" edge.
+func (m *KecamatanMutation) ResetParoki() {
+	m.paroki = nil
+	m.clearedparoki = false
+	m.removedparoki = nil
+}
+
 // Where appends a list predicates to the KecamatanMutation builder.
 func (m *KecamatanMutation) Where(ps ...predicate.Kecamatan) {
 	m.predicates = append(m.predicates, ps...)
@@ -6843,12 +6900,15 @@ func (m *KecamatanMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *KecamatanMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.kota != nil {
 		edges = append(edges, kecamatan.EdgeKota)
 	}
 	if m.kelurahan != nil {
 		edges = append(edges, kecamatan.EdgeKelurahan)
+	}
+	if m.paroki != nil {
+		edges = append(edges, kecamatan.EdgeParoki)
 	}
 	return edges
 }
@@ -6867,15 +6927,24 @@ func (m *KecamatanMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case kecamatan.EdgeParoki:
+		ids := make([]ent.Value, 0, len(m.paroki))
+		for id := range m.paroki {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *KecamatanMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.removedkelurahan != nil {
 		edges = append(edges, kecamatan.EdgeKelurahan)
+	}
+	if m.removedparoki != nil {
+		edges = append(edges, kecamatan.EdgeParoki)
 	}
 	return edges
 }
@@ -6890,18 +6959,27 @@ func (m *KecamatanMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case kecamatan.EdgeParoki:
+		ids := make([]ent.Value, 0, len(m.removedparoki))
+		for id := range m.removedparoki {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *KecamatanMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.clearedkota {
 		edges = append(edges, kecamatan.EdgeKota)
 	}
 	if m.clearedkelurahan {
 		edges = append(edges, kecamatan.EdgeKelurahan)
+	}
+	if m.clearedparoki {
+		edges = append(edges, kecamatan.EdgeParoki)
 	}
 	return edges
 }
@@ -6914,6 +6992,8 @@ func (m *KecamatanMutation) EdgeCleared(name string) bool {
 		return m.clearedkota
 	case kecamatan.EdgeKelurahan:
 		return m.clearedkelurahan
+	case kecamatan.EdgeParoki:
+		return m.clearedparoki
 	}
 	return false
 }
@@ -6939,6 +7019,9 @@ func (m *KecamatanMutation) ResetEdge(name string) error {
 	case kecamatan.EdgeKelurahan:
 		m.ResetKelurahan()
 		return nil
+	case kecamatan.EdgeParoki:
+		m.ResetParoki()
+		return nil
 	}
 	return fmt.Errorf("unknown Kecamatan edge %s", name)
 }
@@ -6959,6 +7042,9 @@ type KelurahanMutation struct {
 	clearedFields    map[string]struct{}
 	kecamatan        *uuid.UUID
 	clearedkecamatan bool
+	paroki           map[uuid.UUID]struct{}
+	removedparoki    map[uuid.UUID]struct{}
+	clearedparoki    bool
 	done             bool
 	oldValue         func(context.Context) (*Kelurahan, error)
 	predicates       []predicate.Kelurahan
@@ -7409,6 +7495,60 @@ func (m *KelurahanMutation) ResetKecamatan() {
 	m.clearedkecamatan = false
 }
 
+// AddParokiIDs adds the "paroki" edge to the Paroki entity by ids.
+func (m *KelurahanMutation) AddParokiIDs(ids ...uuid.UUID) {
+	if m.paroki == nil {
+		m.paroki = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.paroki[ids[i]] = struct{}{}
+	}
+}
+
+// ClearParoki clears the "paroki" edge to the Paroki entity.
+func (m *KelurahanMutation) ClearParoki() {
+	m.clearedparoki = true
+}
+
+// ParokiCleared reports if the "paroki" edge to the Paroki entity was cleared.
+func (m *KelurahanMutation) ParokiCleared() bool {
+	return m.clearedparoki
+}
+
+// RemoveParokiIDs removes the "paroki" edge to the Paroki entity by IDs.
+func (m *KelurahanMutation) RemoveParokiIDs(ids ...uuid.UUID) {
+	if m.removedparoki == nil {
+		m.removedparoki = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.paroki, ids[i])
+		m.removedparoki[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedParoki returns the removed IDs of the "paroki" edge to the Paroki entity.
+func (m *KelurahanMutation) RemovedParokiIDs() (ids []uuid.UUID) {
+	for id := range m.removedparoki {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ParokiIDs returns the "paroki" edge IDs in the mutation.
+func (m *KelurahanMutation) ParokiIDs() (ids []uuid.UUID) {
+	for id := range m.paroki {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetParoki resets all changes to the "paroki" edge.
+func (m *KelurahanMutation) ResetParoki() {
+	m.paroki = nil
+	m.clearedparoki = false
+	m.removedparoki = nil
+}
+
 // Where appends a list predicates to the KelurahanMutation builder.
 func (m *KelurahanMutation) Where(ps ...predicate.Kelurahan) {
 	m.predicates = append(m.predicates, ps...)
@@ -7676,9 +7816,12 @@ func (m *KelurahanMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *KelurahanMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.kecamatan != nil {
 		edges = append(edges, kelurahan.EdgeKecamatan)
+	}
+	if m.paroki != nil {
+		edges = append(edges, kelurahan.EdgeParoki)
 	}
 	return edges
 }
@@ -7691,27 +7834,47 @@ func (m *KelurahanMutation) AddedIDs(name string) []ent.Value {
 		if id := m.kecamatan; id != nil {
 			return []ent.Value{*id}
 		}
+	case kelurahan.EdgeParoki:
+		ids := make([]ent.Value, 0, len(m.paroki))
+		for id := range m.paroki {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *KelurahanMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
+	if m.removedparoki != nil {
+		edges = append(edges, kelurahan.EdgeParoki)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *KelurahanMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case kelurahan.EdgeParoki:
+		ids := make([]ent.Value, 0, len(m.removedparoki))
+		for id := range m.removedparoki {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *KelurahanMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedkecamatan {
 		edges = append(edges, kelurahan.EdgeKecamatan)
+	}
+	if m.clearedparoki {
+		edges = append(edges, kelurahan.EdgeParoki)
 	}
 	return edges
 }
@@ -7722,6 +7885,8 @@ func (m *KelurahanMutation) EdgeCleared(name string) bool {
 	switch name {
 	case kelurahan.EdgeKecamatan:
 		return m.clearedkecamatan
+	case kelurahan.EdgeParoki:
+		return m.clearedparoki
 	}
 	return false
 }
@@ -7743,6 +7908,9 @@ func (m *KelurahanMutation) ResetEdge(name string) error {
 	switch name {
 	case kelurahan.EdgeKecamatan:
 		m.ResetKecamatan()
+		return nil
+	case kelurahan.EdgeParoki:
+		m.ResetParoki()
 		return nil
 	}
 	return fmt.Errorf("unknown Kelurahan edge %s", name)
@@ -8929,6 +9097,9 @@ type KevikepanMutation struct {
 	clearedFields    map[string]struct{}
 	keuskupan        *uuid.UUID
 	clearedkeuskupan bool
+	paroki           map[uuid.UUID]struct{}
+	removedparoki    map[uuid.UUID]struct{}
+	clearedparoki    bool
 	done             bool
 	oldValue         func(context.Context) (*Kevikepan, error)
 	predicates       []predicate.Kevikepan
@@ -9379,6 +9550,60 @@ func (m *KevikepanMutation) ResetKeuskupan() {
 	m.clearedkeuskupan = false
 }
 
+// AddParokiIDs adds the "paroki" edge to the Paroki entity by ids.
+func (m *KevikepanMutation) AddParokiIDs(ids ...uuid.UUID) {
+	if m.paroki == nil {
+		m.paroki = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.paroki[ids[i]] = struct{}{}
+	}
+}
+
+// ClearParoki clears the "paroki" edge to the Paroki entity.
+func (m *KevikepanMutation) ClearParoki() {
+	m.clearedparoki = true
+}
+
+// ParokiCleared reports if the "paroki" edge to the Paroki entity was cleared.
+func (m *KevikepanMutation) ParokiCleared() bool {
+	return m.clearedparoki
+}
+
+// RemoveParokiIDs removes the "paroki" edge to the Paroki entity by IDs.
+func (m *KevikepanMutation) RemoveParokiIDs(ids ...uuid.UUID) {
+	if m.removedparoki == nil {
+		m.removedparoki = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.paroki, ids[i])
+		m.removedparoki[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedParoki returns the removed IDs of the "paroki" edge to the Paroki entity.
+func (m *KevikepanMutation) RemovedParokiIDs() (ids []uuid.UUID) {
+	for id := range m.removedparoki {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ParokiIDs returns the "paroki" edge IDs in the mutation.
+func (m *KevikepanMutation) ParokiIDs() (ids []uuid.UUID) {
+	for id := range m.paroki {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetParoki resets all changes to the "paroki" edge.
+func (m *KevikepanMutation) ResetParoki() {
+	m.paroki = nil
+	m.clearedparoki = false
+	m.removedparoki = nil
+}
+
 // Where appends a list predicates to the KevikepanMutation builder.
 func (m *KevikepanMutation) Where(ps ...predicate.Kevikepan) {
 	m.predicates = append(m.predicates, ps...)
@@ -9646,9 +9871,12 @@ func (m *KevikepanMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *KevikepanMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.keuskupan != nil {
 		edges = append(edges, kevikepan.EdgeKeuskupan)
+	}
+	if m.paroki != nil {
+		edges = append(edges, kevikepan.EdgeParoki)
 	}
 	return edges
 }
@@ -9661,27 +9889,47 @@ func (m *KevikepanMutation) AddedIDs(name string) []ent.Value {
 		if id := m.keuskupan; id != nil {
 			return []ent.Value{*id}
 		}
+	case kevikepan.EdgeParoki:
+		ids := make([]ent.Value, 0, len(m.paroki))
+		for id := range m.paroki {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *KevikepanMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
+	if m.removedparoki != nil {
+		edges = append(edges, kevikepan.EdgeParoki)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *KevikepanMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case kevikepan.EdgeParoki:
+		ids := make([]ent.Value, 0, len(m.removedparoki))
+		for id := range m.removedparoki {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *KevikepanMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedkeuskupan {
 		edges = append(edges, kevikepan.EdgeKeuskupan)
+	}
+	if m.clearedparoki {
+		edges = append(edges, kevikepan.EdgeParoki)
 	}
 	return edges
 }
@@ -9692,6 +9940,8 @@ func (m *KevikepanMutation) EdgeCleared(name string) bool {
 	switch name {
 	case kevikepan.EdgeKeuskupan:
 		return m.clearedkeuskupan
+	case kevikepan.EdgeParoki:
+		return m.clearedparoki
 	}
 	return false
 }
@@ -9714,6 +9964,9 @@ func (m *KevikepanMutation) ResetEdge(name string) error {
 	case kevikepan.EdgeKeuskupan:
 		m.ResetKeuskupan()
 		return nil
+	case kevikepan.EdgeParoki:
+		m.ResetParoki()
+		return nil
 	}
 	return fmt.Errorf("unknown Kevikepan edge %s", name)
 }
@@ -9734,6 +9987,9 @@ type KotaMutation struct {
 	kecamatan        map[uuid.UUID]struct{}
 	removedkecamatan map[uuid.UUID]struct{}
 	clearedkecamatan bool
+	paroki           map[uuid.UUID]struct{}
+	removedparoki    map[uuid.UUID]struct{}
+	clearedparoki    bool
 	done             bool
 	oldValue         func(context.Context) (*Kota, error)
 	predicates       []predicate.Kota
@@ -10126,6 +10382,60 @@ func (m *KotaMutation) ResetKecamatan() {
 	m.removedkecamatan = nil
 }
 
+// AddParokiIDs adds the "paroki" edge to the Paroki entity by ids.
+func (m *KotaMutation) AddParokiIDs(ids ...uuid.UUID) {
+	if m.paroki == nil {
+		m.paroki = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.paroki[ids[i]] = struct{}{}
+	}
+}
+
+// ClearParoki clears the "paroki" edge to the Paroki entity.
+func (m *KotaMutation) ClearParoki() {
+	m.clearedparoki = true
+}
+
+// ParokiCleared reports if the "paroki" edge to the Paroki entity was cleared.
+func (m *KotaMutation) ParokiCleared() bool {
+	return m.clearedparoki
+}
+
+// RemoveParokiIDs removes the "paroki" edge to the Paroki entity by IDs.
+func (m *KotaMutation) RemoveParokiIDs(ids ...uuid.UUID) {
+	if m.removedparoki == nil {
+		m.removedparoki = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.paroki, ids[i])
+		m.removedparoki[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedParoki returns the removed IDs of the "paroki" edge to the Paroki entity.
+func (m *KotaMutation) RemovedParokiIDs() (ids []uuid.UUID) {
+	for id := range m.removedparoki {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ParokiIDs returns the "paroki" edge IDs in the mutation.
+func (m *KotaMutation) ParokiIDs() (ids []uuid.UUID) {
+	for id := range m.paroki {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetParoki resets all changes to the "paroki" edge.
+func (m *KotaMutation) ResetParoki() {
+	m.paroki = nil
+	m.clearedparoki = false
+	m.removedparoki = nil
+}
+
 // Where appends a list predicates to the KotaMutation builder.
 func (m *KotaMutation) Where(ps ...predicate.Kota) {
 	m.predicates = append(m.predicates, ps...)
@@ -10353,9 +10663,12 @@ func (m *KotaMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *KotaMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.kecamatan != nil {
 		edges = append(edges, kota.EdgeKecamatan)
+	}
+	if m.paroki != nil {
+		edges = append(edges, kota.EdgeParoki)
 	}
 	return edges
 }
@@ -10370,15 +10683,24 @@ func (m *KotaMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case kota.EdgeParoki:
+		ids := make([]ent.Value, 0, len(m.paroki))
+		for id := range m.paroki {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *KotaMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.removedkecamatan != nil {
 		edges = append(edges, kota.EdgeKecamatan)
+	}
+	if m.removedparoki != nil {
+		edges = append(edges, kota.EdgeParoki)
 	}
 	return edges
 }
@@ -10393,15 +10715,24 @@ func (m *KotaMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case kota.EdgeParoki:
+		ids := make([]ent.Value, 0, len(m.removedparoki))
+		for id := range m.removedparoki {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *KotaMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedkecamatan {
 		edges = append(edges, kota.EdgeKecamatan)
+	}
+	if m.clearedparoki {
+		edges = append(edges, kota.EdgeParoki)
 	}
 	return edges
 }
@@ -10412,6 +10743,8 @@ func (m *KotaMutation) EdgeCleared(name string) bool {
 	switch name {
 	case kota.EdgeKecamatan:
 		return m.clearedkecamatan
+	case kota.EdgeParoki:
+		return m.clearedparoki
 	}
 	return false
 }
@@ -10430,6 +10763,9 @@ func (m *KotaMutation) ResetEdge(name string) error {
 	switch name {
 	case kota.EdgeKecamatan:
 		m.ResetKecamatan()
+		return nil
+	case kota.EdgeParoki:
+		m.ResetParoki()
 		return nil
 	}
 	return fmt.Errorf("unknown Kota edge %s", name)
@@ -15861,19 +16197,40 @@ type ParokiMutation struct {
 	updated_at        *time.Time
 	deleted_at        *time.Time
 	kode              *string
+	kode_resmi        *string
 	nama              *string
 	pelindung         *string
 	pastor            *string
 	alamat            *string
+	timezone          *string
 	telepon           *string
+	fax               *string
 	email             *string
 	website           *string
 	logo_url          *string
 	kop_surat         *string
+	latitude          *float64
+	addlatitude       *float64
+	longitude         *float64
+	addlongitude      *float64
+	status_paroki     *string
 	active            *bool
 	clearedFields     map[string]struct{}
 	keuskupan         *uuid.UUID
 	clearedkeuskupan  bool
+	kevikepan         *uuid.UUID
+	clearedkevikepan  bool
+	induk             *uuid.UUID
+	clearedinduk      bool
+	anak              map[uuid.UUID]struct{}
+	removedanak       map[uuid.UUID]struct{}
+	clearedanak       bool
+	kota              *uuid.UUID
+	clearedkota       bool
+	kecamatan         *uuid.UUID
+	clearedkecamatan  bool
+	kelurahan         *uuid.UUID
+	clearedkelurahan  bool
 	members           map[uuid.UUID]struct{}
 	removedmembers    map[uuid.UUID]struct{}
 	clearedmembers    bool
@@ -16155,6 +16512,104 @@ func (m *ParokiMutation) ResetKeuskupanID() {
 	m.keuskupan = nil
 }
 
+// SetKevikepanID sets the "kevikepan_id" field.
+func (m *ParokiMutation) SetKevikepanID(u uuid.UUID) {
+	m.kevikepan = &u
+}
+
+// KevikepanID returns the value of the "kevikepan_id" field in the mutation.
+func (m *ParokiMutation) KevikepanID() (r uuid.UUID, exists bool) {
+	v := m.kevikepan
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKevikepanID returns the old "kevikepan_id" field's value of the Paroki entity.
+// If the Paroki object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParokiMutation) OldKevikepanID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldKevikepanID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldKevikepanID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKevikepanID: %w", err)
+	}
+	return oldValue.KevikepanID, nil
+}
+
+// ClearKevikepanID clears the value of the "kevikepan_id" field.
+func (m *ParokiMutation) ClearKevikepanID() {
+	m.kevikepan = nil
+	m.clearedFields[paroki.FieldKevikepanID] = struct{}{}
+}
+
+// KevikepanIDCleared returns if the "kevikepan_id" field was cleared in this mutation.
+func (m *ParokiMutation) KevikepanIDCleared() bool {
+	_, ok := m.clearedFields[paroki.FieldKevikepanID]
+	return ok
+}
+
+// ResetKevikepanID resets all changes to the "kevikepan_id" field.
+func (m *ParokiMutation) ResetKevikepanID() {
+	m.kevikepan = nil
+	delete(m.clearedFields, paroki.FieldKevikepanID)
+}
+
+// SetIndukID sets the "induk_id" field.
+func (m *ParokiMutation) SetIndukID(u uuid.UUID) {
+	m.induk = &u
+}
+
+// IndukID returns the value of the "induk_id" field in the mutation.
+func (m *ParokiMutation) IndukID() (r uuid.UUID, exists bool) {
+	v := m.induk
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIndukID returns the old "induk_id" field's value of the Paroki entity.
+// If the Paroki object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParokiMutation) OldIndukID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIndukID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIndukID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIndukID: %w", err)
+	}
+	return oldValue.IndukID, nil
+}
+
+// ClearIndukID clears the value of the "induk_id" field.
+func (m *ParokiMutation) ClearIndukID() {
+	m.induk = nil
+	m.clearedFields[paroki.FieldIndukID] = struct{}{}
+}
+
+// IndukIDCleared returns if the "induk_id" field was cleared in this mutation.
+func (m *ParokiMutation) IndukIDCleared() bool {
+	_, ok := m.clearedFields[paroki.FieldIndukID]
+	return ok
+}
+
+// ResetIndukID resets all changes to the "induk_id" field.
+func (m *ParokiMutation) ResetIndukID() {
+	m.induk = nil
+	delete(m.clearedFields, paroki.FieldIndukID)
+}
+
 // SetKode sets the "kode" field.
 func (m *ParokiMutation) SetKode(s string) {
 	m.kode = &s
@@ -16189,6 +16644,55 @@ func (m *ParokiMutation) OldKode(ctx context.Context) (v string, err error) {
 // ResetKode resets all changes to the "kode" field.
 func (m *ParokiMutation) ResetKode() {
 	m.kode = nil
+}
+
+// SetKodeResmi sets the "kode_resmi" field.
+func (m *ParokiMutation) SetKodeResmi(s string) {
+	m.kode_resmi = &s
+}
+
+// KodeResmi returns the value of the "kode_resmi" field in the mutation.
+func (m *ParokiMutation) KodeResmi() (r string, exists bool) {
+	v := m.kode_resmi
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKodeResmi returns the old "kode_resmi" field's value of the Paroki entity.
+// If the Paroki object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParokiMutation) OldKodeResmi(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldKodeResmi is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldKodeResmi requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKodeResmi: %w", err)
+	}
+	return oldValue.KodeResmi, nil
+}
+
+// ClearKodeResmi clears the value of the "kode_resmi" field.
+func (m *ParokiMutation) ClearKodeResmi() {
+	m.kode_resmi = nil
+	m.clearedFields[paroki.FieldKodeResmi] = struct{}{}
+}
+
+// KodeResmiCleared returns if the "kode_resmi" field was cleared in this mutation.
+func (m *ParokiMutation) KodeResmiCleared() bool {
+	_, ok := m.clearedFields[paroki.FieldKodeResmi]
+	return ok
+}
+
+// ResetKodeResmi resets all changes to the "kode_resmi" field.
+func (m *ParokiMutation) ResetKodeResmi() {
+	m.kode_resmi = nil
+	delete(m.clearedFields, paroki.FieldKodeResmi)
 }
 
 // SetNama sets the "nama" field.
@@ -16374,6 +16878,189 @@ func (m *ParokiMutation) ResetAlamat() {
 	delete(m.clearedFields, paroki.FieldAlamat)
 }
 
+// SetKotaID sets the "kota_id" field.
+func (m *ParokiMutation) SetKotaID(u uuid.UUID) {
+	m.kota = &u
+}
+
+// KotaID returns the value of the "kota_id" field in the mutation.
+func (m *ParokiMutation) KotaID() (r uuid.UUID, exists bool) {
+	v := m.kota
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKotaID returns the old "kota_id" field's value of the Paroki entity.
+// If the Paroki object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParokiMutation) OldKotaID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldKotaID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldKotaID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKotaID: %w", err)
+	}
+	return oldValue.KotaID, nil
+}
+
+// ClearKotaID clears the value of the "kota_id" field.
+func (m *ParokiMutation) ClearKotaID() {
+	m.kota = nil
+	m.clearedFields[paroki.FieldKotaID] = struct{}{}
+}
+
+// KotaIDCleared returns if the "kota_id" field was cleared in this mutation.
+func (m *ParokiMutation) KotaIDCleared() bool {
+	_, ok := m.clearedFields[paroki.FieldKotaID]
+	return ok
+}
+
+// ResetKotaID resets all changes to the "kota_id" field.
+func (m *ParokiMutation) ResetKotaID() {
+	m.kota = nil
+	delete(m.clearedFields, paroki.FieldKotaID)
+}
+
+// SetKecamatanID sets the "kecamatan_id" field.
+func (m *ParokiMutation) SetKecamatanID(u uuid.UUID) {
+	m.kecamatan = &u
+}
+
+// KecamatanID returns the value of the "kecamatan_id" field in the mutation.
+func (m *ParokiMutation) KecamatanID() (r uuid.UUID, exists bool) {
+	v := m.kecamatan
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKecamatanID returns the old "kecamatan_id" field's value of the Paroki entity.
+// If the Paroki object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParokiMutation) OldKecamatanID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldKecamatanID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldKecamatanID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKecamatanID: %w", err)
+	}
+	return oldValue.KecamatanID, nil
+}
+
+// ClearKecamatanID clears the value of the "kecamatan_id" field.
+func (m *ParokiMutation) ClearKecamatanID() {
+	m.kecamatan = nil
+	m.clearedFields[paroki.FieldKecamatanID] = struct{}{}
+}
+
+// KecamatanIDCleared returns if the "kecamatan_id" field was cleared in this mutation.
+func (m *ParokiMutation) KecamatanIDCleared() bool {
+	_, ok := m.clearedFields[paroki.FieldKecamatanID]
+	return ok
+}
+
+// ResetKecamatanID resets all changes to the "kecamatan_id" field.
+func (m *ParokiMutation) ResetKecamatanID() {
+	m.kecamatan = nil
+	delete(m.clearedFields, paroki.FieldKecamatanID)
+}
+
+// SetKelurahanID sets the "kelurahan_id" field.
+func (m *ParokiMutation) SetKelurahanID(u uuid.UUID) {
+	m.kelurahan = &u
+}
+
+// KelurahanID returns the value of the "kelurahan_id" field in the mutation.
+func (m *ParokiMutation) KelurahanID() (r uuid.UUID, exists bool) {
+	v := m.kelurahan
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKelurahanID returns the old "kelurahan_id" field's value of the Paroki entity.
+// If the Paroki object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParokiMutation) OldKelurahanID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldKelurahanID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldKelurahanID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKelurahanID: %w", err)
+	}
+	return oldValue.KelurahanID, nil
+}
+
+// ClearKelurahanID clears the value of the "kelurahan_id" field.
+func (m *ParokiMutation) ClearKelurahanID() {
+	m.kelurahan = nil
+	m.clearedFields[paroki.FieldKelurahanID] = struct{}{}
+}
+
+// KelurahanIDCleared returns if the "kelurahan_id" field was cleared in this mutation.
+func (m *ParokiMutation) KelurahanIDCleared() bool {
+	_, ok := m.clearedFields[paroki.FieldKelurahanID]
+	return ok
+}
+
+// ResetKelurahanID resets all changes to the "kelurahan_id" field.
+func (m *ParokiMutation) ResetKelurahanID() {
+	m.kelurahan = nil
+	delete(m.clearedFields, paroki.FieldKelurahanID)
+}
+
+// SetTimezone sets the "timezone" field.
+func (m *ParokiMutation) SetTimezone(s string) {
+	m.timezone = &s
+}
+
+// Timezone returns the value of the "timezone" field in the mutation.
+func (m *ParokiMutation) Timezone() (r string, exists bool) {
+	v := m.timezone
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTimezone returns the old "timezone" field's value of the Paroki entity.
+// If the Paroki object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParokiMutation) OldTimezone(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTimezone is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTimezone requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTimezone: %w", err)
+	}
+	return oldValue.Timezone, nil
+}
+
+// ResetTimezone resets all changes to the "timezone" field.
+func (m *ParokiMutation) ResetTimezone() {
+	m.timezone = nil
+}
+
 // SetTelepon sets the "telepon" field.
 func (m *ParokiMutation) SetTelepon(s string) {
 	m.telepon = &s
@@ -16421,6 +17108,55 @@ func (m *ParokiMutation) TeleponCleared() bool {
 func (m *ParokiMutation) ResetTelepon() {
 	m.telepon = nil
 	delete(m.clearedFields, paroki.FieldTelepon)
+}
+
+// SetFax sets the "fax" field.
+func (m *ParokiMutation) SetFax(s string) {
+	m.fax = &s
+}
+
+// Fax returns the value of the "fax" field in the mutation.
+func (m *ParokiMutation) Fax() (r string, exists bool) {
+	v := m.fax
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFax returns the old "fax" field's value of the Paroki entity.
+// If the Paroki object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParokiMutation) OldFax(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFax is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFax requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFax: %w", err)
+	}
+	return oldValue.Fax, nil
+}
+
+// ClearFax clears the value of the "fax" field.
+func (m *ParokiMutation) ClearFax() {
+	m.fax = nil
+	m.clearedFields[paroki.FieldFax] = struct{}{}
+}
+
+// FaxCleared returns if the "fax" field was cleared in this mutation.
+func (m *ParokiMutation) FaxCleared() bool {
+	_, ok := m.clearedFields[paroki.FieldFax]
+	return ok
+}
+
+// ResetFax resets all changes to the "fax" field.
+func (m *ParokiMutation) ResetFax() {
+	m.fax = nil
+	delete(m.clearedFields, paroki.FieldFax)
 }
 
 // SetEmail sets the "email" field.
@@ -16619,6 +17355,195 @@ func (m *ParokiMutation) ResetKopSurat() {
 	delete(m.clearedFields, paroki.FieldKopSurat)
 }
 
+// SetLatitude sets the "latitude" field.
+func (m *ParokiMutation) SetLatitude(f float64) {
+	m.latitude = &f
+	m.addlatitude = nil
+}
+
+// Latitude returns the value of the "latitude" field in the mutation.
+func (m *ParokiMutation) Latitude() (r float64, exists bool) {
+	v := m.latitude
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLatitude returns the old "latitude" field's value of the Paroki entity.
+// If the Paroki object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParokiMutation) OldLatitude(ctx context.Context) (v *float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLatitude is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLatitude requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLatitude: %w", err)
+	}
+	return oldValue.Latitude, nil
+}
+
+// AddLatitude adds f to the "latitude" field.
+func (m *ParokiMutation) AddLatitude(f float64) {
+	if m.addlatitude != nil {
+		*m.addlatitude += f
+	} else {
+		m.addlatitude = &f
+	}
+}
+
+// AddedLatitude returns the value that was added to the "latitude" field in this mutation.
+func (m *ParokiMutation) AddedLatitude() (r float64, exists bool) {
+	v := m.addlatitude
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearLatitude clears the value of the "latitude" field.
+func (m *ParokiMutation) ClearLatitude() {
+	m.latitude = nil
+	m.addlatitude = nil
+	m.clearedFields[paroki.FieldLatitude] = struct{}{}
+}
+
+// LatitudeCleared returns if the "latitude" field was cleared in this mutation.
+func (m *ParokiMutation) LatitudeCleared() bool {
+	_, ok := m.clearedFields[paroki.FieldLatitude]
+	return ok
+}
+
+// ResetLatitude resets all changes to the "latitude" field.
+func (m *ParokiMutation) ResetLatitude() {
+	m.latitude = nil
+	m.addlatitude = nil
+	delete(m.clearedFields, paroki.FieldLatitude)
+}
+
+// SetLongitude sets the "longitude" field.
+func (m *ParokiMutation) SetLongitude(f float64) {
+	m.longitude = &f
+	m.addlongitude = nil
+}
+
+// Longitude returns the value of the "longitude" field in the mutation.
+func (m *ParokiMutation) Longitude() (r float64, exists bool) {
+	v := m.longitude
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLongitude returns the old "longitude" field's value of the Paroki entity.
+// If the Paroki object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParokiMutation) OldLongitude(ctx context.Context) (v *float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLongitude is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLongitude requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLongitude: %w", err)
+	}
+	return oldValue.Longitude, nil
+}
+
+// AddLongitude adds f to the "longitude" field.
+func (m *ParokiMutation) AddLongitude(f float64) {
+	if m.addlongitude != nil {
+		*m.addlongitude += f
+	} else {
+		m.addlongitude = &f
+	}
+}
+
+// AddedLongitude returns the value that was added to the "longitude" field in this mutation.
+func (m *ParokiMutation) AddedLongitude() (r float64, exists bool) {
+	v := m.addlongitude
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearLongitude clears the value of the "longitude" field.
+func (m *ParokiMutation) ClearLongitude() {
+	m.longitude = nil
+	m.addlongitude = nil
+	m.clearedFields[paroki.FieldLongitude] = struct{}{}
+}
+
+// LongitudeCleared returns if the "longitude" field was cleared in this mutation.
+func (m *ParokiMutation) LongitudeCleared() bool {
+	_, ok := m.clearedFields[paroki.FieldLongitude]
+	return ok
+}
+
+// ResetLongitude resets all changes to the "longitude" field.
+func (m *ParokiMutation) ResetLongitude() {
+	m.longitude = nil
+	m.addlongitude = nil
+	delete(m.clearedFields, paroki.FieldLongitude)
+}
+
+// SetStatusParoki sets the "status_paroki" field.
+func (m *ParokiMutation) SetStatusParoki(s string) {
+	m.status_paroki = &s
+}
+
+// StatusParoki returns the value of the "status_paroki" field in the mutation.
+func (m *ParokiMutation) StatusParoki() (r string, exists bool) {
+	v := m.status_paroki
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatusParoki returns the old "status_paroki" field's value of the Paroki entity.
+// If the Paroki object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParokiMutation) OldStatusParoki(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatusParoki is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatusParoki requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatusParoki: %w", err)
+	}
+	return oldValue.StatusParoki, nil
+}
+
+// ClearStatusParoki clears the value of the "status_paroki" field.
+func (m *ParokiMutation) ClearStatusParoki() {
+	m.status_paroki = nil
+	m.clearedFields[paroki.FieldStatusParoki] = struct{}{}
+}
+
+// StatusParokiCleared returns if the "status_paroki" field was cleared in this mutation.
+func (m *ParokiMutation) StatusParokiCleared() bool {
+	_, ok := m.clearedFields[paroki.FieldStatusParoki]
+	return ok
+}
+
+// ResetStatusParoki resets all changes to the "status_paroki" field.
+func (m *ParokiMutation) ResetStatusParoki() {
+	m.status_paroki = nil
+	delete(m.clearedFields, paroki.FieldStatusParoki)
+}
+
 // SetActive sets the "active" field.
 func (m *ParokiMutation) SetActive(b bool) {
 	m.active = &b
@@ -16680,6 +17605,195 @@ func (m *ParokiMutation) KeuskupanIDs() (ids []uuid.UUID) {
 func (m *ParokiMutation) ResetKeuskupan() {
 	m.keuskupan = nil
 	m.clearedkeuskupan = false
+}
+
+// ClearKevikepan clears the "kevikepan" edge to the Kevikepan entity.
+func (m *ParokiMutation) ClearKevikepan() {
+	m.clearedkevikepan = true
+	m.clearedFields[paroki.FieldKevikepanID] = struct{}{}
+}
+
+// KevikepanCleared reports if the "kevikepan" edge to the Kevikepan entity was cleared.
+func (m *ParokiMutation) KevikepanCleared() bool {
+	return m.KevikepanIDCleared() || m.clearedkevikepan
+}
+
+// KevikepanIDs returns the "kevikepan" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// KevikepanID instead. It exists only for internal usage by the builders.
+func (m *ParokiMutation) KevikepanIDs() (ids []uuid.UUID) {
+	if id := m.kevikepan; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetKevikepan resets all changes to the "kevikepan" edge.
+func (m *ParokiMutation) ResetKevikepan() {
+	m.kevikepan = nil
+	m.clearedkevikepan = false
+}
+
+// ClearInduk clears the "induk" edge to the Paroki entity.
+func (m *ParokiMutation) ClearInduk() {
+	m.clearedinduk = true
+	m.clearedFields[paroki.FieldIndukID] = struct{}{}
+}
+
+// IndukCleared reports if the "induk" edge to the Paroki entity was cleared.
+func (m *ParokiMutation) IndukCleared() bool {
+	return m.IndukIDCleared() || m.clearedinduk
+}
+
+// IndukIDs returns the "induk" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// IndukID instead. It exists only for internal usage by the builders.
+func (m *ParokiMutation) IndukIDs() (ids []uuid.UUID) {
+	if id := m.induk; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetInduk resets all changes to the "induk" edge.
+func (m *ParokiMutation) ResetInduk() {
+	m.induk = nil
+	m.clearedinduk = false
+}
+
+// AddAnakIDs adds the "anak" edge to the Paroki entity by ids.
+func (m *ParokiMutation) AddAnakIDs(ids ...uuid.UUID) {
+	if m.anak == nil {
+		m.anak = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.anak[ids[i]] = struct{}{}
+	}
+}
+
+// ClearAnak clears the "anak" edge to the Paroki entity.
+func (m *ParokiMutation) ClearAnak() {
+	m.clearedanak = true
+}
+
+// AnakCleared reports if the "anak" edge to the Paroki entity was cleared.
+func (m *ParokiMutation) AnakCleared() bool {
+	return m.clearedanak
+}
+
+// RemoveAnakIDs removes the "anak" edge to the Paroki entity by IDs.
+func (m *ParokiMutation) RemoveAnakIDs(ids ...uuid.UUID) {
+	if m.removedanak == nil {
+		m.removedanak = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.anak, ids[i])
+		m.removedanak[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedAnak returns the removed IDs of the "anak" edge to the Paroki entity.
+func (m *ParokiMutation) RemovedAnakIDs() (ids []uuid.UUID) {
+	for id := range m.removedanak {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// AnakIDs returns the "anak" edge IDs in the mutation.
+func (m *ParokiMutation) AnakIDs() (ids []uuid.UUID) {
+	for id := range m.anak {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetAnak resets all changes to the "anak" edge.
+func (m *ParokiMutation) ResetAnak() {
+	m.anak = nil
+	m.clearedanak = false
+	m.removedanak = nil
+}
+
+// ClearKota clears the "kota" edge to the Kota entity.
+func (m *ParokiMutation) ClearKota() {
+	m.clearedkota = true
+	m.clearedFields[paroki.FieldKotaID] = struct{}{}
+}
+
+// KotaCleared reports if the "kota" edge to the Kota entity was cleared.
+func (m *ParokiMutation) KotaCleared() bool {
+	return m.KotaIDCleared() || m.clearedkota
+}
+
+// KotaIDs returns the "kota" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// KotaID instead. It exists only for internal usage by the builders.
+func (m *ParokiMutation) KotaIDs() (ids []uuid.UUID) {
+	if id := m.kota; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetKota resets all changes to the "kota" edge.
+func (m *ParokiMutation) ResetKota() {
+	m.kota = nil
+	m.clearedkota = false
+}
+
+// ClearKecamatan clears the "kecamatan" edge to the Kecamatan entity.
+func (m *ParokiMutation) ClearKecamatan() {
+	m.clearedkecamatan = true
+	m.clearedFields[paroki.FieldKecamatanID] = struct{}{}
+}
+
+// KecamatanCleared reports if the "kecamatan" edge to the Kecamatan entity was cleared.
+func (m *ParokiMutation) KecamatanCleared() bool {
+	return m.KecamatanIDCleared() || m.clearedkecamatan
+}
+
+// KecamatanIDs returns the "kecamatan" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// KecamatanID instead. It exists only for internal usage by the builders.
+func (m *ParokiMutation) KecamatanIDs() (ids []uuid.UUID) {
+	if id := m.kecamatan; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetKecamatan resets all changes to the "kecamatan" edge.
+func (m *ParokiMutation) ResetKecamatan() {
+	m.kecamatan = nil
+	m.clearedkecamatan = false
+}
+
+// ClearKelurahan clears the "kelurahan" edge to the Kelurahan entity.
+func (m *ParokiMutation) ClearKelurahan() {
+	m.clearedkelurahan = true
+	m.clearedFields[paroki.FieldKelurahanID] = struct{}{}
+}
+
+// KelurahanCleared reports if the "kelurahan" edge to the Kelurahan entity was cleared.
+func (m *ParokiMutation) KelurahanCleared() bool {
+	return m.KelurahanIDCleared() || m.clearedkelurahan
+}
+
+// KelurahanIDs returns the "kelurahan" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// KelurahanID instead. It exists only for internal usage by the builders.
+func (m *ParokiMutation) KelurahanIDs() (ids []uuid.UUID) {
+	if id := m.kelurahan; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetKelurahan resets all changes to the "kelurahan" edge.
+func (m *ParokiMutation) ResetKelurahan() {
+	m.kelurahan = nil
+	m.clearedkelurahan = false
 }
 
 // AddMemberIDs adds the "members" edge to the ParokiMember entity by ids.
@@ -16986,7 +18100,7 @@ func (m *ParokiMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ParokiMutation) Fields() []string {
-	fields := make([]string, 0, 15)
+	fields := make([]string, 0, 26)
 	if m.created_at != nil {
 		fields = append(fields, paroki.FieldCreatedAt)
 	}
@@ -16999,8 +18113,17 @@ func (m *ParokiMutation) Fields() []string {
 	if m.keuskupan != nil {
 		fields = append(fields, paroki.FieldKeuskupanID)
 	}
+	if m.kevikepan != nil {
+		fields = append(fields, paroki.FieldKevikepanID)
+	}
+	if m.induk != nil {
+		fields = append(fields, paroki.FieldIndukID)
+	}
 	if m.kode != nil {
 		fields = append(fields, paroki.FieldKode)
+	}
+	if m.kode_resmi != nil {
+		fields = append(fields, paroki.FieldKodeResmi)
 	}
 	if m.nama != nil {
 		fields = append(fields, paroki.FieldNama)
@@ -17014,8 +18137,23 @@ func (m *ParokiMutation) Fields() []string {
 	if m.alamat != nil {
 		fields = append(fields, paroki.FieldAlamat)
 	}
+	if m.kota != nil {
+		fields = append(fields, paroki.FieldKotaID)
+	}
+	if m.kecamatan != nil {
+		fields = append(fields, paroki.FieldKecamatanID)
+	}
+	if m.kelurahan != nil {
+		fields = append(fields, paroki.FieldKelurahanID)
+	}
+	if m.timezone != nil {
+		fields = append(fields, paroki.FieldTimezone)
+	}
 	if m.telepon != nil {
 		fields = append(fields, paroki.FieldTelepon)
+	}
+	if m.fax != nil {
+		fields = append(fields, paroki.FieldFax)
 	}
 	if m.email != nil {
 		fields = append(fields, paroki.FieldEmail)
@@ -17028,6 +18166,15 @@ func (m *ParokiMutation) Fields() []string {
 	}
 	if m.kop_surat != nil {
 		fields = append(fields, paroki.FieldKopSurat)
+	}
+	if m.latitude != nil {
+		fields = append(fields, paroki.FieldLatitude)
+	}
+	if m.longitude != nil {
+		fields = append(fields, paroki.FieldLongitude)
+	}
+	if m.status_paroki != nil {
+		fields = append(fields, paroki.FieldStatusParoki)
 	}
 	if m.active != nil {
 		fields = append(fields, paroki.FieldActive)
@@ -17048,8 +18195,14 @@ func (m *ParokiMutation) Field(name string) (ent.Value, bool) {
 		return m.DeletedAt()
 	case paroki.FieldKeuskupanID:
 		return m.KeuskupanID()
+	case paroki.FieldKevikepanID:
+		return m.KevikepanID()
+	case paroki.FieldIndukID:
+		return m.IndukID()
 	case paroki.FieldKode:
 		return m.Kode()
+	case paroki.FieldKodeResmi:
+		return m.KodeResmi()
 	case paroki.FieldNama:
 		return m.Nama()
 	case paroki.FieldPelindung:
@@ -17058,8 +18211,18 @@ func (m *ParokiMutation) Field(name string) (ent.Value, bool) {
 		return m.Pastor()
 	case paroki.FieldAlamat:
 		return m.Alamat()
+	case paroki.FieldKotaID:
+		return m.KotaID()
+	case paroki.FieldKecamatanID:
+		return m.KecamatanID()
+	case paroki.FieldKelurahanID:
+		return m.KelurahanID()
+	case paroki.FieldTimezone:
+		return m.Timezone()
 	case paroki.FieldTelepon:
 		return m.Telepon()
+	case paroki.FieldFax:
+		return m.Fax()
 	case paroki.FieldEmail:
 		return m.Email()
 	case paroki.FieldWebsite:
@@ -17068,6 +18231,12 @@ func (m *ParokiMutation) Field(name string) (ent.Value, bool) {
 		return m.LogoURL()
 	case paroki.FieldKopSurat:
 		return m.KopSurat()
+	case paroki.FieldLatitude:
+		return m.Latitude()
+	case paroki.FieldLongitude:
+		return m.Longitude()
+	case paroki.FieldStatusParoki:
+		return m.StatusParoki()
 	case paroki.FieldActive:
 		return m.Active()
 	}
@@ -17087,8 +18256,14 @@ func (m *ParokiMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldDeletedAt(ctx)
 	case paroki.FieldKeuskupanID:
 		return m.OldKeuskupanID(ctx)
+	case paroki.FieldKevikepanID:
+		return m.OldKevikepanID(ctx)
+	case paroki.FieldIndukID:
+		return m.OldIndukID(ctx)
 	case paroki.FieldKode:
 		return m.OldKode(ctx)
+	case paroki.FieldKodeResmi:
+		return m.OldKodeResmi(ctx)
 	case paroki.FieldNama:
 		return m.OldNama(ctx)
 	case paroki.FieldPelindung:
@@ -17097,8 +18272,18 @@ func (m *ParokiMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldPastor(ctx)
 	case paroki.FieldAlamat:
 		return m.OldAlamat(ctx)
+	case paroki.FieldKotaID:
+		return m.OldKotaID(ctx)
+	case paroki.FieldKecamatanID:
+		return m.OldKecamatanID(ctx)
+	case paroki.FieldKelurahanID:
+		return m.OldKelurahanID(ctx)
+	case paroki.FieldTimezone:
+		return m.OldTimezone(ctx)
 	case paroki.FieldTelepon:
 		return m.OldTelepon(ctx)
+	case paroki.FieldFax:
+		return m.OldFax(ctx)
 	case paroki.FieldEmail:
 		return m.OldEmail(ctx)
 	case paroki.FieldWebsite:
@@ -17107,6 +18292,12 @@ func (m *ParokiMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldLogoURL(ctx)
 	case paroki.FieldKopSurat:
 		return m.OldKopSurat(ctx)
+	case paroki.FieldLatitude:
+		return m.OldLatitude(ctx)
+	case paroki.FieldLongitude:
+		return m.OldLongitude(ctx)
+	case paroki.FieldStatusParoki:
+		return m.OldStatusParoki(ctx)
 	case paroki.FieldActive:
 		return m.OldActive(ctx)
 	}
@@ -17146,12 +18337,33 @@ func (m *ParokiMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetKeuskupanID(v)
 		return nil
+	case paroki.FieldKevikepanID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKevikepanID(v)
+		return nil
+	case paroki.FieldIndukID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIndukID(v)
+		return nil
 	case paroki.FieldKode:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetKode(v)
+		return nil
+	case paroki.FieldKodeResmi:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKodeResmi(v)
 		return nil
 	case paroki.FieldNama:
 		v, ok := value.(string)
@@ -17181,12 +18393,47 @@ func (m *ParokiMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetAlamat(v)
 		return nil
+	case paroki.FieldKotaID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKotaID(v)
+		return nil
+	case paroki.FieldKecamatanID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKecamatanID(v)
+		return nil
+	case paroki.FieldKelurahanID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKelurahanID(v)
+		return nil
+	case paroki.FieldTimezone:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTimezone(v)
+		return nil
 	case paroki.FieldTelepon:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetTelepon(v)
+		return nil
+	case paroki.FieldFax:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFax(v)
 		return nil
 	case paroki.FieldEmail:
 		v, ok := value.(string)
@@ -17216,6 +18463,27 @@ func (m *ParokiMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetKopSurat(v)
 		return nil
+	case paroki.FieldLatitude:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLatitude(v)
+		return nil
+	case paroki.FieldLongitude:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLongitude(v)
+		return nil
+	case paroki.FieldStatusParoki:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatusParoki(v)
+		return nil
 	case paroki.FieldActive:
 		v, ok := value.(bool)
 		if !ok {
@@ -17230,13 +18498,26 @@ func (m *ParokiMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *ParokiMutation) AddedFields() []string {
-	return nil
+	var fields []string
+	if m.addlatitude != nil {
+		fields = append(fields, paroki.FieldLatitude)
+	}
+	if m.addlongitude != nil {
+		fields = append(fields, paroki.FieldLongitude)
+	}
+	return fields
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *ParokiMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case paroki.FieldLatitude:
+		return m.AddedLatitude()
+	case paroki.FieldLongitude:
+		return m.AddedLongitude()
+	}
 	return nil, false
 }
 
@@ -17245,6 +18526,20 @@ func (m *ParokiMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *ParokiMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case paroki.FieldLatitude:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddLatitude(v)
+		return nil
+	case paroki.FieldLongitude:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddLongitude(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Paroki numeric field %s", name)
 }
@@ -17256,6 +18551,15 @@ func (m *ParokiMutation) ClearedFields() []string {
 	if m.FieldCleared(paroki.FieldDeletedAt) {
 		fields = append(fields, paroki.FieldDeletedAt)
 	}
+	if m.FieldCleared(paroki.FieldKevikepanID) {
+		fields = append(fields, paroki.FieldKevikepanID)
+	}
+	if m.FieldCleared(paroki.FieldIndukID) {
+		fields = append(fields, paroki.FieldIndukID)
+	}
+	if m.FieldCleared(paroki.FieldKodeResmi) {
+		fields = append(fields, paroki.FieldKodeResmi)
+	}
 	if m.FieldCleared(paroki.FieldPelindung) {
 		fields = append(fields, paroki.FieldPelindung)
 	}
@@ -17265,8 +18569,20 @@ func (m *ParokiMutation) ClearedFields() []string {
 	if m.FieldCleared(paroki.FieldAlamat) {
 		fields = append(fields, paroki.FieldAlamat)
 	}
+	if m.FieldCleared(paroki.FieldKotaID) {
+		fields = append(fields, paroki.FieldKotaID)
+	}
+	if m.FieldCleared(paroki.FieldKecamatanID) {
+		fields = append(fields, paroki.FieldKecamatanID)
+	}
+	if m.FieldCleared(paroki.FieldKelurahanID) {
+		fields = append(fields, paroki.FieldKelurahanID)
+	}
 	if m.FieldCleared(paroki.FieldTelepon) {
 		fields = append(fields, paroki.FieldTelepon)
+	}
+	if m.FieldCleared(paroki.FieldFax) {
+		fields = append(fields, paroki.FieldFax)
 	}
 	if m.FieldCleared(paroki.FieldEmail) {
 		fields = append(fields, paroki.FieldEmail)
@@ -17279,6 +18595,15 @@ func (m *ParokiMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(paroki.FieldKopSurat) {
 		fields = append(fields, paroki.FieldKopSurat)
+	}
+	if m.FieldCleared(paroki.FieldLatitude) {
+		fields = append(fields, paroki.FieldLatitude)
+	}
+	if m.FieldCleared(paroki.FieldLongitude) {
+		fields = append(fields, paroki.FieldLongitude)
+	}
+	if m.FieldCleared(paroki.FieldStatusParoki) {
+		fields = append(fields, paroki.FieldStatusParoki)
 	}
 	return fields
 }
@@ -17297,6 +18622,15 @@ func (m *ParokiMutation) ClearField(name string) error {
 	case paroki.FieldDeletedAt:
 		m.ClearDeletedAt()
 		return nil
+	case paroki.FieldKevikepanID:
+		m.ClearKevikepanID()
+		return nil
+	case paroki.FieldIndukID:
+		m.ClearIndukID()
+		return nil
+	case paroki.FieldKodeResmi:
+		m.ClearKodeResmi()
+		return nil
 	case paroki.FieldPelindung:
 		m.ClearPelindung()
 		return nil
@@ -17306,8 +18640,20 @@ func (m *ParokiMutation) ClearField(name string) error {
 	case paroki.FieldAlamat:
 		m.ClearAlamat()
 		return nil
+	case paroki.FieldKotaID:
+		m.ClearKotaID()
+		return nil
+	case paroki.FieldKecamatanID:
+		m.ClearKecamatanID()
+		return nil
+	case paroki.FieldKelurahanID:
+		m.ClearKelurahanID()
+		return nil
 	case paroki.FieldTelepon:
 		m.ClearTelepon()
+		return nil
+	case paroki.FieldFax:
+		m.ClearFax()
 		return nil
 	case paroki.FieldEmail:
 		m.ClearEmail()
@@ -17320,6 +18666,15 @@ func (m *ParokiMutation) ClearField(name string) error {
 		return nil
 	case paroki.FieldKopSurat:
 		m.ClearKopSurat()
+		return nil
+	case paroki.FieldLatitude:
+		m.ClearLatitude()
+		return nil
+	case paroki.FieldLongitude:
+		m.ClearLongitude()
+		return nil
+	case paroki.FieldStatusParoki:
+		m.ClearStatusParoki()
 		return nil
 	}
 	return fmt.Errorf("unknown Paroki nullable field %s", name)
@@ -17341,8 +18696,17 @@ func (m *ParokiMutation) ResetField(name string) error {
 	case paroki.FieldKeuskupanID:
 		m.ResetKeuskupanID()
 		return nil
+	case paroki.FieldKevikepanID:
+		m.ResetKevikepanID()
+		return nil
+	case paroki.FieldIndukID:
+		m.ResetIndukID()
+		return nil
 	case paroki.FieldKode:
 		m.ResetKode()
+		return nil
+	case paroki.FieldKodeResmi:
+		m.ResetKodeResmi()
 		return nil
 	case paroki.FieldNama:
 		m.ResetNama()
@@ -17356,8 +18720,23 @@ func (m *ParokiMutation) ResetField(name string) error {
 	case paroki.FieldAlamat:
 		m.ResetAlamat()
 		return nil
+	case paroki.FieldKotaID:
+		m.ResetKotaID()
+		return nil
+	case paroki.FieldKecamatanID:
+		m.ResetKecamatanID()
+		return nil
+	case paroki.FieldKelurahanID:
+		m.ResetKelurahanID()
+		return nil
+	case paroki.FieldTimezone:
+		m.ResetTimezone()
+		return nil
 	case paroki.FieldTelepon:
 		m.ResetTelepon()
+		return nil
+	case paroki.FieldFax:
+		m.ResetFax()
 		return nil
 	case paroki.FieldEmail:
 		m.ResetEmail()
@@ -17371,6 +18750,15 @@ func (m *ParokiMutation) ResetField(name string) error {
 	case paroki.FieldKopSurat:
 		m.ResetKopSurat()
 		return nil
+	case paroki.FieldLatitude:
+		m.ResetLatitude()
+		return nil
+	case paroki.FieldLongitude:
+		m.ResetLongitude()
+		return nil
+	case paroki.FieldStatusParoki:
+		m.ResetStatusParoki()
+		return nil
 	case paroki.FieldActive:
 		m.ResetActive()
 		return nil
@@ -17380,9 +18768,27 @@ func (m *ParokiMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ParokiMutation) AddedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 12)
 	if m.keuskupan != nil {
 		edges = append(edges, paroki.EdgeKeuskupan)
+	}
+	if m.kevikepan != nil {
+		edges = append(edges, paroki.EdgeKevikepan)
+	}
+	if m.induk != nil {
+		edges = append(edges, paroki.EdgeInduk)
+	}
+	if m.anak != nil {
+		edges = append(edges, paroki.EdgeAnak)
+	}
+	if m.kota != nil {
+		edges = append(edges, paroki.EdgeKota)
+	}
+	if m.kecamatan != nil {
+		edges = append(edges, paroki.EdgeKecamatan)
+	}
+	if m.kelurahan != nil {
+		edges = append(edges, paroki.EdgeKelurahan)
 	}
 	if m.members != nil {
 		edges = append(edges, paroki.EdgeMembers)
@@ -17408,6 +18814,32 @@ func (m *ParokiMutation) AddedIDs(name string) []ent.Value {
 	switch name {
 	case paroki.EdgeKeuskupan:
 		if id := m.keuskupan; id != nil {
+			return []ent.Value{*id}
+		}
+	case paroki.EdgeKevikepan:
+		if id := m.kevikepan; id != nil {
+			return []ent.Value{*id}
+		}
+	case paroki.EdgeInduk:
+		if id := m.induk; id != nil {
+			return []ent.Value{*id}
+		}
+	case paroki.EdgeAnak:
+		ids := make([]ent.Value, 0, len(m.anak))
+		for id := range m.anak {
+			ids = append(ids, id)
+		}
+		return ids
+	case paroki.EdgeKota:
+		if id := m.kota; id != nil {
+			return []ent.Value{*id}
+		}
+	case paroki.EdgeKecamatan:
+		if id := m.kecamatan; id != nil {
+			return []ent.Value{*id}
+		}
+	case paroki.EdgeKelurahan:
+		if id := m.kelurahan; id != nil {
 			return []ent.Value{*id}
 		}
 	case paroki.EdgeMembers:
@@ -17446,7 +18878,10 @@ func (m *ParokiMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ParokiMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 12)
+	if m.removedanak != nil {
+		edges = append(edges, paroki.EdgeAnak)
+	}
 	if m.removedmembers != nil {
 		edges = append(edges, paroki.EdgeMembers)
 	}
@@ -17469,6 +18904,12 @@ func (m *ParokiMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *ParokiMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
+	case paroki.EdgeAnak:
+		ids := make([]ent.Value, 0, len(m.removedanak))
+		for id := range m.removedanak {
+			ids = append(ids, id)
+		}
+		return ids
 	case paroki.EdgeMembers:
 		ids := make([]ent.Value, 0, len(m.removedmembers))
 		for id := range m.removedmembers {
@@ -17505,9 +18946,27 @@ func (m *ParokiMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ParokiMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 12)
 	if m.clearedkeuskupan {
 		edges = append(edges, paroki.EdgeKeuskupan)
+	}
+	if m.clearedkevikepan {
+		edges = append(edges, paroki.EdgeKevikepan)
+	}
+	if m.clearedinduk {
+		edges = append(edges, paroki.EdgeInduk)
+	}
+	if m.clearedanak {
+		edges = append(edges, paroki.EdgeAnak)
+	}
+	if m.clearedkota {
+		edges = append(edges, paroki.EdgeKota)
+	}
+	if m.clearedkecamatan {
+		edges = append(edges, paroki.EdgeKecamatan)
+	}
+	if m.clearedkelurahan {
+		edges = append(edges, paroki.EdgeKelurahan)
 	}
 	if m.clearedmembers {
 		edges = append(edges, paroki.EdgeMembers)
@@ -17533,6 +18992,18 @@ func (m *ParokiMutation) EdgeCleared(name string) bool {
 	switch name {
 	case paroki.EdgeKeuskupan:
 		return m.clearedkeuskupan
+	case paroki.EdgeKevikepan:
+		return m.clearedkevikepan
+	case paroki.EdgeInduk:
+		return m.clearedinduk
+	case paroki.EdgeAnak:
+		return m.clearedanak
+	case paroki.EdgeKota:
+		return m.clearedkota
+	case paroki.EdgeKecamatan:
+		return m.clearedkecamatan
+	case paroki.EdgeKelurahan:
+		return m.clearedkelurahan
 	case paroki.EdgeMembers:
 		return m.clearedmembers
 	case paroki.EdgeWilayah:
@@ -17554,6 +19025,21 @@ func (m *ParokiMutation) ClearEdge(name string) error {
 	case paroki.EdgeKeuskupan:
 		m.ClearKeuskupan()
 		return nil
+	case paroki.EdgeKevikepan:
+		m.ClearKevikepan()
+		return nil
+	case paroki.EdgeInduk:
+		m.ClearInduk()
+		return nil
+	case paroki.EdgeKota:
+		m.ClearKota()
+		return nil
+	case paroki.EdgeKecamatan:
+		m.ClearKecamatan()
+		return nil
+	case paroki.EdgeKelurahan:
+		m.ClearKelurahan()
+		return nil
 	}
 	return fmt.Errorf("unknown Paroki unique edge %s", name)
 }
@@ -17564,6 +19050,24 @@ func (m *ParokiMutation) ResetEdge(name string) error {
 	switch name {
 	case paroki.EdgeKeuskupan:
 		m.ResetKeuskupan()
+		return nil
+	case paroki.EdgeKevikepan:
+		m.ResetKevikepan()
+		return nil
+	case paroki.EdgeInduk:
+		m.ResetInduk()
+		return nil
+	case paroki.EdgeAnak:
+		m.ResetAnak()
+		return nil
+	case paroki.EdgeKota:
+		m.ResetKota()
+		return nil
+	case paroki.EdgeKecamatan:
+		m.ResetKecamatan()
+		return nil
+	case paroki.EdgeKelurahan:
+		m.ResetKelurahan()
 		return nil
 	case paroki.EdgeMembers:
 		m.ResetMembers()

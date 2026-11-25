@@ -172,12 +172,19 @@ func (s *Service) UpdateKevikepan(ctx context.Context, id uuid.UUID, req domain.
 	return toKevikepanResponse(updated), nil
 }
 
-// DeleteKevikepan soft-deletes a non-deleted Kevikepan.
+// DeleteKevikepan soft-deletes a non-deleted Kevikepan if no non-deleted paroki references it.
 func (s *Service) DeleteKevikepan(ctx context.Context, id uuid.UUID) error {
 	if _, err := s.repo.FindKevikepanByID(ctx, id); ent.IsNotFound(err) {
 		return domain.ErrKevikepanNotFound
 	} else if err != nil {
 		return err
+	}
+	inUse, err := s.repo.HasParokiByKevikepan(ctx, id)
+	if err != nil {
+		return err
+	}
+	if inUse {
+		return domain.ErrInUse
 	}
 	return s.repo.SoftDeleteKevikepan(ctx, id, time.Now().UTC())
 }

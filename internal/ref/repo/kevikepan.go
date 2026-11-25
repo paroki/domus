@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/ent/kevikepan"
+	"github.com/paroki/domus/ent/paroki"
 )
 
 // KevikepanInput holds mutable fields for creating or reactivating a Kevikepan.
@@ -140,5 +141,12 @@ func (r *Repository) SoftDeleteKevikepan(ctx context.Context, id uuid.UUID, at t
 func (r *Repository) HasKevikepanByKeuskupan(ctx context.Context, keuskupanID uuid.UUID) (bool, error) {
 	return r.client.Kevikepan.Query().
 		Where(kevikepan.KeuskupanIDEQ(keuskupanID), kevikepan.DeletedAtIsNil()).
+		Exist(ctx)
+}
+
+// HasParokiByKevikepan reports whether any non-deleted Paroki references kevikepanID.
+func (r *Repository) HasParokiByKevikepan(ctx context.Context, kevikepanID uuid.UUID) (bool, error) {
+	return r.client.Paroki.Query().
+		Where(paroki.KevikepanIDEQ(kevikepanID), paroki.DeletedAtIsNil()).
 		Exist(ctx)
 }

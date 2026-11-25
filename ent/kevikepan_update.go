@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent/keuskupan"
 	"github.com/paroki/domus/ent/kevikepan"
+	"github.com/paroki/domus/ent/paroki"
 	"github.com/paroki/domus/ent/predicate"
 )
 
@@ -137,6 +138,21 @@ func (_u *KevikepanUpdate) SetKeuskupan(v *Keuskupan) *KevikepanUpdate {
 	return _u.SetKeuskupanID(v.ID)
 }
 
+// AddParokiIDs adds the "paroki" edge to the Paroki entity by IDs.
+func (_u *KevikepanUpdate) AddParokiIDs(ids ...uuid.UUID) *KevikepanUpdate {
+	_u.mutation.AddParokiIDs(ids...)
+	return _u
+}
+
+// AddParoki adds the "paroki" edges to the Paroki entity.
+func (_u *KevikepanUpdate) AddParoki(v ...*Paroki) *KevikepanUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddParokiIDs(ids...)
+}
+
 // Mutation returns the KevikepanMutation object of the builder.
 func (_u *KevikepanUpdate) Mutation() *KevikepanMutation {
 	return _u.mutation
@@ -146,6 +162,27 @@ func (_u *KevikepanUpdate) Mutation() *KevikepanMutation {
 func (_u *KevikepanUpdate) ClearKeuskupan() *KevikepanUpdate {
 	_u.mutation.ClearKeuskupan()
 	return _u
+}
+
+// ClearParoki clears all "paroki" edges to the Paroki entity.
+func (_u *KevikepanUpdate) ClearParoki() *KevikepanUpdate {
+	_u.mutation.ClearParoki()
+	return _u
+}
+
+// RemoveParokiIDs removes the "paroki" edge to Paroki entities by IDs.
+func (_u *KevikepanUpdate) RemoveParokiIDs(ids ...uuid.UUID) *KevikepanUpdate {
+	_u.mutation.RemoveParokiIDs(ids...)
+	return _u
+}
+
+// RemoveParoki removes "paroki" edges to Paroki entities.
+func (_u *KevikepanUpdate) RemoveParoki(v ...*Paroki) *KevikepanUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveParokiIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -260,6 +297,51 @@ func (_u *KevikepanUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(keuskupan.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ParokiCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   kevikepan.ParokiTable,
+			Columns: []string{kevikepan.ParokiColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedParokiIDs(); len(nodes) > 0 && !_u.mutation.ParokiCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   kevikepan.ParokiTable,
+			Columns: []string{kevikepan.ParokiColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ParokiIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   kevikepan.ParokiTable,
+			Columns: []string{kevikepan.ParokiColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -394,6 +476,21 @@ func (_u *KevikepanUpdateOne) SetKeuskupan(v *Keuskupan) *KevikepanUpdateOne {
 	return _u.SetKeuskupanID(v.ID)
 }
 
+// AddParokiIDs adds the "paroki" edge to the Paroki entity by IDs.
+func (_u *KevikepanUpdateOne) AddParokiIDs(ids ...uuid.UUID) *KevikepanUpdateOne {
+	_u.mutation.AddParokiIDs(ids...)
+	return _u
+}
+
+// AddParoki adds the "paroki" edges to the Paroki entity.
+func (_u *KevikepanUpdateOne) AddParoki(v ...*Paroki) *KevikepanUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddParokiIDs(ids...)
+}
+
 // Mutation returns the KevikepanMutation object of the builder.
 func (_u *KevikepanUpdateOne) Mutation() *KevikepanMutation {
 	return _u.mutation
@@ -403,6 +500,27 @@ func (_u *KevikepanUpdateOne) Mutation() *KevikepanMutation {
 func (_u *KevikepanUpdateOne) ClearKeuskupan() *KevikepanUpdateOne {
 	_u.mutation.ClearKeuskupan()
 	return _u
+}
+
+// ClearParoki clears all "paroki" edges to the Paroki entity.
+func (_u *KevikepanUpdateOne) ClearParoki() *KevikepanUpdateOne {
+	_u.mutation.ClearParoki()
+	return _u
+}
+
+// RemoveParokiIDs removes the "paroki" edge to Paroki entities by IDs.
+func (_u *KevikepanUpdateOne) RemoveParokiIDs(ids ...uuid.UUID) *KevikepanUpdateOne {
+	_u.mutation.RemoveParokiIDs(ids...)
+	return _u
+}
+
+// RemoveParoki removes "paroki" edges to Paroki entities.
+func (_u *KevikepanUpdateOne) RemoveParoki(v ...*Paroki) *KevikepanUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveParokiIDs(ids...)
 }
 
 // Where appends a list predicates to the KevikepanUpdate builder.
@@ -547,6 +665,51 @@ func (_u *KevikepanUpdateOne) sqlSave(ctx context.Context) (_node *Kevikepan, er
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(keuskupan.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ParokiCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   kevikepan.ParokiTable,
+			Columns: []string{kevikepan.ParokiColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedParokiIDs(); len(nodes) > 0 && !_u.mutation.ParokiCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   kevikepan.ParokiTable,
+			Columns: []string{kevikepan.ParokiColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ParokiIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   kevikepan.ParokiTable,
+			Columns: []string{kevikepan.ParokiColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

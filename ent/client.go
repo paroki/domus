@@ -1557,6 +1557,22 @@ func (c *KecamatanClient) QueryKelurahan(_m *Kecamatan) *KelurahanQuery {
 	return query
 }
 
+// QueryParoki queries the paroki edge of a Kecamatan.
+func (c *KecamatanClient) QueryParoki(_m *Kecamatan) *ParokiQuery {
+	query := (&ParokiClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(kecamatan.Table, kecamatan.FieldID, id),
+			sqlgraph.To(paroki.Table, paroki.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, kecamatan.ParokiTable, kecamatan.ParokiColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *KecamatanClient) Hooks() []Hook {
 	return c.hooks.Kecamatan
@@ -1699,6 +1715,22 @@ func (c *KelurahanClient) QueryKecamatan(_m *Kelurahan) *KecamatanQuery {
 			sqlgraph.From(kelurahan.Table, kelurahan.FieldID, id),
 			sqlgraph.To(kecamatan.Table, kecamatan.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, kelurahan.KecamatanTable, kelurahan.KecamatanColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryParoki queries the paroki edge of a Kelurahan.
+func (c *KelurahanClient) QueryParoki(_m *Kelurahan) *ParokiQuery {
+	query := (&ParokiClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(kelurahan.Table, kelurahan.FieldID, id),
+			sqlgraph.To(paroki.Table, paroki.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, kelurahan.ParokiTable, kelurahan.ParokiColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -2020,6 +2052,22 @@ func (c *KevikepanClient) QueryKeuskupan(_m *Kevikepan) *KeuskupanQuery {
 	return query
 }
 
+// QueryParoki queries the paroki edge of a Kevikepan.
+func (c *KevikepanClient) QueryParoki(_m *Kevikepan) *ParokiQuery {
+	query := (&ParokiClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(kevikepan.Table, kevikepan.FieldID, id),
+			sqlgraph.To(paroki.Table, paroki.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, kevikepan.ParokiTable, kevikepan.ParokiColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *KevikepanClient) Hooks() []Hook {
 	return c.hooks.Kevikepan
@@ -2162,6 +2210,22 @@ func (c *KotaClient) QueryKecamatan(_m *Kota) *KecamatanQuery {
 			sqlgraph.From(kota.Table, kota.FieldID, id),
 			sqlgraph.To(kecamatan.Table, kecamatan.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, kota.KecamatanTable, kota.KecamatanColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryParoki queries the paroki edge of a Kota.
+func (c *KotaClient) QueryParoki(_m *Kota) *ParokiQuery {
+	query := (&ParokiClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(kota.Table, kota.FieldID, id),
+			sqlgraph.To(paroki.Table, paroki.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, kota.ParokiTable, kota.ParokiColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -3120,6 +3184,102 @@ func (c *ParokiClient) QueryKeuskupan(_m *Paroki) *KeuskupanQuery {
 			sqlgraph.From(paroki.Table, paroki.FieldID, id),
 			sqlgraph.To(keuskupan.Table, keuskupan.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, paroki.KeuskupanTable, paroki.KeuskupanColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryKevikepan queries the kevikepan edge of a Paroki.
+func (c *ParokiClient) QueryKevikepan(_m *Paroki) *KevikepanQuery {
+	query := (&KevikepanClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(paroki.Table, paroki.FieldID, id),
+			sqlgraph.To(kevikepan.Table, kevikepan.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, paroki.KevikepanTable, paroki.KevikepanColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryInduk queries the induk edge of a Paroki.
+func (c *ParokiClient) QueryInduk(_m *Paroki) *ParokiQuery {
+	query := (&ParokiClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(paroki.Table, paroki.FieldID, id),
+			sqlgraph.To(paroki.Table, paroki.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, paroki.IndukTable, paroki.IndukColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAnak queries the anak edge of a Paroki.
+func (c *ParokiClient) QueryAnak(_m *Paroki) *ParokiQuery {
+	query := (&ParokiClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(paroki.Table, paroki.FieldID, id),
+			sqlgraph.To(paroki.Table, paroki.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, paroki.AnakTable, paroki.AnakColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryKota queries the kota edge of a Paroki.
+func (c *ParokiClient) QueryKota(_m *Paroki) *KotaQuery {
+	query := (&KotaClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(paroki.Table, paroki.FieldID, id),
+			sqlgraph.To(kota.Table, kota.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, paroki.KotaTable, paroki.KotaColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryKecamatan queries the kecamatan edge of a Paroki.
+func (c *ParokiClient) QueryKecamatan(_m *Paroki) *KecamatanQuery {
+	query := (&KecamatanClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(paroki.Table, paroki.FieldID, id),
+			sqlgraph.To(kecamatan.Table, kecamatan.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, paroki.KecamatanTable, paroki.KecamatanColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryKelurahan queries the kelurahan edge of a Paroki.
+func (c *ParokiClient) QueryKelurahan(_m *Paroki) *KelurahanQuery {
+	query := (&KelurahanClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(paroki.Table, paroki.FieldID, id),
+			sqlgraph.To(kelurahan.Table, kelurahan.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, paroki.KelurahanTable, paroki.KelurahanColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil

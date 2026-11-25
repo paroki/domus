@@ -181,7 +181,7 @@ func (s *Service) UpdateKota(ctx context.Context, id uuid.UUID, req domain.Updat
 	return toKotaResponse(updated), nil
 }
 
-// DeleteKota soft-deletes a Kota if it has no non-deleted kecamatan.
+// DeleteKota soft-deletes a Kota if it has no non-deleted kecamatan or paroki.
 func (s *Service) DeleteKota(ctx context.Context, id uuid.UUID) error {
 	if _, err := s.repo.FindKotaByID(ctx, id); ent.IsNotFound(err) {
 		return domain.ErrKotaNotFound
@@ -190,6 +190,13 @@ func (s *Service) DeleteKota(ctx context.Context, id uuid.UUID) error {
 	}
 
 	inUse, err := s.repo.HasKecamatanByKota(ctx, id)
+	if err != nil {
+		return err
+	}
+	if inUse {
+		return domain.ErrInUse
+	}
+	inUse, err = s.repo.HasParokiByKota(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -350,7 +357,7 @@ func (s *Service) UpdateKecamatan(ctx context.Context, id uuid.UUID, req domain.
 	return toKecamatanResponse(updated), nil
 }
 
-// DeleteKecamatan soft-deletes a Kecamatan if it has no non-deleted kelurahan.
+// DeleteKecamatan soft-deletes a Kecamatan if it has no non-deleted kelurahan or paroki.
 func (s *Service) DeleteKecamatan(ctx context.Context, id uuid.UUID) error {
 	if _, err := s.repo.FindKecamatanByID(ctx, id); ent.IsNotFound(err) {
 		return domain.ErrKecamatanNotFound
@@ -359,6 +366,13 @@ func (s *Service) DeleteKecamatan(ctx context.Context, id uuid.UUID) error {
 	}
 
 	inUse, err := s.repo.HasKelurahanByKecamatan(ctx, id)
+	if err != nil {
+		return err
+	}
+	if inUse {
+		return domain.ErrInUse
+	}
+	inUse, err = s.repo.HasParokiByKecamatan(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -537,12 +551,19 @@ func (s *Service) UpdateKelurahan(ctx context.Context, id uuid.UUID, req domain.
 	return toKelurahanResponse(updated), nil
 }
 
-// DeleteKelurahan soft-deletes a non-deleted Kelurahan.
+// DeleteKelurahan soft-deletes a non-deleted Kelurahan if no non-deleted paroki references it.
 func (s *Service) DeleteKelurahan(ctx context.Context, id uuid.UUID) error {
 	if _, err := s.repo.FindKelurahanByID(ctx, id); ent.IsNotFound(err) {
 		return domain.ErrKelurahanNotFound
 	} else if err != nil {
 		return err
+	}
+	inUse, err := s.repo.HasParokiByKelurahan(ctx, id)
+	if err != nil {
+		return err
+	}
+	if inUse {
+		return domain.ErrInUse
 	}
 	return s.repo.SoftDeleteKelurahan(ctx, id, time.Now().UTC())
 }

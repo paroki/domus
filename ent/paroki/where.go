@@ -76,9 +76,24 @@ func KeuskupanID(v uuid.UUID) predicate.Paroki {
 	return predicate.Paroki(sql.FieldEQ(FieldKeuskupanID, v))
 }
 
+// KevikepanID applies equality check predicate on the "kevikepan_id" field. It's identical to KevikepanIDEQ.
+func KevikepanID(v uuid.UUID) predicate.Paroki {
+	return predicate.Paroki(sql.FieldEQ(FieldKevikepanID, v))
+}
+
+// IndukID applies equality check predicate on the "induk_id" field. It's identical to IndukIDEQ.
+func IndukID(v uuid.UUID) predicate.Paroki {
+	return predicate.Paroki(sql.FieldEQ(FieldIndukID, v))
+}
+
 // Kode applies equality check predicate on the "kode" field. It's identical to KodeEQ.
 func Kode(v string) predicate.Paroki {
 	return predicate.Paroki(sql.FieldEQ(FieldKode, v))
+}
+
+// KodeResmi applies equality check predicate on the "kode_resmi" field. It's identical to KodeResmiEQ.
+func KodeResmi(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldEQ(FieldKodeResmi, v))
 }
 
 // Nama applies equality check predicate on the "nama" field. It's identical to NamaEQ.
@@ -101,9 +116,34 @@ func Alamat(v string) predicate.Paroki {
 	return predicate.Paroki(sql.FieldEQ(FieldAlamat, v))
 }
 
+// KotaID applies equality check predicate on the "kota_id" field. It's identical to KotaIDEQ.
+func KotaID(v uuid.UUID) predicate.Paroki {
+	return predicate.Paroki(sql.FieldEQ(FieldKotaID, v))
+}
+
+// KecamatanID applies equality check predicate on the "kecamatan_id" field. It's identical to KecamatanIDEQ.
+func KecamatanID(v uuid.UUID) predicate.Paroki {
+	return predicate.Paroki(sql.FieldEQ(FieldKecamatanID, v))
+}
+
+// KelurahanID applies equality check predicate on the "kelurahan_id" field. It's identical to KelurahanIDEQ.
+func KelurahanID(v uuid.UUID) predicate.Paroki {
+	return predicate.Paroki(sql.FieldEQ(FieldKelurahanID, v))
+}
+
+// Timezone applies equality check predicate on the "timezone" field. It's identical to TimezoneEQ.
+func Timezone(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldEQ(FieldTimezone, v))
+}
+
 // Telepon applies equality check predicate on the "telepon" field. It's identical to TeleponEQ.
 func Telepon(v string) predicate.Paroki {
 	return predicate.Paroki(sql.FieldEQ(FieldTelepon, v))
+}
+
+// Fax applies equality check predicate on the "fax" field. It's identical to FaxEQ.
+func Fax(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldEQ(FieldFax, v))
 }
 
 // Email applies equality check predicate on the "email" field. It's identical to EmailEQ.
@@ -124,6 +164,21 @@ func LogoURL(v string) predicate.Paroki {
 // KopSurat applies equality check predicate on the "kop_surat" field. It's identical to KopSuratEQ.
 func KopSurat(v string) predicate.Paroki {
 	return predicate.Paroki(sql.FieldEQ(FieldKopSurat, v))
+}
+
+// Latitude applies equality check predicate on the "latitude" field. It's identical to LatitudeEQ.
+func Latitude(v float64) predicate.Paroki {
+	return predicate.Paroki(sql.FieldEQ(FieldLatitude, v))
+}
+
+// Longitude applies equality check predicate on the "longitude" field. It's identical to LongitudeEQ.
+func Longitude(v float64) predicate.Paroki {
+	return predicate.Paroki(sql.FieldEQ(FieldLongitude, v))
+}
+
+// StatusParoki applies equality check predicate on the "status_paroki" field. It's identical to StatusParokiEQ.
+func StatusParoki(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldEQ(FieldStatusParoki, v))
 }
 
 // Active applies equality check predicate on the "active" field. It's identical to ActiveEQ.
@@ -281,6 +336,66 @@ func KeuskupanIDNotIn(vs ...uuid.UUID) predicate.Paroki {
 	return predicate.Paroki(sql.FieldNotIn(FieldKeuskupanID, vs...))
 }
 
+// KevikepanIDEQ applies the EQ predicate on the "kevikepan_id" field.
+func KevikepanIDEQ(v uuid.UUID) predicate.Paroki {
+	return predicate.Paroki(sql.FieldEQ(FieldKevikepanID, v))
+}
+
+// KevikepanIDNEQ applies the NEQ predicate on the "kevikepan_id" field.
+func KevikepanIDNEQ(v uuid.UUID) predicate.Paroki {
+	return predicate.Paroki(sql.FieldNEQ(FieldKevikepanID, v))
+}
+
+// KevikepanIDIn applies the In predicate on the "kevikepan_id" field.
+func KevikepanIDIn(vs ...uuid.UUID) predicate.Paroki {
+	return predicate.Paroki(sql.FieldIn(FieldKevikepanID, vs...))
+}
+
+// KevikepanIDNotIn applies the NotIn predicate on the "kevikepan_id" field.
+func KevikepanIDNotIn(vs ...uuid.UUID) predicate.Paroki {
+	return predicate.Paroki(sql.FieldNotIn(FieldKevikepanID, vs...))
+}
+
+// KevikepanIDIsNil applies the IsNil predicate on the "kevikepan_id" field.
+func KevikepanIDIsNil() predicate.Paroki {
+	return predicate.Paroki(sql.FieldIsNull(FieldKevikepanID))
+}
+
+// KevikepanIDNotNil applies the NotNil predicate on the "kevikepan_id" field.
+func KevikepanIDNotNil() predicate.Paroki {
+	return predicate.Paroki(sql.FieldNotNull(FieldKevikepanID))
+}
+
+// IndukIDEQ applies the EQ predicate on the "induk_id" field.
+func IndukIDEQ(v uuid.UUID) predicate.Paroki {
+	return predicate.Paroki(sql.FieldEQ(FieldIndukID, v))
+}
+
+// IndukIDNEQ applies the NEQ predicate on the "induk_id" field.
+func IndukIDNEQ(v uuid.UUID) predicate.Paroki {
+	return predicate.Paroki(sql.FieldNEQ(FieldIndukID, v))
+}
+
+// IndukIDIn applies the In predicate on the "induk_id" field.
+func IndukIDIn(vs ...uuid.UUID) predicate.Paroki {
+	return predicate.Paroki(sql.FieldIn(FieldIndukID, vs...))
+}
+
+// IndukIDNotIn applies the NotIn predicate on the "induk_id" field.
+func IndukIDNotIn(vs ...uuid.UUID) predicate.Paroki {
+	return predicate.Paroki(sql.FieldNotIn(FieldIndukID, vs...))
+}
+
+// IndukIDIsNil applies the IsNil predicate on the "induk_id" field.
+func IndukIDIsNil() predicate.Paroki {
+	return predicate.Paroki(sql.FieldIsNull(FieldIndukID))
+}
+
+// IndukIDNotNil applies the NotNil predicate on the "induk_id" field.
+func IndukIDNotNil() predicate.Paroki {
+	return predicate.Paroki(sql.FieldNotNull(FieldIndukID))
+}
+
 // KodeEQ applies the EQ predicate on the "kode" field.
 func KodeEQ(v string) predicate.Paroki {
 	return predicate.Paroki(sql.FieldEQ(FieldKode, v))
@@ -344,6 +459,81 @@ func KodeEqualFold(v string) predicate.Paroki {
 // KodeContainsFold applies the ContainsFold predicate on the "kode" field.
 func KodeContainsFold(v string) predicate.Paroki {
 	return predicate.Paroki(sql.FieldContainsFold(FieldKode, v))
+}
+
+// KodeResmiEQ applies the EQ predicate on the "kode_resmi" field.
+func KodeResmiEQ(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldEQ(FieldKodeResmi, v))
+}
+
+// KodeResmiNEQ applies the NEQ predicate on the "kode_resmi" field.
+func KodeResmiNEQ(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldNEQ(FieldKodeResmi, v))
+}
+
+// KodeResmiIn applies the In predicate on the "kode_resmi" field.
+func KodeResmiIn(vs ...string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldIn(FieldKodeResmi, vs...))
+}
+
+// KodeResmiNotIn applies the NotIn predicate on the "kode_resmi" field.
+func KodeResmiNotIn(vs ...string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldNotIn(FieldKodeResmi, vs...))
+}
+
+// KodeResmiGT applies the GT predicate on the "kode_resmi" field.
+func KodeResmiGT(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldGT(FieldKodeResmi, v))
+}
+
+// KodeResmiGTE applies the GTE predicate on the "kode_resmi" field.
+func KodeResmiGTE(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldGTE(FieldKodeResmi, v))
+}
+
+// KodeResmiLT applies the LT predicate on the "kode_resmi" field.
+func KodeResmiLT(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldLT(FieldKodeResmi, v))
+}
+
+// KodeResmiLTE applies the LTE predicate on the "kode_resmi" field.
+func KodeResmiLTE(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldLTE(FieldKodeResmi, v))
+}
+
+// KodeResmiContains applies the Contains predicate on the "kode_resmi" field.
+func KodeResmiContains(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldContains(FieldKodeResmi, v))
+}
+
+// KodeResmiHasPrefix applies the HasPrefix predicate on the "kode_resmi" field.
+func KodeResmiHasPrefix(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldHasPrefix(FieldKodeResmi, v))
+}
+
+// KodeResmiHasSuffix applies the HasSuffix predicate on the "kode_resmi" field.
+func KodeResmiHasSuffix(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldHasSuffix(FieldKodeResmi, v))
+}
+
+// KodeResmiIsNil applies the IsNil predicate on the "kode_resmi" field.
+func KodeResmiIsNil() predicate.Paroki {
+	return predicate.Paroki(sql.FieldIsNull(FieldKodeResmi))
+}
+
+// KodeResmiNotNil applies the NotNil predicate on the "kode_resmi" field.
+func KodeResmiNotNil() predicate.Paroki {
+	return predicate.Paroki(sql.FieldNotNull(FieldKodeResmi))
+}
+
+// KodeResmiEqualFold applies the EqualFold predicate on the "kode_resmi" field.
+func KodeResmiEqualFold(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldEqualFold(FieldKodeResmi, v))
+}
+
+// KodeResmiContainsFold applies the ContainsFold predicate on the "kode_resmi" field.
+func KodeResmiContainsFold(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldContainsFold(FieldKodeResmi, v))
 }
 
 // NamaEQ applies the EQ predicate on the "nama" field.
@@ -636,6 +826,161 @@ func AlamatContainsFold(v string) predicate.Paroki {
 	return predicate.Paroki(sql.FieldContainsFold(FieldAlamat, v))
 }
 
+// KotaIDEQ applies the EQ predicate on the "kota_id" field.
+func KotaIDEQ(v uuid.UUID) predicate.Paroki {
+	return predicate.Paroki(sql.FieldEQ(FieldKotaID, v))
+}
+
+// KotaIDNEQ applies the NEQ predicate on the "kota_id" field.
+func KotaIDNEQ(v uuid.UUID) predicate.Paroki {
+	return predicate.Paroki(sql.FieldNEQ(FieldKotaID, v))
+}
+
+// KotaIDIn applies the In predicate on the "kota_id" field.
+func KotaIDIn(vs ...uuid.UUID) predicate.Paroki {
+	return predicate.Paroki(sql.FieldIn(FieldKotaID, vs...))
+}
+
+// KotaIDNotIn applies the NotIn predicate on the "kota_id" field.
+func KotaIDNotIn(vs ...uuid.UUID) predicate.Paroki {
+	return predicate.Paroki(sql.FieldNotIn(FieldKotaID, vs...))
+}
+
+// KotaIDIsNil applies the IsNil predicate on the "kota_id" field.
+func KotaIDIsNil() predicate.Paroki {
+	return predicate.Paroki(sql.FieldIsNull(FieldKotaID))
+}
+
+// KotaIDNotNil applies the NotNil predicate on the "kota_id" field.
+func KotaIDNotNil() predicate.Paroki {
+	return predicate.Paroki(sql.FieldNotNull(FieldKotaID))
+}
+
+// KecamatanIDEQ applies the EQ predicate on the "kecamatan_id" field.
+func KecamatanIDEQ(v uuid.UUID) predicate.Paroki {
+	return predicate.Paroki(sql.FieldEQ(FieldKecamatanID, v))
+}
+
+// KecamatanIDNEQ applies the NEQ predicate on the "kecamatan_id" field.
+func KecamatanIDNEQ(v uuid.UUID) predicate.Paroki {
+	return predicate.Paroki(sql.FieldNEQ(FieldKecamatanID, v))
+}
+
+// KecamatanIDIn applies the In predicate on the "kecamatan_id" field.
+func KecamatanIDIn(vs ...uuid.UUID) predicate.Paroki {
+	return predicate.Paroki(sql.FieldIn(FieldKecamatanID, vs...))
+}
+
+// KecamatanIDNotIn applies the NotIn predicate on the "kecamatan_id" field.
+func KecamatanIDNotIn(vs ...uuid.UUID) predicate.Paroki {
+	return predicate.Paroki(sql.FieldNotIn(FieldKecamatanID, vs...))
+}
+
+// KecamatanIDIsNil applies the IsNil predicate on the "kecamatan_id" field.
+func KecamatanIDIsNil() predicate.Paroki {
+	return predicate.Paroki(sql.FieldIsNull(FieldKecamatanID))
+}
+
+// KecamatanIDNotNil applies the NotNil predicate on the "kecamatan_id" field.
+func KecamatanIDNotNil() predicate.Paroki {
+	return predicate.Paroki(sql.FieldNotNull(FieldKecamatanID))
+}
+
+// KelurahanIDEQ applies the EQ predicate on the "kelurahan_id" field.
+func KelurahanIDEQ(v uuid.UUID) predicate.Paroki {
+	return predicate.Paroki(sql.FieldEQ(FieldKelurahanID, v))
+}
+
+// KelurahanIDNEQ applies the NEQ predicate on the "kelurahan_id" field.
+func KelurahanIDNEQ(v uuid.UUID) predicate.Paroki {
+	return predicate.Paroki(sql.FieldNEQ(FieldKelurahanID, v))
+}
+
+// KelurahanIDIn applies the In predicate on the "kelurahan_id" field.
+func KelurahanIDIn(vs ...uuid.UUID) predicate.Paroki {
+	return predicate.Paroki(sql.FieldIn(FieldKelurahanID, vs...))
+}
+
+// KelurahanIDNotIn applies the NotIn predicate on the "kelurahan_id" field.
+func KelurahanIDNotIn(vs ...uuid.UUID) predicate.Paroki {
+	return predicate.Paroki(sql.FieldNotIn(FieldKelurahanID, vs...))
+}
+
+// KelurahanIDIsNil applies the IsNil predicate on the "kelurahan_id" field.
+func KelurahanIDIsNil() predicate.Paroki {
+	return predicate.Paroki(sql.FieldIsNull(FieldKelurahanID))
+}
+
+// KelurahanIDNotNil applies the NotNil predicate on the "kelurahan_id" field.
+func KelurahanIDNotNil() predicate.Paroki {
+	return predicate.Paroki(sql.FieldNotNull(FieldKelurahanID))
+}
+
+// TimezoneEQ applies the EQ predicate on the "timezone" field.
+func TimezoneEQ(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldEQ(FieldTimezone, v))
+}
+
+// TimezoneNEQ applies the NEQ predicate on the "timezone" field.
+func TimezoneNEQ(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldNEQ(FieldTimezone, v))
+}
+
+// TimezoneIn applies the In predicate on the "timezone" field.
+func TimezoneIn(vs ...string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldIn(FieldTimezone, vs...))
+}
+
+// TimezoneNotIn applies the NotIn predicate on the "timezone" field.
+func TimezoneNotIn(vs ...string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldNotIn(FieldTimezone, vs...))
+}
+
+// TimezoneGT applies the GT predicate on the "timezone" field.
+func TimezoneGT(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldGT(FieldTimezone, v))
+}
+
+// TimezoneGTE applies the GTE predicate on the "timezone" field.
+func TimezoneGTE(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldGTE(FieldTimezone, v))
+}
+
+// TimezoneLT applies the LT predicate on the "timezone" field.
+func TimezoneLT(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldLT(FieldTimezone, v))
+}
+
+// TimezoneLTE applies the LTE predicate on the "timezone" field.
+func TimezoneLTE(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldLTE(FieldTimezone, v))
+}
+
+// TimezoneContains applies the Contains predicate on the "timezone" field.
+func TimezoneContains(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldContains(FieldTimezone, v))
+}
+
+// TimezoneHasPrefix applies the HasPrefix predicate on the "timezone" field.
+func TimezoneHasPrefix(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldHasPrefix(FieldTimezone, v))
+}
+
+// TimezoneHasSuffix applies the HasSuffix predicate on the "timezone" field.
+func TimezoneHasSuffix(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldHasSuffix(FieldTimezone, v))
+}
+
+// TimezoneEqualFold applies the EqualFold predicate on the "timezone" field.
+func TimezoneEqualFold(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldEqualFold(FieldTimezone, v))
+}
+
+// TimezoneContainsFold applies the ContainsFold predicate on the "timezone" field.
+func TimezoneContainsFold(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldContainsFold(FieldTimezone, v))
+}
+
 // TeleponEQ applies the EQ predicate on the "telepon" field.
 func TeleponEQ(v string) predicate.Paroki {
 	return predicate.Paroki(sql.FieldEQ(FieldTelepon, v))
@@ -709,6 +1054,81 @@ func TeleponEqualFold(v string) predicate.Paroki {
 // TeleponContainsFold applies the ContainsFold predicate on the "telepon" field.
 func TeleponContainsFold(v string) predicate.Paroki {
 	return predicate.Paroki(sql.FieldContainsFold(FieldTelepon, v))
+}
+
+// FaxEQ applies the EQ predicate on the "fax" field.
+func FaxEQ(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldEQ(FieldFax, v))
+}
+
+// FaxNEQ applies the NEQ predicate on the "fax" field.
+func FaxNEQ(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldNEQ(FieldFax, v))
+}
+
+// FaxIn applies the In predicate on the "fax" field.
+func FaxIn(vs ...string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldIn(FieldFax, vs...))
+}
+
+// FaxNotIn applies the NotIn predicate on the "fax" field.
+func FaxNotIn(vs ...string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldNotIn(FieldFax, vs...))
+}
+
+// FaxGT applies the GT predicate on the "fax" field.
+func FaxGT(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldGT(FieldFax, v))
+}
+
+// FaxGTE applies the GTE predicate on the "fax" field.
+func FaxGTE(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldGTE(FieldFax, v))
+}
+
+// FaxLT applies the LT predicate on the "fax" field.
+func FaxLT(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldLT(FieldFax, v))
+}
+
+// FaxLTE applies the LTE predicate on the "fax" field.
+func FaxLTE(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldLTE(FieldFax, v))
+}
+
+// FaxContains applies the Contains predicate on the "fax" field.
+func FaxContains(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldContains(FieldFax, v))
+}
+
+// FaxHasPrefix applies the HasPrefix predicate on the "fax" field.
+func FaxHasPrefix(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldHasPrefix(FieldFax, v))
+}
+
+// FaxHasSuffix applies the HasSuffix predicate on the "fax" field.
+func FaxHasSuffix(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldHasSuffix(FieldFax, v))
+}
+
+// FaxIsNil applies the IsNil predicate on the "fax" field.
+func FaxIsNil() predicate.Paroki {
+	return predicate.Paroki(sql.FieldIsNull(FieldFax))
+}
+
+// FaxNotNil applies the NotNil predicate on the "fax" field.
+func FaxNotNil() predicate.Paroki {
+	return predicate.Paroki(sql.FieldNotNull(FieldFax))
+}
+
+// FaxEqualFold applies the EqualFold predicate on the "fax" field.
+func FaxEqualFold(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldEqualFold(FieldFax, v))
+}
+
+// FaxContainsFold applies the ContainsFold predicate on the "fax" field.
+func FaxContainsFold(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldContainsFold(FieldFax, v))
 }
 
 // EmailEQ applies the EQ predicate on the "email" field.
@@ -1011,6 +1431,181 @@ func KopSuratContainsFold(v string) predicate.Paroki {
 	return predicate.Paroki(sql.FieldContainsFold(FieldKopSurat, v))
 }
 
+// LatitudeEQ applies the EQ predicate on the "latitude" field.
+func LatitudeEQ(v float64) predicate.Paroki {
+	return predicate.Paroki(sql.FieldEQ(FieldLatitude, v))
+}
+
+// LatitudeNEQ applies the NEQ predicate on the "latitude" field.
+func LatitudeNEQ(v float64) predicate.Paroki {
+	return predicate.Paroki(sql.FieldNEQ(FieldLatitude, v))
+}
+
+// LatitudeIn applies the In predicate on the "latitude" field.
+func LatitudeIn(vs ...float64) predicate.Paroki {
+	return predicate.Paroki(sql.FieldIn(FieldLatitude, vs...))
+}
+
+// LatitudeNotIn applies the NotIn predicate on the "latitude" field.
+func LatitudeNotIn(vs ...float64) predicate.Paroki {
+	return predicate.Paroki(sql.FieldNotIn(FieldLatitude, vs...))
+}
+
+// LatitudeGT applies the GT predicate on the "latitude" field.
+func LatitudeGT(v float64) predicate.Paroki {
+	return predicate.Paroki(sql.FieldGT(FieldLatitude, v))
+}
+
+// LatitudeGTE applies the GTE predicate on the "latitude" field.
+func LatitudeGTE(v float64) predicate.Paroki {
+	return predicate.Paroki(sql.FieldGTE(FieldLatitude, v))
+}
+
+// LatitudeLT applies the LT predicate on the "latitude" field.
+func LatitudeLT(v float64) predicate.Paroki {
+	return predicate.Paroki(sql.FieldLT(FieldLatitude, v))
+}
+
+// LatitudeLTE applies the LTE predicate on the "latitude" field.
+func LatitudeLTE(v float64) predicate.Paroki {
+	return predicate.Paroki(sql.FieldLTE(FieldLatitude, v))
+}
+
+// LatitudeIsNil applies the IsNil predicate on the "latitude" field.
+func LatitudeIsNil() predicate.Paroki {
+	return predicate.Paroki(sql.FieldIsNull(FieldLatitude))
+}
+
+// LatitudeNotNil applies the NotNil predicate on the "latitude" field.
+func LatitudeNotNil() predicate.Paroki {
+	return predicate.Paroki(sql.FieldNotNull(FieldLatitude))
+}
+
+// LongitudeEQ applies the EQ predicate on the "longitude" field.
+func LongitudeEQ(v float64) predicate.Paroki {
+	return predicate.Paroki(sql.FieldEQ(FieldLongitude, v))
+}
+
+// LongitudeNEQ applies the NEQ predicate on the "longitude" field.
+func LongitudeNEQ(v float64) predicate.Paroki {
+	return predicate.Paroki(sql.FieldNEQ(FieldLongitude, v))
+}
+
+// LongitudeIn applies the In predicate on the "longitude" field.
+func LongitudeIn(vs ...float64) predicate.Paroki {
+	return predicate.Paroki(sql.FieldIn(FieldLongitude, vs...))
+}
+
+// LongitudeNotIn applies the NotIn predicate on the "longitude" field.
+func LongitudeNotIn(vs ...float64) predicate.Paroki {
+	return predicate.Paroki(sql.FieldNotIn(FieldLongitude, vs...))
+}
+
+// LongitudeGT applies the GT predicate on the "longitude" field.
+func LongitudeGT(v float64) predicate.Paroki {
+	return predicate.Paroki(sql.FieldGT(FieldLongitude, v))
+}
+
+// LongitudeGTE applies the GTE predicate on the "longitude" field.
+func LongitudeGTE(v float64) predicate.Paroki {
+	return predicate.Paroki(sql.FieldGTE(FieldLongitude, v))
+}
+
+// LongitudeLT applies the LT predicate on the "longitude" field.
+func LongitudeLT(v float64) predicate.Paroki {
+	return predicate.Paroki(sql.FieldLT(FieldLongitude, v))
+}
+
+// LongitudeLTE applies the LTE predicate on the "longitude" field.
+func LongitudeLTE(v float64) predicate.Paroki {
+	return predicate.Paroki(sql.FieldLTE(FieldLongitude, v))
+}
+
+// LongitudeIsNil applies the IsNil predicate on the "longitude" field.
+func LongitudeIsNil() predicate.Paroki {
+	return predicate.Paroki(sql.FieldIsNull(FieldLongitude))
+}
+
+// LongitudeNotNil applies the NotNil predicate on the "longitude" field.
+func LongitudeNotNil() predicate.Paroki {
+	return predicate.Paroki(sql.FieldNotNull(FieldLongitude))
+}
+
+// StatusParokiEQ applies the EQ predicate on the "status_paroki" field.
+func StatusParokiEQ(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldEQ(FieldStatusParoki, v))
+}
+
+// StatusParokiNEQ applies the NEQ predicate on the "status_paroki" field.
+func StatusParokiNEQ(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldNEQ(FieldStatusParoki, v))
+}
+
+// StatusParokiIn applies the In predicate on the "status_paroki" field.
+func StatusParokiIn(vs ...string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldIn(FieldStatusParoki, vs...))
+}
+
+// StatusParokiNotIn applies the NotIn predicate on the "status_paroki" field.
+func StatusParokiNotIn(vs ...string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldNotIn(FieldStatusParoki, vs...))
+}
+
+// StatusParokiGT applies the GT predicate on the "status_paroki" field.
+func StatusParokiGT(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldGT(FieldStatusParoki, v))
+}
+
+// StatusParokiGTE applies the GTE predicate on the "status_paroki" field.
+func StatusParokiGTE(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldGTE(FieldStatusParoki, v))
+}
+
+// StatusParokiLT applies the LT predicate on the "status_paroki" field.
+func StatusParokiLT(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldLT(FieldStatusParoki, v))
+}
+
+// StatusParokiLTE applies the LTE predicate on the "status_paroki" field.
+func StatusParokiLTE(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldLTE(FieldStatusParoki, v))
+}
+
+// StatusParokiContains applies the Contains predicate on the "status_paroki" field.
+func StatusParokiContains(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldContains(FieldStatusParoki, v))
+}
+
+// StatusParokiHasPrefix applies the HasPrefix predicate on the "status_paroki" field.
+func StatusParokiHasPrefix(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldHasPrefix(FieldStatusParoki, v))
+}
+
+// StatusParokiHasSuffix applies the HasSuffix predicate on the "status_paroki" field.
+func StatusParokiHasSuffix(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldHasSuffix(FieldStatusParoki, v))
+}
+
+// StatusParokiIsNil applies the IsNil predicate on the "status_paroki" field.
+func StatusParokiIsNil() predicate.Paroki {
+	return predicate.Paroki(sql.FieldIsNull(FieldStatusParoki))
+}
+
+// StatusParokiNotNil applies the NotNil predicate on the "status_paroki" field.
+func StatusParokiNotNil() predicate.Paroki {
+	return predicate.Paroki(sql.FieldNotNull(FieldStatusParoki))
+}
+
+// StatusParokiEqualFold applies the EqualFold predicate on the "status_paroki" field.
+func StatusParokiEqualFold(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldEqualFold(FieldStatusParoki, v))
+}
+
+// StatusParokiContainsFold applies the ContainsFold predicate on the "status_paroki" field.
+func StatusParokiContainsFold(v string) predicate.Paroki {
+	return predicate.Paroki(sql.FieldContainsFold(FieldStatusParoki, v))
+}
+
 // ActiveEQ applies the EQ predicate on the "active" field.
 func ActiveEQ(v bool) predicate.Paroki {
 	return predicate.Paroki(sql.FieldEQ(FieldActive, v))
@@ -1036,6 +1631,144 @@ func HasKeuskupan() predicate.Paroki {
 func HasKeuskupanWith(preds ...predicate.Keuskupan) predicate.Paroki {
 	return predicate.Paroki(func(s *sql.Selector) {
 		step := newKeuskupanStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasKevikepan applies the HasEdge predicate on the "kevikepan" edge.
+func HasKevikepan() predicate.Paroki {
+	return predicate.Paroki(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, KevikepanTable, KevikepanColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasKevikepanWith applies the HasEdge predicate on the "kevikepan" edge with a given conditions (other predicates).
+func HasKevikepanWith(preds ...predicate.Kevikepan) predicate.Paroki {
+	return predicate.Paroki(func(s *sql.Selector) {
+		step := newKevikepanStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasInduk applies the HasEdge predicate on the "induk" edge.
+func HasInduk() predicate.Paroki {
+	return predicate.Paroki(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, IndukTable, IndukColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasIndukWith applies the HasEdge predicate on the "induk" edge with a given conditions (other predicates).
+func HasIndukWith(preds ...predicate.Paroki) predicate.Paroki {
+	return predicate.Paroki(func(s *sql.Selector) {
+		step := newIndukStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasAnak applies the HasEdge predicate on the "anak" edge.
+func HasAnak() predicate.Paroki {
+	return predicate.Paroki(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, AnakTable, AnakColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAnakWith applies the HasEdge predicate on the "anak" edge with a given conditions (other predicates).
+func HasAnakWith(preds ...predicate.Paroki) predicate.Paroki {
+	return predicate.Paroki(func(s *sql.Selector) {
+		step := newAnakStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasKota applies the HasEdge predicate on the "kota" edge.
+func HasKota() predicate.Paroki {
+	return predicate.Paroki(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, KotaTable, KotaColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasKotaWith applies the HasEdge predicate on the "kota" edge with a given conditions (other predicates).
+func HasKotaWith(preds ...predicate.Kota) predicate.Paroki {
+	return predicate.Paroki(func(s *sql.Selector) {
+		step := newKotaStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasKecamatan applies the HasEdge predicate on the "kecamatan" edge.
+func HasKecamatan() predicate.Paroki {
+	return predicate.Paroki(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, KecamatanTable, KecamatanColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasKecamatanWith applies the HasEdge predicate on the "kecamatan" edge with a given conditions (other predicates).
+func HasKecamatanWith(preds ...predicate.Kecamatan) predicate.Paroki {
+	return predicate.Paroki(func(s *sql.Selector) {
+		step := newKecamatanStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasKelurahan applies the HasEdge predicate on the "kelurahan" edge.
+func HasKelurahan() predicate.Paroki {
+	return predicate.Paroki(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, KelurahanTable, KelurahanColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasKelurahanWith applies the HasEdge predicate on the "kelurahan" edge with a given conditions (other predicates).
+func HasKelurahanWith(preds ...predicate.Kelurahan) predicate.Paroki {
+	return predicate.Paroki(func(s *sql.Selector) {
+		step := newKelurahanStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

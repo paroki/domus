@@ -22,18 +22,57 @@ import (
 
 // ParokiInput holds fields for creating or reactivating a Paroki.
 type ParokiInput struct {
-	KeuskupanID uuid.UUID
-	Kode        string
-	Nama        string
-	Pelindung   *string
-	Pastor      *string
-	Alamat      *string
-	Telepon     *string
-	Email       *string
-	Website     *string
-	LogoURL     *string
-	KopSurat    *string
-	Active      bool
+	KeuskupanID  uuid.UUID
+	KevikepanID  *uuid.UUID
+	IndukID      *uuid.UUID
+	Kode         string
+	KodeResmi    *string
+	Nama         string
+	Pelindung    *string
+	Pastor       *string
+	Alamat       *string
+	KotaID       *uuid.UUID
+	KecamatanID  *uuid.UUID
+	KelurahanID  *uuid.UUID
+	Timezone     string
+	Telepon      *string
+	Fax          *string
+	Email        *string
+	Website      *string
+	LogoURL      *string
+	KopSurat     *string
+	Latitude     *float64
+	Longitude    *float64
+	StatusParoki *string
+	Active       bool
+}
+
+// ParokiUpdate holds optional mutable fields for updating a Paroki.
+type ParokiUpdate struct {
+	KeuskupanID      *uuid.UUID
+	KevikepanID      *uuid.UUID
+	IndukID          *uuid.UUID
+	Kode             *string
+	KodeResmi        *string
+	Nama             *string
+	Pelindung        *string
+	Pastor           *string
+	Alamat           *string
+	KotaID           *uuid.UUID
+	KecamatanID      *uuid.UUID
+	KelurahanID      *uuid.UUID
+	Timezone         *string
+	Telepon          *string
+	Fax              *string
+	Email            *string
+	Website          *string
+	LogoURL          *string
+	KopSurat         *string
+	Latitude         *float64
+	Longitude        *float64
+	ClearCoordinates bool
+	StatusParoki     *string
+	Active           *bool
 }
 
 // SearchParoki returns non-deleted paroki matching optional filters and cursor.
@@ -41,6 +80,7 @@ func (r *Repository) SearchParoki(
 	ctx context.Context,
 	q string,
 	keuskupanID *uuid.UUID,
+	kevikepanID *uuid.UUID,
 	active *bool,
 	memberUserID *uuid.UUID,
 	cursorCreatedAt *time.Time,
@@ -56,6 +96,9 @@ func (r *Repository) SearchParoki(
 	}
 	if keuskupanID != nil && *keuskupanID != uuid.Nil {
 		query = query.Where(paroki.KeuskupanIDEQ(*keuskupanID))
+	}
+	if kevikepanID != nil && *kevikepanID != uuid.Nil {
+		query = query.Where(paroki.KevikepanIDEQ(*kevikepanID))
 	}
 	if active != nil {
 		query = query.Where(paroki.ActiveEQ(*active))
@@ -107,16 +150,27 @@ func (r *Repository) FindParokiByKodeIncludeDeleted(ctx context.Context, kode st
 func (r *Repository) CreateParoki(ctx context.Context, in ParokiInput) (*ent.Paroki, error) {
 	return r.client.Paroki.Create().
 		SetKeuskupanID(in.KeuskupanID).
+		SetNillableKevikepanID(in.KevikepanID).
+		SetNillableIndukID(in.IndukID).
 		SetKode(in.Kode).
+		SetNillableKodeResmi(in.KodeResmi).
 		SetNama(in.Nama).
 		SetNillablePelindung(in.Pelindung).
 		SetNillablePastor(in.Pastor).
 		SetNillableAlamat(in.Alamat).
+		SetNillableKotaID(in.KotaID).
+		SetNillableKecamatanID(in.KecamatanID).
+		SetNillableKelurahanID(in.KelurahanID).
+		SetTimezone(in.Timezone).
 		SetNillableTelepon(in.Telepon).
+		SetNillableFax(in.Fax).
 		SetNillableEmail(in.Email).
 		SetNillableWebsite(in.Website).
 		SetNillableLogoURL(in.LogoURL).
 		SetNillableKopSurat(in.KopSurat).
+		SetNillableLatitude(in.Latitude).
+		SetNillableLongitude(in.Longitude).
+		SetNillableStatusParoki(in.StatusParoki).
 		SetActive(in.Active).
 		Save(ctx)
 }
@@ -128,62 +182,107 @@ func (r *Repository) ReactivateParoki(ctx context.Context, id uuid.UUID, in Paro
 		SetKeuskupanID(in.KeuskupanID).
 		SetKode(in.Kode).
 		SetNama(in.Nama).
-		SetActive(true)
+		SetTimezone(in.Timezone).
+		SetActive(in.Active)
+	setOrClearParokiUUID(in.KevikepanID, upd.SetKevikepanID, upd.ClearKevikepanID)
+	setOrClearParokiUUID(in.IndukID, upd.SetIndukID, upd.ClearIndukID)
+	setOrClearParokiString(in.KodeResmi, upd.SetKodeResmi, upd.ClearKodeResmi)
 	setOrClearParokiString(in.Pelindung, upd.SetPelindung, upd.ClearPelindung)
 	setOrClearParokiString(in.Pastor, upd.SetPastor, upd.ClearPastor)
 	setOrClearParokiString(in.Alamat, upd.SetAlamat, upd.ClearAlamat)
+	setOrClearParokiUUID(in.KotaID, upd.SetKotaID, upd.ClearKotaID)
+	setOrClearParokiUUID(in.KecamatanID, upd.SetKecamatanID, upd.ClearKecamatanID)
+	setOrClearParokiUUID(in.KelurahanID, upd.SetKelurahanID, upd.ClearKelurahanID)
 	setOrClearParokiString(in.Telepon, upd.SetTelepon, upd.ClearTelepon)
+	setOrClearParokiString(in.Fax, upd.SetFax, upd.ClearFax)
 	setOrClearParokiString(in.Email, upd.SetEmail, upd.ClearEmail)
 	setOrClearParokiString(in.Website, upd.SetWebsite, upd.ClearWebsite)
 	setOrClearParokiString(in.LogoURL, upd.SetLogoURL, upd.ClearLogoURL)
 	setOrClearParokiString(in.KopSurat, upd.SetKopSurat, upd.ClearKopSurat)
+	if in.Latitude != nil && in.Longitude != nil {
+		upd.SetLatitude(*in.Latitude).SetLongitude(*in.Longitude)
+	} else {
+		upd.ClearLatitude().ClearLongitude()
+	}
+	setOrClearParokiString(in.StatusParoki, upd.SetStatusParoki, upd.ClearStatusParoki)
 	return upd.Save(ctx)
 }
 
 // UpdateParoki updates mutable fields of a Paroki.
-func (r *Repository) UpdateParoki(
-	ctx context.Context,
-	id uuid.UUID,
-	keuskupanID *uuid.UUID,
-	kode, nama, pelindung, pastor, alamat, telepon, email, website, logoURL, kopSurat *string,
-	active *bool,
-) (*ent.Paroki, error) {
+func (r *Repository) UpdateParoki(ctx context.Context, id uuid.UUID, in ParokiUpdate) (*ent.Paroki, error) {
 	upd := r.client.Paroki.UpdateOneID(id)
-	if keuskupanID != nil {
-		upd.SetKeuskupanID(*keuskupanID)
+	if in.KeuskupanID != nil {
+		upd.SetKeuskupanID(*in.KeuskupanID)
 	}
-	if kode != nil {
-		upd.SetKode(*kode)
+	if in.KevikepanID != nil {
+		setOrClearParokiUUID(in.KevikepanID, upd.SetKevikepanID, upd.ClearKevikepanID)
 	}
-	if nama != nil {
-		upd.SetNama(*nama)
+	if in.IndukID != nil {
+		setOrClearParokiUUID(in.IndukID, upd.SetIndukID, upd.ClearIndukID)
 	}
-	if pelindung != nil {
-		setOrClearParokiString(pelindung, upd.SetPelindung, upd.ClearPelindung)
+	if in.Kode != nil {
+		upd.SetKode(*in.Kode)
 	}
-	if pastor != nil {
-		setOrClearParokiString(pastor, upd.SetPastor, upd.ClearPastor)
+	if in.KodeResmi != nil {
+		setOrClearParokiString(in.KodeResmi, upd.SetKodeResmi, upd.ClearKodeResmi)
 	}
-	if alamat != nil {
-		setOrClearParokiString(alamat, upd.SetAlamat, upd.ClearAlamat)
+	if in.Nama != nil {
+		upd.SetNama(*in.Nama)
 	}
-	if telepon != nil {
-		setOrClearParokiString(telepon, upd.SetTelepon, upd.ClearTelepon)
+	if in.Pelindung != nil {
+		setOrClearParokiString(in.Pelindung, upd.SetPelindung, upd.ClearPelindung)
 	}
-	if email != nil {
-		setOrClearParokiString(email, upd.SetEmail, upd.ClearEmail)
+	if in.Pastor != nil {
+		setOrClearParokiString(in.Pastor, upd.SetPastor, upd.ClearPastor)
 	}
-	if website != nil {
-		setOrClearParokiString(website, upd.SetWebsite, upd.ClearWebsite)
+	if in.Alamat != nil {
+		setOrClearParokiString(in.Alamat, upd.SetAlamat, upd.ClearAlamat)
 	}
-	if logoURL != nil {
-		setOrClearParokiString(logoURL, upd.SetLogoURL, upd.ClearLogoURL)
+	if in.KotaID != nil {
+		setOrClearParokiUUID(in.KotaID, upd.SetKotaID, upd.ClearKotaID)
 	}
-	if kopSurat != nil {
-		setOrClearParokiString(kopSurat, upd.SetKopSurat, upd.ClearKopSurat)
+	if in.KecamatanID != nil {
+		setOrClearParokiUUID(in.KecamatanID, upd.SetKecamatanID, upd.ClearKecamatanID)
 	}
-	if active != nil {
-		upd.SetActive(*active)
+	if in.KelurahanID != nil {
+		setOrClearParokiUUID(in.KelurahanID, upd.SetKelurahanID, upd.ClearKelurahanID)
+	}
+	if in.Timezone != nil {
+		upd.SetTimezone(*in.Timezone)
+	}
+	if in.Telepon != nil {
+		setOrClearParokiString(in.Telepon, upd.SetTelepon, upd.ClearTelepon)
+	}
+	if in.Fax != nil {
+		setOrClearParokiString(in.Fax, upd.SetFax, upd.ClearFax)
+	}
+	if in.Email != nil {
+		setOrClearParokiString(in.Email, upd.SetEmail, upd.ClearEmail)
+	}
+	if in.Website != nil {
+		setOrClearParokiString(in.Website, upd.SetWebsite, upd.ClearWebsite)
+	}
+	if in.LogoURL != nil {
+		setOrClearParokiString(in.LogoURL, upd.SetLogoURL, upd.ClearLogoURL)
+	}
+	if in.KopSurat != nil {
+		setOrClearParokiString(in.KopSurat, upd.SetKopSurat, upd.ClearKopSurat)
+	}
+	if in.ClearCoordinates {
+		upd.ClearLatitude().ClearLongitude()
+	} else {
+		if in.Latitude != nil {
+			upd.SetLatitude(*in.Latitude)
+		}
+		if in.Longitude != nil {
+			upd.SetLongitude(*in.Longitude)
+		}
+	}
+	if in.StatusParoki != nil {
+		setOrClearParokiString(in.StatusParoki, upd.SetStatusParoki, upd.ClearStatusParoki)
+	}
+	if in.Active != nil {
+		upd.SetActive(*in.Active)
 	}
 	return upd.Save(ctx)
 }
@@ -196,8 +295,18 @@ func (r *Repository) SoftDeleteParoki(ctx context.Context, id uuid.UUID, at time
 		Exec(ctx)
 }
 
-// HasParokiChildren reports whether any non-deleted Wilayah, Lingkungan, Lookup, Organization, Event, Period, AgentSession, or AgentMemory belongs to parokiID.
+// HasChildParoki reports whether any non-deleted child Paroki references parokiID via induk_id.
+func (r *Repository) HasChildParoki(ctx context.Context, parokiID uuid.UUID) (bool, error) {
+	return r.client.Paroki.Query().
+		Where(paroki.IndukIDEQ(parokiID), paroki.DeletedAtIsNil()).
+		Exist(ctx)
+}
+
+// HasParokiChildren reports whether any non-deleted child Paroki, Wilayah, Lingkungan, Lookup, Organization, Event, Period, AgentSession, or AgentMemory belongs to parokiID.
 func (r *Repository) HasParokiChildren(ctx context.Context, parokiID uuid.UUID) (bool, error) {
+	if has, err := r.HasChildParoki(ctx, parokiID); err != nil || has {
+		return has, err
+	}
 	if has, err := r.client.Wilayah.Query().Where(wilayah.ParokiIDEQ(parokiID), wilayah.DeletedAtIsNil()).Exist(ctx); err != nil || has {
 		return has, err
 	}
@@ -317,6 +426,14 @@ func (r *Repository) CountParokiAdmins(ctx context.Context, parokiID uuid.UUID) 
 	return r.client.ParokiMember.Query().
 		Where(parokimember.ParokiIDEQ(parokiID), parokimember.RoleEQ(parokimember.RoleAdmin)).
 		Count(ctx)
+}
+
+func setOrClearParokiUUID(val *uuid.UUID, setFn func(uuid.UUID) *ent.ParokiUpdateOne, clearFn func() *ent.ParokiUpdateOne) {
+	if val == nil || *val == uuid.Nil {
+		clearFn()
+		return
+	}
+	setFn(*val)
 }
 
 func setOrClearParokiString(val *string, setFn func(string) *ent.ParokiUpdateOne, clearFn func() *ent.ParokiUpdateOne) {

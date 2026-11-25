@@ -50,6 +50,7 @@ func (Kelurahan) Edges() []ent.Edge {
 			Field("kecamatan_id").
 			Unique().
 			Required(),
+		edge.To("paroki", Paroki.Type),
 	}
 }
 

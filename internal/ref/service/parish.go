@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"math"
 	"strings"
 	"time"
 
@@ -14,6 +15,9 @@ import (
 	"github.com/paroki/domus/internal/ref/repo"
 )
 
+// DefaultParokiTimezone is the default IANA timezone assigned to new Paroki records.
+const DefaultParokiTimezone = "Asia/Makassar"
+
 // SearchParoki returns paginated non-deleted paroki.
 func (s *Service) SearchParoki(
 	ctx context.Context,
@@ -23,17 +27,18 @@ func (s *Service) SearchParoki(
 	cursorID *uuid.UUID,
 	limit int,
 ) ([]domain.ParokiResponse, bool, error) {
-	var keuskupanID, memberUserID *uuid.UUID
+	var keuskupanID, kevikepanID, memberUserID *uuid.UUID
 	var active *bool
 	if req.Filter != nil {
 		keuskupanID = req.Filter.KeuskupanID
+		kevikepanID = req.Filter.KevikepanID
 		active = req.Filter.Active
 		if req.Filter.MemberOnly != nil && *req.Filter.MemberOnly {
 			uid := p.UserID
 			memberUserID = &uid
 		}
 	}
-	rows, err := s.repo.SearchParoki(ctx, strings.TrimSpace(req.Q), keuskupanID, active, memberUserID, cursorCreatedAt, cursorID, limit+1)
+	rows, err := s.repo.SearchParoki(ctx, strings.TrimSpace(req.Q), keuskupanID, kevikepanID, active, memberUserID, cursorCreatedAt, cursorID, limit+1)
 	if err != nil {
 		return nil, false, err
 	}
@@ -88,9 +93,41 @@ func (s *Service) CreateParoki(ctx context.Context, req domain.CreateParokiReque
 	if err != nil {
 		return domain.ParokiResponse{}, err
 	}
+	kodeResmi, err := normalizeOptMaxString("kodeResmi", req.KodeResmi, 64, false)
+	if err != nil {
+		return domain.ParokiResponse{}, err
+	}
+	fax, err := normalizeOptMaxString("fax", req.Fax, 32, false)
+	if err != nil {
+		return domain.ParokiResponse{}, err
+	}
+	statusParoki, err := normalizeOptStatusParoki(req.StatusParoki, false)
+	if err != nil {
+		return domain.ParokiResponse{}, err
+	}
+	tz := DefaultParokiTimezone
+	if req.Timezone != nil && strings.TrimSpace(*req.Timezone) != "" {
+		tz, err = normalizeTimezone(*req.Timezone)
+		if err != nil {
+			return domain.ParokiResponse{}, err
+		}
+	}
 	if _, err := s.repo.FindKeuskupanByID(ctx, req.KeuskupanID); ent.IsNotFound(err) {
 		return domain.ParokiResponse{}, domain.ErrKeuskupanNotFound
 	} else if err != nil {
+		return domain.ParokiResponse{}, err
+	}
+
+	kevikepanID := nonNilUUID(req.KevikepanID)
+	indukID := nonNilUUID(req.IndukID)
+	kotaID := nonNilUUID(req.KotaID)
+	kecamatanID := nonNilUUID(req.KecamatanID)
+	kelurahanID := nonNilUUID(req.KelurahanID)
+
+	if err := s.validateParokiHierarchy(ctx, uuid.Nil, req.KeuskupanID, kevikepanID, indukID, kotaID, kecamatanID, kelurahanID); err != nil {
+		return domain.ParokiResponse{}, err
+	}
+	if err := validateCoordinates(req.Latitude, req.Longitude); err != nil {
 		return domain.ParokiResponse{}, err
 	}
 
@@ -99,18 +136,29 @@ func (s *Service) CreateParoki(ctx context.Context, req domain.CreateParokiReque
 		active = *req.Active
 	}
 	in := repo.ParokiInput{
-		KeuskupanID: req.KeuskupanID,
-		Kode:        kode,
-		Nama:        nama,
-		Pelindung:   trimOptString(req.Pelindung),
-		Pastor:      trimOptString(req.Pastor),
-		Alamat:      trimOptString(req.Alamat),
-		Telepon:     telepon,
-		Email:       normalizeOptEmail(req.Email),
-		Website:     trimOptString(req.Website),
-		LogoURL:     trimOptString(req.LogoURL),
-		KopSurat:    trimOptString(req.KopSurat),
-		Active:      active,
+		KeuskupanID:  req.KeuskupanID,
+		KevikepanID:  kevikepanID,
+		IndukID:      indukID,
+		Kode:         kode,
+		KodeResmi:    kodeResmi,
+		Nama:         nama,
+		Pelindung:    trimOptString(req.Pelindung),
+		Pastor:       trimOptString(req.Pastor),
+		Alamat:       trimOptString(req.Alamat),
+		KotaID:       kotaID,
+		KecamatanID:  kecamatanID,
+		KelurahanID:  kelurahanID,
+		Timezone:     tz,
+		Telepon:      telepon,
+		Fax:          fax,
+		Email:        normalizeOptEmail(req.Email),
+		Website:      trimOptString(req.Website),
+		LogoURL:      trimOptString(req.LogoURL),
+		KopSurat:     trimOptString(req.KopSurat),
+		Latitude:     req.Latitude,
+		Longitude:    req.Longitude,
+		StatusParoki: statusParoki,
+		Active:       active,
 	}
 
 	var out *ent.Paroki
@@ -144,7 +192,8 @@ func (s *Service) UpdateParoki(ctx context.Context, p authx.Principal, id uuid.U
 	if err != nil {
 		return domain.ParokiResponse{}, err
 	}
-	if !isSuper && (req.Kode != nil || req.KeuskupanID != nil || req.Active != nil) {
+	if !isSuper && (req.KeuskupanID != nil || req.KevikepanID != nil || req.IndukID != nil ||
+		req.Kode != nil || req.KodeResmi != nil || req.StatusParoki != nil || req.Active != nil) {
 		return domain.ParokiResponse{}, domain.ErrRefForbidden
 	}
 
@@ -156,12 +205,14 @@ func (s *Service) UpdateParoki(ctx context.Context, p authx.Principal, id uuid.U
 		return domain.ParokiResponse{}, err
 	}
 
+	effKeuskupanID := existing.KeuskupanID
 	if req.KeuskupanID != nil {
 		if _, err := s.repo.FindKeuskupanByID(ctx, *req.KeuskupanID); ent.IsNotFound(err) {
 			return domain.ParokiResponse{}, domain.ErrKeuskupanNotFound
 		} else if err != nil {
 			return domain.ParokiResponse{}, err
 		}
+		effKeuskupanID = *req.KeuskupanID
 	}
 
 	var kodePtr *string
@@ -193,23 +244,70 @@ func (s *Service) UpdateParoki(ctx context.Context, p authx.Principal, id uuid.U
 	if err != nil {
 		return domain.ParokiResponse{}, err
 	}
+	kodeResmiPtr, err := normalizeOptMaxString("kodeResmi", req.KodeResmi, 64, true)
+	if err != nil {
+		return domain.ParokiResponse{}, err
+	}
+	faxPtr, err := normalizeOptMaxString("fax", req.Fax, 32, true)
+	if err != nil {
+		return domain.ParokiResponse{}, err
+	}
+	statusParokiPtr, err := normalizeOptStatusParoki(req.StatusParoki, true)
+	if err != nil {
+		return domain.ParokiResponse{}, err
+	}
+	var tzPtr *string
+	if req.Timezone != nil {
+		normTZ, err := normalizeTimezone(*req.Timezone)
+		if err != nil {
+			return domain.ParokiResponse{}, err
+		}
+		tzPtr = &normTZ
+	}
 
-	updated, err := s.repo.UpdateParoki(
-		ctx,
-		id,
-		req.KeuskupanID,
-		kodePtr,
-		namaPtr,
-		trimOptString(req.Pelindung),
-		trimOptString(req.Pastor),
-		trimOptString(req.Alamat),
-		teleponPtr,
-		normalizeOptEmail(req.Email),
-		trimOptString(req.Website),
-		trimOptString(req.LogoURL),
-		trimOptString(req.KopSurat),
-		req.Active,
-	)
+	clearCoords := req.ClearCoordinates != nil && *req.ClearCoordinates
+	effLat, effLng, err := resolveUpdateCoordinates(existing.Latitude, existing.Longitude, req.Latitude, req.Longitude, clearCoords)
+	if err != nil {
+		return domain.ParokiResponse{}, err
+	}
+
+	kotaReq, kecReq, kelReq := cascadeCivilClear(req.KotaID, req.KecamatanID, req.KelurahanID)
+	effKevikepanID := resolveOptUUID(existing.KevikepanID, req.KevikepanID)
+	effIndukID := resolveOptUUID(existing.IndukID, req.IndukID)
+	effKotaID := resolveOptUUID(existing.KotaID, kotaReq)
+	effKecamatanID := resolveOptUUID(existing.KecamatanID, kecReq)
+	effKelurahanID := resolveOptUUID(existing.KelurahanID, kelReq)
+
+	if err := s.validateParokiHierarchy(ctx, id, effKeuskupanID, effKevikepanID, effIndukID, effKotaID, effKecamatanID, effKelurahanID); err != nil {
+		return domain.ParokiResponse{}, err
+	}
+
+	updated, err := s.repo.UpdateParoki(ctx, id, repo.ParokiUpdate{
+		KeuskupanID:      req.KeuskupanID,
+		KevikepanID:      req.KevikepanID,
+		IndukID:          req.IndukID,
+		Kode:             kodePtr,
+		KodeResmi:        kodeResmiPtr,
+		Nama:             namaPtr,
+		Pelindung:        trimOptString(req.Pelindung),
+		Pastor:           trimOptString(req.Pastor),
+		Alamat:           trimOptString(req.Alamat),
+		KotaID:           kotaReq,
+		KecamatanID:      kecReq,
+		KelurahanID:      kelReq,
+		Timezone:         tzPtr,
+		Telepon:          teleponPtr,
+		Fax:              faxPtr,
+		Email:            normalizeOptEmail(req.Email),
+		Website:          trimOptString(req.Website),
+		LogoURL:          trimOptString(req.LogoURL),
+		KopSurat:         trimOptString(req.KopSurat),
+		Latitude:         effLat,
+		Longitude:        effLng,
+		ClearCoordinates: clearCoords,
+		StatusParoki:     statusParokiPtr,
+		Active:           req.Active,
+	})
 	if err != nil {
 		if ent.IsConstraintError(err) {
 			return domain.ParokiResponse{}, domain.ErrCodeConflict
@@ -229,7 +327,8 @@ func (s *Service) UpdateCurrentParokiProfile(ctx context.Context, p authx.Princi
 		return domain.ParokiResponse{}, domain.ErrRefForbidden
 	}
 
-	if _, err := s.repo.FindParokiByID(ctx, p.ParokiID); ent.IsNotFound(err) {
+	existing, err := s.repo.FindParokiByID(ctx, p.ParokiID)
+	if ent.IsNotFound(err) {
 		return domain.ParokiResponse{}, domain.ErrParokiNotFound
 	} else if err != nil {
 		return domain.ParokiResponse{}, err
@@ -247,23 +346,53 @@ func (s *Service) UpdateCurrentParokiProfile(ctx context.Context, p authx.Princi
 	if err != nil {
 		return domain.ParokiResponse{}, err
 	}
+	faxPtr, err := normalizeOptMaxString("fax", req.Fax, 32, true)
+	if err != nil {
+		return domain.ParokiResponse{}, err
+	}
+	var tzPtr *string
+	if req.Timezone != nil {
+		normTZ, err := normalizeTimezone(*req.Timezone)
+		if err != nil {
+			return domain.ParokiResponse{}, err
+		}
+		tzPtr = &normTZ
+	}
 
-	updated, err := s.repo.UpdateParoki(
-		ctx,
-		p.ParokiID,
-		nil,
-		nil,
-		namaPtr,
-		trimOptString(req.Pelindung),
-		trimOptString(req.Pastor),
-		trimOptString(req.Alamat),
-		phonePtr,
-		normalizeOptEmail(req.Email),
-		trimOptString(req.Website),
-		trimOptString(req.LogoURL),
-		trimOptString(req.KopSurat),
-		nil,
-	)
+	clearCoords := req.ClearCoordinates != nil && *req.ClearCoordinates
+	effLat, effLng, err := resolveUpdateCoordinates(existing.Latitude, existing.Longitude, req.Latitude, req.Longitude, clearCoords)
+	if err != nil {
+		return domain.ParokiResponse{}, err
+	}
+
+	kotaReq, kecReq, kelReq := cascadeCivilClear(req.KotaID, req.KecamatanID, req.KelurahanID)
+	effKotaID := resolveOptUUID(existing.KotaID, kotaReq)
+	effKecamatanID := resolveOptUUID(existing.KecamatanID, kecReq)
+	effKelurahanID := resolveOptUUID(existing.KelurahanID, kelReq)
+
+	if err := s.validateParokiHierarchy(ctx, p.ParokiID, existing.KeuskupanID, existing.KevikepanID, existing.IndukID, effKotaID, effKecamatanID, effKelurahanID); err != nil {
+		return domain.ParokiResponse{}, err
+	}
+
+	updated, err := s.repo.UpdateParoki(ctx, p.ParokiID, repo.ParokiUpdate{
+		Nama:             namaPtr,
+		Pelindung:        trimOptString(req.Pelindung),
+		Pastor:           trimOptString(req.Pastor),
+		Alamat:           trimOptString(req.Alamat),
+		KotaID:           kotaReq,
+		KecamatanID:      kecReq,
+		KelurahanID:      kelReq,
+		Timezone:         tzPtr,
+		Telepon:          phonePtr,
+		Fax:              faxPtr,
+		Email:            normalizeOptEmail(req.Email),
+		Website:          trimOptString(req.Website),
+		LogoURL:          trimOptString(req.LogoURL),
+		KopSurat:         trimOptString(req.KopSurat),
+		Latitude:         effLat,
+		Longitude:        effLng,
+		ClearCoordinates: clearCoords,
+	})
 	if err != nil {
 		return domain.ParokiResponse{}, err
 	}
@@ -540,23 +669,235 @@ func guardNotLastParokiAdmin(ctx context.Context, r *repo.Repository, parokiID u
 	return nil
 }
 
+func (s *Service) validateParokiHierarchy(
+	ctx context.Context,
+	parokiID uuid.UUID,
+	keuskupanID uuid.UUID,
+	kevikepanID *uuid.UUID,
+	indukID *uuid.UUID,
+	kotaID *uuid.UUID,
+	kecamatanID *uuid.UUID,
+	kelurahanID *uuid.UUID,
+) error {
+	if kevikepanID != nil {
+		kev, err := s.repo.FindKevikepanByID(ctx, *kevikepanID)
+		if ent.IsNotFound(err) {
+			return domain.ErrKevikepanNotFound
+		}
+		if err != nil {
+			return err
+		}
+		if kev.KeuskupanID != keuskupanID {
+			return domain.ValidationError("kevikepanId", "KEUSKUPAN_MISMATCH", "Kevikepan must belong to the same Keuskupan.")
+		}
+	}
+
+	if indukID != nil {
+		if parokiID != uuid.Nil && *indukID == parokiID {
+			return domain.ValidationError("indukId", "SELF_REFERENCE", "Paroki cannot reference itself as induk.")
+		}
+		induk, err := s.repo.FindParokiByID(ctx, *indukID)
+		if ent.IsNotFound(err) {
+			return domain.ErrParokiNotFound
+		}
+		if err != nil {
+			return err
+		}
+		if induk.KeuskupanID != keuskupanID {
+			return domain.ValidationError("indukId", "KEUSKUPAN_MISMATCH", "Induk paroki must belong to the same Keuskupan.")
+		}
+		if induk.IndukID != nil {
+			return domain.ValidationError("indukId", "MAX_DEPTH", "Induk paroki cannot itself be a child paroki.")
+		}
+		if parokiID != uuid.Nil {
+			hasChildren, err := s.repo.HasChildParoki(ctx, parokiID)
+			if err != nil {
+				return err
+			}
+			if hasChildren {
+				return domain.ValidationError("indukId", "HAS_CHILDREN", "Paroki with child paroki cannot become a child paroki.")
+			}
+		}
+	}
+
+	if kotaID != nil {
+		if _, err := s.repo.FindKotaByID(ctx, *kotaID); ent.IsNotFound(err) {
+			return domain.ErrKotaNotFound
+		} else if err != nil {
+			return err
+		}
+	}
+	if kecamatanID != nil {
+		kec, err := s.repo.FindKecamatanByID(ctx, *kecamatanID)
+		if ent.IsNotFound(err) {
+			return domain.ErrKecamatanNotFound
+		}
+		if err != nil {
+			return err
+		}
+		if kotaID == nil || kec.KotaID != *kotaID {
+			return domain.ValidationError("kecamatanId", "KOTA_MISMATCH", "Kecamatan must belong to the selected Kota.")
+		}
+	}
+	if kelurahanID != nil {
+		kel, err := s.repo.FindKelurahanByID(ctx, *kelurahanID)
+		if ent.IsNotFound(err) {
+			return domain.ErrKelurahanNotFound
+		}
+		if err != nil {
+			return err
+		}
+		if kecamatanID == nil || kel.KecamatanID != *kecamatanID {
+			return domain.ValidationError("kelurahanId", "KECAMATAN_MISMATCH", "Kelurahan must belong to the selected Kecamatan.")
+		}
+	}
+	return nil
+}
+
+func normalizeTimezone(raw string) (string, error) {
+	tz := strings.TrimSpace(raw)
+	if tz == "" || strings.EqualFold(tz, "Local") {
+		return "", domain.ValidationError("timezone", "TIMEZONE", "Invalid IANA timezone.")
+	}
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		return "", domain.ValidationError("timezone", "TIMEZONE", "Invalid IANA timezone.")
+	}
+	return loc.String(), nil
+}
+
+func normalizeOptMaxString(field string, raw *string, maxLen int, keepEmpty bool) (*string, error) {
+	if raw == nil {
+		return nil, nil
+	}
+	trimmed := strings.TrimSpace(*raw)
+	if len(trimmed) > maxLen {
+		return nil, domain.ValidationError(field, "MAX_LENGTH", field+" exceeds maximum length.")
+	}
+	if trimmed == "" && !keepEmpty {
+		return nil, nil
+	}
+	return &trimmed, nil
+}
+
+func normalizeOptStatusParoki(raw *string, keepEmpty bool) (*string, error) {
+	if raw == nil {
+		return nil, nil
+	}
+	trimmed := strings.TrimSpace(*raw)
+	if trimmed == "" {
+		if keepEmpty {
+			return &trimmed, nil
+		}
+		return nil, nil
+	}
+	norm, err := normalizeKode(trimmed)
+	if err != nil {
+		return nil, domain.ValidationError("statusParoki", "INVALID_CODE", "Status paroki must be 2-64 lowercase alphanumeric characters, hyphens, or underscores.")
+	}
+	return &norm, nil
+}
+
+func validateCoordinates(lat, lng *float64) error {
+	if (lat == nil) != (lng == nil) {
+		return domain.ValidationError("latitude", "COORDINATES", "Both latitude and longitude are required.")
+	}
+	if lat == nil {
+		return nil
+	}
+	if math.IsNaN(*lat) || math.IsInf(*lat, 0) || *lat < -90 || *lat > 90 {
+		return domain.ValidationError("latitude", "RANGE", "Latitude must be between -90 and 90.")
+	}
+	if math.IsNaN(*lng) || math.IsInf(*lng, 0) || *lng < -180 || *lng > 180 {
+		return domain.ValidationError("longitude", "RANGE", "Longitude must be between -180 and 180.")
+	}
+	return nil
+}
+
+func resolveUpdateCoordinates(existingLat, existingLng, reqLat, reqLng *float64, clear bool) (*float64, *float64, error) {
+	if clear {
+		if reqLat != nil || reqLng != nil {
+			return nil, nil, domain.ValidationError("clearCoordinates", "CONFLICT", "Cannot set coordinates while clearCoordinates is true.")
+		}
+		return nil, nil, nil
+	}
+	effLat := existingLat
+	if reqLat != nil {
+		effLat = reqLat
+	}
+	effLng := existingLng
+	if reqLng != nil {
+		effLng = reqLng
+	}
+	if err := validateCoordinates(effLat, effLng); err != nil {
+		return nil, nil, err
+	}
+	return effLat, effLng, nil
+}
+
+func nonNilUUID(id *uuid.UUID) *uuid.UUID {
+	if id == nil || *id == uuid.Nil {
+		return nil
+	}
+	return id
+}
+
+func resolveOptUUID(existing, req *uuid.UUID) *uuid.UUID {
+	if req == nil {
+		return existing
+	}
+	if *req == uuid.Nil {
+		return nil
+	}
+	return req
+}
+
+func cascadeCivilClear(kotaReq, kecReq, kelReq *uuid.UUID) (*uuid.UUID, *uuid.UUID, *uuid.UUID) {
+	nilID := uuid.Nil
+	if kotaReq != nil && *kotaReq == uuid.Nil {
+		if kecReq == nil {
+			kecReq = &nilID
+		}
+		if kelReq == nil {
+			kelReq = &nilID
+		}
+	}
+	if kecReq != nil && *kecReq == uuid.Nil {
+		if kelReq == nil {
+			kelReq = &nilID
+		}
+	}
+	return kotaReq, kecReq, kelReq
+}
+
 func toParokiResponse(p *ent.Paroki) domain.ParokiResponse {
 	return domain.ParokiResponse{
-		ID:          p.ID,
-		KeuskupanID: p.KeuskupanID,
-		Kode:        p.Kode,
-		Nama:        p.Nama,
-		Pelindung:   p.Pelindung,
-		Pastor:      p.Pastor,
-		Alamat:      p.Alamat,
-		Telepon:     p.Telepon,
-		Email:       p.Email,
-		Website:     p.Website,
-		LogoURL:     p.LogoURL,
-		KopSurat:    p.KopSurat,
-		Active:      p.Active,
-		CreatedAt:   p.CreatedAt,
-		UpdatedAt:   p.UpdatedAt,
+		ID:           p.ID,
+		KeuskupanID:  p.KeuskupanID,
+		KevikepanID:  p.KevikepanID,
+		IndukID:      p.IndukID,
+		Kode:         p.Kode,
+		KodeResmi:    p.KodeResmi,
+		Nama:         p.Nama,
+		Pelindung:    p.Pelindung,
+		Pastor:       p.Pastor,
+		Alamat:       p.Alamat,
+		KotaID:       p.KotaID,
+		KecamatanID:  p.KecamatanID,
+		KelurahanID:  p.KelurahanID,
+		Timezone:     p.Timezone,
+		Telepon:      p.Telepon,
+		Fax:          p.Fax,
+		Email:        p.Email,
+		Website:      p.Website,
+		LogoURL:      p.LogoURL,
+		KopSurat:     p.KopSurat,
+		Latitude:     p.Latitude,
+		Longitude:    p.Longitude,
+		StatusParoki: p.StatusParoki,
+		Active:       p.Active,
+		CreatedAt:    p.CreatedAt,
+		UpdatedAt:    p.UpdatedAt,
 	}
 }
 

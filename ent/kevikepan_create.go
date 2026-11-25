@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent/keuskupan"
 	"github.com/paroki/domus/ent/kevikepan"
+	"github.com/paroki/domus/ent/paroki"
 )
 
 // KevikepanCreate is the builder for creating a Kevikepan entity.
@@ -127,6 +128,21 @@ func (_c *KevikepanCreate) SetNillableID(v *uuid.UUID) *KevikepanCreate {
 // SetKeuskupan sets the "keuskupan" edge to the Keuskupan entity.
 func (_c *KevikepanCreate) SetKeuskupan(v *Keuskupan) *KevikepanCreate {
 	return _c.SetKeuskupanID(v.ID)
+}
+
+// AddParokiIDs adds the "paroki" edge to the Paroki entity by IDs.
+func (_c *KevikepanCreate) AddParokiIDs(ids ...uuid.UUID) *KevikepanCreate {
+	_c.mutation.AddParokiIDs(ids...)
+	return _c
+}
+
+// AddParoki adds the "paroki" edges to the Paroki entity.
+func (_c *KevikepanCreate) AddParoki(v ...*Paroki) *KevikepanCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddParokiIDs(ids...)
 }
 
 // Mutation returns the KevikepanMutation object of the builder.
@@ -293,6 +309,22 @@ func (_c *KevikepanCreate) createSpec() (*Kevikepan, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.KeuskupanID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.ParokiIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   kevikepan.ParokiTable,
+			Columns: []string{kevikepan.ParokiColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

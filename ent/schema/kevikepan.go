@@ -50,6 +50,7 @@ func (Kevikepan) Edges() []ent.Edge {
 			Field("keuskupan_id").
 			Unique().
 			Required(),
+		edge.To("paroki", Paroki.Type),
 	}
 }
 

@@ -23,8 +23,14 @@ const (
 	FieldDeletedAt = "deleted_at"
 	// FieldKeuskupanID holds the string denoting the keuskupan_id field in the database.
 	FieldKeuskupanID = "keuskupan_id"
+	// FieldKevikepanID holds the string denoting the kevikepan_id field in the database.
+	FieldKevikepanID = "kevikepan_id"
+	// FieldIndukID holds the string denoting the induk_id field in the database.
+	FieldIndukID = "induk_id"
 	// FieldKode holds the string denoting the kode field in the database.
 	FieldKode = "kode"
+	// FieldKodeResmi holds the string denoting the kode_resmi field in the database.
+	FieldKodeResmi = "kode_resmi"
 	// FieldNama holds the string denoting the nama field in the database.
 	FieldNama = "nama"
 	// FieldPelindung holds the string denoting the pelindung field in the database.
@@ -33,8 +39,18 @@ const (
 	FieldPastor = "pastor"
 	// FieldAlamat holds the string denoting the alamat field in the database.
 	FieldAlamat = "alamat"
+	// FieldKotaID holds the string denoting the kota_id field in the database.
+	FieldKotaID = "kota_id"
+	// FieldKecamatanID holds the string denoting the kecamatan_id field in the database.
+	FieldKecamatanID = "kecamatan_id"
+	// FieldKelurahanID holds the string denoting the kelurahan_id field in the database.
+	FieldKelurahanID = "kelurahan_id"
+	// FieldTimezone holds the string denoting the timezone field in the database.
+	FieldTimezone = "timezone"
 	// FieldTelepon holds the string denoting the telepon field in the database.
 	FieldTelepon = "telepon"
+	// FieldFax holds the string denoting the fax field in the database.
+	FieldFax = "fax"
 	// FieldEmail holds the string denoting the email field in the database.
 	FieldEmail = "email"
 	// FieldWebsite holds the string denoting the website field in the database.
@@ -43,10 +59,28 @@ const (
 	FieldLogoURL = "logo_url"
 	// FieldKopSurat holds the string denoting the kop_surat field in the database.
 	FieldKopSurat = "kop_surat"
+	// FieldLatitude holds the string denoting the latitude field in the database.
+	FieldLatitude = "latitude"
+	// FieldLongitude holds the string denoting the longitude field in the database.
+	FieldLongitude = "longitude"
+	// FieldStatusParoki holds the string denoting the status_paroki field in the database.
+	FieldStatusParoki = "status_paroki"
 	// FieldActive holds the string denoting the active field in the database.
 	FieldActive = "active"
 	// EdgeKeuskupan holds the string denoting the keuskupan edge name in mutations.
 	EdgeKeuskupan = "keuskupan"
+	// EdgeKevikepan holds the string denoting the kevikepan edge name in mutations.
+	EdgeKevikepan = "kevikepan"
+	// EdgeInduk holds the string denoting the induk edge name in mutations.
+	EdgeInduk = "induk"
+	// EdgeAnak holds the string denoting the anak edge name in mutations.
+	EdgeAnak = "anak"
+	// EdgeKota holds the string denoting the kota edge name in mutations.
+	EdgeKota = "kota"
+	// EdgeKecamatan holds the string denoting the kecamatan edge name in mutations.
+	EdgeKecamatan = "kecamatan"
+	// EdgeKelurahan holds the string denoting the kelurahan edge name in mutations.
+	EdgeKelurahan = "kelurahan"
 	// EdgeMembers holds the string denoting the members edge name in mutations.
 	EdgeMembers = "members"
 	// EdgeWilayah holds the string denoting the wilayah edge name in mutations.
@@ -66,6 +100,42 @@ const (
 	KeuskupanInverseTable = "keuskupan"
 	// KeuskupanColumn is the table column denoting the keuskupan relation/edge.
 	KeuskupanColumn = "keuskupan_id"
+	// KevikepanTable is the table that holds the kevikepan relation/edge.
+	KevikepanTable = "paroki"
+	// KevikepanInverseTable is the table name for the Kevikepan entity.
+	// It exists in this package in order to avoid circular dependency with the "kevikepan" package.
+	KevikepanInverseTable = "kevikepan"
+	// KevikepanColumn is the table column denoting the kevikepan relation/edge.
+	KevikepanColumn = "kevikepan_id"
+	// IndukTable is the table that holds the induk relation/edge.
+	IndukTable = "paroki"
+	// IndukColumn is the table column denoting the induk relation/edge.
+	IndukColumn = "induk_id"
+	// AnakTable is the table that holds the anak relation/edge.
+	AnakTable = "paroki"
+	// AnakColumn is the table column denoting the anak relation/edge.
+	AnakColumn = "induk_id"
+	// KotaTable is the table that holds the kota relation/edge.
+	KotaTable = "paroki"
+	// KotaInverseTable is the table name for the Kota entity.
+	// It exists in this package in order to avoid circular dependency with the "kota" package.
+	KotaInverseTable = "kota"
+	// KotaColumn is the table column denoting the kota relation/edge.
+	KotaColumn = "kota_id"
+	// KecamatanTable is the table that holds the kecamatan relation/edge.
+	KecamatanTable = "paroki"
+	// KecamatanInverseTable is the table name for the Kecamatan entity.
+	// It exists in this package in order to avoid circular dependency with the "kecamatan" package.
+	KecamatanInverseTable = "kecamatan"
+	// KecamatanColumn is the table column denoting the kecamatan relation/edge.
+	KecamatanColumn = "kecamatan_id"
+	// KelurahanTable is the table that holds the kelurahan relation/edge.
+	KelurahanTable = "paroki"
+	// KelurahanInverseTable is the table name for the Kelurahan entity.
+	// It exists in this package in order to avoid circular dependency with the "kelurahan" package.
+	KelurahanInverseTable = "kelurahan"
+	// KelurahanColumn is the table column denoting the kelurahan relation/edge.
+	KelurahanColumn = "kelurahan_id"
 	// MembersTable is the table that holds the members relation/edge.
 	MembersTable = "paroki_members"
 	// MembersInverseTable is the table name for the ParokiMember entity.
@@ -110,16 +180,27 @@ var Columns = []string{
 	FieldUpdatedAt,
 	FieldDeletedAt,
 	FieldKeuskupanID,
+	FieldKevikepanID,
+	FieldIndukID,
 	FieldKode,
+	FieldKodeResmi,
 	FieldNama,
 	FieldPelindung,
 	FieldPastor,
 	FieldAlamat,
+	FieldKotaID,
+	FieldKecamatanID,
+	FieldKelurahanID,
+	FieldTimezone,
 	FieldTelepon,
+	FieldFax,
 	FieldEmail,
 	FieldWebsite,
 	FieldLogoURL,
 	FieldKopSurat,
+	FieldLatitude,
+	FieldLongitude,
+	FieldStatusParoki,
 	FieldActive,
 }
 
@@ -144,6 +225,10 @@ var (
 	KodeValidator func(string) error
 	// NamaValidator is a validator for the "nama" field. It is called by the builders before save.
 	NamaValidator func(string) error
+	// DefaultTimezone holds the default value on creation for the "timezone" field.
+	DefaultTimezone string
+	// TimezoneValidator is a validator for the "timezone" field. It is called by the builders before save.
+	TimezoneValidator func(string) error
 	// DefaultActive holds the default value on creation for the "active" field.
 	DefaultActive bool
 	// DefaultID holds the default value on creation for the "id" field.
@@ -178,9 +263,24 @@ func ByKeuskupanID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldKeuskupanID, opts...).ToFunc()
 }
 
+// ByKevikepanID orders the results by the kevikepan_id field.
+func ByKevikepanID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldKevikepanID, opts...).ToFunc()
+}
+
+// ByIndukID orders the results by the induk_id field.
+func ByIndukID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIndukID, opts...).ToFunc()
+}
+
 // ByKode orders the results by the kode field.
 func ByKode(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldKode, opts...).ToFunc()
+}
+
+// ByKodeResmi orders the results by the kode_resmi field.
+func ByKodeResmi(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldKodeResmi, opts...).ToFunc()
 }
 
 // ByNama orders the results by the nama field.
@@ -203,9 +303,34 @@ func ByAlamat(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAlamat, opts...).ToFunc()
 }
 
+// ByKotaID orders the results by the kota_id field.
+func ByKotaID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldKotaID, opts...).ToFunc()
+}
+
+// ByKecamatanID orders the results by the kecamatan_id field.
+func ByKecamatanID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldKecamatanID, opts...).ToFunc()
+}
+
+// ByKelurahanID orders the results by the kelurahan_id field.
+func ByKelurahanID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldKelurahanID, opts...).ToFunc()
+}
+
+// ByTimezone orders the results by the timezone field.
+func ByTimezone(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTimezone, opts...).ToFunc()
+}
+
 // ByTelepon orders the results by the telepon field.
 func ByTelepon(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTelepon, opts...).ToFunc()
+}
+
+// ByFax orders the results by the fax field.
+func ByFax(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldFax, opts...).ToFunc()
 }
 
 // ByEmail orders the results by the email field.
@@ -228,6 +353,21 @@ func ByKopSurat(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldKopSurat, opts...).ToFunc()
 }
 
+// ByLatitude orders the results by the latitude field.
+func ByLatitude(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLatitude, opts...).ToFunc()
+}
+
+// ByLongitude orders the results by the longitude field.
+func ByLongitude(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLongitude, opts...).ToFunc()
+}
+
+// ByStatusParoki orders the results by the status_paroki field.
+func ByStatusParoki(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStatusParoki, opts...).ToFunc()
+}
+
 // ByActive orders the results by the active field.
 func ByActive(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldActive, opts...).ToFunc()
@@ -237,6 +377,55 @@ func ByActive(opts ...sql.OrderTermOption) OrderOption {
 func ByKeuskupanField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newKeuskupanStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByKevikepanField orders the results by kevikepan field.
+func ByKevikepanField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newKevikepanStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByIndukField orders the results by induk field.
+func ByIndukField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newIndukStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByAnakCount orders the results by anak count.
+func ByAnakCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAnakStep(), opts...)
+	}
+}
+
+// ByAnak orders the results by anak terms.
+func ByAnak(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAnakStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByKotaField orders the results by kota field.
+func ByKotaField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newKotaStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByKecamatanField orders the results by kecamatan field.
+func ByKecamatanField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newKecamatanStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByKelurahanField orders the results by kelurahan field.
+func ByKelurahanField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newKelurahanStep(), sql.OrderByField(field, opts...))
 	}
 }
 
@@ -314,6 +503,48 @@ func newKeuskupanStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(KeuskupanInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, KeuskupanTable, KeuskupanColumn),
+	)
+}
+func newKevikepanStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(KevikepanInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, KevikepanTable, KevikepanColumn),
+	)
+}
+func newIndukStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(Table, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, IndukTable, IndukColumn),
+	)
+}
+func newAnakStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(Table, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AnakTable, AnakColumn),
+	)
+}
+func newKotaStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(KotaInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, KotaTable, KotaColumn),
+	)
+}
+func newKecamatanStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(KecamatanInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, KecamatanTable, KecamatanColumn),
+	)
+}
+func newKelurahanStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(KelurahanInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, KelurahanTable, KelurahanColumn),
 	)
 }
 func newMembersStep() *sqlgraph.Step {
