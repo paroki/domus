@@ -26,8 +26,16 @@ type Tx struct {
 	Event *EventClient
 	// EventRSVP is the client for interacting with the EventRSVP builders.
 	EventRSVP *EventRSVPClient
+	// Kecamatan is the client for interacting with the Kecamatan builders.
+	Kecamatan *KecamatanClient
+	// Kelurahan is the client for interacting with the Kelurahan builders.
+	Kelurahan *KelurahanClient
 	// Keuskupan is the client for interacting with the Keuskupan builders.
 	Keuskupan *KeuskupanClient
+	// Kevikepan is the client for interacting with the Kevikepan builders.
+	Kevikepan *KevikepanClient
+	// Kota is the client for interacting with the Kota builders.
+	Kota *KotaClient
 	// Lingkungan is the client for interacting with the Lingkungan builders.
 	Lingkungan *LingkunganClient
 	// Lookup is the client for interacting with the Lookup builders.
@@ -196,7 +204,11 @@ func (tx *Tx) init() {
 	tx.CasbinRule = NewCasbinRuleClient(tx.config)
 	tx.Event = NewEventClient(tx.config)
 	tx.EventRSVP = NewEventRSVPClient(tx.config)
+	tx.Kecamatan = NewKecamatanClient(tx.config)
+	tx.Kelurahan = NewKelurahanClient(tx.config)
 	tx.Keuskupan = NewKeuskupanClient(tx.config)
+	tx.Kevikepan = NewKevikepanClient(tx.config)
+	tx.Kota = NewKotaClient(tx.config)
 	tx.Lingkungan = NewLingkunganClient(tx.config)
 	tx.Lookup = NewLookupClient(tx.config)
 	tx.OrgInvite = NewOrgInviteClient(tx.config)

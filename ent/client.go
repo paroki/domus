@@ -23,7 +23,11 @@ import (
 	"github.com/paroki/domus/ent/casbinrule"
 	"github.com/paroki/domus/ent/event"
 	"github.com/paroki/domus/ent/eventrsvp"
+	"github.com/paroki/domus/ent/kecamatan"
+	"github.com/paroki/domus/ent/kelurahan"
 	"github.com/paroki/domus/ent/keuskupan"
+	"github.com/paroki/domus/ent/kevikepan"
+	"github.com/paroki/domus/ent/kota"
 	"github.com/paroki/domus/ent/lingkungan"
 	"github.com/paroki/domus/ent/lookup"
 	"github.com/paroki/domus/ent/organization"
@@ -60,8 +64,16 @@ type Client struct {
 	Event *EventClient
 	// EventRSVP is the client for interacting with the EventRSVP builders.
 	EventRSVP *EventRSVPClient
+	// Kecamatan is the client for interacting with the Kecamatan builders.
+	Kecamatan *KecamatanClient
+	// Kelurahan is the client for interacting with the Kelurahan builders.
+	Kelurahan *KelurahanClient
 	// Keuskupan is the client for interacting with the Keuskupan builders.
 	Keuskupan *KeuskupanClient
+	// Kevikepan is the client for interacting with the Kevikepan builders.
+	Kevikepan *KevikepanClient
+	// Kota is the client for interacting with the Kota builders.
+	Kota *KotaClient
 	// Lingkungan is the client for interacting with the Lingkungan builders.
 	Lingkungan *LingkunganClient
 	// Lookup is the client for interacting with the Lookup builders.
@@ -110,7 +122,11 @@ func (c *Client) init() {
 	c.CasbinRule = NewCasbinRuleClient(c.config)
 	c.Event = NewEventClient(c.config)
 	c.EventRSVP = NewEventRSVPClient(c.config)
+	c.Kecamatan = NewKecamatanClient(c.config)
+	c.Kelurahan = NewKelurahanClient(c.config)
 	c.Keuskupan = NewKeuskupanClient(c.config)
+	c.Kevikepan = NewKevikepanClient(c.config)
+	c.Kota = NewKotaClient(c.config)
 	c.Lingkungan = NewLingkunganClient(c.config)
 	c.Lookup = NewLookupClient(c.config)
 	c.OrgInvite = NewOrgInviteClient(c.config)
@@ -225,7 +241,11 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		CasbinRule:    NewCasbinRuleClient(cfg),
 		Event:         NewEventClient(cfg),
 		EventRSVP:     NewEventRSVPClient(cfg),
+		Kecamatan:     NewKecamatanClient(cfg),
+		Kelurahan:     NewKelurahanClient(cfg),
 		Keuskupan:     NewKeuskupanClient(cfg),
+		Kevikepan:     NewKevikepanClient(cfg),
+		Kota:          NewKotaClient(cfg),
 		Lingkungan:    NewLingkunganClient(cfg),
 		Lookup:        NewLookupClient(cfg),
 		OrgInvite:     NewOrgInviteClient(cfg),
@@ -267,7 +287,11 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		CasbinRule:    NewCasbinRuleClient(cfg),
 		Event:         NewEventClient(cfg),
 		EventRSVP:     NewEventRSVPClient(cfg),
+		Kecamatan:     NewKecamatanClient(cfg),
+		Kelurahan:     NewKelurahanClient(cfg),
 		Keuskupan:     NewKeuskupanClient(cfg),
+		Kevikepan:     NewKevikepanClient(cfg),
+		Kota:          NewKotaClient(cfg),
 		Lingkungan:    NewLingkunganClient(cfg),
 		Lookup:        NewLookupClient(cfg),
 		OrgInvite:     NewOrgInviteClient(cfg),
@@ -313,9 +337,10 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.AgentMemory, c.AgentMessage, c.AgentProvider, c.AgentSession, c.CasbinRule,
-		c.Event, c.EventRSVP, c.Keuskupan, c.Lingkungan, c.Lookup, c.OrgInvite,
-		c.OrgMember, c.Organization, c.Paroki, c.ParokiMember, c.Period, c.Setting,
-		c.User, c.UserAccount, c.UserOTP, c.UserSession, c.UserToken, c.Wilayah,
+		c.Event, c.EventRSVP, c.Kecamatan, c.Kelurahan, c.Keuskupan, c.Kevikepan,
+		c.Kota, c.Lingkungan, c.Lookup, c.OrgInvite, c.OrgMember, c.Organization,
+		c.Paroki, c.ParokiMember, c.Period, c.Setting, c.User, c.UserAccount,
+		c.UserOTP, c.UserSession, c.UserToken, c.Wilayah,
 	} {
 		n.Use(hooks...)
 	}
@@ -326,9 +351,10 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.AgentMemory, c.AgentMessage, c.AgentProvider, c.AgentSession, c.CasbinRule,
-		c.Event, c.EventRSVP, c.Keuskupan, c.Lingkungan, c.Lookup, c.OrgInvite,
-		c.OrgMember, c.Organization, c.Paroki, c.ParokiMember, c.Period, c.Setting,
-		c.User, c.UserAccount, c.UserOTP, c.UserSession, c.UserToken, c.Wilayah,
+		c.Event, c.EventRSVP, c.Kecamatan, c.Kelurahan, c.Keuskupan, c.Kevikepan,
+		c.Kota, c.Lingkungan, c.Lookup, c.OrgInvite, c.OrgMember, c.Organization,
+		c.Paroki, c.ParokiMember, c.Period, c.Setting, c.User, c.UserAccount,
+		c.UserOTP, c.UserSession, c.UserToken, c.Wilayah,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -351,8 +377,16 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Event.mutate(ctx, m)
 	case *EventRSVPMutation:
 		return c.EventRSVP.mutate(ctx, m)
+	case *KecamatanMutation:
+		return c.Kecamatan.mutate(ctx, m)
+	case *KelurahanMutation:
+		return c.Kelurahan.mutate(ctx, m)
 	case *KeuskupanMutation:
 		return c.Keuskupan.mutate(ctx, m)
+	case *KevikepanMutation:
+		return c.Kevikepan.mutate(ctx, m)
+	case *KotaMutation:
+		return c.Kota.mutate(ctx, m)
 	case *LingkunganMutation:
 		return c.Lingkungan.mutate(ctx, m)
 	case *LookupMutation:
@@ -1383,6 +1417,320 @@ func (c *EventRSVPClient) mutate(ctx context.Context, m *EventRSVPMutation) (Val
 	}
 }
 
+// KecamatanClient is a client for the Kecamatan schema.
+type KecamatanClient struct {
+	config
+}
+
+// NewKecamatanClient returns a client for the Kecamatan from the given config.
+func NewKecamatanClient(c config) *KecamatanClient {
+	return &KecamatanClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `kecamatan.Hooks(f(g(h())))`.
+func (c *KecamatanClient) Use(hooks ...Hook) {
+	c.hooks.Kecamatan = append(c.hooks.Kecamatan, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `kecamatan.Intercept(f(g(h())))`.
+func (c *KecamatanClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Kecamatan = append(c.inters.Kecamatan, interceptors...)
+}
+
+// Create returns a builder for creating a Kecamatan entity.
+func (c *KecamatanClient) Create() *KecamatanCreate {
+	mutation := newKecamatanMutation(c.config, OpCreate)
+	return &KecamatanCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Kecamatan entities.
+func (c *KecamatanClient) CreateBulk(builders ...*KecamatanCreate) *KecamatanCreateBulk {
+	return &KecamatanCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *KecamatanClient) MapCreateBulk(slice any, setFunc func(*KecamatanCreate, int)) *KecamatanCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &KecamatanCreateBulk{err: fmt.Errorf("calling to KecamatanClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*KecamatanCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &KecamatanCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Kecamatan.
+func (c *KecamatanClient) Update() *KecamatanUpdate {
+	mutation := newKecamatanMutation(c.config, OpUpdate)
+	return &KecamatanUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *KecamatanClient) UpdateOne(_m *Kecamatan) *KecamatanUpdateOne {
+	mutation := newKecamatanMutation(c.config, OpUpdateOne, withKecamatan(_m))
+	return &KecamatanUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *KecamatanClient) UpdateOneID(id uuid.UUID) *KecamatanUpdateOne {
+	mutation := newKecamatanMutation(c.config, OpUpdateOne, withKecamatanID(id))
+	return &KecamatanUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Kecamatan.
+func (c *KecamatanClient) Delete() *KecamatanDelete {
+	mutation := newKecamatanMutation(c.config, OpDelete)
+	return &KecamatanDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *KecamatanClient) DeleteOne(_m *Kecamatan) *KecamatanDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *KecamatanClient) DeleteOneID(id uuid.UUID) *KecamatanDeleteOne {
+	builder := c.Delete().Where(kecamatan.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &KecamatanDeleteOne{builder}
+}
+
+// Query returns a query builder for Kecamatan.
+func (c *KecamatanClient) Query() *KecamatanQuery {
+	return &KecamatanQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeKecamatan},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Kecamatan entity by its id.
+func (c *KecamatanClient) Get(ctx context.Context, id uuid.UUID) (*Kecamatan, error) {
+	return c.Query().Where(kecamatan.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *KecamatanClient) GetX(ctx context.Context, id uuid.UUID) *Kecamatan {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryKota queries the kota edge of a Kecamatan.
+func (c *KecamatanClient) QueryKota(_m *Kecamatan) *KotaQuery {
+	query := (&KotaClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(kecamatan.Table, kecamatan.FieldID, id),
+			sqlgraph.To(kota.Table, kota.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, kecamatan.KotaTable, kecamatan.KotaColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryKelurahan queries the kelurahan edge of a Kecamatan.
+func (c *KecamatanClient) QueryKelurahan(_m *Kecamatan) *KelurahanQuery {
+	query := (&KelurahanClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(kecamatan.Table, kecamatan.FieldID, id),
+			sqlgraph.To(kelurahan.Table, kelurahan.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, kecamatan.KelurahanTable, kecamatan.KelurahanColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *KecamatanClient) Hooks() []Hook {
+	return c.hooks.Kecamatan
+}
+
+// Interceptors returns the client interceptors.
+func (c *KecamatanClient) Interceptors() []Interceptor {
+	return c.inters.Kecamatan
+}
+
+func (c *KecamatanClient) mutate(ctx context.Context, m *KecamatanMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&KecamatanCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&KecamatanUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&KecamatanUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&KecamatanDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Kecamatan mutation op: %q", m.Op())
+	}
+}
+
+// KelurahanClient is a client for the Kelurahan schema.
+type KelurahanClient struct {
+	config
+}
+
+// NewKelurahanClient returns a client for the Kelurahan from the given config.
+func NewKelurahanClient(c config) *KelurahanClient {
+	return &KelurahanClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `kelurahan.Hooks(f(g(h())))`.
+func (c *KelurahanClient) Use(hooks ...Hook) {
+	c.hooks.Kelurahan = append(c.hooks.Kelurahan, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `kelurahan.Intercept(f(g(h())))`.
+func (c *KelurahanClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Kelurahan = append(c.inters.Kelurahan, interceptors...)
+}
+
+// Create returns a builder for creating a Kelurahan entity.
+func (c *KelurahanClient) Create() *KelurahanCreate {
+	mutation := newKelurahanMutation(c.config, OpCreate)
+	return &KelurahanCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Kelurahan entities.
+func (c *KelurahanClient) CreateBulk(builders ...*KelurahanCreate) *KelurahanCreateBulk {
+	return &KelurahanCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *KelurahanClient) MapCreateBulk(slice any, setFunc func(*KelurahanCreate, int)) *KelurahanCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &KelurahanCreateBulk{err: fmt.Errorf("calling to KelurahanClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*KelurahanCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &KelurahanCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Kelurahan.
+func (c *KelurahanClient) Update() *KelurahanUpdate {
+	mutation := newKelurahanMutation(c.config, OpUpdate)
+	return &KelurahanUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *KelurahanClient) UpdateOne(_m *Kelurahan) *KelurahanUpdateOne {
+	mutation := newKelurahanMutation(c.config, OpUpdateOne, withKelurahan(_m))
+	return &KelurahanUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *KelurahanClient) UpdateOneID(id uuid.UUID) *KelurahanUpdateOne {
+	mutation := newKelurahanMutation(c.config, OpUpdateOne, withKelurahanID(id))
+	return &KelurahanUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Kelurahan.
+func (c *KelurahanClient) Delete() *KelurahanDelete {
+	mutation := newKelurahanMutation(c.config, OpDelete)
+	return &KelurahanDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *KelurahanClient) DeleteOne(_m *Kelurahan) *KelurahanDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *KelurahanClient) DeleteOneID(id uuid.UUID) *KelurahanDeleteOne {
+	builder := c.Delete().Where(kelurahan.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &KelurahanDeleteOne{builder}
+}
+
+// Query returns a query builder for Kelurahan.
+func (c *KelurahanClient) Query() *KelurahanQuery {
+	return &KelurahanQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeKelurahan},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Kelurahan entity by its id.
+func (c *KelurahanClient) Get(ctx context.Context, id uuid.UUID) (*Kelurahan, error) {
+	return c.Query().Where(kelurahan.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *KelurahanClient) GetX(ctx context.Context, id uuid.UUID) *Kelurahan {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryKecamatan queries the kecamatan edge of a Kelurahan.
+func (c *KelurahanClient) QueryKecamatan(_m *Kelurahan) *KecamatanQuery {
+	query := (&KecamatanClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(kelurahan.Table, kelurahan.FieldID, id),
+			sqlgraph.To(kecamatan.Table, kecamatan.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, kelurahan.KecamatanTable, kelurahan.KecamatanColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *KelurahanClient) Hooks() []Hook {
+	return c.hooks.Kelurahan
+}
+
+// Interceptors returns the client interceptors.
+func (c *KelurahanClient) Interceptors() []Interceptor {
+	return c.inters.Kelurahan
+}
+
+func (c *KelurahanClient) mutate(ctx context.Context, m *KelurahanMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&KelurahanCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&KelurahanUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&KelurahanUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&KelurahanDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Kelurahan mutation op: %q", m.Op())
+	}
+}
+
 // KeuskupanClient is a client for the Keuskupan schema.
 type KeuskupanClient struct {
 	config
@@ -1507,6 +1855,22 @@ func (c *KeuskupanClient) QueryParoki(_m *Keuskupan) *ParokiQuery {
 	return query
 }
 
+// QueryKevikepan queries the kevikepan edge of a Keuskupan.
+func (c *KeuskupanClient) QueryKevikepan(_m *Keuskupan) *KevikepanQuery {
+	query := (&KevikepanClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(keuskupan.Table, keuskupan.FieldID, id),
+			sqlgraph.To(kevikepan.Table, kevikepan.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, keuskupan.KevikepanTable, keuskupan.KevikepanColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *KeuskupanClient) Hooks() []Hook {
 	return c.hooks.Keuskupan
@@ -1529,6 +1893,304 @@ func (c *KeuskupanClient) mutate(ctx context.Context, m *KeuskupanMutation) (Val
 		return (&KeuskupanDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Keuskupan mutation op: %q", m.Op())
+	}
+}
+
+// KevikepanClient is a client for the Kevikepan schema.
+type KevikepanClient struct {
+	config
+}
+
+// NewKevikepanClient returns a client for the Kevikepan from the given config.
+func NewKevikepanClient(c config) *KevikepanClient {
+	return &KevikepanClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `kevikepan.Hooks(f(g(h())))`.
+func (c *KevikepanClient) Use(hooks ...Hook) {
+	c.hooks.Kevikepan = append(c.hooks.Kevikepan, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `kevikepan.Intercept(f(g(h())))`.
+func (c *KevikepanClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Kevikepan = append(c.inters.Kevikepan, interceptors...)
+}
+
+// Create returns a builder for creating a Kevikepan entity.
+func (c *KevikepanClient) Create() *KevikepanCreate {
+	mutation := newKevikepanMutation(c.config, OpCreate)
+	return &KevikepanCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Kevikepan entities.
+func (c *KevikepanClient) CreateBulk(builders ...*KevikepanCreate) *KevikepanCreateBulk {
+	return &KevikepanCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *KevikepanClient) MapCreateBulk(slice any, setFunc func(*KevikepanCreate, int)) *KevikepanCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &KevikepanCreateBulk{err: fmt.Errorf("calling to KevikepanClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*KevikepanCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &KevikepanCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Kevikepan.
+func (c *KevikepanClient) Update() *KevikepanUpdate {
+	mutation := newKevikepanMutation(c.config, OpUpdate)
+	return &KevikepanUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *KevikepanClient) UpdateOne(_m *Kevikepan) *KevikepanUpdateOne {
+	mutation := newKevikepanMutation(c.config, OpUpdateOne, withKevikepan(_m))
+	return &KevikepanUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *KevikepanClient) UpdateOneID(id uuid.UUID) *KevikepanUpdateOne {
+	mutation := newKevikepanMutation(c.config, OpUpdateOne, withKevikepanID(id))
+	return &KevikepanUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Kevikepan.
+func (c *KevikepanClient) Delete() *KevikepanDelete {
+	mutation := newKevikepanMutation(c.config, OpDelete)
+	return &KevikepanDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *KevikepanClient) DeleteOne(_m *Kevikepan) *KevikepanDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *KevikepanClient) DeleteOneID(id uuid.UUID) *KevikepanDeleteOne {
+	builder := c.Delete().Where(kevikepan.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &KevikepanDeleteOne{builder}
+}
+
+// Query returns a query builder for Kevikepan.
+func (c *KevikepanClient) Query() *KevikepanQuery {
+	return &KevikepanQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeKevikepan},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Kevikepan entity by its id.
+func (c *KevikepanClient) Get(ctx context.Context, id uuid.UUID) (*Kevikepan, error) {
+	return c.Query().Where(kevikepan.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *KevikepanClient) GetX(ctx context.Context, id uuid.UUID) *Kevikepan {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryKeuskupan queries the keuskupan edge of a Kevikepan.
+func (c *KevikepanClient) QueryKeuskupan(_m *Kevikepan) *KeuskupanQuery {
+	query := (&KeuskupanClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(kevikepan.Table, kevikepan.FieldID, id),
+			sqlgraph.To(keuskupan.Table, keuskupan.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, kevikepan.KeuskupanTable, kevikepan.KeuskupanColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *KevikepanClient) Hooks() []Hook {
+	return c.hooks.Kevikepan
+}
+
+// Interceptors returns the client interceptors.
+func (c *KevikepanClient) Interceptors() []Interceptor {
+	return c.inters.Kevikepan
+}
+
+func (c *KevikepanClient) mutate(ctx context.Context, m *KevikepanMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&KevikepanCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&KevikepanUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&KevikepanUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&KevikepanDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Kevikepan mutation op: %q", m.Op())
+	}
+}
+
+// KotaClient is a client for the Kota schema.
+type KotaClient struct {
+	config
+}
+
+// NewKotaClient returns a client for the Kota from the given config.
+func NewKotaClient(c config) *KotaClient {
+	return &KotaClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `kota.Hooks(f(g(h())))`.
+func (c *KotaClient) Use(hooks ...Hook) {
+	c.hooks.Kota = append(c.hooks.Kota, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `kota.Intercept(f(g(h())))`.
+func (c *KotaClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Kota = append(c.inters.Kota, interceptors...)
+}
+
+// Create returns a builder for creating a Kota entity.
+func (c *KotaClient) Create() *KotaCreate {
+	mutation := newKotaMutation(c.config, OpCreate)
+	return &KotaCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Kota entities.
+func (c *KotaClient) CreateBulk(builders ...*KotaCreate) *KotaCreateBulk {
+	return &KotaCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *KotaClient) MapCreateBulk(slice any, setFunc func(*KotaCreate, int)) *KotaCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &KotaCreateBulk{err: fmt.Errorf("calling to KotaClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*KotaCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &KotaCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Kota.
+func (c *KotaClient) Update() *KotaUpdate {
+	mutation := newKotaMutation(c.config, OpUpdate)
+	return &KotaUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *KotaClient) UpdateOne(_m *Kota) *KotaUpdateOne {
+	mutation := newKotaMutation(c.config, OpUpdateOne, withKota(_m))
+	return &KotaUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *KotaClient) UpdateOneID(id uuid.UUID) *KotaUpdateOne {
+	mutation := newKotaMutation(c.config, OpUpdateOne, withKotaID(id))
+	return &KotaUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Kota.
+func (c *KotaClient) Delete() *KotaDelete {
+	mutation := newKotaMutation(c.config, OpDelete)
+	return &KotaDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *KotaClient) DeleteOne(_m *Kota) *KotaDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *KotaClient) DeleteOneID(id uuid.UUID) *KotaDeleteOne {
+	builder := c.Delete().Where(kota.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &KotaDeleteOne{builder}
+}
+
+// Query returns a query builder for Kota.
+func (c *KotaClient) Query() *KotaQuery {
+	return &KotaQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeKota},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Kota entity by its id.
+func (c *KotaClient) Get(ctx context.Context, id uuid.UUID) (*Kota, error) {
+	return c.Query().Where(kota.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *KotaClient) GetX(ctx context.Context, id uuid.UUID) *Kota {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryKecamatan queries the kecamatan edge of a Kota.
+func (c *KotaClient) QueryKecamatan(_m *Kota) *KecamatanQuery {
+	query := (&KecamatanClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(kota.Table, kota.FieldID, id),
+			sqlgraph.To(kecamatan.Table, kecamatan.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, kota.KecamatanTable, kota.KecamatanColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *KotaClient) Hooks() []Hook {
+	return c.hooks.Kota
+}
+
+// Interceptors returns the client interceptors.
+func (c *KotaClient) Interceptors() []Interceptor {
+	return c.inters.Kota
+}
+
+func (c *KotaClient) mutate(ctx context.Context, m *KotaMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&KotaCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&KotaUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&KotaUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&KotaDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Kota mutation op: %q", m.Op())
 	}
 }
 
@@ -3931,14 +4593,15 @@ func (c *WilayahClient) mutate(ctx context.Context, m *WilayahMutation) (Value, 
 type (
 	hooks struct {
 		AgentMemory, AgentMessage, AgentProvider, AgentSession, CasbinRule, Event,
-		EventRSVP, Keuskupan, Lingkungan, Lookup, OrgInvite, OrgMember, Organization,
-		Paroki, ParokiMember, Period, Setting, User, UserAccount, UserOTP, UserSession,
-		UserToken, Wilayah []ent.Hook
+		EventRSVP, Kecamatan, Kelurahan, Keuskupan, Kevikepan, Kota, Lingkungan,
+		Lookup, OrgInvite, OrgMember, Organization, Paroki, ParokiMember, Period,
+		Setting, User, UserAccount, UserOTP, UserSession, UserToken, Wilayah []ent.Hook
 	}
 	inters struct {
 		AgentMemory, AgentMessage, AgentProvider, AgentSession, CasbinRule, Event,
-		EventRSVP, Keuskupan, Lingkungan, Lookup, OrgInvite, OrgMember, Organization,
-		Paroki, ParokiMember, Period, Setting, User, UserAccount, UserOTP, UserSession,
-		UserToken, Wilayah []ent.Interceptor
+		EventRSVP, Kecamatan, Kelurahan, Keuskupan, Kevikepan, Kota, Lingkungan,
+		Lookup, OrgInvite, OrgMember, Organization, Paroki, ParokiMember, Period,
+		Setting, User, UserAccount, UserOTP, UserSession, UserToken,
+		Wilayah []ent.Interceptor
 	}
 )

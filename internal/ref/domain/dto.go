@@ -369,3 +369,169 @@ type UpdatePeriodRequest struct {
 	Status    *string `json:"status,omitempty" validate:"omitempty,oneof=open closed"`
 	IsCurrent *bool   `json:"isCurrent,omitempty"`
 }
+
+// KevikepanResponse is the public API representation of a Kevikepan.
+type KevikepanResponse struct {
+	ID          uuid.UUID `json:"id"`
+	KeuskupanID uuid.UUID `json:"keuskupanId"`
+	Kode        string    `json:"kode"`
+	Nama        string    `json:"nama"`
+	Vikep       *string   `json:"vikep,omitempty"`
+	Active      bool      `json:"active"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+}
+
+// KevikepanSearchFilter filters kevikepan search results.
+type KevikepanSearchFilter struct {
+	KeuskupanID *uuid.UUID `json:"keuskupanId,omitempty"`
+	Active      *bool      `json:"active,omitempty"`
+}
+
+// SearchKevikepanRequest searches kevikepan with optional query, filter, and cursor pagination.
+type SearchKevikepanRequest struct {
+	Q      string                 `json:"q,omitempty"`
+	Filter *KevikepanSearchFilter `json:"filter,omitempty"`
+	Cursor string                 `json:"cursor,omitempty"`
+	Limit  int                    `json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
+}
+
+// CreateKevikepanRequest creates a new Kevikepan.
+type CreateKevikepanRequest struct {
+	KeuskupanID uuid.UUID `json:"keuskupanId" validate:"required"`
+	Kode        string    `json:"kode" validate:"required"`
+	Nama        string    `json:"nama" validate:"required,min=1"`
+	Vikep       *string   `json:"vikep,omitempty"`
+	Active      *bool     `json:"active,omitempty"`
+}
+
+// UpdateKevikepanRequest updates an existing Kevikepan.
+type UpdateKevikepanRequest struct {
+	KeuskupanID *uuid.UUID `json:"keuskupanId,omitempty"`
+	Kode        *string    `json:"kode,omitempty"`
+	Nama        *string    `json:"nama,omitempty" validate:"omitempty,min=1"`
+	Vikep       *string    `json:"vikep,omitempty"`
+	Active      *bool      `json:"active,omitempty"`
+}
+
+// KotaResponse is the public API representation of a Kota.
+type KotaResponse struct {
+	ID        uuid.UUID `json:"id"`
+	Kode      string    `json:"kode"`
+	Nama      string    `json:"nama"`
+	Active    bool      `json:"active"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+// KotaSearchFilter filters kota search results.
+type KotaSearchFilter struct {
+	Active *bool `json:"active,omitempty"`
+}
+
+// SearchKotaRequest searches kota with optional query, filter, and cursor pagination.
+type SearchKotaRequest struct {
+	Q      string            `json:"q,omitempty"`
+	Filter *KotaSearchFilter `json:"filter,omitempty"`
+	Cursor string            `json:"cursor,omitempty"`
+	Limit  int               `json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
+}
+
+// CreateKotaRequest creates a new Kota.
+type CreateKotaRequest struct {
+	Kode   string `json:"kode" validate:"required"`
+	Nama   string `json:"nama" validate:"required,min=1"`
+	Active *bool  `json:"active,omitempty"`
+}
+
+// UpdateKotaRequest updates an existing Kota.
+type UpdateKotaRequest struct {
+	Kode   *string `json:"kode,omitempty"`
+	Nama   *string `json:"nama,omitempty" validate:"omitempty,min=1"`
+	Active *bool   `json:"active,omitempty"`
+}
+
+// KecamatanResponse is the public API representation of a Kecamatan.
+type KecamatanResponse struct {
+	ID        uuid.UUID `json:"id"`
+	KotaID    uuid.UUID `json:"kotaId"`
+	Kode      string    `json:"kode"`
+	Nama      string    `json:"nama"`
+	Active    bool      `json:"active"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+// KecamatanSearchFilter filters kecamatan search results.
+type KecamatanSearchFilter struct {
+	KotaID *uuid.UUID `json:"kotaId,omitempty"`
+	Active *bool      `json:"active,omitempty"`
+}
+
+// SearchKecamatanRequest searches kecamatan with optional query, filter, and cursor pagination.
+type SearchKecamatanRequest struct {
+	Q      string                 `json:"q,omitempty"`
+	Filter *KecamatanSearchFilter `json:"filter,omitempty"`
+	Cursor string                 `json:"cursor,omitempty"`
+	Limit  int                    `json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
+}
+
+// CreateKecamatanRequest creates a new Kecamatan.
+type CreateKecamatanRequest struct {
+	KotaID uuid.UUID `json:"kotaId" validate:"required"`
+	Kode   string    `json:"kode" validate:"required"`
+	Nama   string    `json:"nama" validate:"required,min=1"`
+	Active *bool     `json:"active,omitempty"`
+}
+
+// UpdateKecamatanRequest updates an existing Kecamatan.
+type UpdateKecamatanRequest struct {
+	KotaID *uuid.UUID `json:"kotaId,omitempty"`
+	Kode   *string    `json:"kode,omitempty"`
+	Nama   *string    `json:"nama,omitempty" validate:"omitempty,min=1"`
+	Active *bool      `json:"active,omitempty"`
+}
+
+// KelurahanResponse is the public API representation of a Kelurahan.
+type KelurahanResponse struct {
+	ID          uuid.UUID `json:"id"`
+	KecamatanID uuid.UUID `json:"kecamatanId"`
+	Kode        string    `json:"kode"`
+	Nama        string    `json:"nama"`
+	KodePos     *string   `json:"kodePos,omitempty"`
+	Active      bool      `json:"active"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+}
+
+// KelurahanSearchFilter filters kelurahan search results.
+type KelurahanSearchFilter struct {
+	KecamatanID *uuid.UUID `json:"kecamatanId,omitempty"`
+	Active      *bool      `json:"active,omitempty"`
+}
+
+// SearchKelurahanRequest searches kelurahan with optional query, filter, and cursor pagination.
+type SearchKelurahanRequest struct {
+	Q      string                 `json:"q,omitempty"`
+	Filter *KelurahanSearchFilter `json:"filter,omitempty"`
+	Cursor string                 `json:"cursor,omitempty"`
+	Limit  int                    `json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
+}
+
+// CreateKelurahanRequest creates a new Kelurahan.
+type CreateKelurahanRequest struct {
+	KecamatanID uuid.UUID `json:"kecamatanId" validate:"required"`
+	Kode        string    `json:"kode" validate:"required"`
+	Nama        string    `json:"nama" validate:"required,min=1"`
+	KodePos     *string   `json:"kodePos,omitempty"`
+	Active      *bool     `json:"active,omitempty"`
+}
+
+// UpdateKelurahanRequest updates an existing Kelurahan.
+type UpdateKelurahanRequest struct {
+	KecamatanID *uuid.UUID `json:"kecamatanId,omitempty"`
+	Kode        *string    `json:"kode,omitempty"`
+	Nama        *string    `json:"nama,omitempty" validate:"omitempty,min=1"`
+	KodePos     *string    `json:"kodePos,omitempty"`
+	Active      *bool      `json:"active,omitempty"`
+}

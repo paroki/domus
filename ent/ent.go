@@ -19,7 +19,11 @@ import (
 	"github.com/paroki/domus/ent/casbinrule"
 	"github.com/paroki/domus/ent/event"
 	"github.com/paroki/domus/ent/eventrsvp"
+	"github.com/paroki/domus/ent/kecamatan"
+	"github.com/paroki/domus/ent/kelurahan"
 	"github.com/paroki/domus/ent/keuskupan"
+	"github.com/paroki/domus/ent/kevikepan"
+	"github.com/paroki/domus/ent/kota"
 	"github.com/paroki/domus/ent/lingkungan"
 	"github.com/paroki/domus/ent/lookup"
 	"github.com/paroki/domus/ent/organization"
@@ -102,7 +106,11 @@ func checkColumn(t, c string) error {
 			casbinrule.Table:    casbinrule.ValidColumn,
 			event.Table:         event.ValidColumn,
 			eventrsvp.Table:     eventrsvp.ValidColumn,
+			kecamatan.Table:     kecamatan.ValidColumn,
+			kelurahan.Table:     kelurahan.ValidColumn,
 			keuskupan.Table:     keuskupan.ValidColumn,
+			kevikepan.Table:     kevikepan.ValidColumn,
+			kota.Table:          kota.ValidColumn,
 			lingkungan.Table:    lingkungan.ValidColumn,
 			lookup.Table:        lookup.ValidColumn,
 			orginvite.Table:     orginvite.ValidColumn,

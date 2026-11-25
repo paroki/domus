@@ -22,7 +22,7 @@ func New(svc *service.Service) *Handler {
 	return &Handler{service: svc}
 }
 
-// Register mounts /ref/keuskupan, /ref/paroki, /ref/wilayah, /ref/lingkungan, /ref/lookups, and /ref/periods routes onto api (/api).
+// Register mounts /ref/keuskupan, /ref/kevikepan, /ref/kota, /ref/kecamatan, /ref/kelurahan, /ref/paroki, /ref/wilayah, /ref/lingkungan, /ref/lookups, and /ref/periods routes onto api (/api).
 func (h *Handler) Register(
 	api fiber.Router,
 	authMW fiber.Handler,
@@ -30,6 +30,10 @@ func (h *Handler) Register(
 	requireTenant fiber.Handler,
 	requireKeuskupanRead fiber.Handler,
 	requireKeuskupanWrite fiber.Handler,
+	requireKevikepanRead fiber.Handler,
+	requireKevikepanWrite fiber.Handler,
+	requireSipilRead fiber.Handler,
+	requireSipilWrite fiber.Handler,
 	requireParokiRead fiber.Handler,
 	requireParokiWrite fiber.Handler,
 	requireMasterDataRead fiber.Handler,
@@ -41,6 +45,34 @@ func (h *Handler) Register(
 	keuskupan.Post("", requireKeuskupanWrite, h.CreateKeuskupan)
 	keuskupan.Patch("/:id", requireKeuskupanWrite, h.UpdateKeuskupan)
 	keuskupan.Delete("/:id", requireKeuskupanWrite, h.DeleteKeuskupan)
+
+	kevikepan := api.Group("/ref/kevikepan", authMW, requireAuth)
+	kevikepan.Post("/search", requireKevikepanRead, h.SearchKevikepan)
+	kevikepan.Get("/:id", requireKevikepanRead, h.GetKevikepan)
+	kevikepan.Post("", requireKevikepanWrite, h.CreateKevikepan)
+	kevikepan.Patch("/:id", requireKevikepanWrite, h.UpdateKevikepan)
+	kevikepan.Delete("/:id", requireKevikepanWrite, h.DeleteKevikepan)
+
+	kota := api.Group("/ref/kota", authMW, requireAuth)
+	kota.Post("/search", requireSipilRead, h.SearchKota)
+	kota.Get("/:id", requireSipilRead, h.GetKota)
+	kota.Post("", requireSipilWrite, h.CreateKota)
+	kota.Patch("/:id", requireSipilWrite, h.UpdateKota)
+	kota.Delete("/:id", requireSipilWrite, h.DeleteKota)
+
+	kecamatan := api.Group("/ref/kecamatan", authMW, requireAuth)
+	kecamatan.Post("/search", requireSipilRead, h.SearchKecamatan)
+	kecamatan.Get("/:id", requireSipilRead, h.GetKecamatan)
+	kecamatan.Post("", requireSipilWrite, h.CreateKecamatan)
+	kecamatan.Patch("/:id", requireSipilWrite, h.UpdateKecamatan)
+	kecamatan.Delete("/:id", requireSipilWrite, h.DeleteKecamatan)
+
+	kelurahan := api.Group("/ref/kelurahan", authMW, requireAuth)
+	kelurahan.Post("/search", requireSipilRead, h.SearchKelurahan)
+	kelurahan.Get("/:id", requireSipilRead, h.GetKelurahan)
+	kelurahan.Post("", requireSipilWrite, h.CreateKelurahan)
+	kelurahan.Patch("/:id", requireSipilWrite, h.UpdateKelurahan)
+	kelurahan.Delete("/:id", requireSipilWrite, h.DeleteKelurahan)
 
 	paroki := api.Group("/ref/paroki", authMW, requireAuth)
 	paroki.Post("/search", requireParokiRead, h.SearchParoki)

@@ -48,6 +48,7 @@ func (Keuskupan) Fields() []ent.Field {
 func (Keuskupan) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("paroki", Paroki.Type),
+		edge.To("kevikepan", Kevikepan.Type),
 	}
 }
 

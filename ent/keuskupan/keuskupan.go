@@ -39,6 +39,8 @@ const (
 	FieldActive = "active"
 	// EdgeParoki holds the string denoting the paroki edge name in mutations.
 	EdgeParoki = "paroki"
+	// EdgeKevikepan holds the string denoting the kevikepan edge name in mutations.
+	EdgeKevikepan = "kevikepan"
 	// Table holds the table name of the keuskupan in the database.
 	Table = "keuskupan"
 	// ParokiTable is the table that holds the paroki relation/edge.
@@ -48,6 +50,13 @@ const (
 	ParokiInverseTable = "paroki"
 	// ParokiColumn is the table column denoting the paroki relation/edge.
 	ParokiColumn = "keuskupan_id"
+	// KevikepanTable is the table that holds the kevikepan relation/edge.
+	KevikepanTable = "kevikepan"
+	// KevikepanInverseTable is the table name for the Kevikepan entity.
+	// It exists in this package in order to avoid circular dependency with the "kevikepan" package.
+	KevikepanInverseTable = "kevikepan"
+	// KevikepanColumn is the table column denoting the kevikepan relation/edge.
+	KevikepanColumn = "keuskupan_id"
 )
 
 // Columns holds all SQL columns for keuskupan fields.
@@ -169,10 +178,31 @@ func ByParoki(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newParokiStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByKevikepanCount orders the results by kevikepan count.
+func ByKevikepanCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newKevikepanStep(), opts...)
+	}
+}
+
+// ByKevikepan orders the results by kevikepan terms.
+func ByKevikepan(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newKevikepanStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newParokiStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ParokiInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, ParokiTable, ParokiColumn),
+	)
+}
+func newKevikepanStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(KevikepanInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, KevikepanTable, KevikepanColumn),
 	)
 }

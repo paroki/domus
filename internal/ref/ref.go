@@ -17,6 +17,10 @@ import (
 // Re-export read-only DTO types for downstream features.
 type (
 	Keuskupan    = domain.KeuskupanResponse
+	Kevikepan    = domain.KevikepanResponse
+	Kota         = domain.KotaResponse
+	Kecamatan    = domain.KecamatanResponse
+	Kelurahan    = domain.KelurahanResponse
 	Paroki       = domain.ParokiResponse
 	ParokiMember = domain.ParokiMemberResponse
 	Wilayah      = domain.WilayahResponse
@@ -29,6 +33,8 @@ type (
 var (
 	RoleParokiAdmin = authz.Role("ref", "paroki-admin")
 	PermKeuskupan   = authz.Permission("ref", "keuskupan")
+	PermKevikepan   = authz.Permission("ref", "kevikepan")
+	PermSipil       = authz.Permission("ref", "sipil")
 	PermParoki      = authz.Permission("ref", "paroki")
 	PermMasterData  = authz.Permission("ref", "master-data")
 )
@@ -70,7 +76,7 @@ func New(db *ent.Client, enforcer *authz.Enforcer, users *user.Feature) *Feature
 	}
 }
 
-// Register mounts /ref/keuskupan and /ref/paroki routes under /api.
+// Register mounts /ref/* routes under /api.
 func (f *Feature) Register(api fiber.Router) {
 	f.handler.Register(
 		api,
@@ -79,6 +85,10 @@ func (f *Feature) Register(api fiber.Router) {
 		requireTenantMiddleware(),
 		f.users.Require(PermKeuskupan, authz.ActionRead),
 		f.users.Require(PermKeuskupan, authz.ActionWrite),
+		f.users.Require(PermKevikepan, authz.ActionRead),
+		f.users.Require(PermKevikepan, authz.ActionWrite),
+		f.users.Require(PermSipil, authz.ActionRead),
+		f.users.Require(PermSipil, authz.ActionWrite),
 		f.users.Require(PermParoki, authz.ActionRead),
 		f.users.Require(PermParoki, authz.ActionWrite),
 		f.users.Require(PermMasterData, authz.ActionRead),
@@ -104,9 +114,15 @@ func (f *Feature) RegisterPermissions(ctx context.Context, e *authz.Enforcer) er
 	}{
 		{user.RoleSuperAdmin, PermKeuskupan, authz.ActionRead},
 		{user.RoleSuperAdmin, PermKeuskupan, authz.ActionWrite},
+		{user.RoleSuperAdmin, PermKevikepan, authz.ActionRead},
+		{user.RoleSuperAdmin, PermKevikepan, authz.ActionWrite},
+		{user.RoleSuperAdmin, PermSipil, authz.ActionRead},
+		{user.RoleSuperAdmin, PermSipil, authz.ActionWrite},
 		{user.RoleSuperAdmin, PermParoki, authz.ActionRead},
 		{user.RoleSuperAdmin, PermParoki, authz.ActionWrite},
 		{user.RoleUser, PermKeuskupan, authz.ActionRead},
+		{user.RoleUser, PermKevikepan, authz.ActionRead},
+		{user.RoleUser, PermSipil, authz.ActionRead},
 		{user.RoleUser, PermParoki, authz.ActionRead},
 		{user.RoleUser, PermMasterData, authz.ActionRead},
 		{RoleParokiAdmin, PermMasterData, authz.ActionRead},
@@ -118,6 +134,30 @@ func (f *Feature) RegisterPermissions(ctx context.Context, e *authz.Enforcer) er
 		}
 	}
 	return nil
+}
+
+// GetKeuskupan returns a non-deleted Keuskupan by ID.
+func (f *Feature) GetKeuskupan(ctx context.Context, id uuid.UUID) (*Keuskupan, error) {
+	res, err := f.service.GetKeuskupan(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+// ValidateKota returns a non-deleted Kota by ID.
+func (f *Feature) ValidateKota(ctx context.Context, kotaID uuid.UUID) (*Kota, error) {
+	return f.service.ValidateKota(ctx, kotaID)
+}
+
+// ValidateKecamatan returns a non-deleted Kecamatan if it belongs to kotaID.
+func (f *Feature) ValidateKecamatan(ctx context.Context, kotaID, kecamatanID uuid.UUID) (*Kecamatan, error) {
+	return f.service.ValidateKecamatan(ctx, kotaID, kecamatanID)
+}
+
+// ValidateKelurahan returns a non-deleted Kelurahan if it belongs to kecamatanID.
+func (f *Feature) ValidateKelurahan(ctx context.Context, kecamatanID, kelurahanID uuid.UUID) (*Kelurahan, error) {
+	return f.service.ValidateKelurahan(ctx, kecamatanID, kelurahanID)
 }
 
 // GetParoki returns a non-deleted Paroki by ID.

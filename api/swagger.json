@@ -317,6 +317,55 @@
                 ],
                 "type": "object"
             },
+            "domain.CreateKecamatanRequest": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "kode": {
+                        "type": "string"
+                    },
+                    "kotaId": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "minLength": 1,
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "kode",
+                    "kotaId",
+                    "nama"
+                ],
+                "type": "object"
+            },
+            "domain.CreateKelurahanRequest": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "kecamatanId": {
+                        "type": "string"
+                    },
+                    "kode": {
+                        "type": "string"
+                    },
+                    "kodePos": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "minLength": 1,
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "kecamatanId",
+                    "kode",
+                    "nama"
+                ],
+                "type": "object"
+            },
             "domain.CreateKeuskupanRequest": {
                 "properties": {
                     "active": {
@@ -342,6 +391,51 @@
                         "type": "string"
                     },
                     "website": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "kode",
+                    "nama"
+                ],
+                "type": "object"
+            },
+            "domain.CreateKevikepanRequest": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "keuskupanId": {
+                        "type": "string"
+                    },
+                    "kode": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "vikep": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "keuskupanId",
+                    "kode",
+                    "nama"
+                ],
+                "type": "object"
+            },
+            "domain.CreateKotaRequest": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "kode": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "minLength": 1,
                         "type": "string"
                     }
                 },
@@ -838,6 +932,83 @@
                 },
                 "type": "object"
             },
+            "domain.KecamatanResponse": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "kode": {
+                        "type": "string"
+                    },
+                    "kotaId": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.KecamatanSearchFilter": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "kotaId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.KelurahanResponse": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "kecamatanId": {
+                        "type": "string"
+                    },
+                    "kode": {
+                        "type": "string"
+                    },
+                    "kodePos": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.KelurahanSearchFilter": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "kecamatanId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.KeuskupanResponse": {
                 "properties": {
                     "active": {
@@ -877,6 +1048,77 @@
                 "type": "object"
             },
             "domain.KeuskupanSearchFilter": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.KevikepanResponse": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "keuskupanId": {
+                        "type": "string"
+                    },
+                    "kode": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    },
+                    "vikep": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.KevikepanSearchFilter": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "keuskupanId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.KotaResponse": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "kode": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.KotaSearchFilter": {
                 "properties": {
                     "active": {
                         "type": "boolean"
@@ -1619,6 +1861,44 @@
                 },
                 "type": "object"
             },
+            "domain.SearchKecamatanRequest": {
+                "properties": {
+                    "cursor": {
+                        "type": "string"
+                    },
+                    "filter": {
+                        "$ref": "#/components/schemas/domain.KecamatanSearchFilter"
+                    },
+                    "limit": {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "q": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.SearchKelurahanRequest": {
+                "properties": {
+                    "cursor": {
+                        "type": "string"
+                    },
+                    "filter": {
+                        "$ref": "#/components/schemas/domain.KelurahanSearchFilter"
+                    },
+                    "limit": {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "q": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.SearchKeuskupanRequest": {
                 "properties": {
                     "cursor": {
@@ -1626,6 +1906,44 @@
                     },
                     "filter": {
                         "$ref": "#/components/schemas/domain.KeuskupanSearchFilter"
+                    },
+                    "limit": {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "q": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.SearchKevikepanRequest": {
+                "properties": {
+                    "cursor": {
+                        "type": "string"
+                    },
+                    "filter": {
+                        "$ref": "#/components/schemas/domain.KevikepanSearchFilter"
+                    },
+                    "limit": {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "q": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.SearchKotaRequest": {
+                "properties": {
+                    "cursor": {
+                        "type": "string"
+                    },
+                    "filter": {
+                        "$ref": "#/components/schemas/domain.KotaSearchFilter"
                     },
                     "limit": {
                         "maximum": 100,
@@ -2064,6 +2382,45 @@
                 },
                 "type": "object"
             },
+            "domain.UpdateKecamatanRequest": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "kode": {
+                        "type": "string"
+                    },
+                    "kotaId": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "minLength": 1,
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.UpdateKelurahanRequest": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "kecamatanId": {
+                        "type": "string"
+                    },
+                    "kode": {
+                        "type": "string"
+                    },
+                    "kodePos": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "minLength": 1,
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.UpdateKeuskupanRequest": {
                 "properties": {
                     "active": {
@@ -2089,6 +2446,42 @@
                         "type": "string"
                     },
                     "website": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.UpdateKevikepanRequest": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "keuskupanId": {
+                        "type": "string"
+                    },
+                    "kode": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "vikep": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.UpdateKotaRequest": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "kode": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "minLength": 1,
                         "type": "string"
                     }
                 },
@@ -2826,11 +3219,83 @@
                 },
                 "type": "object"
             },
+            "httpx.Envelope-array_domain_KecamatanResponse": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.KecamatanResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-array_domain_KelurahanResponse": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.KelurahanResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
             "httpx.Envelope-array_domain_KeuskupanResponse": {
                 "properties": {
                     "data": {
                         "items": {
                             "$ref": "#/components/schemas/domain.KeuskupanResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-array_domain_KevikepanResponse": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.KevikepanResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-array_domain_KotaResponse": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.KotaResponse"
                         },
                         "type": "array",
                         "uniqueItems": false
@@ -3230,10 +3695,66 @@
                 },
                 "type": "object"
             },
+            "httpx.Envelope-domain_KecamatanResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.KecamatanResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_KelurahanResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.KelurahanResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
             "httpx.Envelope-domain_KeuskupanResponse": {
                 "properties": {
                     "data": {
                         "$ref": "#/components/schemas/domain.KeuskupanResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_KevikepanResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.KevikepanResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_KotaResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.KotaResponse"
                     },
                     "error": {
                         "$ref": "#/components/schemas/httpx.ErrorPayload"
@@ -7721,6 +8242,816 @@
                 ]
             }
         },
+        "/ref/kecamatan": {
+            "post": {
+                "description": "Creates a kecamatan or reactivates a soft-deleted kecamatan with the same kotaId and kode.",
+                "operationId": "createKecamatan",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.CreateKecamatanRequest",
+                                "summary": "body",
+                                "description": "Kecamatan creation payload"
+                            }
+                        }
+                    },
+                    "description": "Kecamatan creation payload",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_KecamatanResponse"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Create kecamatan",
+                "tags": [
+                    "Ref"
+                ]
+            }
+        },
+        "/ref/kecamatan/search": {
+            "post": {
+                "description": "Searches kecamatan with optional query, kotaId/active filters, and cursor pagination.",
+                "operationId": "searchKecamatan",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.SearchKecamatanRequest",
+                                "summary": "body",
+                                "description": "Search parameters"
+                            }
+                        }
+                    },
+                    "description": "Search parameters"
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_KecamatanResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    }
+                },
+                "summary": "Search kecamatan",
+                "tags": [
+                    "Ref"
+                ]
+            }
+        },
+        "/ref/kecamatan/{id}": {
+            "delete": {
+                "description": "Soft-deletes a kecamatan when no non-deleted kelurahan reference it.",
+                "operationId": "deleteKecamatan",
+                "parameters": [
+                    {
+                        "description": "Kecamatan UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    }
+                },
+                "summary": "Delete kecamatan",
+                "tags": [
+                    "Ref"
+                ]
+            },
+            "get": {
+                "description": "Returns a single non-deleted kecamatan by ID.",
+                "operationId": "getKecamatan",
+                "parameters": [
+                    {
+                        "description": "Kecamatan UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_KecamatanResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Get kecamatan",
+                "tags": [
+                    "Ref"
+                ]
+            },
+            "patch": {
+                "description": "Updates mutable fields of a kecamatan.",
+                "operationId": "updateKecamatan",
+                "parameters": [
+                    {
+                        "description": "Kecamatan UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.UpdateKecamatanRequest",
+                                "summary": "body",
+                                "description": "Kecamatan update payload"
+                            }
+                        }
+                    },
+                    "description": "Kecamatan update payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_KecamatanResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Update kecamatan",
+                "tags": [
+                    "Ref"
+                ]
+            }
+        },
+        "/ref/kelurahan": {
+            "post": {
+                "description": "Creates a kelurahan or reactivates a soft-deleted kelurahan with the same kecamatanId and kode.",
+                "operationId": "createKelurahan",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.CreateKelurahanRequest",
+                                "summary": "body",
+                                "description": "Kelurahan creation payload"
+                            }
+                        }
+                    },
+                    "description": "Kelurahan creation payload",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_KelurahanResponse"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Create kelurahan",
+                "tags": [
+                    "Ref"
+                ]
+            }
+        },
+        "/ref/kelurahan/search": {
+            "post": {
+                "description": "Searches kelurahan with optional query, kecamatanId/active filters, and cursor pagination.",
+                "operationId": "searchKelurahan",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.SearchKelurahanRequest",
+                                "summary": "body",
+                                "description": "Search parameters"
+                            }
+                        }
+                    },
+                    "description": "Search parameters"
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_KelurahanResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    }
+                },
+                "summary": "Search kelurahan",
+                "tags": [
+                    "Ref"
+                ]
+            }
+        },
+        "/ref/kelurahan/{id}": {
+            "delete": {
+                "description": "Soft-deletes a kelurahan.",
+                "operationId": "deleteKelurahan",
+                "parameters": [
+                    {
+                        "description": "Kelurahan UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Delete kelurahan",
+                "tags": [
+                    "Ref"
+                ]
+            },
+            "get": {
+                "description": "Returns a single non-deleted kelurahan by ID.",
+                "operationId": "getKelurahan",
+                "parameters": [
+                    {
+                        "description": "Kelurahan UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_KelurahanResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Get kelurahan",
+                "tags": [
+                    "Ref"
+                ]
+            },
+            "patch": {
+                "description": "Updates mutable fields of a kelurahan.",
+                "operationId": "updateKelurahan",
+                "parameters": [
+                    {
+                        "description": "Kelurahan UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.UpdateKelurahanRequest",
+                                "summary": "body",
+                                "description": "Kelurahan update payload"
+                            }
+                        }
+                    },
+                    "description": "Kelurahan update payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_KelurahanResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Update kelurahan",
+                "tags": [
+                    "Ref"
+                ]
+            }
+        },
         "/ref/keuskupan": {
             "post": {
                 "description": "Creates a keuskupan or reactivates a soft-deleted keuskupan with the same kode.",
@@ -8106,6 +9437,806 @@
                     }
                 },
                 "summary": "Update keuskupan",
+                "tags": [
+                    "Ref"
+                ]
+            }
+        },
+        "/ref/kevikepan": {
+            "post": {
+                "description": "Creates a kevikepan or reactivates a soft-deleted kevikepan with the same keuskupanId and kode.",
+                "operationId": "createKevikepan",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.CreateKevikepanRequest",
+                                "summary": "body",
+                                "description": "Kevikepan creation payload"
+                            }
+                        }
+                    },
+                    "description": "Kevikepan creation payload",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_KevikepanResponse"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Create kevikepan",
+                "tags": [
+                    "Ref"
+                ]
+            }
+        },
+        "/ref/kevikepan/search": {
+            "post": {
+                "description": "Searches kevikepan with optional query, keuskupanId/active filters, and cursor pagination.",
+                "operationId": "searchKevikepan",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.SearchKevikepanRequest",
+                                "summary": "body",
+                                "description": "Search parameters"
+                            }
+                        }
+                    },
+                    "description": "Search parameters"
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_KevikepanResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    }
+                },
+                "summary": "Search kevikepan",
+                "tags": [
+                    "Ref"
+                ]
+            }
+        },
+        "/ref/kevikepan/{id}": {
+            "delete": {
+                "description": "Soft-deletes a kevikepan.",
+                "operationId": "deleteKevikepan",
+                "parameters": [
+                    {
+                        "description": "Kevikepan UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Delete kevikepan",
+                "tags": [
+                    "Ref"
+                ]
+            },
+            "get": {
+                "description": "Returns a single non-deleted kevikepan by ID.",
+                "operationId": "getKevikepan",
+                "parameters": [
+                    {
+                        "description": "Kevikepan UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_KevikepanResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Get kevikepan",
+                "tags": [
+                    "Ref"
+                ]
+            },
+            "patch": {
+                "description": "Updates mutable fields of a kevikepan.",
+                "operationId": "updateKevikepan",
+                "parameters": [
+                    {
+                        "description": "Kevikepan UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.UpdateKevikepanRequest",
+                                "summary": "body",
+                                "description": "Kevikepan update payload"
+                            }
+                        }
+                    },
+                    "description": "Kevikepan update payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_KevikepanResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Update kevikepan",
+                "tags": [
+                    "Ref"
+                ]
+            }
+        },
+        "/ref/kota": {
+            "post": {
+                "description": "Creates a kota or reactivates a soft-deleted kota with the same kode.",
+                "operationId": "createKota",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.CreateKotaRequest",
+                                "summary": "body",
+                                "description": "Kota creation payload"
+                            }
+                        }
+                    },
+                    "description": "Kota creation payload",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_KotaResponse"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Create kota",
+                "tags": [
+                    "Ref"
+                ]
+            }
+        },
+        "/ref/kota/search": {
+            "post": {
+                "description": "Searches kota with optional query, active filter, and cursor pagination.",
+                "operationId": "searchKota",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.SearchKotaRequest",
+                                "summary": "body",
+                                "description": "Search parameters"
+                            }
+                        }
+                    },
+                    "description": "Search parameters"
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_KotaResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    }
+                },
+                "summary": "Search kota",
+                "tags": [
+                    "Ref"
+                ]
+            }
+        },
+        "/ref/kota/{id}": {
+            "delete": {
+                "description": "Soft-deletes a kota when no non-deleted kecamatan reference it.",
+                "operationId": "deleteKota",
+                "parameters": [
+                    {
+                        "description": "Kota UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    }
+                },
+                "summary": "Delete kota",
+                "tags": [
+                    "Ref"
+                ]
+            },
+            "get": {
+                "description": "Returns a single non-deleted kota by ID.",
+                "operationId": "getKota",
+                "parameters": [
+                    {
+                        "description": "Kota UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_KotaResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Get kota",
+                "tags": [
+                    "Ref"
+                ]
+            },
+            "patch": {
+                "description": "Updates mutable fields of a kota.",
+                "operationId": "updateKota",
+                "parameters": [
+                    {
+                        "description": "Kota UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.UpdateKotaRequest",
+                                "summary": "body",
+                                "description": "Kota update payload"
+                            }
+                        }
+                    },
+                    "description": "Kota update payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_KotaResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Update kota",
                 "tags": [
                     "Ref"
                 ]

@@ -93,6 +93,30 @@ func (f EventRSVPFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, e
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EventRSVPMutation", m)
 }
 
+// The KecamatanFunc type is an adapter to allow the use of ordinary
+// function as Kecamatan mutator.
+type KecamatanFunc func(context.Context, *ent.KecamatanMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f KecamatanFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.KecamatanMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.KecamatanMutation", m)
+}
+
+// The KelurahanFunc type is an adapter to allow the use of ordinary
+// function as Kelurahan mutator.
+type KelurahanFunc func(context.Context, *ent.KelurahanMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f KelurahanFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.KelurahanMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.KelurahanMutation", m)
+}
+
 // The KeuskupanFunc type is an adapter to allow the use of ordinary
 // function as Keuskupan mutator.
 type KeuskupanFunc func(context.Context, *ent.KeuskupanMutation) (ent.Value, error)
@@ -103,6 +127,30 @@ func (f KeuskupanFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, e
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.KeuskupanMutation", m)
+}
+
+// The KevikepanFunc type is an adapter to allow the use of ordinary
+// function as Kevikepan mutator.
+type KevikepanFunc func(context.Context, *ent.KevikepanMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f KevikepanFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.KevikepanMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.KevikepanMutation", m)
+}
+
+// The KotaFunc type is an adapter to allow the use of ordinary
+// function as Kota mutator.
+type KotaFunc func(context.Context, *ent.KotaMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f KotaFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.KotaMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.KotaMutation", m)
 }
 
 // The LingkunganFunc type is an adapter to allow the use of ordinary

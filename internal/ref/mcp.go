@@ -142,12 +142,42 @@ type RefListLookupsOutput struct {
 	Lookups []MCPRefLookup `json:"lookups"`
 }
 
+// RefListKevikepanInput is the input schema for ref_list_kevikepan.
+type RefListKevikepanInput struct {
+	KeuskupanID string `json:"keuskupanId,omitempty"`
+	Query       string `json:"query,omitempty"`
+	Active      *bool  `json:"active,omitempty"`
+	Limit       int    `json:"limit,omitempty"`
+}
+
+// MCPRefKevikepan is the MCP-safe representation of a Kevikepan.
+type MCPRefKevikepan struct {
+	ID          string    `json:"id"`
+	KeuskupanID string    `json:"keuskupanId"`
+	Kode        string    `json:"kode"`
+	Nama        string    `json:"nama"`
+	Vikep       *string   `json:"vikep,omitempty"`
+	Active      bool      `json:"active"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+}
+
+// RefListKevikepanOutput is the output schema for ref_list_kevikepan.
+type RefListKevikepanOutput struct {
+	Kevikepan []MCPRefKevikepan `json:"kevikepan"`
+}
+
 // RegisterMCP registers read-only ref_* tools on the MCP server.
 func (f *Feature) RegisterMCP(s *mcp.Server) {
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "ref_get_paroki",
 		Description: "Get the caller's active paroki profile.",
 	}, f.mcpRefGetParoki)
+
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "ref_list_kevikepan",
+		Description: "List kevikepan for a keuskupan or the caller's active paroki's keuskupan.",
+	}, f.mcpRefListKevikepan)
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "ref_list_wilayah",
@@ -363,23 +393,85 @@ func (f *Feature) mcpRefListLookups(ctx context.Context, _ *mcp.CallToolRequest,
 	return nil, RefListLookupsOutput{Lookups: out}, nil
 }
 
-func (f *Feature) requireMCPAccess(ctx context.Context, resource string, action authz.Action) (user.Principal, error) {
+func (f *Feature) mcpRefListKevikepan(ctx context.Context, _ *mcp.CallToolRequest, in RefListKevikepanInput) (*mcp.CallToolResult, RefListKevikepanOutput, error) {
+	if _, err := f.requireMCPGlobalAccess(ctx, PermKevikepan, authz.ActionRead); err != nil {
+		return nil, RefListKevikepanOutput{}, err
+	}
+	var keuskupanID uuid.UUID
+	if in.KeuskupanID != "" {
+		parsed, err := uuid.Parse(in.KeuskupanID)
+		if err != nil {
+			return nil, RefListKevikepanOutput{}, httpx.BadRequest("Invalid keuskupanId.")
+		}
+		keuskupanID = parsed
+	} else {
+		tp, err := user.RequireTenant(ctx)
+		if err != nil {
+			return nil, RefListKevikepanOutput{}, err
+		}
+		paroki, err := f.service.GetParoki(ctx, tp.ParokiID)
+		if err != nil {
+			return nil, RefListKevikepanOutput{}, err
+		}
+		keuskupanID = paroki.KeuskupanID
+	}
+
+	items, _, err := f.service.SearchKevikepan(
+		ctx,
+		domain.SearchKevikepanRequest{
+			Q: in.Query,
+			Filter: &domain.KevikepanSearchFilter{
+				KeuskupanID: &keuskupanID,
+				Active:      in.Active,
+			},
+		},
+		nil,
+		nil,
+		clampMCPLimit(in.Limit, 50, 100),
+	)
+	if err != nil {
+		return nil, RefListKevikepanOutput{}, err
+	}
+	out := make([]MCPRefKevikepan, 0, len(items))
+	for _, k := range items {
+		out = append(out, MCPRefKevikepan{
+			ID:          k.ID.String(),
+			KeuskupanID: k.KeuskupanID.String(),
+			Kode:        k.Kode,
+			Nama:        k.Nama,
+			Vikep:       k.Vikep,
+			Active:      k.Active,
+			CreatedAt:   k.CreatedAt,
+			UpdatedAt:   k.UpdatedAt,
+		})
+	}
+	return nil, RefListKevikepanOutput{Kevikepan: out}, nil
+}
+
+func (f *Feature) requireMCPGlobalAccess(ctx context.Context, resource string, action authz.Action) (user.Principal, error) {
 	p, ok := user.UserContext(ctx)
 	if !ok || p.UserID == uuid.Nil {
 		return user.Principal{}, httpx.Unauthorized("Authentication is required.")
 	}
-	tp, err := user.RequireTenant(ctx)
-	if err != nil {
-		return user.Principal{}, err
-	}
 	if f.enforcer != nil {
-		allowed, err := f.enforcer.Enforce(authz.UserSubject(tp.UserID), authz.DomainGlobal, resource, action)
+		allowed, err := f.enforcer.Enforce(authz.UserSubject(p.UserID), authz.DomainGlobal, resource, action)
 		if err != nil {
 			return user.Principal{}, err
 		}
 		if !allowed {
 			return user.Principal{}, httpx.Forbidden("Forbidden.")
 		}
+	}
+	return p, nil
+}
+
+func (f *Feature) requireMCPAccess(ctx context.Context, resource string, action authz.Action) (user.Principal, error) {
+	if _, err := f.requireMCPGlobalAccess(ctx, resource, action); err != nil {
+		return user.Principal{}, err
+	}
+	tp, err := user.RequireTenant(ctx)
+	if err != nil {
+		return user.Principal{}, err
 	}
 	return tp, nil
 }

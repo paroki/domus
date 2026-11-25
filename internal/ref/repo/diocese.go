@@ -149,6 +149,13 @@ func (r *Repository) HasActiveParokiByKeuskupan(ctx context.Context, keuskupanID
 		Exist(ctx)
 }
 
+// HasParokiByKeuskupan reports whether any non-deleted Paroki references keuskupanID.
+func (r *Repository) HasParokiByKeuskupan(ctx context.Context, keuskupanID uuid.UUID) (bool, error) {
+	return r.client.Paroki.Query().
+		Where(paroki.KeuskupanIDEQ(keuskupanID), paroki.DeletedAtIsNil()).
+		Exist(ctx)
+}
+
 func setOrClearString(val *string, setFn func(string) *ent.KeuskupanUpdateOne, clearFn func() *ent.KeuskupanUpdateOne) {
 	if val == nil || *val == "" {
 		clearFn()

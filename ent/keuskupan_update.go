@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent/keuskupan"
+	"github.com/paroki/domus/ent/kevikepan"
 	"github.com/paroki/domus/ent/paroki"
 	"github.com/paroki/domus/ent/predicate"
 )
@@ -213,6 +214,21 @@ func (_u *KeuskupanUpdate) AddParoki(v ...*Paroki) *KeuskupanUpdate {
 	return _u.AddParokiIDs(ids...)
 }
 
+// AddKevikepanIDs adds the "kevikepan" edge to the Kevikepan entity by IDs.
+func (_u *KeuskupanUpdate) AddKevikepanIDs(ids ...uuid.UUID) *KeuskupanUpdate {
+	_u.mutation.AddKevikepanIDs(ids...)
+	return _u
+}
+
+// AddKevikepan adds the "kevikepan" edges to the Kevikepan entity.
+func (_u *KeuskupanUpdate) AddKevikepan(v ...*Kevikepan) *KeuskupanUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddKevikepanIDs(ids...)
+}
+
 // Mutation returns the KeuskupanMutation object of the builder.
 func (_u *KeuskupanUpdate) Mutation() *KeuskupanMutation {
 	return _u.mutation
@@ -237,6 +253,27 @@ func (_u *KeuskupanUpdate) RemoveParoki(v ...*Paroki) *KeuskupanUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveParokiIDs(ids...)
+}
+
+// ClearKevikepan clears all "kevikepan" edges to the Kevikepan entity.
+func (_u *KeuskupanUpdate) ClearKevikepan() *KeuskupanUpdate {
+	_u.mutation.ClearKevikepan()
+	return _u
+}
+
+// RemoveKevikepanIDs removes the "kevikepan" edge to Kevikepan entities by IDs.
+func (_u *KeuskupanUpdate) RemoveKevikepanIDs(ids ...uuid.UUID) *KeuskupanUpdate {
+	_u.mutation.RemoveKevikepanIDs(ids...)
+	return _u
+}
+
+// RemoveKevikepan removes "kevikepan" edges to Kevikepan entities.
+func (_u *KeuskupanUpdate) RemoveKevikepan(v ...*Kevikepan) *KeuskupanUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveKevikepanIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -388,6 +425,51 @@ func (_u *KeuskupanUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.KevikepanCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   keuskupan.KevikepanTable,
+			Columns: []string{keuskupan.KevikepanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(kevikepan.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedKevikepanIDs(); len(nodes) > 0 && !_u.mutation.KevikepanCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   keuskupan.KevikepanTable,
+			Columns: []string{keuskupan.KevikepanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(kevikepan.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.KevikepanIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   keuskupan.KevikepanTable,
+			Columns: []string{keuskupan.KevikepanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(kevikepan.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -598,6 +680,21 @@ func (_u *KeuskupanUpdateOne) AddParoki(v ...*Paroki) *KeuskupanUpdateOne {
 	return _u.AddParokiIDs(ids...)
 }
 
+// AddKevikepanIDs adds the "kevikepan" edge to the Kevikepan entity by IDs.
+func (_u *KeuskupanUpdateOne) AddKevikepanIDs(ids ...uuid.UUID) *KeuskupanUpdateOne {
+	_u.mutation.AddKevikepanIDs(ids...)
+	return _u
+}
+
+// AddKevikepan adds the "kevikepan" edges to the Kevikepan entity.
+func (_u *KeuskupanUpdateOne) AddKevikepan(v ...*Kevikepan) *KeuskupanUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddKevikepanIDs(ids...)
+}
+
 // Mutation returns the KeuskupanMutation object of the builder.
 func (_u *KeuskupanUpdateOne) Mutation() *KeuskupanMutation {
 	return _u.mutation
@@ -622,6 +719,27 @@ func (_u *KeuskupanUpdateOne) RemoveParoki(v ...*Paroki) *KeuskupanUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveParokiIDs(ids...)
+}
+
+// ClearKevikepan clears all "kevikepan" edges to the Kevikepan entity.
+func (_u *KeuskupanUpdateOne) ClearKevikepan() *KeuskupanUpdateOne {
+	_u.mutation.ClearKevikepan()
+	return _u
+}
+
+// RemoveKevikepanIDs removes the "kevikepan" edge to Kevikepan entities by IDs.
+func (_u *KeuskupanUpdateOne) RemoveKevikepanIDs(ids ...uuid.UUID) *KeuskupanUpdateOne {
+	_u.mutation.RemoveKevikepanIDs(ids...)
+	return _u
+}
+
+// RemoveKevikepan removes "kevikepan" edges to Kevikepan entities.
+func (_u *KeuskupanUpdateOne) RemoveKevikepan(v ...*Kevikepan) *KeuskupanUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveKevikepanIDs(ids...)
 }
 
 // Where appends a list predicates to the KeuskupanUpdate builder.
@@ -803,6 +921,51 @@ func (_u *KeuskupanUpdateOne) sqlSave(ctx context.Context) (_node *Keuskupan, er
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.KevikepanCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   keuskupan.KevikepanTable,
+			Columns: []string{keuskupan.KevikepanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(kevikepan.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedKevikepanIDs(); len(nodes) > 0 && !_u.mutation.KevikepanCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   keuskupan.KevikepanTable,
+			Columns: []string{keuskupan.KevikepanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(kevikepan.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.KevikepanIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   keuskupan.KevikepanTable,
+			Columns: []string{keuskupan.KevikepanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(kevikepan.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

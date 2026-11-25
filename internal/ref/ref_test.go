@@ -660,3 +660,269 @@ func (s *RefFeatureSuite) TestPeriod_OverlapValidationAndIsCurrentRotation() {
 	got27 := testutil.DecodeAs[domain.PeriodResponse](s).Data
 	s.False(got27.IsCurrent)
 }
+
+func (s *RefFeatureSuite) TestKevikepanCRUD_SearchPaginationReactivationAndRBAC() {
+	s.loginViaOTP("admin@paroki.org")
+
+	// Create two Keuskupan.
+	s.Request("/api/ref/keuskupan", http.MethodPost, domain.CreateKeuskupanRequest{
+		Kode: "kaj",
+		Nama: "Keuskupan Agung Jakarta",
+	})
+	s.Created()
+	kaj := testutil.DecodeAs[domain.KeuskupanResponse](s).Data
+
+	s.Request("/api/ref/keuskupan", http.MethodPost, domain.CreateKeuskupanRequest{
+		Kode: "kas",
+		Nama: "Keuskupan Agung Semarang",
+	})
+	s.Created()
+	kas := testutil.DecodeAs[domain.KeuskupanResponse](s).Data
+
+	// Facade GetKeuskupan.
+	gotKaj, err := s.refFeature.GetKeuskupan(context.Background(), kaj.ID)
+	s.Require().NoError(err)
+	s.Equal(kaj.ID, gotKaj.ID)
+	_, err = s.refFeature.GetKeuskupan(context.Background(), uuid.New())
+	s.Require().ErrorIs(err, domain.ErrKeuskupanNotFound)
+
+	// Invalid keuskupanId -> 404 REF_KEUSKUPAN_NOT_FOUND.
+	s.Request("/api/ref/kevikepan", http.MethodPost, domain.CreateKevikepanRequest{
+		KeuskupanID: uuid.New(),
+		Kode:        "pusat",
+		Nama:        "Kevikepan Pusat",
+	})
+	s.NotFound()
+	s.Equal("REF_KEUSKUPAN_NOT_FOUND", s.GetErrorResponse().Error.Code)
+
+	// Invalid kode -> 422.
+	s.Request("/api/ref/kevikepan", http.MethodPost, domain.CreateKevikepanRequest{
+		KeuskupanID: kaj.ID,
+		Kode:        "A",
+		Nama:        "Kevikepan Pusat",
+	})
+	s.UnprocessableEntity()
+
+	// Create two Kevikepan under KAJ and one under KAS.
+	vikep := "RD. Anton"
+	s.Request("/api/ref/kevikepan", http.MethodPost, domain.CreateKevikepanRequest{
+		KeuskupanID: kaj.ID,
+		Kode:        "  PUSAT ",
+		Nama:        " Kevikepan Jakarta Pusat ",
+		Vikep:       &vikep,
+	})
+	s.Created()
+	pusat := testutil.DecodeAs[domain.KevikepanResponse](s).Data
+	s.Equal("pusat", pusat.Kode)
+	s.Equal("Kevikepan Jakarta Pusat", pusat.Nama)
+	s.Require().NotNil(pusat.Vikep)
+	s.Equal("RD. Anton", *pusat.Vikep)
+
+	// Duplicate (keuskupanId, kode) -> 409 REF_CODE_CONFLICT.
+	s.Request("/api/ref/kevikepan", http.MethodPost, domain.CreateKevikepanRequest{
+		KeuskupanID: kaj.ID,
+		Kode:        "pusat",
+		Nama:        "Duplicate",
+	})
+	s.Conflict()
+	s.Equal("REF_CODE_CONFLICT", s.GetErrorResponse().Error.Code)
+
+	s.Request("/api/ref/kevikepan", http.MethodPost, domain.CreateKevikepanRequest{
+		KeuskupanID: kaj.ID,
+		Kode:        "barat",
+		Nama:        "Kevikepan Jakarta Barat",
+	})
+	s.Created()
+	barat := testutil.DecodeAs[domain.KevikepanResponse](s).Data
+
+	s.Request("/api/ref/kevikepan", http.MethodPost, domain.CreateKevikepanRequest{
+		KeuskupanID: kas.ID,
+		Kode:        "pusat",
+		Nama:        "Kevikepan Semarang",
+	})
+	s.Created()
+
+	// Search with keuskupanId filter + keyset pagination.
+	s.Request("/api/ref/kevikepan/search", http.MethodPost, domain.SearchKevikepanRequest{
+		Filter: &domain.KevikepanSearchFilter{KeuskupanID: &kaj.ID},
+		Limit:  1,
+	})
+	s.OK()
+	p1 := s.PagedResponse()
+	s.True(p1.Meta.HasMore)
+	s.Require().NotEmpty(p1.Meta.NextCursor)
+
+	s.Request("/api/ref/kevikepan/search", http.MethodPost, domain.SearchKevikepanRequest{
+		Filter: &domain.KevikepanSearchFilter{KeuskupanID: &kaj.ID},
+		Cursor: p1.Meta.NextCursor,
+		Limit:  1,
+	})
+	s.OK()
+	p2 := s.PagedResponse()
+	s.False(p2.Meta.HasMore)
+
+	// PATCH clear vikep with "".
+	empty := ""
+	s.Request("/api/ref/kevikepan/"+pusat.ID.String(), http.MethodPatch, domain.UpdateKevikepanRequest{
+		Vikep: &empty,
+	})
+	s.OK()
+	updated := testutil.DecodeAs[domain.KevikepanResponse](s).Data
+	s.Nil(updated.Vikep)
+
+	// PATCH kode collision -> 409 REF_CODE_CONFLICT.
+	dupKode := "barat"
+	s.Request("/api/ref/kevikepan/"+pusat.ID.String(), http.MethodPatch, domain.UpdateKevikepanRequest{
+		Kode: &dupKode,
+	})
+	s.Conflict()
+	s.Equal("REF_CODE_CONFLICT", s.GetErrorResponse().Error.Code)
+
+	// Delete Keuskupan blocked by Kevikepan -> 409 REF_IN_USE.
+	s.Request("/api/ref/keuskupan/"+kaj.ID.String(), http.MethodDelete, nil)
+	s.Conflict()
+	s.Equal("REF_IN_USE", s.GetErrorResponse().Error.Code)
+
+	// Delete Kevikepan -> 204, then reactivate on Create.
+	s.Request("/api/ref/kevikepan/"+barat.ID.String(), http.MethodDelete, nil)
+	s.NoContent()
+
+	s.Request("/api/ref/kevikepan/"+barat.ID.String(), http.MethodGet, nil)
+	s.NotFound()
+
+	s.Request("/api/ref/kevikepan", http.MethodPost, domain.CreateKevikepanRequest{
+		KeuskupanID: kaj.ID,
+		Kode:        "barat",
+		Nama:        "Kevikepan Barat Reactivated",
+	})
+	s.Created()
+	reactivated := testutil.DecodeAs[domain.KevikepanResponse](s).Data
+	s.Equal(barat.ID, reactivated.ID)
+	s.Equal("Kevikepan Barat Reactivated", reactivated.Nama)
+	s.True(reactivated.Active)
+
+	// Regular user can read but cannot write.
+	_, err = s.userFeature.EnsureUser(context.Background(), "viewer@paroki.org", "Viewer", "", "email", "viewer@paroki.org")
+	s.Require().NoError(err)
+	s.loginViaOTP("viewer@paroki.org")
+
+	s.Request("/api/ref/kevikepan/"+pusat.ID.String(), http.MethodGet, nil)
+	s.OK()
+	s.Request("/api/ref/kevikepan", http.MethodPost, domain.CreateKevikepanRequest{
+		KeuskupanID: kaj.ID,
+		Kode:        "timur",
+		Nama:        "Timur",
+	})
+	s.Forbidden()
+}
+
+func (s *RefFeatureSuite) TestSipilCRUD_KotaKecamatanKelurahanHierarchyAndFacade() {
+	s.loginViaOTP("admin@paroki.org")
+
+	// Create Kota.
+	s.Request("/api/ref/kota", http.MethodPost, domain.CreateKotaRequest{
+		Kode: "3171",
+		Nama: "Kota Jakarta Selatan",
+	})
+	s.Created()
+	jaksel := testutil.DecodeAs[domain.KotaResponse](s).Data
+
+	s.Request("/api/ref/kota", http.MethodPost, domain.CreateKotaRequest{
+		Kode: "3172",
+		Nama: "Kota Jakarta Timur",
+	})
+	s.Created()
+	jaktim := testutil.DecodeAs[domain.KotaResponse](s).Data
+
+	// Create Kecamatan under jaksel.
+	s.Request("/api/ref/kecamatan", http.MethodPost, domain.CreateKecamatanRequest{
+		KotaID: jaksel.ID,
+		Kode:   "317101",
+		Nama:   "Tebet",
+	})
+	s.Created()
+	tebet := testutil.DecodeAs[domain.KecamatanResponse](s).Data
+
+	// Create Kelurahan under tebet with kodePos validation.
+	tooLongPos := "12345678901"
+	s.Request("/api/ref/kelurahan", http.MethodPost, domain.CreateKelurahanRequest{
+		KecamatanID: tebet.ID,
+		Kode:        "31710101",
+		Nama:        "Tebet Barat",
+		KodePos:     &tooLongPos,
+	})
+	s.UnprocessableEntity()
+
+	kodePos := "12810"
+	s.Request("/api/ref/kelurahan", http.MethodPost, domain.CreateKelurahanRequest{
+		KecamatanID: tebet.ID,
+		Kode:        "31710101",
+		Nama:        "Tebet Barat",
+		KodePos:     &kodePos,
+	})
+	s.Created()
+	tebetBarat := testutil.DecodeAs[domain.KelurahanResponse](s).Data
+	s.Require().NotNil(tebetBarat.KodePos)
+	s.Equal("12810", *tebetBarat.KodePos)
+
+	// Clear kodePos via PATCH "".
+	empty := ""
+	s.Request("/api/ref/kelurahan/"+tebetBarat.ID.String(), http.MethodPatch, domain.UpdateKelurahanRequest{
+		KodePos: &empty,
+	})
+	s.OK()
+	cleared := testutil.DecodeAs[domain.KelurahanResponse](s).Data
+	s.Nil(cleared.KodePos)
+
+	// Facade hierarchy validation.
+	ctx := context.Background()
+	_, err := s.refFeature.ValidateKota(ctx, jaksel.ID)
+	s.Require().NoError(err)
+	_, err = s.refFeature.ValidateKecamatan(ctx, jaksel.ID, tebet.ID)
+	s.Require().NoError(err)
+	_, err = s.refFeature.ValidateKecamatan(ctx, jaktim.ID, tebet.ID)
+	s.Require().ErrorIs(err, domain.ErrKecamatanNotFound)
+	_, err = s.refFeature.ValidateKelurahan(ctx, tebet.ID, tebetBarat.ID)
+	s.Require().NoError(err)
+	_, err = s.refFeature.ValidateKelurahan(ctx, uuid.New(), tebetBarat.ID)
+	s.Require().ErrorIs(err, domain.ErrKelurahanNotFound)
+
+	// 409 REF_IN_USE guards.
+	s.Request("/api/ref/kota/"+jaksel.ID.String(), http.MethodDelete, nil)
+	s.Conflict()
+	s.Equal("REF_IN_USE", s.GetErrorResponse().Error.Code)
+
+	s.Request("/api/ref/kecamatan/"+tebet.ID.String(), http.MethodDelete, nil)
+	s.Conflict()
+	s.Equal("REF_IN_USE", s.GetErrorResponse().Error.Code)
+
+	// Delete bottom-up succeeds.
+	s.Request("/api/ref/kelurahan/"+tebetBarat.ID.String(), http.MethodDelete, nil)
+	s.NoContent()
+	s.Request("/api/ref/kecamatan/"+tebet.ID.String(), http.MethodDelete, nil)
+	s.NoContent()
+	s.Request("/api/ref/kota/"+jaksel.ID.String(), http.MethodDelete, nil)
+	s.NoContent()
+
+	// Reactivate Kota.
+	s.Request("/api/ref/kota", http.MethodPost, domain.CreateKotaRequest{
+		Kode: "3171",
+		Nama: "Jakarta Selatan Reactivated",
+	})
+	s.Created()
+	jakselReactivated := testutil.DecodeAs[domain.KotaResponse](s).Data
+	s.Equal(jaksel.ID, jakselReactivated.ID)
+
+	// Regular user can search/get sipil, cannot write.
+	_, err = s.userFeature.EnsureUser(context.Background(), "sipil-viewer@paroki.org", "Sipil Viewer", "", "email", "sipil-viewer@paroki.org")
+	s.Require().NoError(err)
+	s.loginViaOTP("sipil-viewer@paroki.org")
+
+	s.Request("/api/ref/kota/search", http.MethodPost, domain.SearchKotaRequest{Q: "Selatan"})
+	s.OK()
+	s.Request("/api/ref/kota", http.MethodPost, domain.CreateKotaRequest{
+		Kode: "3173",
+		Nama: "Jakarta Barat",
+	})
+	s.Forbidden()
+}

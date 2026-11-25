@@ -43,6 +43,12 @@ func TestRefMCPTools(t *testing.T) {
 
 	keuskupan, err := db.Keuskupan.Create().SetKode("kaj").SetNama("Keuskupan Agung Jakarta").Save(ctx)
 	require.NoError(t, err)
+	kevikepan1, err := db.Kevikepan.Create().
+		SetKeuskupanID(keuskupan.ID).
+		SetKode("pusat").
+		SetNama("Kevikepan Pusat").
+		Save(ctx)
+	require.NoError(t, err)
 	paroki1, err := db.Paroki.Create().SetKeuskupanID(keuskupan.ID).SetKode("p1").SetNama("Paroki Satu").Save(ctx)
 	require.NoError(t, err)
 	paroki2, err := db.Paroki.Create().SetKeuskupanID(keuskupan.ID).SetKode("p2").SetNama("Paroki Dua").Save(ctx)
@@ -139,4 +145,39 @@ func TestRefMCPTools(t *testing.T) {
 			require.Equal(t, paroki1.ID.String(), *l.ParokiID)
 		}
 	}
+
+	// ref_list_kevikepan: with explicit keuskupanId works without active tenant.
+	kevikepanRes, err := noTenantSess.CallTool(noTenantCtx, &mcp.CallToolParams{
+		Name:      "ref_list_kevikepan",
+		Arguments: map[string]any{"keuskupanId": keuskupan.ID.String()},
+	})
+	require.NoError(t, err)
+	require.False(t, kevikepanRes.IsError)
+	var gotKevikepan ref.RefListKevikepanOutput
+	require.NoError(t, json.Unmarshal([]byte(kevikepanRes.Content[0].(*mcp.TextContent).Text), &gotKevikepan))
+	require.Len(t, gotKevikepan.Kevikepan, 1)
+	require.Equal(t, kevikepan1.ID.String(), gotKevikepan.Kevikepan[0].ID)
+
+	// ref_list_kevikepan: invalid keuskupanId returns error.
+	badKevRes, err := noTenantSess.CallTool(noTenantCtx, &mcp.CallToolParams{
+		Name:      "ref_list_kevikepan",
+		Arguments: map[string]any{"keuskupanId": "not-a-uuid"},
+	})
+	require.NoError(t, err)
+	require.True(t, badKevRes.IsError)
+
+	// ref_list_kevikepan: without keuskupanId and without tenant requires active tenant.
+	noTenantKevRes, err := noTenantSess.CallTool(noTenantCtx, &mcp.CallToolParams{Name: "ref_list_kevikepan"})
+	require.NoError(t, err)
+	require.True(t, noTenantKevRes.IsError)
+	require.Contains(t, noTenantKevRes.Content[0].(*mcp.TextContent).Text, "An active paroki tenant is required.")
+
+	// ref_list_kevikepan: without keuskupanId resolves active paroki's keuskupanId.
+	tenantKevRes, err := sess.CallTool(tenantCtx, &mcp.CallToolParams{Name: "ref_list_kevikepan"})
+	require.NoError(t, err)
+	require.False(t, tenantKevRes.IsError)
+	var gotTenantKev ref.RefListKevikepanOutput
+	require.NoError(t, json.Unmarshal([]byte(tenantKevRes.Content[0].(*mcp.TextContent).Text), &gotTenantKev))
+	require.Len(t, gotTenantKev.Kevikepan, 1)
+	require.Equal(t, kevikepan1.ID.String(), gotTenantKev.Kevikepan[0].ID)
 }

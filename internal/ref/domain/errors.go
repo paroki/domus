@@ -5,6 +5,10 @@ import "github.com/paroki/domus/internal/platform/errx"
 // Sentinel errors for the ref feature.
 var (
 	ErrKeuskupanNotFound       = errx.NotFound("REF_KEUSKUPAN_NOT_FOUND", "Keuskupan not found.")
+	ErrKevikepanNotFound       = errx.NotFound("REF_KEVIKEPAN_NOT_FOUND", "Kevikepan not found.")
+	ErrKotaNotFound            = errx.NotFound("REF_KOTA_NOT_FOUND", "Kota not found.")
+	ErrKecamatanNotFound       = errx.NotFound("REF_KECAMATAN_NOT_FOUND", "Kecamatan not found.")
+	ErrKelurahanNotFound       = errx.NotFound("REF_KELURAHAN_NOT_FOUND", "Kelurahan not found.")
 	ErrParokiNotFound          = errx.NotFound("REF_PAROKI_NOT_FOUND", "Paroki not found.")
 	ErrParokiMemberNotFound    = errx.NotFound("REF_PAROKI_MEMBER_NOT_FOUND", "Paroki member not found.")
 	ErrWilayahNotFound         = errx.NotFound("REF_WILAYAH_NOT_FOUND", "Wilayah not found.")

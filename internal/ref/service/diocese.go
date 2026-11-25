@@ -165,7 +165,7 @@ func (s *Service) UpdateKeuskupan(ctx context.Context, id uuid.UUID, req domain.
 	return toKeuskupanResponse(updated), nil
 }
 
-// DeleteKeuskupan soft-deletes a Keuskupan if it has no active paroki.
+// DeleteKeuskupan soft-deletes a Keuskupan if it has no non-deleted kevikepan or paroki.
 func (s *Service) DeleteKeuskupan(ctx context.Context, id uuid.UUID) error {
 	if _, err := s.repo.FindKeuskupanByID(ctx, id); ent.IsNotFound(err) {
 		return domain.ErrKeuskupanNotFound
@@ -173,7 +173,14 @@ func (s *Service) DeleteKeuskupan(ctx context.Context, id uuid.UUID) error {
 		return err
 	}
 
-	inUse, err := s.repo.HasActiveParokiByKeuskupan(ctx, id)
+	inUse, err := s.repo.HasKevikepanByKeuskupan(ctx, id)
+	if err != nil {
+		return err
+	}
+	if inUse {
+		return domain.ErrInUse
+	}
+	inUse, err = s.repo.HasParokiByKeuskupan(ctx, id)
 	if err != nil {
 		return err
 	}

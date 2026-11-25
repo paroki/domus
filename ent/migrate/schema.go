@@ -232,6 +232,81 @@ var (
 			},
 		},
 	}
+	// KecamatanColumns holds the columns for the "kecamatan" table.
+	KecamatanColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "kode", Type: field.TypeString},
+		{Name: "nama", Type: field.TypeString},
+		{Name: "active", Type: field.TypeBool, Default: true},
+		{Name: "kota_id", Type: field.TypeUUID},
+	}
+	// KecamatanTable holds the schema information for the "kecamatan" table.
+	KecamatanTable = &schema.Table{
+		Name:       "kecamatan",
+		Columns:    KecamatanColumns,
+		PrimaryKey: []*schema.Column{KecamatanColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "kecamatan_kota_kecamatan",
+				Columns:    []*schema.Column{KecamatanColumns[7]},
+				RefColumns: []*schema.Column{KotaColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "kecamatan_kota_id_kode",
+				Unique:  true,
+				Columns: []*schema.Column{KecamatanColumns[7], KecamatanColumns[4]},
+			},
+			{
+				Name:    "kecamatan_kota_id_active",
+				Unique:  false,
+				Columns: []*schema.Column{KecamatanColumns[7], KecamatanColumns[6]},
+			},
+		},
+	}
+	// KelurahanColumns holds the columns for the "kelurahan" table.
+	KelurahanColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "kode", Type: field.TypeString},
+		{Name: "nama", Type: field.TypeString},
+		{Name: "kode_pos", Type: field.TypeString, Nullable: true},
+		{Name: "active", Type: field.TypeBool, Default: true},
+		{Name: "kecamatan_id", Type: field.TypeUUID},
+	}
+	// KelurahanTable holds the schema information for the "kelurahan" table.
+	KelurahanTable = &schema.Table{
+		Name:       "kelurahan",
+		Columns:    KelurahanColumns,
+		PrimaryKey: []*schema.Column{KelurahanColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "kelurahan_kecamatan_kelurahan",
+				Columns:    []*schema.Column{KelurahanColumns[8]},
+				RefColumns: []*schema.Column{KecamatanColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "kelurahan_kecamatan_id_kode",
+				Unique:  true,
+				Columns: []*schema.Column{KelurahanColumns[8], KelurahanColumns[4]},
+			},
+			{
+				Name:    "kelurahan_kecamatan_id_active",
+				Unique:  false,
+				Columns: []*schema.Column{KelurahanColumns[8], KelurahanColumns[7]},
+			},
+		},
+	}
 	// KeuskupanColumns holds the columns for the "keuskupan" table.
 	KeuskupanColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -262,6 +337,72 @@ var (
 				Name:    "keuskupan_active",
 				Unique:  false,
 				Columns: []*schema.Column{KeuskupanColumns[11]},
+			},
+		},
+	}
+	// KevikepanColumns holds the columns for the "kevikepan" table.
+	KevikepanColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "kode", Type: field.TypeString},
+		{Name: "nama", Type: field.TypeString},
+		{Name: "vikep", Type: field.TypeString, Nullable: true},
+		{Name: "active", Type: field.TypeBool, Default: true},
+		{Name: "keuskupan_id", Type: field.TypeUUID},
+	}
+	// KevikepanTable holds the schema information for the "kevikepan" table.
+	KevikepanTable = &schema.Table{
+		Name:       "kevikepan",
+		Columns:    KevikepanColumns,
+		PrimaryKey: []*schema.Column{KevikepanColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "kevikepan_keuskupan_kevikepan",
+				Columns:    []*schema.Column{KevikepanColumns[8]},
+				RefColumns: []*schema.Column{KeuskupanColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "kevikepan_keuskupan_id_kode",
+				Unique:  true,
+				Columns: []*schema.Column{KevikepanColumns[8], KevikepanColumns[4]},
+			},
+			{
+				Name:    "kevikepan_keuskupan_id_active",
+				Unique:  false,
+				Columns: []*schema.Column{KevikepanColumns[8], KevikepanColumns[7]},
+			},
+		},
+	}
+	// KotaColumns holds the columns for the "kota" table.
+	KotaColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "kode", Type: field.TypeString, Unique: true},
+		{Name: "nama", Type: field.TypeString},
+		{Name: "active", Type: field.TypeBool, Default: true},
+	}
+	// KotaTable holds the schema information for the "kota" table.
+	KotaTable = &schema.Table{
+		Name:       "kota",
+		Columns:    KotaColumns,
+		PrimaryKey: []*schema.Column{KotaColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "kota_kode",
+				Unique:  true,
+				Columns: []*schema.Column{KotaColumns[4]},
+			},
+			{
+				Name:    "kota_active",
+				Unique:  false,
+				Columns: []*schema.Column{KotaColumns[6]},
 			},
 		},
 	}
@@ -879,7 +1020,11 @@ var (
 		CasbinRulesTable,
 		EventsTable,
 		EventRsvpsTable,
+		KecamatanTable,
+		KelurahanTable,
 		KeuskupanTable,
+		KevikepanTable,
+		KotaTable,
 		LingkunganTable,
 		LookupsTable,
 		OrgInvitesTable,
@@ -916,8 +1061,23 @@ func init() {
 	EventRsvpsTable.Annotation = &entsql.Annotation{
 		Table: "event_rsvps",
 	}
+	KecamatanTable.ForeignKeys[0].RefTable = KotaTable
+	KecamatanTable.Annotation = &entsql.Annotation{
+		Table: "kecamatan",
+	}
+	KelurahanTable.ForeignKeys[0].RefTable = KecamatanTable
+	KelurahanTable.Annotation = &entsql.Annotation{
+		Table: "kelurahan",
+	}
 	KeuskupanTable.Annotation = &entsql.Annotation{
 		Table: "keuskupan",
+	}
+	KevikepanTable.ForeignKeys[0].RefTable = KeuskupanTable
+	KevikepanTable.Annotation = &entsql.Annotation{
+		Table: "kevikepan",
+	}
+	KotaTable.Annotation = &entsql.Annotation{
+		Table: "kota",
 	}
 	LingkunganTable.ForeignKeys[0].RefTable = ParokiTable
 	LingkunganTable.ForeignKeys[1].RefTable = WilayahTable

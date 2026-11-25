@@ -13,7 +13,11 @@ import (
 	"github.com/paroki/domus/ent/casbinrule"
 	"github.com/paroki/domus/ent/event"
 	"github.com/paroki/domus/ent/eventrsvp"
+	"github.com/paroki/domus/ent/kecamatan"
+	"github.com/paroki/domus/ent/kelurahan"
 	"github.com/paroki/domus/ent/keuskupan"
+	"github.com/paroki/domus/ent/kevikepan"
+	"github.com/paroki/domus/ent/kota"
 	"github.com/paroki/domus/ent/lingkungan"
 	"github.com/paroki/domus/ent/lookup"
 	"github.com/paroki/domus/ent/organization"
@@ -247,6 +251,72 @@ func init() {
 	eventrsvpDescID := eventrsvpMixinFields0[0].Descriptor()
 	// eventrsvp.DefaultID holds the default value on creation for the id field.
 	eventrsvp.DefaultID = eventrsvpDescID.Default.(func() uuid.UUID)
+	kecamatanMixin := schema.Kecamatan{}.Mixin()
+	kecamatanMixinFields0 := kecamatanMixin[0].Fields()
+	_ = kecamatanMixinFields0
+	kecamatanMixinFields1 := kecamatanMixin[1].Fields()
+	_ = kecamatanMixinFields1
+	kecamatanFields := schema.Kecamatan{}.Fields()
+	_ = kecamatanFields
+	// kecamatanDescCreatedAt is the schema descriptor for created_at field.
+	kecamatanDescCreatedAt := kecamatanMixinFields1[0].Descriptor()
+	// kecamatan.DefaultCreatedAt holds the default value on creation for the created_at field.
+	kecamatan.DefaultCreatedAt = kecamatanDescCreatedAt.Default.(func() time.Time)
+	// kecamatanDescUpdatedAt is the schema descriptor for updated_at field.
+	kecamatanDescUpdatedAt := kecamatanMixinFields1[1].Descriptor()
+	// kecamatan.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	kecamatan.DefaultUpdatedAt = kecamatanDescUpdatedAt.Default.(func() time.Time)
+	// kecamatan.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	kecamatan.UpdateDefaultUpdatedAt = kecamatanDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// kecamatanDescKode is the schema descriptor for kode field.
+	kecamatanDescKode := kecamatanFields[1].Descriptor()
+	// kecamatan.KodeValidator is a validator for the "kode" field. It is called by the builders before save.
+	kecamatan.KodeValidator = kecamatanDescKode.Validators[0].(func(string) error)
+	// kecamatanDescNama is the schema descriptor for nama field.
+	kecamatanDescNama := kecamatanFields[2].Descriptor()
+	// kecamatan.NamaValidator is a validator for the "nama" field. It is called by the builders before save.
+	kecamatan.NamaValidator = kecamatanDescNama.Validators[0].(func(string) error)
+	// kecamatanDescActive is the schema descriptor for active field.
+	kecamatanDescActive := kecamatanFields[3].Descriptor()
+	// kecamatan.DefaultActive holds the default value on creation for the active field.
+	kecamatan.DefaultActive = kecamatanDescActive.Default.(bool)
+	// kecamatanDescID is the schema descriptor for id field.
+	kecamatanDescID := kecamatanMixinFields0[0].Descriptor()
+	// kecamatan.DefaultID holds the default value on creation for the id field.
+	kecamatan.DefaultID = kecamatanDescID.Default.(func() uuid.UUID)
+	kelurahanMixin := schema.Kelurahan{}.Mixin()
+	kelurahanMixinFields0 := kelurahanMixin[0].Fields()
+	_ = kelurahanMixinFields0
+	kelurahanMixinFields1 := kelurahanMixin[1].Fields()
+	_ = kelurahanMixinFields1
+	kelurahanFields := schema.Kelurahan{}.Fields()
+	_ = kelurahanFields
+	// kelurahanDescCreatedAt is the schema descriptor for created_at field.
+	kelurahanDescCreatedAt := kelurahanMixinFields1[0].Descriptor()
+	// kelurahan.DefaultCreatedAt holds the default value on creation for the created_at field.
+	kelurahan.DefaultCreatedAt = kelurahanDescCreatedAt.Default.(func() time.Time)
+	// kelurahanDescUpdatedAt is the schema descriptor for updated_at field.
+	kelurahanDescUpdatedAt := kelurahanMixinFields1[1].Descriptor()
+	// kelurahan.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	kelurahan.DefaultUpdatedAt = kelurahanDescUpdatedAt.Default.(func() time.Time)
+	// kelurahan.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	kelurahan.UpdateDefaultUpdatedAt = kelurahanDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// kelurahanDescKode is the schema descriptor for kode field.
+	kelurahanDescKode := kelurahanFields[1].Descriptor()
+	// kelurahan.KodeValidator is a validator for the "kode" field. It is called by the builders before save.
+	kelurahan.KodeValidator = kelurahanDescKode.Validators[0].(func(string) error)
+	// kelurahanDescNama is the schema descriptor for nama field.
+	kelurahanDescNama := kelurahanFields[2].Descriptor()
+	// kelurahan.NamaValidator is a validator for the "nama" field. It is called by the builders before save.
+	kelurahan.NamaValidator = kelurahanDescNama.Validators[0].(func(string) error)
+	// kelurahanDescActive is the schema descriptor for active field.
+	kelurahanDescActive := kelurahanFields[4].Descriptor()
+	// kelurahan.DefaultActive holds the default value on creation for the active field.
+	kelurahan.DefaultActive = kelurahanDescActive.Default.(bool)
+	// kelurahanDescID is the schema descriptor for id field.
+	kelurahanDescID := kelurahanMixinFields0[0].Descriptor()
+	// kelurahan.DefaultID holds the default value on creation for the id field.
+	kelurahan.DefaultID = kelurahanDescID.Default.(func() uuid.UUID)
 	keuskupanMixin := schema.Keuskupan{}.Mixin()
 	keuskupanMixinFields0 := keuskupanMixin[0].Fields()
 	_ = keuskupanMixinFields0
@@ -280,6 +350,72 @@ func init() {
 	keuskupanDescID := keuskupanMixinFields0[0].Descriptor()
 	// keuskupan.DefaultID holds the default value on creation for the id field.
 	keuskupan.DefaultID = keuskupanDescID.Default.(func() uuid.UUID)
+	kevikepanMixin := schema.Kevikepan{}.Mixin()
+	kevikepanMixinFields0 := kevikepanMixin[0].Fields()
+	_ = kevikepanMixinFields0
+	kevikepanMixinFields1 := kevikepanMixin[1].Fields()
+	_ = kevikepanMixinFields1
+	kevikepanFields := schema.Kevikepan{}.Fields()
+	_ = kevikepanFields
+	// kevikepanDescCreatedAt is the schema descriptor for created_at field.
+	kevikepanDescCreatedAt := kevikepanMixinFields1[0].Descriptor()
+	// kevikepan.DefaultCreatedAt holds the default value on creation for the created_at field.
+	kevikepan.DefaultCreatedAt = kevikepanDescCreatedAt.Default.(func() time.Time)
+	// kevikepanDescUpdatedAt is the schema descriptor for updated_at field.
+	kevikepanDescUpdatedAt := kevikepanMixinFields1[1].Descriptor()
+	// kevikepan.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	kevikepan.DefaultUpdatedAt = kevikepanDescUpdatedAt.Default.(func() time.Time)
+	// kevikepan.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	kevikepan.UpdateDefaultUpdatedAt = kevikepanDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// kevikepanDescKode is the schema descriptor for kode field.
+	kevikepanDescKode := kevikepanFields[1].Descriptor()
+	// kevikepan.KodeValidator is a validator for the "kode" field. It is called by the builders before save.
+	kevikepan.KodeValidator = kevikepanDescKode.Validators[0].(func(string) error)
+	// kevikepanDescNama is the schema descriptor for nama field.
+	kevikepanDescNama := kevikepanFields[2].Descriptor()
+	// kevikepan.NamaValidator is a validator for the "nama" field. It is called by the builders before save.
+	kevikepan.NamaValidator = kevikepanDescNama.Validators[0].(func(string) error)
+	// kevikepanDescActive is the schema descriptor for active field.
+	kevikepanDescActive := kevikepanFields[4].Descriptor()
+	// kevikepan.DefaultActive holds the default value on creation for the active field.
+	kevikepan.DefaultActive = kevikepanDescActive.Default.(bool)
+	// kevikepanDescID is the schema descriptor for id field.
+	kevikepanDescID := kevikepanMixinFields0[0].Descriptor()
+	// kevikepan.DefaultID holds the default value on creation for the id field.
+	kevikepan.DefaultID = kevikepanDescID.Default.(func() uuid.UUID)
+	kotaMixin := schema.Kota{}.Mixin()
+	kotaMixinFields0 := kotaMixin[0].Fields()
+	_ = kotaMixinFields0
+	kotaMixinFields1 := kotaMixin[1].Fields()
+	_ = kotaMixinFields1
+	kotaFields := schema.Kota{}.Fields()
+	_ = kotaFields
+	// kotaDescCreatedAt is the schema descriptor for created_at field.
+	kotaDescCreatedAt := kotaMixinFields1[0].Descriptor()
+	// kota.DefaultCreatedAt holds the default value on creation for the created_at field.
+	kota.DefaultCreatedAt = kotaDescCreatedAt.Default.(func() time.Time)
+	// kotaDescUpdatedAt is the schema descriptor for updated_at field.
+	kotaDescUpdatedAt := kotaMixinFields1[1].Descriptor()
+	// kota.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	kota.DefaultUpdatedAt = kotaDescUpdatedAt.Default.(func() time.Time)
+	// kota.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	kota.UpdateDefaultUpdatedAt = kotaDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// kotaDescKode is the schema descriptor for kode field.
+	kotaDescKode := kotaFields[0].Descriptor()
+	// kota.KodeValidator is a validator for the "kode" field. It is called by the builders before save.
+	kota.KodeValidator = kotaDescKode.Validators[0].(func(string) error)
+	// kotaDescNama is the schema descriptor for nama field.
+	kotaDescNama := kotaFields[1].Descriptor()
+	// kota.NamaValidator is a validator for the "nama" field. It is called by the builders before save.
+	kota.NamaValidator = kotaDescNama.Validators[0].(func(string) error)
+	// kotaDescActive is the schema descriptor for active field.
+	kotaDescActive := kotaFields[2].Descriptor()
+	// kota.DefaultActive holds the default value on creation for the active field.
+	kota.DefaultActive = kotaDescActive.Default.(bool)
+	// kotaDescID is the schema descriptor for id field.
+	kotaDescID := kotaMixinFields0[0].Descriptor()
+	// kota.DefaultID holds the default value on creation for the id field.
+	kota.DefaultID = kotaDescID.Default.(func() uuid.UUID)
 	lingkunganMixin := schema.Lingkungan{}.Mixin()
 	lingkunganMixinFields0 := lingkunganMixin[0].Fields()
 	_ = lingkunganMixinFields0

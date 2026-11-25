@@ -50,9 +50,11 @@ type Keuskupan struct {
 type KeuskupanEdges struct {
 	// Paroki holds the value of the paroki edge.
 	Paroki []*Paroki `json:"paroki,omitempty"`
+	// Kevikepan holds the value of the kevikepan edge.
+	Kevikepan []*Kevikepan `json:"kevikepan,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // ParokiOrErr returns the Paroki value or an error if the edge
@@ -62,6 +64,15 @@ func (e KeuskupanEdges) ParokiOrErr() ([]*Paroki, error) {
 		return e.Paroki, nil
 	}
 	return nil, &NotLoadedError{edge: "paroki"}
+}
+
+// KevikepanOrErr returns the Kevikepan value or an error if the edge
+// was not loaded in eager-loading.
+func (e KeuskupanEdges) KevikepanOrErr() ([]*Kevikepan, error) {
+	if e.loadedTypes[1] {
+		return e.Kevikepan, nil
+	}
+	return nil, &NotLoadedError{edge: "kevikepan"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -186,6 +197,11 @@ func (_m *Keuskupan) Value(name string) (ent.Value, error) {
 // QueryParoki queries the "paroki" edge of the Keuskupan entity.
 func (_m *Keuskupan) QueryParoki() *ParokiQuery {
 	return NewKeuskupanClient(_m.config).QueryParoki(_m)
+}
+
+// QueryKevikepan queries the "kevikepan" edge of the Keuskupan entity.
+func (_m *Keuskupan) QueryKevikepan() *KevikepanQuery {
+	return NewKeuskupanClient(_m.config).QueryKevikepan(_m)
 }
 
 // Update returns a builder for updating this Keuskupan.
