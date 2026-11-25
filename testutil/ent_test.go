@@ -12,12 +12,12 @@ import (
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orginvite"
 	"github.com/paroki/domus/ent/orgmember"
-	"github.com/paroki/domus/ent/parishmember"
+	"github.com/paroki/domus/ent/parokimember"
 	"github.com/paroki/domus/ent/period"
 	"github.com/paroki/domus/ent/schema"
 	"github.com/paroki/domus/ent/setting"
 	"github.com/paroki/domus/ent/user"
-	"github.com/paroki/domus/ent/zone"
+	"github.com/paroki/domus/ent/wilayah"
 	"github.com/paroki/domus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -194,109 +194,109 @@ func TestRefSchemas_TerritoryHierarchyAndUniqueness(t *testing.T) {
 	ctx := context.Background()
 	client := testutil.NewEntClient(t)
 
-	diocese, err := client.Diocese.Create().
-		SetCode("KAJ").
-		SetName("Keuskupan Agung Jakarta").
+	keuskupan, err := client.Keuskupan.Create().
+		SetKode("KAJ").
+		SetNama("Keuskupan Agung Jakarta").
 		Save(ctx)
 	require.NoError(t, err)
-	assert.True(t, diocese.Active)
-	assert.Nil(t, diocese.DeletedAt)
+	assert.True(t, keuskupan.Active)
+	assert.Nil(t, keuskupan.DeletedAt)
 
-	p1, err := client.Parish.Create().
-		SetDiocese(diocese).
-		SetCode("P001").
-		SetName("Paroki Katedral").
+	p1, err := client.Paroki.Create().
+		SetKeuskupan(keuskupan).
+		SetKode("P001").
+		SetNama("Paroki Katedral").
 		Save(ctx)
 	require.NoError(t, err)
-	assert.Equal(t, diocese.ID, p1.DioceseID)
+	assert.Equal(t, keuskupan.ID, p1.KeuskupanID)
 
-	p2, err := client.Parish.Create().
-		SetDiocese(diocese).
-		SetCode("P002").
-		SetName("Paroki Blok B").
+	p2, err := client.Paroki.Create().
+		SetKeuskupan(keuskupan).
+		SetKode("P002").
+		SetNama("Paroki Blok B").
 		Save(ctx)
 	require.NoError(t, err)
 
-	z1, err := client.Zone.Create().
-		SetParish(p1).
-		SetCode("WIL-01").
-		SetName("Wilayah 1").
+	w1, err := client.Wilayah.Create().
+		SetParoki(p1).
+		SetKode("WIL-01").
+		SetNama("Wilayah 1").
 		Save(ctx)
 	require.NoError(t, err)
-	assert.Equal(t, zone.TypeZone, z1.Type)
+	assert.Equal(t, wilayah.JenisWilayah, w1.Jenis)
 
-	// Same (parish_id, code) on Zone fails; different parish succeeds.
-	_, err = client.Zone.Create().
-		SetParish(p1).
-		SetCode("WIL-01").
-		SetName("Wilayah Duplikat").
-		Save(ctx)
-	require.Error(t, err)
-	assert.True(t, ent.IsConstraintError(err))
-
-	z2, err := client.Zone.Create().
-		SetParish(p2).
-		SetType(zone.TypeStation).
-		SetCode("WIL-01").
-		SetName("Stasi 1").
-		Save(ctx)
-	require.NoError(t, err)
-	assert.Equal(t, zone.TypeStation, z2.Type)
-
-	w1, err := client.Ward.Create().
-		SetParish(p1).
-		SetZone(z1).
-		SetCode("LING-01").
-		SetName("Lingkungan 1").
-		Save(ctx)
-	require.NoError(t, err)
-	assert.Equal(t, p1.ID, w1.ParishID)
-	assert.Equal(t, z1.ID, w1.ZoneID)
-
-	// Same (parish_id, code) on Ward fails.
-	_, err = client.Ward.Create().
-		SetParish(p1).
-		SetZone(z1).
-		SetCode("LING-01").
-		SetName("Lingkungan Duplikat").
+	// Same (paroki_id, kode) on Wilayah fails; different paroki succeeds.
+	_, err = client.Wilayah.Create().
+		SetParoki(p1).
+		SetKode("WIL-01").
+		SetNama("Wilayah Duplikat").
 		Save(ctx)
 	require.Error(t, err)
 	assert.True(t, ent.IsConstraintError(err))
 
-	// Traverse Diocese -> Parishes -> Zones -> Wards.
-	parishes, err := diocese.QueryParishes().All(ctx)
+	w2, err := client.Wilayah.Create().
+		SetParoki(p2).
+		SetJenis(wilayah.JenisStasi).
+		SetKode("WIL-01").
+		SetNama("Stasi 1").
+		Save(ctx)
 	require.NoError(t, err)
-	assert.Len(t, parishes, 2)
+	assert.Equal(t, wilayah.JenisStasi, w2.Jenis)
 
-	wards, err := z1.QueryWards().All(ctx)
+	l1, err := client.Lingkungan.Create().
+		SetParoki(p1).
+		SetWilayah(w1).
+		SetKode("LING-01").
+		SetNama("Lingkungan 1").
+		Save(ctx)
 	require.NoError(t, err)
-	assert.Len(t, wards, 1)
-	assert.Equal(t, w1.ID, wards[0].ID)
+	assert.Equal(t, p1.ID, l1.ParokiID)
+	assert.Equal(t, w1.ID, l1.WilayahID)
+
+	// Same (paroki_id, kode) on Lingkungan fails.
+	_, err = client.Lingkungan.Create().
+		SetParoki(p1).
+		SetWilayah(w1).
+		SetKode("LING-01").
+		SetNama("Lingkungan Duplikat").
+		Save(ctx)
+	require.Error(t, err)
+	assert.True(t, ent.IsConstraintError(err))
+
+	// Traverse Keuskupan -> Paroki -> Wilayah -> Lingkungan.
+	parokis, err := keuskupan.QueryParoki().All(ctx)
+	require.NoError(t, err)
+	assert.Len(t, parokis, 2)
+
+	lingkungans, err := w1.QueryLingkungan().All(ctx)
+	require.NoError(t, err)
+	assert.Len(t, lingkungans, 1)
+	assert.Equal(t, l1.ID, lingkungans[0].ID)
 }
 
-func TestParishMemberSchema_UniqueParishUserAndNoSoftDelete(t *testing.T) {
+func TestParokiMemberSchema_UniqueParokiUserAndNoSoftDelete(t *testing.T) {
 	ctx := context.Background()
 	client := testutil.NewEntClient(t)
 
-	// ParishMember must NOT embed SoftDeleteMixin.
-	assert.Len(t, schema.ParishMember{}.Mixin(), 2)
+	// ParokiMember must NOT embed SoftDeleteMixin.
+	assert.Len(t, schema.ParokiMember{}.Mixin(), 2)
 
-	diocese, err := client.Diocese.Create().SetCode("KAS").SetName("Keuskupan Agung Semarang").Save(ctx)
+	keuskupan, err := client.Keuskupan.Create().SetKode("KAS").SetNama("Keuskupan Agung Semarang").Save(ctx)
 	require.NoError(t, err)
-	parish, err := client.Parish.Create().SetDiocese(diocese).SetCode("P-KAS-01").SetName("Paroki Kotabaru").Save(ctx)
+	paroki, err := client.Paroki.Create().SetKeuskupan(keuskupan).SetKode("P-KAS-01").SetNama("Paroki Kotabaru").Save(ctx)
 	require.NoError(t, err)
 
 	userID := schema.NewID()
-	member, err := client.ParishMember.Create().
-		SetParish(parish).
+	member, err := client.ParokiMember.Create().
+		SetParoki(paroki).
 		SetUserID(userID).
-		SetRole(parishmember.RoleAdmin).
+		SetRole(parokimember.RoleAdmin).
 		Save(ctx)
 	require.NoError(t, err)
-	assert.Equal(t, parishmember.RoleAdmin, member.Role)
+	assert.Equal(t, parokimember.RoleAdmin, member.Role)
 
-	_, err = client.ParishMember.Create().
-		SetParish(parish).
+	_, err = client.ParokiMember.Create().
+		SetParoki(paroki).
 		SetUserID(userID).
 		Save(ctx)
 	require.Error(t, err)
@@ -307,12 +307,12 @@ func TestLookupAndPeriodSchemas_GlobalVsTenantAndPersistence(t *testing.T) {
 	ctx := context.Background()
 	client := testutil.NewEntClient(t)
 
-	diocese, err := client.Diocese.Create().SetCode("KBD").SetName("Keuskupan Bandung").Save(ctx)
+	keuskupan, err := client.Keuskupan.Create().SetKode("KBD").SetNama("Keuskupan Bandung").Save(ctx)
 	require.NoError(t, err)
-	parish, err := client.Parish.Create().SetDiocese(diocese).SetCode("P-KBD-01").SetName("Paroki Katedral Bandung").Save(ctx)
+	paroki, err := client.Paroki.Create().SetKeuskupan(keuskupan).SetKode("P-KBD-01").SetNama("Paroki Katedral Bandung").Save(ctx)
 	require.NoError(t, err)
 
-	// Global lookup (parish_id = nil)
+	// Global lookup (paroki_id = nil)
 	globalLookup, err := client.Lookup.Create().
 		SetCategory("sacrament").
 		SetCode("BAPTISM").
@@ -320,23 +320,23 @@ func TestLookupAndPeriodSchemas_GlobalVsTenantAndPersistence(t *testing.T) {
 		SetSortOrder(1).
 		Save(ctx)
 	require.NoError(t, err)
-	assert.Nil(t, globalLookup.ParishID)
+	assert.Nil(t, globalLookup.ParokiID)
 
-	// Tenant lookup (parish_id = parish.ID)
+	// Tenant lookup (paroki_id = paroki.ID)
 	tenantLookup, err := client.Lookup.Create().
-		SetParish(parish).
+		SetParoki(paroki).
 		SetCategory("sacrament").
 		SetCode("BAPTISM").
 		SetLabel("Baptis Paroki").
 		SetSortOrder(1).
 		Save(ctx)
 	require.NoError(t, err)
-	require.NotNil(t, tenantLookup.ParishID)
-	assert.Equal(t, parish.ID, *tenantLookup.ParishID)
+	require.NotNil(t, tenantLookup.ParokiID)
+	assert.Equal(t, paroki.ID, *tenantLookup.ParokiID)
 
 	// Duplicate tenant lookup fails
 	_, err = client.Lookup.Create().
-		SetParish(parish).
+		SetParoki(paroki).
 		SetCategory("sacrament").
 		SetCode("BAPTISM").
 		SetLabel("Duplicate").
@@ -346,7 +346,7 @@ func TestLookupAndPeriodSchemas_GlobalVsTenantAndPersistence(t *testing.T) {
 
 	// Period persistence
 	p, err := client.Period.Create().
-		SetParish(parish).
+		SetParoki(paroki).
 		SetType(period.TypeLiturgical).
 		SetCode("LIT-2026").
 		SetName("Tahun Liturgi 2026").
@@ -369,13 +369,13 @@ func TestOrgSchemas_HierarchyUniquenessAndMixins(t *testing.T) {
 	assert.Len(t, schema.OrgMember{}.Mixin(), 2)
 	assert.Len(t, schema.OrgInvite{}.Mixin(), 2)
 
-	parishID := schema.NewID()
-	otherParishID := schema.NewID()
+	parokiID := schema.NewID()
+	otherParokiID := schema.NewID()
 	userID := schema.NewID()
 
 	// Organization parent/child self-edge.
 	parent, err := client.Organization.Create().
-		SetParishID(parishID).
+		SetParokiID(parokiID).
 		SetKind(organization.KindDpp).
 		SetCode("DPP-01").
 		SetName("Dewan Pastoral Paroki").
@@ -384,7 +384,7 @@ func TestOrgSchemas_HierarchyUniquenessAndMixins(t *testing.T) {
 	assert.True(t, parent.Active)
 
 	child, err := client.Organization.Create().
-		SetParishID(parishID).
+		SetParokiID(parokiID).
 		SetParent(parent).
 		SetKind(organization.KindSection).
 		SetCode("SEK-LIT").
@@ -399,9 +399,9 @@ func TestOrgSchemas_HierarchyUniquenessAndMixins(t *testing.T) {
 	require.Len(t, children, 1)
 	assert.Equal(t, child.ID, children[0].ID)
 
-	// (parish_id, code) uniqueness on Organization: same parish fails, different parish succeeds.
+	// (paroki_id, code) uniqueness on Organization: same paroki fails, different paroki succeeds.
 	_, err = client.Organization.Create().
-		SetParishID(parishID).
+		SetParokiID(parokiID).
 		SetCode("DPP-01").
 		SetName("Duplicate DPP").
 		Save(ctx)
@@ -409,15 +409,15 @@ func TestOrgSchemas_HierarchyUniquenessAndMixins(t *testing.T) {
 	assert.True(t, ent.IsConstraintError(err))
 
 	_, err = client.Organization.Create().
-		SetParishID(otherParishID).
+		SetParokiID(otherParokiID).
 		SetCode("DPP-01").
-		SetName("Other Parish DPP").
+		SetName("Other Paroki DPP").
 		Save(ctx)
 	require.NoError(t, err)
 
 	// OrgMember (org_id, user_id) uniqueness.
 	member, err := client.OrgMember.Create().
-		SetParishID(parishID).
+		SetParokiID(parokiID).
 		SetOrganization(parent).
 		SetUserID(userID).
 		SetRole(orgmember.RoleAdmin).
@@ -427,7 +427,7 @@ func TestOrgSchemas_HierarchyUniquenessAndMixins(t *testing.T) {
 	assert.Equal(t, orgmember.StatusActive, member.Status)
 
 	_, err = client.OrgMember.Create().
-		SetParishID(parishID).
+		SetParokiID(parokiID).
 		SetOrganization(parent).
 		SetUserID(userID).
 		Save(ctx)
@@ -436,7 +436,7 @@ func TestOrgSchemas_HierarchyUniquenessAndMixins(t *testing.T) {
 
 	// OrgInvite code uniqueness.
 	invite, err := client.OrgInvite.Create().
-		SetParishID(parishID).
+		SetParokiID(parokiID).
 		SetOrganization(parent).
 		SetCode("INV-ORG-01").
 		SetExpiresAt(time.Now().Add(24 * time.Hour)).
@@ -447,7 +447,7 @@ func TestOrgSchemas_HierarchyUniquenessAndMixins(t *testing.T) {
 	assert.Equal(t, orginvite.RoleMember, invite.Role)
 
 	_, err = client.OrgInvite.Create().
-		SetParishID(parishID).
+		SetParokiID(parokiID).
 		SetOrganization(child).
 		SetCode("INV-ORG-01").
 		SetExpiresAt(time.Now().Add(24 * time.Hour)).
@@ -461,7 +461,7 @@ func TestNewEntClient_EventAndRSVPSchemas(t *testing.T) {
 	ctx := context.Background()
 	client := testutil.NewEntClient(t)
 
-	parishID := schema.NewID()
+	parokiID := schema.NewID()
 	orgID := schema.NewID()
 	creatorID := schema.NewID()
 	userID := schema.NewID()
@@ -469,7 +469,7 @@ func TestNewEntClient_EventAndRSVPSchemas(t *testing.T) {
 	endAt := startAt.Add(2 * time.Hour)
 
 	ev, err := client.Event.Create().
-		SetParishID(parishID).
+		SetParokiID(parokiID).
 		SetOrgID(orgID).
 		SetCreatedBy(creatorID).
 		SetTitle("Rapat Pleno DPP").
@@ -486,7 +486,7 @@ func TestNewEntClient_EventAndRSVPSchemas(t *testing.T) {
 	assert.Equal(t, event.StatusScheduled, ev.Status)
 
 	rsvp, err := client.EventRSVP.Create().
-		SetParishID(parishID).
+		SetParokiID(parokiID).
 		SetEvent(ev).
 		SetUserID(userID).
 		SetStatus(eventrsvp.StatusGoing).
@@ -505,7 +505,7 @@ func TestNewEntClient_EventAndRSVPSchemas(t *testing.T) {
 
 	// (event_id, user_id) uniqueness.
 	_, err = client.EventRSVP.Create().
-		SetParishID(parishID).
+		SetParokiID(parokiID).
 		SetEvent(ev).
 		SetUserID(userID).
 		SetStatus(eventrsvp.StatusMaybe).
