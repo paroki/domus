@@ -73,6 +73,8 @@ Environment variables from values.config.
   value: {{ .Values.port | quote }}
 - name: APP_LOG_LEVEL
   value: {{ $c.logLevel | quote }}
+- name: APP_AUTO_MIGRATE
+  value: {{ $c.autoMigrate | quote }}
 {{- with .Values.config.user }}
 {{- with .superAdminEmail }}
 - name: USER_SUPER_ADMIN_EMAIL

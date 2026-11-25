@@ -25,6 +25,8 @@ port: 8080
 
 config:
   logLevel: info
+  # -- Enable Ent schema auto-migration on startup (APP_AUTO_MIGRATE). Set true only in pre-release/staging.
+  autoMigrate: false
   user:
     # -- Bootstrap super admin email (USER_SUPER_ADMIN_EMAIL).
     superAdminEmail: ""
