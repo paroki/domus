@@ -7,33 +7,33 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
-	"github.com/paroki/domus/ent/parishmember"
+	"github.com/paroki/domus/ent/parokimember"
 	"github.com/paroki/domus/internal/platform/authx"
 	"github.com/paroki/domus/internal/platform/authz"
 	"github.com/paroki/domus/internal/ref/domain"
 	"github.com/paroki/domus/internal/ref/repo"
 )
 
-// SearchParishes returns paginated non-deleted parishes.
-func (s *Service) SearchParishes(
+// SearchParoki returns paginated non-deleted paroki.
+func (s *Service) SearchParoki(
 	ctx context.Context,
 	p authx.Principal,
-	req domain.SearchParishesRequest,
+	req domain.SearchParokiRequest,
 	cursorCreatedAt *time.Time,
 	cursorID *uuid.UUID,
 	limit int,
-) ([]domain.ParishResponse, bool, error) {
-	var dioceseID, memberUserID *uuid.UUID
+) ([]domain.ParokiResponse, bool, error) {
+	var keuskupanID, memberUserID *uuid.UUID
 	var active *bool
 	if req.Filter != nil {
-		dioceseID = req.Filter.DioceseID
+		keuskupanID = req.Filter.KeuskupanID
 		active = req.Filter.Active
 		if req.Filter.MemberOnly != nil && *req.Filter.MemberOnly {
 			uid := p.UserID
 			memberUserID = &uid
 		}
 	}
-	rows, err := s.repo.SearchParishes(ctx, strings.TrimSpace(req.Q), dioceseID, active, memberUserID, cursorCreatedAt, cursorID, limit+1)
+	rows, err := s.repo.SearchParoki(ctx, strings.TrimSpace(req.Q), keuskupanID, active, memberUserID, cursorCreatedAt, cursorID, limit+1)
 	if err != nil {
 		return nil, false, err
 	}
@@ -41,89 +41,89 @@ func (s *Service) SearchParishes(
 	if hasMore {
 		rows = rows[:limit]
 	}
-	items := make([]domain.ParishResponse, 0, len(rows))
+	items := make([]domain.ParokiResponse, 0, len(rows))
 	for _, row := range rows {
-		items = append(items, toParishResponse(row))
+		items = append(items, toParokiResponse(row))
 	}
 	return items, hasMore, nil
 }
 
-// GetParish returns a single non-deleted Parish by ID.
-func (s *Service) GetParish(ctx context.Context, id uuid.UUID) (*domain.ParishResponse, error) {
-	row, err := s.repo.FindParishByID(ctx, id)
+// GetParoki returns a single non-deleted Paroki by ID.
+func (s *Service) GetParoki(ctx context.Context, id uuid.UUID) (*domain.ParokiResponse, error) {
+	row, err := s.repo.FindParokiByID(ctx, id)
 	if ent.IsNotFound(err) {
-		return nil, domain.ErrParishNotFound
+		return nil, domain.ErrParokiNotFound
 	}
 	if err != nil {
 		return nil, err
 	}
-	res := toParishResponse(row)
+	res := toParokiResponse(row)
 	return &res, nil
 }
 
-// GetParishByCode returns an active, non-deleted Parish by code.
-func (s *Service) GetParishByCode(ctx context.Context, code string) (*domain.ParishResponse, error) {
-	row, err := s.repo.FindParishByCode(ctx, code)
+// GetParokiByCode returns an active, non-deleted Paroki by kode.
+func (s *Service) GetParokiByCode(ctx context.Context, kode string) (*domain.ParokiResponse, error) {
+	row, err := s.repo.FindParokiByKode(ctx, kode)
 	if ent.IsNotFound(err) {
-		return nil, domain.ErrParishNotFound
+		return nil, domain.ErrParokiNotFound
 	}
 	if err != nil {
 		return nil, err
 	}
-	res := toParishResponse(row)
+	res := toParokiResponse(row)
 	return &res, nil
 }
 
-// CreateParish creates a Parish or reactivates a soft-deleted one with the same code.
-func (s *Service) CreateParish(ctx context.Context, req domain.CreateParishRequest) (domain.ParishResponse, error) {
-	code, err := normalizeCode(req.Code)
+// CreateParoki creates a Paroki or reactivates a soft-deleted one with the same kode.
+func (s *Service) CreateParoki(ctx context.Context, req domain.CreateParokiRequest) (domain.ParokiResponse, error) {
+	kode, err := normalizeKode(req.Kode)
 	if err != nil {
-		return domain.ParishResponse{}, err
+		return domain.ParokiResponse{}, err
 	}
-	name := strings.TrimSpace(req.Name)
-	if name == "" {
-		return domain.ParishResponse{}, domain.ValidationError("name", "REQUIRED", "Name cannot be empty.")
+	nama := strings.TrimSpace(req.Nama)
+	if nama == "" {
+		return domain.ParokiResponse{}, domain.ValidationError("nama", "REQUIRED", "Nama cannot be empty.")
 	}
-	phone, err := normalizeOptPhone(req.Phone)
+	telepon, err := normalizeOptPhone(req.Telepon)
 	if err != nil {
-		return domain.ParishResponse{}, err
+		return domain.ParokiResponse{}, err
 	}
-	if _, err := s.repo.FindDioceseByID(ctx, req.DioceseID); ent.IsNotFound(err) {
-		return domain.ParishResponse{}, domain.ErrDioceseNotFound
+	if _, err := s.repo.FindKeuskupanByID(ctx, req.KeuskupanID); ent.IsNotFound(err) {
+		return domain.ParokiResponse{}, domain.ErrKeuskupanNotFound
 	} else if err != nil {
-		return domain.ParishResponse{}, err
+		return domain.ParokiResponse{}, err
 	}
 
 	active := true
 	if req.Active != nil {
 		active = *req.Active
 	}
-	in := repo.ParishInput{
-		DioceseID:   req.DioceseID,
-		Code:        code,
-		Name:        name,
-		PatronSaint: trimOptString(req.PatronSaint),
-		PastorName:  trimOptString(req.PastorName),
-		Address:     trimOptString(req.Address),
-		Phone:       phone,
+	in := repo.ParokiInput{
+		KeuskupanID: req.KeuskupanID,
+		Kode:        kode,
+		Nama:        nama,
+		Pelindung:   trimOptString(req.Pelindung),
+		Pastor:      trimOptString(req.Pastor),
+		Alamat:      trimOptString(req.Alamat),
+		Telepon:     telepon,
 		Email:       normalizeOptEmail(req.Email),
 		Website:     trimOptString(req.Website),
 		LogoURL:     trimOptString(req.LogoURL),
-		Letterhead:  trimOptString(req.Letterhead),
+		KopSurat:    trimOptString(req.KopSurat),
 		Active:      active,
 	}
 
-	var out *ent.Parish
+	var out *ent.Paroki
 	err = s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
-		existing, findErr := txRepo.FindParishByCodeIncludeDeleted(ctx, code)
+		existing, findErr := txRepo.FindParokiByKodeIncludeDeleted(ctx, kode)
 		switch {
 		case findErr == nil && existing.DeletedAt == nil:
 			return domain.ErrCodeConflict
 		case findErr == nil && existing.DeletedAt != nil:
-			out, findErr = txRepo.ReactivateParish(ctx, existing.ID, in)
+			out, findErr = txRepo.ReactivateParoki(ctx, existing.ID, in)
 			return findErr
 		case ent.IsNotFound(findErr):
-			out, findErr = txRepo.CreateParish(ctx, in)
+			out, findErr = txRepo.CreateParoki(ctx, in)
 			if findErr != nil && ent.IsConstraintError(findErr) {
 				return domain.ErrCodeConflict
 			}
@@ -133,184 +133,184 @@ func (s *Service) CreateParish(ctx context.Context, req domain.CreateParishReque
 		}
 	})
 	if err != nil {
-		return domain.ParishResponse{}, err
+		return domain.ParokiResponse{}, err
 	}
-	return toParishResponse(out), nil
+	return toParokiResponse(out), nil
 }
 
-// UpdateParish updates a Parish; super-admins may edit all fields, while parish admins may edit profile fields only.
-func (s *Service) UpdateParish(ctx context.Context, p authx.Principal, id uuid.UUID, req domain.UpdateParishRequest) (domain.ParishResponse, error) {
-	isSuper, err := s.requireParishAdminOrSuperAdmin(p, id)
+// UpdateParoki updates a Paroki; super-admins may edit all fields, while paroki admins may edit profile fields only.
+func (s *Service) UpdateParoki(ctx context.Context, p authx.Principal, id uuid.UUID, req domain.UpdateParokiRequest) (domain.ParokiResponse, error) {
+	isSuper, err := s.requireParokiAdminOrSuperAdmin(p, id)
 	if err != nil {
-		return domain.ParishResponse{}, err
+		return domain.ParokiResponse{}, err
 	}
-	if !isSuper && (req.Code != nil || req.DioceseID != nil || req.Active != nil) {
-		return domain.ParishResponse{}, domain.ErrRefForbidden
+	if !isSuper && (req.Kode != nil || req.KeuskupanID != nil || req.Active != nil) {
+		return domain.ParokiResponse{}, domain.ErrRefForbidden
 	}
 
-	existing, err := s.repo.FindParishByID(ctx, id)
+	existing, err := s.repo.FindParokiByID(ctx, id)
 	if ent.IsNotFound(err) {
-		return domain.ParishResponse{}, domain.ErrParishNotFound
+		return domain.ParokiResponse{}, domain.ErrParokiNotFound
 	}
 	if err != nil {
-		return domain.ParishResponse{}, err
+		return domain.ParokiResponse{}, err
 	}
 
-	if req.DioceseID != nil {
-		if _, err := s.repo.FindDioceseByID(ctx, *req.DioceseID); ent.IsNotFound(err) {
-			return domain.ParishResponse{}, domain.ErrDioceseNotFound
+	if req.KeuskupanID != nil {
+		if _, err := s.repo.FindKeuskupanByID(ctx, *req.KeuskupanID); ent.IsNotFound(err) {
+			return domain.ParokiResponse{}, domain.ErrKeuskupanNotFound
 		} else if err != nil {
-			return domain.ParishResponse{}, err
+			return domain.ParokiResponse{}, err
 		}
 	}
 
-	var codePtr *string
-	if req.Code != nil {
-		normCode, err := normalizeCode(*req.Code)
+	var kodePtr *string
+	if req.Kode != nil {
+		normKode, err := normalizeKode(*req.Kode)
 		if err != nil {
-			return domain.ParishResponse{}, err
+			return domain.ParokiResponse{}, err
 		}
-		if normCode != existing.Code {
-			if _, findErr := s.repo.FindParishByCodeIncludeDeleted(ctx, normCode); findErr == nil {
-				return domain.ParishResponse{}, domain.ErrCodeConflict
+		if normKode != existing.Kode {
+			if _, findErr := s.repo.FindParokiByKodeIncludeDeleted(ctx, normKode); findErr == nil {
+				return domain.ParokiResponse{}, domain.ErrCodeConflict
 			} else if !ent.IsNotFound(findErr) {
-				return domain.ParishResponse{}, findErr
+				return domain.ParokiResponse{}, findErr
 			}
 		}
-		codePtr = &normCode
+		kodePtr = &normKode
 	}
 
-	var namePtr *string
-	if req.Name != nil {
-		trimmed := strings.TrimSpace(*req.Name)
+	var namaPtr *string
+	if req.Nama != nil {
+		trimmed := strings.TrimSpace(*req.Nama)
 		if trimmed == "" {
-			return domain.ParishResponse{}, domain.ValidationError("name", "REQUIRED", "Name cannot be empty.")
+			return domain.ParokiResponse{}, domain.ValidationError("nama", "REQUIRED", "Nama cannot be empty.")
 		}
-		namePtr = &trimmed
+		namaPtr = &trimmed
 	}
 
-	phonePtr, err := normalizeOptPhone(req.Phone)
+	teleponPtr, err := normalizeOptPhone(req.Telepon)
 	if err != nil {
-		return domain.ParishResponse{}, err
+		return domain.ParokiResponse{}, err
 	}
 
-	updated, err := s.repo.UpdateParish(
+	updated, err := s.repo.UpdateParoki(
 		ctx,
 		id,
-		req.DioceseID,
-		codePtr,
-		namePtr,
-		trimOptString(req.PatronSaint),
-		trimOptString(req.PastorName),
-		trimOptString(req.Address),
-		phonePtr,
+		req.KeuskupanID,
+		kodePtr,
+		namaPtr,
+		trimOptString(req.Pelindung),
+		trimOptString(req.Pastor),
+		trimOptString(req.Alamat),
+		teleponPtr,
 		normalizeOptEmail(req.Email),
 		trimOptString(req.Website),
 		trimOptString(req.LogoURL),
-		trimOptString(req.Letterhead),
+		trimOptString(req.KopSurat),
 		req.Active,
 	)
 	if err != nil {
 		if ent.IsConstraintError(err) {
-			return domain.ParishResponse{}, domain.ErrCodeConflict
+			return domain.ParokiResponse{}, domain.ErrCodeConflict
 		}
-		return domain.ParishResponse{}, err
+		return domain.ParokiResponse{}, err
 	}
-	return toParishResponse(updated), nil
+	return toParokiResponse(updated), nil
 }
 
-// UpdateCurrentParishProfile updates profile fields of the caller's active Parish (requires ref:parish-admin in parish).
-func (s *Service) UpdateCurrentParishProfile(ctx context.Context, p authx.Principal, req domain.UpdateParishProfileRequest) (domain.ParishResponse, error) {
-	isAdmin, err := s.isParishAdmin(p, p.ParishID)
+// UpdateCurrentParokiProfile updates profile fields of the caller's active Paroki (requires ref:paroki-admin in paroki).
+func (s *Service) UpdateCurrentParokiProfile(ctx context.Context, p authx.Principal, req domain.UpdateParokiProfileRequest) (domain.ParokiResponse, error) {
+	isAdmin, err := s.isParokiAdmin(p, p.ParokiID)
 	if err != nil {
-		return domain.ParishResponse{}, err
+		return domain.ParokiResponse{}, err
 	}
 	if !isAdmin {
-		return domain.ParishResponse{}, domain.ErrRefForbidden
+		return domain.ParokiResponse{}, domain.ErrRefForbidden
 	}
 
-	if _, err := s.repo.FindParishByID(ctx, p.ParishID); ent.IsNotFound(err) {
-		return domain.ParishResponse{}, domain.ErrParishNotFound
+	if _, err := s.repo.FindParokiByID(ctx, p.ParokiID); ent.IsNotFound(err) {
+		return domain.ParokiResponse{}, domain.ErrParokiNotFound
 	} else if err != nil {
-		return domain.ParishResponse{}, err
+		return domain.ParokiResponse{}, err
 	}
 
-	var namePtr *string
-	if req.Name != nil {
-		trimmed := strings.TrimSpace(*req.Name)
+	var namaPtr *string
+	if req.Nama != nil {
+		trimmed := strings.TrimSpace(*req.Nama)
 		if trimmed == "" {
-			return domain.ParishResponse{}, domain.ValidationError("name", "REQUIRED", "Name cannot be empty.")
+			return domain.ParokiResponse{}, domain.ValidationError("nama", "REQUIRED", "Nama cannot be empty.")
 		}
-		namePtr = &trimmed
+		namaPtr = &trimmed
 	}
-	phonePtr, err := normalizeOptPhone(req.Phone)
+	phonePtr, err := normalizeOptPhone(req.Telepon)
 	if err != nil {
-		return domain.ParishResponse{}, err
+		return domain.ParokiResponse{}, err
 	}
 
-	updated, err := s.repo.UpdateParish(
+	updated, err := s.repo.UpdateParoki(
 		ctx,
-		p.ParishID,
+		p.ParokiID,
 		nil,
 		nil,
-		namePtr,
-		trimOptString(req.PatronSaint),
-		trimOptString(req.PastorName),
-		trimOptString(req.Address),
+		namaPtr,
+		trimOptString(req.Pelindung),
+		trimOptString(req.Pastor),
+		trimOptString(req.Alamat),
 		phonePtr,
 		normalizeOptEmail(req.Email),
 		trimOptString(req.Website),
 		trimOptString(req.LogoURL),
-		trimOptString(req.Letterhead),
+		trimOptString(req.KopSurat),
 		nil,
 	)
 	if err != nil {
-		return domain.ParishResponse{}, err
+		return domain.ParokiResponse{}, err
 	}
-	return toParishResponse(updated), nil
+	return toParokiResponse(updated), nil
 }
 
-// DeleteParish soft-deletes a Parish if it has no non-deleted child master-data rows.
-func (s *Service) DeleteParish(ctx context.Context, id uuid.UUID) error {
-	if _, err := s.repo.FindParishByID(ctx, id); ent.IsNotFound(err) {
-		return domain.ErrParishNotFound
+// DeleteParoki soft-deletes a Paroki if it has no non-deleted child master-data rows.
+func (s *Service) DeleteParoki(ctx context.Context, id uuid.UUID) error {
+	if _, err := s.repo.FindParokiByID(ctx, id); ent.IsNotFound(err) {
+		return domain.ErrParokiNotFound
 	} else if err != nil {
 		return err
 	}
 
-	inUse, err := s.repo.HasParishChildren(ctx, id)
+	inUse, err := s.repo.HasParokiChildren(ctx, id)
 	if err != nil {
 		return err
 	}
 	if inUse {
 		return domain.ErrInUse
 	}
-	return s.repo.SoftDeleteParish(ctx, id, time.Now().UTC())
+	return s.repo.SoftDeleteParoki(ctx, id, time.Now().UTC())
 }
 
-// SearchParishMembers returns paginated members of parishID joined with user info.
-func (s *Service) SearchParishMembers(
+// SearchParokiMembers returns paginated members of parokiID joined with user info.
+func (s *Service) SearchParokiMembers(
 	ctx context.Context,
 	p authx.Principal,
-	parishID uuid.UUID,
-	req domain.SearchParishMembersRequest,
+	parokiID uuid.UUID,
+	req domain.SearchParokiMembersRequest,
 	cursorCreatedAt *time.Time,
 	cursorID *uuid.UUID,
 	limit int,
-) ([]domain.ParishMemberResponse, bool, error) {
-	if _, err := s.repo.FindParishByID(ctx, parishID); ent.IsNotFound(err) {
-		return nil, false, domain.ErrParishNotFound
+) ([]domain.ParokiMemberResponse, bool, error) {
+	if _, err := s.repo.FindParokiByID(ctx, parokiID); ent.IsNotFound(err) {
+		return nil, false, domain.ErrParokiNotFound
 	} else if err != nil {
 		return nil, false, err
 	}
 
 	if !s.isSuperAdmin(p) {
-		isAdmin, err := s.isParishAdmin(p, parishID)
+		isAdmin, err := s.isParokiAdmin(p, parokiID)
 		if err != nil {
 			return nil, false, err
 		}
 		if !isAdmin {
-			if _, err := s.repo.FindParishMember(ctx, parishID, p.UserID); ent.IsNotFound(err) {
+			if _, err := s.repo.FindParokiMember(ctx, parokiID, p.UserID); ent.IsNotFound(err) {
 				return nil, false, domain.ErrRefForbidden
 			} else if err != nil {
 				return nil, false, err
@@ -322,7 +322,7 @@ func (s *Service) SearchParishMembers(
 	if req.Filter != nil {
 		role = req.Filter.Role
 	}
-	rows, usersMap, err := s.repo.SearchParishMembers(ctx, parishID, strings.TrimSpace(req.Q), role, cursorCreatedAt, cursorID, limit+1)
+	rows, usersMap, err := s.repo.SearchParokiMembers(ctx, parokiID, strings.TrimSpace(req.Q), role, cursorCreatedAt, cursorID, limit+1)
 	if err != nil {
 		return nil, false, err
 	}
@@ -330,54 +330,54 @@ func (s *Service) SearchParishMembers(
 	if hasMore {
 		rows = rows[:limit]
 	}
-	items := make([]domain.ParishMemberResponse, 0, len(rows))
+	items := make([]domain.ParokiMemberResponse, 0, len(rows))
 	for _, row := range rows {
-		items = append(items, toParishMemberResponse(row, usersMap[row.UserID]))
+		items = append(items, toParokiMemberResponse(row, usersMap[row.UserID]))
 	}
 	return items, hasMore, nil
 }
 
-// AddParishMember adds an existing or invited user to parishID and syncs Casbin roles.
-func (s *Service) AddParishMember(
+// AddParokiMember adds an existing or invited user to parokiID and syncs Casbin roles.
+func (s *Service) AddParokiMember(
 	ctx context.Context,
 	p authx.Principal,
-	parishID uuid.UUID,
-	req domain.AddParishMemberRequest,
-) (domain.ParishMemberResponse, error) {
-	if _, err := s.requireParishAdminOrSuperAdmin(p, parishID); err != nil {
-		return domain.ParishMemberResponse{}, err
+	parokiID uuid.UUID,
+	req domain.AddParokiMemberRequest,
+) (domain.ParokiMemberResponse, error) {
+	if _, err := s.requireParokiAdminOrSuperAdmin(p, parokiID); err != nil {
+		return domain.ParokiMemberResponse{}, err
 	}
-	if _, err := s.repo.FindParishByID(ctx, parishID); ent.IsNotFound(err) {
-		return domain.ParishMemberResponse{}, domain.ErrParishNotFound
+	if _, err := s.repo.FindParokiByID(ctx, parokiID); ent.IsNotFound(err) {
+		return domain.ParokiMemberResponse{}, domain.ErrParokiNotFound
 	} else if err != nil {
-		return domain.ParishMemberResponse{}, err
+		return domain.ParokiMemberResponse{}, err
 	}
 
 	role := req.Role
 	if role == "" {
-		role = string(parishmember.RoleMember)
+		role = string(parokimember.RoleMember)
 	}
 
 	var targetUserID uuid.UUID
 	if req.UserID != nil && *req.UserID != uuid.Nil {
 		u, err := s.repo.FindUserByID(ctx, *req.UserID)
 		if ent.IsNotFound(err) {
-			return domain.ParishMemberResponse{}, domain.ValidationError("userId", "NOT_FOUND", "User not found.")
+			return domain.ParokiMemberResponse{}, domain.ValidationError("userId", "NOT_FOUND", "User not found.")
 		}
 		if err != nil {
-			return domain.ParishMemberResponse{}, err
+			return domain.ParokiMemberResponse{}, err
 		}
 		targetUserID = u.ID
 	} else {
 		email := normalizeEmail(req.Email)
 		if email == "" {
-			return domain.ParishMemberResponse{}, domain.ValidationError("email", "REQUIRED", "Email or userId is required.")
+			return domain.ParokiMemberResponse{}, domain.ValidationError("email", "REQUIRED", "Email or userId is required.")
 		}
 		existingUser, err := s.repo.FindUserByEmail(ctx, email)
 		if err == nil {
 			targetUserID = existingUser.ID
 		} else if !ent.IsNotFound(err) {
-			return domain.ParishMemberResponse{}, err
+			return domain.ParokiMemberResponse{}, err
 		} else {
 			name := strings.TrimSpace(req.Name)
 			if name == "" {
@@ -387,83 +387,83 @@ func (s *Service) AddParishMember(
 			if req.Phone != nil {
 				norm, err := normalizePhone(*req.Phone)
 				if err != nil {
-					return domain.ParishMemberResponse{}, err
+					return domain.ParokiMemberResponse{}, err
 				}
 				phoneStr = norm
 			}
 			uid, err := s.users.EnsureUser(ctx, email, name, phoneStr, "email", email)
 			if err != nil {
-				return domain.ParishMemberResponse{}, err
+				return domain.ParokiMemberResponse{}, err
 			}
 			targetUserID = uid
 		}
 	}
 
-	var created *ent.ParishMember
+	var created *ent.ParokiMember
 	err := s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
-		if _, err := txRepo.FindParishMember(ctx, parishID, targetUserID); err == nil {
-			return domain.ErrParishMemberConflict
+		if _, err := txRepo.FindParokiMember(ctx, parokiID, targetUserID); err == nil {
+			return domain.ErrParokiMemberConflict
 		} else if !ent.IsNotFound(err) {
 			return err
 		}
-		pm, err := txRepo.CreateParishMember(ctx, parishID, targetUserID, parishmember.Role(role))
+		pm, err := txRepo.CreateParokiMember(ctx, parokiID, targetUserID, parokimember.Role(role))
 		if err != nil {
 			if ent.IsConstraintError(err) {
-				return domain.ErrParishMemberConflict
+				return domain.ErrParokiMemberConflict
 			}
 			return err
 		}
-		if err := txRepo.SetUserDefaultParishIfNil(ctx, targetUserID, parishID); err != nil {
+		if err := txRepo.SetUserDefaultParokiIfNil(ctx, targetUserID, parokiID); err != nil {
 			return err
 		}
 		created = pm
 		return nil
 	})
 	if err != nil {
-		return domain.ParishMemberResponse{}, err
+		return domain.ParokiMemberResponse{}, err
 	}
 
-	if role == string(parishmember.RoleAdmin) && s.enforcer != nil {
-		if err := s.enforcer.AssignRole(ctx, authz.UserSubject(targetUserID), roleParishAdmin, authz.ParishDomain(parishID)); err != nil {
-			return domain.ParishMemberResponse{}, err
+	if role == string(parokimember.RoleAdmin) && s.enforcer != nil {
+		if err := s.enforcer.AssignRole(ctx, authz.UserSubject(targetUserID), roleParokiAdmin, authz.ParokiDomain(parokiID)); err != nil {
+			return domain.ParokiMemberResponse{}, err
 		}
 	}
 
 	u, err := s.repo.FindUserByID(ctx, targetUserID)
 	if err != nil && !ent.IsNotFound(err) {
-		return domain.ParishMemberResponse{}, err
+		return domain.ParokiMemberResponse{}, err
 	}
-	return toParishMemberResponse(created, u), nil
+	return toParokiMemberResponse(created, u), nil
 }
 
-// UpdateParishMember updates a member's role and syncs Casbin while guarding the last parish admin.
-func (s *Service) UpdateParishMember(
+// UpdateParokiMember updates a member's role and syncs Casbin while guarding the last paroki admin.
+func (s *Service) UpdateParokiMember(
 	ctx context.Context,
 	p authx.Principal,
-	parishID, targetUserID uuid.UUID,
-	req domain.UpdateParishMemberRequest,
-) (domain.ParishMemberResponse, error) {
-	if _, err := s.requireParishAdminOrSuperAdmin(p, parishID); err != nil {
-		return domain.ParishMemberResponse{}, err
+	parokiID, targetUserID uuid.UUID,
+	req domain.UpdateParokiMemberRequest,
+) (domain.ParokiMemberResponse, error) {
+	if _, err := s.requireParokiAdminOrSuperAdmin(p, parokiID); err != nil {
+		return domain.ParokiMemberResponse{}, err
 	}
 
-	var updated *ent.ParishMember
+	var updated *ent.ParokiMember
 	err := s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
-		existing, err := txRepo.FindParishMember(ctx, parishID, targetUserID)
+		existing, err := txRepo.FindParokiMember(ctx, parokiID, targetUserID)
 		if ent.IsNotFound(err) {
-			return domain.ErrParishMemberNotFound
+			return domain.ErrParokiMemberNotFound
 		}
 		if err != nil {
 			return err
 		}
 
-		if existing.Role == parishmember.RoleAdmin && req.Role == string(parishmember.RoleMember) {
-			if err := guardNotLastParishAdmin(ctx, txRepo, parishID); err != nil {
+		if existing.Role == parokimember.RoleAdmin && req.Role == string(parokimember.RoleMember) {
+			if err := guardNotLastParokiAdmin(ctx, txRepo, parokiID); err != nil {
 				return err
 			}
 		}
 
-		u, err := txRepo.UpdateParishMemberRole(ctx, existing.ID, parishmember.Role(req.Role))
+		u, err := txRepo.UpdateParokiMemberRole(ctx, existing.ID, parokimember.Role(req.Role))
 		if err != nil {
 			return err
 		}
@@ -471,99 +471,99 @@ func (s *Service) UpdateParishMember(
 		return nil
 	})
 	if err != nil {
-		return domain.ParishMemberResponse{}, err
+		return domain.ParokiMemberResponse{}, err
 	}
 
 	if s.enforcer != nil {
 		sub := authz.UserSubject(targetUserID)
-		dom := authz.ParishDomain(parishID)
-		if req.Role == string(parishmember.RoleAdmin) {
-			if err := s.enforcer.AssignRole(ctx, sub, roleParishAdmin, dom); err != nil {
-				return domain.ParishMemberResponse{}, err
+		dom := authz.ParokiDomain(parokiID)
+		if req.Role == string(parokimember.RoleAdmin) {
+			if err := s.enforcer.AssignRole(ctx, sub, roleParokiAdmin, dom); err != nil {
+				return domain.ParokiMemberResponse{}, err
 			}
 		} else {
-			if err := s.enforcer.RevokeRole(ctx, sub, roleParishAdmin, dom); err != nil {
-				return domain.ParishMemberResponse{}, err
+			if err := s.enforcer.RevokeRole(ctx, sub, roleParokiAdmin, dom); err != nil {
+				return domain.ParokiMemberResponse{}, err
 			}
 		}
 	}
 
 	u, err := s.repo.FindUserByID(ctx, targetUserID)
 	if err != nil && !ent.IsNotFound(err) {
-		return domain.ParishMemberResponse{}, err
+		return domain.ParokiMemberResponse{}, err
 	}
-	return toParishMemberResponse(updated, u), nil
+	return toParokiMemberResponse(updated, u), nil
 }
 
-// RemoveParishMember removes a member from parishID and revokes Casbin parish-admin role while guarding the last admin.
-func (s *Service) RemoveParishMember(ctx context.Context, p authx.Principal, parishID, targetUserID uuid.UUID) error {
-	if _, err := s.requireParishAdminOrSuperAdmin(p, parishID); err != nil {
+// RemoveParokiMember removes a member from parokiID and revokes Casbin paroki-admin role while guarding the last admin.
+func (s *Service) RemoveParokiMember(ctx context.Context, p authx.Principal, parokiID, targetUserID uuid.UUID) error {
+	if _, err := s.requireParokiAdminOrSuperAdmin(p, parokiID); err != nil {
 		return err
 	}
 
 	var wasAdmin bool
 	err := s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
-		existing, err := txRepo.FindParishMember(ctx, parishID, targetUserID)
+		existing, err := txRepo.FindParokiMember(ctx, parokiID, targetUserID)
 		if ent.IsNotFound(err) {
-			return domain.ErrParishMemberNotFound
+			return domain.ErrParokiMemberNotFound
 		}
 		if err != nil {
 			return err
 		}
 
-		if existing.Role == parishmember.RoleAdmin {
-			if err := guardNotLastParishAdmin(ctx, txRepo, parishID); err != nil {
+		if existing.Role == parokimember.RoleAdmin {
+			if err := guardNotLastParokiAdmin(ctx, txRepo, parokiID); err != nil {
 				return err
 			}
 			wasAdmin = true
 		}
 
-		return txRepo.DeleteParishMember(ctx, existing.ID)
+		return txRepo.DeleteParokiMember(ctx, existing.ID)
 	})
 	if err != nil {
 		return err
 	}
 	if wasAdmin && s.enforcer != nil {
-		return s.enforcer.RevokeRole(ctx, authz.UserSubject(targetUserID), roleParishAdmin, authz.ParishDomain(parishID))
+		return s.enforcer.RevokeRole(ctx, authz.UserSubject(targetUserID), roleParokiAdmin, authz.ParokiDomain(parokiID))
 	}
 	return nil
 }
 
-func guardNotLastParishAdmin(ctx context.Context, r *repo.Repository, parishID uuid.UUID) error {
-	count, err := r.CountParishAdmins(ctx, parishID)
+func guardNotLastParokiAdmin(ctx context.Context, r *repo.Repository, parokiID uuid.UUID) error {
+	count, err := r.CountParokiAdmins(ctx, parokiID)
 	if err != nil {
 		return err
 	}
 	if count <= 1 {
-		return domain.ErrLastParishAdminRequired
+		return domain.ErrLastParokiAdminRequired
 	}
 	return nil
 }
 
-func toParishResponse(p *ent.Parish) domain.ParishResponse {
-	return domain.ParishResponse{
+func toParokiResponse(p *ent.Paroki) domain.ParokiResponse {
+	return domain.ParokiResponse{
 		ID:          p.ID,
-		DioceseID:   p.DioceseID,
-		Code:        p.Code,
-		Name:        p.Name,
-		PatronSaint: p.PatronSaint,
-		PastorName:  p.PastorName,
-		Address:     p.Address,
-		Phone:       p.Phone,
+		KeuskupanID: p.KeuskupanID,
+		Kode:        p.Kode,
+		Nama:        p.Nama,
+		Pelindung:   p.Pelindung,
+		Pastor:      p.Pastor,
+		Alamat:      p.Alamat,
+		Telepon:     p.Telepon,
 		Email:       p.Email,
 		Website:     p.Website,
 		LogoURL:     p.LogoURL,
-		Letterhead:  p.Letterhead,
+		KopSurat:    p.KopSurat,
 		Active:      p.Active,
 		CreatedAt:   p.CreatedAt,
 		UpdatedAt:   p.UpdatedAt,
 	}
 }
 
-func toParishMemberResponse(pm *ent.ParishMember, u *ent.User) domain.ParishMemberResponse {
-	res := domain.ParishMemberResponse{
+func toParokiMemberResponse(pm *ent.ParokiMember, u *ent.User) domain.ParokiMemberResponse {
+	res := domain.ParokiMemberResponse{
 		ID:        pm.ID,
-		ParishID:  pm.ParishID,
+		ParokiID:  pm.ParokiID,
 		UserID:    pm.UserID,
 		Role:      string(pm.Role),
 		CreatedAt: pm.CreatedAt,

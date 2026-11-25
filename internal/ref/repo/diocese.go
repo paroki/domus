@@ -6,121 +6,121 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
-	"github.com/paroki/domus/ent/diocese"
-	"github.com/paroki/domus/ent/parish"
+	"github.com/paroki/domus/ent/keuskupan"
+	"github.com/paroki/domus/ent/paroki"
 )
 
-// DioceseInput holds mutable fields for creating or updating a Diocese.
-type DioceseInput struct {
-	Code       string
-	Name       string
-	BishopName *string
-	Address    *string
-	Phone      *string
-	Email      *string
-	Website    *string
-	Active     bool
+// KeuskupanInput holds mutable fields for creating or updating a Keuskupan.
+type KeuskupanInput struct {
+	Kode    string
+	Nama    string
+	Uskup   *string
+	Alamat  *string
+	Telepon *string
+	Email   *string
+	Website *string
+	Active  bool
 }
 
-// SearchDioceses returns non-deleted dioceses matching optional filters and cursor.
-func (r *Repository) SearchDioceses(
+// SearchKeuskupan returns non-deleted keuskupan matching optional filters and cursor.
+func (r *Repository) SearchKeuskupan(
 	ctx context.Context,
 	q string,
 	active *bool,
 	cursorCreatedAt *time.Time,
 	cursorID *uuid.UUID,
 	limit int,
-) ([]*ent.Diocese, error) {
-	query := r.client.Diocese.Query().Where(diocese.DeletedAtIsNil())
+) ([]*ent.Keuskupan, error) {
+	query := r.client.Keuskupan.Query().Where(keuskupan.DeletedAtIsNil())
 	if q != "" {
-		query = query.Where(diocese.Or(
-			diocese.CodeContainsFold(q),
-			diocese.NameContainsFold(q),
+		query = query.Where(keuskupan.Or(
+			keuskupan.KodeContainsFold(q),
+			keuskupan.NamaContainsFold(q),
 		))
 	}
 	if active != nil {
-		query = query.Where(diocese.ActiveEQ(*active))
+		query = query.Where(keuskupan.ActiveEQ(*active))
 	}
 	if cursorCreatedAt != nil && cursorID != nil {
-		query = query.Where(diocese.Or(
-			diocese.CreatedAtLT(*cursorCreatedAt),
-			diocese.And(
-				diocese.CreatedAtEQ(*cursorCreatedAt),
-				diocese.IDLT(*cursorID),
+		query = query.Where(keuskupan.Or(
+			keuskupan.CreatedAtLT(*cursorCreatedAt),
+			keuskupan.And(
+				keuskupan.CreatedAtEQ(*cursorCreatedAt),
+				keuskupan.IDLT(*cursorID),
 			),
 		))
 	}
 	return query.
-		Order(ent.Desc(diocese.FieldCreatedAt), ent.Desc(diocese.FieldID)).
+		Order(ent.Desc(keuskupan.FieldCreatedAt), ent.Desc(keuskupan.FieldID)).
 		Limit(limit).
 		All(ctx)
 }
 
-// FindDioceseByID returns a non-deleted Diocese by ID.
-func (r *Repository) FindDioceseByID(ctx context.Context, id uuid.UUID) (*ent.Diocese, error) {
-	return r.client.Diocese.Query().
-		Where(diocese.IDEQ(id), diocese.DeletedAtIsNil()).
+// FindKeuskupanByID returns a non-deleted Keuskupan by ID.
+func (r *Repository) FindKeuskupanByID(ctx context.Context, id uuid.UUID) (*ent.Keuskupan, error) {
+	return r.client.Keuskupan.Query().
+		Where(keuskupan.IDEQ(id), keuskupan.DeletedAtIsNil()).
 		Only(ctx)
 }
 
-// FindDioceseByCodeIncludeDeleted returns a Diocese by code, including soft-deleted rows.
-func (r *Repository) FindDioceseByCodeIncludeDeleted(ctx context.Context, code string) (*ent.Diocese, error) {
-	return r.client.Diocese.Query().
-		Where(diocese.CodeEQ(code)).
+// FindKeuskupanByKodeIncludeDeleted returns a Keuskupan by kode, including soft-deleted rows.
+func (r *Repository) FindKeuskupanByKodeIncludeDeleted(ctx context.Context, kode string) (*ent.Keuskupan, error) {
+	return r.client.Keuskupan.Query().
+		Where(keuskupan.KodeEQ(kode)).
 		Only(ctx)
 }
 
-// CreateDiocese inserts a new Diocese.
-func (r *Repository) CreateDiocese(ctx context.Context, in DioceseInput) (*ent.Diocese, error) {
-	return r.client.Diocese.Create().
-		SetCode(in.Code).
-		SetName(in.Name).
-		SetNillableBishopName(in.BishopName).
-		SetNillableAddress(in.Address).
-		SetNillablePhone(in.Phone).
+// CreateKeuskupan inserts a new Keuskupan.
+func (r *Repository) CreateKeuskupan(ctx context.Context, in KeuskupanInput) (*ent.Keuskupan, error) {
+	return r.client.Keuskupan.Create().
+		SetKode(in.Kode).
+		SetNama(in.Nama).
+		SetNillableUskup(in.Uskup).
+		SetNillableAlamat(in.Alamat).
+		SetNillableTelepon(in.Telepon).
 		SetNillableEmail(in.Email).
 		SetNillableWebsite(in.Website).
 		SetActive(in.Active).
 		Save(ctx)
 }
 
-// ReactivateDiocese restores a soft-deleted Diocese with new field values.
-func (r *Repository) ReactivateDiocese(ctx context.Context, id uuid.UUID, in DioceseInput) (*ent.Diocese, error) {
-	upd := r.client.Diocese.UpdateOneID(id).
+// ReactivateKeuskupan restores a soft-deleted Keuskupan with new field values.
+func (r *Repository) ReactivateKeuskupan(ctx context.Context, id uuid.UUID, in KeuskupanInput) (*ent.Keuskupan, error) {
+	upd := r.client.Keuskupan.UpdateOneID(id).
 		ClearDeletedAt().
-		SetCode(in.Code).
-		SetName(in.Name).
+		SetKode(in.Kode).
+		SetNama(in.Nama).
 		SetActive(true)
-	setOrClearString(in.BishopName, upd.SetBishopName, upd.ClearBishopName)
-	setOrClearString(in.Address, upd.SetAddress, upd.ClearAddress)
-	setOrClearString(in.Phone, upd.SetPhone, upd.ClearPhone)
+	setOrClearString(in.Uskup, upd.SetUskup, upd.ClearUskup)
+	setOrClearString(in.Alamat, upd.SetAlamat, upd.ClearAlamat)
+	setOrClearString(in.Telepon, upd.SetTelepon, upd.ClearTelepon)
 	setOrClearString(in.Email, upd.SetEmail, upd.ClearEmail)
 	setOrClearString(in.Website, upd.SetWebsite, upd.ClearWebsite)
 	return upd.Save(ctx)
 }
 
-// UpdateDiocese updates mutable fields of a Diocese.
-func (r *Repository) UpdateDiocese(
+// UpdateKeuskupan updates mutable fields of a Keuskupan.
+func (r *Repository) UpdateKeuskupan(
 	ctx context.Context,
 	id uuid.UUID,
-	code, name, bishopName, address, phone, email, website *string,
+	kode, nama, uskup, alamat, telepon, email, website *string,
 	active *bool,
-) (*ent.Diocese, error) {
-	upd := r.client.Diocese.UpdateOneID(id)
-	if code != nil {
-		upd.SetCode(*code)
+) (*ent.Keuskupan, error) {
+	upd := r.client.Keuskupan.UpdateOneID(id)
+	if kode != nil {
+		upd.SetKode(*kode)
 	}
-	if name != nil {
-		upd.SetName(*name)
+	if nama != nil {
+		upd.SetNama(*nama)
 	}
-	if bishopName != nil {
-		setOrClearString(bishopName, upd.SetBishopName, upd.ClearBishopName)
+	if uskup != nil {
+		setOrClearString(uskup, upd.SetUskup, upd.ClearUskup)
 	}
-	if address != nil {
-		setOrClearString(address, upd.SetAddress, upd.ClearAddress)
+	if alamat != nil {
+		setOrClearString(alamat, upd.SetAlamat, upd.ClearAlamat)
 	}
-	if phone != nil {
-		setOrClearString(phone, upd.SetPhone, upd.ClearPhone)
+	if telepon != nil {
+		setOrClearString(telepon, upd.SetTelepon, upd.ClearTelepon)
 	}
 	if email != nil {
 		setOrClearString(email, upd.SetEmail, upd.ClearEmail)
@@ -134,22 +134,22 @@ func (r *Repository) UpdateDiocese(
 	return upd.Save(ctx)
 }
 
-// SoftDeleteDiocese sets deleted_at and marks the Diocese inactive.
-func (r *Repository) SoftDeleteDiocese(ctx context.Context, id uuid.UUID, at time.Time) error {
-	return r.client.Diocese.UpdateOneID(id).
+// SoftDeleteKeuskupan sets deleted_at and marks the Keuskupan inactive.
+func (r *Repository) SoftDeleteKeuskupan(ctx context.Context, id uuid.UUID, at time.Time) error {
+	return r.client.Keuskupan.UpdateOneID(id).
 		SetDeletedAt(at).
 		SetActive(false).
 		Exec(ctx)
 }
 
-// HasActiveParishesByDiocese reports whether any non-deleted active Parish references dioceseID.
-func (r *Repository) HasActiveParishesByDiocese(ctx context.Context, dioceseID uuid.UUID) (bool, error) {
-	return r.client.Parish.Query().
-		Where(parish.DioceseIDEQ(dioceseID), parish.ActiveEQ(true), parish.DeletedAtIsNil()).
+// HasActiveParokiByKeuskupan reports whether any non-deleted active Paroki references keuskupanID.
+func (r *Repository) HasActiveParokiByKeuskupan(ctx context.Context, keuskupanID uuid.UUID) (bool, error) {
+	return r.client.Paroki.Query().
+		Where(paroki.KeuskupanIDEQ(keuskupanID), paroki.ActiveEQ(true), paroki.DeletedAtIsNil()).
 		Exist(ctx)
 }
 
-func setOrClearString(val *string, setFn func(string) *ent.DioceseUpdateOne, clearFn func() *ent.DioceseUpdateOne) {
+func setOrClearString(val *string, setFn func(string) *ent.KeuskupanUpdateOne, clearFn func() *ent.KeuskupanUpdateOne) {
 	if val == nil || *val == "" {
 		clearFn()
 		return

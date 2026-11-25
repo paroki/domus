@@ -4,18 +4,18 @@ import "github.com/paroki/domus/internal/platform/errx"
 
 // Sentinel errors for the ref feature.
 var (
-	ErrDioceseNotFound         = errx.NotFound("REF_DIOCESE_NOT_FOUND", "Diocese not found.")
-	ErrParishNotFound          = errx.NotFound("REF_PARISH_NOT_FOUND", "Parish not found.")
-	ErrParishMemberNotFound    = errx.NotFound("REF_PARISH_MEMBER_NOT_FOUND", "Parish member not found.")
-	ErrZoneNotFound            = errx.NotFound("REF_ZONE_NOT_FOUND", "Zone not found.")
-	ErrWardNotFound            = errx.NotFound("REF_WARD_NOT_FOUND", "Ward not found.")
+	ErrKeuskupanNotFound       = errx.NotFound("REF_KEUSKUPAN_NOT_FOUND", "Keuskupan not found.")
+	ErrParokiNotFound          = errx.NotFound("REF_PAROKI_NOT_FOUND", "Paroki not found.")
+	ErrParokiMemberNotFound    = errx.NotFound("REF_PAROKI_MEMBER_NOT_FOUND", "Paroki member not found.")
+	ErrWilayahNotFound         = errx.NotFound("REF_WILAYAH_NOT_FOUND", "Wilayah not found.")
+	ErrLingkunganNotFound      = errx.NotFound("REF_LINGKUNGAN_NOT_FOUND", "Lingkungan not found.")
 	ErrLookupNotFound          = errx.NotFound("REF_LOOKUP_NOT_FOUND", "Lookup not found.")
 	ErrPeriodNotFound          = errx.NotFound("REF_PERIOD_NOT_FOUND", "Period not found.")
 	ErrCodeConflict            = errx.Conflict("REF_CODE_CONFLICT", "Code is already in use.")
 	ErrPeriodOverlap           = errx.Conflict("REF_PERIOD_OVERLAP", "Period dates overlap an existing period.")
 	ErrInUse                   = errx.Conflict("REF_IN_USE", "Resource is still in use and cannot be deleted.")
-	ErrLastParishAdminRequired = errx.Conflict("REF_LAST_PARISH_ADMIN_REQUIRED", "At least one parish admin is required.")
-	ErrParishMemberConflict    = errx.Conflict("REF_PARISH_MEMBER_ALREADY_EXISTS", "User is already a member of this parish.")
+	ErrLastParokiAdminRequired = errx.Conflict("REF_LAST_PAROKI_ADMIN_REQUIRED", "At least one paroki admin is required.")
+	ErrParokiMemberConflict    = errx.Conflict("REF_PAROKI_MEMBER_ALREADY_EXISTS", "User is already a member of this paroki.")
 	ErrRefForbidden            = errx.Forbidden("REF_FORBIDDEN", "You do not have permission to perform this action.")
 )
 

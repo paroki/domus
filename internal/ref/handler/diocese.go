@@ -7,22 +7,22 @@ import (
 	"github.com/paroki/domus/internal/ref/domain"
 )
 
-// SearchDioceses searches non-deleted dioceses.
+// SearchKeuskupan searches non-deleted keuskupan.
 //
-//	@Summary		Search dioceses
-//	@Description	Searches dioceses with optional query, active filter, and cursor pagination.
-//	@ID				searchDioceses
+//	@Summary		Search keuskupan
+//	@Description	Searches keuskupan with optional query, active filter, and cursor pagination.
+//	@ID				searchKeuskupan
 //	@Tags			Ref
 //	@Accept			json
 //	@Produce		json
-//	@Param			body	body		domain.SearchDiocesesRequest	false	"Search parameters"
-//	@Success		200		{object}	httpx.Envelope[[]domain.DioceseResponse]
+//	@Param			body	body		domain.SearchKeuskupanRequest	false	"Search parameters"
+//	@Success		200		{object}	httpx.Envelope[[]domain.KeuskupanResponse]
 //	@Failure		400		{object}	httpx.Envelope[any]
 //	@Failure		401		{object}	httpx.Envelope[any]
 //	@Failure		403		{object}	httpx.Envelope[any]
-//	@Router			/ref/dioceses/search [post]
-func (h *Handler) SearchDioceses(c fiber.Ctx) error {
-	var req domain.SearchDiocesesRequest
+//	@Router			/ref/keuskupan/search [post]
+func (h *Handler) SearchKeuskupan(c fiber.Ctx) error {
+	var req domain.SearchKeuskupanRequest
 	if err := decodeEmptyOrStrictJSON(c, &req); err != nil {
 		return err
 	}
@@ -30,7 +30,7 @@ func (h *Handler) SearchDioceses(c fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	items, hasMore, err := h.service.SearchDioceses(c.Context(), req, cursorT, cursorID, limit)
+	items, hasMore, err := h.service.SearchKeuskupan(c.Context(), req, cursorT, cursorID, limit)
 	if err != nil {
 		return err
 	}
@@ -46,113 +46,113 @@ func (h *Handler) SearchDioceses(c fiber.Ctx) error {
 	})
 }
 
-// GetDiocese fetches a single Diocese by ID.
+// GetKeuskupan fetches a single Keuskupan by ID.
 //
-//	@Summary		Get diocese
-//	@Description	Returns a single non-deleted diocese by ID.
-//	@ID				getDiocese
+//	@Summary		Get keuskupan
+//	@Description	Returns a single non-deleted keuskupan by ID.
+//	@ID				getKeuskupan
 //	@Tags			Ref
 //	@Produce		json
-//	@Param			id	path		string	true	"Diocese UUID"
-//	@Success		200	{object}	httpx.Envelope[domain.DioceseResponse]
+//	@Param			id	path		string	true	"Keuskupan UUID"
+//	@Success		200	{object}	httpx.Envelope[domain.KeuskupanResponse]
 //	@Failure		400	{object}	httpx.Envelope[any]
 //	@Failure		401	{object}	httpx.Envelope[any]
 //	@Failure		404	{object}	httpx.Envelope[any]
-//	@Router			/ref/dioceses/{id} [get]
-func (h *Handler) GetDiocese(c fiber.Ctx) error {
+//	@Router			/ref/keuskupan/{id} [get]
+func (h *Handler) GetKeuskupan(c fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return httpx.BadRequest("Invalid diocese ID.")
+		return httpx.BadRequest("Invalid keuskupan ID.")
 	}
-	res, err := h.service.GetDiocese(c.Context(), id)
+	res, err := h.service.GetKeuskupan(c.Context(), id)
 	if err != nil {
 		return err
 	}
 	return httpx.OK(c, res)
 }
 
-// CreateDiocese creates a new Diocese.
+// CreateKeuskupan creates a new Keuskupan.
 //
-//	@Summary		Create diocese
-//	@Description	Creates a diocese or reactivates a soft-deleted diocese with the same code.
-//	@ID				createDiocese
+//	@Summary		Create keuskupan
+//	@Description	Creates a keuskupan or reactivates a soft-deleted keuskupan with the same kode.
+//	@ID				createKeuskupan
 //	@Tags			Ref
 //	@Accept			json
 //	@Produce		json
-//	@Param			body	body		domain.CreateDioceseRequest	true	"Diocese creation payload"
-//	@Success		201		{object}	httpx.Envelope[domain.DioceseResponse]
+//	@Param			body	body		domain.CreateKeuskupanRequest	true	"Keuskupan creation payload"
+//	@Success		201		{object}	httpx.Envelope[domain.KeuskupanResponse]
 //	@Failure		400		{object}	httpx.Envelope[any]
 //	@Failure		401		{object}	httpx.Envelope[any]
 //	@Failure		403		{object}	httpx.Envelope[any]
 //	@Failure		409		{object}	httpx.Envelope[any]
 //	@Failure		422		{object}	httpx.Envelope[any]
-//	@Router			/ref/dioceses [post]
-func (h *Handler) CreateDiocese(c fiber.Ctx) error {
-	var req domain.CreateDioceseRequest
+//	@Router			/ref/keuskupan [post]
+func (h *Handler) CreateKeuskupan(c fiber.Ctx) error {
+	var req domain.CreateKeuskupanRequest
 	if err := decodeStrictJSON(c, &req); err != nil {
 		return err
 	}
-	res, err := h.service.CreateDiocese(c.Context(), req)
+	res, err := h.service.CreateKeuskupan(c.Context(), req)
 	if err != nil {
 		return err
 	}
 	return httpx.Created(c, res)
 }
 
-// UpdateDiocese updates an existing Diocese.
+// UpdateKeuskupan updates an existing Keuskupan.
 //
-//	@Summary		Update diocese
-//	@Description	Updates mutable fields of a diocese.
-//	@ID				updateDiocese
+//	@Summary		Update keuskupan
+//	@Description	Updates mutable fields of a keuskupan.
+//	@ID				updateKeuskupan
 //	@Tags			Ref
 //	@Accept			json
 //	@Produce		json
-//	@Param			id		path		string						true	"Diocese UUID"
-//	@Param			body	body		domain.UpdateDioceseRequest	true	"Diocese update payload"
-//	@Success		200		{object}	httpx.Envelope[domain.DioceseResponse]
+//	@Param			id		path		string							true	"Keuskupan UUID"
+//	@Param			body	body		domain.UpdateKeuskupanRequest	true	"Keuskupan update payload"
+//	@Success		200		{object}	httpx.Envelope[domain.KeuskupanResponse]
 //	@Failure		400		{object}	httpx.Envelope[any]
 //	@Failure		401		{object}	httpx.Envelope[any]
 //	@Failure		403		{object}	httpx.Envelope[any]
 //	@Failure		404		{object}	httpx.Envelope[any]
 //	@Failure		409		{object}	httpx.Envelope[any]
 //	@Failure		422		{object}	httpx.Envelope[any]
-//	@Router			/ref/dioceses/{id} [patch]
-func (h *Handler) UpdateDiocese(c fiber.Ctx) error {
+//	@Router			/ref/keuskupan/{id} [patch]
+func (h *Handler) UpdateKeuskupan(c fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return httpx.BadRequest("Invalid diocese ID.")
+		return httpx.BadRequest("Invalid keuskupan ID.")
 	}
-	var req domain.UpdateDioceseRequest
+	var req domain.UpdateKeuskupanRequest
 	if err := decodeStrictJSON(c, &req); err != nil {
 		return err
 	}
-	res, err := h.service.UpdateDiocese(c.Context(), id, req)
+	res, err := h.service.UpdateKeuskupan(c.Context(), id, req)
 	if err != nil {
 		return err
 	}
 	return httpx.OK(c, res)
 }
 
-// DeleteDiocese soft-deletes a Diocese if it has no active parishes.
+// DeleteKeuskupan soft-deletes a Keuskupan if it has no active paroki.
 //
-//	@Summary		Delete diocese
-//	@Description	Soft-deletes a diocese when no active parishes reference it.
-//	@ID				deleteDiocese
+//	@Summary		Delete keuskupan
+//	@Description	Soft-deletes a keuskupan when no active paroki reference it.
+//	@ID				deleteKeuskupan
 //	@Tags			Ref
-//	@Param			id	path	string	true	"Diocese UUID"
+//	@Param			id	path	string	true	"Keuskupan UUID"
 //	@Success		204
 //	@Failure		400	{object}	httpx.Envelope[any]
 //	@Failure		401	{object}	httpx.Envelope[any]
 //	@Failure		403	{object}	httpx.Envelope[any]
 //	@Failure		404	{object}	httpx.Envelope[any]
 //	@Failure		409	{object}	httpx.Envelope[any]
-//	@Router			/ref/dioceses/{id} [delete]
-func (h *Handler) DeleteDiocese(c fiber.Ctx) error {
+//	@Router			/ref/keuskupan/{id} [delete]
+func (h *Handler) DeleteKeuskupan(c fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return httpx.BadRequest("Invalid diocese ID.")
+		return httpx.BadRequest("Invalid keuskupan ID.")
 	}
-	if err := h.service.DeleteDiocese(c.Context(), id); err != nil {
+	if err := h.service.DeleteKeuskupan(c.Context(), id); err != nil {
 		return err
 	}
 	return httpx.NoContent(c)

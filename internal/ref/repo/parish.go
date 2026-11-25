@@ -10,177 +10,177 @@ import (
 	"github.com/paroki/domus/ent/agentmemory"
 	"github.com/paroki/domus/ent/agentsession"
 	"github.com/paroki/domus/ent/event"
+	"github.com/paroki/domus/ent/lingkungan"
 	"github.com/paroki/domus/ent/lookup"
 	"github.com/paroki/domus/ent/organization"
-	"github.com/paroki/domus/ent/parish"
-	"github.com/paroki/domus/ent/parishmember"
+	"github.com/paroki/domus/ent/paroki"
+	"github.com/paroki/domus/ent/parokimember"
 	"github.com/paroki/domus/ent/period"
 	"github.com/paroki/domus/ent/user"
-	"github.com/paroki/domus/ent/ward"
-	"github.com/paroki/domus/ent/zone"
+	"github.com/paroki/domus/ent/wilayah"
 )
 
-// ParishInput holds fields for creating or reactivating a Parish.
-type ParishInput struct {
-	DioceseID   uuid.UUID
-	Code        string
-	Name        string
-	PatronSaint *string
-	PastorName  *string
-	Address     *string
-	Phone       *string
+// ParokiInput holds fields for creating or reactivating a Paroki.
+type ParokiInput struct {
+	KeuskupanID uuid.UUID
+	Kode        string
+	Nama        string
+	Pelindung   *string
+	Pastor      *string
+	Alamat      *string
+	Telepon     *string
 	Email       *string
 	Website     *string
 	LogoURL     *string
-	Letterhead  *string
+	KopSurat    *string
 	Active      bool
 }
 
-// SearchParishes returns non-deleted parishes matching optional filters and cursor.
-func (r *Repository) SearchParishes(
+// SearchParoki returns non-deleted paroki matching optional filters and cursor.
+func (r *Repository) SearchParoki(
 	ctx context.Context,
 	q string,
-	dioceseID *uuid.UUID,
+	keuskupanID *uuid.UUID,
 	active *bool,
 	memberUserID *uuid.UUID,
 	cursorCreatedAt *time.Time,
 	cursorID *uuid.UUID,
 	limit int,
-) ([]*ent.Parish, error) {
-	query := r.client.Parish.Query().Where(parish.DeletedAtIsNil())
+) ([]*ent.Paroki, error) {
+	query := r.client.Paroki.Query().Where(paroki.DeletedAtIsNil())
 	if q != "" {
-		query = query.Where(parish.Or(
-			parish.CodeContainsFold(q),
-			parish.NameContainsFold(q),
+		query = query.Where(paroki.Or(
+			paroki.KodeContainsFold(q),
+			paroki.NamaContainsFold(q),
 		))
 	}
-	if dioceseID != nil && *dioceseID != uuid.Nil {
-		query = query.Where(parish.DioceseIDEQ(*dioceseID))
+	if keuskupanID != nil && *keuskupanID != uuid.Nil {
+		query = query.Where(paroki.KeuskupanIDEQ(*keuskupanID))
 	}
 	if active != nil {
-		query = query.Where(parish.ActiveEQ(*active))
+		query = query.Where(paroki.ActiveEQ(*active))
 	}
 	if memberUserID != nil && *memberUserID != uuid.Nil {
-		query = query.Where(parish.HasMembersWith(parishmember.UserIDEQ(*memberUserID)))
+		query = query.Where(paroki.HasMembersWith(parokimember.UserIDEQ(*memberUserID)))
 	}
 	if cursorCreatedAt != nil && cursorID != nil {
-		query = query.Where(parish.Or(
-			parish.CreatedAtLT(*cursorCreatedAt),
-			parish.And(
-				parish.CreatedAtEQ(*cursorCreatedAt),
-				parish.IDLT(*cursorID),
+		query = query.Where(paroki.Or(
+			paroki.CreatedAtLT(*cursorCreatedAt),
+			paroki.And(
+				paroki.CreatedAtEQ(*cursorCreatedAt),
+				paroki.IDLT(*cursorID),
 			),
 		))
 	}
 	return query.
-		Order(ent.Desc(parish.FieldCreatedAt), ent.Desc(parish.FieldID)).
+		Order(ent.Desc(paroki.FieldCreatedAt), ent.Desc(paroki.FieldID)).
 		Limit(limit).
 		All(ctx)
 }
 
-// FindParishByID returns a non-deleted Parish by ID.
-func (r *Repository) FindParishByID(ctx context.Context, id uuid.UUID) (*ent.Parish, error) {
-	return r.client.Parish.Query().
-		Where(parish.IDEQ(id), parish.DeletedAtIsNil()).
+// FindParokiByID returns a non-deleted Paroki by ID.
+func (r *Repository) FindParokiByID(ctx context.Context, id uuid.UUID) (*ent.Paroki, error) {
+	return r.client.Paroki.Query().
+		Where(paroki.IDEQ(id), paroki.DeletedAtIsNil()).
 		Only(ctx)
 }
 
-// FindParishByCode returns an active, non-deleted Parish by normalized code.
-func (r *Repository) FindParishByCode(ctx context.Context, code string) (*ent.Parish, error) {
-	return r.client.Parish.Query().
+// FindParokiByKode returns an active, non-deleted Paroki by normalized kode.
+func (r *Repository) FindParokiByKode(ctx context.Context, kode string) (*ent.Paroki, error) {
+	return r.client.Paroki.Query().
 		Where(
-			parish.CodeEQ(strings.ToLower(strings.TrimSpace(code))),
-			parish.DeletedAtIsNil(),
-			parish.ActiveEQ(true),
+			paroki.KodeEQ(strings.ToLower(strings.TrimSpace(kode))),
+			paroki.DeletedAtIsNil(),
+			paroki.ActiveEQ(true),
 		).
 		Only(ctx)
 }
 
-// FindParishByCodeIncludeDeleted returns a Parish by code, including soft-deleted rows.
-func (r *Repository) FindParishByCodeIncludeDeleted(ctx context.Context, code string) (*ent.Parish, error) {
-	return r.client.Parish.Query().
-		Where(parish.CodeEQ(code)).
+// FindParokiByKodeIncludeDeleted returns a Paroki by kode, including soft-deleted rows.
+func (r *Repository) FindParokiByKodeIncludeDeleted(ctx context.Context, kode string) (*ent.Paroki, error) {
+	return r.client.Paroki.Query().
+		Where(paroki.KodeEQ(kode)).
 		Only(ctx)
 }
 
-// CreateParish inserts a new Parish.
-func (r *Repository) CreateParish(ctx context.Context, in ParishInput) (*ent.Parish, error) {
-	return r.client.Parish.Create().
-		SetDioceseID(in.DioceseID).
-		SetCode(in.Code).
-		SetName(in.Name).
-		SetNillablePatronSaint(in.PatronSaint).
-		SetNillablePastorName(in.PastorName).
-		SetNillableAddress(in.Address).
-		SetNillablePhone(in.Phone).
+// CreateParoki inserts a new Paroki.
+func (r *Repository) CreateParoki(ctx context.Context, in ParokiInput) (*ent.Paroki, error) {
+	return r.client.Paroki.Create().
+		SetKeuskupanID(in.KeuskupanID).
+		SetKode(in.Kode).
+		SetNama(in.Nama).
+		SetNillablePelindung(in.Pelindung).
+		SetNillablePastor(in.Pastor).
+		SetNillableAlamat(in.Alamat).
+		SetNillableTelepon(in.Telepon).
 		SetNillableEmail(in.Email).
 		SetNillableWebsite(in.Website).
 		SetNillableLogoURL(in.LogoURL).
-		SetNillableLetterhead(in.Letterhead).
+		SetNillableKopSurat(in.KopSurat).
 		SetActive(in.Active).
 		Save(ctx)
 }
 
-// ReactivateParish restores a soft-deleted Parish with new field values.
-func (r *Repository) ReactivateParish(ctx context.Context, id uuid.UUID, in ParishInput) (*ent.Parish, error) {
-	upd := r.client.Parish.UpdateOneID(id).
+// ReactivateParoki restores a soft-deleted Paroki with new field values.
+func (r *Repository) ReactivateParoki(ctx context.Context, id uuid.UUID, in ParokiInput) (*ent.Paroki, error) {
+	upd := r.client.Paroki.UpdateOneID(id).
 		ClearDeletedAt().
-		SetDioceseID(in.DioceseID).
-		SetCode(in.Code).
-		SetName(in.Name).
+		SetKeuskupanID(in.KeuskupanID).
+		SetKode(in.Kode).
+		SetNama(in.Nama).
 		SetActive(true)
-	setOrClearParishString(in.PatronSaint, upd.SetPatronSaint, upd.ClearPatronSaint)
-	setOrClearParishString(in.PastorName, upd.SetPastorName, upd.ClearPastorName)
-	setOrClearParishString(in.Address, upd.SetAddress, upd.ClearAddress)
-	setOrClearParishString(in.Phone, upd.SetPhone, upd.ClearPhone)
-	setOrClearParishString(in.Email, upd.SetEmail, upd.ClearEmail)
-	setOrClearParishString(in.Website, upd.SetWebsite, upd.ClearWebsite)
-	setOrClearParishString(in.LogoURL, upd.SetLogoURL, upd.ClearLogoURL)
-	setOrClearParishString(in.Letterhead, upd.SetLetterhead, upd.ClearLetterhead)
+	setOrClearParokiString(in.Pelindung, upd.SetPelindung, upd.ClearPelindung)
+	setOrClearParokiString(in.Pastor, upd.SetPastor, upd.ClearPastor)
+	setOrClearParokiString(in.Alamat, upd.SetAlamat, upd.ClearAlamat)
+	setOrClearParokiString(in.Telepon, upd.SetTelepon, upd.ClearTelepon)
+	setOrClearParokiString(in.Email, upd.SetEmail, upd.ClearEmail)
+	setOrClearParokiString(in.Website, upd.SetWebsite, upd.ClearWebsite)
+	setOrClearParokiString(in.LogoURL, upd.SetLogoURL, upd.ClearLogoURL)
+	setOrClearParokiString(in.KopSurat, upd.SetKopSurat, upd.ClearKopSurat)
 	return upd.Save(ctx)
 }
 
-// UpdateParish updates mutable fields of a Parish.
-func (r *Repository) UpdateParish(
+// UpdateParoki updates mutable fields of a Paroki.
+func (r *Repository) UpdateParoki(
 	ctx context.Context,
 	id uuid.UUID,
-	dioceseID *uuid.UUID,
-	code, name, patronSaint, pastorName, address, phone, email, website, logoURL, letterhead *string,
+	keuskupanID *uuid.UUID,
+	kode, nama, pelindung, pastor, alamat, telepon, email, website, logoURL, kopSurat *string,
 	active *bool,
-) (*ent.Parish, error) {
-	upd := r.client.Parish.UpdateOneID(id)
-	if dioceseID != nil {
-		upd.SetDioceseID(*dioceseID)
+) (*ent.Paroki, error) {
+	upd := r.client.Paroki.UpdateOneID(id)
+	if keuskupanID != nil {
+		upd.SetKeuskupanID(*keuskupanID)
 	}
-	if code != nil {
-		upd.SetCode(*code)
+	if kode != nil {
+		upd.SetKode(*kode)
 	}
-	if name != nil {
-		upd.SetName(*name)
+	if nama != nil {
+		upd.SetNama(*nama)
 	}
-	if patronSaint != nil {
-		setOrClearParishString(patronSaint, upd.SetPatronSaint, upd.ClearPatronSaint)
+	if pelindung != nil {
+		setOrClearParokiString(pelindung, upd.SetPelindung, upd.ClearPelindung)
 	}
-	if pastorName != nil {
-		setOrClearParishString(pastorName, upd.SetPastorName, upd.ClearPastorName)
+	if pastor != nil {
+		setOrClearParokiString(pastor, upd.SetPastor, upd.ClearPastor)
 	}
-	if address != nil {
-		setOrClearParishString(address, upd.SetAddress, upd.ClearAddress)
+	if alamat != nil {
+		setOrClearParokiString(alamat, upd.SetAlamat, upd.ClearAlamat)
 	}
-	if phone != nil {
-		setOrClearParishString(phone, upd.SetPhone, upd.ClearPhone)
+	if telepon != nil {
+		setOrClearParokiString(telepon, upd.SetTelepon, upd.ClearTelepon)
 	}
 	if email != nil {
-		setOrClearParishString(email, upd.SetEmail, upd.ClearEmail)
+		setOrClearParokiString(email, upd.SetEmail, upd.ClearEmail)
 	}
 	if website != nil {
-		setOrClearParishString(website, upd.SetWebsite, upd.ClearWebsite)
+		setOrClearParokiString(website, upd.SetWebsite, upd.ClearWebsite)
 	}
 	if logoURL != nil {
-		setOrClearParishString(logoURL, upd.SetLogoURL, upd.ClearLogoURL)
+		setOrClearParokiString(logoURL, upd.SetLogoURL, upd.ClearLogoURL)
 	}
-	if letterhead != nil {
-		setOrClearParishString(letterhead, upd.SetLetterhead, upd.ClearLetterhead)
+	if kopSurat != nil {
+		setOrClearParokiString(kopSurat, upd.SetKopSurat, upd.ClearKopSurat)
 	}
 	if active != nil {
 		upd.SetActive(*active)
@@ -188,50 +188,50 @@ func (r *Repository) UpdateParish(
 	return upd.Save(ctx)
 }
 
-// SoftDeleteParish sets deleted_at and marks the Parish inactive.
-func (r *Repository) SoftDeleteParish(ctx context.Context, id uuid.UUID, at time.Time) error {
-	return r.client.Parish.UpdateOneID(id).
+// SoftDeleteParoki sets deleted_at and marks the Paroki inactive.
+func (r *Repository) SoftDeleteParoki(ctx context.Context, id uuid.UUID, at time.Time) error {
+	return r.client.Paroki.UpdateOneID(id).
 		SetDeletedAt(at).
 		SetActive(false).
 		Exec(ctx)
 }
 
-// HasParishChildren reports whether any non-deleted Zone, Ward, Lookup, Organization, Event, Period, AgentSession, or AgentMemory belongs to parishID.
-func (r *Repository) HasParishChildren(ctx context.Context, parishID uuid.UUID) (bool, error) {
-	if has, err := r.client.Zone.Query().Where(zone.ParishIDEQ(parishID), zone.DeletedAtIsNil()).Exist(ctx); err != nil || has {
+// HasParokiChildren reports whether any non-deleted Wilayah, Lingkungan, Lookup, Organization, Event, Period, AgentSession, or AgentMemory belongs to parokiID.
+func (r *Repository) HasParokiChildren(ctx context.Context, parokiID uuid.UUID) (bool, error) {
+	if has, err := r.client.Wilayah.Query().Where(wilayah.ParokiIDEQ(parokiID), wilayah.DeletedAtIsNil()).Exist(ctx); err != nil || has {
 		return has, err
 	}
-	if has, err := r.client.Ward.Query().Where(ward.ParishIDEQ(parishID), ward.DeletedAtIsNil()).Exist(ctx); err != nil || has {
+	if has, err := r.client.Lingkungan.Query().Where(lingkungan.ParokiIDEQ(parokiID), lingkungan.DeletedAtIsNil()).Exist(ctx); err != nil || has {
 		return has, err
 	}
-	if has, err := r.client.Lookup.Query().Where(lookup.ParishIDEQ(parishID), lookup.DeletedAtIsNil()).Exist(ctx); err != nil || has {
+	if has, err := r.client.Lookup.Query().Where(lookup.ParokiIDEQ(parokiID), lookup.DeletedAtIsNil()).Exist(ctx); err != nil || has {
 		return has, err
 	}
-	if has, err := r.client.Organization.Query().Where(organization.ParishIDEQ(parishID), organization.DeletedAtIsNil()).Exist(ctx); err != nil || has {
+	if has, err := r.client.Organization.Query().Where(organization.ParokiIDEQ(parokiID), organization.DeletedAtIsNil()).Exist(ctx); err != nil || has {
 		return has, err
 	}
-	if has, err := r.client.Event.Query().Where(event.ParishIDEQ(parishID), event.DeletedAtIsNil()).Exist(ctx); err != nil || has {
+	if has, err := r.client.Event.Query().Where(event.ParokiIDEQ(parokiID), event.DeletedAtIsNil()).Exist(ctx); err != nil || has {
 		return has, err
 	}
-	if has, err := r.client.Period.Query().Where(period.ParishIDEQ(parishID), period.DeletedAtIsNil()).Exist(ctx); err != nil || has {
+	if has, err := r.client.Period.Query().Where(period.ParokiIDEQ(parokiID), period.DeletedAtIsNil()).Exist(ctx); err != nil || has {
 		return has, err
 	}
-	if has, err := r.client.AgentSession.Query().Where(agentsession.ParishIDEQ(parishID), agentsession.DeletedAtIsNil()).Exist(ctx); err != nil || has {
+	if has, err := r.client.AgentSession.Query().Where(agentsession.ParokiIDEQ(parokiID), agentsession.DeletedAtIsNil()).Exist(ctx); err != nil || has {
 		return has, err
 	}
-	return r.client.AgentMemory.Query().Where(agentmemory.ParishIDEQ(parishID)).Exist(ctx)
+	return r.client.AgentMemory.Query().Where(agentmemory.ParokiIDEQ(parokiID)).Exist(ctx)
 }
 
-// SearchParishMembers returns paginated ParishMember rows along with a User lookup map.
-func (r *Repository) SearchParishMembers(
+// SearchParokiMembers returns paginated ParokiMember rows along with a User lookup map.
+func (r *Repository) SearchParokiMembers(
 	ctx context.Context,
-	parishID uuid.UUID,
+	parokiID uuid.UUID,
 	q, role string,
 	cursorCreatedAt *time.Time,
 	cursorID *uuid.UUID,
 	limit int,
-) ([]*ent.ParishMember, map[uuid.UUID]*ent.User, error) {
-	query := r.client.ParishMember.Query().Where(parishmember.ParishIDEQ(parishID))
+) ([]*ent.ParokiMember, map[uuid.UUID]*ent.User, error) {
+	query := r.client.ParokiMember.Query().Where(parokimember.ParokiIDEQ(parokiID))
 	if q != "" {
 		userIDs, err := r.client.User.Query().
 			Where(user.DeletedAtIsNil(), user.Or(
@@ -243,24 +243,24 @@ func (r *Repository) SearchParishMembers(
 			return nil, nil, err
 		}
 		if len(userIDs) == 0 {
-			return []*ent.ParishMember{}, map[uuid.UUID]*ent.User{}, nil
+			return []*ent.ParokiMember{}, map[uuid.UUID]*ent.User{}, nil
 		}
-		query = query.Where(parishmember.UserIDIn(userIDs...))
+		query = query.Where(parokimember.UserIDIn(userIDs...))
 	}
 	if role != "" {
-		query = query.Where(parishmember.RoleEQ(parishmember.Role(role)))
+		query = query.Where(parokimember.RoleEQ(parokimember.Role(role)))
 	}
 	if cursorCreatedAt != nil && cursorID != nil {
-		query = query.Where(parishmember.Or(
-			parishmember.CreatedAtLT(*cursorCreatedAt),
-			parishmember.And(
-				parishmember.CreatedAtEQ(*cursorCreatedAt),
-				parishmember.IDLT(*cursorID),
+		query = query.Where(parokimember.Or(
+			parokimember.CreatedAtLT(*cursorCreatedAt),
+			parokimember.And(
+				parokimember.CreatedAtEQ(*cursorCreatedAt),
+				parokimember.IDLT(*cursorID),
 			),
 		))
 	}
 	rows, err := query.
-		Order(ent.Desc(parishmember.FieldCreatedAt), ent.Desc(parishmember.FieldID)).
+		Order(ent.Desc(parokimember.FieldCreatedAt), ent.Desc(parokimember.FieldID)).
 		Limit(limit).
 		All(ctx)
 	if err != nil {
@@ -284,42 +284,42 @@ func (r *Repository) SearchParishMembers(
 	return rows, usersMap, nil
 }
 
-// FindParishMember returns the ParishMember record for (parishID, userID).
-func (r *Repository) FindParishMember(ctx context.Context, parishID, userID uuid.UUID) (*ent.ParishMember, error) {
-	return r.client.ParishMember.Query().
-		Where(parishmember.ParishIDEQ(parishID), parishmember.UserIDEQ(userID)).
+// FindParokiMember returns the ParokiMember record for (parokiID, userID).
+func (r *Repository) FindParokiMember(ctx context.Context, parokiID, userID uuid.UUID) (*ent.ParokiMember, error) {
+	return r.client.ParokiMember.Query().
+		Where(parokimember.ParokiIDEQ(parokiID), parokimember.UserIDEQ(userID)).
 		Only(ctx)
 }
 
-// CreateParishMember inserts a new ParishMember record.
-func (r *Repository) CreateParishMember(ctx context.Context, parishID, userID uuid.UUID, role parishmember.Role) (*ent.ParishMember, error) {
-	return r.client.ParishMember.Create().
-		SetParishID(parishID).
+// CreateParokiMember inserts a new ParokiMember record.
+func (r *Repository) CreateParokiMember(ctx context.Context, parokiID, userID uuid.UUID, role parokimember.Role) (*ent.ParokiMember, error) {
+	return r.client.ParokiMember.Create().
+		SetParokiID(parokiID).
 		SetUserID(userID).
 		SetRole(role).
 		Save(ctx)
 }
 
-// UpdateParishMemberRole updates a ParishMember's role.
-func (r *Repository) UpdateParishMemberRole(ctx context.Context, id uuid.UUID, role parishmember.Role) (*ent.ParishMember, error) {
-	return r.client.ParishMember.UpdateOneID(id).
+// UpdateParokiMemberRole updates a ParokiMember's role.
+func (r *Repository) UpdateParokiMemberRole(ctx context.Context, id uuid.UUID, role parokimember.Role) (*ent.ParokiMember, error) {
+	return r.client.ParokiMember.UpdateOneID(id).
 		SetRole(role).
 		Save(ctx)
 }
 
-// DeleteParishMember hard-deletes a ParishMember record.
-func (r *Repository) DeleteParishMember(ctx context.Context, id uuid.UUID) error {
-	return r.client.ParishMember.DeleteOneID(id).Exec(ctx)
+// DeleteParokiMember hard-deletes a ParokiMember record.
+func (r *Repository) DeleteParokiMember(ctx context.Context, id uuid.UUID) error {
+	return r.client.ParokiMember.DeleteOneID(id).Exec(ctx)
 }
 
-// CountParishAdmins returns the number of admins in parishID.
-func (r *Repository) CountParishAdmins(ctx context.Context, parishID uuid.UUID) (int, error) {
-	return r.client.ParishMember.Query().
-		Where(parishmember.ParishIDEQ(parishID), parishmember.RoleEQ(parishmember.RoleAdmin)).
+// CountParokiAdmins returns the number of admins in parokiID.
+func (r *Repository) CountParokiAdmins(ctx context.Context, parokiID uuid.UUID) (int, error) {
+	return r.client.ParokiMember.Query().
+		Where(parokimember.ParokiIDEQ(parokiID), parokimember.RoleEQ(parokimember.RoleAdmin)).
 		Count(ctx)
 }
 
-func setOrClearParishString(val *string, setFn func(string) *ent.ParishUpdateOne, clearFn func() *ent.ParishUpdateOne) {
+func setOrClearParokiString(val *string, setFn func(string) *ent.ParokiUpdateOne, clearFn func() *ent.ParokiUpdateOne) {
 	if val == nil || *val == "" {
 		clearFn()
 		return

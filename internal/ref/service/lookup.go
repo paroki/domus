@@ -31,31 +31,31 @@ func (s *Service) SearchLookups(
 	}
 	q := strings.TrimSpace(req.Q)
 
-	if scope == "parish" && p.ParishID == uuid.Nil {
+	if scope == "paroki" && p.ParokiID == uuid.Nil {
 		return nil, false, authx.ErrTenantRequired
 	}
 
-	var globalRows, parishRows []*ent.Lookup
+	var globalRows, parokiRows []*ent.Lookup
 	var err error
-	if scope != "parish" {
+	if scope != "paroki" {
 		globalRows, err = s.repo.ListGlobalLookups(ctx, q, category, active)
 		if err != nil {
 			return nil, false, err
 		}
 	}
-	if scope != "global" && p.ParishID != uuid.Nil {
-		parishRows, err = s.repo.ListParishLookups(ctx, p.ParishID, q, category, active)
+	if scope != "global" && p.ParokiID != uuid.Nil {
+		parokiRows, err = s.repo.ListParokiLookups(ctx, p.ParokiID, q, category, active)
 		if err != nil {
 			return nil, false, err
 		}
 	}
 
-	// ponytail: in-memory merge+cursor for hybrid global+parish lookups; move to SQL UNION when lookups > 5k
-	mergedMap := make(map[string]*ent.Lookup, len(globalRows)+len(parishRows))
+	// ponytail: in-memory merge+cursor for hybrid global+paroki lookups; move to SQL UNION when lookups > 5k
+	mergedMap := make(map[string]*ent.Lookup, len(globalRows)+len(parokiRows))
 	for _, row := range globalRows {
 		mergedMap[row.Category+"\x00"+row.Code] = row
 	}
-	for _, row := range parishRows {
+	for _, row := range parokiRows {
 		mergedMap[row.Category+"\x00"+row.Code] = row
 	}
 
@@ -95,7 +95,7 @@ func (s *Service) SearchLookups(
 	return items, hasMore, nil
 }
 
-// GetLookup returns a non-deleted Lookup if global or belonging to p.ParishID.
+// GetLookup returns a non-deleted Lookup if global or belonging to p.ParokiID.
 func (s *Service) GetLookup(ctx context.Context, p authx.Principal, id uuid.UUID) (domain.LookupResponse, error) {
 	row, err := s.repo.FindLookupByID(ctx, id)
 	if ent.IsNotFound(err) {
@@ -104,32 +104,32 @@ func (s *Service) GetLookup(ctx context.Context, p authx.Principal, id uuid.UUID
 	if err != nil {
 		return domain.LookupResponse{}, err
 	}
-	if row.ParishID != nil && *row.ParishID != p.ParishID {
+	if row.ParokiID != nil && *row.ParokiID != p.ParokiID {
 		return domain.LookupResponse{}, domain.ErrLookupNotFound
 	}
 	return toLookupResponse(row), nil
 }
 
-// CreateLookup creates a global (super-admin) or tenant (parish-admin) Lookup, reactivating soft-deleted matches.
+// CreateLookup creates a global (super-admin) or tenant (paroki-admin) Lookup, reactivating soft-deleted matches.
 func (s *Service) CreateLookup(ctx context.Context, p authx.Principal, req domain.CreateLookupRequest) (domain.LookupResponse, error) {
-	var parishID *uuid.UUID
+	var parokiID *uuid.UUID
 	if req.Global {
 		if !s.isSuperAdmin(p) {
 			return domain.LookupResponse{}, domain.ErrRefForbidden
 		}
 	} else {
-		if p.ParishID == uuid.Nil {
+		if p.ParokiID == uuid.Nil {
 			return domain.LookupResponse{}, authx.ErrTenantRequired
 		}
-		isAdmin, err := s.isParishAdmin(p, p.ParishID)
+		isAdmin, err := s.isParokiAdmin(p, p.ParokiID)
 		if err != nil {
 			return domain.LookupResponse{}, err
 		}
 		if !isAdmin {
 			return domain.LookupResponse{}, domain.ErrRefForbidden
 		}
-		pid := p.ParishID
-		parishID = &pid
+		pid := p.ParokiID
+		parokiID = &pid
 	}
 
 	category, err := normalizeLookupKey("category", req.Category)
@@ -146,7 +146,7 @@ func (s *Service) CreateLookup(ctx context.Context, p authx.Principal, req domai
 	}
 
 	in := repo.LookupInput{
-		ParishID:  parishID,
+		ParokiID:  parokiID,
 		Category:  category,
 		Code:      code,
 		Label:     label,
@@ -155,7 +155,7 @@ func (s *Service) CreateLookup(ctx context.Context, p authx.Principal, req domai
 
 	var out *ent.Lookup
 	err = s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
-		existing, findErr := txRepo.FindLookupByKeyIncludeDeleted(ctx, parishID, category, code)
+		existing, findErr := txRepo.FindLookupByKeyIncludeDeleted(ctx, parokiID, category, code)
 		switch {
 		case findErr == nil && existing.DeletedAt == nil:
 			return domain.ErrCodeConflict
@@ -212,7 +212,7 @@ func (s *Service) UpdateLookup(ctx context.Context, p authx.Principal, id uuid.U
 		codePtr = &normCode
 	}
 	if targetCat != existing.Category || targetCode != existing.Code {
-		if _, findErr := s.repo.FindLookupByKeyIncludeDeleted(ctx, existing.ParishID, targetCat, targetCode); findErr == nil {
+		if _, findErr := s.repo.FindLookupByKeyIncludeDeleted(ctx, existing.ParokiID, targetCat, targetCode); findErr == nil {
 			return domain.LookupResponse{}, domain.ErrCodeConflict
 		} else if !ent.IsNotFound(findErr) {
 			return domain.LookupResponse{}, findErr
@@ -254,19 +254,19 @@ func (s *Service) DeleteLookup(ctx context.Context, p authx.Principal, id uuid.U
 }
 
 func (s *Service) authorizeLookupWrite(p authx.Principal, row *ent.Lookup) error {
-	if row.ParishID == nil {
+	if row.ParokiID == nil {
 		if !s.isSuperAdmin(p) {
 			return domain.ErrRefForbidden
 		}
 		return nil
 	}
-	if p.ParishID == uuid.Nil {
+	if p.ParokiID == uuid.Nil {
 		return authx.ErrTenantRequired
 	}
-	if *row.ParishID != p.ParishID {
+	if *row.ParokiID != p.ParokiID {
 		return domain.ErrLookupNotFound
 	}
-	isAdmin, err := s.isParishAdmin(p, p.ParishID)
+	isAdmin, err := s.isParokiAdmin(p, p.ParokiID)
 	if err != nil {
 		return err
 	}
@@ -287,7 +287,7 @@ func normalizeLookupKey(field, raw string) (string, error) {
 func toLookupResponse(l *ent.Lookup) domain.LookupResponse {
 	return domain.LookupResponse{
 		ID:        l.ID,
-		ParishID:  l.ParishID,
+		ParokiID:  l.ParokiID,
 		Category:  l.Category,
 		Code:      l.Code,
 		Label:     l.Label,

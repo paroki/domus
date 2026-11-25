@@ -12,7 +12,7 @@ import (
 
 // PeriodInput holds fields for creating or reactivating a Period.
 type PeriodInput struct {
-	ParishID  uuid.UUID
+	ParokiID  uuid.UUID
 	Type      period.Type
 	Code      string
 	Name      string
@@ -21,17 +21,17 @@ type PeriodInput struct {
 	IsCurrent bool
 }
 
-// SearchPeriods returns paginated non-deleted periods for parishID.
+// SearchPeriods returns paginated non-deleted periods for parokiID.
 func (r *Repository) SearchPeriods(
 	ctx context.Context,
-	parishID uuid.UUID,
+	parokiID uuid.UUID,
 	q, periodType, status string,
 	isCurrent *bool,
 	cursorCreatedAt *time.Time,
 	cursorID *uuid.UUID,
 	limit int,
 ) ([]*ent.Period, error) {
-	query := r.client.Period.Query().Where(period.ParishIDEQ(parishID), period.DeletedAtIsNil())
+	query := r.client.Period.Query().Where(period.ParokiIDEQ(parokiID), period.DeletedAtIsNil())
 	if q != "" {
 		query = query.Where(period.Or(
 			period.CodeContainsFold(q),
@@ -62,24 +62,24 @@ func (r *Repository) SearchPeriods(
 		All(ctx)
 }
 
-// FindPeriodByCodeIncludeDeleted returns a Period by (parishID, code), including soft-deleted rows.
-func (r *Repository) FindPeriodByCodeIncludeDeleted(ctx context.Context, parishID uuid.UUID, code string) (*ent.Period, error) {
+// FindPeriodByCodeIncludeDeleted returns a Period by (parokiID, code), including soft-deleted rows.
+func (r *Repository) FindPeriodByCodeIncludeDeleted(ctx context.Context, parokiID uuid.UUID, code string) (*ent.Period, error) {
 	return r.client.Period.Query().
-		Where(period.ParishIDEQ(parishID), period.CodeEQ(code)).
+		Where(period.ParokiIDEQ(parokiID), period.CodeEQ(code)).
 		Only(ctx)
 }
 
-// HasOverlappingPeriod reports whether any non-deleted Period of the same (parishID, type) overlaps [startDate, endDate].
+// HasOverlappingPeriod reports whether any non-deleted Period of the same (parokiID, type) overlaps [startDate, endDate].
 func (r *Repository) HasOverlappingPeriod(
 	ctx context.Context,
-	parishID uuid.UUID,
+	parokiID uuid.UUID,
 	periodType period.Type,
 	startDate, endDate string,
 	excludeID *uuid.UUID,
 ) (bool, error) {
 	query := r.client.Period.Query().
 		Where(
-			period.ParishIDEQ(parishID),
+			period.ParokiIDEQ(parokiID),
 			period.TypeEQ(periodType),
 			period.DeletedAtIsNil(),
 			period.StartDateLTE(endDate),
@@ -91,11 +91,11 @@ func (r *Repository) HasOverlappingPeriod(
 	return query.Exist(ctx)
 }
 
-// ClearCurrentPeriod sets is_current = false on sibling periods of the same (parishID, type).
-func (r *Repository) ClearCurrentPeriod(ctx context.Context, parishID uuid.UUID, periodType period.Type, excludeID *uuid.UUID) error {
+// ClearCurrentPeriod sets is_current = false on sibling periods of the same (parokiID, type).
+func (r *Repository) ClearCurrentPeriod(ctx context.Context, parokiID uuid.UUID, periodType period.Type, excludeID *uuid.UUID) error {
 	upd := r.client.Period.Update().
 		Where(
-			period.ParishIDEQ(parishID),
+			period.ParokiIDEQ(parokiID),
 			period.TypeEQ(periodType),
 			period.IsCurrentEQ(true),
 			period.DeletedAtIsNil(),
@@ -109,7 +109,7 @@ func (r *Repository) ClearCurrentPeriod(ctx context.Context, parishID uuid.UUID,
 // CreatePeriod inserts a new Period.
 func (r *Repository) CreatePeriod(ctx context.Context, in PeriodInput) (*ent.Period, error) {
 	return r.client.Period.Create().
-		SetParishID(in.ParishID).
+		SetParokiID(in.ParokiID).
 		SetType(in.Type).
 		SetCode(in.Code).
 		SetName(in.Name).
@@ -164,10 +164,10 @@ func (r *Repository) UpdatePeriod(
 	return upd.Save(ctx)
 }
 
-// HasOrgMembersByPeriod reports whether any OrgMember in parishID references periodID.
-func (r *Repository) HasOrgMembersByPeriod(ctx context.Context, parishID, periodID uuid.UUID) (bool, error) {
+// HasOrgMembersByPeriod reports whether any OrgMember in parokiID references periodID.
+func (r *Repository) HasOrgMembersByPeriod(ctx context.Context, parokiID, periodID uuid.UUID) (bool, error) {
 	return r.client.OrgMember.Query().
-		Where(orgmember.ParishIDEQ(parishID), orgmember.PeriodIDEQ(periodID)).
+		Where(orgmember.ParokiIDEQ(parokiID), orgmember.PeriodIDEQ(periodID)).
 		Exist(ctx)
 }
 

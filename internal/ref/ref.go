@@ -16,20 +16,20 @@ import (
 
 // Re-export read-only DTO types for downstream features.
 type (
-	Diocese      = domain.DioceseResponse
-	Parish       = domain.ParishResponse
-	ParishMember = domain.ParishMemberResponse
-	Zone         = domain.ZoneResponse
-	Ward         = domain.WardResponse
+	Keuskupan    = domain.KeuskupanResponse
+	Paroki       = domain.ParokiResponse
+	ParokiMember = domain.ParokiMemberResponse
+	Wilayah      = domain.WilayahResponse
+	Lingkungan   = domain.LingkunganResponse
 	Lookup       = domain.LookupResponse
 	Period       = domain.PeriodResponse
 )
 
 // Feature-owned Casbin roles and resource permissions.
 var (
-	RoleParishAdmin = authz.Role("ref", "parish-admin")
-	PermDioceses    = authz.Permission("ref", "dioceses")
-	PermParishes    = authz.Permission("ref", "parishes")
+	RoleParokiAdmin = authz.Role("ref", "paroki-admin")
+	PermKeuskupan   = authz.Permission("ref", "keuskupan")
+	PermParoki      = authz.Permission("ref", "paroki")
 	PermMasterData  = authz.Permission("ref", "master-data")
 )
 
@@ -70,19 +70,19 @@ func New(db *ent.Client, enforcer *authz.Enforcer, users *user.Feature) *Feature
 	}
 }
 
-// Register mounts /ref/dioceses and /ref/parishes routes under /api.
+// Register mounts /ref/keuskupan and /ref/paroki routes under /api.
 func (f *Feature) Register(api fiber.Router) {
 	f.handler.Register(
 		api,
 		f.users.AuthenticateMiddleware(),
 		f.users.RequireAuth(),
 		requireTenantMiddleware(),
-		f.users.Require(PermDioceses, authz.ActionRead),
-		f.users.Require(PermDioceses, authz.ActionWrite),
-		f.users.Require(PermParishes, authz.ActionRead),
-		f.users.Require(PermParishes, authz.ActionWrite),
+		f.users.Require(PermKeuskupan, authz.ActionRead),
+		f.users.Require(PermKeuskupan, authz.ActionWrite),
+		f.users.Require(PermParoki, authz.ActionRead),
+		f.users.Require(PermParoki, authz.ActionWrite),
 		f.users.Require(PermMasterData, authz.ActionRead),
-		f.users.Require(PermMasterData, authz.ActionWrite, parishDomainFromContext),
+		f.users.Require(PermMasterData, authz.ActionWrite, parokiDomainFromContext),
 	)
 }
 
@@ -92,9 +92,9 @@ func (f *Feature) RegisterPermissions(ctx context.Context, e *authz.Enforcer) er
 		return nil
 	}
 	e.RegisterRole(authz.RoleDescriptor{
-		Code:        RoleParishAdmin,
+		Code:        RoleParokiAdmin,
 		Name:        "Admin Paroki",
-		Scope:       authz.RoleScopeParish,
+		Scope:       authz.RoleScopeParoki,
 		Description: "Mengelola profil paroki, wilayah & lingkungan, kamus referensi, periode, dan organisasi paroki.",
 	})
 	policies := []struct {
@@ -102,15 +102,15 @@ func (f *Feature) RegisterPermissions(ctx context.Context, e *authz.Enforcer) er
 		perm string
 		act  authz.Action
 	}{
-		{user.RoleSuperAdmin, PermDioceses, authz.ActionRead},
-		{user.RoleSuperAdmin, PermDioceses, authz.ActionWrite},
-		{user.RoleSuperAdmin, PermParishes, authz.ActionRead},
-		{user.RoleSuperAdmin, PermParishes, authz.ActionWrite},
-		{user.RoleUser, PermDioceses, authz.ActionRead},
-		{user.RoleUser, PermParishes, authz.ActionRead},
+		{user.RoleSuperAdmin, PermKeuskupan, authz.ActionRead},
+		{user.RoleSuperAdmin, PermKeuskupan, authz.ActionWrite},
+		{user.RoleSuperAdmin, PermParoki, authz.ActionRead},
+		{user.RoleSuperAdmin, PermParoki, authz.ActionWrite},
+		{user.RoleUser, PermKeuskupan, authz.ActionRead},
+		{user.RoleUser, PermParoki, authz.ActionRead},
 		{user.RoleUser, PermMasterData, authz.ActionRead},
-		{RoleParishAdmin, PermMasterData, authz.ActionRead},
-		{RoleParishAdmin, PermMasterData, authz.ActionWrite},
+		{RoleParokiAdmin, PermMasterData, authz.ActionRead},
+		{RoleParokiAdmin, PermMasterData, authz.ActionWrite},
 	}
 	for _, p := range policies {
 		if err := e.AddPermissionForRole(ctx, p.role, authz.DomainGlobal, p.perm, p.act); err != nil {
@@ -120,47 +120,47 @@ func (f *Feature) RegisterPermissions(ctx context.Context, e *authz.Enforcer) er
 	return nil
 }
 
-// GetParish returns a non-deleted Parish by ID.
-func (f *Feature) GetParish(ctx context.Context, parishID uuid.UUID) (*Parish, error) {
-	return f.service.GetParish(ctx, parishID)
+// GetParoki returns a non-deleted Paroki by ID.
+func (f *Feature) GetParoki(ctx context.Context, parokiID uuid.UUID) (*Paroki, error) {
+	return f.service.GetParoki(ctx, parokiID)
 }
 
-// GetParishByCode returns an active, non-deleted Parish by code.
-func (f *Feature) GetParishByCode(ctx context.Context, code string) (*Parish, error) {
-	return f.service.GetParishByCode(ctx, code)
+// GetParokiByCode returns an active, non-deleted Paroki by code.
+func (f *Feature) GetParokiByCode(ctx context.Context, code string) (*Paroki, error) {
+	return f.service.GetParokiByCode(ctx, code)
 }
 
-// ValidateZoneInParish returns a non-deleted Zone if it belongs to parishID.
-func (f *Feature) ValidateZoneInParish(ctx context.Context, parishID, zoneID uuid.UUID) (*Zone, error) {
-	return f.service.ValidateZoneInParish(ctx, parishID, zoneID)
+// ValidateWilayahInParoki returns a non-deleted Wilayah if it belongs to parokiID.
+func (f *Feature) ValidateWilayahInParoki(ctx context.Context, parokiID, wilayahID uuid.UUID) (*Wilayah, error) {
+	return f.service.ValidateWilayahInParoki(ctx, parokiID, wilayahID)
 }
 
-// ValidateWardInParish returns a non-deleted Ward if it belongs to parishID.
-func (f *Feature) ValidateWardInParish(ctx context.Context, parishID, wardID uuid.UUID) (*Ward, error) {
-	return f.service.ValidateWardInParish(ctx, parishID, wardID)
+// ValidateLingkunganInParoki returns a non-deleted Lingkungan if it belongs to parokiID.
+func (f *Feature) ValidateLingkunganInParoki(ctx context.Context, parokiID, lingkunganID uuid.UUID) (*Lingkungan, error) {
+	return f.service.ValidateLingkunganInParoki(ctx, parokiID, lingkunganID)
 }
 
-// ValidatePeriodInParish returns a non-deleted Period if it belongs to parishID.
-func (f *Feature) ValidatePeriodInParish(ctx context.Context, parishID, periodID uuid.UUID) (*Period, error) {
-	return f.service.ValidatePeriodInParish(ctx, parishID, periodID)
+// ValidatePeriodInParoki returns a non-deleted Period if it belongs to parokiID.
+func (f *Feature) ValidatePeriodInParoki(ctx context.Context, parokiID, periodID uuid.UUID) (*Period, error) {
+	return f.service.ValidatePeriodInParoki(ctx, parokiID, periodID)
 }
 
-// EnsureParishMember idempotently ensures userID is a member of parishID.
-func (f *Feature) EnsureParishMember(ctx context.Context, parishID, userID uuid.UUID) (*ParishMember, error) {
-	return f.service.EnsureParishMember(ctx, parishID, userID)
+// EnsureParokiMember idempotently ensures userID is a member of parokiID.
+func (f *Feature) EnsureParokiMember(ctx context.Context, parokiID, userID uuid.UUID) (*ParokiMember, error) {
+	return f.service.EnsureParokiMember(ctx, parokiID, userID)
 }
 
-// ListParishMembers implements user.ParishMemberDirectory for MCP tools.
-func (f *Feature) ListParishMembers(ctx context.Context, p user.Principal, parishID uuid.UUID, query, role string, limit int) ([]user.ParishMemberItem, error) {
-	var filter *domain.ParishMemberSearchFilter
+// ListParokiMembers implements user.ParokiMemberDirectory for MCP tools.
+func (f *Feature) ListParokiMembers(ctx context.Context, p user.Principal, parokiID uuid.UUID, query, role string, limit int) ([]user.ParokiMemberItem, error) {
+	var filter *domain.ParokiMemberSearchFilter
 	if role != "" {
-		filter = &domain.ParishMemberSearchFilter{Role: role}
+		filter = &domain.ParokiMemberSearchFilter{Role: role}
 	}
-	rows, _, err := f.service.SearchParishMembers(
+	rows, _, err := f.service.SearchParokiMembers(
 		ctx,
 		p,
-		parishID,
-		domain.SearchParishMembersRequest{Q: query, Filter: filter},
+		parokiID,
+		domain.SearchParokiMembersRequest{Q: query, Filter: filter},
 		nil,
 		nil,
 		limit,
@@ -168,11 +168,11 @@ func (f *Feature) ListParishMembers(ctx context.Context, p user.Principal, paris
 	if err != nil {
 		return nil, err
 	}
-	out := make([]user.ParishMemberItem, 0, len(rows))
+	out := make([]user.ParokiMemberItem, 0, len(rows))
 	for _, m := range rows {
-		out = append(out, user.ParishMemberItem{
+		out = append(out, user.ParokiMemberItem{
 			ID:       m.ID.String(),
-			ParishID: m.ParishID.String(),
+			ParokiID: m.ParokiID.String(),
 			UserID:   m.UserID.String(),
 			Email:    m.Email,
 			Name:     m.Name,
@@ -192,10 +192,10 @@ func requireTenantMiddleware() fiber.Handler {
 	}
 }
 
-func parishDomainFromContext(c fiber.Ctx) (string, error) {
+func parokiDomainFromContext(c fiber.Ctx) (string, error) {
 	p, err := user.RequireTenant(c.Context())
 	if err != nil {
 		return "", err
 	}
-	return authz.ParishDomain(p.ParishID), nil
+	return authz.ParokiDomain(p.ParokiID), nil
 }

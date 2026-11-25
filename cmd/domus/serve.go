@@ -81,7 +81,7 @@ func newServeCmd() *cobra.Command {
 			}
 			userFeature := user.New(db, enforcer, userCfg, logger, userOpts...)
 			refFeature := ref.New(db, enforcer, userFeature)
-			userFeature.SetParishMemberDirectory(refFeature)
+			userFeature.SetParokiMemberDirectory(refFeature)
 			orgCfg, err := org.GetConfig(ctx)
 			if err != nil {
 				return err

@@ -41,23 +41,23 @@ func TestRefMCPTools(t *testing.T) {
 	regularUser, err := userFeature.EnsureUser(ctx, "umat@paroki.org", "Umat Biasa", "", "email", "umat@paroki.org")
 	require.NoError(t, err)
 
-	diocese, err := db.Diocese.Create().SetCode("kaj").SetName("Keuskupan Agung Jakarta").Save(ctx)
+	keuskupan, err := db.Keuskupan.Create().SetKode("kaj").SetNama("Keuskupan Agung Jakarta").Save(ctx)
 	require.NoError(t, err)
-	parish1, err := db.Parish.Create().SetDioceseID(diocese.ID).SetCode("p1").SetName("Paroki Satu").Save(ctx)
+	paroki1, err := db.Paroki.Create().SetKeuskupanID(keuskupan.ID).SetKode("p1").SetNama("Paroki Satu").Save(ctx)
 	require.NoError(t, err)
-	parish2, err := db.Parish.Create().SetDioceseID(diocese.ID).SetCode("p2").SetName("Paroki Dua").Save(ctx)
-	require.NoError(t, err)
-
-	zone1, err := db.Zone.Create().SetParishID(parish1.ID).SetCode("z1").SetName("Wilayah Satu").Save(ctx)
-	require.NoError(t, err)
-	_, err = db.Zone.Create().SetParishID(parish2.ID).SetCode("z2").SetName("Wilayah Dua").Save(ctx)
+	paroki2, err := db.Paroki.Create().SetKeuskupanID(keuskupan.ID).SetKode("p2").SetNama("Paroki Dua").Save(ctx)
 	require.NoError(t, err)
 
-	_, err = db.Ward.Create().SetParishID(parish1.ID).SetZoneID(zone1.ID).SetCode("w1").SetName("Lingkungan Satu").Save(ctx)
+	wilayah1, err := db.Wilayah.Create().SetParokiID(paroki1.ID).SetKode("z1").SetNama("Wilayah Satu").Save(ctx)
+	require.NoError(t, err)
+	_, err = db.Wilayah.Create().SetParokiID(paroki2.ID).SetKode("z2").SetNama("Wilayah Dua").Save(ctx)
+	require.NoError(t, err)
+
+	_, err = db.Lingkungan.Create().SetParokiID(paroki1.ID).SetWilayahID(wilayah1.ID).SetKode("w1").SetNama("Lingkungan Satu").Save(ctx)
 	require.NoError(t, err)
 
 	_, err = db.Period.Create().
-		SetParishID(parish1.ID).
+		SetParokiID(paroki1.ID).
 		SetCode("2026").
 		SetName("Tahun 2026").
 		SetStartDate("2026-01-01").
@@ -68,54 +68,54 @@ func TestRefMCPTools(t *testing.T) {
 
 	_, err = db.Lookup.Create().SetCategory("skill").SetCode("musik").SetLabel("Musik Liturgi").Save(ctx)
 	require.NoError(t, err)
-	_, err = db.Lookup.Create().SetParishID(parish1.ID).SetCategory("skill").SetCode("lektor").SetLabel("Lektor").Save(ctx)
+	_, err = db.Lookup.Create().SetParokiID(paroki1.ID).SetCategory("skill").SetCode("lektor").SetLabel("Lektor").Save(ctx)
 	require.NoError(t, err)
-	_, err = db.Lookup.Create().SetParishID(parish2.ID).SetCategory("skill").SetCode("other").SetLabel("Other Parish").Save(ctx)
+	_, err = db.Lookup.Create().SetParokiID(paroki2.ID).SetCategory("skill").SetCode("other").SetLabel("Other Paroki").Save(ctx)
 	require.NoError(t, err)
 
 	srv := mcpx.NewServer("domus", userFeature, refFeature)
 
-	// Without active ParishID -> TENANT_REQUIRED
+	// Without active ParokiID -> TENANT_REQUIRED
 	noTenantCtx := authx.WithPrincipal(ctx, authx.Principal{UserID: regularUser.ID})
 	noTenantSess, err := mcpx.ConnectInMemory(noTenantCtx, srv)
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = noTenantSess.Close() })
 
-	res, err := noTenantSess.CallTool(noTenantCtx, &mcp.CallToolParams{Name: "ref_get_parish"})
+	res, err := noTenantSess.CallTool(noTenantCtx, &mcp.CallToolParams{Name: "ref_get_paroki"})
 	require.NoError(t, err)
 	require.True(t, res.IsError)
-	require.Contains(t, res.Content[0].(*mcp.TextContent).Text, "An active parish tenant is required.")
+	require.Contains(t, res.Content[0].(*mcp.TextContent).Text, "An active paroki tenant is required.")
 
-	// With active ParishID -> returns parish1-scoped data only
-	tenantCtx := authx.WithPrincipal(ctx, authx.Principal{UserID: regularUser.ID, ParishID: parish1.ID})
+	// With active ParokiID -> returns paroki1-scoped data only
+	tenantCtx := authx.WithPrincipal(ctx, authx.Principal{UserID: regularUser.ID, ParokiID: paroki1.ID})
 	sess, err := mcpx.ConnectInMemory(tenantCtx, srv)
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = sess.Close() })
 
-	parishRes, err := sess.CallTool(tenantCtx, &mcp.CallToolParams{Name: "ref_get_parish"})
+	parokiRes, err := sess.CallTool(tenantCtx, &mcp.CallToolParams{Name: "ref_get_paroki"})
 	require.NoError(t, err)
-	require.False(t, parishRes.IsError)
-	var gotParish ref.MCPRefParish
-	require.NoError(t, json.Unmarshal([]byte(parishRes.Content[0].(*mcp.TextContent).Text), &gotParish))
-	require.Equal(t, parish1.ID.String(), gotParish.ID)
+	require.False(t, parokiRes.IsError)
+	var gotParoki ref.MCPRefParoki
+	require.NoError(t, json.Unmarshal([]byte(parokiRes.Content[0].(*mcp.TextContent).Text), &gotParoki))
+	require.Equal(t, paroki1.ID.String(), gotParoki.ID)
 
-	zonesRes, err := sess.CallTool(tenantCtx, &mcp.CallToolParams{Name: "ref_list_zones"})
+	wilayahRes, err := sess.CallTool(tenantCtx, &mcp.CallToolParams{Name: "ref_list_wilayah"})
 	require.NoError(t, err)
-	require.False(t, zonesRes.IsError)
-	var gotZones ref.RefListZonesOutput
-	require.NoError(t, json.Unmarshal([]byte(zonesRes.Content[0].(*mcp.TextContent).Text), &gotZones))
-	require.Len(t, gotZones.Zones, 1)
-	require.Equal(t, zone1.ID.String(), gotZones.Zones[0].ID)
+	require.False(t, wilayahRes.IsError)
+	var gotWilayah ref.RefListWilayahOutput
+	require.NoError(t, json.Unmarshal([]byte(wilayahRes.Content[0].(*mcp.TextContent).Text), &gotWilayah))
+	require.Len(t, gotWilayah.Wilayah, 1)
+	require.Equal(t, wilayah1.ID.String(), gotWilayah.Wilayah[0].ID)
 
-	wardsRes, err := sess.CallTool(tenantCtx, &mcp.CallToolParams{
-		Name:      "ref_list_wards",
-		Arguments: map[string]any{"zoneId": zone1.ID.String()},
+	lingkunganRes, err := sess.CallTool(tenantCtx, &mcp.CallToolParams{
+		Name:      "ref_list_lingkungan",
+		Arguments: map[string]any{"wilayahId": wilayah1.ID.String()},
 	})
 	require.NoError(t, err)
-	require.False(t, wardsRes.IsError)
-	var gotWards ref.RefListWardsOutput
-	require.NoError(t, json.Unmarshal([]byte(wardsRes.Content[0].(*mcp.TextContent).Text), &gotWards))
-	require.Len(t, gotWards.Wards, 1)
+	require.False(t, lingkunganRes.IsError)
+	var gotLingkungan ref.RefListLingkunganOutput
+	require.NoError(t, json.Unmarshal([]byte(lingkunganRes.Content[0].(*mcp.TextContent).Text), &gotLingkungan))
+	require.Len(t, gotLingkungan.Lingkungan, 1)
 
 	periodsRes, err := sess.CallTool(tenantCtx, &mcp.CallToolParams{Name: "ref_list_periods"})
 	require.NoError(t, err)
@@ -134,9 +134,9 @@ func TestRefMCPTools(t *testing.T) {
 	require.NoError(t, json.Unmarshal([]byte(lookupsRes.Content[0].(*mcp.TextContent).Text), &gotLookups))
 	require.Len(t, gotLookups.Lookups, 2)
 	for _, l := range gotLookups.Lookups {
-		if l.ParishID != nil {
-			require.NotEqual(t, uuid.Nil.String(), *l.ParishID)
-			require.Equal(t, parish1.ID.String(), *l.ParishID)
+		if l.ParokiID != nil {
+			require.NotEqual(t, uuid.Nil.String(), *l.ParokiID)
+			require.Equal(t, paroki1.ID.String(), *l.ParokiID)
 		}
 	}
 }

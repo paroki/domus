@@ -12,80 +12,80 @@ import (
 	"github.com/paroki/domus/internal/user"
 )
 
-// RefGetParishInput is the input schema for ref_get_parish.
-type RefGetParishInput struct{}
+// RefGetParokiInput is the input schema for ref_get_paroki.
+type RefGetParokiInput struct{}
 
-// MCPRefParish is the MCP-safe representation of a Parish.
-type MCPRefParish struct {
+// MCPRefParoki is the MCP-safe representation of a Paroki.
+type MCPRefParoki struct {
 	ID          string    `json:"id"`
-	DioceseID   string    `json:"dioceseId"`
-	Code        string    `json:"code"`
-	Name        string    `json:"name"`
-	PatronSaint *string   `json:"patronSaint,omitempty"`
-	PastorName  *string   `json:"pastorName,omitempty"`
-	Address     *string   `json:"address,omitempty"`
-	Phone       *string   `json:"phone,omitempty"`
+	KeuskupanID string    `json:"keuskupanId"`
+	Kode        string    `json:"kode"`
+	Nama        string    `json:"nama"`
+	Pelindung   *string   `json:"pelindung,omitempty"`
+	Pastor      *string   `json:"pastor,omitempty"`
+	Alamat      *string   `json:"alamat,omitempty"`
+	Telepon     *string   `json:"telepon,omitempty"`
 	Email       *string   `json:"email,omitempty"`
 	Website     *string   `json:"website,omitempty"`
 	LogoURL     *string   `json:"logoUrl,omitempty"`
-	Letterhead  *string   `json:"letterhead,omitempty"`
+	KopSurat    *string   `json:"kopSurat,omitempty"`
 	Active      bool      `json:"active"`
 	CreatedAt   time.Time `json:"createdAt"`
 	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
-// RefListZonesInput is the input schema for ref_list_zones.
-type RefListZonesInput struct {
+// RefListWilayahInput is the input schema for ref_list_wilayah.
+type RefListWilayahInput struct {
 	Query  string `json:"query,omitempty"`
 	Active *bool  `json:"active,omitempty"`
 	Limit  int    `json:"limit,omitempty"`
 }
 
-// MCPRefZone is the MCP-safe representation of a Zone.
-type MCPRefZone struct {
-	ID               string    `json:"id"`
-	ParishID         string    `json:"parishId"`
-	Type             string    `json:"type"`
-	Code             string    `json:"code"`
-	Name             string    `json:"name"`
-	CoordinatorName  *string   `json:"coordinatorName,omitempty"`
-	CoordinatorPhone *string   `json:"coordinatorPhone,omitempty"`
-	Active           bool      `json:"active"`
-	CreatedAt        time.Time `json:"createdAt"`
-	UpdatedAt        time.Time `json:"updatedAt"`
+// MCPRefWilayah is the MCP-safe representation of a Wilayah.
+type MCPRefWilayah struct {
+	ID                 string    `json:"id"`
+	ParokiID           string    `json:"parokiId"`
+	Jenis              string    `json:"jenis"`
+	Kode               string    `json:"kode"`
+	Nama               string    `json:"nama"`
+	Koordinator        *string   `json:"koordinator,omitempty"`
+	TeleponKoordinator *string   `json:"teleponKoordinator,omitempty"`
+	Active             bool      `json:"active"`
+	CreatedAt          time.Time `json:"createdAt"`
+	UpdatedAt          time.Time `json:"updatedAt"`
 }
 
-// RefListZonesOutput is the output schema for ref_list_zones.
-type RefListZonesOutput struct {
-	Zones []MCPRefZone `json:"zones"`
+// RefListWilayahOutput is the output schema for ref_list_wilayah.
+type RefListWilayahOutput struct {
+	Wilayah []MCPRefWilayah `json:"wilayah"`
 }
 
-// RefListWardsInput is the input schema for ref_list_wards.
-type RefListWardsInput struct {
-	ZoneID string `json:"zoneId,omitempty"`
-	Query  string `json:"query,omitempty"`
-	Active *bool  `json:"active,omitempty"`
-	Limit  int    `json:"limit,omitempty"`
+// RefListLingkunganInput is the input schema for ref_list_lingkungan.
+type RefListLingkunganInput struct {
+	WilayahID string `json:"wilayahId,omitempty"`
+	Query     string `json:"query,omitempty"`
+	Active    *bool  `json:"active,omitempty"`
+	Limit     int    `json:"limit,omitempty"`
 }
 
-// MCPRefWard is the MCP-safe representation of a Ward.
-type MCPRefWard struct {
-	ID          string    `json:"id"`
-	ParishID    string    `json:"parishId"`
-	ZoneID      string    `json:"zoneId"`
-	Code        string    `json:"code"`
-	Name        string    `json:"name"`
-	PatronSaint *string   `json:"patronSaint,omitempty"`
-	HeadName    *string   `json:"headName,omitempty"`
-	HeadPhone   *string   `json:"headPhone,omitempty"`
-	Active      bool      `json:"active"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+// MCPRefLingkungan is the MCP-safe representation of a Lingkungan.
+type MCPRefLingkungan struct {
+	ID           string    `json:"id"`
+	ParokiID     string    `json:"parokiId"`
+	WilayahID    string    `json:"wilayahId"`
+	Kode         string    `json:"kode"`
+	Nama         string    `json:"nama"`
+	Pelindung    *string   `json:"pelindung,omitempty"`
+	Ketua        *string   `json:"ketua,omitempty"`
+	TeleponKetua *string   `json:"teleponKetua,omitempty"`
+	Active       bool      `json:"active"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
 }
 
-// RefListWardsOutput is the output schema for ref_list_wards.
-type RefListWardsOutput struct {
-	Wards []MCPRefWard `json:"wards"`
+// RefListLingkunganOutput is the output schema for ref_list_lingkungan.
+type RefListLingkunganOutput struct {
+	Lingkungan []MCPRefLingkungan `json:"lingkungan"`
 }
 
 // RefListPeriodsInput is the input schema for ref_list_periods.
@@ -99,7 +99,7 @@ type RefListPeriodsInput struct {
 // MCPRefPeriod is the MCP-safe representation of a Period.
 type MCPRefPeriod struct {
 	ID        string    `json:"id"`
-	ParishID  string    `json:"parishId"`
+	ParokiID  string    `json:"parokiId"`
 	Type      string    `json:"type"`
 	Code      string    `json:"code"`
 	Name      string    `json:"name"`
@@ -127,7 +127,7 @@ type RefListLookupsInput struct {
 // MCPRefLookup is the MCP-safe representation of a Lookup.
 type MCPRefLookup struct {
 	ID        string    `json:"id"`
-	ParishID  *string   `json:"parishId,omitempty"`
+	ParokiID  *string   `json:"parokiId,omitempty"`
 	Category  string    `json:"category"`
 	Code      string    `json:"code"`
 	Label     string    `json:"label"`
@@ -145,141 +145,141 @@ type RefListLookupsOutput struct {
 // RegisterMCP registers read-only ref_* tools on the MCP server.
 func (f *Feature) RegisterMCP(s *mcp.Server) {
 	mcp.AddTool(s, &mcp.Tool{
-		Name:        "ref_get_parish",
-		Description: "Get the caller's active parish profile.",
-	}, f.mcpRefGetParish)
+		Name:        "ref_get_paroki",
+		Description: "Get the caller's active paroki profile.",
+	}, f.mcpRefGetParoki)
 
 	mcp.AddTool(s, &mcp.Tool{
-		Name:        "ref_list_zones",
-		Description: "List territorial zones/stations in the caller's active parish.",
-	}, f.mcpRefListZones)
+		Name:        "ref_list_wilayah",
+		Description: "List territorial wilayah/stasi in the caller's active paroki.",
+	}, f.mcpRefListWilayah)
 
 	mcp.AddTool(s, &mcp.Tool{
-		Name:        "ref_list_wards",
-		Description: "List wards (lingkungan) in the caller's active parish.",
-	}, f.mcpRefListWards)
+		Name:        "ref_list_lingkungan",
+		Description: "List lingkungan in the caller's active paroki.",
+	}, f.mcpRefListLingkungan)
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "ref_list_periods",
-		Description: "List fiscal and liturgical periods in the caller's active parish.",
+		Description: "List fiscal and liturgical periods in the caller's active paroki.",
 	}, f.mcpRefListPeriods)
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "ref_list_lookups",
-		Description: "List merged global and active-parish reference lookups.",
+		Description: "List merged global and active-paroki reference lookups.",
 	}, f.mcpRefListLookups)
 }
 
-func (f *Feature) mcpRefGetParish(ctx context.Context, _ *mcp.CallToolRequest, _ RefGetParishInput) (*mcp.CallToolResult, MCPRefParish, error) {
-	p, err := f.requireMCPAccess(ctx, PermParishes, authz.ActionRead)
+func (f *Feature) mcpRefGetParoki(ctx context.Context, _ *mcp.CallToolRequest, _ RefGetParokiInput) (*mcp.CallToolResult, MCPRefParoki, error) {
+	p, err := f.requireMCPAccess(ctx, PermParoki, authz.ActionRead)
 	if err != nil {
-		return nil, MCPRefParish{}, err
+		return nil, MCPRefParoki{}, err
 	}
-	res, err := f.service.GetParish(ctx, p.ParishID)
+	res, err := f.service.GetParoki(ctx, p.ParokiID)
 	if err != nil {
-		return nil, MCPRefParish{}, err
+		return nil, MCPRefParoki{}, err
 	}
-	return nil, MCPRefParish{
+	return nil, MCPRefParoki{
 		ID:          res.ID.String(),
-		DioceseID:   res.DioceseID.String(),
-		Code:        res.Code,
-		Name:        res.Name,
-		PatronSaint: res.PatronSaint,
-		PastorName:  res.PastorName,
-		Address:     res.Address,
-		Phone:       res.Phone,
+		KeuskupanID: res.KeuskupanID.String(),
+		Kode:        res.Kode,
+		Nama:        res.Nama,
+		Pelindung:   res.Pelindung,
+		Pastor:      res.Pastor,
+		Alamat:      res.Alamat,
+		Telepon:     res.Telepon,
 		Email:       res.Email,
 		Website:     res.Website,
 		LogoURL:     res.LogoURL,
-		Letterhead:  res.Letterhead,
+		KopSurat:    res.KopSurat,
 		Active:      res.Active,
 		CreatedAt:   res.CreatedAt,
 		UpdatedAt:   res.UpdatedAt,
 	}, nil
 }
 
-func (f *Feature) mcpRefListZones(ctx context.Context, _ *mcp.CallToolRequest, in RefListZonesInput) (*mcp.CallToolResult, RefListZonesOutput, error) {
+func (f *Feature) mcpRefListWilayah(ctx context.Context, _ *mcp.CallToolRequest, in RefListWilayahInput) (*mcp.CallToolResult, RefListWilayahOutput, error) {
 	p, err := f.requireMCPAccess(ctx, PermMasterData, authz.ActionRead)
 	if err != nil {
-		return nil, RefListZonesOutput{}, err
+		return nil, RefListWilayahOutput{}, err
 	}
-	var filter *domain.ZoneSearchFilter
+	var filter *domain.WilayahSearchFilter
 	if in.Active != nil {
-		filter = &domain.ZoneSearchFilter{Active: in.Active}
+		filter = &domain.WilayahSearchFilter{Active: in.Active}
 	}
-	items, _, err := f.service.SearchZones(
+	items, _, err := f.service.SearchWilayah(
 		ctx,
-		p.ParishID,
-		domain.SearchZonesRequest{Q: in.Query, Filter: filter},
+		p.ParokiID,
+		domain.SearchWilayahRequest{Q: in.Query, Filter: filter},
 		nil,
 		nil,
 		clampMCPLimit(in.Limit, 50, 100),
 	)
 	if err != nil {
-		return nil, RefListZonesOutput{}, err
+		return nil, RefListWilayahOutput{}, err
 	}
-	out := make([]MCPRefZone, 0, len(items))
-	for _, z := range items {
-		out = append(out, MCPRefZone{
-			ID:               z.ID.String(),
-			ParishID:         z.ParishID.String(),
-			Type:             z.Type,
-			Code:             z.Code,
-			Name:             z.Name,
-			CoordinatorName:  z.CoordinatorName,
-			CoordinatorPhone: z.CoordinatorPhone,
-			Active:           z.Active,
-			CreatedAt:        z.CreatedAt,
-			UpdatedAt:        z.UpdatedAt,
+	out := make([]MCPRefWilayah, 0, len(items))
+	for _, w := range items {
+		out = append(out, MCPRefWilayah{
+			ID:                 w.ID.String(),
+			ParokiID:           w.ParokiID.String(),
+			Jenis:              w.Jenis,
+			Kode:               w.Kode,
+			Nama:               w.Nama,
+			Koordinator:        w.Koordinator,
+			TeleponKoordinator: w.TeleponKoordinator,
+			Active:             w.Active,
+			CreatedAt:          w.CreatedAt,
+			UpdatedAt:          w.UpdatedAt,
 		})
 	}
-	return nil, RefListZonesOutput{Zones: out}, nil
+	return nil, RefListWilayahOutput{Wilayah: out}, nil
 }
 
-func (f *Feature) mcpRefListWards(ctx context.Context, _ *mcp.CallToolRequest, in RefListWardsInput) (*mcp.CallToolResult, RefListWardsOutput, error) {
+func (f *Feature) mcpRefListLingkungan(ctx context.Context, _ *mcp.CallToolRequest, in RefListLingkunganInput) (*mcp.CallToolResult, RefListLingkunganOutput, error) {
 	p, err := f.requireMCPAccess(ctx, PermMasterData, authz.ActionRead)
 	if err != nil {
-		return nil, RefListWardsOutput{}, err
+		return nil, RefListLingkunganOutput{}, err
 	}
-	var filter *domain.WardSearchFilter
-	if in.ZoneID != "" || in.Active != nil {
-		filter = &domain.WardSearchFilter{Active: in.Active}
-		if in.ZoneID != "" {
-			zid, err := uuid.Parse(in.ZoneID)
+	var filter *domain.LingkunganSearchFilter
+	if in.WilayahID != "" || in.Active != nil {
+		filter = &domain.LingkunganSearchFilter{Active: in.Active}
+		if in.WilayahID != "" {
+			wid, err := uuid.Parse(in.WilayahID)
 			if err != nil {
-				return nil, RefListWardsOutput{}, httpx.BadRequest("Invalid zoneId.")
+				return nil, RefListLingkunganOutput{}, httpx.BadRequest("Invalid wilayahId.")
 			}
-			filter.ZoneID = &zid
+			filter.WilayahID = &wid
 		}
 	}
-	items, _, err := f.service.SearchWards(
+	items, _, err := f.service.SearchLingkungan(
 		ctx,
-		p.ParishID,
-		domain.SearchWardsRequest{Q: in.Query, Filter: filter},
+		p.ParokiID,
+		domain.SearchLingkunganRequest{Q: in.Query, Filter: filter},
 		nil,
 		nil,
 		clampMCPLimit(in.Limit, 50, 100),
 	)
 	if err != nil {
-		return nil, RefListWardsOutput{}, err
+		return nil, RefListLingkunganOutput{}, err
 	}
-	out := make([]MCPRefWard, 0, len(items))
-	for _, w := range items {
-		out = append(out, MCPRefWard{
-			ID:          w.ID.String(),
-			ParishID:    w.ParishID.String(),
-			ZoneID:      w.ZoneID.String(),
-			Code:        w.Code,
-			Name:        w.Name,
-			PatronSaint: w.PatronSaint,
-			HeadName:    w.HeadName,
-			HeadPhone:   w.HeadPhone,
-			Active:      w.Active,
-			CreatedAt:   w.CreatedAt,
-			UpdatedAt:   w.UpdatedAt,
+	out := make([]MCPRefLingkungan, 0, len(items))
+	for _, l := range items {
+		out = append(out, MCPRefLingkungan{
+			ID:           l.ID.String(),
+			ParokiID:     l.ParokiID.String(),
+			WilayahID:    l.WilayahID.String(),
+			Kode:         l.Kode,
+			Nama:         l.Nama,
+			Pelindung:    l.Pelindung,
+			Ketua:        l.Ketua,
+			TeleponKetua: l.TeleponKetua,
+			Active:       l.Active,
+			CreatedAt:    l.CreatedAt,
+			UpdatedAt:    l.UpdatedAt,
 		})
 	}
-	return nil, RefListWardsOutput{Wards: out}, nil
+	return nil, RefListLingkunganOutput{Lingkungan: out}, nil
 }
 
 func (f *Feature) mcpRefListPeriods(ctx context.Context, _ *mcp.CallToolRequest, in RefListPeriodsInput) (*mcp.CallToolResult, RefListPeriodsOutput, error) {
@@ -293,7 +293,7 @@ func (f *Feature) mcpRefListPeriods(ctx context.Context, _ *mcp.CallToolRequest,
 	}
 	items, _, err := f.service.SearchPeriods(
 		ctx,
-		p.ParishID,
+		p.ParokiID,
 		domain.SearchPeriodsRequest{Q: in.Query, Filter: filter},
 		nil,
 		nil,
@@ -306,7 +306,7 @@ func (f *Feature) mcpRefListPeriods(ctx context.Context, _ *mcp.CallToolRequest,
 	for _, pr := range items {
 		out = append(out, MCPRefPeriod{
 			ID:        pr.ID.String(),
-			ParishID:  pr.ParishID.String(),
+			ParokiID:  pr.ParokiID.String(),
 			Type:      pr.Type,
 			Code:      pr.Code,
 			Name:      pr.Name,
@@ -343,14 +343,14 @@ func (f *Feature) mcpRefListLookups(ctx context.Context, _ *mcp.CallToolRequest,
 	}
 	out := make([]MCPRefLookup, 0, len(items))
 	for _, l := range items {
-		var parishID *string
-		if l.ParishID != nil {
-			s := l.ParishID.String()
-			parishID = &s
+		var parokiID *string
+		if l.ParokiID != nil {
+			s := l.ParokiID.String()
+			parokiID = &s
 		}
 		out = append(out, MCPRefLookup{
 			ID:        l.ID.String(),
-			ParishID:  parishID,
+			ParokiID:  parokiID,
 			Category:  l.Category,
 			Code:      l.Code,
 			Label:     l.Label,

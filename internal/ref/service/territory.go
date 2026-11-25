@@ -7,27 +7,27 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
-	"github.com/paroki/domus/ent/zone"
+	"github.com/paroki/domus/ent/wilayah"
 	"github.com/paroki/domus/internal/ref/domain"
 	"github.com/paroki/domus/internal/ref/repo"
 )
 
-// SearchZones returns paginated non-deleted zones for parishID.
-func (s *Service) SearchZones(
+// SearchWilayah returns paginated non-deleted wilayah for parokiID.
+func (s *Service) SearchWilayah(
 	ctx context.Context,
-	parishID uuid.UUID,
-	req domain.SearchZonesRequest,
+	parokiID uuid.UUID,
+	req domain.SearchWilayahRequest,
 	cursorCreatedAt *time.Time,
 	cursorID *uuid.UUID,
 	limit int,
-) ([]domain.ZoneResponse, bool, error) {
-	var zoneType string
+) ([]domain.WilayahResponse, bool, error) {
+	var jenis string
 	var active *bool
 	if req.Filter != nil {
-		zoneType = req.Filter.Type
+		jenis = req.Filter.Jenis
 		active = req.Filter.Active
 	}
-	rows, err := s.repo.SearchZones(ctx, parishID, strings.TrimSpace(req.Q), zoneType, active, cursorCreatedAt, cursorID, limit+1)
+	rows, err := s.repo.SearchWilayah(ctx, parokiID, strings.TrimSpace(req.Q), jenis, active, cursorCreatedAt, cursorID, limit+1)
 	if err != nil {
 		return nil, false, err
 	}
@@ -35,63 +35,63 @@ func (s *Service) SearchZones(
 	if hasMore {
 		rows = rows[:limit]
 	}
-	items := make([]domain.ZoneResponse, 0, len(rows))
+	items := make([]domain.WilayahResponse, 0, len(rows))
 	for _, row := range rows {
-		items = append(items, toZoneResponse(row))
+		items = append(items, toWilayahResponse(row))
 	}
 	return items, hasMore, nil
 }
 
-// GetZone returns a single non-deleted Zone in parishID.
-func (s *Service) GetZone(ctx context.Context, parishID, zoneID uuid.UUID) (domain.ZoneResponse, error) {
-	z, err := s.repo.FindZoneInParish(ctx, parishID, zoneID)
+// GetWilayah returns a single non-deleted Wilayah in parokiID.
+func (s *Service) GetWilayah(ctx context.Context, parokiID, wilayahID uuid.UUID) (domain.WilayahResponse, error) {
+	w, err := s.repo.FindWilayahInParoki(ctx, parokiID, wilayahID)
 	if ent.IsNotFound(err) {
-		return domain.ZoneResponse{}, domain.ErrZoneNotFound
+		return domain.WilayahResponse{}, domain.ErrWilayahNotFound
 	}
 	if err != nil {
-		return domain.ZoneResponse{}, err
+		return domain.WilayahResponse{}, err
 	}
-	return toZoneResponse(z), nil
+	return toWilayahResponse(w), nil
 }
 
-// CreateZone creates a Zone or reactivates a soft-deleted one with the same (parish_id, code).
-func (s *Service) CreateZone(ctx context.Context, parishID uuid.UUID, req domain.CreateZoneRequest) (domain.ZoneResponse, error) {
-	code, err := normalizeCode(req.Code)
+// CreateWilayah creates a Wilayah or reactivates a soft-deleted one with the same (paroki_id, kode).
+func (s *Service) CreateWilayah(ctx context.Context, parokiID uuid.UUID, req domain.CreateWilayahRequest) (domain.WilayahResponse, error) {
+	kode, err := normalizeKode(req.Kode)
 	if err != nil {
-		return domain.ZoneResponse{}, err
+		return domain.WilayahResponse{}, err
 	}
-	name := strings.TrimSpace(req.Name)
-	if name == "" {
-		return domain.ZoneResponse{}, domain.ValidationError("name", "REQUIRED", "Name cannot be empty.")
+	nama := strings.TrimSpace(req.Nama)
+	if nama == "" {
+		return domain.WilayahResponse{}, domain.ValidationError("nama", "REQUIRED", "Nama cannot be empty.")
 	}
-	phone, err := normalizeOptPhone(req.CoordinatorPhone)
+	phone, err := normalizeOptPhone(req.TeleponKoordinator)
 	if err != nil {
-		return domain.ZoneResponse{}, err
+		return domain.WilayahResponse{}, err
 	}
-	zType := zone.TypeZone
-	if req.Type != "" {
-		zType = zone.Type(req.Type)
+	wJenis := wilayah.JenisWilayah
+	if req.Jenis != "" {
+		wJenis = wilayah.Jenis(req.Jenis)
 	}
-	in := repo.ZoneInput{
-		ParishID:         parishID,
-		Type:             zType,
-		Code:             code,
-		Name:             name,
-		CoordinatorName:  trimOptString(req.CoordinatorName),
-		CoordinatorPhone: phone,
+	in := repo.WilayahInput{
+		ParokiID:           parokiID,
+		Jenis:              wJenis,
+		Kode:               kode,
+		Nama:               nama,
+		Koordinator:        trimOptString(req.Koordinator),
+		TeleponKoordinator: phone,
 	}
 
-	var out *ent.Zone
+	var out *ent.Wilayah
 	err = s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
-		existing, findErr := txRepo.FindZoneByCodeIncludeDeleted(ctx, parishID, code)
+		existing, findErr := txRepo.FindWilayahByKodeIncludeDeleted(ctx, parokiID, kode)
 		switch {
 		case findErr == nil && existing.DeletedAt == nil:
 			return domain.ErrCodeConflict
 		case findErr == nil && existing.DeletedAt != nil:
-			out, findErr = txRepo.ReactivateZone(ctx, existing.ID, in)
+			out, findErr = txRepo.ReactivateWilayah(ctx, existing.ID, in)
 			return findErr
 		case ent.IsNotFound(findErr):
-			out, findErr = txRepo.CreateZone(ctx, in)
+			out, findErr = txRepo.CreateWilayah(ctx, in)
 			if findErr != nil && ent.IsConstraintError(findErr) {
 				return domain.ErrCodeConflict
 			}
@@ -101,86 +101,86 @@ func (s *Service) CreateZone(ctx context.Context, parishID uuid.UUID, req domain
 		}
 	})
 	if err != nil {
-		return domain.ZoneResponse{}, err
+		return domain.WilayahResponse{}, err
 	}
-	return toZoneResponse(out), nil
+	return toWilayahResponse(out), nil
 }
 
-// UpdateZone updates mutable fields of a Zone in parishID.
-func (s *Service) UpdateZone(ctx context.Context, parishID, zoneID uuid.UUID, req domain.UpdateZoneRequest) (domain.ZoneResponse, error) {
-	existing, err := s.repo.FindZoneInParish(ctx, parishID, zoneID)
+// UpdateWilayah updates mutable fields of a Wilayah in parokiID.
+func (s *Service) UpdateWilayah(ctx context.Context, parokiID, wilayahID uuid.UUID, req domain.UpdateWilayahRequest) (domain.WilayahResponse, error) {
+	existing, err := s.repo.FindWilayahInParoki(ctx, parokiID, wilayahID)
 	if ent.IsNotFound(err) {
-		return domain.ZoneResponse{}, domain.ErrZoneNotFound
+		return domain.WilayahResponse{}, domain.ErrWilayahNotFound
 	}
 	if err != nil {
-		return domain.ZoneResponse{}, err
+		return domain.WilayahResponse{}, err
 	}
 
-	var typePtr *zone.Type
-	if req.Type != nil {
-		t := zone.Type(*req.Type)
-		typePtr = &t
+	var jenisPtr *wilayah.Jenis
+	if req.Jenis != nil {
+		j := wilayah.Jenis(*req.Jenis)
+		jenisPtr = &j
 	}
-	var codePtr *string
-	if req.Code != nil {
-		normCode, err := normalizeCode(*req.Code)
+	var kodePtr *string
+	if req.Kode != nil {
+		normKode, err := normalizeKode(*req.Kode)
 		if err != nil {
-			return domain.ZoneResponse{}, err
+			return domain.WilayahResponse{}, err
 		}
-		if normCode != existing.Code {
-			if _, findErr := s.repo.FindZoneByCodeIncludeDeleted(ctx, parishID, normCode); findErr == nil {
-				return domain.ZoneResponse{}, domain.ErrCodeConflict
+		if normKode != existing.Kode {
+			if _, findErr := s.repo.FindWilayahByKodeIncludeDeleted(ctx, parokiID, normKode); findErr == nil {
+				return domain.WilayahResponse{}, domain.ErrCodeConflict
 			} else if !ent.IsNotFound(findErr) {
-				return domain.ZoneResponse{}, findErr
+				return domain.WilayahResponse{}, findErr
 			}
 		}
-		codePtr = &normCode
+		kodePtr = &normKode
 	}
-	var namePtr *string
-	if req.Name != nil {
-		trimmed := strings.TrimSpace(*req.Name)
+	var namaPtr *string
+	if req.Nama != nil {
+		trimmed := strings.TrimSpace(*req.Nama)
 		if trimmed == "" {
-			return domain.ZoneResponse{}, domain.ValidationError("name", "REQUIRED", "Name cannot be empty.")
+			return domain.WilayahResponse{}, domain.ValidationError("nama", "REQUIRED", "Nama cannot be empty.")
 		}
-		namePtr = &trimmed
+		namaPtr = &trimmed
 	}
-	phonePtr, err := normalizeOptPhone(req.CoordinatorPhone)
+	phonePtr, err := normalizeOptPhone(req.TeleponKoordinator)
 	if err != nil {
-		return domain.ZoneResponse{}, err
+		return domain.WilayahResponse{}, err
 	}
 
-	updated, err := s.repo.UpdateZone(
+	updated, err := s.repo.UpdateWilayah(
 		ctx,
-		zoneID,
-		typePtr,
-		codePtr,
-		namePtr,
-		trimOptString(req.CoordinatorName),
+		wilayahID,
+		jenisPtr,
+		kodePtr,
+		namaPtr,
+		trimOptString(req.Koordinator),
 		phonePtr,
 		req.Active,
 	)
 	if err != nil {
 		if ent.IsConstraintError(err) {
-			return domain.ZoneResponse{}, domain.ErrCodeConflict
+			return domain.WilayahResponse{}, domain.ErrCodeConflict
 		}
-		return domain.ZoneResponse{}, err
+		return domain.WilayahResponse{}, err
 	}
-	return toZoneResponse(updated), nil
+	return toWilayahResponse(updated), nil
 }
 
-// DeleteZone soft-deletes a Zone if no non-deleted Wards or Organizations reference it.
-func (s *Service) DeleteZone(ctx context.Context, parishID, zoneID uuid.UUID) error {
-	if _, err := s.repo.FindZoneInParish(ctx, parishID, zoneID); ent.IsNotFound(err) {
-		return domain.ErrZoneNotFound
+// DeleteWilayah soft-deletes a Wilayah if no non-deleted Lingkungan or Organizations reference it.
+func (s *Service) DeleteWilayah(ctx context.Context, parokiID, wilayahID uuid.UUID) error {
+	if _, err := s.repo.FindWilayahInParoki(ctx, parokiID, wilayahID); ent.IsNotFound(err) {
+		return domain.ErrWilayahNotFound
 	} else if err != nil {
 		return err
 	}
-	inUse, err := s.repo.HasWardsByZone(ctx, parishID, zoneID)
+	inUse, err := s.repo.HasLingkunganByWilayah(ctx, parokiID, wilayahID)
 	if err != nil {
 		return err
 	}
 	if !inUse {
-		inUse, err = s.repo.HasOrganizationsByZone(ctx, parishID, zoneID)
+		inUse, err = s.repo.HasOrganizationsByWilayah(ctx, parokiID, wilayahID)
 		if err != nil {
 			return err
 		}
@@ -188,25 +188,25 @@ func (s *Service) DeleteZone(ctx context.Context, parishID, zoneID uuid.UUID) er
 	if inUse {
 		return domain.ErrInUse
 	}
-	return s.repo.SoftDeleteZone(ctx, zoneID, time.Now().UTC())
+	return s.repo.SoftDeleteWilayah(ctx, wilayahID, time.Now().UTC())
 }
 
-// SearchWards returns paginated non-deleted wards for parishID.
-func (s *Service) SearchWards(
+// SearchLingkungan returns paginated non-deleted lingkungan for parokiID.
+func (s *Service) SearchLingkungan(
 	ctx context.Context,
-	parishID uuid.UUID,
-	req domain.SearchWardsRequest,
+	parokiID uuid.UUID,
+	req domain.SearchLingkunganRequest,
 	cursorCreatedAt *time.Time,
 	cursorID *uuid.UUID,
 	limit int,
-) ([]domain.WardResponse, bool, error) {
-	var zoneID *uuid.UUID
+) ([]domain.LingkunganResponse, bool, error) {
+	var wilayahID *uuid.UUID
 	var active *bool
 	if req.Filter != nil {
-		zoneID = req.Filter.ZoneID
+		wilayahID = req.Filter.WilayahID
 		active = req.Filter.Active
 	}
-	rows, err := s.repo.SearchWards(ctx, parishID, strings.TrimSpace(req.Q), zoneID, active, cursorCreatedAt, cursorID, limit+1)
+	rows, err := s.repo.SearchLingkungan(ctx, parokiID, strings.TrimSpace(req.Q), wilayahID, active, cursorCreatedAt, cursorID, limit+1)
 	if err != nil {
 		return nil, false, err
 	}
@@ -214,66 +214,66 @@ func (s *Service) SearchWards(
 	if hasMore {
 		rows = rows[:limit]
 	}
-	items := make([]domain.WardResponse, 0, len(rows))
+	items := make([]domain.LingkunganResponse, 0, len(rows))
 	for _, row := range rows {
-		items = append(items, toWardResponse(row))
+		items = append(items, toLingkunganResponse(row))
 	}
 	return items, hasMore, nil
 }
 
-// GetWard returns a single non-deleted Ward in parishID.
-func (s *Service) GetWard(ctx context.Context, parishID, wardID uuid.UUID) (domain.WardResponse, error) {
-	w, err := s.repo.FindWardInParish(ctx, parishID, wardID)
+// GetLingkungan returns a single non-deleted Lingkungan in parokiID.
+func (s *Service) GetLingkungan(ctx context.Context, parokiID, lingkunganID uuid.UUID) (domain.LingkunganResponse, error) {
+	l, err := s.repo.FindLingkunganInParoki(ctx, parokiID, lingkunganID)
 	if ent.IsNotFound(err) {
-		return domain.WardResponse{}, domain.ErrWardNotFound
+		return domain.LingkunganResponse{}, domain.ErrLingkunganNotFound
 	}
 	if err != nil {
-		return domain.WardResponse{}, err
+		return domain.LingkunganResponse{}, err
 	}
-	return toWardResponse(w), nil
+	return toLingkunganResponse(l), nil
 }
 
-// CreateWard creates a Ward or reactivates a soft-deleted one with the same (parish_id, code).
-func (s *Service) CreateWard(ctx context.Context, parishID uuid.UUID, req domain.CreateWardRequest) (domain.WardResponse, error) {
-	if _, err := s.repo.FindZoneInParish(ctx, parishID, req.ZoneID); ent.IsNotFound(err) {
-		return domain.WardResponse{}, domain.ErrZoneNotFound
+// CreateLingkungan creates a Lingkungan or reactivates a soft-deleted one with the same (paroki_id, kode).
+func (s *Service) CreateLingkungan(ctx context.Context, parokiID uuid.UUID, req domain.CreateLingkunganRequest) (domain.LingkunganResponse, error) {
+	if _, err := s.repo.FindWilayahInParoki(ctx, parokiID, req.WilayahID); ent.IsNotFound(err) {
+		return domain.LingkunganResponse{}, domain.ErrWilayahNotFound
 	} else if err != nil {
-		return domain.WardResponse{}, err
+		return domain.LingkunganResponse{}, err
 	}
 
-	code, err := normalizeCode(req.Code)
+	kode, err := normalizeKode(req.Kode)
 	if err != nil {
-		return domain.WardResponse{}, err
+		return domain.LingkunganResponse{}, err
 	}
-	name := strings.TrimSpace(req.Name)
-	if name == "" {
-		return domain.WardResponse{}, domain.ValidationError("name", "REQUIRED", "Name cannot be empty.")
+	nama := strings.TrimSpace(req.Nama)
+	if nama == "" {
+		return domain.LingkunganResponse{}, domain.ValidationError("nama", "REQUIRED", "Nama cannot be empty.")
 	}
-	phone, err := normalizeOptPhone(req.HeadPhone)
+	phone, err := normalizeOptPhone(req.TeleponKetua)
 	if err != nil {
-		return domain.WardResponse{}, err
+		return domain.LingkunganResponse{}, err
 	}
-	in := repo.WardInput{
-		ParishID:    parishID,
-		ZoneID:      req.ZoneID,
-		Code:        code,
-		Name:        name,
-		PatronSaint: trimOptString(req.PatronSaint),
-		HeadName:    trimOptString(req.HeadName),
-		HeadPhone:   phone,
+	in := repo.LingkunganInput{
+		ParokiID:     parokiID,
+		WilayahID:    req.WilayahID,
+		Kode:         kode,
+		Nama:         nama,
+		Pelindung:    trimOptString(req.Pelindung),
+		Ketua:        trimOptString(req.Ketua),
+		TeleponKetua: phone,
 	}
 
-	var out *ent.Ward
+	var out *ent.Lingkungan
 	err = s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
-		existing, findErr := txRepo.FindWardByCodeIncludeDeleted(ctx, parishID, code)
+		existing, findErr := txRepo.FindLingkunganByKodeIncludeDeleted(ctx, parokiID, kode)
 		switch {
 		case findErr == nil && existing.DeletedAt == nil:
 			return domain.ErrCodeConflict
 		case findErr == nil && existing.DeletedAt != nil:
-			out, findErr = txRepo.ReactivateWard(ctx, existing.ID, in)
+			out, findErr = txRepo.ReactivateLingkungan(ctx, existing.ID, in)
 			return findErr
 		case ent.IsNotFound(findErr):
-			out, findErr = txRepo.CreateWard(ctx, in)
+			out, findErr = txRepo.CreateLingkungan(ctx, in)
 			if findErr != nil && ent.IsConstraintError(findErr) {
 				return domain.ErrCodeConflict
 			}
@@ -283,90 +283,90 @@ func (s *Service) CreateWard(ctx context.Context, parishID uuid.UUID, req domain
 		}
 	})
 	if err != nil {
-		return domain.WardResponse{}, err
+		return domain.LingkunganResponse{}, err
 	}
-	return toWardResponse(out), nil
+	return toLingkunganResponse(out), nil
 }
 
-// UpdateWard updates mutable fields of a Ward in parishID.
-func (s *Service) UpdateWard(ctx context.Context, parishID, wardID uuid.UUID, req domain.UpdateWardRequest) (domain.WardResponse, error) {
-	existing, err := s.repo.FindWardInParish(ctx, parishID, wardID)
+// UpdateLingkungan updates mutable fields of a Lingkungan in parokiID.
+func (s *Service) UpdateLingkungan(ctx context.Context, parokiID, lingkunganID uuid.UUID, req domain.UpdateLingkunganRequest) (domain.LingkunganResponse, error) {
+	existing, err := s.repo.FindLingkunganInParoki(ctx, parokiID, lingkunganID)
 	if ent.IsNotFound(err) {
-		return domain.WardResponse{}, domain.ErrWardNotFound
+		return domain.LingkunganResponse{}, domain.ErrLingkunganNotFound
 	}
 	if err != nil {
-		return domain.WardResponse{}, err
+		return domain.LingkunganResponse{}, err
 	}
 
-	if req.ZoneID != nil {
-		if _, err := s.repo.FindZoneInParish(ctx, parishID, *req.ZoneID); ent.IsNotFound(err) {
-			return domain.WardResponse{}, domain.ErrZoneNotFound
+	if req.WilayahID != nil {
+		if _, err := s.repo.FindWilayahInParoki(ctx, parokiID, *req.WilayahID); ent.IsNotFound(err) {
+			return domain.LingkunganResponse{}, domain.ErrWilayahNotFound
 		} else if err != nil {
-			return domain.WardResponse{}, err
+			return domain.LingkunganResponse{}, err
 		}
 	}
 
-	var codePtr *string
-	if req.Code != nil {
-		normCode, err := normalizeCode(*req.Code)
+	var kodePtr *string
+	if req.Kode != nil {
+		normKode, err := normalizeKode(*req.Kode)
 		if err != nil {
-			return domain.WardResponse{}, err
+			return domain.LingkunganResponse{}, err
 		}
-		if normCode != existing.Code {
-			if _, findErr := s.repo.FindWardByCodeIncludeDeleted(ctx, parishID, normCode); findErr == nil {
-				return domain.WardResponse{}, domain.ErrCodeConflict
+		if normKode != existing.Kode {
+			if _, findErr := s.repo.FindLingkunganByKodeIncludeDeleted(ctx, parokiID, normKode); findErr == nil {
+				return domain.LingkunganResponse{}, domain.ErrCodeConflict
 			} else if !ent.IsNotFound(findErr) {
-				return domain.WardResponse{}, findErr
+				return domain.LingkunganResponse{}, findErr
 			}
 		}
-		codePtr = &normCode
+		kodePtr = &normKode
 	}
-	var namePtr *string
-	if req.Name != nil {
-		trimmed := strings.TrimSpace(*req.Name)
+	var namaPtr *string
+	if req.Nama != nil {
+		trimmed := strings.TrimSpace(*req.Nama)
 		if trimmed == "" {
-			return domain.WardResponse{}, domain.ValidationError("name", "REQUIRED", "Name cannot be empty.")
+			return domain.LingkunganResponse{}, domain.ValidationError("nama", "REQUIRED", "Nama cannot be empty.")
 		}
-		namePtr = &trimmed
+		namaPtr = &trimmed
 	}
-	phonePtr, err := normalizeOptPhone(req.HeadPhone)
+	phonePtr, err := normalizeOptPhone(req.TeleponKetua)
 	if err != nil {
-		return domain.WardResponse{}, err
+		return domain.LingkunganResponse{}, err
 	}
 
-	updated, err := s.repo.UpdateWard(
+	updated, err := s.repo.UpdateLingkungan(
 		ctx,
-		wardID,
-		req.ZoneID,
-		codePtr,
-		namePtr,
-		trimOptString(req.PatronSaint),
-		trimOptString(req.HeadName),
+		lingkunganID,
+		req.WilayahID,
+		kodePtr,
+		namaPtr,
+		trimOptString(req.Pelindung),
+		trimOptString(req.Ketua),
 		phonePtr,
 		req.Active,
 	)
 	if err != nil {
 		if ent.IsConstraintError(err) {
-			return domain.WardResponse{}, domain.ErrCodeConflict
+			return domain.LingkunganResponse{}, domain.ErrCodeConflict
 		}
-		return domain.WardResponse{}, err
+		return domain.LingkunganResponse{}, err
 	}
-	return toWardResponse(updated), nil
+	return toLingkunganResponse(updated), nil
 }
 
-// DeleteWard soft-deletes a Ward in parishID if no non-deleted Organizations reference it.
-func (s *Service) DeleteWard(ctx context.Context, parishID, wardID uuid.UUID) error {
-	if _, err := s.repo.FindWardInParish(ctx, parishID, wardID); ent.IsNotFound(err) {
-		return domain.ErrWardNotFound
+// DeleteLingkungan soft-deletes a Lingkungan in parokiID if no non-deleted Organizations reference it.
+func (s *Service) DeleteLingkungan(ctx context.Context, parokiID, lingkunganID uuid.UUID) error {
+	if _, err := s.repo.FindLingkunganInParoki(ctx, parokiID, lingkunganID); ent.IsNotFound(err) {
+		return domain.ErrLingkunganNotFound
 	} else if err != nil {
 		return err
 	}
-	inUse, err := s.repo.HasOrganizationsByWard(ctx, parishID, wardID)
+	inUse, err := s.repo.HasOrganizationsByLingkungan(ctx, parokiID, lingkunganID)
 	if err != nil {
 		return err
 	}
 	if inUse {
 		return domain.ErrInUse
 	}
-	return s.repo.SoftDeleteWard(ctx, wardID, time.Now().UTC())
+	return s.repo.SoftDeleteLingkungan(ctx, lingkunganID, time.Now().UTC())
 }

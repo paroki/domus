@@ -35,7 +35,7 @@ func (h *Handler) SearchPeriods(c fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	items, hasMore, err := h.service.SearchPeriods(c.Context(), p.ParishID, req, cursorT, cursorID, limit)
+	items, hasMore, err := h.service.SearchPeriods(c.Context(), p.ParokiID, req, cursorT, cursorID, limit)
 	if err != nil {
 		return err
 	}
@@ -73,7 +73,7 @@ func (h *Handler) GetPeriod(c fiber.Ctx) error {
 	if err != nil {
 		return httpx.BadRequest("Invalid period ID.")
 	}
-	res, err := h.service.GetPeriod(c.Context(), p.ParishID, id)
+	res, err := h.service.GetPeriod(c.Context(), p.ParokiID, id)
 	if err != nil {
 		return err
 	}
@@ -105,7 +105,7 @@ func (h *Handler) CreatePeriod(c fiber.Ctx) error {
 	if err := decodeStrictJSON(c, &req); err != nil {
 		return err
 	}
-	res, err := h.service.CreatePeriod(c.Context(), p.ParishID, req)
+	res, err := h.service.CreatePeriod(c.Context(), p.ParokiID, req)
 	if err != nil {
 		return err
 	}
@@ -143,7 +143,7 @@ func (h *Handler) UpdatePeriod(c fiber.Ctx) error {
 	if err := decodeStrictJSON(c, &req); err != nil {
 		return err
 	}
-	res, err := h.service.UpdatePeriod(c.Context(), p.ParishID, id, req)
+	res, err := h.service.UpdatePeriod(c.Context(), p.ParokiID, id, req)
 	if err != nil {
 		return err
 	}
@@ -172,7 +172,7 @@ func (h *Handler) DeletePeriod(c fiber.Ctx) error {
 	if err != nil {
 		return httpx.BadRequest("Invalid period ID.")
 	}
-	if err := h.service.DeletePeriod(c.Context(), p.ParishID, id); err != nil {
+	if err := h.service.DeletePeriod(c.Context(), p.ParokiID, id); err != nil {
 		return err
 	}
 	return httpx.NoContent(c)

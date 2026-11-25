@@ -12,10 +12,10 @@ import (
 	"github.com/paroki/domus/internal/ref/repo"
 )
 
-// SearchPeriods returns paginated non-deleted periods for parishID.
+// SearchPeriods returns paginated non-deleted periods for parokiID.
 func (s *Service) SearchPeriods(
 	ctx context.Context,
-	parishID uuid.UUID,
+	parokiID uuid.UUID,
 	req domain.SearchPeriodsRequest,
 	cursorCreatedAt *time.Time,
 	cursorID *uuid.UUID,
@@ -28,7 +28,7 @@ func (s *Service) SearchPeriods(
 		status = req.Filter.Status
 		isCurrent = req.Filter.IsCurrent
 	}
-	rows, err := s.repo.SearchPeriods(ctx, parishID, strings.TrimSpace(req.Q), pType, status, isCurrent, cursorCreatedAt, cursorID, limit+1)
+	rows, err := s.repo.SearchPeriods(ctx, parokiID, strings.TrimSpace(req.Q), pType, status, isCurrent, cursorCreatedAt, cursorID, limit+1)
 	if err != nil {
 		return nil, false, err
 	}
@@ -43,9 +43,9 @@ func (s *Service) SearchPeriods(
 	return items, hasMore, nil
 }
 
-// GetPeriod returns a single non-deleted Period in parishID.
-func (s *Service) GetPeriod(ctx context.Context, parishID, periodID uuid.UUID) (domain.PeriodResponse, error) {
-	row, err := s.repo.FindPeriodInParish(ctx, parishID, periodID)
+// GetPeriod returns a single non-deleted Period in parokiID.
+func (s *Service) GetPeriod(ctx context.Context, parokiID, periodID uuid.UUID) (domain.PeriodResponse, error) {
+	row, err := s.repo.FindPeriodInParoki(ctx, parokiID, periodID)
 	if ent.IsNotFound(err) {
 		return domain.PeriodResponse{}, domain.ErrPeriodNotFound
 	}
@@ -56,7 +56,7 @@ func (s *Service) GetPeriod(ctx context.Context, parishID, periodID uuid.UUID) (
 }
 
 // CreatePeriod creates a Period (or reactivates a soft-deleted match) with date overlap and is_current rotation.
-func (s *Service) CreatePeriod(ctx context.Context, parishID uuid.UUID, req domain.CreatePeriodRequest) (domain.PeriodResponse, error) {
+func (s *Service) CreatePeriod(ctx context.Context, parokiID uuid.UUID, req domain.CreatePeriodRequest) (domain.PeriodResponse, error) {
 	code, err := normalizeCode(req.Code)
 	if err != nil {
 		return domain.PeriodResponse{}, err
@@ -75,7 +75,7 @@ func (s *Service) CreatePeriod(ctx context.Context, parishID uuid.UUID, req doma
 	}
 
 	in := repo.PeriodInput{
-		ParishID:  parishID,
+		ParokiID:  parokiID,
 		Type:      pType,
 		Code:      code,
 		Name:      name,
@@ -86,7 +86,7 @@ func (s *Service) CreatePeriod(ctx context.Context, parishID uuid.UUID, req doma
 
 	var out *ent.Period
 	err = s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
-		existing, findErr := txRepo.FindPeriodByCodeIncludeDeleted(ctx, parishID, code)
+		existing, findErr := txRepo.FindPeriodByCodeIncludeDeleted(ctx, parokiID, code)
 		var excludeID *uuid.UUID
 		switch {
 		case findErr == nil && existing.DeletedAt == nil:
@@ -98,7 +98,7 @@ func (s *Service) CreatePeriod(ctx context.Context, parishID uuid.UUID, req doma
 			return findErr
 		}
 
-		overlaps, overlapErr := txRepo.HasOverlappingPeriod(ctx, parishID, pType, startDate, endDate, excludeID)
+		overlaps, overlapErr := txRepo.HasOverlappingPeriod(ctx, parokiID, pType, startDate, endDate, excludeID)
 		if overlapErr != nil {
 			return overlapErr
 		}
@@ -107,7 +107,7 @@ func (s *Service) CreatePeriod(ctx context.Context, parishID uuid.UUID, req doma
 		}
 
 		if in.IsCurrent {
-			if err := txRepo.ClearCurrentPeriod(ctx, parishID, pType, excludeID); err != nil {
+			if err := txRepo.ClearCurrentPeriod(ctx, parokiID, pType, excludeID); err != nil {
 				return err
 			}
 		}
@@ -129,8 +129,8 @@ func (s *Service) CreatePeriod(ctx context.Context, parishID uuid.UUID, req doma
 }
 
 // UpdatePeriod updates mutable fields of a Period with date overlap and is_current rotation.
-func (s *Service) UpdatePeriod(ctx context.Context, parishID, periodID uuid.UUID, req domain.UpdatePeriodRequest) (domain.PeriodResponse, error) {
-	existing, err := s.repo.FindPeriodInParish(ctx, parishID, periodID)
+func (s *Service) UpdatePeriod(ctx context.Context, parokiID, periodID uuid.UUID, req domain.UpdatePeriodRequest) (domain.PeriodResponse, error) {
+	existing, err := s.repo.FindPeriodInParoki(ctx, parokiID, periodID)
 	if ent.IsNotFound(err) {
 		return domain.PeriodResponse{}, domain.ErrPeriodNotFound
 	}
@@ -145,7 +145,7 @@ func (s *Service) UpdatePeriod(ctx context.Context, parishID, periodID uuid.UUID
 			return domain.PeriodResponse{}, err
 		}
 		if normCode != existing.Code {
-			if _, findErr := s.repo.FindPeriodByCodeIncludeDeleted(ctx, parishID, normCode); findErr == nil {
+			if _, findErr := s.repo.FindPeriodByCodeIncludeDeleted(ctx, parokiID, normCode); findErr == nil {
 				return domain.PeriodResponse{}, domain.ErrCodeConflict
 			} else if !ent.IsNotFound(findErr) {
 				return domain.PeriodResponse{}, findErr
@@ -193,7 +193,7 @@ func (s *Service) UpdatePeriod(ctx context.Context, parishID, periodID uuid.UUID
 	var updated *ent.Period
 	err = s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
 		if req.StartDate != nil || req.EndDate != nil {
-			overlaps, overlapErr := txRepo.HasOverlappingPeriod(ctx, parishID, existing.Type, normStart, normEnd, &periodID)
+			overlaps, overlapErr := txRepo.HasOverlappingPeriod(ctx, parokiID, existing.Type, normStart, normEnd, &periodID)
 			if overlapErr != nil {
 				return overlapErr
 			}
@@ -202,7 +202,7 @@ func (s *Service) UpdatePeriod(ctx context.Context, parishID, periodID uuid.UUID
 			}
 		}
 		if req.IsCurrent != nil && *req.IsCurrent {
-			if err := txRepo.ClearCurrentPeriod(ctx, parishID, existing.Type, &periodID); err != nil {
+			if err := txRepo.ClearCurrentPeriod(ctx, parokiID, existing.Type, &periodID); err != nil {
 				return err
 			}
 		}
@@ -219,14 +219,14 @@ func (s *Service) UpdatePeriod(ctx context.Context, parishID, periodID uuid.UUID
 	return toPeriodResponse(updated), nil
 }
 
-// DeletePeriod soft-deletes a Period in parishID.
-func (s *Service) DeletePeriod(ctx context.Context, parishID, periodID uuid.UUID) error {
-	if _, err := s.repo.FindPeriodInParish(ctx, parishID, periodID); ent.IsNotFound(err) {
+// DeletePeriod soft-deletes a Period in parokiID.
+func (s *Service) DeletePeriod(ctx context.Context, parokiID, periodID uuid.UUID) error {
+	if _, err := s.repo.FindPeriodInParoki(ctx, parokiID, periodID); ent.IsNotFound(err) {
 		return domain.ErrPeriodNotFound
 	} else if err != nil {
 		return err
 	}
-	inUse, err := s.repo.HasOrgMembersByPeriod(ctx, parishID, periodID)
+	inUse, err := s.repo.HasOrgMembersByPeriod(ctx, parokiID, periodID)
 	if err != nil {
 		return err
 	}

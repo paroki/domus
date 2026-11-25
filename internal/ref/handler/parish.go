@@ -8,26 +8,26 @@ import (
 	"github.com/paroki/domus/internal/ref/domain"
 )
 
-// SearchParishes searches non-deleted parishes.
+// SearchParoki searches non-deleted paroki.
 //
-//	@Summary		Search parishes
-//	@Description	Searches parishes with optional query, diocese/active/memberOnly filters, and cursor pagination.
-//	@ID				searchParishes
+//	@Summary		Search paroki
+//	@Description	Searches paroki with optional query, keuskupan/active/memberOnly filters, and cursor pagination.
+//	@ID				searchParoki
 //	@Tags			Ref
 //	@Accept			json
 //	@Produce		json
-//	@Param			body	body		domain.SearchParishesRequest	false	"Search parameters"
-//	@Success		200		{object}	httpx.Envelope[[]domain.ParishResponse]
+//	@Param			body	body		domain.SearchParokiRequest	false	"Search parameters"
+//	@Success		200		{object}	httpx.Envelope[[]domain.ParokiResponse]
 //	@Failure		400		{object}	httpx.Envelope[any]
 //	@Failure		401		{object}	httpx.Envelope[any]
 //	@Failure		403		{object}	httpx.Envelope[any]
-//	@Router			/ref/parishes/search [post]
-func (h *Handler) SearchParishes(c fiber.Ctx) error {
+//	@Router			/ref/paroki/search [post]
+func (h *Handler) SearchParoki(c fiber.Ctx) error {
 	p, ok := authx.UserContext(c.Context())
 	if !ok {
 		return httpx.Unauthorized("Authentication is required.")
 	}
-	var req domain.SearchParishesRequest
+	var req domain.SearchParokiRequest
 	if err := decodeEmptyOrStrictJSON(c, &req); err != nil {
 		return err
 	}
@@ -35,7 +35,7 @@ func (h *Handler) SearchParishes(c fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	items, hasMore, err := h.service.SearchParishes(c.Context(), p, req, cursorT, cursorID, limit)
+	items, hasMore, err := h.service.SearchParoki(c.Context(), p, req, cursorT, cursorID, limit)
 	if err != nil {
 		return err
 	}
@@ -51,205 +51,205 @@ func (h *Handler) SearchParishes(c fiber.Ctx) error {
 	})
 }
 
-// GetCurrentParish returns the caller's active Parish.
+// GetCurrentParoki returns the caller's active Paroki.
 //
-//	@Summary		Get current parish
-//	@Description	Returns the parish resolved from the active session or X-Parish-Id header.
-//	@ID				getCurrentParish
+//	@Summary		Get current paroki
+//	@Description	Returns the paroki resolved from the active session or X-Paroki-Id header.
+//	@ID				getCurrentParoki
 //	@Tags			Ref
 //	@Produce		json
-//	@Success		200	{object}	httpx.Envelope[domain.ParishResponse]
+//	@Success		200	{object}	httpx.Envelope[domain.ParokiResponse]
 //	@Failure		400	{object}	httpx.Envelope[any]
 //	@Failure		401	{object}	httpx.Envelope[any]
 //	@Failure		404	{object}	httpx.Envelope[any]
-//	@Router			/ref/parishes/current [get]
-func (h *Handler) GetCurrentParish(c fiber.Ctx) error {
+//	@Router			/ref/paroki/current [get]
+func (h *Handler) GetCurrentParoki(c fiber.Ctx) error {
 	p, ok := authx.UserContext(c.Context())
 	if !ok {
 		return httpx.Unauthorized("Authentication is required.")
 	}
-	res, err := h.service.GetParish(c.Context(), p.ParishID)
+	res, err := h.service.GetParoki(c.Context(), p.ParokiID)
 	if err != nil {
 		return err
 	}
 	return httpx.OK(c, res)
 }
 
-// UpdateCurrentParishProfile updates profile fields of the caller's active Parish.
+// UpdateCurrentParokiProfile updates profile fields of the caller's active Paroki.
 //
-//	@Summary		Update current parish profile
-//	@Description	Updates mutable profile fields of the active parish (requires ref:parish-admin).
-//	@ID				updateCurrentParishProfile
+//	@Summary		Update current paroki profile
+//	@Description	Updates mutable profile fields of the active paroki (requires ref:paroki-admin).
+//	@ID				updateCurrentParokiProfile
 //	@Tags			Ref
 //	@Accept			json
 //	@Produce		json
-//	@Param			body	body		domain.UpdateParishProfileRequest	true	"Parish profile payload"
-//	@Success		200		{object}	httpx.Envelope[domain.ParishResponse]
+//	@Param			body	body		domain.UpdateParokiProfileRequest	true	"Paroki profile payload"
+//	@Success		200		{object}	httpx.Envelope[domain.ParokiResponse]
 //	@Failure		400		{object}	httpx.Envelope[any]
 //	@Failure		401		{object}	httpx.Envelope[any]
 //	@Failure		403		{object}	httpx.Envelope[any]
 //	@Failure		404		{object}	httpx.Envelope[any]
 //	@Failure		422		{object}	httpx.Envelope[any]
-//	@Router			/ref/parishes/current [patch]
-func (h *Handler) UpdateCurrentParishProfile(c fiber.Ctx) error {
+//	@Router			/ref/paroki/current [patch]
+func (h *Handler) UpdateCurrentParokiProfile(c fiber.Ctx) error {
 	p, ok := authx.UserContext(c.Context())
 	if !ok {
 		return httpx.Unauthorized("Authentication is required.")
 	}
-	var req domain.UpdateParishProfileRequest
+	var req domain.UpdateParokiProfileRequest
 	if err := decodeStrictJSON(c, &req); err != nil {
 		return err
 	}
-	res, err := h.service.UpdateCurrentParishProfile(c.Context(), p, req)
+	res, err := h.service.UpdateCurrentParokiProfile(c.Context(), p, req)
 	if err != nil {
 		return err
 	}
 	return httpx.OK(c, res)
 }
 
-// GetParish fetches a single Parish by ID.
+// GetParoki fetches a single Paroki by ID.
 //
-//	@Summary		Get parish
-//	@Description	Returns a single non-deleted parish by ID.
-//	@ID				getParish
+//	@Summary		Get paroki
+//	@Description	Returns a single non-deleted paroki by ID.
+//	@ID				getParoki
 //	@Tags			Ref
 //	@Produce		json
-//	@Param			id	path		string	true	"Parish UUID"
-//	@Success		200	{object}	httpx.Envelope[domain.ParishResponse]
+//	@Param			id	path		string	true	"Paroki UUID"
+//	@Success		200	{object}	httpx.Envelope[domain.ParokiResponse]
 //	@Failure		400	{object}	httpx.Envelope[any]
 //	@Failure		401	{object}	httpx.Envelope[any]
 //	@Failure		404	{object}	httpx.Envelope[any]
-//	@Router			/ref/parishes/{id} [get]
-func (h *Handler) GetParish(c fiber.Ctx) error {
+//	@Router			/ref/paroki/{id} [get]
+func (h *Handler) GetParoki(c fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return httpx.BadRequest("Invalid parish ID.")
+		return httpx.BadRequest("Invalid paroki ID.")
 	}
-	res, err := h.service.GetParish(c.Context(), id)
+	res, err := h.service.GetParoki(c.Context(), id)
 	if err != nil {
 		return err
 	}
 	return httpx.OK(c, res)
 }
 
-// CreateParish creates a new Parish.
+// CreateParoki creates a new Paroki.
 //
-//	@Summary		Create parish
-//	@Description	Creates a parish or reactivates a soft-deleted parish with the same code.
-//	@ID				createParish
+//	@Summary		Create paroki
+//	@Description	Creates a paroki or reactivates a soft-deleted paroki with the same kode.
+//	@ID				createParoki
 //	@Tags			Ref
 //	@Accept			json
 //	@Produce		json
-//	@Param			body	body		domain.CreateParishRequest	true	"Parish creation payload"
-//	@Success		201		{object}	httpx.Envelope[domain.ParishResponse]
+//	@Param			body	body		domain.CreateParokiRequest	true	"Paroki creation payload"
+//	@Success		201		{object}	httpx.Envelope[domain.ParokiResponse]
 //	@Failure		400		{object}	httpx.Envelope[any]
 //	@Failure		401		{object}	httpx.Envelope[any]
 //	@Failure		403		{object}	httpx.Envelope[any]
 //	@Failure		404		{object}	httpx.Envelope[any]
 //	@Failure		409		{object}	httpx.Envelope[any]
 //	@Failure		422		{object}	httpx.Envelope[any]
-//	@Router			/ref/parishes [post]
-func (h *Handler) CreateParish(c fiber.Ctx) error {
-	var req domain.CreateParishRequest
+//	@Router			/ref/paroki [post]
+func (h *Handler) CreateParoki(c fiber.Ctx) error {
+	var req domain.CreateParokiRequest
 	if err := decodeStrictJSON(c, &req); err != nil {
 		return err
 	}
-	res, err := h.service.CreateParish(c.Context(), req)
+	res, err := h.service.CreateParoki(c.Context(), req)
 	if err != nil {
 		return err
 	}
 	return httpx.Created(c, res)
 }
 
-// UpdateParish updates a Parish.
+// UpdateParoki updates a Paroki.
 //
-//	@Summary		Update parish
-//	@Description	Updates parish fields (super-admin) or profile fields (parish-admin).
-//	@ID				updateParish
+//	@Summary		Update paroki
+//	@Description	Updates paroki fields (super-admin) or profile fields (paroki-admin).
+//	@ID				updateParoki
 //	@Tags			Ref
 //	@Accept			json
 //	@Produce		json
-//	@Param			id		path		string						true	"Parish UUID"
-//	@Param			body	body		domain.UpdateParishRequest	true	"Parish update payload"
-//	@Success		200		{object}	httpx.Envelope[domain.ParishResponse]
+//	@Param			id		path		string						true	"Paroki UUID"
+//	@Param			body	body		domain.UpdateParokiRequest	true	"Paroki update payload"
+//	@Success		200		{object}	httpx.Envelope[domain.ParokiResponse]
 //	@Failure		400		{object}	httpx.Envelope[any]
 //	@Failure		401		{object}	httpx.Envelope[any]
 //	@Failure		403		{object}	httpx.Envelope[any]
 //	@Failure		404		{object}	httpx.Envelope[any]
 //	@Failure		409		{object}	httpx.Envelope[any]
 //	@Failure		422		{object}	httpx.Envelope[any]
-//	@Router			/ref/parishes/{id} [patch]
-func (h *Handler) UpdateParish(c fiber.Ctx) error {
+//	@Router			/ref/paroki/{id} [patch]
+func (h *Handler) UpdateParoki(c fiber.Ctx) error {
 	p, ok := authx.UserContext(c.Context())
 	if !ok {
 		return httpx.Unauthorized("Authentication is required.")
 	}
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return httpx.BadRequest("Invalid parish ID.")
+		return httpx.BadRequest("Invalid paroki ID.")
 	}
-	var req domain.UpdateParishRequest
+	var req domain.UpdateParokiRequest
 	if err := decodeStrictJSON(c, &req); err != nil {
 		return err
 	}
-	res, err := h.service.UpdateParish(c.Context(), p, id, req)
+	res, err := h.service.UpdateParoki(c.Context(), p, id, req)
 	if err != nil {
 		return err
 	}
 	return httpx.OK(c, res)
 }
 
-// DeleteParish soft-deletes a Parish if it has no non-deleted master-data children.
+// DeleteParoki soft-deletes a Paroki if it has no non-deleted master-data children.
 //
-//	@Summary		Delete parish
-//	@Description	Soft-deletes a parish when no zones, wards, lookups, or periods reference it.
-//	@ID				deleteParish
+//	@Summary		Delete paroki
+//	@Description	Soft-deletes a paroki when no wilayah, lingkungan, lookups, or periods reference it.
+//	@ID				deleteParoki
 //	@Tags			Ref
-//	@Param			id	path	string	true	"Parish UUID"
+//	@Param			id	path	string	true	"Paroki UUID"
 //	@Success		204
 //	@Failure		400	{object}	httpx.Envelope[any]
 //	@Failure		401	{object}	httpx.Envelope[any]
 //	@Failure		403	{object}	httpx.Envelope[any]
 //	@Failure		404	{object}	httpx.Envelope[any]
 //	@Failure		409	{object}	httpx.Envelope[any]
-//	@Router			/ref/parishes/{id} [delete]
-func (h *Handler) DeleteParish(c fiber.Ctx) error {
+//	@Router			/ref/paroki/{id} [delete]
+func (h *Handler) DeleteParoki(c fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return httpx.BadRequest("Invalid parish ID.")
+		return httpx.BadRequest("Invalid paroki ID.")
 	}
-	if err := h.service.DeleteParish(c.Context(), id); err != nil {
+	if err := h.service.DeleteParoki(c.Context(), id); err != nil {
 		return err
 	}
 	return httpx.NoContent(c)
 }
 
-// SearchParishMembers searches members of a Parish.
+// SearchParokiMembers searches members of a Paroki.
 //
-//	@Summary		Search parish members
-//	@Description	Searches members of a parish with optional query, role filter, and cursor pagination.
-//	@ID				searchParishMembers
+//	@Summary		Search paroki members
+//	@Description	Searches members of a paroki with optional query, role filter, and cursor pagination.
+//	@ID				searchParokiMembers
 //	@Tags			Ref
 //	@Accept			json
 //	@Produce		json
-//	@Param			id		path		string								true	"Parish UUID"
-//	@Param			body	body		domain.SearchParishMembersRequest	false	"Search parameters"
-//	@Success		200		{object}	httpx.Envelope[[]domain.ParishMemberResponse]
+//	@Param			id		path		string								true	"Paroki UUID"
+//	@Param			body	body		domain.SearchParokiMembersRequest	false	"Search parameters"
+//	@Success		200		{object}	httpx.Envelope[[]domain.ParokiMemberResponse]
 //	@Failure		400		{object}	httpx.Envelope[any]
 //	@Failure		401		{object}	httpx.Envelope[any]
 //	@Failure		403		{object}	httpx.Envelope[any]
 //	@Failure		404		{object}	httpx.Envelope[any]
-//	@Router			/ref/parishes/{id}/members/search [post]
-func (h *Handler) SearchParishMembers(c fiber.Ctx) error {
+//	@Router			/ref/paroki/{id}/members/search [post]
+func (h *Handler) SearchParokiMembers(c fiber.Ctx) error {
 	p, ok := authx.UserContext(c.Context())
 	if !ok {
 		return httpx.Unauthorized("Authentication is required.")
 	}
-	parishID, err := uuid.Parse(c.Params("id"))
+	parokiID, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return httpx.BadRequest("Invalid parish ID.")
+		return httpx.BadRequest("Invalid paroki ID.")
 	}
-	var req domain.SearchParishMembersRequest
+	var req domain.SearchParokiMembersRequest
 	if err := decodeEmptyOrStrictJSON(c, &req); err != nil {
 		return err
 	}
@@ -257,7 +257,7 @@ func (h *Handler) SearchParishMembers(c fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	items, hasMore, err := h.service.SearchParishMembers(c.Context(), p, parishID, req, cursorT, cursorID, limit)
+	items, hasMore, err := h.service.SearchParokiMembers(c.Context(), p, parokiID, req, cursorT, cursorID, limit)
 	if err != nil {
 		return err
 	}
@@ -273,94 +273,94 @@ func (h *Handler) SearchParishMembers(c fiber.Ctx) error {
 	})
 }
 
-// AddParishMember adds an existing or invited user to a Parish.
+// AddParokiMember adds an existing or invited user to a Paroki.
 //
-//	@Summary		Add parish member
-//	@Description	Adds a user (or creates/invites via email) as a member or admin of a parish.
-//	@ID				addParishMember
+//	@Summary		Add paroki member
+//	@Description	Adds a user (or creates/invites via email) as a member or admin of a paroki.
+//	@ID				addParokiMember
 //	@Tags			Ref
 //	@Accept			json
 //	@Produce		json
-//	@Param			id		path		string							true	"Parish UUID"
-//	@Param			body	body		domain.AddParishMemberRequest	true	"Member payload"
-//	@Success		201		{object}	httpx.Envelope[domain.ParishMemberResponse]
+//	@Param			id		path		string							true	"Paroki UUID"
+//	@Param			body	body		domain.AddParokiMemberRequest	true	"Member payload"
+//	@Success		201		{object}	httpx.Envelope[domain.ParokiMemberResponse]
 //	@Failure		400		{object}	httpx.Envelope[any]
 //	@Failure		401		{object}	httpx.Envelope[any]
 //	@Failure		403		{object}	httpx.Envelope[any]
 //	@Failure		404		{object}	httpx.Envelope[any]
 //	@Failure		409		{object}	httpx.Envelope[any]
 //	@Failure		422		{object}	httpx.Envelope[any]
-//	@Router			/ref/parishes/{id}/members [post]
-func (h *Handler) AddParishMember(c fiber.Ctx) error {
+//	@Router			/ref/paroki/{id}/members [post]
+func (h *Handler) AddParokiMember(c fiber.Ctx) error {
 	p, ok := authx.UserContext(c.Context())
 	if !ok {
 		return httpx.Unauthorized("Authentication is required.")
 	}
-	parishID, err := uuid.Parse(c.Params("id"))
+	parokiID, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return httpx.BadRequest("Invalid parish ID.")
+		return httpx.BadRequest("Invalid paroki ID.")
 	}
-	var req domain.AddParishMemberRequest
+	var req domain.AddParokiMemberRequest
 	if err := decodeStrictJSON(c, &req); err != nil {
 		return err
 	}
-	res, err := h.service.AddParishMember(c.Context(), p, parishID, req)
+	res, err := h.service.AddParokiMember(c.Context(), p, parokiID, req)
 	if err != nil {
 		return err
 	}
 	return httpx.Created(c, res)
 }
 
-// UpdateParishMember updates a parish member's role.
+// UpdateParokiMember updates a paroki member's role.
 //
-//	@Summary		Update parish member
-//	@Description	Updates a parish member role and syncs Casbin parish-admin policy.
-//	@ID				updateParishMember
+//	@Summary		Update paroki member
+//	@Description	Updates a paroki member role and syncs Casbin paroki-admin policy.
+//	@ID				updateParokiMember
 //	@Tags			Ref
 //	@Accept			json
 //	@Produce		json
-//	@Param			id		path		string								true	"Parish UUID"
+//	@Param			id		path		string								true	"Paroki UUID"
 //	@Param			userId	path		string								true	"User UUID"
-//	@Param			body	body		domain.UpdateParishMemberRequest	true	"Role update payload"
-//	@Success		200		{object}	httpx.Envelope[domain.ParishMemberResponse]
+//	@Param			body	body		domain.UpdateParokiMemberRequest	true	"Role update payload"
+//	@Success		200		{object}	httpx.Envelope[domain.ParokiMemberResponse]
 //	@Failure		400		{object}	httpx.Envelope[any]
 //	@Failure		401		{object}	httpx.Envelope[any]
 //	@Failure		403		{object}	httpx.Envelope[any]
 //	@Failure		404		{object}	httpx.Envelope[any]
 //	@Failure		409		{object}	httpx.Envelope[any]
 //	@Failure		422		{object}	httpx.Envelope[any]
-//	@Router			/ref/parishes/{id}/members/{userId} [patch]
-func (h *Handler) UpdateParishMember(c fiber.Ctx) error {
+//	@Router			/ref/paroki/{id}/members/{userId} [patch]
+func (h *Handler) UpdateParokiMember(c fiber.Ctx) error {
 	p, ok := authx.UserContext(c.Context())
 	if !ok {
 		return httpx.Unauthorized("Authentication is required.")
 	}
-	parishID, err := uuid.Parse(c.Params("id"))
+	parokiID, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return httpx.BadRequest("Invalid parish ID.")
+		return httpx.BadRequest("Invalid paroki ID.")
 	}
 	userID, err := uuid.Parse(c.Params("userId"))
 	if err != nil {
 		return httpx.BadRequest("Invalid user ID.")
 	}
-	var req domain.UpdateParishMemberRequest
+	var req domain.UpdateParokiMemberRequest
 	if err := decodeStrictJSON(c, &req); err != nil {
 		return err
 	}
-	res, err := h.service.UpdateParishMember(c.Context(), p, parishID, userID, req)
+	res, err := h.service.UpdateParokiMember(c.Context(), p, parokiID, userID, req)
 	if err != nil {
 		return err
 	}
 	return httpx.OK(c, res)
 }
 
-// RemoveParishMember removes a member from a Parish.
+// RemoveParokiMember removes a member from a Paroki.
 //
-//	@Summary		Remove parish member
-//	@Description	Removes a member from a parish and revokes Casbin parish-admin policy.
-//	@ID				removeParishMember
+//	@Summary		Remove paroki member
+//	@Description	Removes a member from a paroki and revokes Casbin paroki-admin policy.
+//	@ID				removeParokiMember
 //	@Tags			Ref
-//	@Param			id		path	string	true	"Parish UUID"
+//	@Param			id		path	string	true	"Paroki UUID"
 //	@Param			userId	path	string	true	"User UUID"
 //	@Success		204
 //	@Failure		400	{object}	httpx.Envelope[any]
@@ -368,21 +368,21 @@ func (h *Handler) UpdateParishMember(c fiber.Ctx) error {
 //	@Failure		403	{object}	httpx.Envelope[any]
 //	@Failure		404	{object}	httpx.Envelope[any]
 //	@Failure		409	{object}	httpx.Envelope[any]
-//	@Router			/ref/parishes/{id}/members/{userId} [delete]
-func (h *Handler) RemoveParishMember(c fiber.Ctx) error {
+//	@Router			/ref/paroki/{id}/members/{userId} [delete]
+func (h *Handler) RemoveParokiMember(c fiber.Ctx) error {
 	p, ok := authx.UserContext(c.Context())
 	if !ok {
 		return httpx.Unauthorized("Authentication is required.")
 	}
-	parishID, err := uuid.Parse(c.Params("id"))
+	parokiID, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return httpx.BadRequest("Invalid parish ID.")
+		return httpx.BadRequest("Invalid paroki ID.")
 	}
 	userID, err := uuid.Parse(c.Params("userId"))
 	if err != nil {
 		return httpx.BadRequest("Invalid user ID.")
 	}
-	if err := h.service.RemoveParishMember(c.Context(), p, parishID, userID); err != nil {
+	if err := h.service.RemoveParokiMember(c.Context(), p, parokiID, userID); err != nil {
 		return err
 	}
 	return httpx.NoContent(c)

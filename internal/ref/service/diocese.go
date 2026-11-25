@@ -11,19 +11,19 @@ import (
 	"github.com/paroki/domus/internal/ref/repo"
 )
 
-// SearchDioceses returns paginated non-deleted dioceses.
-func (s *Service) SearchDioceses(
+// SearchKeuskupan returns paginated non-deleted keuskupan.
+func (s *Service) SearchKeuskupan(
 	ctx context.Context,
-	req domain.SearchDiocesesRequest,
+	req domain.SearchKeuskupanRequest,
 	cursorCreatedAt *time.Time,
 	cursorID *uuid.UUID,
 	limit int,
-) ([]domain.DioceseResponse, bool, error) {
+) ([]domain.KeuskupanResponse, bool, error) {
 	var active *bool
 	if req.Filter != nil {
 		active = req.Filter.Active
 	}
-	rows, err := s.repo.SearchDioceses(ctx, strings.TrimSpace(req.Q), active, cursorCreatedAt, cursorID, limit+1)
+	rows, err := s.repo.SearchKeuskupan(ctx, strings.TrimSpace(req.Q), active, cursorCreatedAt, cursorID, limit+1)
 	if err != nil {
 		return nil, false, err
 	}
@@ -31,65 +31,65 @@ func (s *Service) SearchDioceses(
 	if hasMore {
 		rows = rows[:limit]
 	}
-	items := make([]domain.DioceseResponse, 0, len(rows))
+	items := make([]domain.KeuskupanResponse, 0, len(rows))
 	for _, row := range rows {
-		items = append(items, toDioceseResponse(row))
+		items = append(items, toKeuskupanResponse(row))
 	}
 	return items, hasMore, nil
 }
 
-// GetDiocese returns a single non-deleted Diocese by ID.
-func (s *Service) GetDiocese(ctx context.Context, id uuid.UUID) (domain.DioceseResponse, error) {
-	d, err := s.repo.FindDioceseByID(ctx, id)
+// GetKeuskupan returns a single non-deleted Keuskupan by ID.
+func (s *Service) GetKeuskupan(ctx context.Context, id uuid.UUID) (domain.KeuskupanResponse, error) {
+	d, err := s.repo.FindKeuskupanByID(ctx, id)
 	if ent.IsNotFound(err) {
-		return domain.DioceseResponse{}, domain.ErrDioceseNotFound
+		return domain.KeuskupanResponse{}, domain.ErrKeuskupanNotFound
 	}
 	if err != nil {
-		return domain.DioceseResponse{}, err
+		return domain.KeuskupanResponse{}, err
 	}
-	return toDioceseResponse(d), nil
+	return toKeuskupanResponse(d), nil
 }
 
-// CreateDiocese creates a Diocese or reactivates a soft-deleted one with the same code.
-func (s *Service) CreateDiocese(ctx context.Context, req domain.CreateDioceseRequest) (domain.DioceseResponse, error) {
-	code, err := normalizeCode(req.Code)
+// CreateKeuskupan creates a Keuskupan or reactivates a soft-deleted one with the same kode.
+func (s *Service) CreateKeuskupan(ctx context.Context, req domain.CreateKeuskupanRequest) (domain.KeuskupanResponse, error) {
+	kode, err := normalizeKode(req.Kode)
 	if err != nil {
-		return domain.DioceseResponse{}, err
+		return domain.KeuskupanResponse{}, err
 	}
-	name := strings.TrimSpace(req.Name)
-	if name == "" {
-		return domain.DioceseResponse{}, domain.ValidationError("name", "REQUIRED", "Name cannot be empty.")
+	nama := strings.TrimSpace(req.Nama)
+	if nama == "" {
+		return domain.KeuskupanResponse{}, domain.ValidationError("nama", "REQUIRED", "Nama cannot be empty.")
 	}
-	phone, err := normalizeOptPhone(req.Phone)
+	telepon, err := normalizeOptPhone(req.Telepon)
 	if err != nil {
-		return domain.DioceseResponse{}, err
+		return domain.KeuskupanResponse{}, err
 	}
 	active := true
 	if req.Active != nil {
 		active = *req.Active
 	}
-	in := repo.DioceseInput{
-		Code:       code,
-		Name:       name,
-		BishopName: trimOptString(req.BishopName),
-		Address:    trimOptString(req.Address),
-		Phone:      phone,
-		Email:      normalizeOptEmail(req.Email),
-		Website:    trimOptString(req.Website),
-		Active:     active,
+	in := repo.KeuskupanInput{
+		Kode:    kode,
+		Nama:    nama,
+		Uskup:   trimOptString(req.Uskup),
+		Alamat:  trimOptString(req.Alamat),
+		Telepon: telepon,
+		Email:   normalizeOptEmail(req.Email),
+		Website: trimOptString(req.Website),
+		Active:  active,
 	}
 
-	var out *ent.Diocese
+	var out *ent.Keuskupan
 	err = s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
-		existing, findErr := txRepo.FindDioceseByCodeIncludeDeleted(ctx, code)
+		existing, findErr := txRepo.FindKeuskupanByKodeIncludeDeleted(ctx, kode)
 		switch {
 		case findErr == nil && existing.DeletedAt == nil:
 			return domain.ErrCodeConflict
 		case findErr == nil && existing.DeletedAt != nil:
-			out, findErr = txRepo.ReactivateDiocese(ctx, existing.ID, in)
+			out, findErr = txRepo.ReactivateKeuskupan(ctx, existing.ID, in)
 			return findErr
 		case ent.IsNotFound(findErr):
-			out, findErr = txRepo.CreateDiocese(ctx, in)
+			out, findErr = txRepo.CreateKeuskupan(ctx, in)
 			if findErr != nil && ent.IsConstraintError(findErr) {
 				return domain.ErrCodeConflict
 			}
@@ -99,102 +99,102 @@ func (s *Service) CreateDiocese(ctx context.Context, req domain.CreateDioceseReq
 		}
 	})
 	if err != nil {
-		return domain.DioceseResponse{}, err
+		return domain.KeuskupanResponse{}, err
 	}
-	return toDioceseResponse(out), nil
+	return toKeuskupanResponse(out), nil
 }
 
-// UpdateDiocese updates mutable fields of a non-deleted Diocese.
-func (s *Service) UpdateDiocese(ctx context.Context, id uuid.UUID, req domain.UpdateDioceseRequest) (domain.DioceseResponse, error) {
-	existing, err := s.repo.FindDioceseByID(ctx, id)
+// UpdateKeuskupan updates mutable fields of a non-deleted Keuskupan.
+func (s *Service) UpdateKeuskupan(ctx context.Context, id uuid.UUID, req domain.UpdateKeuskupanRequest) (domain.KeuskupanResponse, error) {
+	existing, err := s.repo.FindKeuskupanByID(ctx, id)
 	if ent.IsNotFound(err) {
-		return domain.DioceseResponse{}, domain.ErrDioceseNotFound
+		return domain.KeuskupanResponse{}, domain.ErrKeuskupanNotFound
 	}
 	if err != nil {
-		return domain.DioceseResponse{}, err
+		return domain.KeuskupanResponse{}, err
 	}
 
-	var codePtr *string
-	if req.Code != nil {
-		normCode, err := normalizeCode(*req.Code)
+	var kodePtr *string
+	if req.Kode != nil {
+		normKode, err := normalizeKode(*req.Kode)
 		if err != nil {
-			return domain.DioceseResponse{}, err
+			return domain.KeuskupanResponse{}, err
 		}
-		if normCode != existing.Code {
-			if _, findErr := s.repo.FindDioceseByCodeIncludeDeleted(ctx, normCode); findErr == nil {
-				return domain.DioceseResponse{}, domain.ErrCodeConflict
+		if normKode != existing.Kode {
+			if _, findErr := s.repo.FindKeuskupanByKodeIncludeDeleted(ctx, normKode); findErr == nil {
+				return domain.KeuskupanResponse{}, domain.ErrCodeConflict
 			} else if !ent.IsNotFound(findErr) {
-				return domain.DioceseResponse{}, findErr
+				return domain.KeuskupanResponse{}, findErr
 			}
 		}
-		codePtr = &normCode
+		kodePtr = &normKode
 	}
 
-	var namePtr *string
-	if req.Name != nil {
-		trimmed := strings.TrimSpace(*req.Name)
+	var namaPtr *string
+	if req.Nama != nil {
+		trimmed := strings.TrimSpace(*req.Nama)
 		if trimmed == "" {
-			return domain.DioceseResponse{}, domain.ValidationError("name", "REQUIRED", "Name cannot be empty.")
+			return domain.KeuskupanResponse{}, domain.ValidationError("nama", "REQUIRED", "Nama cannot be empty.")
 		}
-		namePtr = &trimmed
+		namaPtr = &trimmed
 	}
 
-	phonePtr, err := normalizeOptPhone(req.Phone)
+	teleponPtr, err := normalizeOptPhone(req.Telepon)
 	if err != nil {
-		return domain.DioceseResponse{}, err
+		return domain.KeuskupanResponse{}, err
 	}
 
-	updated, err := s.repo.UpdateDiocese(
+	updated, err := s.repo.UpdateKeuskupan(
 		ctx,
 		id,
-		codePtr,
-		namePtr,
-		trimOptString(req.BishopName),
-		trimOptString(req.Address),
-		phonePtr,
+		kodePtr,
+		namaPtr,
+		trimOptString(req.Uskup),
+		trimOptString(req.Alamat),
+		teleponPtr,
 		normalizeOptEmail(req.Email),
 		trimOptString(req.Website),
 		req.Active,
 	)
 	if err != nil {
 		if ent.IsConstraintError(err) {
-			return domain.DioceseResponse{}, domain.ErrCodeConflict
+			return domain.KeuskupanResponse{}, domain.ErrCodeConflict
 		}
-		return domain.DioceseResponse{}, err
+		return domain.KeuskupanResponse{}, err
 	}
-	return toDioceseResponse(updated), nil
+	return toKeuskupanResponse(updated), nil
 }
 
-// DeleteDiocese soft-deletes a Diocese if it has no active parishes.
-func (s *Service) DeleteDiocese(ctx context.Context, id uuid.UUID) error {
-	if _, err := s.repo.FindDioceseByID(ctx, id); ent.IsNotFound(err) {
-		return domain.ErrDioceseNotFound
+// DeleteKeuskupan soft-deletes a Keuskupan if it has no active paroki.
+func (s *Service) DeleteKeuskupan(ctx context.Context, id uuid.UUID) error {
+	if _, err := s.repo.FindKeuskupanByID(ctx, id); ent.IsNotFound(err) {
+		return domain.ErrKeuskupanNotFound
 	} else if err != nil {
 		return err
 	}
 
-	inUse, err := s.repo.HasActiveParishesByDiocese(ctx, id)
+	inUse, err := s.repo.HasActiveParokiByKeuskupan(ctx, id)
 	if err != nil {
 		return err
 	}
 	if inUse {
 		return domain.ErrInUse
 	}
-	return s.repo.SoftDeleteDiocese(ctx, id, time.Now().UTC())
+	return s.repo.SoftDeleteKeuskupan(ctx, id, time.Now().UTC())
 }
 
-func toDioceseResponse(d *ent.Diocese) domain.DioceseResponse {
-	return domain.DioceseResponse{
-		ID:         d.ID,
-		Code:       d.Code,
-		Name:       d.Name,
-		BishopName: d.BishopName,
-		Address:    d.Address,
-		Phone:      d.Phone,
-		Email:      d.Email,
-		Website:    d.Website,
-		Active:     d.Active,
-		CreatedAt:  d.CreatedAt,
-		UpdatedAt:  d.UpdatedAt,
+func toKeuskupanResponse(d *ent.Keuskupan) domain.KeuskupanResponse {
+	return domain.KeuskupanResponse{
+		ID:        d.ID,
+		Kode:      d.Kode,
+		Nama:      d.Nama,
+		Uskup:     d.Uskup,
+		Alamat:    d.Alamat,
+		Telepon:   d.Telepon,
+		Email:     d.Email,
+		Website:   d.Website,
+		Active:    d.Active,
+		CreatedAt: d.CreatedAt,
+		UpdatedAt: d.UpdatedAt,
 	}
 }

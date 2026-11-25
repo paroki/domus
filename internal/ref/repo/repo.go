@@ -6,10 +6,10 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
+	"github.com/paroki/domus/ent/lingkungan"
 	"github.com/paroki/domus/ent/period"
 	"github.com/paroki/domus/ent/user"
-	"github.com/paroki/domus/ent/ward"
-	"github.com/paroki/domus/ent/zone"
+	"github.com/paroki/domus/ent/wilayah"
 )
 
 // Repository provides Ent-backed persistence for ref entities.
@@ -52,32 +52,32 @@ func (r *Repository) FindUserByEmail(ctx context.Context, email string) (*ent.Us
 		Only(ctx)
 }
 
-// SetUserDefaultParishIfNil sets User.default_parish_id only when currently unset.
-func (r *Repository) SetUserDefaultParishIfNil(ctx context.Context, userID, parishID uuid.UUID) error {
+// SetUserDefaultParokiIfNil sets User.default_paroki_id only when currently unset.
+func (r *Repository) SetUserDefaultParokiIfNil(ctx context.Context, userID, parokiID uuid.UUID) error {
 	_, err := r.client.User.Update().
-		Where(user.IDEQ(userID), user.DefaultParishIDIsNil()).
-		SetDefaultParishID(parishID).
+		Where(user.IDEQ(userID), user.DefaultParokiIDIsNil()).
+		SetDefaultParokiID(parokiID).
 		Save(ctx)
 	return err
 }
 
-// FindZoneInParish returns a non-deleted Zone belonging to parishID.
-func (r *Repository) FindZoneInParish(ctx context.Context, parishID, zoneID uuid.UUID) (*ent.Zone, error) {
-	return r.client.Zone.Query().
-		Where(zone.IDEQ(zoneID), zone.ParishIDEQ(parishID), zone.DeletedAtIsNil()).
+// FindWilayahInParoki returns a non-deleted Wilayah belonging to parokiID.
+func (r *Repository) FindWilayahInParoki(ctx context.Context, parokiID, wilayahID uuid.UUID) (*ent.Wilayah, error) {
+	return r.client.Wilayah.Query().
+		Where(wilayah.IDEQ(wilayahID), wilayah.ParokiIDEQ(parokiID), wilayah.DeletedAtIsNil()).
 		Only(ctx)
 }
 
-// FindWardInParish returns a non-deleted Ward belonging to parishID.
-func (r *Repository) FindWardInParish(ctx context.Context, parishID, wardID uuid.UUID) (*ent.Ward, error) {
-	return r.client.Ward.Query().
-		Where(ward.IDEQ(wardID), ward.ParishIDEQ(parishID), ward.DeletedAtIsNil()).
+// FindLingkunganInParoki returns a non-deleted Lingkungan belonging to parokiID.
+func (r *Repository) FindLingkunganInParoki(ctx context.Context, parokiID, lingkunganID uuid.UUID) (*ent.Lingkungan, error) {
+	return r.client.Lingkungan.Query().
+		Where(lingkungan.IDEQ(lingkunganID), lingkungan.ParokiIDEQ(parokiID), lingkungan.DeletedAtIsNil()).
 		Only(ctx)
 }
 
-// FindPeriodInParish returns a non-deleted Period belonging to parishID.
-func (r *Repository) FindPeriodInParish(ctx context.Context, parishID, periodID uuid.UUID) (*ent.Period, error) {
+// FindPeriodInParoki returns a non-deleted Period belonging to parokiID.
+func (r *Repository) FindPeriodInParoki(ctx context.Context, parokiID, periodID uuid.UUID) (*ent.Period, error) {
 	return r.client.Period.Query().
-		Where(period.IDEQ(periodID), period.ParishIDEQ(parishID), period.DeletedAtIsNil()).
+		Where(period.IDEQ(periodID), period.ParokiIDEQ(parokiID), period.DeletedAtIsNil()).
 		Only(ctx)
 }

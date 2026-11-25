@@ -6,126 +6,126 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
+	"github.com/paroki/domus/ent/lingkungan"
 	"github.com/paroki/domus/ent/organization"
-	"github.com/paroki/domus/ent/ward"
-	"github.com/paroki/domus/ent/zone"
+	"github.com/paroki/domus/ent/wilayah"
 )
 
-// ZoneInput holds fields for creating or reactivating a Zone.
-type ZoneInput struct {
-	ParishID         uuid.UUID
-	Type             zone.Type
-	Code             string
-	Name             string
-	CoordinatorName  *string
-	CoordinatorPhone *string
+// WilayahInput holds fields for creating or reactivating a Wilayah.
+type WilayahInput struct {
+	ParokiID           uuid.UUID
+	Jenis              wilayah.Jenis
+	Kode               string
+	Nama               string
+	Koordinator        *string
+	TeleponKoordinator *string
 }
 
-// WardInput holds fields for creating or reactivating a Ward.
-type WardInput struct {
-	ParishID    uuid.UUID
-	ZoneID      uuid.UUID
-	Code        string
-	Name        string
-	PatronSaint *string
-	HeadName    *string
-	HeadPhone   *string
+// LingkunganInput holds fields for creating or reactivating a Lingkungan.
+type LingkunganInput struct {
+	ParokiID     uuid.UUID
+	WilayahID    uuid.UUID
+	Kode         string
+	Nama         string
+	Pelindung    *string
+	Ketua        *string
+	TeleponKetua *string
 }
 
-// SearchZones returns paginated non-deleted zones for parishID.
-func (r *Repository) SearchZones(
+// SearchWilayah returns paginated non-deleted wilayah for parokiID.
+func (r *Repository) SearchWilayah(
 	ctx context.Context,
-	parishID uuid.UUID,
-	q, zoneType string,
+	parokiID uuid.UUID,
+	q, jenis string,
 	active *bool,
 	cursorCreatedAt *time.Time,
 	cursorID *uuid.UUID,
 	limit int,
-) ([]*ent.Zone, error) {
-	query := r.client.Zone.Query().Where(zone.ParishIDEQ(parishID), zone.DeletedAtIsNil())
+) ([]*ent.Wilayah, error) {
+	query := r.client.Wilayah.Query().Where(wilayah.ParokiIDEQ(parokiID), wilayah.DeletedAtIsNil())
 	if q != "" {
-		query = query.Where(zone.Or(
-			zone.CodeContainsFold(q),
-			zone.NameContainsFold(q),
+		query = query.Where(wilayah.Or(
+			wilayah.KodeContainsFold(q),
+			wilayah.NamaContainsFold(q),
 		))
 	}
-	if zoneType != "" {
-		query = query.Where(zone.TypeEQ(zone.Type(zoneType)))
+	if jenis != "" {
+		query = query.Where(wilayah.JenisEQ(wilayah.Jenis(jenis)))
 	}
 	if active != nil {
-		query = query.Where(zone.ActiveEQ(*active))
+		query = query.Where(wilayah.ActiveEQ(*active))
 	}
 	if cursorCreatedAt != nil && cursorID != nil {
-		query = query.Where(zone.Or(
-			zone.CreatedAtLT(*cursorCreatedAt),
-			zone.And(
-				zone.CreatedAtEQ(*cursorCreatedAt),
-				zone.IDLT(*cursorID),
+		query = query.Where(wilayah.Or(
+			wilayah.CreatedAtLT(*cursorCreatedAt),
+			wilayah.And(
+				wilayah.CreatedAtEQ(*cursorCreatedAt),
+				wilayah.IDLT(*cursorID),
 			),
 		))
 	}
 	return query.
-		Order(ent.Desc(zone.FieldCreatedAt), ent.Desc(zone.FieldID)).
+		Order(ent.Desc(wilayah.FieldCreatedAt), ent.Desc(wilayah.FieldID)).
 		Limit(limit).
 		All(ctx)
 }
 
-// FindZoneByCodeIncludeDeleted returns a Zone by (parishID, code), including soft-deleted rows.
-func (r *Repository) FindZoneByCodeIncludeDeleted(ctx context.Context, parishID uuid.UUID, code string) (*ent.Zone, error) {
-	return r.client.Zone.Query().
-		Where(zone.ParishIDEQ(parishID), zone.CodeEQ(code)).
+// FindWilayahByKodeIncludeDeleted returns a Wilayah by (parokiID, kode), including soft-deleted rows.
+func (r *Repository) FindWilayahByKodeIncludeDeleted(ctx context.Context, parokiID uuid.UUID, kode string) (*ent.Wilayah, error) {
+	return r.client.Wilayah.Query().
+		Where(wilayah.ParokiIDEQ(parokiID), wilayah.KodeEQ(kode)).
 		Only(ctx)
 }
 
-// CreateZone inserts a new Zone.
-func (r *Repository) CreateZone(ctx context.Context, in ZoneInput) (*ent.Zone, error) {
-	return r.client.Zone.Create().
-		SetParishID(in.ParishID).
-		SetType(in.Type).
-		SetCode(in.Code).
-		SetName(in.Name).
-		SetNillableCoordinatorName(in.CoordinatorName).
-		SetNillableCoordinatorPhone(in.CoordinatorPhone).
+// CreateWilayah inserts a new Wilayah.
+func (r *Repository) CreateWilayah(ctx context.Context, in WilayahInput) (*ent.Wilayah, error) {
+	return r.client.Wilayah.Create().
+		SetParokiID(in.ParokiID).
+		SetJenis(in.Jenis).
+		SetKode(in.Kode).
+		SetNama(in.Nama).
+		SetNillableKoordinator(in.Koordinator).
+		SetNillableTeleponKoordinator(in.TeleponKoordinator).
 		SetActive(true).
 		Save(ctx)
 }
 
-// ReactivateZone restores a soft-deleted Zone with fresh fields.
-func (r *Repository) ReactivateZone(ctx context.Context, id uuid.UUID, in ZoneInput) (*ent.Zone, error) {
-	upd := r.client.Zone.UpdateOneID(id).
+// ReactivateWilayah restores a soft-deleted Wilayah with fresh fields.
+func (r *Repository) ReactivateWilayah(ctx context.Context, id uuid.UUID, in WilayahInput) (*ent.Wilayah, error) {
+	upd := r.client.Wilayah.UpdateOneID(id).
 		ClearDeletedAt().
-		SetType(in.Type).
-		SetCode(in.Code).
-		SetName(in.Name).
+		SetJenis(in.Jenis).
+		SetKode(in.Kode).
+		SetNama(in.Nama).
 		SetActive(true)
-	setOrClearZoneString(in.CoordinatorName, upd.SetCoordinatorName, upd.ClearCoordinatorName)
-	setOrClearZoneString(in.CoordinatorPhone, upd.SetCoordinatorPhone, upd.ClearCoordinatorPhone)
+	setOrClearWilayahString(in.Koordinator, upd.SetKoordinator, upd.ClearKoordinator)
+	setOrClearWilayahString(in.TeleponKoordinator, upd.SetTeleponKoordinator, upd.ClearTeleponKoordinator)
 	return upd.Save(ctx)
 }
 
-// UpdateZone updates mutable fields of a Zone.
-func (r *Repository) UpdateZone(
+// UpdateWilayah updates mutable fields of a Wilayah.
+func (r *Repository) UpdateWilayah(
 	ctx context.Context,
 	id uuid.UUID,
-	zoneType *zone.Type,
-	code, name, coordinatorName, coordinatorPhone *string,
+	jenis *wilayah.Jenis,
+	kode, nama, koordinator, teleponKoordinator *string,
 	active *bool,
-) (*ent.Zone, error) {
-	upd := r.client.Zone.UpdateOneID(id)
-	if zoneType != nil {
-		upd.SetType(*zoneType)
+) (*ent.Wilayah, error) {
+	upd := r.client.Wilayah.UpdateOneID(id)
+	if jenis != nil {
+		upd.SetJenis(*jenis)
 	}
-	if code != nil {
-		upd.SetCode(*code)
+	if kode != nil {
+		upd.SetKode(*kode)
 	}
-	if name != nil {
-		upd.SetName(*name)
+	if nama != nil {
+		upd.SetNama(*nama)
 	}
-	if coordinatorName != nil {
-		setOrClearZoneString(coordinatorName, upd.SetCoordinatorName, upd.ClearCoordinatorName)
+	if koordinator != nil {
+		setOrClearWilayahString(koordinator, upd.SetKoordinator, upd.ClearKoordinator)
 	}
-	if coordinatorPhone != nil {
-		setOrClearZoneString(coordinatorPhone, upd.SetCoordinatorPhone, upd.ClearCoordinatorPhone)
+	if teleponKoordinator != nil {
+		setOrClearWilayahString(teleponKoordinator, upd.SetTeleponKoordinator, upd.ClearTeleponKoordinator)
 	}
 	if active != nil {
 		upd.SetActive(*active)
@@ -133,135 +133,135 @@ func (r *Repository) UpdateZone(
 	return upd.Save(ctx)
 }
 
-// SoftDeleteZone sets deleted_at and marks the Zone inactive.
-func (r *Repository) SoftDeleteZone(ctx context.Context, id uuid.UUID, at time.Time) error {
-	return r.client.Zone.UpdateOneID(id).
+// SoftDeleteWilayah sets deleted_at and marks the Wilayah inactive.
+func (r *Repository) SoftDeleteWilayah(ctx context.Context, id uuid.UUID, at time.Time) error {
+	return r.client.Wilayah.UpdateOneID(id).
 		SetDeletedAt(at).
 		SetActive(false).
 		Exec(ctx)
 }
 
-// HasWardsByZone reports whether any non-deleted Ward references zoneID in parishID.
-func (r *Repository) HasWardsByZone(ctx context.Context, parishID, zoneID uuid.UUID) (bool, error) {
-	return r.client.Ward.Query().
-		Where(ward.ParishIDEQ(parishID), ward.ZoneIDEQ(zoneID), ward.DeletedAtIsNil()).
+// HasLingkunganByWilayah reports whether any non-deleted Lingkungan references wilayahID in parokiID.
+func (r *Repository) HasLingkunganByWilayah(ctx context.Context, parokiID, wilayahID uuid.UUID) (bool, error) {
+	return r.client.Lingkungan.Query().
+		Where(lingkungan.ParokiIDEQ(parokiID), lingkungan.WilayahIDEQ(wilayahID), lingkungan.DeletedAtIsNil()).
 		Exist(ctx)
 }
 
-// HasOrganizationsByZone reports whether any non-deleted Organization references zoneID in parishID.
-func (r *Repository) HasOrganizationsByZone(ctx context.Context, parishID, zoneID uuid.UUID) (bool, error) {
+// HasOrganizationsByWilayah reports whether any non-deleted Organization references wilayahID in parokiID.
+func (r *Repository) HasOrganizationsByWilayah(ctx context.Context, parokiID, wilayahID uuid.UUID) (bool, error) {
 	return r.client.Organization.Query().
-		Where(organization.ParishIDEQ(parishID), organization.ZoneIDEQ(zoneID), organization.DeletedAtIsNil()).
+		Where(organization.ParokiIDEQ(parokiID), organization.WilayahIDEQ(wilayahID), organization.DeletedAtIsNil()).
 		Exist(ctx)
 }
 
-// HasOrganizationsByWard reports whether any non-deleted Organization references wardID in parishID.
-func (r *Repository) HasOrganizationsByWard(ctx context.Context, parishID, wardID uuid.UUID) (bool, error) {
+// HasOrganizationsByLingkungan reports whether any non-deleted Organization references lingkunganID in parokiID.
+func (r *Repository) HasOrganizationsByLingkungan(ctx context.Context, parokiID, lingkunganID uuid.UUID) (bool, error) {
 	return r.client.Organization.Query().
-		Where(organization.ParishIDEQ(parishID), organization.WardIDEQ(wardID), organization.DeletedAtIsNil()).
+		Where(organization.ParokiIDEQ(parokiID), organization.LingkunganIDEQ(lingkunganID), organization.DeletedAtIsNil()).
 		Exist(ctx)
 }
 
-// SearchWards returns paginated non-deleted wards for parishID.
-func (r *Repository) SearchWards(
+// SearchLingkungan returns paginated non-deleted lingkungan for parokiID.
+func (r *Repository) SearchLingkungan(
 	ctx context.Context,
-	parishID uuid.UUID,
+	parokiID uuid.UUID,
 	q string,
-	zoneID *uuid.UUID,
+	wilayahID *uuid.UUID,
 	active *bool,
 	cursorCreatedAt *time.Time,
 	cursorID *uuid.UUID,
 	limit int,
-) ([]*ent.Ward, error) {
-	query := r.client.Ward.Query().Where(ward.ParishIDEQ(parishID), ward.DeletedAtIsNil())
+) ([]*ent.Lingkungan, error) {
+	query := r.client.Lingkungan.Query().Where(lingkungan.ParokiIDEQ(parokiID), lingkungan.DeletedAtIsNil())
 	if q != "" {
-		query = query.Where(ward.Or(
-			ward.CodeContainsFold(q),
-			ward.NameContainsFold(q),
+		query = query.Where(lingkungan.Or(
+			lingkungan.KodeContainsFold(q),
+			lingkungan.NamaContainsFold(q),
 		))
 	}
-	if zoneID != nil && *zoneID != uuid.Nil {
-		query = query.Where(ward.ZoneIDEQ(*zoneID))
+	if wilayahID != nil && *wilayahID != uuid.Nil {
+		query = query.Where(lingkungan.WilayahIDEQ(*wilayahID))
 	}
 	if active != nil {
-		query = query.Where(ward.ActiveEQ(*active))
+		query = query.Where(lingkungan.ActiveEQ(*active))
 	}
 	if cursorCreatedAt != nil && cursorID != nil {
-		query = query.Where(ward.Or(
-			ward.CreatedAtLT(*cursorCreatedAt),
-			ward.And(
-				ward.CreatedAtEQ(*cursorCreatedAt),
-				ward.IDLT(*cursorID),
+		query = query.Where(lingkungan.Or(
+			lingkungan.CreatedAtLT(*cursorCreatedAt),
+			lingkungan.And(
+				lingkungan.CreatedAtEQ(*cursorCreatedAt),
+				lingkungan.IDLT(*cursorID),
 			),
 		))
 	}
 	return query.
-		Order(ent.Desc(ward.FieldCreatedAt), ent.Desc(ward.FieldID)).
+		Order(ent.Desc(lingkungan.FieldCreatedAt), ent.Desc(lingkungan.FieldID)).
 		Limit(limit).
 		All(ctx)
 }
 
-// FindWardByCodeIncludeDeleted returns a Ward by (parishID, code), including soft-deleted rows.
-func (r *Repository) FindWardByCodeIncludeDeleted(ctx context.Context, parishID uuid.UUID, code string) (*ent.Ward, error) {
-	return r.client.Ward.Query().
-		Where(ward.ParishIDEQ(parishID), ward.CodeEQ(code)).
+// FindLingkunganByKodeIncludeDeleted returns a Lingkungan by (parokiID, kode), including soft-deleted rows.
+func (r *Repository) FindLingkunganByKodeIncludeDeleted(ctx context.Context, parokiID uuid.UUID, kode string) (*ent.Lingkungan, error) {
+	return r.client.Lingkungan.Query().
+		Where(lingkungan.ParokiIDEQ(parokiID), lingkungan.KodeEQ(kode)).
 		Only(ctx)
 }
 
-// CreateWard inserts a new Ward.
-func (r *Repository) CreateWard(ctx context.Context, in WardInput) (*ent.Ward, error) {
-	return r.client.Ward.Create().
-		SetParishID(in.ParishID).
-		SetZoneID(in.ZoneID).
-		SetCode(in.Code).
-		SetName(in.Name).
-		SetNillablePatronSaint(in.PatronSaint).
-		SetNillableHeadName(in.HeadName).
-		SetNillableHeadPhone(in.HeadPhone).
+// CreateLingkungan inserts a new Lingkungan.
+func (r *Repository) CreateLingkungan(ctx context.Context, in LingkunganInput) (*ent.Lingkungan, error) {
+	return r.client.Lingkungan.Create().
+		SetParokiID(in.ParokiID).
+		SetWilayahID(in.WilayahID).
+		SetKode(in.Kode).
+		SetNama(in.Nama).
+		SetNillablePelindung(in.Pelindung).
+		SetNillableKetua(in.Ketua).
+		SetNillableTeleponKetua(in.TeleponKetua).
 		SetActive(true).
 		Save(ctx)
 }
 
-// ReactivateWard restores a soft-deleted Ward with fresh fields.
-func (r *Repository) ReactivateWard(ctx context.Context, id uuid.UUID, in WardInput) (*ent.Ward, error) {
-	upd := r.client.Ward.UpdateOneID(id).
+// ReactivateLingkungan restores a soft-deleted Lingkungan with fresh fields.
+func (r *Repository) ReactivateLingkungan(ctx context.Context, id uuid.UUID, in LingkunganInput) (*ent.Lingkungan, error) {
+	upd := r.client.Lingkungan.UpdateOneID(id).
 		ClearDeletedAt().
-		SetZoneID(in.ZoneID).
-		SetCode(in.Code).
-		SetName(in.Name).
+		SetWilayahID(in.WilayahID).
+		SetKode(in.Kode).
+		SetNama(in.Nama).
 		SetActive(true)
-	setOrClearWardString(in.PatronSaint, upd.SetPatronSaint, upd.ClearPatronSaint)
-	setOrClearWardString(in.HeadName, upd.SetHeadName, upd.ClearHeadName)
-	setOrClearWardString(in.HeadPhone, upd.SetHeadPhone, upd.ClearHeadPhone)
+	setOrClearLingkunganString(in.Pelindung, upd.SetPelindung, upd.ClearPelindung)
+	setOrClearLingkunganString(in.Ketua, upd.SetKetua, upd.ClearKetua)
+	setOrClearLingkunganString(in.TeleponKetua, upd.SetTeleponKetua, upd.ClearTeleponKetua)
 	return upd.Save(ctx)
 }
 
-// UpdateWard updates mutable fields of a Ward.
-func (r *Repository) UpdateWard(
+// UpdateLingkungan updates mutable fields of a Lingkungan.
+func (r *Repository) UpdateLingkungan(
 	ctx context.Context,
 	id uuid.UUID,
-	zoneID *uuid.UUID,
-	code, name, patronSaint, headName, headPhone *string,
+	wilayahID *uuid.UUID,
+	kode, nama, pelindung, ketua, teleponKetua *string,
 	active *bool,
-) (*ent.Ward, error) {
-	upd := r.client.Ward.UpdateOneID(id)
-	if zoneID != nil {
-		upd.SetZoneID(*zoneID)
+) (*ent.Lingkungan, error) {
+	upd := r.client.Lingkungan.UpdateOneID(id)
+	if wilayahID != nil {
+		upd.SetWilayahID(*wilayahID)
 	}
-	if code != nil {
-		upd.SetCode(*code)
+	if kode != nil {
+		upd.SetKode(*kode)
 	}
-	if name != nil {
-		upd.SetName(*name)
+	if nama != nil {
+		upd.SetNama(*nama)
 	}
-	if patronSaint != nil {
-		setOrClearWardString(patronSaint, upd.SetPatronSaint, upd.ClearPatronSaint)
+	if pelindung != nil {
+		setOrClearLingkunganString(pelindung, upd.SetPelindung, upd.ClearPelindung)
 	}
-	if headName != nil {
-		setOrClearWardString(headName, upd.SetHeadName, upd.ClearHeadName)
+	if ketua != nil {
+		setOrClearLingkunganString(ketua, upd.SetKetua, upd.ClearKetua)
 	}
-	if headPhone != nil {
-		setOrClearWardString(headPhone, upd.SetHeadPhone, upd.ClearHeadPhone)
+	if teleponKetua != nil {
+		setOrClearLingkunganString(teleponKetua, upd.SetTeleponKetua, upd.ClearTeleponKetua)
 	}
 	if active != nil {
 		upd.SetActive(*active)
@@ -269,15 +269,15 @@ func (r *Repository) UpdateWard(
 	return upd.Save(ctx)
 }
 
-// SoftDeleteWard sets deleted_at and marks the Ward inactive.
-func (r *Repository) SoftDeleteWard(ctx context.Context, id uuid.UUID, at time.Time) error {
-	return r.client.Ward.UpdateOneID(id).
+// SoftDeleteLingkungan sets deleted_at and marks the Lingkungan inactive.
+func (r *Repository) SoftDeleteLingkungan(ctx context.Context, id uuid.UUID, at time.Time) error {
+	return r.client.Lingkungan.UpdateOneID(id).
 		SetDeletedAt(at).
 		SetActive(false).
 		Exec(ctx)
 }
 
-func setOrClearZoneString(val *string, setFn func(string) *ent.ZoneUpdateOne, clearFn func() *ent.ZoneUpdateOne) {
+func setOrClearWilayahString(val *string, setFn func(string) *ent.WilayahUpdateOne, clearFn func() *ent.WilayahUpdateOne) {
 	if val == nil || *val == "" {
 		clearFn()
 		return
@@ -285,7 +285,7 @@ func setOrClearZoneString(val *string, setFn func(string) *ent.ZoneUpdateOne, cl
 	setFn(*val)
 }
 
-func setOrClearWardString(val *string, setFn func(string) *ent.WardUpdateOne, clearFn func() *ent.WardUpdateOne) {
+func setOrClearLingkunganString(val *string, setFn func(string) *ent.LingkunganUpdateOne, clearFn func() *ent.LingkunganUpdateOne) {
 	if val == nil || *val == "" {
 		clearFn()
 		return

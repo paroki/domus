@@ -12,7 +12,7 @@ import (
 	"github.com/paroki/domus/internal/ref/service"
 )
 
-// Handler exposes HTTP endpoints for reference master data (dioceses, parishes, members).
+// Handler exposes HTTP endpoints for reference master data (keuskupan, paroki, members).
 type Handler struct {
 	service *service.Service
 }
@@ -22,54 +22,54 @@ func New(svc *service.Service) *Handler {
 	return &Handler{service: svc}
 }
 
-// Register mounts /ref/dioceses, /ref/parishes, /ref/zones, /ref/wards, /ref/lookups, and /ref/periods routes onto api (/api).
+// Register mounts /ref/keuskupan, /ref/paroki, /ref/wilayah, /ref/lingkungan, /ref/lookups, and /ref/periods routes onto api (/api).
 func (h *Handler) Register(
 	api fiber.Router,
 	authMW fiber.Handler,
 	requireAuth fiber.Handler,
 	requireTenant fiber.Handler,
-	requireDioceseRead fiber.Handler,
-	requireDioceseWrite fiber.Handler,
-	requireParishRead fiber.Handler,
-	requireParishWrite fiber.Handler,
+	requireKeuskupanRead fiber.Handler,
+	requireKeuskupanWrite fiber.Handler,
+	requireParokiRead fiber.Handler,
+	requireParokiWrite fiber.Handler,
 	requireMasterDataRead fiber.Handler,
 	requireMasterDataWrite fiber.Handler,
 ) {
-	dioceses := api.Group("/ref/dioceses", authMW, requireAuth)
-	dioceses.Post("/search", requireDioceseRead, h.SearchDioceses)
-	dioceses.Get("/:id", requireDioceseRead, h.GetDiocese)
-	dioceses.Post("", requireDioceseWrite, h.CreateDiocese)
-	dioceses.Patch("/:id", requireDioceseWrite, h.UpdateDiocese)
-	dioceses.Delete("/:id", requireDioceseWrite, h.DeleteDiocese)
+	keuskupan := api.Group("/ref/keuskupan", authMW, requireAuth)
+	keuskupan.Post("/search", requireKeuskupanRead, h.SearchKeuskupan)
+	keuskupan.Get("/:id", requireKeuskupanRead, h.GetKeuskupan)
+	keuskupan.Post("", requireKeuskupanWrite, h.CreateKeuskupan)
+	keuskupan.Patch("/:id", requireKeuskupanWrite, h.UpdateKeuskupan)
+	keuskupan.Delete("/:id", requireKeuskupanWrite, h.DeleteKeuskupan)
 
-	parishes := api.Group("/ref/parishes", authMW, requireAuth)
-	parishes.Post("/search", requireParishRead, h.SearchParishes)
+	paroki := api.Group("/ref/paroki", authMW, requireAuth)
+	paroki.Post("/search", requireParokiRead, h.SearchParoki)
 	// Static /current routes MUST be registered before parameterized /:id routes.
-	parishes.Get("/current", requireParishRead, requireTenant, h.GetCurrentParish)
-	parishes.Patch("/current", requireTenant, h.UpdateCurrentParishProfile)
-	parishes.Get("/:id", requireParishRead, h.GetParish)
-	parishes.Post("", requireParishWrite, h.CreateParish)
-	parishes.Patch("/:id", h.UpdateParish)
-	parishes.Delete("/:id", requireParishWrite, h.DeleteParish)
+	paroki.Get("/current", requireParokiRead, requireTenant, h.GetCurrentParoki)
+	paroki.Patch("/current", requireTenant, h.UpdateCurrentParokiProfile)
+	paroki.Get("/:id", requireParokiRead, h.GetParoki)
+	paroki.Post("", requireParokiWrite, h.CreateParoki)
+	paroki.Patch("/:id", h.UpdateParoki)
+	paroki.Delete("/:id", requireParokiWrite, h.DeleteParoki)
 
-	parishes.Post("/:id/members/search", h.SearchParishMembers)
-	parishes.Post("/:id/members", h.AddParishMember)
-	parishes.Patch("/:id/members/:userId", h.UpdateParishMember)
-	parishes.Delete("/:id/members/:userId", h.RemoveParishMember)
+	paroki.Post("/:id/members/search", h.SearchParokiMembers)
+	paroki.Post("/:id/members", h.AddParokiMember)
+	paroki.Patch("/:id/members/:userId", h.UpdateParokiMember)
+	paroki.Delete("/:id/members/:userId", h.RemoveParokiMember)
 
-	zones := api.Group("/ref/zones", authMW, requireAuth, requireTenant)
-	zones.Post("/search", requireMasterDataRead, h.SearchZones)
-	zones.Get("/:id", requireMasterDataRead, h.GetZone)
-	zones.Post("", requireMasterDataWrite, h.CreateZone)
-	zones.Patch("/:id", requireMasterDataWrite, h.UpdateZone)
-	zones.Delete("/:id", requireMasterDataWrite, h.DeleteZone)
+	wilayah := api.Group("/ref/wilayah", authMW, requireAuth, requireTenant)
+	wilayah.Post("/search", requireMasterDataRead, h.SearchWilayah)
+	wilayah.Get("/:id", requireMasterDataRead, h.GetWilayah)
+	wilayah.Post("", requireMasterDataWrite, h.CreateWilayah)
+	wilayah.Patch("/:id", requireMasterDataWrite, h.UpdateWilayah)
+	wilayah.Delete("/:id", requireMasterDataWrite, h.DeleteWilayah)
 
-	wards := api.Group("/ref/wards", authMW, requireAuth, requireTenant)
-	wards.Post("/search", requireMasterDataRead, h.SearchWards)
-	wards.Get("/:id", requireMasterDataRead, h.GetWard)
-	wards.Post("", requireMasterDataWrite, h.CreateWard)
-	wards.Patch("/:id", requireMasterDataWrite, h.UpdateWard)
-	wards.Delete("/:id", requireMasterDataWrite, h.DeleteWard)
+	lingkungan := api.Group("/ref/lingkungan", authMW, requireAuth, requireTenant)
+	lingkungan.Post("/search", requireMasterDataRead, h.SearchLingkungan)
+	lingkungan.Get("/:id", requireMasterDataRead, h.GetLingkungan)
+	lingkungan.Post("", requireMasterDataWrite, h.CreateLingkungan)
+	lingkungan.Patch("/:id", requireMasterDataWrite, h.UpdateLingkungan)
+	lingkungan.Delete("/:id", requireMasterDataWrite, h.DeleteLingkungan)
 
 	lookups := api.Group("/ref/lookups", authMW, requireAuth)
 	lookups.Post("/search", requireMasterDataRead, h.SearchLookups)

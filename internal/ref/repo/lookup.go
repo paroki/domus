@@ -11,7 +11,7 @@ import (
 
 // LookupInput holds fields for creating or reactivating a Lookup.
 type LookupInput struct {
-	ParishID  *uuid.UUID
+	ParokiID  *uuid.UUID
 	Category  string
 	Code      string
 	Label     string
@@ -20,14 +20,14 @@ type LookupInput struct {
 
 // ListGlobalLookups returns non-deleted global lookups matching optional filters.
 func (r *Repository) ListGlobalLookups(ctx context.Context, q, category string, active *bool) ([]*ent.Lookup, error) {
-	query := r.client.Lookup.Query().Where(lookup.ParishIDIsNil(), lookup.DeletedAtIsNil())
+	query := r.client.Lookup.Query().Where(lookup.ParokiIDIsNil(), lookup.DeletedAtIsNil())
 	query = applyLookupFilters(query, q, category, active)
 	return query.Order(ent.Desc(lookup.FieldCreatedAt), ent.Desc(lookup.FieldID)).All(ctx)
 }
 
-// ListParishLookups returns non-deleted tenant lookups for parishID matching optional filters.
-func (r *Repository) ListParishLookups(ctx context.Context, parishID uuid.UUID, q, category string, active *bool) ([]*ent.Lookup, error) {
-	query := r.client.Lookup.Query().Where(lookup.ParishIDEQ(parishID), lookup.DeletedAtIsNil())
+// ListParokiLookups returns non-deleted tenant lookups for parokiID matching optional filters.
+func (r *Repository) ListParokiLookups(ctx context.Context, parokiID uuid.UUID, q, category string, active *bool) ([]*ent.Lookup, error) {
+	query := r.client.Lookup.Query().Where(lookup.ParokiIDEQ(parokiID), lookup.DeletedAtIsNil())
 	query = applyLookupFilters(query, q, category, active)
 	return query.Order(ent.Desc(lookup.FieldCreatedAt), ent.Desc(lookup.FieldID)).All(ctx)
 }
@@ -56,14 +56,14 @@ func (r *Repository) FindLookupByID(ctx context.Context, id uuid.UUID) (*ent.Loo
 		Only(ctx)
 }
 
-// FindLookupByKeyIncludeDeleted returns a Lookup by (parishID, category, code), including soft-deleted rows.
-func (r *Repository) FindLookupByKeyIncludeDeleted(ctx context.Context, parishID *uuid.UUID, category, code string) (*ent.Lookup, error) {
+// FindLookupByKeyIncludeDeleted returns a Lookup by (parokiID, category, code), including soft-deleted rows.
+func (r *Repository) FindLookupByKeyIncludeDeleted(ctx context.Context, parokiID *uuid.UUID, category, code string) (*ent.Lookup, error) {
 	query := r.client.Lookup.Query().
 		Where(lookup.CategoryEQ(category), lookup.CodeEQ(code))
-	if parishID == nil {
-		query = query.Where(lookup.ParishIDIsNil())
+	if parokiID == nil {
+		query = query.Where(lookup.ParokiIDIsNil())
 	} else {
-		query = query.Where(lookup.ParishIDEQ(*parishID))
+		query = query.Where(lookup.ParokiIDEQ(*parokiID))
 	}
 	return query.Only(ctx)
 }
@@ -71,7 +71,7 @@ func (r *Repository) FindLookupByKeyIncludeDeleted(ctx context.Context, parishID
 // CreateLookup inserts a new Lookup.
 func (r *Repository) CreateLookup(ctx context.Context, in LookupInput) (*ent.Lookup, error) {
 	return r.client.Lookup.Create().
-		SetNillableParishID(in.ParishID).
+		SetNillableParokiID(in.ParokiID).
 		SetCategory(in.Category).
 		SetCode(in.Code).
 		SetLabel(in.Label).

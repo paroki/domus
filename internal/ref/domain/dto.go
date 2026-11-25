@@ -6,141 +6,141 @@ import (
 	"github.com/google/uuid"
 )
 
-// DioceseResponse is the public API representation of a Diocese.
-type DioceseResponse struct {
-	ID         uuid.UUID `json:"id"`
-	Code       string    `json:"code"`
-	Name       string    `json:"name"`
-	BishopName *string   `json:"bishopName,omitempty"`
-	Address    *string   `json:"address,omitempty"`
-	Phone      *string   `json:"phone,omitempty"`
-	Email      *string   `json:"email,omitempty"`
-	Website    *string   `json:"website,omitempty"`
-	Active     bool      `json:"active"`
-	CreatedAt  time.Time `json:"createdAt"`
-	UpdatedAt  time.Time `json:"updatedAt"`
+// KeuskupanResponse is the public API representation of a Keuskupan.
+type KeuskupanResponse struct {
+	ID        uuid.UUID `json:"id"`
+	Kode      string    `json:"kode"`
+	Nama      string    `json:"nama"`
+	Uskup     *string   `json:"uskup,omitempty"`
+	Alamat    *string   `json:"alamat,omitempty"`
+	Telepon   *string   `json:"telepon,omitempty"`
+	Email     *string   `json:"email,omitempty"`
+	Website   *string   `json:"website,omitempty"`
+	Active    bool      `json:"active"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-// DioceseSearchFilter filters diocese search results.
-type DioceseSearchFilter struct {
+// KeuskupanSearchFilter filters keuskupan search results.
+type KeuskupanSearchFilter struct {
 	Active *bool `json:"active,omitempty"`
 }
 
-// SearchDiocesesRequest searches dioceses with optional query, filter, and cursor pagination.
-type SearchDiocesesRequest struct {
-	Q      string               `json:"q,omitempty"`
-	Filter *DioceseSearchFilter `json:"filter,omitempty"`
-	Cursor string               `json:"cursor,omitempty"`
-	Limit  int                  `json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
+// SearchKeuskupanRequest searches keuskupan with optional query, filter, and cursor pagination.
+type SearchKeuskupanRequest struct {
+	Q      string                 `json:"q,omitempty"`
+	Filter *KeuskupanSearchFilter `json:"filter,omitempty"`
+	Cursor string                 `json:"cursor,omitempty"`
+	Limit  int                    `json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
 }
 
-// CreateDioceseRequest creates a new Diocese.
-type CreateDioceseRequest struct {
-	Code       string  `json:"code" validate:"required"`
-	Name       string  `json:"name" validate:"required,min=1"`
-	BishopName *string `json:"bishopName,omitempty"`
-	Address    *string `json:"address,omitempty"`
-	Phone      *string `json:"phone,omitempty"`
-	Email      *string `json:"email,omitempty" validate:"omitempty,email"`
-	Website    *string `json:"website,omitempty"`
-	Active     *bool   `json:"active,omitempty"`
+// CreateKeuskupanRequest creates a new Keuskupan.
+type CreateKeuskupanRequest struct {
+	Kode    string  `json:"kode" validate:"required"`
+	Nama    string  `json:"nama" validate:"required,min=1"`
+	Uskup   *string `json:"uskup,omitempty"`
+	Alamat  *string `json:"alamat,omitempty"`
+	Telepon *string `json:"telepon,omitempty"`
+	Email   *string `json:"email,omitempty" validate:"omitempty,email"`
+	Website *string `json:"website,omitempty"`
+	Active  *bool   `json:"active,omitempty"`
 }
 
-// UpdateDioceseRequest updates an existing Diocese.
-type UpdateDioceseRequest struct {
-	Code       *string `json:"code,omitempty"`
-	Name       *string `json:"name,omitempty" validate:"omitempty,min=1"`
-	BishopName *string `json:"bishopName,omitempty"`
-	Address    *string `json:"address,omitempty"`
-	Phone      *string `json:"phone,omitempty"`
-	Email      *string `json:"email,omitempty" validate:"omitempty,email"`
-	Website    *string `json:"website,omitempty"`
-	Active     *bool   `json:"active,omitempty"`
+// UpdateKeuskupanRequest updates an existing Keuskupan.
+type UpdateKeuskupanRequest struct {
+	Kode    *string `json:"kode,omitempty"`
+	Nama    *string `json:"nama,omitempty" validate:"omitempty,min=1"`
+	Uskup   *string `json:"uskup,omitempty"`
+	Alamat  *string `json:"alamat,omitempty"`
+	Telepon *string `json:"telepon,omitempty"`
+	Email   *string `json:"email,omitempty" validate:"omitempty,email"`
+	Website *string `json:"website,omitempty"`
+	Active  *bool   `json:"active,omitempty"`
 }
 
-// ParishResponse is the public API representation of a Parish.
-type ParishResponse struct {
+// ParokiResponse is the public API representation of a Paroki.
+type ParokiResponse struct {
 	ID          uuid.UUID `json:"id"`
-	DioceseID   uuid.UUID `json:"dioceseId"`
-	Code        string    `json:"code"`
-	Name        string    `json:"name"`
-	PatronSaint *string   `json:"patronSaint,omitempty"`
-	PastorName  *string   `json:"pastorName,omitempty"`
-	Address     *string   `json:"address,omitempty"`
-	Phone       *string   `json:"phone,omitempty"`
+	KeuskupanID uuid.UUID `json:"keuskupanId"`
+	Kode        string    `json:"kode"`
+	Nama        string    `json:"nama"`
+	Pelindung   *string   `json:"pelindung,omitempty"`
+	Pastor      *string   `json:"pastor,omitempty"`
+	Alamat      *string   `json:"alamat,omitempty"`
+	Telepon     *string   `json:"telepon,omitempty"`
 	Email       *string   `json:"email,omitempty"`
 	Website     *string   `json:"website,omitempty"`
 	LogoURL     *string   `json:"logoUrl,omitempty"`
-	Letterhead  *string   `json:"letterhead,omitempty"`
+	KopSurat    *string   `json:"kopSurat,omitempty"`
 	Active      bool      `json:"active"`
 	CreatedAt   time.Time `json:"createdAt"`
 	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
-// ParishSearchFilter filters parish search results.
-type ParishSearchFilter struct {
-	DioceseID  *uuid.UUID `json:"dioceseId,omitempty"`
-	Active     *bool      `json:"active,omitempty"`
-	MemberOnly *bool      `json:"memberOnly,omitempty"`
+// ParokiSearchFilter filters paroki search results.
+type ParokiSearchFilter struct {
+	KeuskupanID *uuid.UUID `json:"keuskupanId,omitempty"`
+	Active      *bool      `json:"active,omitempty"`
+	MemberOnly  *bool      `json:"memberOnly,omitempty"`
 }
 
-// SearchParishesRequest searches parishes with optional query, filter, and cursor pagination.
-type SearchParishesRequest struct {
+// SearchParokiRequest searches paroki with optional query, filter, and cursor pagination.
+type SearchParokiRequest struct {
 	Q      string              `json:"q,omitempty"`
-	Filter *ParishSearchFilter `json:"filter,omitempty"`
+	Filter *ParokiSearchFilter `json:"filter,omitempty"`
 	Cursor string              `json:"cursor,omitempty"`
 	Limit  int                 `json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
 }
 
-// CreateParishRequest creates a new Parish.
-type CreateParishRequest struct {
-	DioceseID   uuid.UUID `json:"dioceseId" validate:"required"`
-	Code        string    `json:"code" validate:"required"`
-	Name        string    `json:"name" validate:"required,min=1"`
-	PatronSaint *string   `json:"patronSaint,omitempty"`
-	PastorName  *string   `json:"pastorName,omitempty"`
-	Address     *string   `json:"address,omitempty"`
-	Phone       *string   `json:"phone,omitempty"`
+// CreateParokiRequest creates a new Paroki.
+type CreateParokiRequest struct {
+	KeuskupanID uuid.UUID `json:"keuskupanId" validate:"required"`
+	Kode        string    `json:"kode" validate:"required"`
+	Nama        string    `json:"nama" validate:"required,min=1"`
+	Pelindung   *string   `json:"pelindung,omitempty"`
+	Pastor      *string   `json:"pastor,omitempty"`
+	Alamat      *string   `json:"alamat,omitempty"`
+	Telepon     *string   `json:"telepon,omitempty"`
 	Email       *string   `json:"email,omitempty" validate:"omitempty,email"`
 	Website     *string   `json:"website,omitempty"`
 	LogoURL     *string   `json:"logoUrl,omitempty"`
-	Letterhead  *string   `json:"letterhead,omitempty"`
+	KopSurat    *string   `json:"kopSurat,omitempty"`
 	Active      *bool     `json:"active,omitempty"`
 }
 
-// UpdateParishRequest updates a Parish (super-admin fields or parish profile).
-type UpdateParishRequest struct {
-	DioceseID   *uuid.UUID `json:"dioceseId,omitempty"`
-	Code        *string    `json:"code,omitempty"`
-	Name        *string    `json:"name,omitempty" validate:"omitempty,min=1"`
-	PatronSaint *string    `json:"patronSaint,omitempty"`
-	PastorName  *string    `json:"pastorName,omitempty"`
-	Address     *string    `json:"address,omitempty"`
-	Phone       *string    `json:"phone,omitempty"`
+// UpdateParokiRequest updates a Paroki (super-admin fields or paroki profile).
+type UpdateParokiRequest struct {
+	KeuskupanID *uuid.UUID `json:"keuskupanId,omitempty"`
+	Kode        *string    `json:"kode,omitempty"`
+	Nama        *string    `json:"nama,omitempty" validate:"omitempty,min=1"`
+	Pelindung   *string    `json:"pelindung,omitempty"`
+	Pastor      *string    `json:"pastor,omitempty"`
+	Alamat      *string    `json:"alamat,omitempty"`
+	Telepon     *string    `json:"telepon,omitempty"`
 	Email       *string    `json:"email,omitempty" validate:"omitempty,email"`
 	Website     *string    `json:"website,omitempty"`
 	LogoURL     *string    `json:"logoUrl,omitempty"`
-	Letterhead  *string    `json:"letterhead,omitempty"`
+	KopSurat    *string    `json:"kopSurat,omitempty"`
 	Active      *bool      `json:"active,omitempty"`
 }
 
-// UpdateParishProfileRequest updates mutable profile fields of the current active Parish.
-type UpdateParishProfileRequest struct {
-	Name        *string `json:"name,omitempty" validate:"omitempty,min=1"`
-	PatronSaint *string `json:"patronSaint,omitempty"`
-	PastorName  *string `json:"pastorName,omitempty"`
-	Address     *string `json:"address,omitempty"`
-	Phone       *string `json:"phone,omitempty"`
-	Email       *string `json:"email,omitempty" validate:"omitempty,email"`
-	Website     *string `json:"website,omitempty"`
-	LogoURL     *string `json:"logoUrl,omitempty"`
-	Letterhead  *string `json:"letterhead,omitempty"`
+// UpdateParokiProfileRequest updates mutable profile fields of the current active Paroki.
+type UpdateParokiProfileRequest struct {
+	Nama      *string `json:"nama,omitempty" validate:"omitempty,min=1"`
+	Pelindung *string `json:"pelindung,omitempty"`
+	Pastor    *string `json:"pastor,omitempty"`
+	Alamat    *string `json:"alamat,omitempty"`
+	Telepon   *string `json:"telepon,omitempty"`
+	Email     *string `json:"email,omitempty" validate:"omitempty,email"`
+	Website   *string `json:"website,omitempty"`
+	LogoURL   *string `json:"logoUrl,omitempty"`
+	KopSurat  *string `json:"kopSurat,omitempty"`
 }
 
-// ParishMemberResponse is the public API representation of a ParishMember joined with user info.
-type ParishMemberResponse struct {
+// ParokiMemberResponse is the public API representation of a ParokiMember joined with user info.
+type ParokiMemberResponse struct {
 	ID        uuid.UUID `json:"id"`
-	ParishID  uuid.UUID `json:"parishId"`
+	ParokiID  uuid.UUID `json:"parokiId"`
 	UserID    uuid.UUID `json:"userId"`
 	Email     string    `json:"email"`
 	Name      string    `json:"name"`
@@ -150,21 +150,21 @@ type ParishMemberResponse struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-// ParishMemberSearchFilter filters parish member search results.
-type ParishMemberSearchFilter struct {
+// ParokiMemberSearchFilter filters paroki member search results.
+type ParokiMemberSearchFilter struct {
 	Role string `json:"role,omitempty" validate:"omitempty,oneof=admin member"`
 }
 
-// SearchParishMembersRequest searches members of a Parish.
-type SearchParishMembersRequest struct {
+// SearchParokiMembersRequest searches members of a Paroki.
+type SearchParokiMembersRequest struct {
 	Q      string                    `json:"q,omitempty"`
-	Filter *ParishMemberSearchFilter `json:"filter,omitempty"`
+	Filter *ParokiMemberSearchFilter `json:"filter,omitempty"`
 	Cursor string                    `json:"cursor,omitempty"`
 	Limit  int                       `json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
 }
 
-// AddParishMemberRequest adds an existing or invited user as a member of a Parish.
-type AddParishMemberRequest struct {
+// AddParokiMemberRequest adds an existing or invited user as a member of a Paroki.
+type AddParokiMemberRequest struct {
 	UserID *uuid.UUID `json:"userId,omitempty"`
 	Email  string     `json:"email,omitempty" validate:"omitempty,email"`
 	Name   string     `json:"name,omitempty"`
@@ -172,44 +172,44 @@ type AddParishMemberRequest struct {
 	Role   string     `json:"role,omitempty" validate:"omitempty,oneof=admin member"`
 }
 
-// UpdateParishMemberRequest updates a parish member's role.
-type UpdateParishMemberRequest struct {
+// UpdateParokiMemberRequest updates a paroki member's role.
+type UpdateParokiMemberRequest struct {
 	Role string `json:"role" validate:"required,oneof=admin member"`
 }
 
-// ZoneResponse is the public API representation of a Zone.
-type ZoneResponse struct {
-	ID               uuid.UUID `json:"id"`
-	ParishID         uuid.UUID `json:"parishId"`
-	Type             string    `json:"type"`
-	Code             string    `json:"code"`
-	Name             string    `json:"name"`
-	CoordinatorName  *string   `json:"coordinatorName,omitempty"`
-	CoordinatorPhone *string   `json:"coordinatorPhone,omitempty"`
-	Active           bool      `json:"active"`
-	CreatedAt        time.Time `json:"createdAt"`
-	UpdatedAt        time.Time `json:"updatedAt"`
+// WilayahResponse is the public API representation of a Wilayah.
+type WilayahResponse struct {
+	ID                 uuid.UUID `json:"id"`
+	ParokiID           uuid.UUID `json:"parokiId"`
+	Jenis              string    `json:"jenis"`
+	Kode               string    `json:"kode"`
+	Nama               string    `json:"nama"`
+	Koordinator        *string   `json:"koordinator,omitempty"`
+	TeleponKoordinator *string   `json:"teleponKoordinator,omitempty"`
+	Active             bool      `json:"active"`
+	CreatedAt          time.Time `json:"createdAt"`
+	UpdatedAt          time.Time `json:"updatedAt"`
 }
 
-// WardResponse is the public API representation of a Ward.
-type WardResponse struct {
-	ID          uuid.UUID `json:"id"`
-	ParishID    uuid.UUID `json:"parishId"`
-	ZoneID      uuid.UUID `json:"zoneId"`
-	Code        string    `json:"code"`
-	Name        string    `json:"name"`
-	PatronSaint *string   `json:"patronSaint,omitempty"`
-	HeadName    *string   `json:"headName,omitempty"`
-	HeadPhone   *string   `json:"headPhone,omitempty"`
-	Active      bool      `json:"active"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+// LingkunganResponse is the public API representation of a Lingkungan.
+type LingkunganResponse struct {
+	ID           uuid.UUID `json:"id"`
+	ParokiID     uuid.UUID `json:"parokiId"`
+	WilayahID    uuid.UUID `json:"wilayahId"`
+	Kode         string    `json:"kode"`
+	Nama         string    `json:"nama"`
+	Pelindung    *string   `json:"pelindung,omitempty"`
+	Ketua        *string   `json:"ketua,omitempty"`
+	TeleponKetua *string   `json:"teleponKetua,omitempty"`
+	Active       bool      `json:"active"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
 }
 
 // LookupResponse is the public API representation of a Lookup.
 type LookupResponse struct {
 	ID        uuid.UUID  `json:"id"`
-	ParishID  *uuid.UUID `json:"parishId,omitempty"`
+	ParokiID  *uuid.UUID `json:"parokiId,omitempty"`
 	Category  string     `json:"category"`
 	Code      string     `json:"code"`
 	Label     string     `json:"label"`
@@ -222,7 +222,7 @@ type LookupResponse struct {
 // PeriodResponse is the public API representation of a Period.
 type PeriodResponse struct {
 	ID        uuid.UUID `json:"id"`
-	ParishID  uuid.UUID `json:"parishId"`
+	ParokiID  uuid.UUID `json:"parokiId"`
 	Type      string    `json:"type"`
 	Code      string    `json:"code"`
 	Name      string    `json:"name"`
@@ -234,82 +234,82 @@ type PeriodResponse struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-// ZoneSearchFilter filters zone search results.
-type ZoneSearchFilter struct {
-	Type   string `json:"type,omitempty" validate:"omitempty,oneof=zone station"`
+// WilayahSearchFilter filters wilayah search results.
+type WilayahSearchFilter struct {
+	Jenis  string `json:"jenis,omitempty" validate:"omitempty,oneof=wilayah stasi"`
 	Active *bool  `json:"active,omitempty"`
 }
 
-// SearchZonesRequest searches zones within the active parish.
-type SearchZonesRequest struct {
-	Q      string            `json:"q,omitempty"`
-	Filter *ZoneSearchFilter `json:"filter,omitempty"`
-	Cursor string            `json:"cursor,omitempty"`
-	Limit  int               `json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
+// SearchWilayahRequest searches wilayah within the active paroki.
+type SearchWilayahRequest struct {
+	Q      string               `json:"q,omitempty"`
+	Filter *WilayahSearchFilter `json:"filter,omitempty"`
+	Cursor string               `json:"cursor,omitempty"`
+	Limit  int                  `json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
 }
 
-// CreateZoneRequest creates a new Zone or Station in the active parish.
-type CreateZoneRequest struct {
-	Type             string  `json:"type,omitempty" validate:"omitempty,oneof=zone station"`
-	Code             string  `json:"code" validate:"required"`
-	Name             string  `json:"name" validate:"required,min=1"`
-	CoordinatorName  *string `json:"coordinatorName,omitempty"`
-	CoordinatorPhone *string `json:"coordinatorPhone,omitempty"`
+// CreateWilayahRequest creates a new Wilayah or Stasi in the active paroki.
+type CreateWilayahRequest struct {
+	Jenis              string  `json:"jenis,omitempty" validate:"omitempty,oneof=wilayah stasi"`
+	Kode               string  `json:"kode" validate:"required"`
+	Nama               string  `json:"nama" validate:"required,min=1"`
+	Koordinator        *string `json:"koordinator,omitempty"`
+	TeleponKoordinator *string `json:"teleponKoordinator,omitempty"`
 }
 
-// UpdateZoneRequest updates an existing Zone or Station.
-type UpdateZoneRequest struct {
-	Type             *string `json:"type,omitempty" validate:"omitempty,oneof=zone station"`
-	Code             *string `json:"code,omitempty"`
-	Name             *string `json:"name,omitempty" validate:"omitempty,min=1"`
-	CoordinatorName  *string `json:"coordinatorName,omitempty"`
-	CoordinatorPhone *string `json:"coordinatorPhone,omitempty"`
-	Active           *bool   `json:"active,omitempty"`
+// UpdateWilayahRequest updates an existing Wilayah or Stasi.
+type UpdateWilayahRequest struct {
+	Jenis              *string `json:"jenis,omitempty" validate:"omitempty,oneof=wilayah stasi"`
+	Kode               *string `json:"kode,omitempty"`
+	Nama               *string `json:"nama,omitempty" validate:"omitempty,min=1"`
+	Koordinator        *string `json:"koordinator,omitempty"`
+	TeleponKoordinator *string `json:"teleponKoordinator,omitempty"`
+	Active             *bool   `json:"active,omitempty"`
 }
 
-// WardSearchFilter filters ward search results.
-type WardSearchFilter struct {
-	ZoneID *uuid.UUID `json:"zoneId,omitempty"`
-	Active *bool      `json:"active,omitempty"`
+// LingkunganSearchFilter filters lingkungan search results.
+type LingkunganSearchFilter struct {
+	WilayahID *uuid.UUID `json:"wilayahId,omitempty"`
+	Active    *bool      `json:"active,omitempty"`
 }
 
-// SearchWardsRequest searches wards within the active parish.
-type SearchWardsRequest struct {
-	Q      string            `json:"q,omitempty"`
-	Filter *WardSearchFilter `json:"filter,omitempty"`
-	Cursor string            `json:"cursor,omitempty"`
-	Limit  int               `json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
+// SearchLingkunganRequest searches lingkungan within the active paroki.
+type SearchLingkunganRequest struct {
+	Q      string                  `json:"q,omitempty"`
+	Filter *LingkunganSearchFilter `json:"filter,omitempty"`
+	Cursor string                  `json:"cursor,omitempty"`
+	Limit  int                     `json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
 }
 
-// CreateWardRequest creates a new Ward in the active parish.
-type CreateWardRequest struct {
-	ZoneID      uuid.UUID `json:"zoneId" validate:"required"`
-	Code        string    `json:"code" validate:"required"`
-	Name        string    `json:"name" validate:"required,min=1"`
-	PatronSaint *string   `json:"patronSaint,omitempty"`
-	HeadName    *string   `json:"headName,omitempty"`
-	HeadPhone   *string   `json:"headPhone,omitempty"`
+// CreateLingkunganRequest creates a new Lingkungan in the active paroki.
+type CreateLingkunganRequest struct {
+	WilayahID    uuid.UUID `json:"wilayahId" validate:"required"`
+	Kode         string    `json:"kode" validate:"required"`
+	Nama         string    `json:"nama" validate:"required,min=1"`
+	Pelindung    *string   `json:"pelindung,omitempty"`
+	Ketua        *string   `json:"ketua,omitempty"`
+	TeleponKetua *string   `json:"teleponKetua,omitempty"`
 }
 
-// UpdateWardRequest updates an existing Ward.
-type UpdateWardRequest struct {
-	ZoneID      *uuid.UUID `json:"zoneId,omitempty"`
-	Code        *string    `json:"code,omitempty"`
-	Name        *string    `json:"name,omitempty" validate:"omitempty,min=1"`
-	PatronSaint *string    `json:"patronSaint,omitempty"`
-	HeadName    *string    `json:"headName,omitempty"`
-	HeadPhone   *string    `json:"headPhone,omitempty"`
-	Active      *bool      `json:"active,omitempty"`
+// UpdateLingkunganRequest updates an existing Lingkungan.
+type UpdateLingkunganRequest struct {
+	WilayahID    *uuid.UUID `json:"wilayahId,omitempty"`
+	Kode         *string    `json:"kode,omitempty"`
+	Nama         *string    `json:"nama,omitempty" validate:"omitempty,min=1"`
+	Pelindung    *string    `json:"pelindung,omitempty"`
+	Ketua        *string    `json:"ketua,omitempty"`
+	TeleponKetua *string    `json:"teleponKetua,omitempty"`
+	Active       *bool      `json:"active,omitempty"`
 }
 
 // LookupSearchFilter filters lookup search results.
 type LookupSearchFilter struct {
 	Category string `json:"category,omitempty"`
 	Active   *bool  `json:"active,omitempty"`
-	Scope    string `json:"scope,omitempty" validate:"omitempty,oneof=all global parish"`
+	Scope    string `json:"scope,omitempty" validate:"omitempty,oneof=all global paroki"`
 }
 
-// SearchLookupsRequest searches global and/or parish lookups.
+// SearchLookupsRequest searches global and/or paroki lookups.
 type SearchLookupsRequest struct {
 	Q      string              `json:"q,omitempty"`
 	Filter *LookupSearchFilter `json:"filter,omitempty"`
@@ -317,7 +317,7 @@ type SearchLookupsRequest struct {
 	Limit  int                 `json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
 }
 
-// CreateLookupRequest creates a global or parish-scoped Lookup.
+// CreateLookupRequest creates a global or paroki-scoped Lookup.
 type CreateLookupRequest struct {
 	Category  string `json:"category" validate:"required"`
 	Code      string `json:"code" validate:"required"`
@@ -342,7 +342,7 @@ type PeriodSearchFilter struct {
 	IsCurrent *bool  `json:"isCurrent,omitempty"`
 }
 
-// SearchPeriodsRequest searches fiscal and liturgical periods in the active parish.
+// SearchPeriodsRequest searches fiscal and liturgical periods in the active paroki.
 type SearchPeriodsRequest struct {
 	Q      string              `json:"q,omitempty"`
 	Filter *PeriodSearchFilter `json:"filter,omitempty"`

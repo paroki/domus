@@ -8,26 +8,26 @@ import (
 	"github.com/paroki/domus/internal/ref/domain"
 )
 
-// SearchZones searches zones/stations in the active parish.
+// SearchWilayah searches wilayah/stasi in the active paroki.
 //
-//	@Summary		Search zones
-//	@Description	Searches zones/stations in the active parish with optional query, type/active filters, and cursor pagination.
-//	@ID				searchZones
+//	@Summary		Search wilayah
+//	@Description	Searches wilayah/stasi in the active paroki with optional query, jenis/active filters, and cursor pagination.
+//	@ID				searchWilayah
 //	@Tags			Ref
 //	@Accept			json
 //	@Produce		json
-//	@Param			body	body		domain.SearchZonesRequest	false	"Search parameters"
-//	@Success		200		{object}	httpx.Envelope[[]domain.ZoneResponse]
+//	@Param			body	body		domain.SearchWilayahRequest	false	"Search parameters"
+//	@Success		200		{object}	httpx.Envelope[[]domain.WilayahResponse]
 //	@Failure		400		{object}	httpx.Envelope[any]
 //	@Failure		401		{object}	httpx.Envelope[any]
 //	@Failure		403		{object}	httpx.Envelope[any]
-//	@Router			/ref/zones/search [post]
-func (h *Handler) SearchZones(c fiber.Ctx) error {
+//	@Router			/ref/wilayah/search [post]
+func (h *Handler) SearchWilayah(c fiber.Ctx) error {
 	p, ok := authx.UserContext(c.Context())
 	if !ok {
 		return httpx.Unauthorized("Authentication is required.")
 	}
-	var req domain.SearchZonesRequest
+	var req domain.SearchWilayahRequest
 	if err := decodeEmptyOrStrictJSON(c, &req); err != nil {
 		return err
 	}
@@ -35,7 +35,7 @@ func (h *Handler) SearchZones(c fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	items, hasMore, err := h.service.SearchZones(c.Context(), p.ParishID, req, cursorT, cursorID, limit)
+	items, hasMore, err := h.service.SearchWilayah(c.Context(), p.ParokiID, req, cursorT, cursorID, limit)
 	if err != nil {
 		return err
 	}
@@ -51,154 +51,154 @@ func (h *Handler) SearchZones(c fiber.Ctx) error {
 	})
 }
 
-// GetZone fetches a single Zone in the active parish.
+// GetWilayah fetches a single Wilayah in the active paroki.
 //
-//	@Summary		Get zone
-//	@Description	Returns a single non-deleted zone in the active parish.
-//	@ID				getZone
+//	@Summary		Get wilayah
+//	@Description	Returns a single non-deleted wilayah in the active paroki.
+//	@ID				getWilayah
 //	@Tags			Ref
 //	@Produce		json
-//	@Param			id	path		string	true	"Zone UUID"
-//	@Success		200	{object}	httpx.Envelope[domain.ZoneResponse]
+//	@Param			id	path		string	true	"Wilayah UUID"
+//	@Success		200	{object}	httpx.Envelope[domain.WilayahResponse]
 //	@Failure		400	{object}	httpx.Envelope[any]
 //	@Failure		401	{object}	httpx.Envelope[any]
 //	@Failure		404	{object}	httpx.Envelope[any]
-//	@Router			/ref/zones/{id} [get]
-func (h *Handler) GetZone(c fiber.Ctx) error {
+//	@Router			/ref/wilayah/{id} [get]
+func (h *Handler) GetWilayah(c fiber.Ctx) error {
 	p, ok := authx.UserContext(c.Context())
 	if !ok {
 		return httpx.Unauthorized("Authentication is required.")
 	}
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return httpx.BadRequest("Invalid zone ID.")
+		return httpx.BadRequest("Invalid wilayah ID.")
 	}
-	res, err := h.service.GetZone(c.Context(), p.ParishID, id)
+	res, err := h.service.GetWilayah(c.Context(), p.ParokiID, id)
 	if err != nil {
 		return err
 	}
 	return httpx.OK(c, res)
 }
 
-// CreateZone creates a Zone or Station in the active parish.
+// CreateWilayah creates a Wilayah or Stasi in the active paroki.
 //
-//	@Summary		Create zone
-//	@Description	Creates a zone/station or reactivates a soft-deleted match in the active parish.
-//	@ID				createZone
+//	@Summary		Create wilayah
+//	@Description	Creates a wilayah/stasi or reactivates a soft-deleted match in the active paroki.
+//	@ID				createWilayah
 //	@Tags			Ref
 //	@Accept			json
 //	@Produce		json
-//	@Param			body	body		domain.CreateZoneRequest	true	"Zone creation payload"
-//	@Success		201		{object}	httpx.Envelope[domain.ZoneResponse]
+//	@Param			body	body		domain.CreateWilayahRequest	true	"Wilayah creation payload"
+//	@Success		201		{object}	httpx.Envelope[domain.WilayahResponse]
 //	@Failure		400		{object}	httpx.Envelope[any]
 //	@Failure		401		{object}	httpx.Envelope[any]
 //	@Failure		403		{object}	httpx.Envelope[any]
 //	@Failure		409		{object}	httpx.Envelope[any]
 //	@Failure		422		{object}	httpx.Envelope[any]
-//	@Router			/ref/zones [post]
-func (h *Handler) CreateZone(c fiber.Ctx) error {
+//	@Router			/ref/wilayah [post]
+func (h *Handler) CreateWilayah(c fiber.Ctx) error {
 	p, ok := authx.UserContext(c.Context())
 	if !ok {
 		return httpx.Unauthorized("Authentication is required.")
 	}
-	var req domain.CreateZoneRequest
+	var req domain.CreateWilayahRequest
 	if err := decodeStrictJSON(c, &req); err != nil {
 		return err
 	}
-	res, err := h.service.CreateZone(c.Context(), p.ParishID, req)
+	res, err := h.service.CreateWilayah(c.Context(), p.ParokiID, req)
 	if err != nil {
 		return err
 	}
 	return httpx.Created(c, res)
 }
 
-// UpdateZone updates an existing Zone or Station in the active parish.
+// UpdateWilayah updates an existing Wilayah or Stasi in the active paroki.
 //
-//	@Summary		Update zone
-//	@Description	Updates mutable fields of a zone/station in the active parish.
-//	@ID				updateZone
+//	@Summary		Update wilayah
+//	@Description	Updates mutable fields of a wilayah/stasi in the active paroki.
+//	@ID				updateWilayah
 //	@Tags			Ref
 //	@Accept			json
 //	@Produce		json
-//	@Param			id		path		string						true	"Zone UUID"
-//	@Param			body	body		domain.UpdateZoneRequest	true	"Zone update payload"
-//	@Success		200		{object}	httpx.Envelope[domain.ZoneResponse]
+//	@Param			id		path		string						true	"Wilayah UUID"
+//	@Param			body	body		domain.UpdateWilayahRequest	true	"Wilayah update payload"
+//	@Success		200		{object}	httpx.Envelope[domain.WilayahResponse]
 //	@Failure		400		{object}	httpx.Envelope[any]
 //	@Failure		401		{object}	httpx.Envelope[any]
 //	@Failure		403		{object}	httpx.Envelope[any]
 //	@Failure		404		{object}	httpx.Envelope[any]
 //	@Failure		409		{object}	httpx.Envelope[any]
 //	@Failure		422		{object}	httpx.Envelope[any]
-//	@Router			/ref/zones/{id} [patch]
-func (h *Handler) UpdateZone(c fiber.Ctx) error {
+//	@Router			/ref/wilayah/{id} [patch]
+func (h *Handler) UpdateWilayah(c fiber.Ctx) error {
 	p, ok := authx.UserContext(c.Context())
 	if !ok {
 		return httpx.Unauthorized("Authentication is required.")
 	}
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return httpx.BadRequest("Invalid zone ID.")
+		return httpx.BadRequest("Invalid wilayah ID.")
 	}
-	var req domain.UpdateZoneRequest
+	var req domain.UpdateWilayahRequest
 	if err := decodeStrictJSON(c, &req); err != nil {
 		return err
 	}
-	res, err := h.service.UpdateZone(c.Context(), p.ParishID, id, req)
+	res, err := h.service.UpdateWilayah(c.Context(), p.ParokiID, id, req)
 	if err != nil {
 		return err
 	}
 	return httpx.OK(c, res)
 }
 
-// DeleteZone soft-deletes a Zone in the active parish if no Wards reference it.
+// DeleteWilayah soft-deletes a Wilayah in the active paroki if no Lingkungan reference it.
 //
-//	@Summary		Delete zone
-//	@Description	Soft-deletes a zone when no non-deleted wards reference it.
-//	@ID				deleteZone
+//	@Summary		Delete wilayah
+//	@Description	Soft-deletes a wilayah when no non-deleted lingkungan reference it.
+//	@ID				deleteWilayah
 //	@Tags			Ref
-//	@Param			id	path	string	true	"Zone UUID"
+//	@Param			id	path	string	true	"Wilayah UUID"
 //	@Success		204
 //	@Failure		400	{object}	httpx.Envelope[any]
 //	@Failure		401	{object}	httpx.Envelope[any]
 //	@Failure		403	{object}	httpx.Envelope[any]
 //	@Failure		404	{object}	httpx.Envelope[any]
 //	@Failure		409	{object}	httpx.Envelope[any]
-//	@Router			/ref/zones/{id} [delete]
-func (h *Handler) DeleteZone(c fiber.Ctx) error {
+//	@Router			/ref/wilayah/{id} [delete]
+func (h *Handler) DeleteWilayah(c fiber.Ctx) error {
 	p, ok := authx.UserContext(c.Context())
 	if !ok {
 		return httpx.Unauthorized("Authentication is required.")
 	}
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return httpx.BadRequest("Invalid zone ID.")
+		return httpx.BadRequest("Invalid wilayah ID.")
 	}
-	if err := h.service.DeleteZone(c.Context(), p.ParishID, id); err != nil {
+	if err := h.service.DeleteWilayah(c.Context(), p.ParokiID, id); err != nil {
 		return err
 	}
 	return httpx.NoContent(c)
 }
 
-// SearchWards searches wards in the active parish.
+// SearchLingkungan searches lingkungan in the active paroki.
 //
-//	@Summary		Search wards
-//	@Description	Searches wards in the active parish with optional query, zone/active filters, and cursor pagination.
-//	@ID				searchWards
+//	@Summary		Search lingkungan
+//	@Description	Searches lingkungan in the active paroki with optional query, wilayah/active filters, and cursor pagination.
+//	@ID				searchLingkungan
 //	@Tags			Ref
 //	@Accept			json
 //	@Produce		json
-//	@Param			body	body		domain.SearchWardsRequest	false	"Search parameters"
-//	@Success		200		{object}	httpx.Envelope[[]domain.WardResponse]
+//	@Param			body	body		domain.SearchLingkunganRequest	false	"Search parameters"
+//	@Success		200		{object}	httpx.Envelope[[]domain.LingkunganResponse]
 //	@Failure		400		{object}	httpx.Envelope[any]
 //	@Failure		401		{object}	httpx.Envelope[any]
 //	@Failure		403		{object}	httpx.Envelope[any]
-//	@Router			/ref/wards/search [post]
-func (h *Handler) SearchWards(c fiber.Ctx) error {
+//	@Router			/ref/lingkungan/search [post]
+func (h *Handler) SearchLingkungan(c fiber.Ctx) error {
 	p, ok := authx.UserContext(c.Context())
 	if !ok {
 		return httpx.Unauthorized("Authentication is required.")
 	}
-	var req domain.SearchWardsRequest
+	var req domain.SearchLingkunganRequest
 	if err := decodeEmptyOrStrictJSON(c, &req); err != nil {
 		return err
 	}
@@ -206,7 +206,7 @@ func (h *Handler) SearchWards(c fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	items, hasMore, err := h.service.SearchWards(c.Context(), p.ParishID, req, cursorT, cursorID, limit)
+	items, hasMore, err := h.service.SearchLingkungan(c.Context(), p.ParokiID, req, cursorT, cursorID, limit)
 	if err != nil {
 		return err
 	}
@@ -222,129 +222,129 @@ func (h *Handler) SearchWards(c fiber.Ctx) error {
 	})
 }
 
-// GetWard fetches a single Ward in the active parish.
+// GetLingkungan fetches a single Lingkungan in the active paroki.
 //
-//	@Summary		Get ward
-//	@Description	Returns a single non-deleted ward in the active parish.
-//	@ID				getWard
+//	@Summary		Get lingkungan
+//	@Description	Returns a single non-deleted lingkungan in the active paroki.
+//	@ID				getLingkungan
 //	@Tags			Ref
 //	@Produce		json
-//	@Param			id	path		string	true	"Ward UUID"
-//	@Success		200	{object}	httpx.Envelope[domain.WardResponse]
+//	@Param			id	path		string	true	"Lingkungan UUID"
+//	@Success		200	{object}	httpx.Envelope[domain.LingkunganResponse]
 //	@Failure		400	{object}	httpx.Envelope[any]
 //	@Failure		401	{object}	httpx.Envelope[any]
 //	@Failure		404	{object}	httpx.Envelope[any]
-//	@Router			/ref/wards/{id} [get]
-func (h *Handler) GetWard(c fiber.Ctx) error {
+//	@Router			/ref/lingkungan/{id} [get]
+func (h *Handler) GetLingkungan(c fiber.Ctx) error {
 	p, ok := authx.UserContext(c.Context())
 	if !ok {
 		return httpx.Unauthorized("Authentication is required.")
 	}
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return httpx.BadRequest("Invalid ward ID.")
+		return httpx.BadRequest("Invalid lingkungan ID.")
 	}
-	res, err := h.service.GetWard(c.Context(), p.ParishID, id)
+	res, err := h.service.GetLingkungan(c.Context(), p.ParokiID, id)
 	if err != nil {
 		return err
 	}
 	return httpx.OK(c, res)
 }
 
-// CreateWard creates a Ward in the active parish.
+// CreateLingkungan creates a Lingkungan in the active paroki.
 //
-//	@Summary		Create ward
-//	@Description	Creates a ward or reactivates a soft-deleted match in the active parish.
-//	@ID				createWard
+//	@Summary		Create lingkungan
+//	@Description	Creates a lingkungan or reactivates a soft-deleted match in the active paroki.
+//	@ID				createLingkungan
 //	@Tags			Ref
 //	@Accept			json
 //	@Produce		json
-//	@Param			body	body		domain.CreateWardRequest	true	"Ward creation payload"
-//	@Success		201		{object}	httpx.Envelope[domain.WardResponse]
+//	@Param			body	body		domain.CreateLingkunganRequest	true	"Lingkungan creation payload"
+//	@Success		201		{object}	httpx.Envelope[domain.LingkunganResponse]
 //	@Failure		400		{object}	httpx.Envelope[any]
 //	@Failure		401		{object}	httpx.Envelope[any]
 //	@Failure		403		{object}	httpx.Envelope[any]
 //	@Failure		404		{object}	httpx.Envelope[any]
 //	@Failure		409		{object}	httpx.Envelope[any]
 //	@Failure		422		{object}	httpx.Envelope[any]
-//	@Router			/ref/wards [post]
-func (h *Handler) CreateWard(c fiber.Ctx) error {
+//	@Router			/ref/lingkungan [post]
+func (h *Handler) CreateLingkungan(c fiber.Ctx) error {
 	p, ok := authx.UserContext(c.Context())
 	if !ok {
 		return httpx.Unauthorized("Authentication is required.")
 	}
-	var req domain.CreateWardRequest
+	var req domain.CreateLingkunganRequest
 	if err := decodeStrictJSON(c, &req); err != nil {
 		return err
 	}
-	res, err := h.service.CreateWard(c.Context(), p.ParishID, req)
+	res, err := h.service.CreateLingkungan(c.Context(), p.ParokiID, req)
 	if err != nil {
 		return err
 	}
 	return httpx.Created(c, res)
 }
 
-// UpdateWard updates an existing Ward in the active parish.
+// UpdateLingkungan updates an existing Lingkungan in the active paroki.
 //
-//	@Summary		Update ward
-//	@Description	Updates mutable fields of a ward in the active parish.
-//	@ID				updateWard
+//	@Summary		Update lingkungan
+//	@Description	Updates mutable fields of a lingkungan in the active paroki.
+//	@ID				updateLingkungan
 //	@Tags			Ref
 //	@Accept			json
 //	@Produce		json
-//	@Param			id		path		string						true	"Ward UUID"
-//	@Param			body	body		domain.UpdateWardRequest	true	"Ward update payload"
-//	@Success		200		{object}	httpx.Envelope[domain.WardResponse]
+//	@Param			id		path		string							true	"Lingkungan UUID"
+//	@Param			body	body		domain.UpdateLingkunganRequest	true	"Lingkungan update payload"
+//	@Success		200		{object}	httpx.Envelope[domain.LingkunganResponse]
 //	@Failure		400		{object}	httpx.Envelope[any]
 //	@Failure		401		{object}	httpx.Envelope[any]
 //	@Failure		403		{object}	httpx.Envelope[any]
 //	@Failure		404		{object}	httpx.Envelope[any]
 //	@Failure		409		{object}	httpx.Envelope[any]
 //	@Failure		422		{object}	httpx.Envelope[any]
-//	@Router			/ref/wards/{id} [patch]
-func (h *Handler) UpdateWard(c fiber.Ctx) error {
+//	@Router			/ref/lingkungan/{id} [patch]
+func (h *Handler) UpdateLingkungan(c fiber.Ctx) error {
 	p, ok := authx.UserContext(c.Context())
 	if !ok {
 		return httpx.Unauthorized("Authentication is required.")
 	}
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return httpx.BadRequest("Invalid ward ID.")
+		return httpx.BadRequest("Invalid lingkungan ID.")
 	}
-	var req domain.UpdateWardRequest
+	var req domain.UpdateLingkunganRequest
 	if err := decodeStrictJSON(c, &req); err != nil {
 		return err
 	}
-	res, err := h.service.UpdateWard(c.Context(), p.ParishID, id, req)
+	res, err := h.service.UpdateLingkungan(c.Context(), p.ParokiID, id, req)
 	if err != nil {
 		return err
 	}
 	return httpx.OK(c, res)
 }
 
-// DeleteWard soft-deletes a Ward in the active parish.
+// DeleteLingkungan soft-deletes a Lingkungan in the active paroki.
 //
-//	@Summary		Delete ward
-//	@Description	Soft-deletes a ward in the active parish.
-//	@ID				deleteWard
+//	@Summary		Delete lingkungan
+//	@Description	Soft-deletes a lingkungan in the active paroki.
+//	@ID				deleteLingkungan
 //	@Tags			Ref
-//	@Param			id	path	string	true	"Ward UUID"
+//	@Param			id	path	string	true	"Lingkungan UUID"
 //	@Success		204
 //	@Failure		400	{object}	httpx.Envelope[any]
 //	@Failure		401	{object}	httpx.Envelope[any]
 //	@Failure		403	{object}	httpx.Envelope[any]
 //	@Failure		404	{object}	httpx.Envelope[any]
-//	@Router			/ref/wards/{id} [delete]
-func (h *Handler) DeleteWard(c fiber.Ctx) error {
+//	@Router			/ref/lingkungan/{id} [delete]
+func (h *Handler) DeleteLingkungan(c fiber.Ctx) error {
 	p, ok := authx.UserContext(c.Context())
 	if !ok {
 		return httpx.Unauthorized("Authentication is required.")
 	}
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return httpx.BadRequest("Invalid ward ID.")
+		return httpx.BadRequest("Invalid lingkungan ID.")
 	}
-	if err := h.service.DeleteWard(c.Context(), p.ParishID, id); err != nil {
+	if err := h.service.DeleteLingkungan(c.Context(), p.ParokiID, id); err != nil {
 		return err
 	}
 	return httpx.NoContent(c)
