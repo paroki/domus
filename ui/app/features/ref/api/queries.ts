@@ -188,3 +188,73 @@ export function usePeriodsSearch(
     }),
   );
 }
+
+export function useKeuskupanDetail(id: string, enabled = true) {
+  return useQuery(
+    queryOptions({
+      queryKey: refKeys.keuskupanDetail(id),
+      enabled: enabled && Boolean(id),
+      queryFn: () =>
+        unwrap(
+          api.GET("/ref/keuskupan/{id}", { params: { path: { id } } }),
+          REF_ERRORS,
+        ),
+    }),
+  );
+}
+
+export function useParokiDetail(id: string, enabled = true) {
+  return useQuery(
+    queryOptions({
+      queryKey: refKeys.parokiDetail(id),
+      enabled: enabled && Boolean(id),
+      queryFn: () =>
+        unwrap(
+          api.GET("/ref/paroki/{id}", { params: { path: { id } } }),
+          REF_ERRORS,
+        ),
+    }),
+  );
+}
+
+export function useWilayahDetail(id: string, enabled = true) {
+  return useQuery(
+    queryOptions({
+      queryKey: refKeys.wilayahDetail(id),
+      enabled: enabled && Boolean(id),
+      queryFn: () =>
+        unwrap(
+          api.GET("/ref/wilayah/{id}", { params: { path: { id } } }),
+          REF_ERRORS,
+        ),
+    }),
+  );
+}
+
+export function useLingkunganDetail(id: string, enabled = true) {
+  return useQuery(
+    queryOptions({
+      queryKey: refKeys.lingkunganDetail(id),
+      enabled: enabled && Boolean(id),
+      queryFn: () =>
+        unwrap(
+          api.GET("/ref/lingkungan/{id}", { params: { path: { id } } }),
+          REF_ERRORS,
+        ),
+    }),
+  );
+}
+
+export function useLookupDetail(id: string, enabled = true) {
+  return useQuery(
+    queryOptions({
+      queryKey: refKeys.lookupDetail(id),
+      enabled: enabled && Boolean(id),
+      queryFn: () =>
+        unwrap(
+          api.GET("/ref/lookups/{id}", { params: { path: { id } } }),
+          REF_ERRORS,
+        ),
+    }),
+  );
+}

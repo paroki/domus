@@ -72,7 +72,7 @@ export function ChannelSettingView({
 
   return (
     <SettingsSubpageShell
-      backTo="/settings"
+      backTo="/settings/system"
       backLabel={t("settings.backToSettings")}
       title={title}
       subtitle={subtitle}

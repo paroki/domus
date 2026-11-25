@@ -79,7 +79,7 @@ export default function AIAgentPage() {
 
   return (
     <SettingsSubpageShell
-      backTo="/settings"
+      backTo="/settings/system"
       backLabel={t("settings.backToSettings")}
       title={t("settings.agents.title")}
       subtitle={t("settings.agents.subtitle")}
@@ -105,7 +105,7 @@ export default function AIAgentPage() {
           </div>
           {providers.length === 0 ? (
             <Link
-              to="/settings/ai-provider"
+              to="/settings/system/ai-provider"
               className="text-xs font-medium text-accent hover:underline"
             >
               {t("settings.agents.goToProviders")}
@@ -172,7 +172,7 @@ export default function AIAgentPage() {
                           pid ? `${pid}:${parsed.modelId}` : "",
                         );
                       }}
-                      className="rounded-lg border border-line bg-bg px-3 py-2 text-sm text-fg focus:border-accent focus:outline-none"
+                      className="rounded-lg border border-line bg-canvas px-3 py-2 text-sm text-fg focus:border-accent focus:outline-none"
                     >
                       <option value="">
                         {t("settings.agents.selectProvider")}
@@ -197,7 +197,7 @@ export default function AIAgentPage() {
                           pid && mid ? `${pid}:${mid}` : "",
                         );
                       }}
-                      className="rounded-lg border border-line bg-bg px-3 py-2 text-sm text-fg placeholder:text-muted/70 focus:border-accent focus:outline-none"
+                      className="rounded-lg border border-line bg-canvas px-3 py-2 text-sm text-fg placeholder:text-muted/70 focus:border-accent focus:outline-none"
                     />
                   </div>
                 ) : (
@@ -206,7 +206,7 @@ export default function AIAgentPage() {
                     value={currentValue}
                     disabled={updateSettings.isPending}
                     onChange={(e) => editor.updateDraft(key, e.target.value)}
-                    className="rounded-lg border border-line bg-bg px-3 py-2 text-sm text-fg focus:border-accent focus:outline-none"
+                    className="rounded-lg border border-line bg-canvas px-3 py-2 text-sm text-fg focus:border-accent focus:outline-none"
                   >
                     <option value="">{emptyLabel}</option>
                     {options.map((opt) => (
@@ -262,7 +262,7 @@ export default function AIAgentPage() {
                       {item.label}
                     </label>
                     {item.overridden ? (
-                      <span className="inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-300">
+                      <span className="inline-flex items-center rounded-full bg-warning-bg px-2 py-0.5 text-xs font-medium text-warning-fg">
                         {t("settings.agents.overridden")}
                       </span>
                     ) : null}
@@ -285,7 +285,7 @@ export default function AIAgentPage() {
                   value={value}
                   disabled={updateSettings.isPending}
                   onChange={(e) => editor.updateDraft(key, e.target.value)}
-                  className="w-full rounded-lg border border-line bg-bg px-3 py-2 font-mono text-xs text-fg focus:border-accent focus:outline-none"
+                  className="w-full rounded-lg border border-line bg-canvas px-3 py-2 font-mono text-xs text-fg focus:border-accent focus:outline-none"
                 />
 
                 {item.description ? (

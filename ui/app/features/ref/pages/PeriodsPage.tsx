@@ -1,7 +1,8 @@
-import { ArrowLeft, CheckCircle2, Pencil, Plus, Trash2 } from "lucide-react";
+import { CheckCircle2, Pencil, Plus, Trash2 } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router";
+import { ConfirmDialog } from "~/shared/ui/ConfirmDialog";
+import { InductivePageHeader } from "~/shared/ui/iui";
 
 import {
   useCreatePeriod,
@@ -35,6 +36,7 @@ export default function PeriodsPage() {
   const [endDate, setEndDate] = useState("");
   const [isCurrent, setIsCurrent] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Period | null>(null);
 
   const periodsQuery = usePeriodsSearch(
     {
@@ -107,27 +109,24 @@ export default function PeriodsPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8 sm:px-6">
-      <div>
-        <Link
-          to="/ref"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-muted no-underline hover:text-fg"
-        >
-          <ArrowLeft aria-hidden className="size-4" />
-          {t("ref.backToSettings")}
-        </Link>
-        <h1 className="mt-2 text-2xl font-bold text-fg">
-          {t("ref.periodsTitle")}
-        </h1>
-        <p className="text-sm text-muted">{t("ref.periodsSubtitle")}</p>
-      </div>
+      <InductivePageHeader
+        breadcrumbs={[
+          { label: "Beranda", to: "/" },
+          { label: "Pengaturan", to: "/settings" },
+          { label: "Administrasi Paroki", to: "/settings/paroki" },
+          { label: t("ref.periodsTitle") },
+        ]}
+        title={t("ref.periodsTitle")}
+        subtitle={t("ref.periodsSubtitle")}
+      />
 
-      {!hasTenant ? (
-        <div className="rounded-xl border border-line bg-surface p-6 text-sm text-muted">
-          {t("ref.noActiveParish")}
-        </div>
-      ) : !allowed ? (
+      {!allowed ? (
         <div className="rounded-xl border border-line bg-surface p-6 text-sm text-muted">
           {t("ref.forbiddenParishAdmin")}
+        </div>
+      ) : !hasTenant ? (
+        <div className="rounded-xl border border-line bg-surface p-6 text-sm text-muted">
+          {t("ref.noActiveParish")}
         </div>
       ) : (
         <>
@@ -352,19 +351,7 @@ export default function PeriodsPage() {
                     <button
                       type="button"
                       aria-label={`${t("users.deleteUser")} ${p.name}`}
-                      onClick={async () => {
-                        if (!p.id) return;
-                        setErrorMsg(null);
-                        try {
-                          await deletePeriod.mutateAsync(p.id);
-                        } catch (err) {
-                          setErrorMsg(
-                            err instanceof Error
-                              ? err.message
-                              : "Gagal menghapus periode.",
-                          );
-                        }
-                      }}
+                      onClick={() => setPendingDelete(p)}
                       className="inline-flex size-8 items-center justify-center rounded-lg text-danger hover:bg-danger/10"
                     >
                       <Trash2 aria-hidden className="size-4" />
@@ -379,6 +366,34 @@ export default function PeriodsPage() {
               )}
             </div>
           </section>
+
+          <ConfirmDialog
+            open={Boolean(pendingDelete)}
+            title="Hapus periode ini?"
+            description={
+              pendingDelete
+                ? `Periode "${pendingDelete.name}" akan dihapus dari paroki aktif.`
+                : ""
+            }
+            confirmLabel="Ya, Hapus"
+            pending={deletePeriod.isPending}
+            onConfirm={async () => {
+              if (!pendingDelete?.id) return;
+              setErrorMsg(null);
+              try {
+                await deletePeriod.mutateAsync(pendingDelete.id);
+                setPendingDelete(null);
+              } catch (err) {
+                setPendingDelete(null);
+                setErrorMsg(
+                  err instanceof Error
+                    ? err.message
+                    : "Gagal menghapus periode.",
+                );
+              }
+            }}
+            onCancel={() => setPendingDelete(null)}
+          />
         </>
       )}
     </div>

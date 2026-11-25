@@ -7,11 +7,13 @@ import {
   CHANNEL_GROUP_NAMES,
   filterModelsByCapability,
   findChannelGroup,
+  getVisibleSettingsHubs,
   groupSettings,
   indexSettingsByKey,
   isSuperAdmin,
   parseModelSelection,
   parseProviderModels,
+  SETTINGS_HUBS,
   SETTINGS_LAUNCHERS,
 } from "./model";
 
@@ -19,6 +21,19 @@ test("isSuperAdmin checks user:super-admin role", () => {
   assert.equal(isSuperAdmin(["user:super-admin"]), true);
   assert.equal(isSuperAdmin(["user:user", "ref:paroki-admin"]), false);
   assert.equal(isSuperAdmin(undefined), false);
+});
+
+test("getVisibleSettingsHubs filters 5 IUI hubs by role", () => {
+  assert.equal(SETTINGS_HUBS.length, 5);
+  assert.deepEqual(
+    getVisibleSettingsHubs(["user:super-admin"]).map((h) => h.id),
+    ["gerejawi", "sipil", "lookups", "system"],
+  );
+  assert.deepEqual(
+    getVisibleSettingsHubs(["ref:paroki-admin"]).map((h) => h.id),
+    ["paroki", "lookups"],
+  );
+  assert.deepEqual(getVisibleSettingsHubs(["user:user"]), []);
 });
 
 test("groupSettings and findChannelGroup group channel settings", () => {

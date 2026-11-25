@@ -1,4 +1,15 @@
-import { Bot, Cpu, type LucideIcon, MessageCircle, Send } from "lucide-react";
+import {
+  BookOpen,
+  Bot,
+  Building2,
+  Church,
+  Cpu,
+  type LucideIcon,
+  MapPin,
+  MessageCircle,
+  Send,
+  Sliders,
+} from "lucide-react";
 import type {
   AgentProviderResponse,
   ProviderModelItem,
@@ -6,6 +17,73 @@ import type {
 } from "./api/types";
 
 export const ROLE_SUPER_ADMIN = "user:super-admin";
+export const ROLE_PAROKI_ADMIN = "ref:paroki-admin";
+
+export interface SettingsHubItem {
+  id: "gerejawi" | "sipil" | "paroki" | "lookups" | "system";
+  path: string;
+  title: string;
+  description: string;
+  plate: 1 | 2 | 3 | 4 | 5 | 6;
+  icon: LucideIcon;
+  roles: string[];
+}
+
+export const SETTINGS_HUBS: SettingsHubItem[] = [
+  {
+    id: "gerejawi",
+    path: "/settings/gerejawi",
+    title: "Struktur Gerejawi",
+    description: "Kelola keuskupan, kevikepan, dan tenant paroki.",
+    plate: 1,
+    icon: Building2,
+    roles: [ROLE_SUPER_ADMIN],
+  },
+  {
+    id: "sipil",
+    path: "/settings/sipil",
+    title: "Wilayah Sipil",
+    description: "Data referensi kota/kabupaten, kecamatan, dan kelurahan.",
+    plate: 2,
+    icon: MapPin,
+    roles: [ROLE_SUPER_ADMIN],
+  },
+  {
+    id: "paroki",
+    path: "/settings/paroki",
+    title: "Administrasi Paroki",
+    description: "Profil paroki aktif, wilayah/stasi, lingkungan, dan periode.",
+    plate: 3,
+    icon: Church,
+    roles: [ROLE_PAROKI_ADMIN],
+  },
+  {
+    id: "lookups",
+    path: "/settings/lookups",
+    title: "Kamus Referensi",
+    description: "Daftar nilai referensi global maupun khusus paroki.",
+    plate: 4,
+    icon: BookOpen,
+    roles: [ROLE_SUPER_ADMIN, ROLE_PAROKI_ADMIN],
+  },
+  {
+    id: "system",
+    path: "/settings/system",
+    title: "Sistem & Integrasi",
+    description: "Konfigurasi Telegram, WhatsApp, penyedia LLM, dan agen AI.",
+    plate: 6,
+    icon: Sliders,
+    roles: [ROLE_SUPER_ADMIN],
+  },
+];
+
+export function getVisibleSettingsHubs(
+  roles: string[] = [],
+): SettingsHubItem[] {
+  return SETTINGS_HUBS.filter((hub) =>
+    hub.roles.some((r) => roles.includes(r)),
+  );
+}
 
 export interface SettingsLauncherItem {
   id: "telegram" | "whatsapp" | "aiProvider" | "aiAgent";
@@ -15,15 +93,20 @@ export interface SettingsLauncherItem {
 }
 
 export const SETTINGS_LAUNCHERS: SettingsLauncherItem[] = [
-  { id: "telegram", path: "/settings/telegram", plate: 1, icon: Send },
+  { id: "telegram", path: "/settings/system/telegram", plate: 1, icon: Send },
   {
     id: "whatsapp",
-    path: "/settings/whatsapp",
+    path: "/settings/system/whatsapp",
     plate: 2,
     icon: MessageCircle,
   },
-  { id: "aiProvider", path: "/settings/ai-provider", plate: 3, icon: Cpu },
-  { id: "aiAgent", path: "/settings/ai-agent", plate: 4, icon: Bot },
+  {
+    id: "aiProvider",
+    path: "/settings/system/ai-provider",
+    plate: 3,
+    icon: Cpu,
+  },
+  { id: "aiAgent", path: "/settings/system/ai-agent", plate: 4, icon: Bot },
 ];
 
 export const AGENT_MODEL_KEYS = [

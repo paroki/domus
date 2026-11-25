@@ -1,43 +1,64 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  getVisibleSettingsItems,
+  GEREJAWI_STEPS,
+  getLookupCategoryLabel,
+  hasAnyRefAdminRole,
+  isParokiAdmin,
+  isSuperAdmin,
+  LOOKUP_CATEGORIES,
+  LOOKUP_CATEGORY_META,
+  PAROKI_STEPS,
   ROLE_PAROKI_ADMIN,
   ROLE_SUPER_ADMIN,
   slugifyCode,
 } from "./model";
 
-test("getVisibleSettingsItems returns 0 items for regular user", () => {
-  assert.deepEqual(getVisibleSettingsItems(["user:user"]), []);
-  assert.deepEqual(getVisibleSettingsItems([]), []);
+test("role helpers detect user:super-admin and ref:paroki-admin", () => {
+  assert.equal(isSuperAdmin([ROLE_SUPER_ADMIN]), true);
+  assert.equal(isParokiAdmin([ROLE_PAROKI_ADMIN]), true);
+  assert.equal(hasAnyRefAdminRole(["user:user"]), false);
+  assert.equal(hasAnyRefAdminRole([ROLE_PAROKI_ADMIN]), true);
 });
 
-test("getVisibleSettingsItems returns only lookups and paroki for super-admin", () => {
-  const ids = getVisibleSettingsItems([ROLE_SUPER_ADMIN]).map((i) => i.id);
-  assert.deepEqual(ids, ["lookups", "paroki"]);
+test("LOOKUP_CATEGORIES contains all 14 Bahasa Indonesia categories", () => {
+  assert.deepEqual(LOOKUP_CATEGORIES, [
+    "status_paroki",
+    "agama",
+    "golongan_darah",
+    "suku",
+    "hubungan_keluarga",
+    "status_pernikahan",
+    "status_rumah",
+    "pendidikan",
+    "pekerjaan",
+    "profesi",
+    "disabilitas",
+    "status_ekonomi",
+    "aktivitas_sosial",
+    "org_position",
+  ]);
+  assert.equal(LOOKUP_CATEGORY_META.length, 14);
+  assert.equal(getLookupCategoryLabel("status_paroki"), "Status Paroki");
 });
 
-test("getVisibleSettingsItems returns 4 paroki items for paroki-admin", () => {
-  const ids = getVisibleSettingsItems([ROLE_PAROKI_ADMIN]).map((i) => i.id);
-  assert.deepEqual(ids, ["profile", "wilayah", "lookups", "periods"]);
-});
-
-test("getVisibleSettingsItems returns all 5 items when holding both roles", () => {
-  const ids = getVisibleSettingsItems([
-    ROLE_SUPER_ADMIN,
-    ROLE_PAROKI_ADMIN,
-  ]).map((i) => i.id);
-  assert.deepEqual(ids, ["profile", "wilayah", "lookups", "periods", "paroki"]);
-});
-
-test("getVisibleSettingsItems filters visible items by query string", () => {
-  const filtered = getVisibleSettingsItems(
-    [ROLE_SUPER_ADMIN, ROLE_PAROKI_ADMIN],
-    "wilayah",
+test("GEREJAWI_STEPS and PAROKI_STEPS point to /settings/* IUI routes", () => {
+  assert.deepEqual(
+    GEREJAWI_STEPS.map((s) => s.path),
+    [
+      "/settings/gerejawi/keuskupan",
+      "/settings/gerejawi/kevikepan",
+      "/settings/gerejawi/paroki",
+    ],
   );
   assert.deepEqual(
-    filtered.map((i) => i.id),
-    ["wilayah"],
+    PAROKI_STEPS.map((s) => s.path),
+    [
+      "/settings/paroki/profile",
+      "/settings/paroki/wilayah",
+      "/settings/paroki/lingkungan",
+      "/settings/paroki/periods",
+    ],
   );
 });
 

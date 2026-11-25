@@ -26,7 +26,7 @@ export function SettingGroupCard({
           <span
             className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
               group.configured
-                ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                ? "bg-success-bg text-success-fg"
                 : "bg-fg/8 text-muted"
             }`}
           >

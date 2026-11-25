@@ -15,7 +15,7 @@ export default function AIProviderPage() {
 
   return (
     <SettingsSubpageShell
-      backTo="/settings"
+      backTo="/settings/system"
       backLabel={t("settings.backToSettings")}
       title={t("settings.providers.title")}
       subtitle={t("settings.providers.subtitle")}

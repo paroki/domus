@@ -1,7 +1,6 @@
-import { ArrowLeft } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router";
+import { InductivePageHeader } from "~/shared/ui/iui";
 
 import { useUpdateCurrentParokiProfile } from "../api/actions";
 import { useCurrentIdentity, useCurrentParoki } from "../api/queries";
@@ -65,27 +64,24 @@ export default function ParokiProfilePage() {
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-8 sm:px-6">
-      <div>
-        <Link
-          to="/ref"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-muted no-underline hover:text-fg"
-        >
-          <ArrowLeft aria-hidden className="size-4" />
-          {t("ref.backToSettings")}
-        </Link>
-        <h1 className="mt-2 text-2xl font-bold text-fg">
-          {t("ref.profileTitle")}
-        </h1>
-        <p className="text-sm text-muted">{t("ref.profileSubtitle")}</p>
-      </div>
+      <InductivePageHeader
+        breadcrumbs={[
+          { label: "Beranda", to: "/" },
+          { label: "Pengaturan", to: "/settings" },
+          { label: "Administrasi Paroki", to: "/settings/paroki" },
+          { label: t("ref.profileTitle") },
+        ]}
+        title={t("ref.profileTitle")}
+        subtitle={t("ref.profileSubtitle")}
+      />
 
-      {!me?.activeParokiId ? (
-        <div className="rounded-xl border border-line bg-surface p-6 text-sm text-muted">
-          {t("ref.noActiveParish")}
-        </div>
-      ) : !canManage ? (
+      {!canManage ? (
         <div className="rounded-xl border border-line bg-surface p-6 text-sm text-muted">
           {t("ref.forbiddenParishAdmin")}
+        </div>
+      ) : !me?.activeParokiId ? (
+        <div className="rounded-xl border border-line bg-surface p-6 text-sm text-muted">
+          {t("ref.noActiveParish")}
         </div>
       ) : isLoading ? (
         <p className="text-sm text-muted">{t("auth.loading")}</p>

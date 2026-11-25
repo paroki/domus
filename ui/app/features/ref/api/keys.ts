@@ -12,8 +12,11 @@ export const refKeys = {
   all: ["ref"] as const,
   keuskupan: (params?: Omit<SearchKeuskupanRequest, "cursor">) =>
     [...refKeys.all, "keuskupan", params ?? {}] as const,
+  keuskupanDetail: (id: string) =>
+    [...refKeys.all, "keuskupan-detail", id] as const,
   paroki: (params?: Omit<SearchParokiRequest, "cursor">) =>
     [...refKeys.all, "paroki", params ?? {}] as const,
+  parokiDetail: (id: string) => [...refKeys.all, "paroki-detail", id] as const,
   currentParoki: () => [...refKeys.all, "current-paroki"] as const,
   parokiMembers: (
     parokiId: string,
@@ -21,10 +24,15 @@ export const refKeys = {
   ) => [...refKeys.all, "paroki-members", parokiId, params ?? {}] as const,
   wilayah: (params?: Omit<SearchWilayahRequest, "cursor">) =>
     [...refKeys.all, "wilayah", params ?? {}] as const,
+  wilayahDetail: (id: string) =>
+    [...refKeys.all, "wilayah-detail", id] as const,
   lingkungan: (params?: Omit<SearchLingkunganRequest, "cursor">) =>
     [...refKeys.all, "lingkungan", params ?? {}] as const,
+  lingkunganDetail: (id: string) =>
+    [...refKeys.all, "lingkungan-detail", id] as const,
   lookups: (params?: Omit<SearchLookupsRequest, "cursor">) =>
     [...refKeys.all, "lookups", params ?? {}] as const,
+  lookupDetail: (id: string) => [...refKeys.all, "lookup-detail", id] as const,
   periods: (params?: Omit<SearchPeriodsRequest, "cursor">) =>
     [...refKeys.all, "periods", params ?? {}] as const,
 };

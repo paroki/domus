@@ -351,7 +351,7 @@ export function LLMProvidersSection({ onStatus }: LLMProvidersSectionProps) {
                     <span className="inline-flex items-center rounded-full bg-fg/8 px-2.5 py-0.5 text-xs font-medium text-fg">
                       {getProviderLabel(p.provider)}
                     </span>
-                    <span className="inline-flex items-center rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                    <span className="inline-flex items-center rounded-full bg-success-bg px-2.5 py-0.5 text-xs font-medium text-success-fg">
                       {p.apiKeyMasked || t("settings.active")}
                     </span>
                     <span className="inline-flex items-center rounded-full bg-fg/6 px-2.5 py-0.5 text-xs text-muted">
@@ -393,7 +393,7 @@ export function LLMProvidersSection({ onStatus }: LLMProvidersSectionProps) {
                     type="button"
                     disabled={busy}
                     onClick={() => void handleDelete(p)}
-                    className="rounded-lg border border-red-500/30 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50 dark:text-red-400"
+                    className="rounded-lg border border-danger-fg/30 px-3 py-1.5 text-xs font-medium text-danger-fg transition hover:bg-danger-bg disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {t("settings.providers.delete")}
                   </button>

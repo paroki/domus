@@ -8,5 +8,5 @@ export const app: AppDef = {
   order: 5,
   plate: 6,
   icon: Settings,
-  roles: ["user:super-admin"],
+  roles: ["user:super-admin", "ref:paroki-admin"],
 };

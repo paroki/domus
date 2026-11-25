@@ -1,17 +1,10 @@
 import { AlertTriangle } from "lucide-react";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId } from "react";
 import { Button } from "~/shared/ui/Button";
 import { Card } from "~/shared/ui/Card";
 import { getInitials } from "../model";
 
-export function useDebouncedValue<T>(value: T, delayMs = 250): T {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const timer = window.setTimeout(() => setDebounced(value), delayMs);
-    return () => window.clearTimeout(timer);
-  }, [value, delayMs]);
-  return debounced;
-}
+export { useDebouncedValue } from "~/shared/util/use-debounced-value";
 
 export function UserAvatar({
   name,

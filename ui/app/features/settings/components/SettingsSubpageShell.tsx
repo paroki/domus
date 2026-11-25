@@ -95,7 +95,7 @@ export function SettingsSubpageShell({
       {!meLoading && !canManage ? (
         <div
           role="alert"
-          className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-200"
+          className="rounded-xl border border-warning-fg/30 bg-warning-bg px-4 py-3 text-sm text-warning-fg"
         >
           {t("settings.forbiddenSuperAdmin")}
         </div>
@@ -114,7 +114,7 @@ export function SettingsSubpageShell({
           {errorMsg ? (
             <div
               role="alert"
-              className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-300"
+              className="rounded-xl border border-danger-fg/30 bg-danger-bg px-4 py-3 text-sm text-danger-fg"
             >
               {errorMsg}
             </div>
@@ -123,7 +123,7 @@ export function SettingsSubpageShell({
           {savedMsg ? (
             <div
               role="status"
-              className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-300"
+              className="rounded-xl border border-success-fg/30 bg-success-bg px-4 py-3 text-sm text-success-fg"
             >
               {savedMsg}
             </div>

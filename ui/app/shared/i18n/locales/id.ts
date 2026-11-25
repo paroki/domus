@@ -396,7 +396,7 @@ const id = {
     lookupsSubtitle: "Kelola daftar nilai referensi global dan paroki.",
     forbiddenMasterData:
       "Hanya Admin Paroki atau Super Admin yang dapat mengelola kamus referensi.",
-    categoryPlaceholder: "Kategori (mis. sacrament)",
+    categoryPlaceholder: "Kategori (mis. status_paroki)",
     categoryLabel: "Kategori",
     allCategories: "Semua kategori",
     labelPlaceholder: "Label tampilan",
