@@ -1,4 +1,3 @@
-import assert from "node:assert/strict";
 import type { Locator } from "playwright";
 import { BasePage } from "../base.page";
 
@@ -10,105 +9,119 @@ export interface ParokiProfileInput {
   email?: string;
   website?: string;
   address?: string;
+  timezone?: string;
+  latitude?: string;
+  longitude?: string;
 }
 
 export class ParokiProfilePage extends BasePage {
+  private sectionCard(heading: string | RegExp): Locator {
+    return this.page
+      .locator("div.rounded-xl")
+      .filter({ has: this.page.getByRole("heading", { name: heading }) })
+      .first();
+  }
+
   async expectLoaded(): Promise<void> {
     await this.page
       .getByRole("heading", { name: "Profil Paroki" })
       .waitFor({ state: "visible", timeout: 10_000 });
     await this.page
-      .getByRole("button", { name: "Simpan Profil" })
+      .getByRole("heading", { name: "Struktur Gerejawi" })
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
   async updateProfile(input: ParokiProfileInput): Promise<void> {
-    if (input.name !== undefined) {
-      await this.page.getByLabel("Nama", { exact: true }).fill(input.name);
+    if (
+      input.name !== undefined ||
+      input.patronSaint !== undefined ||
+      input.pastorName !== undefined
+    ) {
+      const card = this.sectionCard("Identitas Gereja & Kop Surat");
+      await card.getByRole("button", { name: "Ubah" }).click();
+      if (input.name !== undefined) {
+        await this.page.locator("#sec-nama").fill(input.name);
+      }
+      if (input.patronSaint !== undefined) {
+        await this.page.locator("#sec-pelindung").fill(input.patronSaint);
+      }
+      if (input.pastorName !== undefined) {
+        await this.page.locator("#sec-pastor").fill(input.pastorName);
+      }
+      await this.page.getByRole("button", { name: "Simpan Perubahan" }).click();
+      await this.expectSavedBanner();
     }
-    if (input.patronSaint !== undefined) {
-      await this.page
-        .getByLabel("Santo/Santa Pelindung")
-        .fill(input.patronSaint);
+
+    if (
+      input.phone !== undefined ||
+      input.email !== undefined ||
+      input.website !== undefined
+    ) {
+      const card = this.sectionCard("Kontak Resmi");
+      await card.getByRole("button", { name: "Ubah" }).click();
+      if (input.phone !== undefined) {
+        await this.page.locator("#sec-telepon").fill(input.phone);
+      }
+      if (input.email !== undefined) {
+        await this.page.locator("#sec-email").fill(input.email);
+      }
+      if (input.website !== undefined) {
+        await this.page.locator("#sec-website").fill(input.website);
+      }
+      await this.page.getByRole("button", { name: "Simpan Perubahan" }).click();
+      await this.expectSavedBanner();
     }
-    if (input.pastorName !== undefined) {
-      await this.page.getByLabel("Pastor Paroki").fill(input.pastorName);
+
+    if (
+      input.address !== undefined ||
+      input.timezone !== undefined ||
+      input.latitude !== undefined ||
+      input.longitude !== undefined
+    ) {
+      const card = this.sectionCard(
+        "Domisili Wilayah Sipil, Zona Waktu & Koordinat",
+      );
+      await card.getByRole("button", { name: "Ubah" }).click();
+      if (input.timezone !== undefined) {
+        await this.page.locator("#sec-timezone").selectOption(input.timezone);
+      }
+      if (input.address !== undefined) {
+        await this.page.locator("#sec-alamat").fill(input.address);
+      }
+      if (input.latitude !== undefined) {
+        await this.page.locator("#sec-lat").fill(input.latitude);
+      }
+      if (input.longitude !== undefined) {
+        await this.page.locator("#sec-lng").fill(input.longitude);
+      }
+      await this.page.getByRole("button", { name: "Simpan Perubahan" }).click();
+      await this.expectSavedBanner();
     }
-    if (input.phone !== undefined) {
-      await this.page.getByLabel("Telepon").fill(input.phone);
-    }
-    if (input.email !== undefined) {
-      await this.page.getByLabel("Email", { exact: true }).fill(input.email);
-    }
-    if (input.website !== undefined) {
-      await this.page.getByLabel("Situs Web").fill(input.website);
-    }
-    if (input.address !== undefined) {
-      await this.page.getByLabel("Alamat").fill(input.address);
-    }
-    await this.page.getByRole("button", { name: "Simpan Profil" }).click();
   }
 
   async expectSavedBanner(): Promise<void> {
     await this.page
-      .getByText("Tersimpan", { exact: true })
+      .getByRole("status")
+      .filter({ hasText: "Tersimpan" })
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
-  private async assertInputValue(
-    locator: Locator,
-    expected: string,
-  ): Promise<void> {
-    const deadline = Date.now() + 10_000;
-    while (Date.now() < deadline) {
-      if ((await locator.inputValue()) === expected) return;
-      await this.page.waitForTimeout(100);
-    }
-    assert.equal(await locator.inputValue(), expected);
-  }
-
   async expectProfileValues(expected: ParokiProfileInput): Promise<void> {
-    if (expected.name !== undefined) {
-      await this.assertInputValue(
-        this.page.getByLabel("Nama", { exact: true }),
-        expected.name,
-      );
-    }
-    if (expected.patronSaint !== undefined) {
-      await this.assertInputValue(
-        this.page.getByLabel("Santo/Santa Pelindung"),
-        expected.patronSaint,
-      );
-    }
-    if (expected.pastorName !== undefined) {
-      await this.assertInputValue(
-        this.page.getByLabel("Pastor Paroki"),
-        expected.pastorName,
-      );
-    }
-    if (expected.phone !== undefined) {
-      await this.assertInputValue(
-        this.page.getByLabel("Telepon"),
-        expected.phone,
-      );
-    }
-    if (expected.email !== undefined) {
-      await this.assertInputValue(
-        this.page.getByLabel("Email", { exact: true }),
-        expected.email,
-      );
-    }
-    if (expected.website !== undefined) {
-      await this.assertInputValue(
-        this.page.getByLabel("Situs Web"),
-        expected.website,
-      );
-    }
-    if (expected.address !== undefined) {
-      await this.assertInputValue(
-        this.page.getByLabel("Alamat"),
-        expected.address,
-      );
+    const vals = [
+      expected.name,
+      expected.patronSaint,
+      expected.pastorName,
+      expected.phone,
+      expected.email,
+      expected.website,
+      expected.address,
+      expected.timezone,
+    ].filter((v): v is string => v !== undefined);
+    for (const v of vals) {
+      await this.page
+        .getByText(v, { exact: false })
+        .first()
+        .waitFor({ state: "visible", timeout: 10_000 });
     }
   }
 

@@ -155,3 +155,134 @@ Then(
     await this.pages.ref.lookups.expectLookupNotVisible(label);
   },
 );
+
+When(
+  "I create a kevikepan under keuskupan {string} with code {string} and name {string}",
+  async function (
+    this: DomusWorld,
+    keuskupanName: string,
+    code: string,
+    name: string,
+  ) {
+    await this.pages.ref.kevikepanSipil.createKevikepan({
+      keuskupanName,
+      code,
+      name,
+    });
+  },
+);
+
+Then(
+  "I see kevikepan {string} with code {string}",
+  async function (this: DomusWorld, name: string, code: string) {
+    await this.pages.ref.kevikepanSipil.expectKevikepanVisible(name, code);
+  },
+);
+
+When(
+  "I delete kevikepan {string}",
+  async function (this: DomusWorld, name: string) {
+    await this.pages.ref.kevikepanSipil.deleteKevikepan(name);
+  },
+);
+
+Then(
+  "I do not see kevikepan {string}",
+  async function (this: DomusWorld, name: string) {
+    await this.pages.ref.kevikepanSipil.expectKevikepanNotVisible(name);
+  },
+);
+
+When(
+  "I create a kota with code {string} and name {string}",
+  async function (this: DomusWorld, code: string, name: string) {
+    await this.pages.ref.kevikepanSipil.createKota({ code, name });
+  },
+);
+
+When(
+  "I create a kecamatan under kota {string} with code {string} and name {string}",
+  async function (
+    this: DomusWorld,
+    kotaName: string,
+    code: string,
+    name: string,
+  ) {
+    await this.pages.ref.kevikepanSipil.createKecamatan({
+      kotaName,
+      code,
+      name,
+    });
+  },
+);
+
+When(
+  "I create a kelurahan under kecamatan {string} with code {string} name {string} and kodePos {string}",
+  async function (
+    this: DomusWorld,
+    kecamatanName: string,
+    code: string,
+    name: string,
+    kodePos: string,
+  ) {
+    await this.pages.ref.kevikepanSipil.createKelurahan({
+      kecamatanName,
+      code,
+      name,
+      kodePos,
+    });
+  },
+);
+
+When("I delete kota {string}", async function (this: DomusWorld, name: string) {
+  await this.pages.ref.kevikepanSipil.deleteKota(name);
+});
+
+Then(
+  "I do not see kota {string}",
+  async function (this: DomusWorld, name: string) {
+    await this.pages.ref.kevikepanSipil.expectKotaNotVisible(name);
+  },
+);
+
+When(
+  "I delete kecamatan {string}",
+  async function (this: DomusWorld, name: string) {
+    await this.pages.ref.kevikepanSipil.deleteKecamatan(name);
+  },
+);
+
+Then(
+  "I do not see kecamatan {string}",
+  async function (this: DomusWorld, name: string) {
+    await this.pages.ref.kevikepanSipil.expectKecamatanNotVisible(name);
+  },
+);
+
+When(
+  "I delete kelurahan {string}",
+  async function (this: DomusWorld, name: string) {
+    await this.pages.ref.kevikepanSipil.deleteKelurahan(name);
+  },
+);
+
+Then(
+  "I do not see kelurahan {string}",
+  async function (this: DomusWorld, name: string) {
+    await this.pages.ref.kevikepanSipil.expectKelurahanNotVisible(name);
+  },
+);
+
+Then(
+  "I see ref error {string}",
+  async function (this: DomusWorld, message: string) {
+    await this.pages.ref.kevikepanSipil.expectErrorAlert(message);
+  },
+);
+
+When(
+  "I edit paroki struktur kodeResmi to {string}",
+  async function (this: DomusWorld, kodeResmi: string) {
+    await this.pages.ref.paroki.editParokiStruktur({ kodeResmi });
+  },
+);

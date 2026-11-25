@@ -6,6 +6,7 @@ import { EventsPage } from "./event/events.page";
 import { OrgDetailPage } from "./org/org-detail.page";
 import { OrgJoinPage } from "./org/org-join.page";
 import { OrgsPage } from "./org/orgs.page";
+import { KevikepanSipilPage } from "./ref/kevikepan-sipil.page";
 import { LookupsPage } from "./ref/lookups.page";
 import { ParokiPage } from "./ref/paroki.page";
 import { ParokiProfilePage } from "./ref/paroki-profile.page";
@@ -36,6 +37,7 @@ export function createPages(page: Page) {
     ref: {
       settings: new SettingsPage(page),
       paroki: new ParokiPage(page),
+      kevikepanSipil: new KevikepanSipilPage(page),
       lookups: new LookupsPage(page),
       profile: new ParokiProfilePage(page),
       wilayah: new WilayahPage(page),

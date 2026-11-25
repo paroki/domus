@@ -21,6 +21,9 @@ Feature: Paroki Admin settings, profile, wilayah, lookups, and periods
       | email       | sekretariat@e2e.org    |
       | website     | https://e2e.paroki.org |
       | address     | Jl. Gereja No. 1       |
+      | timezone    | Asia/Jakarta           |
+      | latitude    | -6.1695                |
+      | longitude   | 106.8331               |
     Then I see the profile saved banner
     When I open "/settings/paroki/profile"
     Then I see the paroki profile fields match:
@@ -31,6 +34,7 @@ Feature: Paroki Admin settings, profile, wilayah, lookups, and periods
       | email       | sekretariat@e2e.org    |
       | website     | https://e2e.paroki.org |
       | address     | Jl. Gereja No. 1       |
+      | timezone    | Asia/Jakarta           |
 
   @paroki-admin
   Scenario: Paroki Admin manages wilayah and lingkungan with REF_IN_USE delete guard

@@ -66,21 +66,59 @@ export class ParokiPage extends BasePage {
 
   async createParoki(input: {
     keuskupanName?: string;
+    kevikepanName?: string;
     code: string;
     name: string;
+    timezone?: string;
   }): Promise<void> {
     await this.goto("/settings/gerejawi/paroki/new");
     if (input.keuskupanName) {
       await this.page
-        .locator("#paroki-keuskupan")
+        .locator("#wiz-keuskupan")
         .selectOption({ label: input.keuskupanName });
     }
-    await this.page.locator("#paroki-kode").fill(input.code);
-    await this.page.locator("#paroki-nama").fill(input.name);
-    await this.page.getByRole("button", { name: "Simpan Paroki" }).click();
+    if (input.kevikepanName) {
+      await this.page
+        .locator("#wiz-kevikepan")
+        .selectOption({ label: input.kevikepanName });
+    }
+    await this.page.locator("#wiz-nama").fill(input.name);
+    await this.page.locator("#wiz-kode").fill(input.code);
+    await this.page
+      .getByRole("button", { name: "Lanjut ke Identitas →" })
+      .click();
+    if (input.timezone) {
+      await this.page
+        .getByRole("button", { name: "Lanjut ke Domisili →" })
+        .click();
+      await this.page.locator("#wiz-timezone").selectOption(input.timezone);
+    }
+    await this.page
+      .getByRole("button", { name: "Simpan & Buat Paroki" })
+      .click();
     await this.page.waitForURL(/\/settings\/gerejawi\/paroki\/[^/]+$/, {
       timeout: 10_000,
     });
+  }
+
+  async editParokiStruktur(input: { kodeResmi?: string }): Promise<void> {
+    const card = this.page
+      .locator("div.rounded-xl")
+      .filter({
+        has: this.page.getByRole("heading", {
+          name: "Struktur & Status Gerejawi",
+        }),
+      })
+      .first();
+    await card.getByRole("button", { name: "Ubah" }).click();
+    if (input.kodeResmi !== undefined) {
+      await this.page.locator("#sec-koderesmi").fill(input.kodeResmi);
+    }
+    await this.page.getByRole("button", { name: "Simpan Perubahan" }).click();
+    await this.page
+      .getByRole("status")
+      .filter({ hasText: "Data paroki berhasil diperbarui." })
+      .waitFor({ state: "visible", timeout: 10_000 });
   }
 
   async expectParokiVisible(name: string, code: string): Promise<void> {
@@ -111,6 +149,9 @@ export class ParokiPage extends BasePage {
   }
 
   async expectParokiNotVisible(name: string): Promise<void> {
+    await this.page
+      .getByRole("heading", { name: "Paroki", exact: true })
+      .waitFor({ state: "visible", timeout: 10_000 });
     await this.page
       .getByText(name, { exact: true })
       .waitFor({ state: "detached", timeout: 10_000 });
