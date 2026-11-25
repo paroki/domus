@@ -2,6 +2,46 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.0.0-alpha.6](https://github.com/paroki/domus/compare/v1.0.0-alpha.5...v1.0.0-alpha.6) (2026-11-25)
+
+### ⚙️ API
+
+#### ✨ Features
+
+- add eino multi-agent supervisor, mcp bridge, and sse chat ([5b17a9c](https://github.com/paroki/domus/commit/5b17a9ce59c11b6a08bb773481826758e6c38878))
+- add eino factories and session and memory crud api ([056cf30](https://github.com/paroki/domus/commit/056cf30025d6e094e997638b59b53724e7909148))
+- add agent session, message, and memory schemas and rag repo ([9720e06](https://github.com/paroki/domus/commit/9720e06453e9dc25b4b6cd35c4d52621b696c49c))
+- add ref and user mcp tools and wire agent sql and mcp ([a84fb98](https://github.com/paroki/domus/commit/a84fb98e08a2bd1322475ffb72cda0644017e2fb))
+- add agent permissions, settings, and 4xx error mapping ([3a53020](https://github.com/paroki/domus/commit/3a530200c2439a5ca7710061e7304e87f9559c1e))
+
+#### 🐛 Bug Fixes
+
+- wait for cancelled stream wind-down before locking session ([56565ed](https://github.com/paroki/domus/commit/56565edb4b0f78c41a4effe7bf0b997906fa8df9))
+- emit tool output in SSE and stabilize agent stream ([0d7e860](https://github.com/paroki/domus/commit/0d7e860277ed7c7a6bc084d69eecf16362e9812d))
+- accept YYYY-MM-DD and document event_list schema ([9999a69](https://github.com/paroki/domus/commit/9999a69867f33d46069d6d5247b62b89fa98a9db))
+- support chat retry without duplicating user message ([7f94eb9](https://github.com/paroki/domus/commit/7f94eb9c55bc5eac9f1df9d7a81252057c4c7594))
+
+### 🖥️ UI
+
+#### ✨ Features
+
+- polish agent chat UX with copy, prompts, and inline confirm ([672ec52](https://github.com/paroki/domus/commit/672ec52188dcb41582de3fa417f178b5d2936c20))
+- add verbose mode and tool error display in agent chat ([8f7c6b6](https://github.com/paroki/domus/commit/8f7c6b667f83af7ed59272b0c76b769d3cfb350f))
+- implement ai assistant workspace and clean up shell header ([8c4ab39](https://github.com/paroki/domus/commit/8c4ab39fe832ba1d46a945e327f7bd341228625d))
+- add ai-agent settings page and launcher tile ([461d998](https://github.com/paroki/domus/commit/461d998b35884dd5ca998a1da552c6599ce7d3e6))
+
+#### 🐛 Bug Fixes
+
+- add retry action for failed or unanswered agent chat ([028ce26](https://github.com/paroki/domus/commit/028ce264f9568fb38d438ba7554c14ec683f29b2))
+
+### 📦 Dependencies
+
+- **deps:** add react-markdown for safe agent markdown rendering ([fdfbe4b](https://github.com/paroki/domus/commit/fdfbe4b829e24924fbe53f205d53cc5feb357e7d))
+- **deps:** replace genkit with eino model and embedding sdks ([d14d791](https://github.com/paroki/domus/commit/d14d791caa06e44fdb409e9a060c8e17e789a184))
+- **deps:** remove unused a2ui and markdown packages ([173d37d](https://github.com/paroki/domus/commit/173d37dd3aa68d1728928cfced85f648987844b0))
+- **deps:** update dependency atlas to v1.4.0 (#164) ([82558d4](https://github.com/paroki/domus/commit/82558d496e70f689280b857a3fd0050c36da9e70))
+- **deps:** update dependency typescript to v7 (#166) ([c32dd3c](https://github.com/paroki/domus/commit/c32dd3c22dd015ba3c007690e3d1ef755e41ab68))
+
 ## [v1.0.0-alpha.5](https://github.com/paroki/domus/compare/v1.0.0-alpha.4...v1.0.0-alpha.5) (2026-11-23)
 
 ### ⚙️ API
