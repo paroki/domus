@@ -28,6 +28,7 @@ import (
 	"github.com/paroki/domus/ent/useraccount"
 	"github.com/paroki/domus/ent/userotp"
 	"github.com/paroki/domus/ent/usersession"
+	"github.com/paroki/domus/ent/usertoken"
 	"github.com/paroki/domus/ent/wilayah"
 )
 
@@ -698,6 +699,53 @@ func init() {
 	usersessionDescID := usersessionMixinFields0[0].Descriptor()
 	// usersession.DefaultID holds the default value on creation for the id field.
 	usersession.DefaultID = usersessionDescID.Default.(func() uuid.UUID)
+	usertokenMixin := schema.UserToken{}.Mixin()
+	usertokenMixinFields0 := usertokenMixin[0].Fields()
+	_ = usertokenMixinFields0
+	usertokenMixinFields1 := usertokenMixin[1].Fields()
+	_ = usertokenMixinFields1
+	usertokenFields := schema.UserToken{}.Fields()
+	_ = usertokenFields
+	// usertokenDescCreatedAt is the schema descriptor for created_at field.
+	usertokenDescCreatedAt := usertokenMixinFields1[0].Descriptor()
+	// usertoken.DefaultCreatedAt holds the default value on creation for the created_at field.
+	usertoken.DefaultCreatedAt = usertokenDescCreatedAt.Default.(func() time.Time)
+	// usertokenDescUpdatedAt is the schema descriptor for updated_at field.
+	usertokenDescUpdatedAt := usertokenMixinFields1[1].Descriptor()
+	// usertoken.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	usertoken.DefaultUpdatedAt = usertokenDescUpdatedAt.Default.(func() time.Time)
+	// usertoken.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	usertoken.UpdateDefaultUpdatedAt = usertokenDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// usertokenDescName is the schema descriptor for name field.
+	usertokenDescName := usertokenFields[1].Descriptor()
+	// usertoken.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	usertoken.NameValidator = func() func(string) error {
+		validators := usertokenDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// usertokenDescTokenPrefix is the schema descriptor for token_prefix field.
+	usertokenDescTokenPrefix := usertokenFields[2].Descriptor()
+	// usertoken.TokenPrefixValidator is a validator for the "token_prefix" field. It is called by the builders before save.
+	usertoken.TokenPrefixValidator = usertokenDescTokenPrefix.Validators[0].(func(string) error)
+	// usertokenDescTokenHash is the schema descriptor for token_hash field.
+	usertokenDescTokenHash := usertokenFields[3].Descriptor()
+	// usertoken.TokenHashValidator is a validator for the "token_hash" field. It is called by the builders before save.
+	usertoken.TokenHashValidator = usertokenDescTokenHash.Validators[0].(func(string) error)
+	// usertokenDescID is the schema descriptor for id field.
+	usertokenDescID := usertokenMixinFields0[0].Descriptor()
+	// usertoken.DefaultID holds the default value on creation for the id field.
+	usertoken.DefaultID = usertokenDescID.Default.(func() uuid.UUID)
 	wilayahMixin := schema.Wilayah{}.Mixin()
 	wilayahMixinFields0 := wilayahMixin[0].Fields()
 	_ = wilayahMixinFields0

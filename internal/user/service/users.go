@@ -173,7 +173,10 @@ func (s *Service) AdminUpdateUser(ctx context.Context, id uuid.UUID, req domain.
 			return txErr
 		}
 		if disabling {
-			return txRepo.DeleteSessionsByUserID(ctx, id)
+			if err := txRepo.DeleteSessionsByUserID(ctx, id); err != nil {
+				return err
+			}
+			return txRepo.DeleteTokensByUserID(ctx, id)
 		}
 		return nil
 	})
@@ -221,6 +224,9 @@ func (s *Service) AdminDeleteUser(ctx context.Context, id uuid.UUID) error {
 			return err
 		}
 		if err := txRepo.DeleteSessionsByUserID(ctx, id); err != nil {
+			return err
+		}
+		if err := txRepo.DeleteTokensByUserID(ctx, id); err != nil {
 			return err
 		}
 		return txRepo.DeleteAccountsByUserID(ctx, id)

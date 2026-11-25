@@ -261,6 +261,18 @@ func (f UserSessionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value,
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserSessionMutation", m)
 }
 
+// The UserTokenFunc type is an adapter to allow the use of ordinary
+// function as UserToken mutator.
+type UserTokenFunc func(context.Context, *ent.UserTokenMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f UserTokenFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.UserTokenMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserTokenMutation", m)
+}
+
 // The WilayahFunc type is an adapter to allow the use of ordinary
 // function as Wilayah mutator.
 type WilayahFunc func(context.Context, *ent.WilayahMutation) (ent.Value, error)

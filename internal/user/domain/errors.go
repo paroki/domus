@@ -15,6 +15,7 @@ var (
 	ErrOAuthStateInvalid      = errx.Invalid("AUTH_OAUTH_STATE_INVALID", "Invalid or expired OAuth state.")
 	ErrOAuthEmailUnverified   = errx.Forbidden("AUTH_OAUTH_EMAIL_UNVERIFIED", "OAuth provider email is not verified.")
 	ErrSessionNotFound        = errx.NotFound("USER_SESSION_NOT_FOUND", "Session not found.")
+	ErrTokenNotFound          = errx.NotFound("USER_TOKEN_NOT_FOUND", "Personal access token not found.")
 	ErrSessionInvalid         = errx.Unauthorized("UNAUTHORIZED", "Invalid or expired session.")
 	ErrAccountNotFound        = errx.NotFound("USER_ACCOUNT_NOT_FOUND", "Linked account not found.")
 	ErrLastAccountRequired    = errx.Conflict("USER_LAST_ACCOUNT_REQUIRED", "Cannot unlink the last authentication account.")

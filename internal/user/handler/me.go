@@ -163,6 +163,105 @@ func (h *Handler) RevokeMySession(c fiber.Ctx) error {
 	return httpx.NoContent(c)
 }
 
+// SearchMyTokens lists active Personal Access Tokens for the authenticated user.
+//
+//	@Summary		Search my personal access tokens
+//	@Description	Lists active non-expired personal access tokens for the current user with cursor pagination.
+//	@ID				searchMeTokens
+//	@Tags			Me
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		domain.SearchTokensRequest	false	"Pagination parameters"
+//	@Success		200		{object}	httpx.Envelope[[]domain.UserTokenResponse]
+//	@Failure		400		{object}	httpx.Envelope[any]
+//	@Failure		401		{object}	httpx.Envelope[any]
+//	@Router			/me/tokens/search [post]
+func (h *Handler) SearchMyTokens(c fiber.Ctx) error {
+	p, ok := authx.FromContext(c.Context())
+	if !ok {
+		return httpx.Unauthorized("Authentication is required.")
+	}
+	var req domain.SearchTokensRequest
+	if err := decodeEmptyOrStrictJSON(c, &req); err != nil {
+		return err
+	}
+	cursorT, cursorID, limit, err := parseCursorAndLimit(req.Cursor, req.Limit)
+	if err != nil {
+		return err
+	}
+	items, hasMore, err := h.service.SearchMyTokens(c.Context(), p, cursorT, cursorID, limit)
+	if err != nil {
+		return err
+	}
+	var nextCursor string
+	if hasMore && len(items) > 0 {
+		last := items[len(items)-1]
+		nextCursor = httpx.EncodeCursor(last.CreatedAt, last.ID.String())
+	}
+	return httpx.List(c, items, httpx.Meta{
+		NextCursor: nextCursor,
+		HasMore:    hasMore,
+		Limit:      limit,
+	})
+}
+
+// CreateMyToken creates a new Personal Access Token for the authenticated user.
+//
+//	@Summary		Create a personal access token
+//	@Description	Creates a new personal access token and returns the plaintext token once.
+//	@ID				createMeToken
+//	@Tags			Me
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		domain.CreateUserTokenRequest	true	"Token creation parameters"
+//	@Success		201		{object}	httpx.Envelope[domain.CreateUserTokenResponse]
+//	@Failure		400		{object}	httpx.Envelope[any]
+//	@Failure		401		{object}	httpx.Envelope[any]
+//	@Failure		422		{object}	httpx.Envelope[any]
+//	@Router			/me/tokens [post]
+func (h *Handler) CreateMyToken(c fiber.Ctx) error {
+	p, ok := authx.FromContext(c.Context())
+	if !ok {
+		return httpx.Unauthorized("Authentication is required.")
+	}
+	var req domain.CreateUserTokenRequest
+	if err := decodeStrictJSON(c, &req); err != nil {
+		return err
+	}
+	res, err := h.service.CreateMyToken(c.Context(), p, req)
+	if err != nil {
+		return err
+	}
+	return httpx.Created(c, res)
+}
+
+// RevokeMyToken revokes a single Personal Access Token owned by the authenticated user.
+//
+//	@Summary		Revoke a personal access token
+//	@Description	Hard-deletes the specified personal access token owned by the current user.
+//	@ID				revokeMeToken
+//	@Tags			Me
+//	@Param			id	path	string	true	"Token UUID"
+//	@Success		204
+//	@Failure		400	{object}	httpx.Envelope[any]
+//	@Failure		401	{object}	httpx.Envelope[any]
+//	@Failure		404	{object}	httpx.Envelope[any]
+//	@Router			/me/tokens/{id} [delete]
+func (h *Handler) RevokeMyToken(c fiber.Ctx) error {
+	p, ok := authx.FromContext(c.Context())
+	if !ok {
+		return httpx.Unauthorized("Authentication is required.")
+	}
+	tokenID, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return httpx.BadRequest("Invalid token ID.")
+	}
+	if err := h.service.RevokeMyToken(c.Context(), p, tokenID); err != nil {
+		return err
+	}
+	return httpx.NoContent(c)
+}
+
 // SearchMyAccounts lists linked identity accounts for the authenticated user.
 //
 //	@Summary		Search my linked accounts

@@ -204,6 +204,90 @@ func (s *Service) RevokeMySession(ctx context.Context, p authx.Principal, sessio
 	return p.SessionID != uuid.Nil && sessionID == p.SessionID, nil
 }
 
+// CreateMyToken creates a new Personal Access Token for the authenticated user and returns the plaintext token once.
+func (s *Service) CreateMyToken(ctx context.Context, p authx.Principal, req domain.CreateUserTokenRequest) (domain.CreateUserTokenResponse, error) {
+	name := strings.TrimSpace(req.Name)
+	if name == "" {
+		return domain.CreateUserTokenResponse{}, domain.ValidationError("name", "REQUIRED", "Token name is required.")
+	}
+	if len(name) > 100 {
+		return domain.CreateUserTokenResponse{}, domain.ValidationError("name", "MAX_LENGTH", "Token name must be at most 100 characters.")
+	}
+
+	now := time.Now().UTC()
+	var expiresAt *time.Time
+	if req.ExpiresInDays != nil {
+		if *req.ExpiresInDays < 1 || *req.ExpiresInDays > 365 {
+			return domain.CreateUserTokenResponse{}, domain.ValidationError("expiresInDays", "OUT_OF_RANGE", "Expiration must be between 1 and 365 days.")
+		}
+		exp := now.AddDate(0, 0, *req.ExpiresInDays)
+		expiresAt = &exp
+	}
+
+	suffix, err := randomToken(32)
+	if err != nil {
+		return domain.CreateUserTokenResponse{}, err
+	}
+	rawToken := "dms_" + suffix
+	tokenPrefix := rawToken[:12]
+	tokenHash := sha256Hex(rawToken)
+
+	tok, err := s.repo.CreateUserToken(ctx, p.UserID, name, tokenPrefix, tokenHash, expiresAt)
+	if err != nil {
+		return domain.CreateUserTokenResponse{}, err
+	}
+	return domain.CreateUserTokenResponse{
+		UserTokenResponse: toUserTokenResponse(tok),
+		Token:             rawToken,
+	}, nil
+}
+
+// SearchMyTokens returns active non-expired Personal Access Tokens for the authenticated user.
+func (s *Service) SearchMyTokens(
+	ctx context.Context,
+	p authx.Principal,
+	cursorCreatedAt *time.Time,
+	cursorID *uuid.UUID,
+	limit int,
+) ([]domain.UserTokenResponse, bool, error) {
+	rows, err := s.repo.SearchUserTokens(ctx, p.UserID, time.Now().UTC(), cursorCreatedAt, cursorID, limit+1)
+	if err != nil {
+		return nil, false, err
+	}
+	hasMore := len(rows) > limit
+	if hasMore {
+		rows = rows[:limit]
+	}
+	items := make([]domain.UserTokenResponse, 0, len(rows))
+	for _, row := range rows {
+		items = append(items, toUserTokenResponse(row))
+	}
+	return items, hasMore, nil
+}
+
+// RevokeMyToken revokes a Personal Access Token owned by the authenticated user.
+func (s *Service) RevokeMyToken(ctx context.Context, p authx.Principal, tokenID uuid.UUID) error {
+	deleted, err := s.repo.DeleteUserTokenByID(ctx, tokenID, p.UserID)
+	if err != nil {
+		return err
+	}
+	if deleted == 0 {
+		return domain.ErrTokenNotFound
+	}
+	return nil
+}
+
+func toUserTokenResponse(tok *ent.UserToken) domain.UserTokenResponse {
+	return domain.UserTokenResponse{
+		ID:          tok.ID,
+		Name:        tok.Name,
+		TokenPrefix: tok.TokenPrefix,
+		LastUsedAt:  tok.LastUsedAt,
+		ExpiresAt:   tok.ExpiresAt,
+		CreatedAt:   tok.CreatedAt,
+	}
+}
+
 // SearchMyAccounts returns linked provider accounts for the authenticated user.
 func (s *Service) SearchMyAccounts(
 	ctx context.Context,

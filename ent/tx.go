@@ -54,6 +54,8 @@ type Tx struct {
 	UserOTP *UserOTPClient
 	// UserSession is the client for interacting with the UserSession builders.
 	UserSession *UserSessionClient
+	// UserToken is the client for interacting with the UserToken builders.
+	UserToken *UserTokenClient
 	// Wilayah is the client for interacting with the Wilayah builders.
 	Wilayah *WilayahClient
 
@@ -208,6 +210,7 @@ func (tx *Tx) init() {
 	tx.UserAccount = NewUserAccountClient(tx.config)
 	tx.UserOTP = NewUserOTPClient(tx.config)
 	tx.UserSession = NewUserSessionClient(tx.config)
+	tx.UserToken = NewUserTokenClient(tx.config)
 	tx.Wilayah = NewWilayahClient(tx.config)
 }
 

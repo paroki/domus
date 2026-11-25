@@ -139,6 +139,34 @@ type SearchAccountsRequest struct {
 	Limit  int    `json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
 }
 
+// CreateUserTokenRequest creates a new Personal Access Token for the current user.
+type CreateUserTokenRequest struct {
+	Name          string `json:"name" validate:"required,min=1,max=100"`
+	ExpiresInDays *int   `json:"expiresInDays,omitempty" validate:"omitempty,min=1,max=365"`
+}
+
+// UserTokenResponse is the public API representation of a UserToken (never exposes token_hash or plaintext token).
+type UserTokenResponse struct {
+	ID          uuid.UUID  `json:"id"`
+	Name        string     `json:"name"`
+	TokenPrefix string     `json:"tokenPrefix"`
+	LastUsedAt  *time.Time `json:"lastUsedAt,omitempty"`
+	ExpiresAt   *time.Time `json:"expiresAt,omitempty"`
+	CreatedAt   time.Time  `json:"createdAt"`
+}
+
+// CreateUserTokenResponse is returned once on token creation and includes the plaintext token.
+type CreateUserTokenResponse struct {
+	UserTokenResponse
+	Token string `json:"token"`
+}
+
+// SearchTokensRequest holds cursor pagination parameters for listing Personal Access Tokens.
+type SearchTokensRequest struct {
+	Cursor string `json:"cursor,omitempty"`
+	Limit  int    `json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
+}
+
 // UserSearchFilter filters the admin user directory search.
 type UserSearchFilter struct {
 	Status string `json:"status,omitempty" validate:"omitempty,oneof=active disabled"`

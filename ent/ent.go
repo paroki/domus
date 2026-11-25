@@ -33,6 +33,7 @@ import (
 	"github.com/paroki/domus/ent/useraccount"
 	"github.com/paroki/domus/ent/userotp"
 	"github.com/paroki/domus/ent/usersession"
+	"github.com/paroki/domus/ent/usertoken"
 	"github.com/paroki/domus/ent/wilayah"
 )
 
@@ -115,6 +116,7 @@ func checkColumn(t, c string) error {
 			useraccount.Table:   useraccount.ValidColumn,
 			userotp.Table:       userotp.ValidColumn,
 			usersession.Table:   usersession.ValidColumn,
+			usertoken.Table:     usertoken.ValidColumn,
 			wilayah.Table:       wilayah.ValidColumn,
 		})
 	})

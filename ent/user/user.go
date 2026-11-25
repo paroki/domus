@@ -46,6 +46,8 @@ const (
 	EdgeAccounts = "accounts"
 	// EdgeSessions holds the string denoting the sessions edge name in mutations.
 	EdgeSessions = "sessions"
+	// EdgeTokens holds the string denoting the tokens edge name in mutations.
+	EdgeTokens = "tokens"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// AccountsTable is the table that holds the accounts relation/edge.
@@ -62,6 +64,13 @@ const (
 	SessionsInverseTable = "user_sessions"
 	// SessionsColumn is the table column denoting the sessions relation/edge.
 	SessionsColumn = "user_id"
+	// TokensTable is the table that holds the tokens relation/edge.
+	TokensTable = "user_tokens"
+	// TokensInverseTable is the table name for the UserToken entity.
+	// It exists in this package in order to avoid circular dependency with the "usertoken" package.
+	TokensInverseTable = "user_tokens"
+	// TokensColumn is the table column denoting the tokens relation/edge.
+	TokensColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -258,6 +267,20 @@ func BySessions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newSessionsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByTokensCount orders the results by tokens count.
+func ByTokensCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newTokensStep(), opts...)
+	}
+}
+
+// ByTokens orders the results by tokens terms.
+func ByTokens(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTokensStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newAccountsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -270,5 +293,12 @@ func newSessionsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(SessionsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, SessionsTable, SessionsColumn),
+	)
+}
+func newTokensStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TokensInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, TokensTable, TokensColumn),
 	)
 }

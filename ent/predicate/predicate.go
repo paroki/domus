@@ -69,5 +69,8 @@ type UserOTP func(*sql.Selector)
 // UserSession is the predicate function for usersession builders.
 type UserSession func(*sql.Selector)
 
+// UserToken is the predicate function for usertoken builders.
+type UserToken func(*sql.Selector)
+
 // Wilayah is the predicate function for wilayah builders.
 type Wilayah func(*sql.Selector)

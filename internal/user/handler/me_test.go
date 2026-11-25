@@ -10,12 +10,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/ent/parokimember"
 	entuser "github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/useraccount"
 	"github.com/paroki/domus/ent/userotp"
+	"github.com/paroki/domus/ent/usertoken"
 	"github.com/paroki/domus/internal/platform/authz"
 	"github.com/paroki/domus/internal/platform/gowa"
 	"github.com/paroki/domus/internal/platform/telegram"
@@ -563,4 +565,133 @@ func (s *MeHandlerSuite) TestLinkWhatsAppAndTelegramToken() {
 		Count(ctx)
 	s.Require().NoError(err)
 	s.Equal(1, tgRows)
+}
+
+func (s *MeHandlerSuite) TestPersonalAccessTokens_LifecycleAndBearerAuth() {
+	ctx := context.Background()
+	u, cookie := s.loginUser("pat-user@paroki.org", "PAT User", "Browser/1")
+	otherUser, otherCookie := s.loginUser("pat-other@paroki.org", "Other User", "Browser/2")
+
+	// Setup paroki membership for X-Paroki-Id tenant resolution test.
+	d, err := s.client.Keuskupan.Create().SetKode("kaj-pat").SetNama("KAJ PAT").Save(ctx)
+	s.Require().NoError(err)
+	p, err := s.client.Paroki.Create().SetKeuskupanID(d.ID).SetKode("p-pat").SetNama("Paroki PAT").Save(ctx)
+	s.Require().NoError(err)
+	_, err = s.client.ParokiMember.Create().SetParokiID(p.ID).SetUserID(u.ID).SetRole(parokimember.RoleMember).Save(ctx)
+	s.Require().NoError(err)
+
+	// Whitespace-only name returns 422 VALIDATION_ERROR.
+	s.SetCookie(cookie)
+	s.Request("/api/me/tokens", http.MethodPost, domain.CreateUserTokenRequest{Name: "   "})
+	s.UnprocessableEntity()
+
+	// Create PAT with 30-day expiry.
+	days := 30
+	s.Request("/api/me/tokens", http.MethodPost, domain.CreateUserTokenRequest{
+		Name:          "CLI Exporter",
+		ExpiresInDays: &days,
+	})
+	s.Created()
+	created := testutil.DecodeAs[domain.CreateUserTokenResponse](&s.ApiTestSuite).Data
+	s.Equal("CLI Exporter", created.Name)
+	s.True(len(created.Token) == 47 && created.Token[:4] == "dms_")
+	s.Equal(created.Token[:12], created.TokenPrefix)
+	s.NotNil(created.ExpiresAt)
+	s.Nil(created.LastUsedAt)
+
+	// Search tokens -> returns prefix, never plaintext.
+	s.Request("/api/me/tokens/search", http.MethodPost, domain.SearchTokensRequest{Limit: 10})
+	s.OK()
+	listed := testutil.DecodeAs[[]domain.UserTokenResponse](&s.ApiTestSuite)
+	s.Require().Len(listed.Data, 1)
+	s.Equal(created.ID, listed.Data[0].ID)
+	s.Equal(created.TokenPrefix, listed.Data[0].TokenPrefix)
+
+	// Authenticate via Authorization: Bearer <token> + X-Paroki-Id on /api/me.
+	s.ClearCookies()
+	s.SetHeader("X-Paroki-Id", p.ID.String())
+	s.RequestWithToken("/api/me", http.MethodGet, nil, created.Token)
+	s.OK()
+	me := testutil.DecodeAs[domain.UserResponse](&s.ApiTestSuite).Data
+	s.Equal(u.ID, me.ID)
+	s.Require().NotNil(me.ActiveParokiID)
+	s.Equal(p.ID, *me.ActiveParokiID)
+
+	// Verify last_used_at was updated and expires_at was NOT extended.
+	tokRow, err := s.client.UserToken.Get(ctx, created.ID)
+	s.Require().NoError(err)
+	s.NotNil(tokRow.LastUsedAt)
+	s.Equal(created.ExpiresAt.Unix(), tokRow.ExpiresAt.Unix())
+
+	// Verify PrincipalResolver resolves Bearer PAT (for /mcp).
+	resolver := s.feature.PrincipalResolver()
+	s.App.Post("/mcp-check", func(c fiber.Ctx) error {
+		resolved, ok := resolver(c)
+		s.Require().True(ok)
+		s.Equal(u.ID, resolved.UserID)
+		s.Equal(p.ID, resolved.ParokiID)
+		s.Equal("api", resolved.Channel)
+		s.Equal(uuid.Nil, resolved.SessionID)
+		return c.SendStatus(http.StatusOK)
+	})
+	req := httptest.NewRequest(http.MethodPost, "/mcp-check", nil)
+	req.Header.Set("Authorization", "Bearer "+created.Token)
+	req.Header.Set("X-Paroki-Id", p.ID.String())
+	resp, err := s.App.Test(req)
+	s.Require().NoError(err)
+	s.Equal(http.StatusOK, resp.StatusCode)
+	_ = resp.Body.Close()
+
+	// Cross-user revoke returns 404 USER_TOKEN_NOT_FOUND.
+	s.SetHeader("X-Paroki-Id", "")
+	s.SetCookie(otherCookie)
+	s.Request("/api/me/tokens/"+created.ID.String(), http.MethodDelete, nil)
+	s.NotFound()
+	s.Equal("USER_TOKEN_NOT_FOUND", s.GetErrorResponse().Error.Code)
+	_ = otherUser
+
+	// Expired token is rejected with 401 and deleted.
+	_, err = s.client.UserToken.UpdateOneID(created.ID).
+		SetExpiresAt(time.Now().UTC().Add(-time.Minute)).
+		Save(ctx)
+	s.Require().NoError(err)
+	s.ClearCookies()
+	s.RequestWithToken("/api/me", http.MethodGet, nil, created.Token)
+	s.Unauthorized()
+	exists, err := s.client.UserToken.Query().Where(usertoken.IDEQ(created.ID)).Exist(ctx)
+	s.Require().NoError(err)
+	s.False(exists)
+
+	// Create never-expiring token, then disable user -> token revoked & 403 USER_DISABLED.
+	s.SetCookie(cookie)
+	s.Request("/api/me/tokens", http.MethodPost, domain.CreateUserTokenRequest{Name: "MCP Token"})
+	s.Created()
+	neverExp := testutil.DecodeAs[domain.CreateUserTokenResponse](&s.ApiTestSuite).Data
+	s.Nil(neverExp.ExpiresAt)
+
+	_, err = s.client.User.UpdateOneID(u.ID).SetStatus(entuser.StatusDisabled).Save(ctx)
+	s.Require().NoError(err)
+	s.ClearCookies()
+	s.RequestWithToken("/api/me", http.MethodGet, nil, neverExp.Token)
+	s.Forbidden()
+	s.Equal("USER_DISABLED", s.GetErrorResponse().Error.Code)
+	countAfterDisable, err := s.client.UserToken.Query().Where(usertoken.UserIDEQ(u.ID)).Count(ctx)
+	s.Require().NoError(err)
+	s.Equal(0, countAfterDisable)
+
+	// Re-enable user, create token, and revoke it via DELETE /api/me/tokens/:id.
+	_, err = s.client.User.UpdateOneID(u.ID).SetStatus(entuser.StatusActive).Save(ctx)
+	s.Require().NoError(err)
+	_, freshCookie := s.loginUser("pat-user@paroki.org", "PAT User", "Browser/3")
+	s.SetCookie(freshCookie)
+	s.Request("/api/me/tokens", http.MethodPost, domain.CreateUserTokenRequest{Name: "Temp Token"})
+	s.Created()
+	tempTok := testutil.DecodeAs[domain.CreateUserTokenResponse](&s.ApiTestSuite).Data
+
+	s.Request("/api/me/tokens/"+tempTok.ID.String(), http.MethodDelete, nil)
+	s.NoContent()
+
+	s.ClearCookies()
+	s.RequestWithToken("/api/me", http.MethodGet, nil, tempTok.Token)
+	s.Unauthorized()
 }

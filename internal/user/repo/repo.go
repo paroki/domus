@@ -16,6 +16,7 @@ import (
 	"github.com/paroki/domus/ent/useraccount"
 	"github.com/paroki/domus/ent/userotp"
 	"github.com/paroki/domus/ent/usersession"
+	"github.com/paroki/domus/ent/usertoken"
 )
 
 // Repository provides Ent-backed persistence for User, UserAccount, UserOTP, and UserSession.
@@ -489,6 +490,93 @@ func (r *Repository) DeleteUserSessionByID(ctx context.Context, sessionID, userI
 	return r.client.UserSession.Delete().
 		Where(usersession.IDEQ(sessionID), usersession.UserIDEQ(userID)).
 		Exec(ctx)
+}
+
+// CreateUserToken inserts a new UserToken row.
+func (r *Repository) CreateUserToken(
+	ctx context.Context,
+	userID uuid.UUID,
+	name, tokenPrefix, tokenHash string,
+	expiresAt *time.Time,
+) (*ent.UserToken, error) {
+	cre := r.client.UserToken.Create().
+		SetUserID(userID).
+		SetName(name).
+		SetTokenPrefix(tokenPrefix).
+		SetTokenHash(tokenHash)
+	if expiresAt != nil {
+		cre.SetExpiresAt(*expiresAt)
+	}
+	return cre.Save(ctx)
+}
+
+// FindTokenWithUserByTokenHash returns the UserToken and its non-deleted User.
+func (r *Repository) FindTokenWithUserByTokenHash(ctx context.Context, tokenHash string) (*ent.UserToken, *ent.User, error) {
+	tok, err := r.client.UserToken.Query().
+		Where(usertoken.TokenHashEQ(tokenHash)).
+		WithUser(func(q *ent.UserQuery) {
+			q.Where(user.DeletedAtIsNil())
+		}).
+		Only(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	if tok.Edges.User == nil {
+		return nil, nil, &ent.NotFoundError{}
+	}
+	return tok, tok.Edges.User, nil
+}
+
+// UpdateTokenLastUsed updates last_used_at on a UserToken.
+func (r *Repository) UpdateTokenLastUsed(ctx context.Context, id uuid.UUID, at time.Time) error {
+	return r.client.UserToken.UpdateOneID(id).
+		SetLastUsedAt(at).
+		Exec(ctx)
+}
+
+// SearchUserTokens returns active non-expired tokens for userID ordered by (created_at DESC, id DESC).
+func (r *Repository) SearchUserTokens(
+	ctx context.Context,
+	userID uuid.UUID,
+	now time.Time,
+	cursorCreatedAt *time.Time,
+	cursorID *uuid.UUID,
+	limit int,
+) ([]*ent.UserToken, error) {
+	q := r.client.UserToken.Query().
+		Where(
+			usertoken.UserIDEQ(userID),
+			usertoken.Or(usertoken.ExpiresAtIsNil(), usertoken.ExpiresAtGT(now)),
+		)
+	if cursorCreatedAt != nil && cursorID != nil {
+		q = q.Where(usertoken.Or(
+			usertoken.CreatedAtLT(*cursorCreatedAt),
+			usertoken.And(usertoken.CreatedAtEQ(*cursorCreatedAt), usertoken.IDLT(*cursorID)),
+		))
+	}
+	return q.Order(ent.Desc(usertoken.FieldCreatedAt), ent.Desc(usertoken.FieldID)).
+		Limit(limit).
+		All(ctx)
+}
+
+// DeleteUserTokenByID deletes a UserToken scoped to userID and returns the affected row count.
+func (r *Repository) DeleteUserTokenByID(ctx context.Context, tokenID, userID uuid.UUID) (int, error) {
+	return r.client.UserToken.Delete().
+		Where(usertoken.IDEQ(tokenID), usertoken.UserIDEQ(userID)).
+		Exec(ctx)
+}
+
+// DeleteTokenByID hard-deletes a UserToken by ID.
+func (r *Repository) DeleteTokenByID(ctx context.Context, id uuid.UUID) error {
+	return r.client.UserToken.DeleteOneID(id).Exec(ctx)
+}
+
+// DeleteTokensByUserID hard-deletes all UserToken rows for userID.
+func (r *Repository) DeleteTokensByUserID(ctx context.Context, userID uuid.UUID) error {
+	_, err := r.client.UserToken.Delete().
+		Where(usertoken.UserIDEQ(userID)).
+		Exec(ctx)
+	return err
 }
 
 // SearchUserAccounts returns linked accounts for userID ordered by (created_at DESC, id DESC).

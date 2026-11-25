@@ -43,6 +43,7 @@ func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("accounts", UserAccount.Type),
 		edge.To("sessions", UserSession.Type),
+		edge.To("tokens", UserToken.Type),
 	}
 }
 

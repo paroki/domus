@@ -15,10 +15,13 @@ import (
 	"github.com/paroki/domus/internal/user/repo"
 )
 
-// ResolveSession validates a raw session token, refreshes sliding expiry, and returns an authx.Principal.
+// ResolveSession validates a raw session token or Personal Access Token (dms_*) and returns an authx.Principal.
 func (s *Service) ResolveSession(ctx context.Context, rawToken string, headerParokiID uuid.UUID) (authx.Principal, error) {
 	if rawToken == "" {
 		return authx.Principal{}, domain.ErrSessionInvalid
+	}
+	if strings.HasPrefix(rawToken, "dms_") {
+		return s.resolvePAT(ctx, rawToken, headerParokiID)
 	}
 
 	sess, u, err := s.repo.FindSessionWithUserByTokenHash(ctx, sha256Hex(rawToken))
@@ -37,32 +40,16 @@ func (s *Service) ResolveSession(ctx context.Context, rawToken string, headerPar
 
 	if u.Status == user.StatusDisabled {
 		_ = s.repo.DeleteSessionsByUserID(ctx, u.ID)
+		_ = s.repo.DeleteTokensByUserID(ctx, u.ID)
 		return authx.Principal{}, domain.ErrUserDisabled
 	}
 
-	if headerParokiID != uuid.Nil {
-		isSuper, err := s.hasSuperAdminRole(u.ID)
-		if err != nil {
-			return authx.Principal{}, err
-		}
-		if !isSuper {
-			ok, err := s.repo.IsActiveParokiMember(ctx, u.ID, headerParokiID)
-			if err != nil {
-				return authx.Principal{}, err
-			}
-			if !ok {
-				return authx.Principal{}, errx.Forbidden("FORBIDDEN", "User is not a member of this paroki.")
-			}
-		}
-	}
-
-	parokiID := resolveParokiID(headerParokiID, sess.ActiveParokiID, u.DefaultParokiID)
-	if err := s.repo.RefreshSession(ctx, sess.ID, now, now.Add(s.cfg.SessionTTL)); err != nil {
+	parokiID, roles, err := s.resolveTenantAccess(ctx, u, headerParokiID, sess.ActiveParokiID)
+	if err != nil {
 		return authx.Principal{}, err
 	}
 
-	roles, err := s.loadRoles(ctx, u.ID, parokiID)
-	if err != nil {
+	if err := s.repo.RefreshSession(ctx, sess.ID, now, now.Add(s.cfg.SessionTTL)); err != nil {
 		return authx.Principal{}, err
 	}
 
@@ -75,6 +62,71 @@ func (s *Service) ResolveSession(ctx context.Context, rawToken string, headerPar
 		Roles:     roles,
 		Channel:   "web",
 	}, nil
+}
+
+func (s *Service) resolvePAT(ctx context.Context, rawToken string, headerParokiID uuid.UUID) (authx.Principal, error) {
+	tok, u, err := s.repo.FindTokenWithUserByTokenHash(ctx, sha256Hex(rawToken))
+	if ent.IsNotFound(err) {
+		return authx.Principal{}, domain.ErrSessionInvalid
+	}
+	if err != nil {
+		return authx.Principal{}, err
+	}
+
+	now := time.Now().UTC()
+	if tok.ExpiresAt != nil && now.After(*tok.ExpiresAt) {
+		_ = s.repo.DeleteTokenByID(ctx, tok.ID)
+		return authx.Principal{}, domain.ErrSessionInvalid
+	}
+
+	if u.Status == user.StatusDisabled {
+		_ = s.repo.DeleteSessionsByUserID(ctx, u.ID)
+		_ = s.repo.DeleteTokensByUserID(ctx, u.ID)
+		return authx.Principal{}, domain.ErrUserDisabled
+	}
+
+	parokiID, roles, err := s.resolveTenantAccess(ctx, u, headerParokiID, nil)
+	if err != nil {
+		return authx.Principal{}, err
+	}
+
+	if err := s.repo.UpdateTokenLastUsed(ctx, tok.ID, now); err != nil {
+		return authx.Principal{}, err
+	}
+
+	return authx.Principal{
+		UserID:   u.ID,
+		Email:    u.Email,
+		Name:     u.Name,
+		ParokiID: parokiID,
+		Roles:    roles,
+		Channel:  "api",
+	}, nil
+}
+
+func (s *Service) resolveTenantAccess(ctx context.Context, u *ent.User, headerParokiID uuid.UUID, activeParokiID *uuid.UUID) (uuid.UUID, []string, error) {
+	if headerParokiID != uuid.Nil {
+		isSuper, err := s.hasSuperAdminRole(u.ID)
+		if err != nil {
+			return uuid.Nil, nil, err
+		}
+		if !isSuper {
+			ok, err := s.repo.IsActiveParokiMember(ctx, u.ID, headerParokiID)
+			if err != nil {
+				return uuid.Nil, nil, err
+			}
+			if !ok {
+				return uuid.Nil, nil, errx.Forbidden("FORBIDDEN", "User is not a member of this paroki.")
+			}
+		}
+	}
+
+	parokiID := resolveParokiID(headerParokiID, activeParokiID, u.DefaultParokiID)
+	roles, err := s.loadRoles(ctx, u.ID, parokiID)
+	if err != nil {
+		return uuid.Nil, nil, err
+	}
+	return parokiID, roles, nil
 }
 
 // ResolveByChannel resolves a linked channel identity (e.g. telegram, whatsapp) into an authx.Principal.

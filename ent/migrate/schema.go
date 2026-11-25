@@ -792,6 +792,44 @@ var (
 			},
 		},
 	}
+	// UserTokensColumns holds the columns for the "user_tokens" table.
+	UserTokensColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "name", Type: field.TypeString, Size: 100},
+		{Name: "token_prefix", Type: field.TypeString},
+		{Name: "token_hash", Type: field.TypeString, Unique: true},
+		{Name: "last_used_at", Type: field.TypeTime, Nullable: true},
+		{Name: "expires_at", Type: field.TypeTime, Nullable: true},
+		{Name: "user_id", Type: field.TypeUUID},
+	}
+	// UserTokensTable holds the schema information for the "user_tokens" table.
+	UserTokensTable = &schema.Table{
+		Name:       "user_tokens",
+		Columns:    UserTokensColumns,
+		PrimaryKey: []*schema.Column{UserTokensColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_tokens_users_tokens",
+				Columns:    []*schema.Column{UserTokensColumns[8]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "usertoken_token_hash",
+				Unique:  true,
+				Columns: []*schema.Column{UserTokensColumns[5]},
+			},
+			{
+				Name:    "usertoken_user_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{UserTokensColumns[8], UserTokensColumns[1]},
+			},
+		},
+	}
 	// WilayahColumns holds the columns for the "wilayah" table.
 	WilayahColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -855,6 +893,7 @@ var (
 		UserAccountsTable,
 		UserOtpsTable,
 		UserSessionsTable,
+		UserTokensTable,
 		WilayahTable,
 	}
 )
@@ -903,6 +942,7 @@ func init() {
 		Table: "user_otps",
 	}
 	UserSessionsTable.ForeignKeys[0].RefTable = UsersTable
+	UserTokensTable.ForeignKeys[0].RefTable = UsersTable
 	WilayahTable.ForeignKeys[0].RefTable = ParokiTable
 	WilayahTable.Annotation = &entsql.Annotation{
 		Table: "wilayah",

@@ -172,6 +172,55 @@ func TestUserSessionSchema_MultiDeviceAndUniqueTokenHash(t *testing.T) {
 	assert.True(t, ent.IsConstraintError(err))
 }
 
+func TestUserTokenSchema_UniqueTokenHashAndOptionalExpiry(t *testing.T) {
+	ctx := context.Background()
+	client := testutil.NewEntClient(t)
+
+	u, err := client.User.Create().
+		SetEmail("pat@paroki.org").
+		SetName("PAT User").
+		Save(ctx)
+	require.NoError(t, err)
+
+	// Token without expiry (expires_at = nil)
+	t1, err := client.UserToken.Create().
+		SetUserID(u.ID).
+		SetName("CLI Exporter").
+		SetTokenPrefix("dms_abcdefgh").
+		SetTokenHash("sha256-pat-hash-1").
+		Save(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, u.ID, t1.UserID)
+	assert.Nil(t, t1.ExpiresAt)
+	assert.Nil(t, t1.LastUsedAt)
+
+	// Token with expiry
+	expiresAt := time.Now().UTC().Add(30 * 24 * time.Hour)
+	t2, err := client.UserToken.Create().
+		SetUserID(u.ID).
+		SetName("MCP Client").
+		SetTokenPrefix("dms_12345678").
+		SetTokenHash("sha256-pat-hash-2").
+		SetExpiresAt(expiresAt).
+		Save(ctx)
+	require.NoError(t, err)
+	assert.NotNil(t, t2.ExpiresAt)
+
+	tokens, err := u.QueryTokens().All(ctx)
+	require.NoError(t, err)
+	assert.Len(t, tokens, 2)
+
+	// Duplicate token_hash must fail with constraint error
+	_, err = client.UserToken.Create().
+		SetUserID(u.ID).
+		SetName("Duplicate").
+		SetTokenPrefix("dms_abcdefgh").
+		SetTokenHash("sha256-pat-hash-1").
+		Save(ctx)
+	require.Error(t, err)
+	assert.True(t, ent.IsConstraintError(err))
+}
+
 func TestUserOTPSchema_Persistence(t *testing.T) {
 	ctx := context.Background()
 	client := testutil.NewEntClient(t)

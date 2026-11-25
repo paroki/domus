@@ -14,6 +14,7 @@ import (
 	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/useraccount"
 	"github.com/paroki/domus/ent/usersession"
+	"github.com/paroki/domus/ent/usertoken"
 )
 
 // UserCreate is the builder for creating a User entity.
@@ -233,6 +234,21 @@ func (_c *UserCreate) AddSessions(v ...*UserSession) *UserCreate {
 	return _c.AddSessionIDs(ids...)
 }
 
+// AddTokenIDs adds the "tokens" edge to the UserToken entity by IDs.
+func (_c *UserCreate) AddTokenIDs(ids ...uuid.UUID) *UserCreate {
+	_c.mutation.AddTokenIDs(ids...)
+	return _c
+}
+
+// AddTokens adds the "tokens" edges to the UserToken entity.
+func (_c *UserCreate) AddTokens(v ...*UserToken) *UserCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddTokenIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_c *UserCreate) Mutation() *UserMutation {
 	return _c.mutation
@@ -442,6 +458,22 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usersession.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.TokensIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TokensTable,
+			Columns: []string{user.TokensColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usertoken.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

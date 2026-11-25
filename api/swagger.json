@@ -580,6 +580,50 @@
                 ],
                 "type": "object"
             },
+            "domain.CreateUserTokenRequest": {
+                "properties": {
+                    "expiresInDays": {
+                        "maximum": 365,
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "name": {
+                        "maxLength": 100,
+                        "minLength": 1,
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "name"
+                ],
+                "type": "object"
+            },
+            "domain.CreateUserTokenResponse": {
+                "properties": {
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "expiresAt": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "lastUsedAt": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "token": {
+                        "type": "string"
+                    },
+                    "tokenPrefix": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.CreateWilayahRequest": {
                 "properties": {
                     "jenis": {
@@ -1762,6 +1806,19 @@
                 },
                 "type": "object"
             },
+            "domain.SearchTokensRequest": {
+                "properties": {
+                    "cursor": {
+                        "type": "string"
+                    },
+                    "limit": {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
             "domain.SearchUsersRequest": {
                 "properties": {
                     "cursor": {
@@ -2518,6 +2575,29 @@
                 },
                 "type": "object"
             },
+            "domain.UserTokenResponse": {
+                "properties": {
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "expiresAt": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "lastUsedAt": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "tokenPrefix": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.VerifyLinkAccountRequest": {
                 "properties": {
                     "channel": {
@@ -2998,6 +3078,24 @@
                 },
                 "type": "object"
             },
+            "httpx.Envelope-array_domain_UserTokenResponse": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.UserTokenResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
             "httpx.Envelope-array_domain_WilayahResponse": {
                 "properties": {
                     "data": {
@@ -3066,6 +3164,20 @@
                 "properties": {
                     "data": {
                         "$ref": "#/components/schemas/domain.AuthSessionResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_CreateUserTokenResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.CreateUserTokenResponse"
                     },
                     "error": {
                         "$ref": "#/components/schemas/httpx.ErrorPayload"
@@ -6268,6 +6380,181 @@
                     }
                 },
                 "summary": "Revoke a user session",
+                "tags": [
+                    "Me"
+                ]
+            }
+        },
+        "/me/tokens": {
+            "post": {
+                "description": "Creates a new personal access token and returns the plaintext token once.",
+                "operationId": "createMeToken",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.CreateUserTokenRequest",
+                                "summary": "body",
+                                "description": "Token creation parameters"
+                            }
+                        }
+                    },
+                    "description": "Token creation parameters",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_CreateUserTokenResponse"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Create a personal access token",
+                "tags": [
+                    "Me"
+                ]
+            }
+        },
+        "/me/tokens/search": {
+            "post": {
+                "description": "Lists active non-expired personal access tokens for the current user with cursor pagination.",
+                "operationId": "searchMeTokens",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.SearchTokensRequest",
+                                "summary": "body",
+                                "description": "Pagination parameters"
+                            }
+                        }
+                    },
+                    "description": "Pagination parameters"
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_UserTokenResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    }
+                },
+                "summary": "Search my personal access tokens",
+                "tags": [
+                    "Me"
+                ]
+            }
+        },
+        "/me/tokens/{id}": {
+            "delete": {
+                "description": "Hard-deletes the specified personal access token owned by the current user.",
+                "operationId": "revokeMeToken",
+                "parameters": [
+                    {
+                        "description": "Token UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Revoke a personal access token",
                 "tags": [
                     "Me"
                 ]
