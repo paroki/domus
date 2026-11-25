@@ -31,8 +31,8 @@ type UserSession struct {
 	UserAgent string `json:"user_agent,omitempty"`
 	// IPAddress holds the value of the "ip_address" field.
 	IPAddress string `json:"ip_address,omitempty"`
-	// ActiveParishID holds the value of the "active_parish_id" field.
-	ActiveParishID *uuid.UUID `json:"active_parish_id,omitempty"`
+	// ActiveParokiID holds the value of the "active_paroki_id" field.
+	ActiveParokiID *uuid.UUID `json:"active_paroki_id,omitempty"`
 	// LastActiveAt holds the value of the "last_active_at" field.
 	LastActiveAt time.Time `json:"last_active_at,omitempty"`
 	// ExpiresAt holds the value of the "expires_at" field.
@@ -68,7 +68,7 @@ func (*UserSession) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case usersession.FieldActiveParishID:
+		case usersession.FieldActiveParokiID:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case usersession.FieldTokenHash, usersession.FieldUserAgent, usersession.FieldIPAddress:
 			values[i] = new(sql.NullString)
@@ -133,12 +133,12 @@ func (_m *UserSession) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.IPAddress = value.String
 			}
-		case usersession.FieldActiveParishID:
+		case usersession.FieldActiveParokiID:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field active_parish_id", values[i])
+				return fmt.Errorf("unexpected type %T for field active_paroki_id", values[i])
 			} else if value.Valid {
-				_m.ActiveParishID = new(uuid.UUID)
-				*_m.ActiveParishID = *value.S.(*uuid.UUID)
+				_m.ActiveParokiID = new(uuid.UUID)
+				*_m.ActiveParokiID = *value.S.(*uuid.UUID)
 			}
 		case usersession.FieldLastActiveAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -211,8 +211,8 @@ func (_m *UserSession) String() string {
 	builder.WriteString("ip_address=")
 	builder.WriteString(_m.IPAddress)
 	builder.WriteString(", ")
-	if v := _m.ActiveParishID; v != nil {
-		builder.WriteString("active_parish_id=")
+	if v := _m.ActiveParokiID; v != nil {
+		builder.WriteString("active_paroki_id=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")

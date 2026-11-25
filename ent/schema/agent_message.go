@@ -41,7 +41,7 @@ func (AgentMessage) Mixin() []ent.Mixin {
 func (AgentMessage) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("session_id", uuid.UUID{}),
-		field.UUID("parish_id", uuid.UUID{}),
+		field.UUID("paroki_id", uuid.UUID{}),
 		field.UUID("user_id", uuid.UUID{}),
 		field.String("agent_name").Default("gabriel"),
 		field.Enum("role").Values("user", "assistant", "tool"),
@@ -68,6 +68,6 @@ func (AgentMessage) Edges() []ent.Edge {
 func (AgentMessage) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("session_id", "created_at"),
-		index.Fields("parish_id", "user_id", "created_at"),
+		index.Fields("paroki_id", "user_id", "created_at"),
 	}
 }

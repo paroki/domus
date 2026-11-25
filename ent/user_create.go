@@ -161,16 +161,16 @@ func (_c *UserCreate) SetNillableOnboarded(v *bool) *UserCreate {
 	return _c
 }
 
-// SetDefaultParishID sets the "default_parish_id" field.
-func (_c *UserCreate) SetDefaultParishID(v uuid.UUID) *UserCreate {
-	_c.mutation.SetDefaultParishID(v)
+// SetDefaultParokiID sets the "default_paroki_id" field.
+func (_c *UserCreate) SetDefaultParokiID(v uuid.UUID) *UserCreate {
+	_c.mutation.SetDefaultParokiID(v)
 	return _c
 }
 
-// SetNillableDefaultParishID sets the "default_parish_id" field if the given value is not nil.
-func (_c *UserCreate) SetNillableDefaultParishID(v *uuid.UUID) *UserCreate {
+// SetNillableDefaultParokiID sets the "default_paroki_id" field if the given value is not nil.
+func (_c *UserCreate) SetNillableDefaultParokiID(v *uuid.UUID) *UserCreate {
 	if v != nil {
-		_c.SetDefaultParishID(*v)
+		_c.SetDefaultParokiID(*v)
 	}
 	return _c
 }
@@ -409,9 +409,9 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldOnboarded, field.TypeBool, value)
 		_node.Onboarded = value
 	}
-	if value, ok := _c.mutation.DefaultParishID(); ok {
-		_spec.SetField(user.FieldDefaultParishID, field.TypeUUID, value)
-		_node.DefaultParishID = &value
+	if value, ok := _c.mutation.DefaultParokiID(); ok {
+		_spec.SetField(user.FieldDefaultParokiID, field.TypeUUID, value)
+		_node.DefaultParokiID = &value
 	}
 	if value, ok := _c.mutation.LastLoginAt(); ok {
 		_spec.SetField(user.FieldLastLoginAt, field.TypeTime, value)

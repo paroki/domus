@@ -50,9 +50,9 @@ func (_c *EventRSVPCreate) SetNillableUpdatedAt(v *time.Time) *EventRSVPCreate {
 	return _c
 }
 
-// SetParishID sets the "parish_id" field.
-func (_c *EventRSVPCreate) SetParishID(v uuid.UUID) *EventRSVPCreate {
-	_c.mutation.SetParishID(v)
+// SetParokiID sets the "paroki_id" field.
+func (_c *EventRSVPCreate) SetParokiID(v uuid.UUID) *EventRSVPCreate {
+	_c.mutation.SetParokiID(v)
 	return _c
 }
 
@@ -164,8 +164,8 @@ func (_c *EventRSVPCreate) check() error {
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "EventRSVP.updated_at"`)}
 	}
-	if _, ok := _c.mutation.ParishID(); !ok {
-		return &ValidationError{Name: "parish_id", err: errors.New(`ent: missing required field "EventRSVP.parish_id"`)}
+	if _, ok := _c.mutation.ParokiID(); !ok {
+		return &ValidationError{Name: "paroki_id", err: errors.New(`ent: missing required field "EventRSVP.paroki_id"`)}
 	}
 	if _, ok := _c.mutation.EventID(); !ok {
 		return &ValidationError{Name: "event_id", err: errors.New(`ent: missing required field "EventRSVP.event_id"`)}
@@ -227,9 +227,9 @@ func (_c *EventRSVPCreate) createSpec() (*EventRSVP, *sqlgraph.CreateSpec) {
 		_spec.SetField(eventrsvp.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if value, ok := _c.mutation.ParishID(); ok {
-		_spec.SetField(eventrsvp.FieldParishID, field.TypeUUID, value)
-		_node.ParishID = value
+	if value, ok := _c.mutation.ParokiID(); ok {
+		_spec.SetField(eventrsvp.FieldParokiID, field.TypeUUID, value)
+		_node.ParokiID = value
 	}
 	if value, ok := _c.mutation.UserID(); ok {
 		_spec.SetField(eventrsvp.FieldUserID, field.TypeUUID, value)

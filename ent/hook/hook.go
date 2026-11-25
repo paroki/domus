@@ -69,18 +69,6 @@ func (f CasbinRuleFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, 
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CasbinRuleMutation", m)
 }
 
-// The DioceseFunc type is an adapter to allow the use of ordinary
-// function as Diocese mutator.
-type DioceseFunc func(context.Context, *ent.DioceseMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f DioceseFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.DioceseMutation); ok {
-		return f(ctx, mv)
-	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.DioceseMutation", m)
-}
-
 // The EventFunc type is an adapter to allow the use of ordinary
 // function as Event mutator.
 type EventFunc func(context.Context, *ent.EventMutation) (ent.Value, error)
@@ -103,6 +91,30 @@ func (f EventRSVPFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, e
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EventRSVPMutation", m)
+}
+
+// The KeuskupanFunc type is an adapter to allow the use of ordinary
+// function as Keuskupan mutator.
+type KeuskupanFunc func(context.Context, *ent.KeuskupanMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f KeuskupanFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.KeuskupanMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.KeuskupanMutation", m)
+}
+
+// The LingkunganFunc type is an adapter to allow the use of ordinary
+// function as Lingkungan mutator.
+type LingkunganFunc func(context.Context, *ent.LingkunganMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f LingkunganFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.LingkunganMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LingkunganMutation", m)
 }
 
 // The LookupFunc type is an adapter to allow the use of ordinary
@@ -153,28 +165,28 @@ func (f OrganizationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.OrganizationMutation", m)
 }
 
-// The ParishFunc type is an adapter to allow the use of ordinary
-// function as Parish mutator.
-type ParishFunc func(context.Context, *ent.ParishMutation) (ent.Value, error)
+// The ParokiFunc type is an adapter to allow the use of ordinary
+// function as Paroki mutator.
+type ParokiFunc func(context.Context, *ent.ParokiMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
-func (f ParishFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.ParishMutation); ok {
+func (f ParokiFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ParokiMutation); ok {
 		return f(ctx, mv)
 	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ParishMutation", m)
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ParokiMutation", m)
 }
 
-// The ParishMemberFunc type is an adapter to allow the use of ordinary
-// function as ParishMember mutator.
-type ParishMemberFunc func(context.Context, *ent.ParishMemberMutation) (ent.Value, error)
+// The ParokiMemberFunc type is an adapter to allow the use of ordinary
+// function as ParokiMember mutator.
+type ParokiMemberFunc func(context.Context, *ent.ParokiMemberMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
-func (f ParishMemberFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.ParishMemberMutation); ok {
+func (f ParokiMemberFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ParokiMemberMutation); ok {
 		return f(ctx, mv)
 	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ParishMemberMutation", m)
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ParokiMemberMutation", m)
 }
 
 // The PeriodFunc type is an adapter to allow the use of ordinary
@@ -249,28 +261,16 @@ func (f UserSessionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value,
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserSessionMutation", m)
 }
 
-// The WardFunc type is an adapter to allow the use of ordinary
-// function as Ward mutator.
-type WardFunc func(context.Context, *ent.WardMutation) (ent.Value, error)
+// The WilayahFunc type is an adapter to allow the use of ordinary
+// function as Wilayah mutator.
+type WilayahFunc func(context.Context, *ent.WilayahMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
-func (f WardFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.WardMutation); ok {
+func (f WilayahFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.WilayahMutation); ok {
 		return f(ctx, mv)
 	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.WardMutation", m)
-}
-
-// The ZoneFunc type is an adapter to allow the use of ordinary
-// function as Zone mutator.
-type ZoneFunc func(context.Context, *ent.ZoneMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f ZoneFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.ZoneMutation); ok {
-		return f(ctx, mv)
-	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ZoneMutation", m)
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.WilayahMutation", m)
 }
 
 // Condition is a hook condition function.

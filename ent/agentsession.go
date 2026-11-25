@@ -24,8 +24,8 @@ type AgentSession struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// DeletedAt holds the value of the "deleted_at" field.
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
-	// ParishID holds the value of the "parish_id" field.
-	ParishID uuid.UUID `json:"parish_id,omitempty"`
+	// ParokiID holds the value of the "paroki_id" field.
+	ParokiID uuid.UUID `json:"paroki_id,omitempty"`
 	// UserID holds the value of the "user_id" field.
 	UserID uuid.UUID `json:"user_id,omitempty"`
 	// Title holds the value of the "title" field.
@@ -71,7 +71,7 @@ func (*AgentSession) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case agentsession.FieldCreatedAt, agentsession.FieldUpdatedAt, agentsession.FieldDeletedAt, agentsession.FieldLastMessageAt:
 			values[i] = new(sql.NullTime)
-		case agentsession.FieldID, agentsession.FieldParishID, agentsession.FieldUserID:
+		case agentsession.FieldID, agentsession.FieldParokiID, agentsession.FieldUserID:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -113,11 +113,11 @@ func (_m *AgentSession) assignValues(columns []string, values []any) error {
 				_m.DeletedAt = new(time.Time)
 				*_m.DeletedAt = value.Time
 			}
-		case agentsession.FieldParishID:
+		case agentsession.FieldParokiID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field parish_id", values[i])
+				return fmt.Errorf("unexpected type %T for field paroki_id", values[i])
 			} else if value != nil {
-				_m.ParishID = *value
+				_m.ParokiID = *value
 			}
 		case agentsession.FieldUserID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
@@ -203,8 +203,8 @@ func (_m *AgentSession) String() string {
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteString(", ")
-	builder.WriteString("parish_id=")
-	builder.WriteString(fmt.Sprintf("%v", _m.ParishID))
+	builder.WriteString("paroki_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ParokiID))
 	builder.WriteString(", ")
 	builder.WriteString("user_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.UserID))

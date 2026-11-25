@@ -71,9 +71,9 @@ func DeletedAt(v time.Time) predicate.Period {
 	return predicate.Period(sql.FieldEQ(FieldDeletedAt, v))
 }
 
-// ParishID applies equality check predicate on the "parish_id" field. It's identical to ParishIDEQ.
-func ParishID(v uuid.UUID) predicate.Period {
-	return predicate.Period(sql.FieldEQ(FieldParishID, v))
+// ParokiID applies equality check predicate on the "paroki_id" field. It's identical to ParokiIDEQ.
+func ParokiID(v uuid.UUID) predicate.Period {
+	return predicate.Period(sql.FieldEQ(FieldParokiID, v))
 }
 
 // Code applies equality check predicate on the "code" field. It's identical to CodeEQ.
@@ -231,24 +231,24 @@ func DeletedAtNotNil() predicate.Period {
 	return predicate.Period(sql.FieldNotNull(FieldDeletedAt))
 }
 
-// ParishIDEQ applies the EQ predicate on the "parish_id" field.
-func ParishIDEQ(v uuid.UUID) predicate.Period {
-	return predicate.Period(sql.FieldEQ(FieldParishID, v))
+// ParokiIDEQ applies the EQ predicate on the "paroki_id" field.
+func ParokiIDEQ(v uuid.UUID) predicate.Period {
+	return predicate.Period(sql.FieldEQ(FieldParokiID, v))
 }
 
-// ParishIDNEQ applies the NEQ predicate on the "parish_id" field.
-func ParishIDNEQ(v uuid.UUID) predicate.Period {
-	return predicate.Period(sql.FieldNEQ(FieldParishID, v))
+// ParokiIDNEQ applies the NEQ predicate on the "paroki_id" field.
+func ParokiIDNEQ(v uuid.UUID) predicate.Period {
+	return predicate.Period(sql.FieldNEQ(FieldParokiID, v))
 }
 
-// ParishIDIn applies the In predicate on the "parish_id" field.
-func ParishIDIn(vs ...uuid.UUID) predicate.Period {
-	return predicate.Period(sql.FieldIn(FieldParishID, vs...))
+// ParokiIDIn applies the In predicate on the "paroki_id" field.
+func ParokiIDIn(vs ...uuid.UUID) predicate.Period {
+	return predicate.Period(sql.FieldIn(FieldParokiID, vs...))
 }
 
-// ParishIDNotIn applies the NotIn predicate on the "parish_id" field.
-func ParishIDNotIn(vs ...uuid.UUID) predicate.Period {
-	return predicate.Period(sql.FieldNotIn(FieldParishID, vs...))
+// ParokiIDNotIn applies the NotIn predicate on the "paroki_id" field.
+func ParokiIDNotIn(vs ...uuid.UUID) predicate.Period {
+	return predicate.Period(sql.FieldNotIn(FieldParokiID, vs...))
 }
 
 // TypeEQ applies the EQ predicate on the "type" field.
@@ -561,21 +561,21 @@ func IsCurrentNEQ(v bool) predicate.Period {
 	return predicate.Period(sql.FieldNEQ(FieldIsCurrent, v))
 }
 
-// HasParish applies the HasEdge predicate on the "parish" edge.
-func HasParish() predicate.Period {
+// HasParoki applies the HasEdge predicate on the "paroki" edge.
+func HasParoki() predicate.Period {
 	return predicate.Period(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ParishTable, ParishColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, ParokiTable, ParokiColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasParishWith applies the HasEdge predicate on the "parish" edge with a given conditions (other predicates).
-func HasParishWith(preds ...predicate.Parish) predicate.Period {
+// HasParokiWith applies the HasEdge predicate on the "paroki" edge with a given conditions (other predicates).
+func HasParokiWith(preds ...predicate.Paroki) predicate.Period {
 	return predicate.Period(func(s *sql.Selector) {
-		step := newParishStep()
+		step := newParokiStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

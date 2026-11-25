@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// Lookup stores global or parish-scoped reference lookup values.
+// Lookup stores global or paroki-scoped reference lookup values.
 type Lookup struct {
 	ent.Schema
 }
@@ -26,7 +26,7 @@ func (Lookup) Mixin() []ent.Mixin {
 // Fields returns the fields of the Lookup entity.
 func (Lookup) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("parish_id", uuid.UUID{}).Optional().Nillable(),
+		field.UUID("paroki_id", uuid.UUID{}).Optional().Nillable(),
 		field.String("category").NotEmpty(),
 		field.String("code").NotEmpty(),
 		field.String("label").NotEmpty(),
@@ -38,9 +38,9 @@ func (Lookup) Fields() []ent.Field {
 // Edges returns the edges of the Lookup entity.
 func (Lookup) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("parish", Parish.Type).
+		edge.From("paroki", Paroki.Type).
 			Ref("lookups").
-			Field("parish_id").
+			Field("paroki_id").
 			Unique(),
 	}
 }
@@ -48,11 +48,11 @@ func (Lookup) Edges() []ent.Edge {
 // Indexes returns the indexes for the Lookup entity.
 func (Lookup) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("parish_id", "category", "code").Unique(),
+		index.Fields("paroki_id", "category", "code").Unique(),
 		index.Fields("category", "code").
 			Unique().
-			Annotations(entsql.IndexWhere("parish_id IS NULL")).
+			Annotations(entsql.IndexWhere("paroki_id IS NULL")).
 			StorageKey("lookup_global_category_code"),
-		index.Fields("parish_id", "category", "sort_order"),
+		index.Fields("paroki_id", "category", "sort_order"),
 	}
 }

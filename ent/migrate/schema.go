@@ -14,7 +14,7 @@ var (
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "parish_id", Type: field.TypeUUID},
+		{Name: "paroki_id", Type: field.TypeUUID},
 		{Name: "user_id", Type: field.TypeUUID},
 		{Name: "category", Type: field.TypeEnum, Enums: []string{"preference", "fact", "context"}, Default: "fact"},
 		{Name: "content", Type: field.TypeString, Size: 2147483647},
@@ -27,7 +27,7 @@ var (
 		PrimaryKey: []*schema.Column{AgentMemoriesColumns[0]},
 		Indexes: []*schema.Index{
 			{
-				Name:    "agentmemory_parish_id_user_id_created_at",
+				Name:    "agentmemory_paroki_id_user_id_created_at",
 				Unique:  false,
 				Columns: []*schema.Column{AgentMemoriesColumns[3], AgentMemoriesColumns[4], AgentMemoriesColumns[1]},
 			},
@@ -38,7 +38,7 @@ var (
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "parish_id", Type: field.TypeUUID},
+		{Name: "paroki_id", Type: field.TypeUUID},
 		{Name: "user_id", Type: field.TypeUUID},
 		{Name: "agent_name", Type: field.TypeString, Default: "gabriel"},
 		{Name: "role", Type: field.TypeEnum, Enums: []string{"user", "assistant", "tool"}},
@@ -69,7 +69,7 @@ var (
 				Columns: []*schema.Column{AgentMessagesColumns[12], AgentMessagesColumns[1]},
 			},
 			{
-				Name:    "agentmessage_parish_id_user_id_created_at",
+				Name:    "agentmessage_paroki_id_user_id_created_at",
 				Unique:  false,
 				Columns: []*schema.Column{AgentMessagesColumns[3], AgentMessagesColumns[4], AgentMessagesColumns[1]},
 			},
@@ -99,7 +99,7 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
-		{Name: "parish_id", Type: field.TypeUUID},
+		{Name: "paroki_id", Type: field.TypeUUID},
 		{Name: "user_id", Type: field.TypeUUID},
 		{Name: "title", Type: field.TypeString, Default: "Percakapan Baru"},
 		{Name: "provider_id", Type: field.TypeUUID, Nullable: true},
@@ -113,7 +113,7 @@ var (
 		PrimaryKey: []*schema.Column{AgentSessionsColumns[0]},
 		Indexes: []*schema.Index{
 			{
-				Name:    "agentsession_parish_id_user_id_last_message_at",
+				Name:    "agentsession_paroki_id_user_id_last_message_at",
 				Unique:  false,
 				Columns: []*schema.Column{AgentSessionsColumns[4], AgentSessionsColumns[5], AgentSessionsColumns[9]},
 			},
@@ -143,46 +143,13 @@ var (
 			},
 		},
 	}
-	// DiocesesColumns holds the columns for the "dioceses" table.
-	DiocesesColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeUUID},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
-		{Name: "code", Type: field.TypeString, Unique: true},
-		{Name: "name", Type: field.TypeString},
-		{Name: "bishop_name", Type: field.TypeString, Nullable: true},
-		{Name: "address", Type: field.TypeString, Nullable: true},
-		{Name: "phone", Type: field.TypeString, Nullable: true},
-		{Name: "email", Type: field.TypeString, Nullable: true},
-		{Name: "website", Type: field.TypeString, Nullable: true},
-		{Name: "active", Type: field.TypeBool, Default: true},
-	}
-	// DiocesesTable holds the schema information for the "dioceses" table.
-	DiocesesTable = &schema.Table{
-		Name:       "dioceses",
-		Columns:    DiocesesColumns,
-		PrimaryKey: []*schema.Column{DiocesesColumns[0]},
-		Indexes: []*schema.Index{
-			{
-				Name:    "diocese_code",
-				Unique:  true,
-				Columns: []*schema.Column{DiocesesColumns[4]},
-			},
-			{
-				Name:    "diocese_active",
-				Unique:  false,
-				Columns: []*schema.Column{DiocesesColumns[11]},
-			},
-		},
-	}
 	// EventsColumns holds the columns for the "events" table.
 	EventsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
-		{Name: "parish_id", Type: field.TypeUUID},
+		{Name: "paroki_id", Type: field.TypeUUID},
 		{Name: "org_id", Type: field.TypeUUID},
 		{Name: "created_by", Type: field.TypeUUID},
 		{Name: "title", Type: field.TypeString},
@@ -202,17 +169,17 @@ var (
 		PrimaryKey: []*schema.Column{EventsColumns[0]},
 		Indexes: []*schema.Index{
 			{
-				Name:    "event_parish_id_start_at",
+				Name:    "event_paroki_id_start_at",
 				Unique:  false,
 				Columns: []*schema.Column{EventsColumns[4], EventsColumns[10]},
 			},
 			{
-				Name:    "event_parish_id_org_id_start_at",
+				Name:    "event_paroki_id_org_id_start_at",
 				Unique:  false,
 				Columns: []*schema.Column{EventsColumns[4], EventsColumns[5], EventsColumns[10]},
 			},
 			{
-				Name:    "event_parish_id_visibility_status_start_at",
+				Name:    "event_paroki_id_visibility_status_start_at",
 				Unique:  false,
 				Columns: []*schema.Column{EventsColumns[4], EventsColumns[12], EventsColumns[15], EventsColumns[10]},
 			},
@@ -228,7 +195,7 @@ var (
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "parish_id", Type: field.TypeUUID},
+		{Name: "paroki_id", Type: field.TypeUUID},
 		{Name: "user_id", Type: field.TypeUUID},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"going", "maybe", "not_going"}},
 		{Name: "note", Type: field.TypeString, Nullable: true},
@@ -259,9 +226,89 @@ var (
 				Columns: []*schema.Column{EventRsvpsColumns[7], EventRsvpsColumns[5], EventRsvpsColumns[2]},
 			},
 			{
-				Name:    "eventrsvp_parish_id_user_id",
+				Name:    "eventrsvp_paroki_id_user_id",
 				Unique:  false,
 				Columns: []*schema.Column{EventRsvpsColumns[3], EventRsvpsColumns[4]},
+			},
+		},
+	}
+	// KeuskupanColumns holds the columns for the "keuskupan" table.
+	KeuskupanColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "kode", Type: field.TypeString, Unique: true},
+		{Name: "nama", Type: field.TypeString},
+		{Name: "uskup", Type: field.TypeString, Nullable: true},
+		{Name: "alamat", Type: field.TypeString, Nullable: true},
+		{Name: "telepon", Type: field.TypeString, Nullable: true},
+		{Name: "email", Type: field.TypeString, Nullable: true},
+		{Name: "website", Type: field.TypeString, Nullable: true},
+		{Name: "active", Type: field.TypeBool, Default: true},
+	}
+	// KeuskupanTable holds the schema information for the "keuskupan" table.
+	KeuskupanTable = &schema.Table{
+		Name:       "keuskupan",
+		Columns:    KeuskupanColumns,
+		PrimaryKey: []*schema.Column{KeuskupanColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "keuskupan_kode",
+				Unique:  true,
+				Columns: []*schema.Column{KeuskupanColumns[4]},
+			},
+			{
+				Name:    "keuskupan_active",
+				Unique:  false,
+				Columns: []*schema.Column{KeuskupanColumns[11]},
+			},
+		},
+	}
+	// LingkunganColumns holds the columns for the "lingkungan" table.
+	LingkunganColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "kode", Type: field.TypeString},
+		{Name: "nama", Type: field.TypeString},
+		{Name: "pelindung", Type: field.TypeString, Nullable: true},
+		{Name: "ketua", Type: field.TypeString, Nullable: true},
+		{Name: "telepon_ketua", Type: field.TypeString, Nullable: true},
+		{Name: "active", Type: field.TypeBool, Default: true},
+		{Name: "paroki_id", Type: field.TypeUUID},
+		{Name: "wilayah_id", Type: field.TypeUUID},
+	}
+	// LingkunganTable holds the schema information for the "lingkungan" table.
+	LingkunganTable = &schema.Table{
+		Name:       "lingkungan",
+		Columns:    LingkunganColumns,
+		PrimaryKey: []*schema.Column{LingkunganColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "lingkungan_paroki_lingkungan",
+				Columns:    []*schema.Column{LingkunganColumns[10]},
+				RefColumns: []*schema.Column{ParokiColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "lingkungan_wilayah_lingkungan",
+				Columns:    []*schema.Column{LingkunganColumns[11]},
+				RefColumns: []*schema.Column{WilayahColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "lingkungan_paroki_id_kode",
+				Unique:  true,
+				Columns: []*schema.Column{LingkunganColumns[10], LingkunganColumns[4]},
+			},
+			{
+				Name:    "lingkungan_paroki_id_wilayah_id_active",
+				Unique:  false,
+				Columns: []*schema.Column{LingkunganColumns[10], LingkunganColumns[11], LingkunganColumns[9]},
 			},
 		},
 	}
@@ -276,7 +323,7 @@ var (
 		{Name: "label", Type: field.TypeString},
 		{Name: "sort_order", Type: field.TypeInt, Default: 0},
 		{Name: "active", Type: field.TypeBool, Default: true},
-		{Name: "parish_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "paroki_id", Type: field.TypeUUID, Nullable: true},
 	}
 	// LookupsTable holds the schema information for the "lookups" table.
 	LookupsTable = &schema.Table{
@@ -285,15 +332,15 @@ var (
 		PrimaryKey: []*schema.Column{LookupsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "lookups_parishes_lookups",
+				Symbol:     "lookups_paroki_lookups",
 				Columns:    []*schema.Column{LookupsColumns[9]},
-				RefColumns: []*schema.Column{ParishesColumns[0]},
+				RefColumns: []*schema.Column{ParokiColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "lookup_parish_id_category_code",
+				Name:    "lookup_paroki_id_category_code",
 				Unique:  true,
 				Columns: []*schema.Column{LookupsColumns[9], LookupsColumns[4], LookupsColumns[5]},
 			},
@@ -302,11 +349,11 @@ var (
 				Unique:  true,
 				Columns: []*schema.Column{LookupsColumns[4], LookupsColumns[5]},
 				Annotation: &entsql.IndexAnnotation{
-					Where: "parish_id IS NULL",
+					Where: "paroki_id IS NULL",
 				},
 			},
 			{
-				Name:    "lookup_parish_id_category_sort_order",
+				Name:    "lookup_paroki_id_category_sort_order",
 				Unique:  false,
 				Columns: []*schema.Column{LookupsColumns[9], LookupsColumns[4], LookupsColumns[7]},
 			},
@@ -317,7 +364,7 @@ var (
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "parish_id", Type: field.TypeUUID},
+		{Name: "paroki_id", Type: field.TypeUUID},
 		{Name: "code", Type: field.TypeString},
 		{Name: "role", Type: field.TypeEnum, Enums: []string{"admin", "member"}, Default: "member"},
 		{Name: "default_position", Type: field.TypeString, Nullable: true},
@@ -353,7 +400,7 @@ var (
 				Columns: []*schema.Column{OrgInvitesColumns[12], OrgInvitesColumns[1]},
 			},
 			{
-				Name:    "orginvite_parish_id_org_id",
+				Name:    "orginvite_paroki_id_org_id",
 				Unique:  false,
 				Columns: []*schema.Column{OrgInvitesColumns[3], OrgInvitesColumns[12]},
 			},
@@ -364,7 +411,7 @@ var (
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "parish_id", Type: field.TypeUUID},
+		{Name: "paroki_id", Type: field.TypeUUID},
 		{Name: "user_id", Type: field.TypeUUID},
 		{Name: "role", Type: field.TypeEnum, Enums: []string{"admin", "member"}, Default: "member"},
 		{Name: "position", Type: field.TypeString, Nullable: true},
@@ -394,7 +441,7 @@ var (
 				Columns: []*schema.Column{OrgMembersColumns[11], OrgMembersColumns[4]},
 			},
 			{
-				Name:    "orgmember_parish_id_user_id",
+				Name:    "orgmember_paroki_id_user_id",
 				Unique:  false,
 				Columns: []*schema.Column{OrgMembersColumns[3], OrgMembersColumns[4]},
 			},
@@ -411,10 +458,10 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
-		{Name: "parish_id", Type: field.TypeUUID},
-		{Name: "zone_id", Type: field.TypeUUID, Nullable: true},
-		{Name: "ward_id", Type: field.TypeUUID, Nullable: true},
-		{Name: "kind", Type: field.TypeEnum, Enums: []string{"dpp", "bgkp", "section", "categorical", "zone", "ward", "community"}, Default: "section"},
+		{Name: "paroki_id", Type: field.TypeUUID},
+		{Name: "wilayah_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "lingkungan_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "kind", Type: field.TypeEnum, Enums: []string{"dpp", "bgkp", "section", "categorical", "wilayah", "lingkungan", "community"}, Default: "section"},
 		{Name: "code", Type: field.TypeString},
 		{Name: "name", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString, Nullable: true},
@@ -436,109 +483,109 @@ var (
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "organization_parish_id_code",
+				Name:    "organization_paroki_id_code",
 				Unique:  true,
 				Columns: []*schema.Column{OrganizationsColumns[4], OrganizationsColumns[8]},
 			},
 			{
-				Name:    "organization_parish_id_kind_active",
+				Name:    "organization_paroki_id_kind_active",
 				Unique:  false,
 				Columns: []*schema.Column{OrganizationsColumns[4], OrganizationsColumns[7], OrganizationsColumns[11]},
 			},
 			{
-				Name:    "organization_parish_id_parent_id",
+				Name:    "organization_paroki_id_parent_id",
 				Unique:  false,
 				Columns: []*schema.Column{OrganizationsColumns[4], OrganizationsColumns[12]},
 			},
 			{
-				Name:    "organization_parish_id_zone_id",
+				Name:    "organization_paroki_id_wilayah_id",
 				Unique:  false,
 				Columns: []*schema.Column{OrganizationsColumns[4], OrganizationsColumns[5]},
 			},
 			{
-				Name:    "organization_parish_id_ward_id",
+				Name:    "organization_paroki_id_lingkungan_id",
 				Unique:  false,
 				Columns: []*schema.Column{OrganizationsColumns[4], OrganizationsColumns[6]},
 			},
 		},
 	}
-	// ParishesColumns holds the columns for the "parishes" table.
-	ParishesColumns = []*schema.Column{
+	// ParokiColumns holds the columns for the "paroki" table.
+	ParokiColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
-		{Name: "code", Type: field.TypeString, Unique: true},
-		{Name: "name", Type: field.TypeString},
-		{Name: "patron_saint", Type: field.TypeString, Nullable: true},
-		{Name: "pastor_name", Type: field.TypeString, Nullable: true},
-		{Name: "address", Type: field.TypeString, Nullable: true},
-		{Name: "phone", Type: field.TypeString, Nullable: true},
+		{Name: "kode", Type: field.TypeString, Unique: true},
+		{Name: "nama", Type: field.TypeString},
+		{Name: "pelindung", Type: field.TypeString, Nullable: true},
+		{Name: "pastor", Type: field.TypeString, Nullable: true},
+		{Name: "alamat", Type: field.TypeString, Nullable: true},
+		{Name: "telepon", Type: field.TypeString, Nullable: true},
 		{Name: "email", Type: field.TypeString, Nullable: true},
 		{Name: "website", Type: field.TypeString, Nullable: true},
 		{Name: "logo_url", Type: field.TypeString, Nullable: true},
-		{Name: "letterhead", Type: field.TypeString, Nullable: true},
+		{Name: "kop_surat", Type: field.TypeString, Nullable: true},
 		{Name: "active", Type: field.TypeBool, Default: true},
-		{Name: "diocese_id", Type: field.TypeUUID},
+		{Name: "keuskupan_id", Type: field.TypeUUID},
 	}
-	// ParishesTable holds the schema information for the "parishes" table.
-	ParishesTable = &schema.Table{
-		Name:       "parishes",
-		Columns:    ParishesColumns,
-		PrimaryKey: []*schema.Column{ParishesColumns[0]},
+	// ParokiTable holds the schema information for the "paroki" table.
+	ParokiTable = &schema.Table{
+		Name:       "paroki",
+		Columns:    ParokiColumns,
+		PrimaryKey: []*schema.Column{ParokiColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "parishes_dioceses_parishes",
-				Columns:    []*schema.Column{ParishesColumns[15]},
-				RefColumns: []*schema.Column{DiocesesColumns[0]},
+				Symbol:     "paroki_keuskupan_paroki",
+				Columns:    []*schema.Column{ParokiColumns[15]},
+				RefColumns: []*schema.Column{KeuskupanColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "parish_code",
+				Name:    "paroki_kode",
 				Unique:  true,
-				Columns: []*schema.Column{ParishesColumns[4]},
+				Columns: []*schema.Column{ParokiColumns[4]},
 			},
 			{
-				Name:    "parish_diocese_id_active",
+				Name:    "paroki_keuskupan_id_active",
 				Unique:  false,
-				Columns: []*schema.Column{ParishesColumns[15], ParishesColumns[14]},
+				Columns: []*schema.Column{ParokiColumns[15], ParokiColumns[14]},
 			},
 		},
 	}
-	// ParishMembersColumns holds the columns for the "parish_members" table.
-	ParishMembersColumns = []*schema.Column{
+	// ParokiMembersColumns holds the columns for the "paroki_members" table.
+	ParokiMembersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "user_id", Type: field.TypeUUID},
 		{Name: "role", Type: field.TypeEnum, Enums: []string{"admin", "member"}, Default: "member"},
-		{Name: "parish_id", Type: field.TypeUUID},
+		{Name: "paroki_id", Type: field.TypeUUID},
 	}
-	// ParishMembersTable holds the schema information for the "parish_members" table.
-	ParishMembersTable = &schema.Table{
-		Name:       "parish_members",
-		Columns:    ParishMembersColumns,
-		PrimaryKey: []*schema.Column{ParishMembersColumns[0]},
+	// ParokiMembersTable holds the schema information for the "paroki_members" table.
+	ParokiMembersTable = &schema.Table{
+		Name:       "paroki_members",
+		Columns:    ParokiMembersColumns,
+		PrimaryKey: []*schema.Column{ParokiMembersColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "parish_members_parishes_members",
-				Columns:    []*schema.Column{ParishMembersColumns[5]},
-				RefColumns: []*schema.Column{ParishesColumns[0]},
+				Symbol:     "paroki_members_paroki_members",
+				Columns:    []*schema.Column{ParokiMembersColumns[5]},
+				RefColumns: []*schema.Column{ParokiColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "parishmember_parish_id_user_id",
+				Name:    "parokimember_paroki_id_user_id",
 				Unique:  true,
-				Columns: []*schema.Column{ParishMembersColumns[5], ParishMembersColumns[3]},
+				Columns: []*schema.Column{ParokiMembersColumns[5], ParokiMembersColumns[3]},
 			},
 			{
-				Name:    "parishmember_user_id",
+				Name:    "parokimember_user_id",
 				Unique:  false,
-				Columns: []*schema.Column{ParishMembersColumns[3]},
+				Columns: []*schema.Column{ParokiMembersColumns[3]},
 			},
 		},
 	}
@@ -555,7 +602,7 @@ var (
 		{Name: "end_date", Type: field.TypeString},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"open", "closed"}, Default: "open"},
 		{Name: "is_current", Type: field.TypeBool, Default: false},
-		{Name: "parish_id", Type: field.TypeUUID},
+		{Name: "paroki_id", Type: field.TypeUUID},
 	}
 	// PeriodsTable holds the schema information for the "periods" table.
 	PeriodsTable = &schema.Table{
@@ -564,20 +611,20 @@ var (
 		PrimaryKey: []*schema.Column{PeriodsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "periods_parishes_periods",
+				Symbol:     "periods_paroki_periods",
 				Columns:    []*schema.Column{PeriodsColumns[11]},
-				RefColumns: []*schema.Column{ParishesColumns[0]},
+				RefColumns: []*schema.Column{ParokiColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "period_parish_id_code",
+				Name:    "period_paroki_id_code",
 				Unique:  true,
 				Columns: []*schema.Column{PeriodsColumns[11], PeriodsColumns[5]},
 			},
 			{
-				Name:    "period_parish_id_type_is_current",
+				Name:    "period_paroki_id_type_is_current",
 				Unique:  false,
 				Columns: []*schema.Column{PeriodsColumns[11], PeriodsColumns[4], PeriodsColumns[10]},
 			},
@@ -611,7 +658,7 @@ var (
 		{Name: "avatar_url", Type: field.TypeString, Nullable: true},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "disabled"}, Default: "active"},
 		{Name: "onboarded", Type: field.TypeBool, Default: false},
-		{Name: "default_parish_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "default_paroki_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "last_login_at", Type: field.TypeTime, Nullable: true},
 	}
 	// UsersTable holds the schema information for the "users" table.
@@ -642,7 +689,7 @@ var (
 		{Name: "email", Type: field.TypeString, Nullable: true},
 		{Name: "display_name", Type: field.TypeString, Nullable: true},
 		{Name: "avatar_url", Type: field.TypeString, Nullable: true},
-		{Name: "active_parish_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "active_paroki_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "last_used_at", Type: field.TypeTime, Nullable: true},
 		{Name: "user_id", Type: field.TypeUUID},
 	}
@@ -714,7 +761,7 @@ var (
 		{Name: "token_hash", Type: field.TypeString, Unique: true},
 		{Name: "user_agent", Type: field.TypeString, Default: ""},
 		{Name: "ip_address", Type: field.TypeString, Default: ""},
-		{Name: "active_parish_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "active_paroki_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "last_active_at", Type: field.TypeTime},
 		{Name: "expires_at", Type: field.TypeTime},
 		{Name: "user_id", Type: field.TypeUUID},
@@ -745,90 +792,43 @@ var (
 			},
 		},
 	}
-	// WardsColumns holds the columns for the "wards" table.
-	WardsColumns = []*schema.Column{
+	// WilayahColumns holds the columns for the "wilayah" table.
+	WilayahColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
-		{Name: "code", Type: field.TypeString},
-		{Name: "name", Type: field.TypeString},
-		{Name: "patron_saint", Type: field.TypeString, Nullable: true},
-		{Name: "head_name", Type: field.TypeString, Nullable: true},
-		{Name: "head_phone", Type: field.TypeString, Nullable: true},
+		{Name: "jenis", Type: field.TypeEnum, Enums: []string{"wilayah", "stasi"}, Default: "wilayah"},
+		{Name: "kode", Type: field.TypeString},
+		{Name: "nama", Type: field.TypeString},
+		{Name: "koordinator", Type: field.TypeString, Nullable: true},
+		{Name: "telepon_koordinator", Type: field.TypeString, Nullable: true},
 		{Name: "active", Type: field.TypeBool, Default: true},
-		{Name: "parish_id", Type: field.TypeUUID},
-		{Name: "zone_id", Type: field.TypeUUID},
+		{Name: "paroki_id", Type: field.TypeUUID},
 	}
-	// WardsTable holds the schema information for the "wards" table.
-	WardsTable = &schema.Table{
-		Name:       "wards",
-		Columns:    WardsColumns,
-		PrimaryKey: []*schema.Column{WardsColumns[0]},
+	// WilayahTable holds the schema information for the "wilayah" table.
+	WilayahTable = &schema.Table{
+		Name:       "wilayah",
+		Columns:    WilayahColumns,
+		PrimaryKey: []*schema.Column{WilayahColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "wards_parishes_wards",
-				Columns:    []*schema.Column{WardsColumns[10]},
-				RefColumns: []*schema.Column{ParishesColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-			{
-				Symbol:     "wards_zones_wards",
-				Columns:    []*schema.Column{WardsColumns[11]},
-				RefColumns: []*schema.Column{ZonesColumns[0]},
+				Symbol:     "wilayah_paroki_wilayah",
+				Columns:    []*schema.Column{WilayahColumns[10]},
+				RefColumns: []*schema.Column{ParokiColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "ward_parish_id_code",
+				Name:    "wilayah_paroki_id_kode",
 				Unique:  true,
-				Columns: []*schema.Column{WardsColumns[10], WardsColumns[4]},
+				Columns: []*schema.Column{WilayahColumns[10], WilayahColumns[5]},
 			},
 			{
-				Name:    "ward_parish_id_zone_id_active",
+				Name:    "wilayah_paroki_id_jenis_active",
 				Unique:  false,
-				Columns: []*schema.Column{WardsColumns[10], WardsColumns[11], WardsColumns[9]},
-			},
-		},
-	}
-	// ZonesColumns holds the columns for the "zones" table.
-	ZonesColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeUUID},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
-		{Name: "type", Type: field.TypeEnum, Enums: []string{"zone", "station"}, Default: "zone"},
-		{Name: "code", Type: field.TypeString},
-		{Name: "name", Type: field.TypeString},
-		{Name: "coordinator_name", Type: field.TypeString, Nullable: true},
-		{Name: "coordinator_phone", Type: field.TypeString, Nullable: true},
-		{Name: "active", Type: field.TypeBool, Default: true},
-		{Name: "parish_id", Type: field.TypeUUID},
-	}
-	// ZonesTable holds the schema information for the "zones" table.
-	ZonesTable = &schema.Table{
-		Name:       "zones",
-		Columns:    ZonesColumns,
-		PrimaryKey: []*schema.Column{ZonesColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "zones_parishes_zones",
-				Columns:    []*schema.Column{ZonesColumns[10]},
-				RefColumns: []*schema.Column{ParishesColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-		},
-		Indexes: []*schema.Index{
-			{
-				Name:    "zone_parish_id_code",
-				Unique:  true,
-				Columns: []*schema.Column{ZonesColumns[10], ZonesColumns[5]},
-			},
-			{
-				Name:    "zone_parish_id_type_active",
-				Unique:  false,
-				Columns: []*schema.Column{ZonesColumns[10], ZonesColumns[4], ZonesColumns[9]},
+				Columns: []*schema.Column{WilayahColumns[10], WilayahColumns[4], WilayahColumns[9]},
 			},
 		},
 	}
@@ -839,23 +839,23 @@ var (
 		AgentProvidersTable,
 		AgentSessionsTable,
 		CasbinRulesTable,
-		DiocesesTable,
 		EventsTable,
 		EventRsvpsTable,
+		KeuskupanTable,
+		LingkunganTable,
 		LookupsTable,
 		OrgInvitesTable,
 		OrgMembersTable,
 		OrganizationsTable,
-		ParishesTable,
-		ParishMembersTable,
+		ParokiTable,
+		ParokiMembersTable,
 		PeriodsTable,
 		SettingsTable,
 		UsersTable,
 		UserAccountsTable,
 		UserOtpsTable,
 		UserSessionsTable,
-		WardsTable,
-		ZonesTable,
+		WilayahTable,
 	}
 )
 
@@ -877,19 +877,34 @@ func init() {
 	EventRsvpsTable.Annotation = &entsql.Annotation{
 		Table: "event_rsvps",
 	}
-	LookupsTable.ForeignKeys[0].RefTable = ParishesTable
+	KeuskupanTable.Annotation = &entsql.Annotation{
+		Table: "keuskupan",
+	}
+	LingkunganTable.ForeignKeys[0].RefTable = ParokiTable
+	LingkunganTable.ForeignKeys[1].RefTable = WilayahTable
+	LingkunganTable.Annotation = &entsql.Annotation{
+		Table: "lingkungan",
+	}
+	LookupsTable.ForeignKeys[0].RefTable = ParokiTable
 	OrgInvitesTable.ForeignKeys[0].RefTable = OrganizationsTable
 	OrgMembersTable.ForeignKeys[0].RefTable = OrganizationsTable
 	OrganizationsTable.ForeignKeys[0].RefTable = OrganizationsTable
-	ParishesTable.ForeignKeys[0].RefTable = DiocesesTable
-	ParishMembersTable.ForeignKeys[0].RefTable = ParishesTable
-	PeriodsTable.ForeignKeys[0].RefTable = ParishesTable
+	ParokiTable.ForeignKeys[0].RefTable = KeuskupanTable
+	ParokiTable.Annotation = &entsql.Annotation{
+		Table: "paroki",
+	}
+	ParokiMembersTable.ForeignKeys[0].RefTable = ParokiTable
+	ParokiMembersTable.Annotation = &entsql.Annotation{
+		Table: "paroki_members",
+	}
+	PeriodsTable.ForeignKeys[0].RefTable = ParokiTable
 	UserAccountsTable.ForeignKeys[0].RefTable = UsersTable
 	UserOtpsTable.Annotation = &entsql.Annotation{
 		Table: "user_otps",
 	}
 	UserSessionsTable.ForeignKeys[0].RefTable = UsersTable
-	WardsTable.ForeignKeys[0].RefTable = ParishesTable
-	WardsTable.ForeignKeys[1].RefTable = ZonesTable
-	ZonesTable.ForeignKeys[0].RefTable = ParishesTable
+	WilayahTable.ForeignKeys[0].RefTable = ParokiTable
+	WilayahTable.Annotation = &entsql.Annotation{
+		Table: "wilayah",
+	}
 }

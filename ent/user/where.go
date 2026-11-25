@@ -101,9 +101,9 @@ func Onboarded(v bool) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldOnboarded, v))
 }
 
-// DefaultParishID applies equality check predicate on the "default_parish_id" field. It's identical to DefaultParishIDEQ.
-func DefaultParishID(v uuid.UUID) predicate.User {
-	return predicate.User(sql.FieldEQ(FieldDefaultParishID, v))
+// DefaultParokiID applies equality check predicate on the "default_paroki_id" field. It's identical to DefaultParokiIDEQ.
+func DefaultParokiID(v uuid.UUID) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldDefaultParokiID, v))
 }
 
 // LastLoginAt applies equality check predicate on the "last_login_at" field. It's identical to LastLoginAtEQ.
@@ -656,54 +656,54 @@ func OnboardedNEQ(v bool) predicate.User {
 	return predicate.User(sql.FieldNEQ(FieldOnboarded, v))
 }
 
-// DefaultParishIDEQ applies the EQ predicate on the "default_parish_id" field.
-func DefaultParishIDEQ(v uuid.UUID) predicate.User {
-	return predicate.User(sql.FieldEQ(FieldDefaultParishID, v))
+// DefaultParokiIDEQ applies the EQ predicate on the "default_paroki_id" field.
+func DefaultParokiIDEQ(v uuid.UUID) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldDefaultParokiID, v))
 }
 
-// DefaultParishIDNEQ applies the NEQ predicate on the "default_parish_id" field.
-func DefaultParishIDNEQ(v uuid.UUID) predicate.User {
-	return predicate.User(sql.FieldNEQ(FieldDefaultParishID, v))
+// DefaultParokiIDNEQ applies the NEQ predicate on the "default_paroki_id" field.
+func DefaultParokiIDNEQ(v uuid.UUID) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldDefaultParokiID, v))
 }
 
-// DefaultParishIDIn applies the In predicate on the "default_parish_id" field.
-func DefaultParishIDIn(vs ...uuid.UUID) predicate.User {
-	return predicate.User(sql.FieldIn(FieldDefaultParishID, vs...))
+// DefaultParokiIDIn applies the In predicate on the "default_paroki_id" field.
+func DefaultParokiIDIn(vs ...uuid.UUID) predicate.User {
+	return predicate.User(sql.FieldIn(FieldDefaultParokiID, vs...))
 }
 
-// DefaultParishIDNotIn applies the NotIn predicate on the "default_parish_id" field.
-func DefaultParishIDNotIn(vs ...uuid.UUID) predicate.User {
-	return predicate.User(sql.FieldNotIn(FieldDefaultParishID, vs...))
+// DefaultParokiIDNotIn applies the NotIn predicate on the "default_paroki_id" field.
+func DefaultParokiIDNotIn(vs ...uuid.UUID) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldDefaultParokiID, vs...))
 }
 
-// DefaultParishIDGT applies the GT predicate on the "default_parish_id" field.
-func DefaultParishIDGT(v uuid.UUID) predicate.User {
-	return predicate.User(sql.FieldGT(FieldDefaultParishID, v))
+// DefaultParokiIDGT applies the GT predicate on the "default_paroki_id" field.
+func DefaultParokiIDGT(v uuid.UUID) predicate.User {
+	return predicate.User(sql.FieldGT(FieldDefaultParokiID, v))
 }
 
-// DefaultParishIDGTE applies the GTE predicate on the "default_parish_id" field.
-func DefaultParishIDGTE(v uuid.UUID) predicate.User {
-	return predicate.User(sql.FieldGTE(FieldDefaultParishID, v))
+// DefaultParokiIDGTE applies the GTE predicate on the "default_paroki_id" field.
+func DefaultParokiIDGTE(v uuid.UUID) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldDefaultParokiID, v))
 }
 
-// DefaultParishIDLT applies the LT predicate on the "default_parish_id" field.
-func DefaultParishIDLT(v uuid.UUID) predicate.User {
-	return predicate.User(sql.FieldLT(FieldDefaultParishID, v))
+// DefaultParokiIDLT applies the LT predicate on the "default_paroki_id" field.
+func DefaultParokiIDLT(v uuid.UUID) predicate.User {
+	return predicate.User(sql.FieldLT(FieldDefaultParokiID, v))
 }
 
-// DefaultParishIDLTE applies the LTE predicate on the "default_parish_id" field.
-func DefaultParishIDLTE(v uuid.UUID) predicate.User {
-	return predicate.User(sql.FieldLTE(FieldDefaultParishID, v))
+// DefaultParokiIDLTE applies the LTE predicate on the "default_paroki_id" field.
+func DefaultParokiIDLTE(v uuid.UUID) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldDefaultParokiID, v))
 }
 
-// DefaultParishIDIsNil applies the IsNil predicate on the "default_parish_id" field.
-func DefaultParishIDIsNil() predicate.User {
-	return predicate.User(sql.FieldIsNull(FieldDefaultParishID))
+// DefaultParokiIDIsNil applies the IsNil predicate on the "default_paroki_id" field.
+func DefaultParokiIDIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldDefaultParokiID))
 }
 
-// DefaultParishIDNotNil applies the NotNil predicate on the "default_parish_id" field.
-func DefaultParishIDNotNil() predicate.User {
-	return predicate.User(sql.FieldNotNull(FieldDefaultParishID))
+// DefaultParokiIDNotNil applies the NotNil predicate on the "default_paroki_id" field.
+func DefaultParokiIDNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldDefaultParokiID))
 }
 
 // LastLoginAtEQ applies the EQ predicate on the "last_login_at" field.

@@ -24,7 +24,7 @@ func (OrgInvite) Mixin() []ent.Mixin {
 // Fields returns the fields of the OrgInvite entity.
 func (OrgInvite) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("parish_id", uuid.UUID{}),
+		field.UUID("paroki_id", uuid.UUID{}),
 		field.UUID("org_id", uuid.UUID{}),
 		field.String("code").NotEmpty(),
 		field.Enum("role").Values("admin", "member").Default("member"),
@@ -53,6 +53,6 @@ func (OrgInvite) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("code").Unique(),
 		index.Fields("org_id", "created_at"),
-		index.Fields("parish_id", "org_id"),
+		index.Fields("paroki_id", "org_id"),
 	}
 }

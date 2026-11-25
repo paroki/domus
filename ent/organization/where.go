@@ -71,9 +71,9 @@ func DeletedAt(v time.Time) predicate.Organization {
 	return predicate.Organization(sql.FieldEQ(FieldDeletedAt, v))
 }
 
-// ParishID applies equality check predicate on the "parish_id" field. It's identical to ParishIDEQ.
-func ParishID(v uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldEQ(FieldParishID, v))
+// ParokiID applies equality check predicate on the "paroki_id" field. It's identical to ParokiIDEQ.
+func ParokiID(v uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldEQ(FieldParokiID, v))
 }
 
 // ParentID applies equality check predicate on the "parent_id" field. It's identical to ParentIDEQ.
@@ -81,14 +81,14 @@ func ParentID(v uuid.UUID) predicate.Organization {
 	return predicate.Organization(sql.FieldEQ(FieldParentID, v))
 }
 
-// ZoneID applies equality check predicate on the "zone_id" field. It's identical to ZoneIDEQ.
-func ZoneID(v uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldEQ(FieldZoneID, v))
+// WilayahID applies equality check predicate on the "wilayah_id" field. It's identical to WilayahIDEQ.
+func WilayahID(v uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldEQ(FieldWilayahID, v))
 }
 
-// WardID applies equality check predicate on the "ward_id" field. It's identical to WardIDEQ.
-func WardID(v uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldEQ(FieldWardID, v))
+// LingkunganID applies equality check predicate on the "lingkungan_id" field. It's identical to LingkunganIDEQ.
+func LingkunganID(v uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldEQ(FieldLingkunganID, v))
 }
 
 // Code applies equality check predicate on the "code" field. It's identical to CodeEQ.
@@ -241,44 +241,44 @@ func DeletedAtNotNil() predicate.Organization {
 	return predicate.Organization(sql.FieldNotNull(FieldDeletedAt))
 }
 
-// ParishIDEQ applies the EQ predicate on the "parish_id" field.
-func ParishIDEQ(v uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldEQ(FieldParishID, v))
+// ParokiIDEQ applies the EQ predicate on the "paroki_id" field.
+func ParokiIDEQ(v uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldEQ(FieldParokiID, v))
 }
 
-// ParishIDNEQ applies the NEQ predicate on the "parish_id" field.
-func ParishIDNEQ(v uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldNEQ(FieldParishID, v))
+// ParokiIDNEQ applies the NEQ predicate on the "paroki_id" field.
+func ParokiIDNEQ(v uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldNEQ(FieldParokiID, v))
 }
 
-// ParishIDIn applies the In predicate on the "parish_id" field.
-func ParishIDIn(vs ...uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldIn(FieldParishID, vs...))
+// ParokiIDIn applies the In predicate on the "paroki_id" field.
+func ParokiIDIn(vs ...uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldIn(FieldParokiID, vs...))
 }
 
-// ParishIDNotIn applies the NotIn predicate on the "parish_id" field.
-func ParishIDNotIn(vs ...uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldNotIn(FieldParishID, vs...))
+// ParokiIDNotIn applies the NotIn predicate on the "paroki_id" field.
+func ParokiIDNotIn(vs ...uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldNotIn(FieldParokiID, vs...))
 }
 
-// ParishIDGT applies the GT predicate on the "parish_id" field.
-func ParishIDGT(v uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldGT(FieldParishID, v))
+// ParokiIDGT applies the GT predicate on the "paroki_id" field.
+func ParokiIDGT(v uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldGT(FieldParokiID, v))
 }
 
-// ParishIDGTE applies the GTE predicate on the "parish_id" field.
-func ParishIDGTE(v uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldGTE(FieldParishID, v))
+// ParokiIDGTE applies the GTE predicate on the "paroki_id" field.
+func ParokiIDGTE(v uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldGTE(FieldParokiID, v))
 }
 
-// ParishIDLT applies the LT predicate on the "parish_id" field.
-func ParishIDLT(v uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldLT(FieldParishID, v))
+// ParokiIDLT applies the LT predicate on the "paroki_id" field.
+func ParokiIDLT(v uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldLT(FieldParokiID, v))
 }
 
-// ParishIDLTE applies the LTE predicate on the "parish_id" field.
-func ParishIDLTE(v uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldLTE(FieldParishID, v))
+// ParokiIDLTE applies the LTE predicate on the "paroki_id" field.
+func ParokiIDLTE(v uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldLTE(FieldParokiID, v))
 }
 
 // ParentIDEQ applies the EQ predicate on the "parent_id" field.
@@ -311,104 +311,104 @@ func ParentIDNotNil() predicate.Organization {
 	return predicate.Organization(sql.FieldNotNull(FieldParentID))
 }
 
-// ZoneIDEQ applies the EQ predicate on the "zone_id" field.
-func ZoneIDEQ(v uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldEQ(FieldZoneID, v))
+// WilayahIDEQ applies the EQ predicate on the "wilayah_id" field.
+func WilayahIDEQ(v uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldEQ(FieldWilayahID, v))
 }
 
-// ZoneIDNEQ applies the NEQ predicate on the "zone_id" field.
-func ZoneIDNEQ(v uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldNEQ(FieldZoneID, v))
+// WilayahIDNEQ applies the NEQ predicate on the "wilayah_id" field.
+func WilayahIDNEQ(v uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldNEQ(FieldWilayahID, v))
 }
 
-// ZoneIDIn applies the In predicate on the "zone_id" field.
-func ZoneIDIn(vs ...uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldIn(FieldZoneID, vs...))
+// WilayahIDIn applies the In predicate on the "wilayah_id" field.
+func WilayahIDIn(vs ...uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldIn(FieldWilayahID, vs...))
 }
 
-// ZoneIDNotIn applies the NotIn predicate on the "zone_id" field.
-func ZoneIDNotIn(vs ...uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldNotIn(FieldZoneID, vs...))
+// WilayahIDNotIn applies the NotIn predicate on the "wilayah_id" field.
+func WilayahIDNotIn(vs ...uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldNotIn(FieldWilayahID, vs...))
 }
 
-// ZoneIDGT applies the GT predicate on the "zone_id" field.
-func ZoneIDGT(v uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldGT(FieldZoneID, v))
+// WilayahIDGT applies the GT predicate on the "wilayah_id" field.
+func WilayahIDGT(v uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldGT(FieldWilayahID, v))
 }
 
-// ZoneIDGTE applies the GTE predicate on the "zone_id" field.
-func ZoneIDGTE(v uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldGTE(FieldZoneID, v))
+// WilayahIDGTE applies the GTE predicate on the "wilayah_id" field.
+func WilayahIDGTE(v uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldGTE(FieldWilayahID, v))
 }
 
-// ZoneIDLT applies the LT predicate on the "zone_id" field.
-func ZoneIDLT(v uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldLT(FieldZoneID, v))
+// WilayahIDLT applies the LT predicate on the "wilayah_id" field.
+func WilayahIDLT(v uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldLT(FieldWilayahID, v))
 }
 
-// ZoneIDLTE applies the LTE predicate on the "zone_id" field.
-func ZoneIDLTE(v uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldLTE(FieldZoneID, v))
+// WilayahIDLTE applies the LTE predicate on the "wilayah_id" field.
+func WilayahIDLTE(v uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldLTE(FieldWilayahID, v))
 }
 
-// ZoneIDIsNil applies the IsNil predicate on the "zone_id" field.
-func ZoneIDIsNil() predicate.Organization {
-	return predicate.Organization(sql.FieldIsNull(FieldZoneID))
+// WilayahIDIsNil applies the IsNil predicate on the "wilayah_id" field.
+func WilayahIDIsNil() predicate.Organization {
+	return predicate.Organization(sql.FieldIsNull(FieldWilayahID))
 }
 
-// ZoneIDNotNil applies the NotNil predicate on the "zone_id" field.
-func ZoneIDNotNil() predicate.Organization {
-	return predicate.Organization(sql.FieldNotNull(FieldZoneID))
+// WilayahIDNotNil applies the NotNil predicate on the "wilayah_id" field.
+func WilayahIDNotNil() predicate.Organization {
+	return predicate.Organization(sql.FieldNotNull(FieldWilayahID))
 }
 
-// WardIDEQ applies the EQ predicate on the "ward_id" field.
-func WardIDEQ(v uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldEQ(FieldWardID, v))
+// LingkunganIDEQ applies the EQ predicate on the "lingkungan_id" field.
+func LingkunganIDEQ(v uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldEQ(FieldLingkunganID, v))
 }
 
-// WardIDNEQ applies the NEQ predicate on the "ward_id" field.
-func WardIDNEQ(v uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldNEQ(FieldWardID, v))
+// LingkunganIDNEQ applies the NEQ predicate on the "lingkungan_id" field.
+func LingkunganIDNEQ(v uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldNEQ(FieldLingkunganID, v))
 }
 
-// WardIDIn applies the In predicate on the "ward_id" field.
-func WardIDIn(vs ...uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldIn(FieldWardID, vs...))
+// LingkunganIDIn applies the In predicate on the "lingkungan_id" field.
+func LingkunganIDIn(vs ...uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldIn(FieldLingkunganID, vs...))
 }
 
-// WardIDNotIn applies the NotIn predicate on the "ward_id" field.
-func WardIDNotIn(vs ...uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldNotIn(FieldWardID, vs...))
+// LingkunganIDNotIn applies the NotIn predicate on the "lingkungan_id" field.
+func LingkunganIDNotIn(vs ...uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldNotIn(FieldLingkunganID, vs...))
 }
 
-// WardIDGT applies the GT predicate on the "ward_id" field.
-func WardIDGT(v uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldGT(FieldWardID, v))
+// LingkunganIDGT applies the GT predicate on the "lingkungan_id" field.
+func LingkunganIDGT(v uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldGT(FieldLingkunganID, v))
 }
 
-// WardIDGTE applies the GTE predicate on the "ward_id" field.
-func WardIDGTE(v uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldGTE(FieldWardID, v))
+// LingkunganIDGTE applies the GTE predicate on the "lingkungan_id" field.
+func LingkunganIDGTE(v uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldGTE(FieldLingkunganID, v))
 }
 
-// WardIDLT applies the LT predicate on the "ward_id" field.
-func WardIDLT(v uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldLT(FieldWardID, v))
+// LingkunganIDLT applies the LT predicate on the "lingkungan_id" field.
+func LingkunganIDLT(v uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldLT(FieldLingkunganID, v))
 }
 
-// WardIDLTE applies the LTE predicate on the "ward_id" field.
-func WardIDLTE(v uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldLTE(FieldWardID, v))
+// LingkunganIDLTE applies the LTE predicate on the "lingkungan_id" field.
+func LingkunganIDLTE(v uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldLTE(FieldLingkunganID, v))
 }
 
-// WardIDIsNil applies the IsNil predicate on the "ward_id" field.
-func WardIDIsNil() predicate.Organization {
-	return predicate.Organization(sql.FieldIsNull(FieldWardID))
+// LingkunganIDIsNil applies the IsNil predicate on the "lingkungan_id" field.
+func LingkunganIDIsNil() predicate.Organization {
+	return predicate.Organization(sql.FieldIsNull(FieldLingkunganID))
 }
 
-// WardIDNotNil applies the NotNil predicate on the "ward_id" field.
-func WardIDNotNil() predicate.Organization {
-	return predicate.Organization(sql.FieldNotNull(FieldWardID))
+// LingkunganIDNotNil applies the NotNil predicate on the "lingkungan_id" field.
+func LingkunganIDNotNil() predicate.Organization {
+	return predicate.Organization(sql.FieldNotNull(FieldLingkunganID))
 }
 
 // KindEQ applies the EQ predicate on the "kind" field.

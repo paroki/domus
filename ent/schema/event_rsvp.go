@@ -33,7 +33,7 @@ func (EventRSVP) Mixin() []ent.Mixin {
 // Fields returns the fields of the EventRSVP entity.
 func (EventRSVP) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("parish_id", uuid.UUID{}),
+		field.UUID("paroki_id", uuid.UUID{}),
 		field.UUID("event_id", uuid.UUID{}),
 		field.UUID("user_id", uuid.UUID{}),
 		field.Enum("status").Values("going", "maybe", "not_going"),
@@ -57,6 +57,6 @@ func (EventRSVP) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("event_id", "user_id").Unique(),
 		index.Fields("event_id", "status", "updated_at"),
-		index.Fields("parish_id", "user_id"),
+		index.Fields("paroki_id", "user_id"),
 	}
 }

@@ -17,23 +17,23 @@ import (
 	"github.com/paroki/domus/ent/agentprovider"
 	"github.com/paroki/domus/ent/agentsession"
 	"github.com/paroki/domus/ent/casbinrule"
-	"github.com/paroki/domus/ent/diocese"
 	"github.com/paroki/domus/ent/event"
 	"github.com/paroki/domus/ent/eventrsvp"
+	"github.com/paroki/domus/ent/keuskupan"
+	"github.com/paroki/domus/ent/lingkungan"
 	"github.com/paroki/domus/ent/lookup"
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orginvite"
 	"github.com/paroki/domus/ent/orgmember"
-	"github.com/paroki/domus/ent/parish"
-	"github.com/paroki/domus/ent/parishmember"
+	"github.com/paroki/domus/ent/paroki"
+	"github.com/paroki/domus/ent/parokimember"
 	"github.com/paroki/domus/ent/period"
 	"github.com/paroki/domus/ent/setting"
 	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/useraccount"
 	"github.com/paroki/domus/ent/userotp"
 	"github.com/paroki/domus/ent/usersession"
-	"github.com/paroki/domus/ent/ward"
-	"github.com/paroki/domus/ent/zone"
+	"github.com/paroki/domus/ent/wilayah"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -99,23 +99,23 @@ func checkColumn(t, c string) error {
 			agentprovider.Table: agentprovider.ValidColumn,
 			agentsession.Table:  agentsession.ValidColumn,
 			casbinrule.Table:    casbinrule.ValidColumn,
-			diocese.Table:       diocese.ValidColumn,
 			event.Table:         event.ValidColumn,
 			eventrsvp.Table:     eventrsvp.ValidColumn,
+			keuskupan.Table:     keuskupan.ValidColumn,
+			lingkungan.Table:    lingkungan.ValidColumn,
 			lookup.Table:        lookup.ValidColumn,
 			orginvite.Table:     orginvite.ValidColumn,
 			orgmember.Table:     orgmember.ValidColumn,
 			organization.Table:  organization.ValidColumn,
-			parish.Table:        parish.ValidColumn,
-			parishmember.Table:  parishmember.ValidColumn,
+			paroki.Table:        paroki.ValidColumn,
+			parokimember.Table:  parokimember.ValidColumn,
 			period.Table:        period.ValidColumn,
 			setting.Table:       setting.ValidColumn,
 			user.Table:          user.ValidColumn,
 			useraccount.Table:   useraccount.ValidColumn,
 			userotp.Table:       userotp.ValidColumn,
 			usersession.Table:   usersession.ValidColumn,
-			ward.Table:          ward.ValidColumn,
-			zone.Table:          zone.ValidColumn,
+			wilayah.Table:       wilayah.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

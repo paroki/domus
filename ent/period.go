@@ -10,7 +10,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
-	"github.com/paroki/domus/ent/parish"
+	"github.com/paroki/domus/ent/paroki"
 	"github.com/paroki/domus/ent/period"
 )
 
@@ -25,8 +25,8 @@ type Period struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// DeletedAt holds the value of the "deleted_at" field.
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
-	// ParishID holds the value of the "parish_id" field.
-	ParishID uuid.UUID `json:"parish_id,omitempty"`
+	// ParokiID holds the value of the "paroki_id" field.
+	ParokiID uuid.UUID `json:"paroki_id,omitempty"`
 	// Type holds the value of the "type" field.
 	Type period.Type `json:"type,omitempty"`
 	// Code holds the value of the "code" field.
@@ -49,22 +49,22 @@ type Period struct {
 
 // PeriodEdges holds the relations/edges for other nodes in the graph.
 type PeriodEdges struct {
-	// Parish holds the value of the parish edge.
-	Parish *Parish `json:"parish,omitempty"`
+	// Paroki holds the value of the paroki edge.
+	Paroki *Paroki `json:"paroki,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [1]bool
 }
 
-// ParishOrErr returns the Parish value or an error if the edge
+// ParokiOrErr returns the Paroki value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e PeriodEdges) ParishOrErr() (*Parish, error) {
-	if e.Parish != nil {
-		return e.Parish, nil
+func (e PeriodEdges) ParokiOrErr() (*Paroki, error) {
+	if e.Paroki != nil {
+		return e.Paroki, nil
 	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: parish.Label}
+		return nil, &NotFoundError{label: paroki.Label}
 	}
-	return nil, &NotLoadedError{edge: "parish"}
+	return nil, &NotLoadedError{edge: "paroki"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -78,7 +78,7 @@ func (*Period) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case period.FieldCreatedAt, period.FieldUpdatedAt, period.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
-		case period.FieldID, period.FieldParishID:
+		case period.FieldID, period.FieldParokiID:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -120,11 +120,11 @@ func (_m *Period) assignValues(columns []string, values []any) error {
 				_m.DeletedAt = new(time.Time)
 				*_m.DeletedAt = value.Time
 			}
-		case period.FieldParishID:
+		case period.FieldParokiID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field parish_id", values[i])
+				return fmt.Errorf("unexpected type %T for field paroki_id", values[i])
 			} else if value != nil {
-				_m.ParishID = *value
+				_m.ParokiID = *value
 			}
 		case period.FieldType:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -181,9 +181,9 @@ func (_m *Period) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
 }
 
-// QueryParish queries the "parish" edge of the Period entity.
-func (_m *Period) QueryParish() *ParishQuery {
-	return NewPeriodClient(_m.config).QueryParish(_m)
+// QueryParoki queries the "paroki" edge of the Period entity.
+func (_m *Period) QueryParoki() *ParokiQuery {
+	return NewPeriodClient(_m.config).QueryParoki(_m)
 }
 
 // Update returns a builder for updating this Period.
@@ -220,8 +220,8 @@ func (_m *Period) String() string {
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteString(", ")
-	builder.WriteString("parish_id=")
-	builder.WriteString(fmt.Sprintf("%v", _m.ParishID))
+	builder.WriteString("paroki_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ParokiID))
 	builder.WriteString(", ")
 	builder.WriteString("type=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Type))

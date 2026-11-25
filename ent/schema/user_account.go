@@ -30,7 +30,7 @@ func (UserAccount) Fields() []ent.Field {
 		field.String("email").Optional().Nillable(),
 		field.String("display_name").Optional().Nillable(),
 		field.String("avatar_url").Optional().Nillable(),
-		field.UUID("active_parish_id", uuid.UUID{}).Optional().Nillable(),
+		field.UUID("active_paroki_id", uuid.UUID{}).Optional().Nillable(),
 		field.Time("last_used_at").Optional().Nillable(),
 	}
 }

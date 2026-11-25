@@ -56,16 +56,16 @@ func (_u *EventUpdate) ClearDeletedAt() *EventUpdate {
 	return _u
 }
 
-// SetParishID sets the "parish_id" field.
-func (_u *EventUpdate) SetParishID(v uuid.UUID) *EventUpdate {
-	_u.mutation.SetParishID(v)
+// SetParokiID sets the "paroki_id" field.
+func (_u *EventUpdate) SetParokiID(v uuid.UUID) *EventUpdate {
+	_u.mutation.SetParokiID(v)
 	return _u
 }
 
-// SetNillableParishID sets the "parish_id" field if the given value is not nil.
-func (_u *EventUpdate) SetNillableParishID(v *uuid.UUID) *EventUpdate {
+// SetNillableParokiID sets the "paroki_id" field if the given value is not nil.
+func (_u *EventUpdate) SetNillableParokiID(v *uuid.UUID) *EventUpdate {
 	if v != nil {
-		_u.SetParishID(*v)
+		_u.SetParokiID(*v)
 	}
 	return _u
 }
@@ -360,8 +360,8 @@ func (_u *EventUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if _u.mutation.DeletedAtCleared() {
 		_spec.ClearField(event.FieldDeletedAt, field.TypeTime)
 	}
-	if value, ok := _u.mutation.ParishID(); ok {
-		_spec.SetField(event.FieldParishID, field.TypeUUID, value)
+	if value, ok := _u.mutation.ParokiID(); ok {
+		_spec.SetField(event.FieldParokiID, field.TypeUUID, value)
 	}
 	if value, ok := _u.mutation.OrgID(); ok {
 		_spec.SetField(event.FieldOrgID, field.TypeUUID, value)
@@ -496,16 +496,16 @@ func (_u *EventUpdateOne) ClearDeletedAt() *EventUpdateOne {
 	return _u
 }
 
-// SetParishID sets the "parish_id" field.
-func (_u *EventUpdateOne) SetParishID(v uuid.UUID) *EventUpdateOne {
-	_u.mutation.SetParishID(v)
+// SetParokiID sets the "paroki_id" field.
+func (_u *EventUpdateOne) SetParokiID(v uuid.UUID) *EventUpdateOne {
+	_u.mutation.SetParokiID(v)
 	return _u
 }
 
-// SetNillableParishID sets the "parish_id" field if the given value is not nil.
-func (_u *EventUpdateOne) SetNillableParishID(v *uuid.UUID) *EventUpdateOne {
+// SetNillableParokiID sets the "paroki_id" field if the given value is not nil.
+func (_u *EventUpdateOne) SetNillableParokiID(v *uuid.UUID) *EventUpdateOne {
 	if v != nil {
-		_u.SetParishID(*v)
+		_u.SetParokiID(*v)
 	}
 	return _u
 }
@@ -830,8 +830,8 @@ func (_u *EventUpdateOne) sqlSave(ctx context.Context) (_node *Event, err error)
 	if _u.mutation.DeletedAtCleared() {
 		_spec.ClearField(event.FieldDeletedAt, field.TypeTime)
 	}
-	if value, ok := _u.mutation.ParishID(); ok {
-		_spec.SetField(event.FieldParishID, field.TypeUUID, value)
+	if value, ok := _u.mutation.ParokiID(); ok {
+		_spec.SetField(event.FieldParokiID, field.TypeUUID, value)
 	}
 	if value, ok := _u.mutation.OrgID(); ok {
 		_spec.SetField(event.FieldOrgID, field.TypeUUID, value)

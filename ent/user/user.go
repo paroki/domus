@@ -38,8 +38,8 @@ const (
 	FieldStatus = "status"
 	// FieldOnboarded holds the string denoting the onboarded field in the database.
 	FieldOnboarded = "onboarded"
-	// FieldDefaultParishID holds the string denoting the default_parish_id field in the database.
-	FieldDefaultParishID = "default_parish_id"
+	// FieldDefaultParokiID holds the string denoting the default_paroki_id field in the database.
+	FieldDefaultParokiID = "default_paroki_id"
 	// FieldLastLoginAt holds the string denoting the last_login_at field in the database.
 	FieldLastLoginAt = "last_login_at"
 	// EdgeAccounts holds the string denoting the accounts edge name in mutations.
@@ -78,7 +78,7 @@ var Columns = []string{
 	FieldAvatarURL,
 	FieldStatus,
 	FieldOnboarded,
-	FieldDefaultParishID,
+	FieldDefaultParokiID,
 	FieldLastLoginAt,
 }
 
@@ -221,9 +221,9 @@ func ByOnboarded(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldOnboarded, opts...).ToFunc()
 }
 
-// ByDefaultParishID orders the results by the default_parish_id field.
-func ByDefaultParishID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldDefaultParishID, opts...).ToFunc()
+// ByDefaultParokiID orders the results by the default_paroki_id field.
+func ByDefaultParokiID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDefaultParokiID, opts...).ToFunc()
 }
 
 // ByLastLoginAt orders the results by the last_login_at field.

@@ -12,7 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/paroki/domus/ent/parish"
+	"github.com/paroki/domus/ent/paroki"
 	"github.com/paroki/domus/ent/period"
 	"github.com/paroki/domus/ent/predicate"
 )
@@ -56,16 +56,16 @@ func (_u *PeriodUpdate) ClearDeletedAt() *PeriodUpdate {
 	return _u
 }
 
-// SetParishID sets the "parish_id" field.
-func (_u *PeriodUpdate) SetParishID(v uuid.UUID) *PeriodUpdate {
-	_u.mutation.SetParishID(v)
+// SetParokiID sets the "paroki_id" field.
+func (_u *PeriodUpdate) SetParokiID(v uuid.UUID) *PeriodUpdate {
+	_u.mutation.SetParokiID(v)
 	return _u
 }
 
-// SetNillableParishID sets the "parish_id" field if the given value is not nil.
-func (_u *PeriodUpdate) SetNillableParishID(v *uuid.UUID) *PeriodUpdate {
+// SetNillableParokiID sets the "paroki_id" field if the given value is not nil.
+func (_u *PeriodUpdate) SetNillableParokiID(v *uuid.UUID) *PeriodUpdate {
 	if v != nil {
-		_u.SetParishID(*v)
+		_u.SetParokiID(*v)
 	}
 	return _u
 }
@@ -168,9 +168,9 @@ func (_u *PeriodUpdate) SetNillableIsCurrent(v *bool) *PeriodUpdate {
 	return _u
 }
 
-// SetParish sets the "parish" edge to the Parish entity.
-func (_u *PeriodUpdate) SetParish(v *Parish) *PeriodUpdate {
-	return _u.SetParishID(v.ID)
+// SetParoki sets the "paroki" edge to the Paroki entity.
+func (_u *PeriodUpdate) SetParoki(v *Paroki) *PeriodUpdate {
+	return _u.SetParokiID(v.ID)
 }
 
 // Mutation returns the PeriodMutation object of the builder.
@@ -178,9 +178,9 @@ func (_u *PeriodUpdate) Mutation() *PeriodMutation {
 	return _u.mutation
 }
 
-// ClearParish clears the "parish" edge to the Parish entity.
-func (_u *PeriodUpdate) ClearParish() *PeriodUpdate {
-	_u.mutation.ClearParish()
+// ClearParoki clears the "paroki" edge to the Paroki entity.
+func (_u *PeriodUpdate) ClearParoki() *PeriodUpdate {
+	_u.mutation.ClearParoki()
 	return _u
 }
 
@@ -252,8 +252,8 @@ func (_u *PeriodUpdate) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Period.status": %w`, err)}
 		}
 	}
-	if _u.mutation.ParishCleared() && len(_u.mutation.ParishIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "Period.parish"`)
+	if _u.mutation.ParokiCleared() && len(_u.mutation.ParokiIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Period.paroki"`)
 	}
 	return nil
 }
@@ -300,28 +300,28 @@ func (_u *PeriodUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.IsCurrent(); ok {
 		_spec.SetField(period.FieldIsCurrent, field.TypeBool, value)
 	}
-	if _u.mutation.ParishCleared() {
+	if _u.mutation.ParokiCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   period.ParishTable,
-			Columns: []string{period.ParishColumn},
+			Table:   period.ParokiTable,
+			Columns: []string{period.ParokiColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(parish.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.ParishIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ParokiIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   period.ParishTable,
-			Columns: []string{period.ParishColumn},
+			Table:   period.ParokiTable,
+			Columns: []string{period.ParokiColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(parish.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -375,16 +375,16 @@ func (_u *PeriodUpdateOne) ClearDeletedAt() *PeriodUpdateOne {
 	return _u
 }
 
-// SetParishID sets the "parish_id" field.
-func (_u *PeriodUpdateOne) SetParishID(v uuid.UUID) *PeriodUpdateOne {
-	_u.mutation.SetParishID(v)
+// SetParokiID sets the "paroki_id" field.
+func (_u *PeriodUpdateOne) SetParokiID(v uuid.UUID) *PeriodUpdateOne {
+	_u.mutation.SetParokiID(v)
 	return _u
 }
 
-// SetNillableParishID sets the "parish_id" field if the given value is not nil.
-func (_u *PeriodUpdateOne) SetNillableParishID(v *uuid.UUID) *PeriodUpdateOne {
+// SetNillableParokiID sets the "paroki_id" field if the given value is not nil.
+func (_u *PeriodUpdateOne) SetNillableParokiID(v *uuid.UUID) *PeriodUpdateOne {
 	if v != nil {
-		_u.SetParishID(*v)
+		_u.SetParokiID(*v)
 	}
 	return _u
 }
@@ -487,9 +487,9 @@ func (_u *PeriodUpdateOne) SetNillableIsCurrent(v *bool) *PeriodUpdateOne {
 	return _u
 }
 
-// SetParish sets the "parish" edge to the Parish entity.
-func (_u *PeriodUpdateOne) SetParish(v *Parish) *PeriodUpdateOne {
-	return _u.SetParishID(v.ID)
+// SetParoki sets the "paroki" edge to the Paroki entity.
+func (_u *PeriodUpdateOne) SetParoki(v *Paroki) *PeriodUpdateOne {
+	return _u.SetParokiID(v.ID)
 }
 
 // Mutation returns the PeriodMutation object of the builder.
@@ -497,9 +497,9 @@ func (_u *PeriodUpdateOne) Mutation() *PeriodMutation {
 	return _u.mutation
 }
 
-// ClearParish clears the "parish" edge to the Parish entity.
-func (_u *PeriodUpdateOne) ClearParish() *PeriodUpdateOne {
-	_u.mutation.ClearParish()
+// ClearParoki clears the "paroki" edge to the Paroki entity.
+func (_u *PeriodUpdateOne) ClearParoki() *PeriodUpdateOne {
+	_u.mutation.ClearParoki()
 	return _u
 }
 
@@ -584,8 +584,8 @@ func (_u *PeriodUpdateOne) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Period.status": %w`, err)}
 		}
 	}
-	if _u.mutation.ParishCleared() && len(_u.mutation.ParishIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "Period.parish"`)
+	if _u.mutation.ParokiCleared() && len(_u.mutation.ParokiIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Period.paroki"`)
 	}
 	return nil
 }
@@ -649,28 +649,28 @@ func (_u *PeriodUpdateOne) sqlSave(ctx context.Context) (_node *Period, err erro
 	if value, ok := _u.mutation.IsCurrent(); ok {
 		_spec.SetField(period.FieldIsCurrent, field.TypeBool, value)
 	}
-	if _u.mutation.ParishCleared() {
+	if _u.mutation.ParokiCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   period.ParishTable,
-			Columns: []string{period.ParishColumn},
+			Table:   period.ParokiTable,
+			Columns: []string{period.ParokiColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(parish.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.ParishIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ParokiIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   period.ParishTable,
-			Columns: []string{period.ParishColumn},
+			Table:   period.ParokiTable,
+			Columns: []string{period.ParokiColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(parish.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

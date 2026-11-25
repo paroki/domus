@@ -49,9 +49,9 @@ func (_c *AgentMemoryCreate) SetNillableUpdatedAt(v *time.Time) *AgentMemoryCrea
 	return _c
 }
 
-// SetParishID sets the "parish_id" field.
-func (_c *AgentMemoryCreate) SetParishID(v uuid.UUID) *AgentMemoryCreate {
-	_c.mutation.SetParishID(v)
+// SetParokiID sets the "paroki_id" field.
+func (_c *AgentMemoryCreate) SetParokiID(v uuid.UUID) *AgentMemoryCreate {
+	_c.mutation.SetParokiID(v)
 	return _c
 }
 
@@ -170,8 +170,8 @@ func (_c *AgentMemoryCreate) check() error {
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "AgentMemory.updated_at"`)}
 	}
-	if _, ok := _c.mutation.ParishID(); !ok {
-		return &ValidationError{Name: "parish_id", err: errors.New(`ent: missing required field "AgentMemory.parish_id"`)}
+	if _, ok := _c.mutation.ParokiID(); !ok {
+		return &ValidationError{Name: "paroki_id", err: errors.New(`ent: missing required field "AgentMemory.paroki_id"`)}
 	}
 	if _, ok := _c.mutation.UserID(); !ok {
 		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "AgentMemory.user_id"`)}
@@ -235,9 +235,9 @@ func (_c *AgentMemoryCreate) createSpec() (*AgentMemory, *sqlgraph.CreateSpec) {
 		_spec.SetField(agentmemory.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if value, ok := _c.mutation.ParishID(); ok {
-		_spec.SetField(agentmemory.FieldParishID, field.TypeUUID, value)
-		_node.ParishID = value
+	if value, ok := _c.mutation.ParokiID(); ok {
+		_spec.SetField(agentmemory.FieldParokiID, field.TypeUUID, value)
+		_node.ParokiID = value
 	}
 	if value, ok := _c.mutation.UserID(); ok {
 		_spec.SetField(agentmemory.FieldUserID, field.TypeUUID, value)

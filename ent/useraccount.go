@@ -35,8 +35,8 @@ type UserAccount struct {
 	DisplayName *string `json:"display_name,omitempty"`
 	// AvatarURL holds the value of the "avatar_url" field.
 	AvatarURL *string `json:"avatar_url,omitempty"`
-	// ActiveParishID holds the value of the "active_parish_id" field.
-	ActiveParishID *uuid.UUID `json:"active_parish_id,omitempty"`
+	// ActiveParokiID holds the value of the "active_paroki_id" field.
+	ActiveParokiID *uuid.UUID `json:"active_paroki_id,omitempty"`
 	// LastUsedAt holds the value of the "last_used_at" field.
 	LastUsedAt *time.Time `json:"last_used_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -70,7 +70,7 @@ func (*UserAccount) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case useraccount.FieldActiveParishID:
+		case useraccount.FieldActiveParokiID:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case useraccount.FieldProvider, useraccount.FieldSubject, useraccount.FieldEmail, useraccount.FieldDisplayName, useraccount.FieldAvatarURL:
 			values[i] = new(sql.NullString)
@@ -150,12 +150,12 @@ func (_m *UserAccount) assignValues(columns []string, values []any) error {
 				_m.AvatarURL = new(string)
 				*_m.AvatarURL = value.String
 			}
-		case useraccount.FieldActiveParishID:
+		case useraccount.FieldActiveParokiID:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field active_parish_id", values[i])
+				return fmt.Errorf("unexpected type %T for field active_paroki_id", values[i])
 			} else if value.Valid {
-				_m.ActiveParishID = new(uuid.UUID)
-				*_m.ActiveParishID = *value.S.(*uuid.UUID)
+				_m.ActiveParokiID = new(uuid.UUID)
+				*_m.ActiveParokiID = *value.S.(*uuid.UUID)
 			}
 		case useraccount.FieldLastUsedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -235,8 +235,8 @@ func (_m *UserAccount) String() string {
 		builder.WriteString(*v)
 	}
 	builder.WriteString(", ")
-	if v := _m.ActiveParishID; v != nil {
-		builder.WriteString("active_parish_id=")
+	if v := _m.ActiveParokiID; v != nil {
+		builder.WriteString("active_paroki_id=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")

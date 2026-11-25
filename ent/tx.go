@@ -22,12 +22,14 @@ type Tx struct {
 	AgentSession *AgentSessionClient
 	// CasbinRule is the client for interacting with the CasbinRule builders.
 	CasbinRule *CasbinRuleClient
-	// Diocese is the client for interacting with the Diocese builders.
-	Diocese *DioceseClient
 	// Event is the client for interacting with the Event builders.
 	Event *EventClient
 	// EventRSVP is the client for interacting with the EventRSVP builders.
 	EventRSVP *EventRSVPClient
+	// Keuskupan is the client for interacting with the Keuskupan builders.
+	Keuskupan *KeuskupanClient
+	// Lingkungan is the client for interacting with the Lingkungan builders.
+	Lingkungan *LingkunganClient
 	// Lookup is the client for interacting with the Lookup builders.
 	Lookup *LookupClient
 	// OrgInvite is the client for interacting with the OrgInvite builders.
@@ -36,10 +38,10 @@ type Tx struct {
 	OrgMember *OrgMemberClient
 	// Organization is the client for interacting with the Organization builders.
 	Organization *OrganizationClient
-	// Parish is the client for interacting with the Parish builders.
-	Parish *ParishClient
-	// ParishMember is the client for interacting with the ParishMember builders.
-	ParishMember *ParishMemberClient
+	// Paroki is the client for interacting with the Paroki builders.
+	Paroki *ParokiClient
+	// ParokiMember is the client for interacting with the ParokiMember builders.
+	ParokiMember *ParokiMemberClient
 	// Period is the client for interacting with the Period builders.
 	Period *PeriodClient
 	// Setting is the client for interacting with the Setting builders.
@@ -52,10 +54,8 @@ type Tx struct {
 	UserOTP *UserOTPClient
 	// UserSession is the client for interacting with the UserSession builders.
 	UserSession *UserSessionClient
-	// Ward is the client for interacting with the Ward builders.
-	Ward *WardClient
-	// Zone is the client for interacting with the Zone builders.
-	Zone *ZoneClient
+	// Wilayah is the client for interacting with the Wilayah builders.
+	Wilayah *WilayahClient
 
 	// lazily loaded.
 	client     *Client
@@ -192,23 +192,23 @@ func (tx *Tx) init() {
 	tx.AgentProvider = NewAgentProviderClient(tx.config)
 	tx.AgentSession = NewAgentSessionClient(tx.config)
 	tx.CasbinRule = NewCasbinRuleClient(tx.config)
-	tx.Diocese = NewDioceseClient(tx.config)
 	tx.Event = NewEventClient(tx.config)
 	tx.EventRSVP = NewEventRSVPClient(tx.config)
+	tx.Keuskupan = NewKeuskupanClient(tx.config)
+	tx.Lingkungan = NewLingkunganClient(tx.config)
 	tx.Lookup = NewLookupClient(tx.config)
 	tx.OrgInvite = NewOrgInviteClient(tx.config)
 	tx.OrgMember = NewOrgMemberClient(tx.config)
 	tx.Organization = NewOrganizationClient(tx.config)
-	tx.Parish = NewParishClient(tx.config)
-	tx.ParishMember = NewParishMemberClient(tx.config)
+	tx.Paroki = NewParokiClient(tx.config)
+	tx.ParokiMember = NewParokiMemberClient(tx.config)
 	tx.Period = NewPeriodClient(tx.config)
 	tx.Setting = NewSettingClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.UserAccount = NewUserAccountClient(tx.config)
 	tx.UserOTP = NewUserOTPClient(tx.config)
 	tx.UserSession = NewUserSessionClient(tx.config)
-	tx.Ward = NewWardClient(tx.config)
-	tx.Zone = NewZoneClient(tx.config)
+	tx.Wilayah = NewWilayahClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

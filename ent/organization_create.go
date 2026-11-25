@@ -65,9 +65,9 @@ func (_c *OrganizationCreate) SetNillableDeletedAt(v *time.Time) *OrganizationCr
 	return _c
 }
 
-// SetParishID sets the "parish_id" field.
-func (_c *OrganizationCreate) SetParishID(v uuid.UUID) *OrganizationCreate {
-	_c.mutation.SetParishID(v)
+// SetParokiID sets the "paroki_id" field.
+func (_c *OrganizationCreate) SetParokiID(v uuid.UUID) *OrganizationCreate {
+	_c.mutation.SetParokiID(v)
 	return _c
 }
 
@@ -85,30 +85,30 @@ func (_c *OrganizationCreate) SetNillableParentID(v *uuid.UUID) *OrganizationCre
 	return _c
 }
 
-// SetZoneID sets the "zone_id" field.
-func (_c *OrganizationCreate) SetZoneID(v uuid.UUID) *OrganizationCreate {
-	_c.mutation.SetZoneID(v)
+// SetWilayahID sets the "wilayah_id" field.
+func (_c *OrganizationCreate) SetWilayahID(v uuid.UUID) *OrganizationCreate {
+	_c.mutation.SetWilayahID(v)
 	return _c
 }
 
-// SetNillableZoneID sets the "zone_id" field if the given value is not nil.
-func (_c *OrganizationCreate) SetNillableZoneID(v *uuid.UUID) *OrganizationCreate {
+// SetNillableWilayahID sets the "wilayah_id" field if the given value is not nil.
+func (_c *OrganizationCreate) SetNillableWilayahID(v *uuid.UUID) *OrganizationCreate {
 	if v != nil {
-		_c.SetZoneID(*v)
+		_c.SetWilayahID(*v)
 	}
 	return _c
 }
 
-// SetWardID sets the "ward_id" field.
-func (_c *OrganizationCreate) SetWardID(v uuid.UUID) *OrganizationCreate {
-	_c.mutation.SetWardID(v)
+// SetLingkunganID sets the "lingkungan_id" field.
+func (_c *OrganizationCreate) SetLingkunganID(v uuid.UUID) *OrganizationCreate {
+	_c.mutation.SetLingkunganID(v)
 	return _c
 }
 
-// SetNillableWardID sets the "ward_id" field if the given value is not nil.
-func (_c *OrganizationCreate) SetNillableWardID(v *uuid.UUID) *OrganizationCreate {
+// SetNillableLingkunganID sets the "lingkungan_id" field if the given value is not nil.
+func (_c *OrganizationCreate) SetNillableLingkunganID(v *uuid.UUID) *OrganizationCreate {
 	if v != nil {
-		_c.SetWardID(*v)
+		_c.SetLingkunganID(*v)
 	}
 	return _c
 }
@@ -296,8 +296,8 @@ func (_c *OrganizationCreate) check() error {
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Organization.updated_at"`)}
 	}
-	if _, ok := _c.mutation.ParishID(); !ok {
-		return &ValidationError{Name: "parish_id", err: errors.New(`ent: missing required field "Organization.parish_id"`)}
+	if _, ok := _c.mutation.ParokiID(); !ok {
+		return &ValidationError{Name: "paroki_id", err: errors.New(`ent: missing required field "Organization.paroki_id"`)}
 	}
 	if _, ok := _c.mutation.Kind(); !ok {
 		return &ValidationError{Name: "kind", err: errors.New(`ent: missing required field "Organization.kind"`)}
@@ -373,17 +373,17 @@ func (_c *OrganizationCreate) createSpec() (*Organization, *sqlgraph.CreateSpec)
 		_spec.SetField(organization.FieldDeletedAt, field.TypeTime, value)
 		_node.DeletedAt = &value
 	}
-	if value, ok := _c.mutation.ParishID(); ok {
-		_spec.SetField(organization.FieldParishID, field.TypeUUID, value)
-		_node.ParishID = value
+	if value, ok := _c.mutation.ParokiID(); ok {
+		_spec.SetField(organization.FieldParokiID, field.TypeUUID, value)
+		_node.ParokiID = value
 	}
-	if value, ok := _c.mutation.ZoneID(); ok {
-		_spec.SetField(organization.FieldZoneID, field.TypeUUID, value)
-		_node.ZoneID = &value
+	if value, ok := _c.mutation.WilayahID(); ok {
+		_spec.SetField(organization.FieldWilayahID, field.TypeUUID, value)
+		_node.WilayahID = &value
 	}
-	if value, ok := _c.mutation.WardID(); ok {
-		_spec.SetField(organization.FieldWardID, field.TypeUUID, value)
-		_node.WardID = &value
+	if value, ok := _c.mutation.LingkunganID(); ok {
+		_spec.SetField(organization.FieldLingkunganID, field.TypeUUID, value)
+		_node.LingkunganID = &value
 	}
 	if value, ok := _c.mutation.Kind(); ok {
 		_spec.SetField(organization.FieldKind, field.TypeEnum, value)

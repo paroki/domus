@@ -33,7 +33,7 @@ func (User) Fields() []ent.Field {
 		field.String("avatar_url").Optional().Nillable(),
 		field.Enum("status").Values("active", "disabled").Default("active"),
 		field.Bool("onboarded").Default(false),
-		field.UUID("default_parish_id", uuid.UUID{}).Optional().Nillable(),
+		field.UUID("default_paroki_id", uuid.UUID{}).Optional().Nillable(),
 		field.Time("last_login_at").Optional().Nillable(),
 	}
 }

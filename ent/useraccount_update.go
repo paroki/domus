@@ -138,23 +138,23 @@ func (_u *UserAccountUpdate) ClearAvatarURL() *UserAccountUpdate {
 	return _u
 }
 
-// SetActiveParishID sets the "active_parish_id" field.
-func (_u *UserAccountUpdate) SetActiveParishID(v uuid.UUID) *UserAccountUpdate {
-	_u.mutation.SetActiveParishID(v)
+// SetActiveParokiID sets the "active_paroki_id" field.
+func (_u *UserAccountUpdate) SetActiveParokiID(v uuid.UUID) *UserAccountUpdate {
+	_u.mutation.SetActiveParokiID(v)
 	return _u
 }
 
-// SetNillableActiveParishID sets the "active_parish_id" field if the given value is not nil.
-func (_u *UserAccountUpdate) SetNillableActiveParishID(v *uuid.UUID) *UserAccountUpdate {
+// SetNillableActiveParokiID sets the "active_paroki_id" field if the given value is not nil.
+func (_u *UserAccountUpdate) SetNillableActiveParokiID(v *uuid.UUID) *UserAccountUpdate {
 	if v != nil {
-		_u.SetActiveParishID(*v)
+		_u.SetActiveParokiID(*v)
 	}
 	return _u
 }
 
-// ClearActiveParishID clears the value of the "active_parish_id" field.
-func (_u *UserAccountUpdate) ClearActiveParishID() *UserAccountUpdate {
-	_u.mutation.ClearActiveParishID()
+// ClearActiveParokiID clears the value of the "active_paroki_id" field.
+func (_u *UserAccountUpdate) ClearActiveParokiID() *UserAccountUpdate {
+	_u.mutation.ClearActiveParokiID()
 	return _u
 }
 
@@ -287,11 +287,11 @@ func (_u *UserAccountUpdate) sqlSave(ctx context.Context) (_node int, err error)
 	if _u.mutation.AvatarURLCleared() {
 		_spec.ClearField(useraccount.FieldAvatarURL, field.TypeString)
 	}
-	if value, ok := _u.mutation.ActiveParishID(); ok {
-		_spec.SetField(useraccount.FieldActiveParishID, field.TypeUUID, value)
+	if value, ok := _u.mutation.ActiveParokiID(); ok {
+		_spec.SetField(useraccount.FieldActiveParokiID, field.TypeUUID, value)
 	}
-	if _u.mutation.ActiveParishIDCleared() {
-		_spec.ClearField(useraccount.FieldActiveParishID, field.TypeUUID)
+	if _u.mutation.ActiveParokiIDCleared() {
+		_spec.ClearField(useraccount.FieldActiveParokiID, field.TypeUUID)
 	}
 	if value, ok := _u.mutation.LastUsedAt(); ok {
 		_spec.SetField(useraccount.FieldLastUsedAt, field.TypeTime, value)
@@ -456,23 +456,23 @@ func (_u *UserAccountUpdateOne) ClearAvatarURL() *UserAccountUpdateOne {
 	return _u
 }
 
-// SetActiveParishID sets the "active_parish_id" field.
-func (_u *UserAccountUpdateOne) SetActiveParishID(v uuid.UUID) *UserAccountUpdateOne {
-	_u.mutation.SetActiveParishID(v)
+// SetActiveParokiID sets the "active_paroki_id" field.
+func (_u *UserAccountUpdateOne) SetActiveParokiID(v uuid.UUID) *UserAccountUpdateOne {
+	_u.mutation.SetActiveParokiID(v)
 	return _u
 }
 
-// SetNillableActiveParishID sets the "active_parish_id" field if the given value is not nil.
-func (_u *UserAccountUpdateOne) SetNillableActiveParishID(v *uuid.UUID) *UserAccountUpdateOne {
+// SetNillableActiveParokiID sets the "active_paroki_id" field if the given value is not nil.
+func (_u *UserAccountUpdateOne) SetNillableActiveParokiID(v *uuid.UUID) *UserAccountUpdateOne {
 	if v != nil {
-		_u.SetActiveParishID(*v)
+		_u.SetActiveParokiID(*v)
 	}
 	return _u
 }
 
-// ClearActiveParishID clears the value of the "active_parish_id" field.
-func (_u *UserAccountUpdateOne) ClearActiveParishID() *UserAccountUpdateOne {
-	_u.mutation.ClearActiveParishID()
+// ClearActiveParokiID clears the value of the "active_paroki_id" field.
+func (_u *UserAccountUpdateOne) ClearActiveParokiID() *UserAccountUpdateOne {
+	_u.mutation.ClearActiveParokiID()
 	return _u
 }
 
@@ -635,11 +635,11 @@ func (_u *UserAccountUpdateOne) sqlSave(ctx context.Context) (_node *UserAccount
 	if _u.mutation.AvatarURLCleared() {
 		_spec.ClearField(useraccount.FieldAvatarURL, field.TypeString)
 	}
-	if value, ok := _u.mutation.ActiveParishID(); ok {
-		_spec.SetField(useraccount.FieldActiveParishID, field.TypeUUID, value)
+	if value, ok := _u.mutation.ActiveParokiID(); ok {
+		_spec.SetField(useraccount.FieldActiveParokiID, field.TypeUUID, value)
 	}
-	if _u.mutation.ActiveParishIDCleared() {
-		_spec.ClearField(useraccount.FieldActiveParishID, field.TypeUUID)
+	if _u.mutation.ActiveParokiIDCleared() {
+		_spec.ClearField(useraccount.FieldActiveParokiID, field.TypeUUID)
 	}
 	if value, ok := _u.mutation.LastUsedAt(); ok {
 		_spec.SetField(useraccount.FieldLastUsedAt, field.TypeTime, value)

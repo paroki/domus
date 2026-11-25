@@ -96,9 +96,9 @@ func AvatarURL(v string) predicate.UserAccount {
 	return predicate.UserAccount(sql.FieldEQ(FieldAvatarURL, v))
 }
 
-// ActiveParishID applies equality check predicate on the "active_parish_id" field. It's identical to ActiveParishIDEQ.
-func ActiveParishID(v uuid.UUID) predicate.UserAccount {
-	return predicate.UserAccount(sql.FieldEQ(FieldActiveParishID, v))
+// ActiveParokiID applies equality check predicate on the "active_paroki_id" field. It's identical to ActiveParokiIDEQ.
+func ActiveParokiID(v uuid.UUID) predicate.UserAccount {
+	return predicate.UserAccount(sql.FieldEQ(FieldActiveParokiID, v))
 }
 
 // LastUsedAt applies equality check predicate on the "last_used_at" field. It's identical to LastUsedAtEQ.
@@ -561,54 +561,54 @@ func AvatarURLContainsFold(v string) predicate.UserAccount {
 	return predicate.UserAccount(sql.FieldContainsFold(FieldAvatarURL, v))
 }
 
-// ActiveParishIDEQ applies the EQ predicate on the "active_parish_id" field.
-func ActiveParishIDEQ(v uuid.UUID) predicate.UserAccount {
-	return predicate.UserAccount(sql.FieldEQ(FieldActiveParishID, v))
+// ActiveParokiIDEQ applies the EQ predicate on the "active_paroki_id" field.
+func ActiveParokiIDEQ(v uuid.UUID) predicate.UserAccount {
+	return predicate.UserAccount(sql.FieldEQ(FieldActiveParokiID, v))
 }
 
-// ActiveParishIDNEQ applies the NEQ predicate on the "active_parish_id" field.
-func ActiveParishIDNEQ(v uuid.UUID) predicate.UserAccount {
-	return predicate.UserAccount(sql.FieldNEQ(FieldActiveParishID, v))
+// ActiveParokiIDNEQ applies the NEQ predicate on the "active_paroki_id" field.
+func ActiveParokiIDNEQ(v uuid.UUID) predicate.UserAccount {
+	return predicate.UserAccount(sql.FieldNEQ(FieldActiveParokiID, v))
 }
 
-// ActiveParishIDIn applies the In predicate on the "active_parish_id" field.
-func ActiveParishIDIn(vs ...uuid.UUID) predicate.UserAccount {
-	return predicate.UserAccount(sql.FieldIn(FieldActiveParishID, vs...))
+// ActiveParokiIDIn applies the In predicate on the "active_paroki_id" field.
+func ActiveParokiIDIn(vs ...uuid.UUID) predicate.UserAccount {
+	return predicate.UserAccount(sql.FieldIn(FieldActiveParokiID, vs...))
 }
 
-// ActiveParishIDNotIn applies the NotIn predicate on the "active_parish_id" field.
-func ActiveParishIDNotIn(vs ...uuid.UUID) predicate.UserAccount {
-	return predicate.UserAccount(sql.FieldNotIn(FieldActiveParishID, vs...))
+// ActiveParokiIDNotIn applies the NotIn predicate on the "active_paroki_id" field.
+func ActiveParokiIDNotIn(vs ...uuid.UUID) predicate.UserAccount {
+	return predicate.UserAccount(sql.FieldNotIn(FieldActiveParokiID, vs...))
 }
 
-// ActiveParishIDGT applies the GT predicate on the "active_parish_id" field.
-func ActiveParishIDGT(v uuid.UUID) predicate.UserAccount {
-	return predicate.UserAccount(sql.FieldGT(FieldActiveParishID, v))
+// ActiveParokiIDGT applies the GT predicate on the "active_paroki_id" field.
+func ActiveParokiIDGT(v uuid.UUID) predicate.UserAccount {
+	return predicate.UserAccount(sql.FieldGT(FieldActiveParokiID, v))
 }
 
-// ActiveParishIDGTE applies the GTE predicate on the "active_parish_id" field.
-func ActiveParishIDGTE(v uuid.UUID) predicate.UserAccount {
-	return predicate.UserAccount(sql.FieldGTE(FieldActiveParishID, v))
+// ActiveParokiIDGTE applies the GTE predicate on the "active_paroki_id" field.
+func ActiveParokiIDGTE(v uuid.UUID) predicate.UserAccount {
+	return predicate.UserAccount(sql.FieldGTE(FieldActiveParokiID, v))
 }
 
-// ActiveParishIDLT applies the LT predicate on the "active_parish_id" field.
-func ActiveParishIDLT(v uuid.UUID) predicate.UserAccount {
-	return predicate.UserAccount(sql.FieldLT(FieldActiveParishID, v))
+// ActiveParokiIDLT applies the LT predicate on the "active_paroki_id" field.
+func ActiveParokiIDLT(v uuid.UUID) predicate.UserAccount {
+	return predicate.UserAccount(sql.FieldLT(FieldActiveParokiID, v))
 }
 
-// ActiveParishIDLTE applies the LTE predicate on the "active_parish_id" field.
-func ActiveParishIDLTE(v uuid.UUID) predicate.UserAccount {
-	return predicate.UserAccount(sql.FieldLTE(FieldActiveParishID, v))
+// ActiveParokiIDLTE applies the LTE predicate on the "active_paroki_id" field.
+func ActiveParokiIDLTE(v uuid.UUID) predicate.UserAccount {
+	return predicate.UserAccount(sql.FieldLTE(FieldActiveParokiID, v))
 }
 
-// ActiveParishIDIsNil applies the IsNil predicate on the "active_parish_id" field.
-func ActiveParishIDIsNil() predicate.UserAccount {
-	return predicate.UserAccount(sql.FieldIsNull(FieldActiveParishID))
+// ActiveParokiIDIsNil applies the IsNil predicate on the "active_paroki_id" field.
+func ActiveParokiIDIsNil() predicate.UserAccount {
+	return predicate.UserAccount(sql.FieldIsNull(FieldActiveParokiID))
 }
 
-// ActiveParishIDNotNil applies the NotNil predicate on the "active_parish_id" field.
-func ActiveParishIDNotNil() predicate.UserAccount {
-	return predicate.UserAccount(sql.FieldNotNull(FieldActiveParishID))
+// ActiveParokiIDNotNil applies the NotNil predicate on the "active_paroki_id" field.
+func ActiveParokiIDNotNil() predicate.UserAccount {
+	return predicate.UserAccount(sql.FieldNotNull(FieldActiveParokiID))
 }
 
 // LastUsedAtEQ applies the EQ predicate on the "last_used_at" field.

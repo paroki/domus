@@ -66,9 +66,9 @@ func UpdatedAt(v time.Time) predicate.EventRSVP {
 	return predicate.EventRSVP(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
-// ParishID applies equality check predicate on the "parish_id" field. It's identical to ParishIDEQ.
-func ParishID(v uuid.UUID) predicate.EventRSVP {
-	return predicate.EventRSVP(sql.FieldEQ(FieldParishID, v))
+// ParokiID applies equality check predicate on the "paroki_id" field. It's identical to ParokiIDEQ.
+func ParokiID(v uuid.UUID) predicate.EventRSVP {
+	return predicate.EventRSVP(sql.FieldEQ(FieldParokiID, v))
 }
 
 // EventID applies equality check predicate on the "event_id" field. It's identical to EventIDEQ.
@@ -166,44 +166,44 @@ func UpdatedAtLTE(v time.Time) predicate.EventRSVP {
 	return predicate.EventRSVP(sql.FieldLTE(FieldUpdatedAt, v))
 }
 
-// ParishIDEQ applies the EQ predicate on the "parish_id" field.
-func ParishIDEQ(v uuid.UUID) predicate.EventRSVP {
-	return predicate.EventRSVP(sql.FieldEQ(FieldParishID, v))
+// ParokiIDEQ applies the EQ predicate on the "paroki_id" field.
+func ParokiIDEQ(v uuid.UUID) predicate.EventRSVP {
+	return predicate.EventRSVP(sql.FieldEQ(FieldParokiID, v))
 }
 
-// ParishIDNEQ applies the NEQ predicate on the "parish_id" field.
-func ParishIDNEQ(v uuid.UUID) predicate.EventRSVP {
-	return predicate.EventRSVP(sql.FieldNEQ(FieldParishID, v))
+// ParokiIDNEQ applies the NEQ predicate on the "paroki_id" field.
+func ParokiIDNEQ(v uuid.UUID) predicate.EventRSVP {
+	return predicate.EventRSVP(sql.FieldNEQ(FieldParokiID, v))
 }
 
-// ParishIDIn applies the In predicate on the "parish_id" field.
-func ParishIDIn(vs ...uuid.UUID) predicate.EventRSVP {
-	return predicate.EventRSVP(sql.FieldIn(FieldParishID, vs...))
+// ParokiIDIn applies the In predicate on the "paroki_id" field.
+func ParokiIDIn(vs ...uuid.UUID) predicate.EventRSVP {
+	return predicate.EventRSVP(sql.FieldIn(FieldParokiID, vs...))
 }
 
-// ParishIDNotIn applies the NotIn predicate on the "parish_id" field.
-func ParishIDNotIn(vs ...uuid.UUID) predicate.EventRSVP {
-	return predicate.EventRSVP(sql.FieldNotIn(FieldParishID, vs...))
+// ParokiIDNotIn applies the NotIn predicate on the "paroki_id" field.
+func ParokiIDNotIn(vs ...uuid.UUID) predicate.EventRSVP {
+	return predicate.EventRSVP(sql.FieldNotIn(FieldParokiID, vs...))
 }
 
-// ParishIDGT applies the GT predicate on the "parish_id" field.
-func ParishIDGT(v uuid.UUID) predicate.EventRSVP {
-	return predicate.EventRSVP(sql.FieldGT(FieldParishID, v))
+// ParokiIDGT applies the GT predicate on the "paroki_id" field.
+func ParokiIDGT(v uuid.UUID) predicate.EventRSVP {
+	return predicate.EventRSVP(sql.FieldGT(FieldParokiID, v))
 }
 
-// ParishIDGTE applies the GTE predicate on the "parish_id" field.
-func ParishIDGTE(v uuid.UUID) predicate.EventRSVP {
-	return predicate.EventRSVP(sql.FieldGTE(FieldParishID, v))
+// ParokiIDGTE applies the GTE predicate on the "paroki_id" field.
+func ParokiIDGTE(v uuid.UUID) predicate.EventRSVP {
+	return predicate.EventRSVP(sql.FieldGTE(FieldParokiID, v))
 }
 
-// ParishIDLT applies the LT predicate on the "parish_id" field.
-func ParishIDLT(v uuid.UUID) predicate.EventRSVP {
-	return predicate.EventRSVP(sql.FieldLT(FieldParishID, v))
+// ParokiIDLT applies the LT predicate on the "paroki_id" field.
+func ParokiIDLT(v uuid.UUID) predicate.EventRSVP {
+	return predicate.EventRSVP(sql.FieldLT(FieldParokiID, v))
 }
 
-// ParishIDLTE applies the LTE predicate on the "parish_id" field.
-func ParishIDLTE(v uuid.UUID) predicate.EventRSVP {
-	return predicate.EventRSVP(sql.FieldLTE(FieldParishID, v))
+// ParokiIDLTE applies the LTE predicate on the "paroki_id" field.
+func ParokiIDLTE(v uuid.UUID) predicate.EventRSVP {
+	return predicate.EventRSVP(sql.FieldLTE(FieldParokiID, v))
 }
 
 // EventIDEQ applies the EQ predicate on the "event_id" field.

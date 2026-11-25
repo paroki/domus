@@ -13,7 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent/lookup"
-	"github.com/paroki/domus/ent/parish"
+	"github.com/paroki/domus/ent/paroki"
 	"github.com/paroki/domus/ent/predicate"
 )
 
@@ -24,7 +24,7 @@ type LookupQuery struct {
 	order      []lookup.OrderOption
 	inters     []Interceptor
 	predicates []predicate.Lookup
-	withParish *ParishQuery
+	withParoki *ParokiQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -61,9 +61,9 @@ func (_q *LookupQuery) Order(o ...lookup.OrderOption) *LookupQuery {
 	return _q
 }
 
-// QueryParish chains the current query on the "parish" edge.
-func (_q *LookupQuery) QueryParish() *ParishQuery {
-	query := (&ParishClient{config: _q.config}).Query()
+// QueryParoki chains the current query on the "paroki" edge.
+func (_q *LookupQuery) QueryParoki() *ParokiQuery {
+	query := (&ParokiClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -74,8 +74,8 @@ func (_q *LookupQuery) QueryParish() *ParishQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(lookup.Table, lookup.FieldID, selector),
-			sqlgraph.To(parish.Table, parish.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, lookup.ParishTable, lookup.ParishColumn),
+			sqlgraph.To(paroki.Table, paroki.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, lookup.ParokiTable, lookup.ParokiColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -275,21 +275,21 @@ func (_q *LookupQuery) Clone() *LookupQuery {
 		order:      append([]lookup.OrderOption{}, _q.order...),
 		inters:     append([]Interceptor{}, _q.inters...),
 		predicates: append([]predicate.Lookup{}, _q.predicates...),
-		withParish: _q.withParish.Clone(),
+		withParoki: _q.withParoki.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
 	}
 }
 
-// WithParish tells the query-builder to eager-load the nodes that are connected to
-// the "parish" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *LookupQuery) WithParish(opts ...func(*ParishQuery)) *LookupQuery {
-	query := (&ParishClient{config: _q.config}).Query()
+// WithParoki tells the query-builder to eager-load the nodes that are connected to
+// the "paroki" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *LookupQuery) WithParoki(opts ...func(*ParokiQuery)) *LookupQuery {
+	query := (&ParokiClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	_q.withParish = query
+	_q.withParoki = query
 	return _q
 }
 
@@ -372,7 +372,7 @@ func (_q *LookupQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Looku
 		nodes       = []*Lookup{}
 		_spec       = _q.querySpec()
 		loadedTypes = [1]bool{
-			_q.withParish != nil,
+			_q.withParoki != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -393,23 +393,23 @@ func (_q *LookupQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Looku
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := _q.withParish; query != nil {
-		if err := _q.loadParish(ctx, query, nodes, nil,
-			func(n *Lookup, e *Parish) { n.Edges.Parish = e }); err != nil {
+	if query := _q.withParoki; query != nil {
+		if err := _q.loadParoki(ctx, query, nodes, nil,
+			func(n *Lookup, e *Paroki) { n.Edges.Paroki = e }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (_q *LookupQuery) loadParish(ctx context.Context, query *ParishQuery, nodes []*Lookup, init func(*Lookup), assign func(*Lookup, *Parish)) error {
+func (_q *LookupQuery) loadParoki(ctx context.Context, query *ParokiQuery, nodes []*Lookup, init func(*Lookup), assign func(*Lookup, *Paroki)) error {
 	ids := make([]uuid.UUID, 0, len(nodes))
 	nodeids := make(map[uuid.UUID][]*Lookup)
 	for i := range nodes {
-		if nodes[i].ParishID == nil {
+		if nodes[i].ParokiID == nil {
 			continue
 		}
-		fk := *nodes[i].ParishID
+		fk := *nodes[i].ParokiID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -418,7 +418,7 @@ func (_q *LookupQuery) loadParish(ctx context.Context, query *ParishQuery, nodes
 	if len(ids) == 0 {
 		return nil
 	}
-	query.Where(parish.IDIn(ids...))
+	query.Where(paroki.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
@@ -426,7 +426,7 @@ func (_q *LookupQuery) loadParish(ctx context.Context, query *ParishQuery, nodes
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "parish_id" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "paroki_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -460,8 +460,8 @@ func (_q *LookupQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if _q.withParish != nil {
-			_spec.Node.AddColumnOnce(lookup.FieldParishID)
+		if _q.withParoki != nil {
+			_spec.Node.AddColumnOnce(lookup.FieldParokiID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {

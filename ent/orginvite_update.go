@@ -36,16 +36,16 @@ func (_u *OrgInviteUpdate) SetUpdatedAt(v time.Time) *OrgInviteUpdate {
 	return _u
 }
 
-// SetParishID sets the "parish_id" field.
-func (_u *OrgInviteUpdate) SetParishID(v uuid.UUID) *OrgInviteUpdate {
-	_u.mutation.SetParishID(v)
+// SetParokiID sets the "paroki_id" field.
+func (_u *OrgInviteUpdate) SetParokiID(v uuid.UUID) *OrgInviteUpdate {
+	_u.mutation.SetParokiID(v)
 	return _u
 }
 
-// SetNillableParishID sets the "parish_id" field if the given value is not nil.
-func (_u *OrgInviteUpdate) SetNillableParishID(v *uuid.UUID) *OrgInviteUpdate {
+// SetNillableParokiID sets the "paroki_id" field if the given value is not nil.
+func (_u *OrgInviteUpdate) SetNillableParokiID(v *uuid.UUID) *OrgInviteUpdate {
 	if v != nil {
-		_u.SetParishID(*v)
+		_u.SetParokiID(*v)
 	}
 	return _u
 }
@@ -299,8 +299,8 @@ func (_u *OrgInviteUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(orginvite.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if value, ok := _u.mutation.ParishID(); ok {
-		_spec.SetField(orginvite.FieldParishID, field.TypeUUID, value)
+	if value, ok := _u.mutation.ParokiID(); ok {
+		_spec.SetField(orginvite.FieldParokiID, field.TypeUUID, value)
 	}
 	if value, ok := _u.mutation.Code(); ok {
 		_spec.SetField(orginvite.FieldCode, field.TypeString, value)
@@ -396,16 +396,16 @@ func (_u *OrgInviteUpdateOne) SetUpdatedAt(v time.Time) *OrgInviteUpdateOne {
 	return _u
 }
 
-// SetParishID sets the "parish_id" field.
-func (_u *OrgInviteUpdateOne) SetParishID(v uuid.UUID) *OrgInviteUpdateOne {
-	_u.mutation.SetParishID(v)
+// SetParokiID sets the "paroki_id" field.
+func (_u *OrgInviteUpdateOne) SetParokiID(v uuid.UUID) *OrgInviteUpdateOne {
+	_u.mutation.SetParokiID(v)
 	return _u
 }
 
-// SetNillableParishID sets the "parish_id" field if the given value is not nil.
-func (_u *OrgInviteUpdateOne) SetNillableParishID(v *uuid.UUID) *OrgInviteUpdateOne {
+// SetNillableParokiID sets the "paroki_id" field if the given value is not nil.
+func (_u *OrgInviteUpdateOne) SetNillableParokiID(v *uuid.UUID) *OrgInviteUpdateOne {
 	if v != nil {
-		_u.SetParishID(*v)
+		_u.SetParokiID(*v)
 	}
 	return _u
 }
@@ -689,8 +689,8 @@ func (_u *OrgInviteUpdateOne) sqlSave(ctx context.Context) (_node *OrgInvite, er
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(orginvite.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if value, ok := _u.mutation.ParishID(); ok {
-		_spec.SetField(orginvite.FieldParishID, field.TypeUUID, value)
+	if value, ok := _u.mutation.ParokiID(); ok {
+		_spec.SetField(orginvite.FieldParokiID, field.TypeUUID, value)
 	}
 	if value, ok := _u.mutation.Code(); ok {
 		_spec.SetField(orginvite.FieldCode, field.TypeString, value)

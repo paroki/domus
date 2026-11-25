@@ -13,7 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent/lookup"
-	"github.com/paroki/domus/ent/parish"
+	"github.com/paroki/domus/ent/paroki"
 	"github.com/paroki/domus/ent/predicate"
 )
 
@@ -56,23 +56,23 @@ func (_u *LookupUpdate) ClearDeletedAt() *LookupUpdate {
 	return _u
 }
 
-// SetParishID sets the "parish_id" field.
-func (_u *LookupUpdate) SetParishID(v uuid.UUID) *LookupUpdate {
-	_u.mutation.SetParishID(v)
+// SetParokiID sets the "paroki_id" field.
+func (_u *LookupUpdate) SetParokiID(v uuid.UUID) *LookupUpdate {
+	_u.mutation.SetParokiID(v)
 	return _u
 }
 
-// SetNillableParishID sets the "parish_id" field if the given value is not nil.
-func (_u *LookupUpdate) SetNillableParishID(v *uuid.UUID) *LookupUpdate {
+// SetNillableParokiID sets the "paroki_id" field if the given value is not nil.
+func (_u *LookupUpdate) SetNillableParokiID(v *uuid.UUID) *LookupUpdate {
 	if v != nil {
-		_u.SetParishID(*v)
+		_u.SetParokiID(*v)
 	}
 	return _u
 }
 
-// ClearParishID clears the value of the "parish_id" field.
-func (_u *LookupUpdate) ClearParishID() *LookupUpdate {
-	_u.mutation.ClearParishID()
+// ClearParokiID clears the value of the "paroki_id" field.
+func (_u *LookupUpdate) ClearParokiID() *LookupUpdate {
+	_u.mutation.ClearParokiID()
 	return _u
 }
 
@@ -153,9 +153,9 @@ func (_u *LookupUpdate) SetNillableActive(v *bool) *LookupUpdate {
 	return _u
 }
 
-// SetParish sets the "parish" edge to the Parish entity.
-func (_u *LookupUpdate) SetParish(v *Parish) *LookupUpdate {
-	return _u.SetParishID(v.ID)
+// SetParoki sets the "paroki" edge to the Paroki entity.
+func (_u *LookupUpdate) SetParoki(v *Paroki) *LookupUpdate {
+	return _u.SetParokiID(v.ID)
 }
 
 // Mutation returns the LookupMutation object of the builder.
@@ -163,9 +163,9 @@ func (_u *LookupUpdate) Mutation() *LookupMutation {
 	return _u.mutation
 }
 
-// ClearParish clears the "parish" edge to the Parish entity.
-func (_u *LookupUpdate) ClearParish() *LookupUpdate {
-	_u.mutation.ClearParish()
+// ClearParoki clears the "paroki" edge to the Paroki entity.
+func (_u *LookupUpdate) ClearParoki() *LookupUpdate {
+	_u.mutation.ClearParoki()
 	return _u
 }
 
@@ -264,28 +264,28 @@ func (_u *LookupUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.Active(); ok {
 		_spec.SetField(lookup.FieldActive, field.TypeBool, value)
 	}
-	if _u.mutation.ParishCleared() {
+	if _u.mutation.ParokiCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   lookup.ParishTable,
-			Columns: []string{lookup.ParishColumn},
+			Table:   lookup.ParokiTable,
+			Columns: []string{lookup.ParokiColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(parish.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.ParishIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ParokiIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   lookup.ParishTable,
-			Columns: []string{lookup.ParishColumn},
+			Table:   lookup.ParokiTable,
+			Columns: []string{lookup.ParokiColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(parish.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -339,23 +339,23 @@ func (_u *LookupUpdateOne) ClearDeletedAt() *LookupUpdateOne {
 	return _u
 }
 
-// SetParishID sets the "parish_id" field.
-func (_u *LookupUpdateOne) SetParishID(v uuid.UUID) *LookupUpdateOne {
-	_u.mutation.SetParishID(v)
+// SetParokiID sets the "paroki_id" field.
+func (_u *LookupUpdateOne) SetParokiID(v uuid.UUID) *LookupUpdateOne {
+	_u.mutation.SetParokiID(v)
 	return _u
 }
 
-// SetNillableParishID sets the "parish_id" field if the given value is not nil.
-func (_u *LookupUpdateOne) SetNillableParishID(v *uuid.UUID) *LookupUpdateOne {
+// SetNillableParokiID sets the "paroki_id" field if the given value is not nil.
+func (_u *LookupUpdateOne) SetNillableParokiID(v *uuid.UUID) *LookupUpdateOne {
 	if v != nil {
-		_u.SetParishID(*v)
+		_u.SetParokiID(*v)
 	}
 	return _u
 }
 
-// ClearParishID clears the value of the "parish_id" field.
-func (_u *LookupUpdateOne) ClearParishID() *LookupUpdateOne {
-	_u.mutation.ClearParishID()
+// ClearParokiID clears the value of the "paroki_id" field.
+func (_u *LookupUpdateOne) ClearParokiID() *LookupUpdateOne {
+	_u.mutation.ClearParokiID()
 	return _u
 }
 
@@ -436,9 +436,9 @@ func (_u *LookupUpdateOne) SetNillableActive(v *bool) *LookupUpdateOne {
 	return _u
 }
 
-// SetParish sets the "parish" edge to the Parish entity.
-func (_u *LookupUpdateOne) SetParish(v *Parish) *LookupUpdateOne {
-	return _u.SetParishID(v.ID)
+// SetParoki sets the "paroki" edge to the Paroki entity.
+func (_u *LookupUpdateOne) SetParoki(v *Paroki) *LookupUpdateOne {
+	return _u.SetParokiID(v.ID)
 }
 
 // Mutation returns the LookupMutation object of the builder.
@@ -446,9 +446,9 @@ func (_u *LookupUpdateOne) Mutation() *LookupMutation {
 	return _u.mutation
 }
 
-// ClearParish clears the "parish" edge to the Parish entity.
-func (_u *LookupUpdateOne) ClearParish() *LookupUpdateOne {
-	_u.mutation.ClearParish()
+// ClearParoki clears the "paroki" edge to the Paroki entity.
+func (_u *LookupUpdateOne) ClearParoki() *LookupUpdateOne {
+	_u.mutation.ClearParoki()
 	return _u
 }
 
@@ -577,28 +577,28 @@ func (_u *LookupUpdateOne) sqlSave(ctx context.Context) (_node *Lookup, err erro
 	if value, ok := _u.mutation.Active(); ok {
 		_spec.SetField(lookup.FieldActive, field.TypeBool, value)
 	}
-	if _u.mutation.ParishCleared() {
+	if _u.mutation.ParokiCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   lookup.ParishTable,
-			Columns: []string{lookup.ParishColumn},
+			Table:   lookup.ParokiTable,
+			Columns: []string{lookup.ParokiColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(parish.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.ParishIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ParokiIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   lookup.ParishTable,
-			Columns: []string{lookup.ParishColumn},
+			Table:   lookup.ParokiTable,
+			Columns: []string{lookup.ParokiColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(parish.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

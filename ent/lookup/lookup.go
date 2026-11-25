@@ -21,8 +21,8 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// FieldDeletedAt holds the string denoting the deleted_at field in the database.
 	FieldDeletedAt = "deleted_at"
-	// FieldParishID holds the string denoting the parish_id field in the database.
-	FieldParishID = "parish_id"
+	// FieldParokiID holds the string denoting the paroki_id field in the database.
+	FieldParokiID = "paroki_id"
 	// FieldCategory holds the string denoting the category field in the database.
 	FieldCategory = "category"
 	// FieldCode holds the string denoting the code field in the database.
@@ -33,17 +33,17 @@ const (
 	FieldSortOrder = "sort_order"
 	// FieldActive holds the string denoting the active field in the database.
 	FieldActive = "active"
-	// EdgeParish holds the string denoting the parish edge name in mutations.
-	EdgeParish = "parish"
+	// EdgeParoki holds the string denoting the paroki edge name in mutations.
+	EdgeParoki = "paroki"
 	// Table holds the table name of the lookup in the database.
 	Table = "lookups"
-	// ParishTable is the table that holds the parish relation/edge.
-	ParishTable = "lookups"
-	// ParishInverseTable is the table name for the Parish entity.
-	// It exists in this package in order to avoid circular dependency with the "parish" package.
-	ParishInverseTable = "parishes"
-	// ParishColumn is the table column denoting the parish relation/edge.
-	ParishColumn = "parish_id"
+	// ParokiTable is the table that holds the paroki relation/edge.
+	ParokiTable = "lookups"
+	// ParokiInverseTable is the table name for the Paroki entity.
+	// It exists in this package in order to avoid circular dependency with the "paroki" package.
+	ParokiInverseTable = "paroki"
+	// ParokiColumn is the table column denoting the paroki relation/edge.
+	ParokiColumn = "paroki_id"
 )
 
 // Columns holds all SQL columns for lookup fields.
@@ -52,7 +52,7 @@ var Columns = []string{
 	FieldCreatedAt,
 	FieldUpdatedAt,
 	FieldDeletedAt,
-	FieldParishID,
+	FieldParokiID,
 	FieldCategory,
 	FieldCode,
 	FieldLabel,
@@ -114,9 +114,9 @@ func ByDeletedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDeletedAt, opts...).ToFunc()
 }
 
-// ByParishID orders the results by the parish_id field.
-func ByParishID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldParishID, opts...).ToFunc()
+// ByParokiID orders the results by the paroki_id field.
+func ByParokiID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldParokiID, opts...).ToFunc()
 }
 
 // ByCategory orders the results by the category field.
@@ -144,16 +144,16 @@ func ByActive(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldActive, opts...).ToFunc()
 }
 
-// ByParishField orders the results by parish field.
-func ByParishField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByParokiField orders the results by paroki field.
+func ByParokiField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newParishStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborTerms(s, newParokiStep(), sql.OrderByField(field, opts...))
 	}
 }
-func newParishStep() *sqlgraph.Step {
+func newParokiStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ParishInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, ParishTable, ParishColumn),
+		sqlgraph.To(ParokiInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, ParokiTable, ParokiColumn),
 	)
 }

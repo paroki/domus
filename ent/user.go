@@ -40,8 +40,8 @@ type User struct {
 	Status user.Status `json:"status,omitempty"`
 	// Onboarded holds the value of the "onboarded" field.
 	Onboarded bool `json:"onboarded,omitempty"`
-	// DefaultParishID holds the value of the "default_parish_id" field.
-	DefaultParishID *uuid.UUID `json:"default_parish_id,omitempty"`
+	// DefaultParokiID holds the value of the "default_paroki_id" field.
+	DefaultParokiID *uuid.UUID `json:"default_paroki_id,omitempty"`
 	// LastLoginAt holds the value of the "last_login_at" field.
 	LastLoginAt *time.Time `json:"last_login_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -84,7 +84,7 @@ func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case user.FieldDefaultParishID:
+		case user.FieldDefaultParokiID:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case user.FieldOnboarded:
 			values[i] = new(sql.NullBool)
@@ -186,12 +186,12 @@ func (_m *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Onboarded = value.Bool
 			}
-		case user.FieldDefaultParishID:
+		case user.FieldDefaultParokiID:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field default_parish_id", values[i])
+				return fmt.Errorf("unexpected type %T for field default_paroki_id", values[i])
 			} else if value.Valid {
-				_m.DefaultParishID = new(uuid.UUID)
-				*_m.DefaultParishID = *value.S.(*uuid.UUID)
+				_m.DefaultParokiID = new(uuid.UUID)
+				*_m.DefaultParokiID = *value.S.(*uuid.UUID)
 			}
 		case user.FieldLastLoginAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -289,8 +289,8 @@ func (_m *User) String() string {
 	builder.WriteString("onboarded=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Onboarded))
 	builder.WriteString(", ")
-	if v := _m.DefaultParishID; v != nil {
-		builder.WriteString("default_parish_id=")
+	if v := _m.DefaultParokiID; v != nil {
+		builder.WriteString("default_paroki_id=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")

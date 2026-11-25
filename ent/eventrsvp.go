@@ -23,8 +23,8 @@ type EventRSVP struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// ParishID holds the value of the "parish_id" field.
-	ParishID uuid.UUID `json:"parish_id,omitempty"`
+	// ParokiID holds the value of the "paroki_id" field.
+	ParokiID uuid.UUID `json:"paroki_id,omitempty"`
 	// EventID holds the value of the "event_id" field.
 	EventID uuid.UUID `json:"event_id,omitempty"`
 	// UserID holds the value of the "user_id" field.
@@ -68,7 +68,7 @@ func (*EventRSVP) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case eventrsvp.FieldCreatedAt, eventrsvp.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case eventrsvp.FieldID, eventrsvp.FieldParishID, eventrsvp.FieldEventID, eventrsvp.FieldUserID:
+		case eventrsvp.FieldID, eventrsvp.FieldParokiID, eventrsvp.FieldEventID, eventrsvp.FieldUserID:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -103,11 +103,11 @@ func (_m *EventRSVP) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.UpdatedAt = value.Time
 			}
-		case eventrsvp.FieldParishID:
+		case eventrsvp.FieldParokiID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field parish_id", values[i])
+				return fmt.Errorf("unexpected type %T for field paroki_id", values[i])
 			} else if value != nil {
-				_m.ParishID = *value
+				_m.ParokiID = *value
 			}
 		case eventrsvp.FieldEventID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
@@ -181,8 +181,8 @@ func (_m *EventRSVP) String() string {
 	builder.WriteString("updated_at=")
 	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
-	builder.WriteString("parish_id=")
-	builder.WriteString(fmt.Sprintf("%v", _m.ParishID))
+	builder.WriteString("paroki_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ParokiID))
 	builder.WriteString(", ")
 	builder.WriteString("event_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.EventID))

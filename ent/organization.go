@@ -24,14 +24,14 @@ type Organization struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// DeletedAt holds the value of the "deleted_at" field.
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
-	// ParishID holds the value of the "parish_id" field.
-	ParishID uuid.UUID `json:"parish_id,omitempty"`
+	// ParokiID holds the value of the "paroki_id" field.
+	ParokiID uuid.UUID `json:"paroki_id,omitempty"`
 	// ParentID holds the value of the "parent_id" field.
 	ParentID *uuid.UUID `json:"parent_id,omitempty"`
-	// ZoneID holds the value of the "zone_id" field.
-	ZoneID *uuid.UUID `json:"zone_id,omitempty"`
-	// WardID holds the value of the "ward_id" field.
-	WardID *uuid.UUID `json:"ward_id,omitempty"`
+	// WilayahID holds the value of the "wilayah_id" field.
+	WilayahID *uuid.UUID `json:"wilayah_id,omitempty"`
+	// LingkunganID holds the value of the "lingkungan_id" field.
+	LingkunganID *uuid.UUID `json:"lingkungan_id,omitempty"`
 	// Kind holds the value of the "kind" field.
 	Kind organization.Kind `json:"kind,omitempty"`
 	// Code holds the value of the "code" field.
@@ -106,7 +106,7 @@ func (*Organization) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case organization.FieldParentID, organization.FieldZoneID, organization.FieldWardID:
+		case organization.FieldParentID, organization.FieldWilayahID, organization.FieldLingkunganID:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case organization.FieldActive:
 			values[i] = new(sql.NullBool)
@@ -114,7 +114,7 @@ func (*Organization) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case organization.FieldCreatedAt, organization.FieldUpdatedAt, organization.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
-		case organization.FieldID, organization.FieldParishID:
+		case organization.FieldID, organization.FieldParokiID:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -156,11 +156,11 @@ func (_m *Organization) assignValues(columns []string, values []any) error {
 				_m.DeletedAt = new(time.Time)
 				*_m.DeletedAt = value.Time
 			}
-		case organization.FieldParishID:
+		case organization.FieldParokiID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field parish_id", values[i])
+				return fmt.Errorf("unexpected type %T for field paroki_id", values[i])
 			} else if value != nil {
-				_m.ParishID = *value
+				_m.ParokiID = *value
 			}
 		case organization.FieldParentID:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
@@ -169,19 +169,19 @@ func (_m *Organization) assignValues(columns []string, values []any) error {
 				_m.ParentID = new(uuid.UUID)
 				*_m.ParentID = *value.S.(*uuid.UUID)
 			}
-		case organization.FieldZoneID:
+		case organization.FieldWilayahID:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field zone_id", values[i])
+				return fmt.Errorf("unexpected type %T for field wilayah_id", values[i])
 			} else if value.Valid {
-				_m.ZoneID = new(uuid.UUID)
-				*_m.ZoneID = *value.S.(*uuid.UUID)
+				_m.WilayahID = new(uuid.UUID)
+				*_m.WilayahID = *value.S.(*uuid.UUID)
 			}
-		case organization.FieldWardID:
+		case organization.FieldLingkunganID:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field ward_id", values[i])
+				return fmt.Errorf("unexpected type %T for field lingkungan_id", values[i])
 			} else if value.Valid {
-				_m.WardID = new(uuid.UUID)
-				*_m.WardID = *value.S.(*uuid.UUID)
+				_m.LingkunganID = new(uuid.UUID)
+				*_m.LingkunganID = *value.S.(*uuid.UUID)
 			}
 		case organization.FieldKind:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -281,21 +281,21 @@ func (_m *Organization) String() string {
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteString(", ")
-	builder.WriteString("parish_id=")
-	builder.WriteString(fmt.Sprintf("%v", _m.ParishID))
+	builder.WriteString("paroki_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ParokiID))
 	builder.WriteString(", ")
 	if v := _m.ParentID; v != nil {
 		builder.WriteString("parent_id=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")
-	if v := _m.ZoneID; v != nil {
-		builder.WriteString("zone_id=")
+	if v := _m.WilayahID; v != nil {
+		builder.WriteString("wilayah_id=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")
-	if v := _m.WardID; v != nil {
-		builder.WriteString("ward_id=")
+	if v := _m.LingkunganID; v != nil {
+		builder.WriteString("lingkungan_id=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")

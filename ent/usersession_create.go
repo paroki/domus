@@ -90,16 +90,16 @@ func (_c *UserSessionCreate) SetNillableIPAddress(v *string) *UserSessionCreate 
 	return _c
 }
 
-// SetActiveParishID sets the "active_parish_id" field.
-func (_c *UserSessionCreate) SetActiveParishID(v uuid.UUID) *UserSessionCreate {
-	_c.mutation.SetActiveParishID(v)
+// SetActiveParokiID sets the "active_paroki_id" field.
+func (_c *UserSessionCreate) SetActiveParokiID(v uuid.UUID) *UserSessionCreate {
+	_c.mutation.SetActiveParokiID(v)
 	return _c
 }
 
-// SetNillableActiveParishID sets the "active_parish_id" field if the given value is not nil.
-func (_c *UserSessionCreate) SetNillableActiveParishID(v *uuid.UUID) *UserSessionCreate {
+// SetNillableActiveParokiID sets the "active_paroki_id" field if the given value is not nil.
+func (_c *UserSessionCreate) SetNillableActiveParokiID(v *uuid.UUID) *UserSessionCreate {
 	if v != nil {
-		_c.SetActiveParishID(*v)
+		_c.SetActiveParokiID(*v)
 	}
 	return _c
 }
@@ -293,9 +293,9 @@ func (_c *UserSessionCreate) createSpec() (*UserSession, *sqlgraph.CreateSpec) {
 		_spec.SetField(usersession.FieldIPAddress, field.TypeString, value)
 		_node.IPAddress = value
 	}
-	if value, ok := _c.mutation.ActiveParishID(); ok {
-		_spec.SetField(usersession.FieldActiveParishID, field.TypeUUID, value)
-		_node.ActiveParishID = &value
+	if value, ok := _c.mutation.ActiveParokiID(); ok {
+		_spec.SetField(usersession.FieldActiveParokiID, field.TypeUUID, value)
+		_node.ActiveParokiID = &value
 	}
 	if value, ok := _c.mutation.LastActiveAt(); ok {
 		_spec.SetField(usersession.FieldLastActiveAt, field.TypeTime, value)

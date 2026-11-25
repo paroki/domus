@@ -64,9 +64,9 @@ func (_c *EventCreate) SetNillableDeletedAt(v *time.Time) *EventCreate {
 	return _c
 }
 
-// SetParishID sets the "parish_id" field.
-func (_c *EventCreate) SetParishID(v uuid.UUID) *EventCreate {
-	_c.mutation.SetParishID(v)
+// SetParokiID sets the "paroki_id" field.
+func (_c *EventCreate) SetParokiID(v uuid.UUID) *EventCreate {
+	_c.mutation.SetParokiID(v)
 	return _c
 }
 
@@ -282,8 +282,8 @@ func (_c *EventCreate) check() error {
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Event.updated_at"`)}
 	}
-	if _, ok := _c.mutation.ParishID(); !ok {
-		return &ValidationError{Name: "parish_id", err: errors.New(`ent: missing required field "Event.parish_id"`)}
+	if _, ok := _c.mutation.ParokiID(); !ok {
+		return &ValidationError{Name: "paroki_id", err: errors.New(`ent: missing required field "Event.paroki_id"`)}
 	}
 	if _, ok := _c.mutation.OrgID(); !ok {
 		return &ValidationError{Name: "org_id", err: errors.New(`ent: missing required field "Event.org_id"`)}
@@ -371,9 +371,9 @@ func (_c *EventCreate) createSpec() (*Event, *sqlgraph.CreateSpec) {
 		_spec.SetField(event.FieldDeletedAt, field.TypeTime, value)
 		_node.DeletedAt = &value
 	}
-	if value, ok := _c.mutation.ParishID(); ok {
-		_spec.SetField(event.FieldParishID, field.TypeUUID, value)
-		_node.ParishID = value
+	if value, ok := _c.mutation.ParokiID(); ok {
+		_spec.SetField(event.FieldParokiID, field.TypeUUID, value)
+		_node.ParokiID = value
 	}
 	if value, ok := _c.mutation.OrgID(); ok {
 		_spec.SetField(event.FieldOrgID, field.TypeUUID, value)

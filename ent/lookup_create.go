@@ -12,7 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent/lookup"
-	"github.com/paroki/domus/ent/parish"
+	"github.com/paroki/domus/ent/paroki"
 )
 
 // LookupCreate is the builder for creating a Lookup entity.
@@ -64,16 +64,16 @@ func (_c *LookupCreate) SetNillableDeletedAt(v *time.Time) *LookupCreate {
 	return _c
 }
 
-// SetParishID sets the "parish_id" field.
-func (_c *LookupCreate) SetParishID(v uuid.UUID) *LookupCreate {
-	_c.mutation.SetParishID(v)
+// SetParokiID sets the "paroki_id" field.
+func (_c *LookupCreate) SetParokiID(v uuid.UUID) *LookupCreate {
+	_c.mutation.SetParokiID(v)
 	return _c
 }
 
-// SetNillableParishID sets the "parish_id" field if the given value is not nil.
-func (_c *LookupCreate) SetNillableParishID(v *uuid.UUID) *LookupCreate {
+// SetNillableParokiID sets the "paroki_id" field if the given value is not nil.
+func (_c *LookupCreate) SetNillableParokiID(v *uuid.UUID) *LookupCreate {
 	if v != nil {
-		_c.SetParishID(*v)
+		_c.SetParokiID(*v)
 	}
 	return _c
 }
@@ -138,9 +138,9 @@ func (_c *LookupCreate) SetNillableID(v *uuid.UUID) *LookupCreate {
 	return _c
 }
 
-// SetParish sets the "parish" edge to the Parish entity.
-func (_c *LookupCreate) SetParish(v *Parish) *LookupCreate {
-	return _c.SetParishID(v.ID)
+// SetParoki sets the "paroki" edge to the Paroki entity.
+func (_c *LookupCreate) SetParoki(v *Paroki) *LookupCreate {
+	return _c.SetParokiID(v.ID)
 }
 
 // Mutation returns the LookupMutation object of the builder.
@@ -305,21 +305,21 @@ func (_c *LookupCreate) createSpec() (*Lookup, *sqlgraph.CreateSpec) {
 		_spec.SetField(lookup.FieldActive, field.TypeBool, value)
 		_node.Active = value
 	}
-	if nodes := _c.mutation.ParishIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.ParokiIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   lookup.ParishTable,
-			Columns: []string{lookup.ParishColumn},
+			Table:   lookup.ParokiTable,
+			Columns: []string{lookup.ParokiColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(parish.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.ParishID = &nodes[0]
+		_node.ParokiID = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

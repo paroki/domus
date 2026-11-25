@@ -193,23 +193,23 @@ func (_u *UserUpdate) SetNillableOnboarded(v *bool) *UserUpdate {
 	return _u
 }
 
-// SetDefaultParishID sets the "default_parish_id" field.
-func (_u *UserUpdate) SetDefaultParishID(v uuid.UUID) *UserUpdate {
-	_u.mutation.SetDefaultParishID(v)
+// SetDefaultParokiID sets the "default_paroki_id" field.
+func (_u *UserUpdate) SetDefaultParokiID(v uuid.UUID) *UserUpdate {
+	_u.mutation.SetDefaultParokiID(v)
 	return _u
 }
 
-// SetNillableDefaultParishID sets the "default_parish_id" field if the given value is not nil.
-func (_u *UserUpdate) SetNillableDefaultParishID(v *uuid.UUID) *UserUpdate {
+// SetNillableDefaultParokiID sets the "default_paroki_id" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableDefaultParokiID(v *uuid.UUID) *UserUpdate {
 	if v != nil {
-		_u.SetDefaultParishID(*v)
+		_u.SetDefaultParokiID(*v)
 	}
 	return _u
 }
 
-// ClearDefaultParishID clears the value of the "default_parish_id" field.
-func (_u *UserUpdate) ClearDefaultParishID() *UserUpdate {
-	_u.mutation.ClearDefaultParishID()
+// ClearDefaultParokiID clears the value of the "default_paroki_id" field.
+func (_u *UserUpdate) ClearDefaultParokiID() *UserUpdate {
+	_u.mutation.ClearDefaultParokiID()
 	return _u
 }
 
@@ -428,11 +428,11 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.Onboarded(); ok {
 		_spec.SetField(user.FieldOnboarded, field.TypeBool, value)
 	}
-	if value, ok := _u.mutation.DefaultParishID(); ok {
-		_spec.SetField(user.FieldDefaultParishID, field.TypeUUID, value)
+	if value, ok := _u.mutation.DefaultParokiID(); ok {
+		_spec.SetField(user.FieldDefaultParokiID, field.TypeUUID, value)
 	}
-	if _u.mutation.DefaultParishIDCleared() {
-		_spec.ClearField(user.FieldDefaultParishID, field.TypeUUID)
+	if _u.mutation.DefaultParokiIDCleared() {
+		_spec.ClearField(user.FieldDefaultParokiID, field.TypeUUID)
 	}
 	if value, ok := _u.mutation.LastLoginAt(); ok {
 		_spec.SetField(user.FieldLastLoginAt, field.TypeTime, value)
@@ -712,23 +712,23 @@ func (_u *UserUpdateOne) SetNillableOnboarded(v *bool) *UserUpdateOne {
 	return _u
 }
 
-// SetDefaultParishID sets the "default_parish_id" field.
-func (_u *UserUpdateOne) SetDefaultParishID(v uuid.UUID) *UserUpdateOne {
-	_u.mutation.SetDefaultParishID(v)
+// SetDefaultParokiID sets the "default_paroki_id" field.
+func (_u *UserUpdateOne) SetDefaultParokiID(v uuid.UUID) *UserUpdateOne {
+	_u.mutation.SetDefaultParokiID(v)
 	return _u
 }
 
-// SetNillableDefaultParishID sets the "default_parish_id" field if the given value is not nil.
-func (_u *UserUpdateOne) SetNillableDefaultParishID(v *uuid.UUID) *UserUpdateOne {
+// SetNillableDefaultParokiID sets the "default_paroki_id" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableDefaultParokiID(v *uuid.UUID) *UserUpdateOne {
 	if v != nil {
-		_u.SetDefaultParishID(*v)
+		_u.SetDefaultParokiID(*v)
 	}
 	return _u
 }
 
-// ClearDefaultParishID clears the value of the "default_parish_id" field.
-func (_u *UserUpdateOne) ClearDefaultParishID() *UserUpdateOne {
-	_u.mutation.ClearDefaultParishID()
+// ClearDefaultParokiID clears the value of the "default_paroki_id" field.
+func (_u *UserUpdateOne) ClearDefaultParokiID() *UserUpdateOne {
+	_u.mutation.ClearDefaultParokiID()
 	return _u
 }
 
@@ -977,11 +977,11 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	if value, ok := _u.mutation.Onboarded(); ok {
 		_spec.SetField(user.FieldOnboarded, field.TypeBool, value)
 	}
-	if value, ok := _u.mutation.DefaultParishID(); ok {
-		_spec.SetField(user.FieldDefaultParishID, field.TypeUUID, value)
+	if value, ok := _u.mutation.DefaultParokiID(); ok {
+		_spec.SetField(user.FieldDefaultParokiID, field.TypeUUID, value)
 	}
-	if _u.mutation.DefaultParishIDCleared() {
-		_spec.ClearField(user.FieldDefaultParishID, field.TypeUUID)
+	if _u.mutation.DefaultParokiIDCleared() {
+		_spec.ClearField(user.FieldDefaultParokiID, field.TypeUUID)
 	}
 	if value, ok := _u.mutation.LastLoginAt(); ok {
 		_spec.SetField(user.FieldLastLoginAt, field.TypeTime, value)

@@ -27,8 +27,8 @@ const (
 	FieldUserAgent = "user_agent"
 	// FieldIPAddress holds the string denoting the ip_address field in the database.
 	FieldIPAddress = "ip_address"
-	// FieldActiveParishID holds the string denoting the active_parish_id field in the database.
-	FieldActiveParishID = "active_parish_id"
+	// FieldActiveParokiID holds the string denoting the active_paroki_id field in the database.
+	FieldActiveParokiID = "active_paroki_id"
 	// FieldLastActiveAt holds the string denoting the last_active_at field in the database.
 	FieldLastActiveAt = "last_active_at"
 	// FieldExpiresAt holds the string denoting the expires_at field in the database.
@@ -55,7 +55,7 @@ var Columns = []string{
 	FieldTokenHash,
 	FieldUserAgent,
 	FieldIPAddress,
-	FieldActiveParishID,
+	FieldActiveParokiID,
 	FieldLastActiveAt,
 	FieldExpiresAt,
 }
@@ -127,9 +127,9 @@ func ByIPAddress(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIPAddress, opts...).ToFunc()
 }
 
-// ByActiveParishID orders the results by the active_parish_id field.
-func ByActiveParishID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldActiveParishID, opts...).ToFunc()
+// ByActiveParokiID orders the results by the active_paroki_id field.
+func ByActiveParokiID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldActiveParokiID, opts...).ToFunc()
 }
 
 // ByLastActiveAt orders the results by the last_active_at field.

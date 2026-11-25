@@ -36,16 +36,16 @@ func (_u *OrgMemberUpdate) SetUpdatedAt(v time.Time) *OrgMemberUpdate {
 	return _u
 }
 
-// SetParishID sets the "parish_id" field.
-func (_u *OrgMemberUpdate) SetParishID(v uuid.UUID) *OrgMemberUpdate {
-	_u.mutation.SetParishID(v)
+// SetParokiID sets the "paroki_id" field.
+func (_u *OrgMemberUpdate) SetParokiID(v uuid.UUID) *OrgMemberUpdate {
+	_u.mutation.SetParokiID(v)
 	return _u
 }
 
-// SetNillableParishID sets the "parish_id" field if the given value is not nil.
-func (_u *OrgMemberUpdate) SetNillableParishID(v *uuid.UUID) *OrgMemberUpdate {
+// SetNillableParokiID sets the "paroki_id" field if the given value is not nil.
+func (_u *OrgMemberUpdate) SetNillableParokiID(v *uuid.UUID) *OrgMemberUpdate {
 	if v != nil {
-		_u.SetParishID(*v)
+		_u.SetParokiID(*v)
 	}
 	return _u
 }
@@ -277,8 +277,8 @@ func (_u *OrgMemberUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(orgmember.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if value, ok := _u.mutation.ParishID(); ok {
-		_spec.SetField(orgmember.FieldParishID, field.TypeUUID, value)
+	if value, ok := _u.mutation.ParokiID(); ok {
+		_spec.SetField(orgmember.FieldParokiID, field.TypeUUID, value)
 	}
 	if value, ok := _u.mutation.UserID(); ok {
 		_spec.SetField(orgmember.FieldUserID, field.TypeUUID, value)
@@ -368,16 +368,16 @@ func (_u *OrgMemberUpdateOne) SetUpdatedAt(v time.Time) *OrgMemberUpdateOne {
 	return _u
 }
 
-// SetParishID sets the "parish_id" field.
-func (_u *OrgMemberUpdateOne) SetParishID(v uuid.UUID) *OrgMemberUpdateOne {
-	_u.mutation.SetParishID(v)
+// SetParokiID sets the "paroki_id" field.
+func (_u *OrgMemberUpdateOne) SetParokiID(v uuid.UUID) *OrgMemberUpdateOne {
+	_u.mutation.SetParokiID(v)
 	return _u
 }
 
-// SetNillableParishID sets the "parish_id" field if the given value is not nil.
-func (_u *OrgMemberUpdateOne) SetNillableParishID(v *uuid.UUID) *OrgMemberUpdateOne {
+// SetNillableParokiID sets the "paroki_id" field if the given value is not nil.
+func (_u *OrgMemberUpdateOne) SetNillableParokiID(v *uuid.UUID) *OrgMemberUpdateOne {
 	if v != nil {
-		_u.SetParishID(*v)
+		_u.SetParokiID(*v)
 	}
 	return _u
 }
@@ -639,8 +639,8 @@ func (_u *OrgMemberUpdateOne) sqlSave(ctx context.Context) (_node *OrgMember, er
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(orgmember.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if value, ok := _u.mutation.ParishID(); ok {
-		_spec.SetField(orgmember.FieldParishID, field.TypeUUID, value)
+	if value, ok := _u.mutation.ParokiID(); ok {
+		_spec.SetField(orgmember.FieldParokiID, field.TypeUUID, value)
 	}
 	if value, ok := _u.mutation.UserID(); ok {
 		_spec.SetField(orgmember.FieldUserID, field.TypeUUID, value)

@@ -92,23 +92,23 @@ func (_u *UserSessionUpdate) SetNillableIPAddress(v *string) *UserSessionUpdate 
 	return _u
 }
 
-// SetActiveParishID sets the "active_parish_id" field.
-func (_u *UserSessionUpdate) SetActiveParishID(v uuid.UUID) *UserSessionUpdate {
-	_u.mutation.SetActiveParishID(v)
+// SetActiveParokiID sets the "active_paroki_id" field.
+func (_u *UserSessionUpdate) SetActiveParokiID(v uuid.UUID) *UserSessionUpdate {
+	_u.mutation.SetActiveParokiID(v)
 	return _u
 }
 
-// SetNillableActiveParishID sets the "active_parish_id" field if the given value is not nil.
-func (_u *UserSessionUpdate) SetNillableActiveParishID(v *uuid.UUID) *UserSessionUpdate {
+// SetNillableActiveParokiID sets the "active_paroki_id" field if the given value is not nil.
+func (_u *UserSessionUpdate) SetNillableActiveParokiID(v *uuid.UUID) *UserSessionUpdate {
 	if v != nil {
-		_u.SetActiveParishID(*v)
+		_u.SetActiveParokiID(*v)
 	}
 	return _u
 }
 
-// ClearActiveParishID clears the value of the "active_parish_id" field.
-func (_u *UserSessionUpdate) ClearActiveParishID() *UserSessionUpdate {
-	_u.mutation.ClearActiveParishID()
+// ClearActiveParokiID clears the value of the "active_paroki_id" field.
+func (_u *UserSessionUpdate) ClearActiveParokiID() *UserSessionUpdate {
+	_u.mutation.ClearActiveParokiID()
 	return _u
 }
 
@@ -229,11 +229,11 @@ func (_u *UserSessionUpdate) sqlSave(ctx context.Context) (_node int, err error)
 	if value, ok := _u.mutation.IPAddress(); ok {
 		_spec.SetField(usersession.FieldIPAddress, field.TypeString, value)
 	}
-	if value, ok := _u.mutation.ActiveParishID(); ok {
-		_spec.SetField(usersession.FieldActiveParishID, field.TypeUUID, value)
+	if value, ok := _u.mutation.ActiveParokiID(); ok {
+		_spec.SetField(usersession.FieldActiveParokiID, field.TypeUUID, value)
 	}
-	if _u.mutation.ActiveParishIDCleared() {
-		_spec.ClearField(usersession.FieldActiveParishID, field.TypeUUID)
+	if _u.mutation.ActiveParokiIDCleared() {
+		_spec.ClearField(usersession.FieldActiveParokiID, field.TypeUUID)
 	}
 	if value, ok := _u.mutation.LastActiveAt(); ok {
 		_spec.SetField(usersession.FieldLastActiveAt, field.TypeTime, value)
@@ -352,23 +352,23 @@ func (_u *UserSessionUpdateOne) SetNillableIPAddress(v *string) *UserSessionUpda
 	return _u
 }
 
-// SetActiveParishID sets the "active_parish_id" field.
-func (_u *UserSessionUpdateOne) SetActiveParishID(v uuid.UUID) *UserSessionUpdateOne {
-	_u.mutation.SetActiveParishID(v)
+// SetActiveParokiID sets the "active_paroki_id" field.
+func (_u *UserSessionUpdateOne) SetActiveParokiID(v uuid.UUID) *UserSessionUpdateOne {
+	_u.mutation.SetActiveParokiID(v)
 	return _u
 }
 
-// SetNillableActiveParishID sets the "active_parish_id" field if the given value is not nil.
-func (_u *UserSessionUpdateOne) SetNillableActiveParishID(v *uuid.UUID) *UserSessionUpdateOne {
+// SetNillableActiveParokiID sets the "active_paroki_id" field if the given value is not nil.
+func (_u *UserSessionUpdateOne) SetNillableActiveParokiID(v *uuid.UUID) *UserSessionUpdateOne {
 	if v != nil {
-		_u.SetActiveParishID(*v)
+		_u.SetActiveParokiID(*v)
 	}
 	return _u
 }
 
-// ClearActiveParishID clears the value of the "active_parish_id" field.
-func (_u *UserSessionUpdateOne) ClearActiveParishID() *UserSessionUpdateOne {
-	_u.mutation.ClearActiveParishID()
+// ClearActiveParokiID clears the value of the "active_paroki_id" field.
+func (_u *UserSessionUpdateOne) ClearActiveParokiID() *UserSessionUpdateOne {
+	_u.mutation.ClearActiveParokiID()
 	return _u
 }
 
@@ -519,11 +519,11 @@ func (_u *UserSessionUpdateOne) sqlSave(ctx context.Context) (_node *UserSession
 	if value, ok := _u.mutation.IPAddress(); ok {
 		_spec.SetField(usersession.FieldIPAddress, field.TypeString, value)
 	}
-	if value, ok := _u.mutation.ActiveParishID(); ok {
-		_spec.SetField(usersession.FieldActiveParishID, field.TypeUUID, value)
+	if value, ok := _u.mutation.ActiveParokiID(); ok {
+		_spec.SetField(usersession.FieldActiveParokiID, field.TypeUUID, value)
 	}
-	if _u.mutation.ActiveParishIDCleared() {
-		_spec.ClearField(usersession.FieldActiveParishID, field.TypeUUID)
+	if _u.mutation.ActiveParokiIDCleared() {
+		_spec.ClearField(usersession.FieldActiveParokiID, field.TypeUUID)
 	}
 	if value, ok := _u.mutation.LastActiveAt(); ok {
 		_spec.SetField(usersession.FieldLastActiveAt, field.TypeTime, value)

@@ -22,14 +22,14 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// FieldDeletedAt holds the string denoting the deleted_at field in the database.
 	FieldDeletedAt = "deleted_at"
-	// FieldParishID holds the string denoting the parish_id field in the database.
-	FieldParishID = "parish_id"
+	// FieldParokiID holds the string denoting the paroki_id field in the database.
+	FieldParokiID = "paroki_id"
 	// FieldParentID holds the string denoting the parent_id field in the database.
 	FieldParentID = "parent_id"
-	// FieldZoneID holds the string denoting the zone_id field in the database.
-	FieldZoneID = "zone_id"
-	// FieldWardID holds the string denoting the ward_id field in the database.
-	FieldWardID = "ward_id"
+	// FieldWilayahID holds the string denoting the wilayah_id field in the database.
+	FieldWilayahID = "wilayah_id"
+	// FieldLingkunganID holds the string denoting the lingkungan_id field in the database.
+	FieldLingkunganID = "lingkungan_id"
 	// FieldKind holds the string denoting the kind field in the database.
 	FieldKind = "kind"
 	// FieldCode holds the string denoting the code field in the database.
@@ -80,10 +80,10 @@ var Columns = []string{
 	FieldCreatedAt,
 	FieldUpdatedAt,
 	FieldDeletedAt,
-	FieldParishID,
+	FieldParokiID,
 	FieldParentID,
-	FieldZoneID,
-	FieldWardID,
+	FieldWilayahID,
+	FieldLingkunganID,
 	FieldKind,
 	FieldCode,
 	FieldName,
@@ -130,8 +130,8 @@ const (
 	KindBgkp        Kind = "bgkp"
 	KindSection     Kind = "section"
 	KindCategorical Kind = "categorical"
-	KindZone        Kind = "zone"
-	KindWard        Kind = "ward"
+	KindWilayah     Kind = "wilayah"
+	KindLingkungan  Kind = "lingkungan"
 	KindCommunity   Kind = "community"
 )
 
@@ -142,7 +142,7 @@ func (k Kind) String() string {
 // KindValidator is a validator for the "kind" field enum values. It is called by the builders before save.
 func KindValidator(k Kind) error {
 	switch k {
-	case KindDpp, KindBgkp, KindSection, KindCategorical, KindZone, KindWard, KindCommunity:
+	case KindDpp, KindBgkp, KindSection, KindCategorical, KindWilayah, KindLingkungan, KindCommunity:
 		return nil
 	default:
 		return fmt.Errorf("organization: invalid enum value for kind field: %q", k)
@@ -172,9 +172,9 @@ func ByDeletedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDeletedAt, opts...).ToFunc()
 }
 
-// ByParishID orders the results by the parish_id field.
-func ByParishID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldParishID, opts...).ToFunc()
+// ByParokiID orders the results by the paroki_id field.
+func ByParokiID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldParokiID, opts...).ToFunc()
 }
 
 // ByParentID orders the results by the parent_id field.
@@ -182,14 +182,14 @@ func ByParentID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldParentID, opts...).ToFunc()
 }
 
-// ByZoneID orders the results by the zone_id field.
-func ByZoneID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldZoneID, opts...).ToFunc()
+// ByWilayahID orders the results by the wilayah_id field.
+func ByWilayahID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldWilayahID, opts...).ToFunc()
 }
 
-// ByWardID orders the results by the ward_id field.
-func ByWardID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldWardID, opts...).ToFunc()
+// ByLingkunganID orders the results by the lingkungan_id field.
+func ByLingkunganID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLingkunganID, opts...).ToFunc()
 }
 
 // ByKind orders the results by the kind field.

@@ -56,16 +56,16 @@ func (_u *AgentSessionUpdate) ClearDeletedAt() *AgentSessionUpdate {
 	return _u
 }
 
-// SetParishID sets the "parish_id" field.
-func (_u *AgentSessionUpdate) SetParishID(v uuid.UUID) *AgentSessionUpdate {
-	_u.mutation.SetParishID(v)
+// SetParokiID sets the "paroki_id" field.
+func (_u *AgentSessionUpdate) SetParokiID(v uuid.UUID) *AgentSessionUpdate {
+	_u.mutation.SetParokiID(v)
 	return _u
 }
 
-// SetNillableParishID sets the "parish_id" field if the given value is not nil.
-func (_u *AgentSessionUpdate) SetNillableParishID(v *uuid.UUID) *AgentSessionUpdate {
+// SetNillableParokiID sets the "paroki_id" field if the given value is not nil.
+func (_u *AgentSessionUpdate) SetNillableParokiID(v *uuid.UUID) *AgentSessionUpdate {
 	if v != nil {
-		_u.SetParishID(*v)
+		_u.SetParokiID(*v)
 	}
 	return _u
 }
@@ -247,8 +247,8 @@ func (_u *AgentSessionUpdate) sqlSave(ctx context.Context) (_node int, err error
 	if _u.mutation.DeletedAtCleared() {
 		_spec.ClearField(agentsession.FieldDeletedAt, field.TypeTime)
 	}
-	if value, ok := _u.mutation.ParishID(); ok {
-		_spec.SetField(agentsession.FieldParishID, field.TypeUUID, value)
+	if value, ok := _u.mutation.ParokiID(); ok {
+		_spec.SetField(agentsession.FieldParokiID, field.TypeUUID, value)
 	}
 	if value, ok := _u.mutation.UserID(); ok {
 		_spec.SetField(agentsession.FieldUserID, field.TypeUUID, value)
@@ -362,16 +362,16 @@ func (_u *AgentSessionUpdateOne) ClearDeletedAt() *AgentSessionUpdateOne {
 	return _u
 }
 
-// SetParishID sets the "parish_id" field.
-func (_u *AgentSessionUpdateOne) SetParishID(v uuid.UUID) *AgentSessionUpdateOne {
-	_u.mutation.SetParishID(v)
+// SetParokiID sets the "paroki_id" field.
+func (_u *AgentSessionUpdateOne) SetParokiID(v uuid.UUID) *AgentSessionUpdateOne {
+	_u.mutation.SetParokiID(v)
 	return _u
 }
 
-// SetNillableParishID sets the "parish_id" field if the given value is not nil.
-func (_u *AgentSessionUpdateOne) SetNillableParishID(v *uuid.UUID) *AgentSessionUpdateOne {
+// SetNillableParokiID sets the "paroki_id" field if the given value is not nil.
+func (_u *AgentSessionUpdateOne) SetNillableParokiID(v *uuid.UUID) *AgentSessionUpdateOne {
 	if v != nil {
-		_u.SetParishID(*v)
+		_u.SetParokiID(*v)
 	}
 	return _u
 }
@@ -583,8 +583,8 @@ func (_u *AgentSessionUpdateOne) sqlSave(ctx context.Context) (_node *AgentSessi
 	if _u.mutation.DeletedAtCleared() {
 		_spec.ClearField(agentsession.FieldDeletedAt, field.TypeTime)
 	}
-	if value, ok := _u.mutation.ParishID(); ok {
-		_spec.SetField(agentsession.FieldParishID, field.TypeUUID, value)
+	if value, ok := _u.mutation.ParokiID(); ok {
+		_spec.SetField(agentsession.FieldParokiID, field.TypeUUID, value)
 	}
 	if value, ok := _u.mutation.UserID(); ok {
 		_spec.SetField(agentsession.FieldUserID, field.TypeUUID, value)

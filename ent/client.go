@@ -21,23 +21,23 @@ import (
 	"github.com/paroki/domus/ent/agentprovider"
 	"github.com/paroki/domus/ent/agentsession"
 	"github.com/paroki/domus/ent/casbinrule"
-	"github.com/paroki/domus/ent/diocese"
 	"github.com/paroki/domus/ent/event"
 	"github.com/paroki/domus/ent/eventrsvp"
+	"github.com/paroki/domus/ent/keuskupan"
+	"github.com/paroki/domus/ent/lingkungan"
 	"github.com/paroki/domus/ent/lookup"
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orginvite"
 	"github.com/paroki/domus/ent/orgmember"
-	"github.com/paroki/domus/ent/parish"
-	"github.com/paroki/domus/ent/parishmember"
+	"github.com/paroki/domus/ent/paroki"
+	"github.com/paroki/domus/ent/parokimember"
 	"github.com/paroki/domus/ent/period"
 	"github.com/paroki/domus/ent/setting"
 	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/useraccount"
 	"github.com/paroki/domus/ent/userotp"
 	"github.com/paroki/domus/ent/usersession"
-	"github.com/paroki/domus/ent/ward"
-	"github.com/paroki/domus/ent/zone"
+	"github.com/paroki/domus/ent/wilayah"
 )
 
 // Client is the client that holds all ent builders.
@@ -55,12 +55,14 @@ type Client struct {
 	AgentSession *AgentSessionClient
 	// CasbinRule is the client for interacting with the CasbinRule builders.
 	CasbinRule *CasbinRuleClient
-	// Diocese is the client for interacting with the Diocese builders.
-	Diocese *DioceseClient
 	// Event is the client for interacting with the Event builders.
 	Event *EventClient
 	// EventRSVP is the client for interacting with the EventRSVP builders.
 	EventRSVP *EventRSVPClient
+	// Keuskupan is the client for interacting with the Keuskupan builders.
+	Keuskupan *KeuskupanClient
+	// Lingkungan is the client for interacting with the Lingkungan builders.
+	Lingkungan *LingkunganClient
 	// Lookup is the client for interacting with the Lookup builders.
 	Lookup *LookupClient
 	// OrgInvite is the client for interacting with the OrgInvite builders.
@@ -69,10 +71,10 @@ type Client struct {
 	OrgMember *OrgMemberClient
 	// Organization is the client for interacting with the Organization builders.
 	Organization *OrganizationClient
-	// Parish is the client for interacting with the Parish builders.
-	Parish *ParishClient
-	// ParishMember is the client for interacting with the ParishMember builders.
-	ParishMember *ParishMemberClient
+	// Paroki is the client for interacting with the Paroki builders.
+	Paroki *ParokiClient
+	// ParokiMember is the client for interacting with the ParokiMember builders.
+	ParokiMember *ParokiMemberClient
 	// Period is the client for interacting with the Period builders.
 	Period *PeriodClient
 	// Setting is the client for interacting with the Setting builders.
@@ -85,10 +87,8 @@ type Client struct {
 	UserOTP *UserOTPClient
 	// UserSession is the client for interacting with the UserSession builders.
 	UserSession *UserSessionClient
-	// Ward is the client for interacting with the Ward builders.
-	Ward *WardClient
-	// Zone is the client for interacting with the Zone builders.
-	Zone *ZoneClient
+	// Wilayah is the client for interacting with the Wilayah builders.
+	Wilayah *WilayahClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -105,23 +105,23 @@ func (c *Client) init() {
 	c.AgentProvider = NewAgentProviderClient(c.config)
 	c.AgentSession = NewAgentSessionClient(c.config)
 	c.CasbinRule = NewCasbinRuleClient(c.config)
-	c.Diocese = NewDioceseClient(c.config)
 	c.Event = NewEventClient(c.config)
 	c.EventRSVP = NewEventRSVPClient(c.config)
+	c.Keuskupan = NewKeuskupanClient(c.config)
+	c.Lingkungan = NewLingkunganClient(c.config)
 	c.Lookup = NewLookupClient(c.config)
 	c.OrgInvite = NewOrgInviteClient(c.config)
 	c.OrgMember = NewOrgMemberClient(c.config)
 	c.Organization = NewOrganizationClient(c.config)
-	c.Parish = NewParishClient(c.config)
-	c.ParishMember = NewParishMemberClient(c.config)
+	c.Paroki = NewParokiClient(c.config)
+	c.ParokiMember = NewParokiMemberClient(c.config)
 	c.Period = NewPeriodClient(c.config)
 	c.Setting = NewSettingClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.UserAccount = NewUserAccountClient(c.config)
 	c.UserOTP = NewUserOTPClient(c.config)
 	c.UserSession = NewUserSessionClient(c.config)
-	c.Ward = NewWardClient(c.config)
-	c.Zone = NewZoneClient(c.config)
+	c.Wilayah = NewWilayahClient(c.config)
 }
 
 type (
@@ -219,23 +219,23 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		AgentProvider: NewAgentProviderClient(cfg),
 		AgentSession:  NewAgentSessionClient(cfg),
 		CasbinRule:    NewCasbinRuleClient(cfg),
-		Diocese:       NewDioceseClient(cfg),
 		Event:         NewEventClient(cfg),
 		EventRSVP:     NewEventRSVPClient(cfg),
+		Keuskupan:     NewKeuskupanClient(cfg),
+		Lingkungan:    NewLingkunganClient(cfg),
 		Lookup:        NewLookupClient(cfg),
 		OrgInvite:     NewOrgInviteClient(cfg),
 		OrgMember:     NewOrgMemberClient(cfg),
 		Organization:  NewOrganizationClient(cfg),
-		Parish:        NewParishClient(cfg),
-		ParishMember:  NewParishMemberClient(cfg),
+		Paroki:        NewParokiClient(cfg),
+		ParokiMember:  NewParokiMemberClient(cfg),
 		Period:        NewPeriodClient(cfg),
 		Setting:       NewSettingClient(cfg),
 		User:          NewUserClient(cfg),
 		UserAccount:   NewUserAccountClient(cfg),
 		UserOTP:       NewUserOTPClient(cfg),
 		UserSession:   NewUserSessionClient(cfg),
-		Ward:          NewWardClient(cfg),
-		Zone:          NewZoneClient(cfg),
+		Wilayah:       NewWilayahClient(cfg),
 	}, nil
 }
 
@@ -260,23 +260,23 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		AgentProvider: NewAgentProviderClient(cfg),
 		AgentSession:  NewAgentSessionClient(cfg),
 		CasbinRule:    NewCasbinRuleClient(cfg),
-		Diocese:       NewDioceseClient(cfg),
 		Event:         NewEventClient(cfg),
 		EventRSVP:     NewEventRSVPClient(cfg),
+		Keuskupan:     NewKeuskupanClient(cfg),
+		Lingkungan:    NewLingkunganClient(cfg),
 		Lookup:        NewLookupClient(cfg),
 		OrgInvite:     NewOrgInviteClient(cfg),
 		OrgMember:     NewOrgMemberClient(cfg),
 		Organization:  NewOrganizationClient(cfg),
-		Parish:        NewParishClient(cfg),
-		ParishMember:  NewParishMemberClient(cfg),
+		Paroki:        NewParokiClient(cfg),
+		ParokiMember:  NewParokiMemberClient(cfg),
 		Period:        NewPeriodClient(cfg),
 		Setting:       NewSettingClient(cfg),
 		User:          NewUserClient(cfg),
 		UserAccount:   NewUserAccountClient(cfg),
 		UserOTP:       NewUserOTPClient(cfg),
 		UserSession:   NewUserSessionClient(cfg),
-		Ward:          NewWardClient(cfg),
-		Zone:          NewZoneClient(cfg),
+		Wilayah:       NewWilayahClient(cfg),
 	}, nil
 }
 
@@ -307,9 +307,9 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.AgentMemory, c.AgentMessage, c.AgentProvider, c.AgentSession, c.CasbinRule,
-		c.Diocese, c.Event, c.EventRSVP, c.Lookup, c.OrgInvite, c.OrgMember,
-		c.Organization, c.Parish, c.ParishMember, c.Period, c.Setting, c.User,
-		c.UserAccount, c.UserOTP, c.UserSession, c.Ward, c.Zone,
+		c.Event, c.EventRSVP, c.Keuskupan, c.Lingkungan, c.Lookup, c.OrgInvite,
+		c.OrgMember, c.Organization, c.Paroki, c.ParokiMember, c.Period, c.Setting,
+		c.User, c.UserAccount, c.UserOTP, c.UserSession, c.Wilayah,
 	} {
 		n.Use(hooks...)
 	}
@@ -320,9 +320,9 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.AgentMemory, c.AgentMessage, c.AgentProvider, c.AgentSession, c.CasbinRule,
-		c.Diocese, c.Event, c.EventRSVP, c.Lookup, c.OrgInvite, c.OrgMember,
-		c.Organization, c.Parish, c.ParishMember, c.Period, c.Setting, c.User,
-		c.UserAccount, c.UserOTP, c.UserSession, c.Ward, c.Zone,
+		c.Event, c.EventRSVP, c.Keuskupan, c.Lingkungan, c.Lookup, c.OrgInvite,
+		c.OrgMember, c.Organization, c.Paroki, c.ParokiMember, c.Period, c.Setting,
+		c.User, c.UserAccount, c.UserOTP, c.UserSession, c.Wilayah,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -341,12 +341,14 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.AgentSession.mutate(ctx, m)
 	case *CasbinRuleMutation:
 		return c.CasbinRule.mutate(ctx, m)
-	case *DioceseMutation:
-		return c.Diocese.mutate(ctx, m)
 	case *EventMutation:
 		return c.Event.mutate(ctx, m)
 	case *EventRSVPMutation:
 		return c.EventRSVP.mutate(ctx, m)
+	case *KeuskupanMutation:
+		return c.Keuskupan.mutate(ctx, m)
+	case *LingkunganMutation:
+		return c.Lingkungan.mutate(ctx, m)
 	case *LookupMutation:
 		return c.Lookup.mutate(ctx, m)
 	case *OrgInviteMutation:
@@ -355,10 +357,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.OrgMember.mutate(ctx, m)
 	case *OrganizationMutation:
 		return c.Organization.mutate(ctx, m)
-	case *ParishMutation:
-		return c.Parish.mutate(ctx, m)
-	case *ParishMemberMutation:
-		return c.ParishMember.mutate(ctx, m)
+	case *ParokiMutation:
+		return c.Paroki.mutate(ctx, m)
+	case *ParokiMemberMutation:
+		return c.ParokiMember.mutate(ctx, m)
 	case *PeriodMutation:
 		return c.Period.mutate(ctx, m)
 	case *SettingMutation:
@@ -371,10 +373,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.UserOTP.mutate(ctx, m)
 	case *UserSessionMutation:
 		return c.UserSession.mutate(ctx, m)
-	case *WardMutation:
-		return c.Ward.mutate(ctx, m)
-	case *ZoneMutation:
-		return c.Zone.mutate(ctx, m)
+	case *WilayahMutation:
+		return c.Wilayah.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -1077,155 +1077,6 @@ func (c *CasbinRuleClient) mutate(ctx context.Context, m *CasbinRuleMutation) (V
 	}
 }
 
-// DioceseClient is a client for the Diocese schema.
-type DioceseClient struct {
-	config
-}
-
-// NewDioceseClient returns a client for the Diocese from the given config.
-func NewDioceseClient(c config) *DioceseClient {
-	return &DioceseClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `diocese.Hooks(f(g(h())))`.
-func (c *DioceseClient) Use(hooks ...Hook) {
-	c.hooks.Diocese = append(c.hooks.Diocese, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `diocese.Intercept(f(g(h())))`.
-func (c *DioceseClient) Intercept(interceptors ...Interceptor) {
-	c.inters.Diocese = append(c.inters.Diocese, interceptors...)
-}
-
-// Create returns a builder for creating a Diocese entity.
-func (c *DioceseClient) Create() *DioceseCreate {
-	mutation := newDioceseMutation(c.config, OpCreate)
-	return &DioceseCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of Diocese entities.
-func (c *DioceseClient) CreateBulk(builders ...*DioceseCreate) *DioceseCreateBulk {
-	return &DioceseCreateBulk{config: c.config, builders: builders}
-}
-
-// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
-// a builder and applies setFunc on it.
-func (c *DioceseClient) MapCreateBulk(slice any, setFunc func(*DioceseCreate, int)) *DioceseCreateBulk {
-	rv := reflect.ValueOf(slice)
-	if rv.Kind() != reflect.Slice {
-		return &DioceseCreateBulk{err: fmt.Errorf("calling to DioceseClient.MapCreateBulk with wrong type %T, need slice", slice)}
-	}
-	builders := make([]*DioceseCreate, rv.Len())
-	for i := 0; i < rv.Len(); i++ {
-		builders[i] = c.Create()
-		setFunc(builders[i], i)
-	}
-	return &DioceseCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for Diocese.
-func (c *DioceseClient) Update() *DioceseUpdate {
-	mutation := newDioceseMutation(c.config, OpUpdate)
-	return &DioceseUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *DioceseClient) UpdateOne(_m *Diocese) *DioceseUpdateOne {
-	mutation := newDioceseMutation(c.config, OpUpdateOne, withDiocese(_m))
-	return &DioceseUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *DioceseClient) UpdateOneID(id uuid.UUID) *DioceseUpdateOne {
-	mutation := newDioceseMutation(c.config, OpUpdateOne, withDioceseID(id))
-	return &DioceseUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for Diocese.
-func (c *DioceseClient) Delete() *DioceseDelete {
-	mutation := newDioceseMutation(c.config, OpDelete)
-	return &DioceseDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *DioceseClient) DeleteOne(_m *Diocese) *DioceseDeleteOne {
-	return c.DeleteOneID(_m.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *DioceseClient) DeleteOneID(id uuid.UUID) *DioceseDeleteOne {
-	builder := c.Delete().Where(diocese.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &DioceseDeleteOne{builder}
-}
-
-// Query returns a query builder for Diocese.
-func (c *DioceseClient) Query() *DioceseQuery {
-	return &DioceseQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypeDiocese},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a Diocese entity by its id.
-func (c *DioceseClient) Get(ctx context.Context, id uuid.UUID) (*Diocese, error) {
-	return c.Query().Where(diocese.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *DioceseClient) GetX(ctx context.Context, id uuid.UUID) *Diocese {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// QueryParishes queries the parishes edge of a Diocese.
-func (c *DioceseClient) QueryParishes(_m *Diocese) *ParishQuery {
-	query := (&ParishClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(diocese.Table, diocese.FieldID, id),
-			sqlgraph.To(parish.Table, parish.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, diocese.ParishesTable, diocese.ParishesColumn),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// Hooks returns the client hooks.
-func (c *DioceseClient) Hooks() []Hook {
-	return c.hooks.Diocese
-}
-
-// Interceptors returns the client interceptors.
-func (c *DioceseClient) Interceptors() []Interceptor {
-	return c.inters.Diocese
-}
-
-func (c *DioceseClient) mutate(ctx context.Context, m *DioceseMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&DioceseCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&DioceseUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&DioceseUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&DioceseDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown Diocese mutation op: %q", m.Op())
-	}
-}
-
 // EventClient is a client for the Event schema.
 type EventClient struct {
 	config
@@ -1524,6 +1375,320 @@ func (c *EventRSVPClient) mutate(ctx context.Context, m *EventRSVPMutation) (Val
 	}
 }
 
+// KeuskupanClient is a client for the Keuskupan schema.
+type KeuskupanClient struct {
+	config
+}
+
+// NewKeuskupanClient returns a client for the Keuskupan from the given config.
+func NewKeuskupanClient(c config) *KeuskupanClient {
+	return &KeuskupanClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `keuskupan.Hooks(f(g(h())))`.
+func (c *KeuskupanClient) Use(hooks ...Hook) {
+	c.hooks.Keuskupan = append(c.hooks.Keuskupan, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `keuskupan.Intercept(f(g(h())))`.
+func (c *KeuskupanClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Keuskupan = append(c.inters.Keuskupan, interceptors...)
+}
+
+// Create returns a builder for creating a Keuskupan entity.
+func (c *KeuskupanClient) Create() *KeuskupanCreate {
+	mutation := newKeuskupanMutation(c.config, OpCreate)
+	return &KeuskupanCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Keuskupan entities.
+func (c *KeuskupanClient) CreateBulk(builders ...*KeuskupanCreate) *KeuskupanCreateBulk {
+	return &KeuskupanCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *KeuskupanClient) MapCreateBulk(slice any, setFunc func(*KeuskupanCreate, int)) *KeuskupanCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &KeuskupanCreateBulk{err: fmt.Errorf("calling to KeuskupanClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*KeuskupanCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &KeuskupanCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Keuskupan.
+func (c *KeuskupanClient) Update() *KeuskupanUpdate {
+	mutation := newKeuskupanMutation(c.config, OpUpdate)
+	return &KeuskupanUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *KeuskupanClient) UpdateOne(_m *Keuskupan) *KeuskupanUpdateOne {
+	mutation := newKeuskupanMutation(c.config, OpUpdateOne, withKeuskupan(_m))
+	return &KeuskupanUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *KeuskupanClient) UpdateOneID(id uuid.UUID) *KeuskupanUpdateOne {
+	mutation := newKeuskupanMutation(c.config, OpUpdateOne, withKeuskupanID(id))
+	return &KeuskupanUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Keuskupan.
+func (c *KeuskupanClient) Delete() *KeuskupanDelete {
+	mutation := newKeuskupanMutation(c.config, OpDelete)
+	return &KeuskupanDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *KeuskupanClient) DeleteOne(_m *Keuskupan) *KeuskupanDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *KeuskupanClient) DeleteOneID(id uuid.UUID) *KeuskupanDeleteOne {
+	builder := c.Delete().Where(keuskupan.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &KeuskupanDeleteOne{builder}
+}
+
+// Query returns a query builder for Keuskupan.
+func (c *KeuskupanClient) Query() *KeuskupanQuery {
+	return &KeuskupanQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeKeuskupan},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Keuskupan entity by its id.
+func (c *KeuskupanClient) Get(ctx context.Context, id uuid.UUID) (*Keuskupan, error) {
+	return c.Query().Where(keuskupan.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *KeuskupanClient) GetX(ctx context.Context, id uuid.UUID) *Keuskupan {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryParoki queries the paroki edge of a Keuskupan.
+func (c *KeuskupanClient) QueryParoki(_m *Keuskupan) *ParokiQuery {
+	query := (&ParokiClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(keuskupan.Table, keuskupan.FieldID, id),
+			sqlgraph.To(paroki.Table, paroki.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, keuskupan.ParokiTable, keuskupan.ParokiColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *KeuskupanClient) Hooks() []Hook {
+	return c.hooks.Keuskupan
+}
+
+// Interceptors returns the client interceptors.
+func (c *KeuskupanClient) Interceptors() []Interceptor {
+	return c.inters.Keuskupan
+}
+
+func (c *KeuskupanClient) mutate(ctx context.Context, m *KeuskupanMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&KeuskupanCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&KeuskupanUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&KeuskupanUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&KeuskupanDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Keuskupan mutation op: %q", m.Op())
+	}
+}
+
+// LingkunganClient is a client for the Lingkungan schema.
+type LingkunganClient struct {
+	config
+}
+
+// NewLingkunganClient returns a client for the Lingkungan from the given config.
+func NewLingkunganClient(c config) *LingkunganClient {
+	return &LingkunganClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `lingkungan.Hooks(f(g(h())))`.
+func (c *LingkunganClient) Use(hooks ...Hook) {
+	c.hooks.Lingkungan = append(c.hooks.Lingkungan, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `lingkungan.Intercept(f(g(h())))`.
+func (c *LingkunganClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Lingkungan = append(c.inters.Lingkungan, interceptors...)
+}
+
+// Create returns a builder for creating a Lingkungan entity.
+func (c *LingkunganClient) Create() *LingkunganCreate {
+	mutation := newLingkunganMutation(c.config, OpCreate)
+	return &LingkunganCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Lingkungan entities.
+func (c *LingkunganClient) CreateBulk(builders ...*LingkunganCreate) *LingkunganCreateBulk {
+	return &LingkunganCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *LingkunganClient) MapCreateBulk(slice any, setFunc func(*LingkunganCreate, int)) *LingkunganCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &LingkunganCreateBulk{err: fmt.Errorf("calling to LingkunganClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*LingkunganCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &LingkunganCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Lingkungan.
+func (c *LingkunganClient) Update() *LingkunganUpdate {
+	mutation := newLingkunganMutation(c.config, OpUpdate)
+	return &LingkunganUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *LingkunganClient) UpdateOne(_m *Lingkungan) *LingkunganUpdateOne {
+	mutation := newLingkunganMutation(c.config, OpUpdateOne, withLingkungan(_m))
+	return &LingkunganUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *LingkunganClient) UpdateOneID(id uuid.UUID) *LingkunganUpdateOne {
+	mutation := newLingkunganMutation(c.config, OpUpdateOne, withLingkunganID(id))
+	return &LingkunganUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Lingkungan.
+func (c *LingkunganClient) Delete() *LingkunganDelete {
+	mutation := newLingkunganMutation(c.config, OpDelete)
+	return &LingkunganDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *LingkunganClient) DeleteOne(_m *Lingkungan) *LingkunganDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *LingkunganClient) DeleteOneID(id uuid.UUID) *LingkunganDeleteOne {
+	builder := c.Delete().Where(lingkungan.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &LingkunganDeleteOne{builder}
+}
+
+// Query returns a query builder for Lingkungan.
+func (c *LingkunganClient) Query() *LingkunganQuery {
+	return &LingkunganQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeLingkungan},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Lingkungan entity by its id.
+func (c *LingkunganClient) Get(ctx context.Context, id uuid.UUID) (*Lingkungan, error) {
+	return c.Query().Where(lingkungan.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *LingkunganClient) GetX(ctx context.Context, id uuid.UUID) *Lingkungan {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryParoki queries the paroki edge of a Lingkungan.
+func (c *LingkunganClient) QueryParoki(_m *Lingkungan) *ParokiQuery {
+	query := (&ParokiClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(lingkungan.Table, lingkungan.FieldID, id),
+			sqlgraph.To(paroki.Table, paroki.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, lingkungan.ParokiTable, lingkungan.ParokiColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryWilayah queries the wilayah edge of a Lingkungan.
+func (c *LingkunganClient) QueryWilayah(_m *Lingkungan) *WilayahQuery {
+	query := (&WilayahClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(lingkungan.Table, lingkungan.FieldID, id),
+			sqlgraph.To(wilayah.Table, wilayah.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, lingkungan.WilayahTable, lingkungan.WilayahColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *LingkunganClient) Hooks() []Hook {
+	return c.hooks.Lingkungan
+}
+
+// Interceptors returns the client interceptors.
+func (c *LingkunganClient) Interceptors() []Interceptor {
+	return c.inters.Lingkungan
+}
+
+func (c *LingkunganClient) mutate(ctx context.Context, m *LingkunganMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&LingkunganCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&LingkunganUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&LingkunganUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&LingkunganDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Lingkungan mutation op: %q", m.Op())
+	}
+}
+
 // LookupClient is a client for the Lookup schema.
 type LookupClient struct {
 	config
@@ -1632,15 +1797,15 @@ func (c *LookupClient) GetX(ctx context.Context, id uuid.UUID) *Lookup {
 	return obj
 }
 
-// QueryParish queries the parish edge of a Lookup.
-func (c *LookupClient) QueryParish(_m *Lookup) *ParishQuery {
-	query := (&ParishClient{config: c.config}).Query()
+// QueryParoki queries the paroki edge of a Lookup.
+func (c *LookupClient) QueryParoki(_m *Lookup) *ParokiQuery {
+	query := (&ParokiClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(lookup.Table, lookup.FieldID, id),
-			sqlgraph.To(parish.Table, parish.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, lookup.ParishTable, lookup.ParishColumn),
+			sqlgraph.To(paroki.Table, paroki.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, lookup.ParokiTable, lookup.ParokiColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -2168,107 +2333,107 @@ func (c *OrganizationClient) mutate(ctx context.Context, m *OrganizationMutation
 	}
 }
 
-// ParishClient is a client for the Parish schema.
-type ParishClient struct {
+// ParokiClient is a client for the Paroki schema.
+type ParokiClient struct {
 	config
 }
 
-// NewParishClient returns a client for the Parish from the given config.
-func NewParishClient(c config) *ParishClient {
-	return &ParishClient{config: c}
+// NewParokiClient returns a client for the Paroki from the given config.
+func NewParokiClient(c config) *ParokiClient {
+	return &ParokiClient{config: c}
 }
 
 // Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `parish.Hooks(f(g(h())))`.
-func (c *ParishClient) Use(hooks ...Hook) {
-	c.hooks.Parish = append(c.hooks.Parish, hooks...)
+// A call to `Use(f, g, h)` equals to `paroki.Hooks(f(g(h())))`.
+func (c *ParokiClient) Use(hooks ...Hook) {
+	c.hooks.Paroki = append(c.hooks.Paroki, hooks...)
 }
 
 // Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `parish.Intercept(f(g(h())))`.
-func (c *ParishClient) Intercept(interceptors ...Interceptor) {
-	c.inters.Parish = append(c.inters.Parish, interceptors...)
+// A call to `Intercept(f, g, h)` equals to `paroki.Intercept(f(g(h())))`.
+func (c *ParokiClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Paroki = append(c.inters.Paroki, interceptors...)
 }
 
-// Create returns a builder for creating a Parish entity.
-func (c *ParishClient) Create() *ParishCreate {
-	mutation := newParishMutation(c.config, OpCreate)
-	return &ParishCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Create returns a builder for creating a Paroki entity.
+func (c *ParokiClient) Create() *ParokiCreate {
+	mutation := newParokiMutation(c.config, OpCreate)
+	return &ParokiCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// CreateBulk returns a builder for creating a bulk of Parish entities.
-func (c *ParishClient) CreateBulk(builders ...*ParishCreate) *ParishCreateBulk {
-	return &ParishCreateBulk{config: c.config, builders: builders}
+// CreateBulk returns a builder for creating a bulk of Paroki entities.
+func (c *ParokiClient) CreateBulk(builders ...*ParokiCreate) *ParokiCreateBulk {
+	return &ParokiCreateBulk{config: c.config, builders: builders}
 }
 
 // MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
 // a builder and applies setFunc on it.
-func (c *ParishClient) MapCreateBulk(slice any, setFunc func(*ParishCreate, int)) *ParishCreateBulk {
+func (c *ParokiClient) MapCreateBulk(slice any, setFunc func(*ParokiCreate, int)) *ParokiCreateBulk {
 	rv := reflect.ValueOf(slice)
 	if rv.Kind() != reflect.Slice {
-		return &ParishCreateBulk{err: fmt.Errorf("calling to ParishClient.MapCreateBulk with wrong type %T, need slice", slice)}
+		return &ParokiCreateBulk{err: fmt.Errorf("calling to ParokiClient.MapCreateBulk with wrong type %T, need slice", slice)}
 	}
-	builders := make([]*ParishCreate, rv.Len())
+	builders := make([]*ParokiCreate, rv.Len())
 	for i := 0; i < rv.Len(); i++ {
 		builders[i] = c.Create()
 		setFunc(builders[i], i)
 	}
-	return &ParishCreateBulk{config: c.config, builders: builders}
+	return &ParokiCreateBulk{config: c.config, builders: builders}
 }
 
-// Update returns an update builder for Parish.
-func (c *ParishClient) Update() *ParishUpdate {
-	mutation := newParishMutation(c.config, OpUpdate)
-	return &ParishUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Update returns an update builder for Paroki.
+func (c *ParokiClient) Update() *ParokiUpdate {
+	mutation := newParokiMutation(c.config, OpUpdate)
+	return &ParokiUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *ParishClient) UpdateOne(_m *Parish) *ParishUpdateOne {
-	mutation := newParishMutation(c.config, OpUpdateOne, withParish(_m))
-	return &ParishUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *ParokiClient) UpdateOne(_m *Paroki) *ParokiUpdateOne {
+	mutation := newParokiMutation(c.config, OpUpdateOne, withParoki(_m))
+	return &ParokiUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *ParishClient) UpdateOneID(id uuid.UUID) *ParishUpdateOne {
-	mutation := newParishMutation(c.config, OpUpdateOne, withParishID(id))
-	return &ParishUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *ParokiClient) UpdateOneID(id uuid.UUID) *ParokiUpdateOne {
+	mutation := newParokiMutation(c.config, OpUpdateOne, withParokiID(id))
+	return &ParokiUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// Delete returns a delete builder for Parish.
-func (c *ParishClient) Delete() *ParishDelete {
-	mutation := newParishMutation(c.config, OpDelete)
-	return &ParishDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Delete returns a delete builder for Paroki.
+func (c *ParokiClient) Delete() *ParokiDelete {
+	mutation := newParokiMutation(c.config, OpDelete)
+	return &ParokiDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *ParishClient) DeleteOne(_m *Parish) *ParishDeleteOne {
+func (c *ParokiClient) DeleteOne(_m *Paroki) *ParokiDeleteOne {
 	return c.DeleteOneID(_m.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *ParishClient) DeleteOneID(id uuid.UUID) *ParishDeleteOne {
-	builder := c.Delete().Where(parish.ID(id))
+func (c *ParokiClient) DeleteOneID(id uuid.UUID) *ParokiDeleteOne {
+	builder := c.Delete().Where(paroki.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
-	return &ParishDeleteOne{builder}
+	return &ParokiDeleteOne{builder}
 }
 
-// Query returns a query builder for Parish.
-func (c *ParishClient) Query() *ParishQuery {
-	return &ParishQuery{
+// Query returns a query builder for Paroki.
+func (c *ParokiClient) Query() *ParokiQuery {
+	return &ParokiQuery{
 		config: c.config,
-		ctx:    &QueryContext{Type: TypeParish},
+		ctx:    &QueryContext{Type: TypeParoki},
 		inters: c.Interceptors(),
 	}
 }
 
-// Get returns a Parish entity by its id.
-func (c *ParishClient) Get(ctx context.Context, id uuid.UUID) (*Parish, error) {
-	return c.Query().Where(parish.ID(id)).Only(ctx)
+// Get returns a Paroki entity by its id.
+func (c *ParokiClient) Get(ctx context.Context, id uuid.UUID) (*Paroki, error) {
+	return c.Query().Where(paroki.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *ParishClient) GetX(ctx context.Context, id uuid.UUID) *Parish {
+func (c *ParokiClient) GetX(ctx context.Context, id uuid.UUID) *Paroki {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -2276,15 +2441,15 @@ func (c *ParishClient) GetX(ctx context.Context, id uuid.UUID) *Parish {
 	return obj
 }
 
-// QueryDiocese queries the diocese edge of a Parish.
-func (c *ParishClient) QueryDiocese(_m *Parish) *DioceseQuery {
-	query := (&DioceseClient{config: c.config}).Query()
+// QueryKeuskupan queries the keuskupan edge of a Paroki.
+func (c *ParokiClient) QueryKeuskupan(_m *Paroki) *KeuskupanQuery {
+	query := (&KeuskupanClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := _m.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(parish.Table, parish.FieldID, id),
-			sqlgraph.To(diocese.Table, diocese.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, parish.DioceseTable, parish.DioceseColumn),
+			sqlgraph.From(paroki.Table, paroki.FieldID, id),
+			sqlgraph.To(keuskupan.Table, keuskupan.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, paroki.KeuskupanTable, paroki.KeuskupanColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -2292,15 +2457,15 @@ func (c *ParishClient) QueryDiocese(_m *Parish) *DioceseQuery {
 	return query
 }
 
-// QueryMembers queries the members edge of a Parish.
-func (c *ParishClient) QueryMembers(_m *Parish) *ParishMemberQuery {
-	query := (&ParishMemberClient{config: c.config}).Query()
+// QueryMembers queries the members edge of a Paroki.
+func (c *ParokiClient) QueryMembers(_m *Paroki) *ParokiMemberQuery {
+	query := (&ParokiMemberClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := _m.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(parish.Table, parish.FieldID, id),
-			sqlgraph.To(parishmember.Table, parishmember.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, parish.MembersTable, parish.MembersColumn),
+			sqlgraph.From(paroki.Table, paroki.FieldID, id),
+			sqlgraph.To(parokimember.Table, parokimember.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, paroki.MembersTable, paroki.MembersColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -2308,15 +2473,15 @@ func (c *ParishClient) QueryMembers(_m *Parish) *ParishMemberQuery {
 	return query
 }
 
-// QueryZones queries the zones edge of a Parish.
-func (c *ParishClient) QueryZones(_m *Parish) *ZoneQuery {
-	query := (&ZoneClient{config: c.config}).Query()
+// QueryWilayah queries the wilayah edge of a Paroki.
+func (c *ParokiClient) QueryWilayah(_m *Paroki) *WilayahQuery {
+	query := (&WilayahClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := _m.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(parish.Table, parish.FieldID, id),
-			sqlgraph.To(zone.Table, zone.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, parish.ZonesTable, parish.ZonesColumn),
+			sqlgraph.From(paroki.Table, paroki.FieldID, id),
+			sqlgraph.To(wilayah.Table, wilayah.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, paroki.WilayahTable, paroki.WilayahColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -2324,15 +2489,15 @@ func (c *ParishClient) QueryZones(_m *Parish) *ZoneQuery {
 	return query
 }
 
-// QueryWards queries the wards edge of a Parish.
-func (c *ParishClient) QueryWards(_m *Parish) *WardQuery {
-	query := (&WardClient{config: c.config}).Query()
+// QueryLingkungan queries the lingkungan edge of a Paroki.
+func (c *ParokiClient) QueryLingkungan(_m *Paroki) *LingkunganQuery {
+	query := (&LingkunganClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := _m.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(parish.Table, parish.FieldID, id),
-			sqlgraph.To(ward.Table, ward.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, parish.WardsTable, parish.WardsColumn),
+			sqlgraph.From(paroki.Table, paroki.FieldID, id),
+			sqlgraph.To(lingkungan.Table, lingkungan.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, paroki.LingkunganTable, paroki.LingkunganColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -2340,15 +2505,15 @@ func (c *ParishClient) QueryWards(_m *Parish) *WardQuery {
 	return query
 }
 
-// QueryLookups queries the lookups edge of a Parish.
-func (c *ParishClient) QueryLookups(_m *Parish) *LookupQuery {
+// QueryLookups queries the lookups edge of a Paroki.
+func (c *ParokiClient) QueryLookups(_m *Paroki) *LookupQuery {
 	query := (&LookupClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := _m.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(parish.Table, parish.FieldID, id),
+			sqlgraph.From(paroki.Table, paroki.FieldID, id),
 			sqlgraph.To(lookup.Table, lookup.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, parish.LookupsTable, parish.LookupsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, paroki.LookupsTable, paroki.LookupsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -2356,15 +2521,15 @@ func (c *ParishClient) QueryLookups(_m *Parish) *LookupQuery {
 	return query
 }
 
-// QueryPeriods queries the periods edge of a Parish.
-func (c *ParishClient) QueryPeriods(_m *Parish) *PeriodQuery {
+// QueryPeriods queries the periods edge of a Paroki.
+func (c *ParokiClient) QueryPeriods(_m *Paroki) *PeriodQuery {
 	query := (&PeriodClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := _m.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(parish.Table, parish.FieldID, id),
+			sqlgraph.From(paroki.Table, paroki.FieldID, id),
 			sqlgraph.To(period.Table, period.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, parish.PeriodsTable, parish.PeriodsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, paroki.PeriodsTable, paroki.PeriodsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -2373,131 +2538,131 @@ func (c *ParishClient) QueryPeriods(_m *Parish) *PeriodQuery {
 }
 
 // Hooks returns the client hooks.
-func (c *ParishClient) Hooks() []Hook {
-	return c.hooks.Parish
+func (c *ParokiClient) Hooks() []Hook {
+	return c.hooks.Paroki
 }
 
 // Interceptors returns the client interceptors.
-func (c *ParishClient) Interceptors() []Interceptor {
-	return c.inters.Parish
+func (c *ParokiClient) Interceptors() []Interceptor {
+	return c.inters.Paroki
 }
 
-func (c *ParishClient) mutate(ctx context.Context, m *ParishMutation) (Value, error) {
+func (c *ParokiClient) mutate(ctx context.Context, m *ParokiMutation) (Value, error) {
 	switch m.Op() {
 	case OpCreate:
-		return (&ParishCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&ParokiCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdate:
-		return (&ParishUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&ParokiUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdateOne:
-		return (&ParishUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&ParokiUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpDelete, OpDeleteOne:
-		return (&ParishDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+		return (&ParokiDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
-		return nil, fmt.Errorf("ent: unknown Parish mutation op: %q", m.Op())
+		return nil, fmt.Errorf("ent: unknown Paroki mutation op: %q", m.Op())
 	}
 }
 
-// ParishMemberClient is a client for the ParishMember schema.
-type ParishMemberClient struct {
+// ParokiMemberClient is a client for the ParokiMember schema.
+type ParokiMemberClient struct {
 	config
 }
 
-// NewParishMemberClient returns a client for the ParishMember from the given config.
-func NewParishMemberClient(c config) *ParishMemberClient {
-	return &ParishMemberClient{config: c}
+// NewParokiMemberClient returns a client for the ParokiMember from the given config.
+func NewParokiMemberClient(c config) *ParokiMemberClient {
+	return &ParokiMemberClient{config: c}
 }
 
 // Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `parishmember.Hooks(f(g(h())))`.
-func (c *ParishMemberClient) Use(hooks ...Hook) {
-	c.hooks.ParishMember = append(c.hooks.ParishMember, hooks...)
+// A call to `Use(f, g, h)` equals to `parokimember.Hooks(f(g(h())))`.
+func (c *ParokiMemberClient) Use(hooks ...Hook) {
+	c.hooks.ParokiMember = append(c.hooks.ParokiMember, hooks...)
 }
 
 // Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `parishmember.Intercept(f(g(h())))`.
-func (c *ParishMemberClient) Intercept(interceptors ...Interceptor) {
-	c.inters.ParishMember = append(c.inters.ParishMember, interceptors...)
+// A call to `Intercept(f, g, h)` equals to `parokimember.Intercept(f(g(h())))`.
+func (c *ParokiMemberClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ParokiMember = append(c.inters.ParokiMember, interceptors...)
 }
 
-// Create returns a builder for creating a ParishMember entity.
-func (c *ParishMemberClient) Create() *ParishMemberCreate {
-	mutation := newParishMemberMutation(c.config, OpCreate)
-	return &ParishMemberCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Create returns a builder for creating a ParokiMember entity.
+func (c *ParokiMemberClient) Create() *ParokiMemberCreate {
+	mutation := newParokiMemberMutation(c.config, OpCreate)
+	return &ParokiMemberCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// CreateBulk returns a builder for creating a bulk of ParishMember entities.
-func (c *ParishMemberClient) CreateBulk(builders ...*ParishMemberCreate) *ParishMemberCreateBulk {
-	return &ParishMemberCreateBulk{config: c.config, builders: builders}
+// CreateBulk returns a builder for creating a bulk of ParokiMember entities.
+func (c *ParokiMemberClient) CreateBulk(builders ...*ParokiMemberCreate) *ParokiMemberCreateBulk {
+	return &ParokiMemberCreateBulk{config: c.config, builders: builders}
 }
 
 // MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
 // a builder and applies setFunc on it.
-func (c *ParishMemberClient) MapCreateBulk(slice any, setFunc func(*ParishMemberCreate, int)) *ParishMemberCreateBulk {
+func (c *ParokiMemberClient) MapCreateBulk(slice any, setFunc func(*ParokiMemberCreate, int)) *ParokiMemberCreateBulk {
 	rv := reflect.ValueOf(slice)
 	if rv.Kind() != reflect.Slice {
-		return &ParishMemberCreateBulk{err: fmt.Errorf("calling to ParishMemberClient.MapCreateBulk with wrong type %T, need slice", slice)}
+		return &ParokiMemberCreateBulk{err: fmt.Errorf("calling to ParokiMemberClient.MapCreateBulk with wrong type %T, need slice", slice)}
 	}
-	builders := make([]*ParishMemberCreate, rv.Len())
+	builders := make([]*ParokiMemberCreate, rv.Len())
 	for i := 0; i < rv.Len(); i++ {
 		builders[i] = c.Create()
 		setFunc(builders[i], i)
 	}
-	return &ParishMemberCreateBulk{config: c.config, builders: builders}
+	return &ParokiMemberCreateBulk{config: c.config, builders: builders}
 }
 
-// Update returns an update builder for ParishMember.
-func (c *ParishMemberClient) Update() *ParishMemberUpdate {
-	mutation := newParishMemberMutation(c.config, OpUpdate)
-	return &ParishMemberUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Update returns an update builder for ParokiMember.
+func (c *ParokiMemberClient) Update() *ParokiMemberUpdate {
+	mutation := newParokiMemberMutation(c.config, OpUpdate)
+	return &ParokiMemberUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *ParishMemberClient) UpdateOne(_m *ParishMember) *ParishMemberUpdateOne {
-	mutation := newParishMemberMutation(c.config, OpUpdateOne, withParishMember(_m))
-	return &ParishMemberUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *ParokiMemberClient) UpdateOne(_m *ParokiMember) *ParokiMemberUpdateOne {
+	mutation := newParokiMemberMutation(c.config, OpUpdateOne, withParokiMember(_m))
+	return &ParokiMemberUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *ParishMemberClient) UpdateOneID(id uuid.UUID) *ParishMemberUpdateOne {
-	mutation := newParishMemberMutation(c.config, OpUpdateOne, withParishMemberID(id))
-	return &ParishMemberUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *ParokiMemberClient) UpdateOneID(id uuid.UUID) *ParokiMemberUpdateOne {
+	mutation := newParokiMemberMutation(c.config, OpUpdateOne, withParokiMemberID(id))
+	return &ParokiMemberUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// Delete returns a delete builder for ParishMember.
-func (c *ParishMemberClient) Delete() *ParishMemberDelete {
-	mutation := newParishMemberMutation(c.config, OpDelete)
-	return &ParishMemberDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Delete returns a delete builder for ParokiMember.
+func (c *ParokiMemberClient) Delete() *ParokiMemberDelete {
+	mutation := newParokiMemberMutation(c.config, OpDelete)
+	return &ParokiMemberDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *ParishMemberClient) DeleteOne(_m *ParishMember) *ParishMemberDeleteOne {
+func (c *ParokiMemberClient) DeleteOne(_m *ParokiMember) *ParokiMemberDeleteOne {
 	return c.DeleteOneID(_m.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *ParishMemberClient) DeleteOneID(id uuid.UUID) *ParishMemberDeleteOne {
-	builder := c.Delete().Where(parishmember.ID(id))
+func (c *ParokiMemberClient) DeleteOneID(id uuid.UUID) *ParokiMemberDeleteOne {
+	builder := c.Delete().Where(parokimember.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
-	return &ParishMemberDeleteOne{builder}
+	return &ParokiMemberDeleteOne{builder}
 }
 
-// Query returns a query builder for ParishMember.
-func (c *ParishMemberClient) Query() *ParishMemberQuery {
-	return &ParishMemberQuery{
+// Query returns a query builder for ParokiMember.
+func (c *ParokiMemberClient) Query() *ParokiMemberQuery {
+	return &ParokiMemberQuery{
 		config: c.config,
-		ctx:    &QueryContext{Type: TypeParishMember},
+		ctx:    &QueryContext{Type: TypeParokiMember},
 		inters: c.Interceptors(),
 	}
 }
 
-// Get returns a ParishMember entity by its id.
-func (c *ParishMemberClient) Get(ctx context.Context, id uuid.UUID) (*ParishMember, error) {
-	return c.Query().Where(parishmember.ID(id)).Only(ctx)
+// Get returns a ParokiMember entity by its id.
+func (c *ParokiMemberClient) Get(ctx context.Context, id uuid.UUID) (*ParokiMember, error) {
+	return c.Query().Where(parokimember.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *ParishMemberClient) GetX(ctx context.Context, id uuid.UUID) *ParishMember {
+func (c *ParokiMemberClient) GetX(ctx context.Context, id uuid.UUID) *ParokiMember {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -2505,15 +2670,15 @@ func (c *ParishMemberClient) GetX(ctx context.Context, id uuid.UUID) *ParishMemb
 	return obj
 }
 
-// QueryParish queries the parish edge of a ParishMember.
-func (c *ParishMemberClient) QueryParish(_m *ParishMember) *ParishQuery {
-	query := (&ParishClient{config: c.config}).Query()
+// QueryParoki queries the paroki edge of a ParokiMember.
+func (c *ParokiMemberClient) QueryParoki(_m *ParokiMember) *ParokiQuery {
+	query := (&ParokiClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := _m.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(parishmember.Table, parishmember.FieldID, id),
-			sqlgraph.To(parish.Table, parish.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, parishmember.ParishTable, parishmember.ParishColumn),
+			sqlgraph.From(parokimember.Table, parokimember.FieldID, id),
+			sqlgraph.To(paroki.Table, paroki.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, parokimember.ParokiTable, parokimember.ParokiColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -2522,27 +2687,27 @@ func (c *ParishMemberClient) QueryParish(_m *ParishMember) *ParishQuery {
 }
 
 // Hooks returns the client hooks.
-func (c *ParishMemberClient) Hooks() []Hook {
-	return c.hooks.ParishMember
+func (c *ParokiMemberClient) Hooks() []Hook {
+	return c.hooks.ParokiMember
 }
 
 // Interceptors returns the client interceptors.
-func (c *ParishMemberClient) Interceptors() []Interceptor {
-	return c.inters.ParishMember
+func (c *ParokiMemberClient) Interceptors() []Interceptor {
+	return c.inters.ParokiMember
 }
 
-func (c *ParishMemberClient) mutate(ctx context.Context, m *ParishMemberMutation) (Value, error) {
+func (c *ParokiMemberClient) mutate(ctx context.Context, m *ParokiMemberMutation) (Value, error) {
 	switch m.Op() {
 	case OpCreate:
-		return (&ParishMemberCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&ParokiMemberCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdate:
-		return (&ParishMemberUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&ParokiMemberUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdateOne:
-		return (&ParishMemberUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&ParokiMemberUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpDelete, OpDeleteOne:
-		return (&ParishMemberDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+		return (&ParokiMemberDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
-		return nil, fmt.Errorf("ent: unknown ParishMember mutation op: %q", m.Op())
+		return nil, fmt.Errorf("ent: unknown ParokiMember mutation op: %q", m.Op())
 	}
 }
 
@@ -2654,15 +2819,15 @@ func (c *PeriodClient) GetX(ctx context.Context, id uuid.UUID) *Period {
 	return obj
 }
 
-// QueryParish queries the parish edge of a Period.
-func (c *PeriodClient) QueryParish(_m *Period) *ParishQuery {
-	query := (&ParishClient{config: c.config}).Query()
+// QueryParoki queries the paroki edge of a Period.
+func (c *PeriodClient) QueryParoki(_m *Period) *ParokiQuery {
+	query := (&ParokiClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(period.Table, period.FieldID, id),
-			sqlgraph.To(parish.Table, parish.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, period.ParishTable, period.ParishColumn),
+			sqlgraph.To(paroki.Table, paroki.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, period.ParokiTable, period.ParokiColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -3424,107 +3589,107 @@ func (c *UserSessionClient) mutate(ctx context.Context, m *UserSessionMutation) 
 	}
 }
 
-// WardClient is a client for the Ward schema.
-type WardClient struct {
+// WilayahClient is a client for the Wilayah schema.
+type WilayahClient struct {
 	config
 }
 
-// NewWardClient returns a client for the Ward from the given config.
-func NewWardClient(c config) *WardClient {
-	return &WardClient{config: c}
+// NewWilayahClient returns a client for the Wilayah from the given config.
+func NewWilayahClient(c config) *WilayahClient {
+	return &WilayahClient{config: c}
 }
 
 // Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `ward.Hooks(f(g(h())))`.
-func (c *WardClient) Use(hooks ...Hook) {
-	c.hooks.Ward = append(c.hooks.Ward, hooks...)
+// A call to `Use(f, g, h)` equals to `wilayah.Hooks(f(g(h())))`.
+func (c *WilayahClient) Use(hooks ...Hook) {
+	c.hooks.Wilayah = append(c.hooks.Wilayah, hooks...)
 }
 
 // Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `ward.Intercept(f(g(h())))`.
-func (c *WardClient) Intercept(interceptors ...Interceptor) {
-	c.inters.Ward = append(c.inters.Ward, interceptors...)
+// A call to `Intercept(f, g, h)` equals to `wilayah.Intercept(f(g(h())))`.
+func (c *WilayahClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Wilayah = append(c.inters.Wilayah, interceptors...)
 }
 
-// Create returns a builder for creating a Ward entity.
-func (c *WardClient) Create() *WardCreate {
-	mutation := newWardMutation(c.config, OpCreate)
-	return &WardCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Create returns a builder for creating a Wilayah entity.
+func (c *WilayahClient) Create() *WilayahCreate {
+	mutation := newWilayahMutation(c.config, OpCreate)
+	return &WilayahCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// CreateBulk returns a builder for creating a bulk of Ward entities.
-func (c *WardClient) CreateBulk(builders ...*WardCreate) *WardCreateBulk {
-	return &WardCreateBulk{config: c.config, builders: builders}
+// CreateBulk returns a builder for creating a bulk of Wilayah entities.
+func (c *WilayahClient) CreateBulk(builders ...*WilayahCreate) *WilayahCreateBulk {
+	return &WilayahCreateBulk{config: c.config, builders: builders}
 }
 
 // MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
 // a builder and applies setFunc on it.
-func (c *WardClient) MapCreateBulk(slice any, setFunc func(*WardCreate, int)) *WardCreateBulk {
+func (c *WilayahClient) MapCreateBulk(slice any, setFunc func(*WilayahCreate, int)) *WilayahCreateBulk {
 	rv := reflect.ValueOf(slice)
 	if rv.Kind() != reflect.Slice {
-		return &WardCreateBulk{err: fmt.Errorf("calling to WardClient.MapCreateBulk with wrong type %T, need slice", slice)}
+		return &WilayahCreateBulk{err: fmt.Errorf("calling to WilayahClient.MapCreateBulk with wrong type %T, need slice", slice)}
 	}
-	builders := make([]*WardCreate, rv.Len())
+	builders := make([]*WilayahCreate, rv.Len())
 	for i := 0; i < rv.Len(); i++ {
 		builders[i] = c.Create()
 		setFunc(builders[i], i)
 	}
-	return &WardCreateBulk{config: c.config, builders: builders}
+	return &WilayahCreateBulk{config: c.config, builders: builders}
 }
 
-// Update returns an update builder for Ward.
-func (c *WardClient) Update() *WardUpdate {
-	mutation := newWardMutation(c.config, OpUpdate)
-	return &WardUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Update returns an update builder for Wilayah.
+func (c *WilayahClient) Update() *WilayahUpdate {
+	mutation := newWilayahMutation(c.config, OpUpdate)
+	return &WilayahUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *WardClient) UpdateOne(_m *Ward) *WardUpdateOne {
-	mutation := newWardMutation(c.config, OpUpdateOne, withWard(_m))
-	return &WardUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *WilayahClient) UpdateOne(_m *Wilayah) *WilayahUpdateOne {
+	mutation := newWilayahMutation(c.config, OpUpdateOne, withWilayah(_m))
+	return &WilayahUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *WardClient) UpdateOneID(id uuid.UUID) *WardUpdateOne {
-	mutation := newWardMutation(c.config, OpUpdateOne, withWardID(id))
-	return &WardUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *WilayahClient) UpdateOneID(id uuid.UUID) *WilayahUpdateOne {
+	mutation := newWilayahMutation(c.config, OpUpdateOne, withWilayahID(id))
+	return &WilayahUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// Delete returns a delete builder for Ward.
-func (c *WardClient) Delete() *WardDelete {
-	mutation := newWardMutation(c.config, OpDelete)
-	return &WardDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Delete returns a delete builder for Wilayah.
+func (c *WilayahClient) Delete() *WilayahDelete {
+	mutation := newWilayahMutation(c.config, OpDelete)
+	return &WilayahDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *WardClient) DeleteOne(_m *Ward) *WardDeleteOne {
+func (c *WilayahClient) DeleteOne(_m *Wilayah) *WilayahDeleteOne {
 	return c.DeleteOneID(_m.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *WardClient) DeleteOneID(id uuid.UUID) *WardDeleteOne {
-	builder := c.Delete().Where(ward.ID(id))
+func (c *WilayahClient) DeleteOneID(id uuid.UUID) *WilayahDeleteOne {
+	builder := c.Delete().Where(wilayah.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
-	return &WardDeleteOne{builder}
+	return &WilayahDeleteOne{builder}
 }
 
-// Query returns a query builder for Ward.
-func (c *WardClient) Query() *WardQuery {
-	return &WardQuery{
+// Query returns a query builder for Wilayah.
+func (c *WilayahClient) Query() *WilayahQuery {
+	return &WilayahQuery{
 		config: c.config,
-		ctx:    &QueryContext{Type: TypeWard},
+		ctx:    &QueryContext{Type: TypeWilayah},
 		inters: c.Interceptors(),
 	}
 }
 
-// Get returns a Ward entity by its id.
-func (c *WardClient) Get(ctx context.Context, id uuid.UUID) (*Ward, error) {
-	return c.Query().Where(ward.ID(id)).Only(ctx)
+// Get returns a Wilayah entity by its id.
+func (c *WilayahClient) Get(ctx context.Context, id uuid.UUID) (*Wilayah, error) {
+	return c.Query().Where(wilayah.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *WardClient) GetX(ctx context.Context, id uuid.UUID) *Ward {
+func (c *WilayahClient) GetX(ctx context.Context, id uuid.UUID) *Wilayah {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -3532,15 +3697,15 @@ func (c *WardClient) GetX(ctx context.Context, id uuid.UUID) *Ward {
 	return obj
 }
 
-// QueryParish queries the parish edge of a Ward.
-func (c *WardClient) QueryParish(_m *Ward) *ParishQuery {
-	query := (&ParishClient{config: c.config}).Query()
+// QueryParoki queries the paroki edge of a Wilayah.
+func (c *WilayahClient) QueryParoki(_m *Wilayah) *ParokiQuery {
+	query := (&ParokiClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := _m.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(ward.Table, ward.FieldID, id),
-			sqlgraph.To(parish.Table, parish.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ward.ParishTable, ward.ParishColumn),
+			sqlgraph.From(wilayah.Table, wilayah.FieldID, id),
+			sqlgraph.To(paroki.Table, paroki.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, wilayah.ParokiTable, wilayah.ParokiColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -3548,15 +3713,15 @@ func (c *WardClient) QueryParish(_m *Ward) *ParishQuery {
 	return query
 }
 
-// QueryZone queries the zone edge of a Ward.
-func (c *WardClient) QueryZone(_m *Ward) *ZoneQuery {
-	query := (&ZoneClient{config: c.config}).Query()
+// QueryLingkungan queries the lingkungan edge of a Wilayah.
+func (c *WilayahClient) QueryLingkungan(_m *Wilayah) *LingkunganQuery {
+	query := (&LingkunganClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := _m.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(ward.Table, ward.FieldID, id),
-			sqlgraph.To(zone.Table, zone.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ward.ZoneTable, ward.ZoneColumn),
+			sqlgraph.From(wilayah.Table, wilayah.FieldID, id),
+			sqlgraph.To(lingkungan.Table, lingkungan.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, wilayah.LingkunganTable, wilayah.LingkunganColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -3565,207 +3730,42 @@ func (c *WardClient) QueryZone(_m *Ward) *ZoneQuery {
 }
 
 // Hooks returns the client hooks.
-func (c *WardClient) Hooks() []Hook {
-	return c.hooks.Ward
+func (c *WilayahClient) Hooks() []Hook {
+	return c.hooks.Wilayah
 }
 
 // Interceptors returns the client interceptors.
-func (c *WardClient) Interceptors() []Interceptor {
-	return c.inters.Ward
+func (c *WilayahClient) Interceptors() []Interceptor {
+	return c.inters.Wilayah
 }
 
-func (c *WardClient) mutate(ctx context.Context, m *WardMutation) (Value, error) {
+func (c *WilayahClient) mutate(ctx context.Context, m *WilayahMutation) (Value, error) {
 	switch m.Op() {
 	case OpCreate:
-		return (&WardCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&WilayahCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdate:
-		return (&WardUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&WilayahUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdateOne:
-		return (&WardUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&WilayahUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpDelete, OpDeleteOne:
-		return (&WardDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+		return (&WilayahDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
-		return nil, fmt.Errorf("ent: unknown Ward mutation op: %q", m.Op())
-	}
-}
-
-// ZoneClient is a client for the Zone schema.
-type ZoneClient struct {
-	config
-}
-
-// NewZoneClient returns a client for the Zone from the given config.
-func NewZoneClient(c config) *ZoneClient {
-	return &ZoneClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `zone.Hooks(f(g(h())))`.
-func (c *ZoneClient) Use(hooks ...Hook) {
-	c.hooks.Zone = append(c.hooks.Zone, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `zone.Intercept(f(g(h())))`.
-func (c *ZoneClient) Intercept(interceptors ...Interceptor) {
-	c.inters.Zone = append(c.inters.Zone, interceptors...)
-}
-
-// Create returns a builder for creating a Zone entity.
-func (c *ZoneClient) Create() *ZoneCreate {
-	mutation := newZoneMutation(c.config, OpCreate)
-	return &ZoneCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of Zone entities.
-func (c *ZoneClient) CreateBulk(builders ...*ZoneCreate) *ZoneCreateBulk {
-	return &ZoneCreateBulk{config: c.config, builders: builders}
-}
-
-// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
-// a builder and applies setFunc on it.
-func (c *ZoneClient) MapCreateBulk(slice any, setFunc func(*ZoneCreate, int)) *ZoneCreateBulk {
-	rv := reflect.ValueOf(slice)
-	if rv.Kind() != reflect.Slice {
-		return &ZoneCreateBulk{err: fmt.Errorf("calling to ZoneClient.MapCreateBulk with wrong type %T, need slice", slice)}
-	}
-	builders := make([]*ZoneCreate, rv.Len())
-	for i := 0; i < rv.Len(); i++ {
-		builders[i] = c.Create()
-		setFunc(builders[i], i)
-	}
-	return &ZoneCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for Zone.
-func (c *ZoneClient) Update() *ZoneUpdate {
-	mutation := newZoneMutation(c.config, OpUpdate)
-	return &ZoneUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *ZoneClient) UpdateOne(_m *Zone) *ZoneUpdateOne {
-	mutation := newZoneMutation(c.config, OpUpdateOne, withZone(_m))
-	return &ZoneUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *ZoneClient) UpdateOneID(id uuid.UUID) *ZoneUpdateOne {
-	mutation := newZoneMutation(c.config, OpUpdateOne, withZoneID(id))
-	return &ZoneUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for Zone.
-func (c *ZoneClient) Delete() *ZoneDelete {
-	mutation := newZoneMutation(c.config, OpDelete)
-	return &ZoneDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *ZoneClient) DeleteOne(_m *Zone) *ZoneDeleteOne {
-	return c.DeleteOneID(_m.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *ZoneClient) DeleteOneID(id uuid.UUID) *ZoneDeleteOne {
-	builder := c.Delete().Where(zone.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &ZoneDeleteOne{builder}
-}
-
-// Query returns a query builder for Zone.
-func (c *ZoneClient) Query() *ZoneQuery {
-	return &ZoneQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypeZone},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a Zone entity by its id.
-func (c *ZoneClient) Get(ctx context.Context, id uuid.UUID) (*Zone, error) {
-	return c.Query().Where(zone.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *ZoneClient) GetX(ctx context.Context, id uuid.UUID) *Zone {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// QueryParish queries the parish edge of a Zone.
-func (c *ZoneClient) QueryParish(_m *Zone) *ParishQuery {
-	query := (&ParishClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(zone.Table, zone.FieldID, id),
-			sqlgraph.To(parish.Table, parish.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, zone.ParishTable, zone.ParishColumn),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryWards queries the wards edge of a Zone.
-func (c *ZoneClient) QueryWards(_m *Zone) *WardQuery {
-	query := (&WardClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(zone.Table, zone.FieldID, id),
-			sqlgraph.To(ward.Table, ward.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, zone.WardsTable, zone.WardsColumn),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// Hooks returns the client hooks.
-func (c *ZoneClient) Hooks() []Hook {
-	return c.hooks.Zone
-}
-
-// Interceptors returns the client interceptors.
-func (c *ZoneClient) Interceptors() []Interceptor {
-	return c.inters.Zone
-}
-
-func (c *ZoneClient) mutate(ctx context.Context, m *ZoneMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&ZoneCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&ZoneUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&ZoneUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&ZoneDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown Zone mutation op: %q", m.Op())
+		return nil, fmt.Errorf("ent: unknown Wilayah mutation op: %q", m.Op())
 	}
 }
 
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		AgentMemory, AgentMessage, AgentProvider, AgentSession, CasbinRule, Diocese,
-		Event, EventRSVP, Lookup, OrgInvite, OrgMember, Organization, Parish,
-		ParishMember, Period, Setting, User, UserAccount, UserOTP, UserSession, Ward,
-		Zone []ent.Hook
+		AgentMemory, AgentMessage, AgentProvider, AgentSession, CasbinRule, Event,
+		EventRSVP, Keuskupan, Lingkungan, Lookup, OrgInvite, OrgMember, Organization,
+		Paroki, ParokiMember, Period, Setting, User, UserAccount, UserOTP, UserSession,
+		Wilayah []ent.Hook
 	}
 	inters struct {
-		AgentMemory, AgentMessage, AgentProvider, AgentSession, CasbinRule, Diocese,
-		Event, EventRSVP, Lookup, OrgInvite, OrgMember, Organization, Parish,
-		ParishMember, Period, Setting, User, UserAccount, UserOTP, UserSession, Ward,
-		Zone []ent.Interceptor
+		AgentMemory, AgentMessage, AgentProvider, AgentSession, CasbinRule, Event,
+		EventRSVP, Keuskupan, Lingkungan, Lookup, OrgInvite, OrgMember, Organization,
+		Paroki, ParokiMember, Period, Setting, User, UserAccount, UserOTP, UserSession,
+		Wilayah []ent.Interceptor
 	}
 )

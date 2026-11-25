@@ -50,9 +50,9 @@ func (_c *OrgMemberCreate) SetNillableUpdatedAt(v *time.Time) *OrgMemberCreate {
 	return _c
 }
 
-// SetParishID sets the "parish_id" field.
-func (_c *OrgMemberCreate) SetParishID(v uuid.UUID) *OrgMemberCreate {
-	_c.mutation.SetParishID(v)
+// SetParokiID sets the "paroki_id" field.
+func (_c *OrgMemberCreate) SetParokiID(v uuid.UUID) *OrgMemberCreate {
+	_c.mutation.SetParokiID(v)
 	return _c
 }
 
@@ -242,8 +242,8 @@ func (_c *OrgMemberCreate) check() error {
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "OrgMember.updated_at"`)}
 	}
-	if _, ok := _c.mutation.ParishID(); !ok {
-		return &ValidationError{Name: "parish_id", err: errors.New(`ent: missing required field "OrgMember.parish_id"`)}
+	if _, ok := _c.mutation.ParokiID(); !ok {
+		return &ValidationError{Name: "paroki_id", err: errors.New(`ent: missing required field "OrgMember.paroki_id"`)}
 	}
 	if _, ok := _c.mutation.OrgID(); !ok {
 		return &ValidationError{Name: "org_id", err: errors.New(`ent: missing required field "OrgMember.org_id"`)}
@@ -313,9 +313,9 @@ func (_c *OrgMemberCreate) createSpec() (*OrgMember, *sqlgraph.CreateSpec) {
 		_spec.SetField(orgmember.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if value, ok := _c.mutation.ParishID(); ok {
-		_spec.SetField(orgmember.FieldParishID, field.TypeUUID, value)
-		_node.ParishID = value
+	if value, ok := _c.mutation.ParokiID(); ok {
+		_spec.SetField(orgmember.FieldParokiID, field.TypeUUID, value)
+		_node.ParokiID = value
 	}
 	if value, ok := _c.mutation.UserID(); ok {
 		_spec.SetField(orgmember.FieldUserID, field.TypeUUID, value)

@@ -11,7 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent/lookup"
-	"github.com/paroki/domus/ent/parish"
+	"github.com/paroki/domus/ent/paroki"
 )
 
 // Lookup is the model entity for the Lookup schema.
@@ -25,8 +25,8 @@ type Lookup struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// DeletedAt holds the value of the "deleted_at" field.
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
-	// ParishID holds the value of the "parish_id" field.
-	ParishID *uuid.UUID `json:"parish_id,omitempty"`
+	// ParokiID holds the value of the "paroki_id" field.
+	ParokiID *uuid.UUID `json:"paroki_id,omitempty"`
 	// Category holds the value of the "category" field.
 	Category string `json:"category,omitempty"`
 	// Code holds the value of the "code" field.
@@ -45,22 +45,22 @@ type Lookup struct {
 
 // LookupEdges holds the relations/edges for other nodes in the graph.
 type LookupEdges struct {
-	// Parish holds the value of the parish edge.
-	Parish *Parish `json:"parish,omitempty"`
+	// Paroki holds the value of the paroki edge.
+	Paroki *Paroki `json:"paroki,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [1]bool
 }
 
-// ParishOrErr returns the Parish value or an error if the edge
+// ParokiOrErr returns the Paroki value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e LookupEdges) ParishOrErr() (*Parish, error) {
-	if e.Parish != nil {
-		return e.Parish, nil
+func (e LookupEdges) ParokiOrErr() (*Paroki, error) {
+	if e.Paroki != nil {
+		return e.Paroki, nil
 	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: parish.Label}
+		return nil, &NotFoundError{label: paroki.Label}
 	}
-	return nil, &NotLoadedError{edge: "parish"}
+	return nil, &NotLoadedError{edge: "paroki"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -68,7 +68,7 @@ func (*Lookup) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case lookup.FieldParishID:
+		case lookup.FieldParokiID:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case lookup.FieldActive:
 			values[i] = new(sql.NullBool)
@@ -120,12 +120,12 @@ func (_m *Lookup) assignValues(columns []string, values []any) error {
 				_m.DeletedAt = new(time.Time)
 				*_m.DeletedAt = value.Time
 			}
-		case lookup.FieldParishID:
+		case lookup.FieldParokiID:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field parish_id", values[i])
+				return fmt.Errorf("unexpected type %T for field paroki_id", values[i])
 			} else if value.Valid {
-				_m.ParishID = new(uuid.UUID)
-				*_m.ParishID = *value.S.(*uuid.UUID)
+				_m.ParokiID = new(uuid.UUID)
+				*_m.ParokiID = *value.S.(*uuid.UUID)
 			}
 		case lookup.FieldCategory:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -170,9 +170,9 @@ func (_m *Lookup) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
 }
 
-// QueryParish queries the "parish" edge of the Lookup entity.
-func (_m *Lookup) QueryParish() *ParishQuery {
-	return NewLookupClient(_m.config).QueryParish(_m)
+// QueryParoki queries the "paroki" edge of the Lookup entity.
+func (_m *Lookup) QueryParoki() *ParokiQuery {
+	return NewLookupClient(_m.config).QueryParoki(_m)
 }
 
 // Update returns a builder for updating this Lookup.
@@ -209,8 +209,8 @@ func (_m *Lookup) String() string {
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteString(", ")
-	if v := _m.ParishID; v != nil {
-		builder.WriteString("parish_id=")
+	if v := _m.ParokiID; v != nil {
+		builder.WriteString("paroki_id=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")

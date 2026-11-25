@@ -25,7 +25,7 @@ func (Event) Mixin() []ent.Mixin {
 // Fields returns the fields of the Event entity.
 func (Event) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("parish_id", uuid.UUID{}),
+		field.UUID("paroki_id", uuid.UUID{}),
 		field.UUID("org_id", uuid.UUID{}),
 		field.UUID("created_by", uuid.UUID{}),
 		field.String("title").NotEmpty(),
@@ -50,9 +50,9 @@ func (Event) Edges() []ent.Edge {
 // Indexes returns the indexes for the Event entity.
 func (Event) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("parish_id", "start_at"),
-		index.Fields("parish_id", "org_id", "start_at"),
-		index.Fields("parish_id", "visibility", "status", "start_at"),
+		index.Fields("paroki_id", "start_at"),
+		index.Fields("paroki_id", "org_id", "start_at"),
+		index.Fields("paroki_id", "visibility", "status", "start_at"),
 		index.Fields("org_id"),
 	}
 }

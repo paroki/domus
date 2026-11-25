@@ -11,15 +11,16 @@ import (
 	"github.com/paroki/domus/ent/agentprovider"
 	"github.com/paroki/domus/ent/agentsession"
 	"github.com/paroki/domus/ent/casbinrule"
-	"github.com/paroki/domus/ent/diocese"
 	"github.com/paroki/domus/ent/event"
 	"github.com/paroki/domus/ent/eventrsvp"
+	"github.com/paroki/domus/ent/keuskupan"
+	"github.com/paroki/domus/ent/lingkungan"
 	"github.com/paroki/domus/ent/lookup"
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orginvite"
 	"github.com/paroki/domus/ent/orgmember"
-	"github.com/paroki/domus/ent/parish"
-	"github.com/paroki/domus/ent/parishmember"
+	"github.com/paroki/domus/ent/paroki"
+	"github.com/paroki/domus/ent/parokimember"
 	"github.com/paroki/domus/ent/period"
 	"github.com/paroki/domus/ent/schema"
 	"github.com/paroki/domus/ent/setting"
@@ -27,8 +28,7 @@ import (
 	"github.com/paroki/domus/ent/useraccount"
 	"github.com/paroki/domus/ent/userotp"
 	"github.com/paroki/domus/ent/usersession"
-	"github.com/paroki/domus/ent/ward"
-	"github.com/paroki/domus/ent/zone"
+	"github.com/paroki/domus/ent/wilayah"
 )
 
 // The init function reads all schema descriptors with runtime code
@@ -196,39 +196,6 @@ func init() {
 	casbinruleDescID := casbinruleMixinFields0[0].Descriptor()
 	// casbinrule.DefaultID holds the default value on creation for the id field.
 	casbinrule.DefaultID = casbinruleDescID.Default.(func() uuid.UUID)
-	dioceseMixin := schema.Diocese{}.Mixin()
-	dioceseMixinFields0 := dioceseMixin[0].Fields()
-	_ = dioceseMixinFields0
-	dioceseMixinFields1 := dioceseMixin[1].Fields()
-	_ = dioceseMixinFields1
-	dioceseFields := schema.Diocese{}.Fields()
-	_ = dioceseFields
-	// dioceseDescCreatedAt is the schema descriptor for created_at field.
-	dioceseDescCreatedAt := dioceseMixinFields1[0].Descriptor()
-	// diocese.DefaultCreatedAt holds the default value on creation for the created_at field.
-	diocese.DefaultCreatedAt = dioceseDescCreatedAt.Default.(func() time.Time)
-	// dioceseDescUpdatedAt is the schema descriptor for updated_at field.
-	dioceseDescUpdatedAt := dioceseMixinFields1[1].Descriptor()
-	// diocese.DefaultUpdatedAt holds the default value on creation for the updated_at field.
-	diocese.DefaultUpdatedAt = dioceseDescUpdatedAt.Default.(func() time.Time)
-	// diocese.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
-	diocese.UpdateDefaultUpdatedAt = dioceseDescUpdatedAt.UpdateDefault.(func() time.Time)
-	// dioceseDescCode is the schema descriptor for code field.
-	dioceseDescCode := dioceseFields[0].Descriptor()
-	// diocese.CodeValidator is a validator for the "code" field. It is called by the builders before save.
-	diocese.CodeValidator = dioceseDescCode.Validators[0].(func(string) error)
-	// dioceseDescName is the schema descriptor for name field.
-	dioceseDescName := dioceseFields[1].Descriptor()
-	// diocese.NameValidator is a validator for the "name" field. It is called by the builders before save.
-	diocese.NameValidator = dioceseDescName.Validators[0].(func(string) error)
-	// dioceseDescActive is the schema descriptor for active field.
-	dioceseDescActive := dioceseFields[7].Descriptor()
-	// diocese.DefaultActive holds the default value on creation for the active field.
-	diocese.DefaultActive = dioceseDescActive.Default.(bool)
-	// dioceseDescID is the schema descriptor for id field.
-	dioceseDescID := dioceseMixinFields0[0].Descriptor()
-	// diocese.DefaultID holds the default value on creation for the id field.
-	diocese.DefaultID = dioceseDescID.Default.(func() uuid.UUID)
 	eventMixin := schema.Event{}.Mixin()
 	eventMixinFields0 := eventMixin[0].Fields()
 	_ = eventMixinFields0
@@ -279,6 +246,72 @@ func init() {
 	eventrsvpDescID := eventrsvpMixinFields0[0].Descriptor()
 	// eventrsvp.DefaultID holds the default value on creation for the id field.
 	eventrsvp.DefaultID = eventrsvpDescID.Default.(func() uuid.UUID)
+	keuskupanMixin := schema.Keuskupan{}.Mixin()
+	keuskupanMixinFields0 := keuskupanMixin[0].Fields()
+	_ = keuskupanMixinFields0
+	keuskupanMixinFields1 := keuskupanMixin[1].Fields()
+	_ = keuskupanMixinFields1
+	keuskupanFields := schema.Keuskupan{}.Fields()
+	_ = keuskupanFields
+	// keuskupanDescCreatedAt is the schema descriptor for created_at field.
+	keuskupanDescCreatedAt := keuskupanMixinFields1[0].Descriptor()
+	// keuskupan.DefaultCreatedAt holds the default value on creation for the created_at field.
+	keuskupan.DefaultCreatedAt = keuskupanDescCreatedAt.Default.(func() time.Time)
+	// keuskupanDescUpdatedAt is the schema descriptor for updated_at field.
+	keuskupanDescUpdatedAt := keuskupanMixinFields1[1].Descriptor()
+	// keuskupan.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	keuskupan.DefaultUpdatedAt = keuskupanDescUpdatedAt.Default.(func() time.Time)
+	// keuskupan.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	keuskupan.UpdateDefaultUpdatedAt = keuskupanDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// keuskupanDescKode is the schema descriptor for kode field.
+	keuskupanDescKode := keuskupanFields[0].Descriptor()
+	// keuskupan.KodeValidator is a validator for the "kode" field. It is called by the builders before save.
+	keuskupan.KodeValidator = keuskupanDescKode.Validators[0].(func(string) error)
+	// keuskupanDescNama is the schema descriptor for nama field.
+	keuskupanDescNama := keuskupanFields[1].Descriptor()
+	// keuskupan.NamaValidator is a validator for the "nama" field. It is called by the builders before save.
+	keuskupan.NamaValidator = keuskupanDescNama.Validators[0].(func(string) error)
+	// keuskupanDescActive is the schema descriptor for active field.
+	keuskupanDescActive := keuskupanFields[7].Descriptor()
+	// keuskupan.DefaultActive holds the default value on creation for the active field.
+	keuskupan.DefaultActive = keuskupanDescActive.Default.(bool)
+	// keuskupanDescID is the schema descriptor for id field.
+	keuskupanDescID := keuskupanMixinFields0[0].Descriptor()
+	// keuskupan.DefaultID holds the default value on creation for the id field.
+	keuskupan.DefaultID = keuskupanDescID.Default.(func() uuid.UUID)
+	lingkunganMixin := schema.Lingkungan{}.Mixin()
+	lingkunganMixinFields0 := lingkunganMixin[0].Fields()
+	_ = lingkunganMixinFields0
+	lingkunganMixinFields1 := lingkunganMixin[1].Fields()
+	_ = lingkunganMixinFields1
+	lingkunganFields := schema.Lingkungan{}.Fields()
+	_ = lingkunganFields
+	// lingkunganDescCreatedAt is the schema descriptor for created_at field.
+	lingkunganDescCreatedAt := lingkunganMixinFields1[0].Descriptor()
+	// lingkungan.DefaultCreatedAt holds the default value on creation for the created_at field.
+	lingkungan.DefaultCreatedAt = lingkunganDescCreatedAt.Default.(func() time.Time)
+	// lingkunganDescUpdatedAt is the schema descriptor for updated_at field.
+	lingkunganDescUpdatedAt := lingkunganMixinFields1[1].Descriptor()
+	// lingkungan.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	lingkungan.DefaultUpdatedAt = lingkunganDescUpdatedAt.Default.(func() time.Time)
+	// lingkungan.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	lingkungan.UpdateDefaultUpdatedAt = lingkunganDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// lingkunganDescKode is the schema descriptor for kode field.
+	lingkunganDescKode := lingkunganFields[2].Descriptor()
+	// lingkungan.KodeValidator is a validator for the "kode" field. It is called by the builders before save.
+	lingkungan.KodeValidator = lingkunganDescKode.Validators[0].(func(string) error)
+	// lingkunganDescNama is the schema descriptor for nama field.
+	lingkunganDescNama := lingkunganFields[3].Descriptor()
+	// lingkungan.NamaValidator is a validator for the "nama" field. It is called by the builders before save.
+	lingkungan.NamaValidator = lingkunganDescNama.Validators[0].(func(string) error)
+	// lingkunganDescActive is the schema descriptor for active field.
+	lingkunganDescActive := lingkunganFields[7].Descriptor()
+	// lingkungan.DefaultActive holds the default value on creation for the active field.
+	lingkungan.DefaultActive = lingkunganDescActive.Default.(bool)
+	// lingkunganDescID is the schema descriptor for id field.
+	lingkunganDescID := lingkunganMixinFields0[0].Descriptor()
+	// lingkungan.DefaultID holds the default value on creation for the id field.
+	lingkungan.DefaultID = lingkunganDescID.Default.(func() uuid.UUID)
 	lookupMixin := schema.Lookup{}.Mixin()
 	lookupMixinFields0 := lookupMixin[0].Fields()
 	_ = lookupMixinFields0
@@ -403,60 +436,60 @@ func init() {
 	organizationDescID := organizationMixinFields0[0].Descriptor()
 	// organization.DefaultID holds the default value on creation for the id field.
 	organization.DefaultID = organizationDescID.Default.(func() uuid.UUID)
-	parishMixin := schema.Parish{}.Mixin()
-	parishMixinFields0 := parishMixin[0].Fields()
-	_ = parishMixinFields0
-	parishMixinFields1 := parishMixin[1].Fields()
-	_ = parishMixinFields1
-	parishFields := schema.Parish{}.Fields()
-	_ = parishFields
-	// parishDescCreatedAt is the schema descriptor for created_at field.
-	parishDescCreatedAt := parishMixinFields1[0].Descriptor()
-	// parish.DefaultCreatedAt holds the default value on creation for the created_at field.
-	parish.DefaultCreatedAt = parishDescCreatedAt.Default.(func() time.Time)
-	// parishDescUpdatedAt is the schema descriptor for updated_at field.
-	parishDescUpdatedAt := parishMixinFields1[1].Descriptor()
-	// parish.DefaultUpdatedAt holds the default value on creation for the updated_at field.
-	parish.DefaultUpdatedAt = parishDescUpdatedAt.Default.(func() time.Time)
-	// parish.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
-	parish.UpdateDefaultUpdatedAt = parishDescUpdatedAt.UpdateDefault.(func() time.Time)
-	// parishDescCode is the schema descriptor for code field.
-	parishDescCode := parishFields[1].Descriptor()
-	// parish.CodeValidator is a validator for the "code" field. It is called by the builders before save.
-	parish.CodeValidator = parishDescCode.Validators[0].(func(string) error)
-	// parishDescName is the schema descriptor for name field.
-	parishDescName := parishFields[2].Descriptor()
-	// parish.NameValidator is a validator for the "name" field. It is called by the builders before save.
-	parish.NameValidator = parishDescName.Validators[0].(func(string) error)
-	// parishDescActive is the schema descriptor for active field.
-	parishDescActive := parishFields[11].Descriptor()
-	// parish.DefaultActive holds the default value on creation for the active field.
-	parish.DefaultActive = parishDescActive.Default.(bool)
-	// parishDescID is the schema descriptor for id field.
-	parishDescID := parishMixinFields0[0].Descriptor()
-	// parish.DefaultID holds the default value on creation for the id field.
-	parish.DefaultID = parishDescID.Default.(func() uuid.UUID)
-	parishmemberMixin := schema.ParishMember{}.Mixin()
-	parishmemberMixinFields0 := parishmemberMixin[0].Fields()
-	_ = parishmemberMixinFields0
-	parishmemberMixinFields1 := parishmemberMixin[1].Fields()
-	_ = parishmemberMixinFields1
-	parishmemberFields := schema.ParishMember{}.Fields()
-	_ = parishmemberFields
-	// parishmemberDescCreatedAt is the schema descriptor for created_at field.
-	parishmemberDescCreatedAt := parishmemberMixinFields1[0].Descriptor()
-	// parishmember.DefaultCreatedAt holds the default value on creation for the created_at field.
-	parishmember.DefaultCreatedAt = parishmemberDescCreatedAt.Default.(func() time.Time)
-	// parishmemberDescUpdatedAt is the schema descriptor for updated_at field.
-	parishmemberDescUpdatedAt := parishmemberMixinFields1[1].Descriptor()
-	// parishmember.DefaultUpdatedAt holds the default value on creation for the updated_at field.
-	parishmember.DefaultUpdatedAt = parishmemberDescUpdatedAt.Default.(func() time.Time)
-	// parishmember.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
-	parishmember.UpdateDefaultUpdatedAt = parishmemberDescUpdatedAt.UpdateDefault.(func() time.Time)
-	// parishmemberDescID is the schema descriptor for id field.
-	parishmemberDescID := parishmemberMixinFields0[0].Descriptor()
-	// parishmember.DefaultID holds the default value on creation for the id field.
-	parishmember.DefaultID = parishmemberDescID.Default.(func() uuid.UUID)
+	parokiMixin := schema.Paroki{}.Mixin()
+	parokiMixinFields0 := parokiMixin[0].Fields()
+	_ = parokiMixinFields0
+	parokiMixinFields1 := parokiMixin[1].Fields()
+	_ = parokiMixinFields1
+	parokiFields := schema.Paroki{}.Fields()
+	_ = parokiFields
+	// parokiDescCreatedAt is the schema descriptor for created_at field.
+	parokiDescCreatedAt := parokiMixinFields1[0].Descriptor()
+	// paroki.DefaultCreatedAt holds the default value on creation for the created_at field.
+	paroki.DefaultCreatedAt = parokiDescCreatedAt.Default.(func() time.Time)
+	// parokiDescUpdatedAt is the schema descriptor for updated_at field.
+	parokiDescUpdatedAt := parokiMixinFields1[1].Descriptor()
+	// paroki.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	paroki.DefaultUpdatedAt = parokiDescUpdatedAt.Default.(func() time.Time)
+	// paroki.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	paroki.UpdateDefaultUpdatedAt = parokiDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// parokiDescKode is the schema descriptor for kode field.
+	parokiDescKode := parokiFields[1].Descriptor()
+	// paroki.KodeValidator is a validator for the "kode" field. It is called by the builders before save.
+	paroki.KodeValidator = parokiDescKode.Validators[0].(func(string) error)
+	// parokiDescNama is the schema descriptor for nama field.
+	parokiDescNama := parokiFields[2].Descriptor()
+	// paroki.NamaValidator is a validator for the "nama" field. It is called by the builders before save.
+	paroki.NamaValidator = parokiDescNama.Validators[0].(func(string) error)
+	// parokiDescActive is the schema descriptor for active field.
+	parokiDescActive := parokiFields[11].Descriptor()
+	// paroki.DefaultActive holds the default value on creation for the active field.
+	paroki.DefaultActive = parokiDescActive.Default.(bool)
+	// parokiDescID is the schema descriptor for id field.
+	parokiDescID := parokiMixinFields0[0].Descriptor()
+	// paroki.DefaultID holds the default value on creation for the id field.
+	paroki.DefaultID = parokiDescID.Default.(func() uuid.UUID)
+	parokimemberMixin := schema.ParokiMember{}.Mixin()
+	parokimemberMixinFields0 := parokimemberMixin[0].Fields()
+	_ = parokimemberMixinFields0
+	parokimemberMixinFields1 := parokimemberMixin[1].Fields()
+	_ = parokimemberMixinFields1
+	parokimemberFields := schema.ParokiMember{}.Fields()
+	_ = parokimemberFields
+	// parokimemberDescCreatedAt is the schema descriptor for created_at field.
+	parokimemberDescCreatedAt := parokimemberMixinFields1[0].Descriptor()
+	// parokimember.DefaultCreatedAt holds the default value on creation for the created_at field.
+	parokimember.DefaultCreatedAt = parokimemberDescCreatedAt.Default.(func() time.Time)
+	// parokimemberDescUpdatedAt is the schema descriptor for updated_at field.
+	parokimemberDescUpdatedAt := parokimemberMixinFields1[1].Descriptor()
+	// parokimember.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	parokimember.DefaultUpdatedAt = parokimemberDescUpdatedAt.Default.(func() time.Time)
+	// parokimember.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	parokimember.UpdateDefaultUpdatedAt = parokimemberDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// parokimemberDescID is the schema descriptor for id field.
+	parokimemberDescID := parokimemberMixinFields0[0].Descriptor()
+	// parokimember.DefaultID holds the default value on creation for the id field.
+	parokimember.DefaultID = parokimemberDescID.Default.(func() uuid.UUID)
 	periodMixin := schema.Period{}.Mixin()
 	periodMixinFields0 := periodMixin[0].Fields()
 	_ = periodMixinFields0
@@ -665,70 +698,37 @@ func init() {
 	usersessionDescID := usersessionMixinFields0[0].Descriptor()
 	// usersession.DefaultID holds the default value on creation for the id field.
 	usersession.DefaultID = usersessionDescID.Default.(func() uuid.UUID)
-	wardMixin := schema.Ward{}.Mixin()
-	wardMixinFields0 := wardMixin[0].Fields()
-	_ = wardMixinFields0
-	wardMixinFields1 := wardMixin[1].Fields()
-	_ = wardMixinFields1
-	wardFields := schema.Ward{}.Fields()
-	_ = wardFields
-	// wardDescCreatedAt is the schema descriptor for created_at field.
-	wardDescCreatedAt := wardMixinFields1[0].Descriptor()
-	// ward.DefaultCreatedAt holds the default value on creation for the created_at field.
-	ward.DefaultCreatedAt = wardDescCreatedAt.Default.(func() time.Time)
-	// wardDescUpdatedAt is the schema descriptor for updated_at field.
-	wardDescUpdatedAt := wardMixinFields1[1].Descriptor()
-	// ward.DefaultUpdatedAt holds the default value on creation for the updated_at field.
-	ward.DefaultUpdatedAt = wardDescUpdatedAt.Default.(func() time.Time)
-	// ward.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
-	ward.UpdateDefaultUpdatedAt = wardDescUpdatedAt.UpdateDefault.(func() time.Time)
-	// wardDescCode is the schema descriptor for code field.
-	wardDescCode := wardFields[2].Descriptor()
-	// ward.CodeValidator is a validator for the "code" field. It is called by the builders before save.
-	ward.CodeValidator = wardDescCode.Validators[0].(func(string) error)
-	// wardDescName is the schema descriptor for name field.
-	wardDescName := wardFields[3].Descriptor()
-	// ward.NameValidator is a validator for the "name" field. It is called by the builders before save.
-	ward.NameValidator = wardDescName.Validators[0].(func(string) error)
-	// wardDescActive is the schema descriptor for active field.
-	wardDescActive := wardFields[7].Descriptor()
-	// ward.DefaultActive holds the default value on creation for the active field.
-	ward.DefaultActive = wardDescActive.Default.(bool)
-	// wardDescID is the schema descriptor for id field.
-	wardDescID := wardMixinFields0[0].Descriptor()
-	// ward.DefaultID holds the default value on creation for the id field.
-	ward.DefaultID = wardDescID.Default.(func() uuid.UUID)
-	zoneMixin := schema.Zone{}.Mixin()
-	zoneMixinFields0 := zoneMixin[0].Fields()
-	_ = zoneMixinFields0
-	zoneMixinFields1 := zoneMixin[1].Fields()
-	_ = zoneMixinFields1
-	zoneFields := schema.Zone{}.Fields()
-	_ = zoneFields
-	// zoneDescCreatedAt is the schema descriptor for created_at field.
-	zoneDescCreatedAt := zoneMixinFields1[0].Descriptor()
-	// zone.DefaultCreatedAt holds the default value on creation for the created_at field.
-	zone.DefaultCreatedAt = zoneDescCreatedAt.Default.(func() time.Time)
-	// zoneDescUpdatedAt is the schema descriptor for updated_at field.
-	zoneDescUpdatedAt := zoneMixinFields1[1].Descriptor()
-	// zone.DefaultUpdatedAt holds the default value on creation for the updated_at field.
-	zone.DefaultUpdatedAt = zoneDescUpdatedAt.Default.(func() time.Time)
-	// zone.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
-	zone.UpdateDefaultUpdatedAt = zoneDescUpdatedAt.UpdateDefault.(func() time.Time)
-	// zoneDescCode is the schema descriptor for code field.
-	zoneDescCode := zoneFields[2].Descriptor()
-	// zone.CodeValidator is a validator for the "code" field. It is called by the builders before save.
-	zone.CodeValidator = zoneDescCode.Validators[0].(func(string) error)
-	// zoneDescName is the schema descriptor for name field.
-	zoneDescName := zoneFields[3].Descriptor()
-	// zone.NameValidator is a validator for the "name" field. It is called by the builders before save.
-	zone.NameValidator = zoneDescName.Validators[0].(func(string) error)
-	// zoneDescActive is the schema descriptor for active field.
-	zoneDescActive := zoneFields[6].Descriptor()
-	// zone.DefaultActive holds the default value on creation for the active field.
-	zone.DefaultActive = zoneDescActive.Default.(bool)
-	// zoneDescID is the schema descriptor for id field.
-	zoneDescID := zoneMixinFields0[0].Descriptor()
-	// zone.DefaultID holds the default value on creation for the id field.
-	zone.DefaultID = zoneDescID.Default.(func() uuid.UUID)
+	wilayahMixin := schema.Wilayah{}.Mixin()
+	wilayahMixinFields0 := wilayahMixin[0].Fields()
+	_ = wilayahMixinFields0
+	wilayahMixinFields1 := wilayahMixin[1].Fields()
+	_ = wilayahMixinFields1
+	wilayahFields := schema.Wilayah{}.Fields()
+	_ = wilayahFields
+	// wilayahDescCreatedAt is the schema descriptor for created_at field.
+	wilayahDescCreatedAt := wilayahMixinFields1[0].Descriptor()
+	// wilayah.DefaultCreatedAt holds the default value on creation for the created_at field.
+	wilayah.DefaultCreatedAt = wilayahDescCreatedAt.Default.(func() time.Time)
+	// wilayahDescUpdatedAt is the schema descriptor for updated_at field.
+	wilayahDescUpdatedAt := wilayahMixinFields1[1].Descriptor()
+	// wilayah.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	wilayah.DefaultUpdatedAt = wilayahDescUpdatedAt.Default.(func() time.Time)
+	// wilayah.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	wilayah.UpdateDefaultUpdatedAt = wilayahDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// wilayahDescKode is the schema descriptor for kode field.
+	wilayahDescKode := wilayahFields[2].Descriptor()
+	// wilayah.KodeValidator is a validator for the "kode" field. It is called by the builders before save.
+	wilayah.KodeValidator = wilayahDescKode.Validators[0].(func(string) error)
+	// wilayahDescNama is the schema descriptor for nama field.
+	wilayahDescNama := wilayahFields[3].Descriptor()
+	// wilayah.NamaValidator is a validator for the "nama" field. It is called by the builders before save.
+	wilayah.NamaValidator = wilayahDescNama.Validators[0].(func(string) error)
+	// wilayahDescActive is the schema descriptor for active field.
+	wilayahDescActive := wilayahFields[6].Descriptor()
+	// wilayah.DefaultActive holds the default value on creation for the active field.
+	wilayah.DefaultActive = wilayahDescActive.Default.(bool)
+	// wilayahDescID is the schema descriptor for id field.
+	wilayahDescID := wilayahMixinFields0[0].Descriptor()
+	// wilayah.DefaultID holds the default value on creation for the id field.
+	wilayah.DefaultID = wilayahDescID.Default.(func() uuid.UUID)
 }

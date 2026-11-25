@@ -36,7 +36,7 @@ func (AgentSession) Mixin() []ent.Mixin {
 // Fields returns the fields of the AgentSession entity.
 func (AgentSession) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("parish_id", uuid.UUID{}),
+		field.UUID("paroki_id", uuid.UUID{}),
 		field.UUID("user_id", uuid.UUID{}),
 		field.String("title").Default("Percakapan Baru"),
 		field.UUID("provider_id", uuid.UUID{}).Optional().Nillable(),
@@ -55,6 +55,6 @@ func (AgentSession) Edges() []ent.Edge {
 // Indexes returns the indexes of the AgentSession entity.
 func (AgentSession) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("parish_id", "user_id", "last_message_at"),
+		index.Fields("paroki_id", "user_id", "last_message_at"),
 	}
 }

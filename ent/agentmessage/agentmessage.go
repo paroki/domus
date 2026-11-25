@@ -22,8 +22,8 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// FieldSessionID holds the string denoting the session_id field in the database.
 	FieldSessionID = "session_id"
-	// FieldParishID holds the string denoting the parish_id field in the database.
-	FieldParishID = "parish_id"
+	// FieldParokiID holds the string denoting the paroki_id field in the database.
+	FieldParokiID = "paroki_id"
 	// FieldUserID holds the string denoting the user_id field in the database.
 	FieldUserID = "user_id"
 	// FieldAgentName holds the string denoting the agent_name field in the database.
@@ -59,7 +59,7 @@ var Columns = []string{
 	FieldCreatedAt,
 	FieldUpdatedAt,
 	FieldSessionID,
-	FieldParishID,
+	FieldParokiID,
 	FieldUserID,
 	FieldAgentName,
 	FieldRole,
@@ -142,9 +142,9 @@ func BySessionID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSessionID, opts...).ToFunc()
 }
 
-// ByParishID orders the results by the parish_id field.
-func ByParishID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldParishID, opts...).ToFunc()
+// ByParokiID orders the results by the paroki_id field.
+func ByParokiID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldParokiID, opts...).ToFunc()
 }
 
 // ByUserID orders the results by the user_id field.

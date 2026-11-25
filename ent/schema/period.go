@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// Period stores fiscal or liturgical periods for a Parish.
+// Period stores fiscal or liturgical periods for a Paroki.
 type Period struct {
 	ent.Schema
 }
@@ -25,7 +25,7 @@ func (Period) Mixin() []ent.Mixin {
 // Fields returns the fields of the Period entity.
 func (Period) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("parish_id", uuid.UUID{}),
+		field.UUID("paroki_id", uuid.UUID{}),
 		field.Enum("type").Values("fiscal", "liturgical").Default("fiscal"),
 		field.String("code").NotEmpty(),
 		field.String("name").NotEmpty(),
@@ -39,9 +39,9 @@ func (Period) Fields() []ent.Field {
 // Edges returns the edges of the Period entity.
 func (Period) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("parish", Parish.Type).
+		edge.From("paroki", Paroki.Type).
 			Ref("periods").
-			Field("parish_id").
+			Field("paroki_id").
 			Unique().
 			Required(),
 	}
@@ -50,7 +50,7 @@ func (Period) Edges() []ent.Edge {
 // Indexes returns the indexes for the Period entity.
 func (Period) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("parish_id", "code").Unique(),
-		index.Fields("parish_id", "type", "is_current"),
+		index.Fields("paroki_id", "code").Unique(),
+		index.Fields("paroki_id", "type", "is_current"),
 	}
 }

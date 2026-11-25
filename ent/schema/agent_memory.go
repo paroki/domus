@@ -32,7 +32,7 @@ func (AgentMemory) Mixin() []ent.Mixin {
 // Fields returns the fields of the AgentMemory entity.
 func (AgentMemory) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("parish_id", uuid.UUID{}),
+		field.UUID("paroki_id", uuid.UUID{}),
 		field.UUID("user_id", uuid.UUID{}),
 		field.Enum("category").Values("preference", "fact", "context").Default("fact"),
 		field.Text("content").NotEmpty(),
@@ -43,6 +43,6 @@ func (AgentMemory) Fields() []ent.Field {
 // Indexes returns the indexes of the AgentMemory entity.
 func (AgentMemory) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("parish_id", "user_id", "created_at"),
+		index.Fields("paroki_id", "user_id", "created_at"),
 	}
 }

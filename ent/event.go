@@ -24,8 +24,8 @@ type Event struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// DeletedAt holds the value of the "deleted_at" field.
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
-	// ParishID holds the value of the "parish_id" field.
-	ParishID uuid.UUID `json:"parish_id,omitempty"`
+	// ParokiID holds the value of the "paroki_id" field.
+	ParokiID uuid.UUID `json:"paroki_id,omitempty"`
 	// OrgID holds the value of the "org_id" field.
 	OrgID uuid.UUID `json:"org_id,omitempty"`
 	// CreatedBy holds the value of the "created_by" field.
@@ -83,7 +83,7 @@ func (*Event) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case event.FieldCreatedAt, event.FieldUpdatedAt, event.FieldDeletedAt, event.FieldStartAt, event.FieldEndAt, event.FieldRsvpDeadline:
 			values[i] = new(sql.NullTime)
-		case event.FieldID, event.FieldParishID, event.FieldOrgID, event.FieldCreatedBy:
+		case event.FieldID, event.FieldParokiID, event.FieldOrgID, event.FieldCreatedBy:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -125,11 +125,11 @@ func (_m *Event) assignValues(columns []string, values []any) error {
 				_m.DeletedAt = new(time.Time)
 				*_m.DeletedAt = value.Time
 			}
-		case event.FieldParishID:
+		case event.FieldParokiID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field parish_id", values[i])
+				return fmt.Errorf("unexpected type %T for field paroki_id", values[i])
 			} else if value != nil {
-				_m.ParishID = *value
+				_m.ParokiID = *value
 			}
 		case event.FieldOrgID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
@@ -252,8 +252,8 @@ func (_m *Event) String() string {
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteString(", ")
-	builder.WriteString("parish_id=")
-	builder.WriteString(fmt.Sprintf("%v", _m.ParishID))
+	builder.WriteString("paroki_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ParokiID))
 	builder.WriteString(", ")
 	builder.WriteString("org_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.OrgID))

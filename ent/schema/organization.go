@@ -25,11 +25,11 @@ func (Organization) Mixin() []ent.Mixin {
 // Fields returns the fields of the Organization entity.
 func (Organization) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("parish_id", uuid.UUID{}),
+		field.UUID("paroki_id", uuid.UUID{}),
 		field.UUID("parent_id", uuid.UUID{}).Optional().Nillable(),
-		field.UUID("zone_id", uuid.UUID{}).Optional().Nillable(),
-		field.UUID("ward_id", uuid.UUID{}).Optional().Nillable(),
-		field.Enum("kind").Values("dpp", "bgkp", "section", "categorical", "zone", "ward", "community").Default("section"),
+		field.UUID("wilayah_id", uuid.UUID{}).Optional().Nillable(),
+		field.UUID("lingkungan_id", uuid.UUID{}).Optional().Nillable(),
+		field.Enum("kind").Values("dpp", "bgkp", "section", "categorical", "wilayah", "lingkungan", "community").Default("section"),
 		field.String("code").NotEmpty(),
 		field.String("name").NotEmpty(),
 		field.String("description").Optional().Nillable(),
@@ -52,10 +52,10 @@ func (Organization) Edges() []ent.Edge {
 // Indexes returns the indexes for the Organization entity.
 func (Organization) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("parish_id", "code").Unique(),
-		index.Fields("parish_id", "kind", "active"),
-		index.Fields("parish_id", "parent_id"),
-		index.Fields("parish_id", "zone_id"),
-		index.Fields("parish_id", "ward_id"),
+		index.Fields("paroki_id", "code").Unique(),
+		index.Fields("paroki_id", "kind", "active"),
+		index.Fields("paroki_id", "parent_id"),
+		index.Fields("paroki_id", "wilayah_id"),
+		index.Fields("paroki_id", "lingkungan_id"),
 	}
 }

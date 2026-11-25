@@ -21,14 +21,17 @@ type AgentSession func(*sql.Selector)
 // CasbinRule is the predicate function for casbinrule builders.
 type CasbinRule func(*sql.Selector)
 
-// Diocese is the predicate function for diocese builders.
-type Diocese func(*sql.Selector)
-
 // Event is the predicate function for event builders.
 type Event func(*sql.Selector)
 
 // EventRSVP is the predicate function for eventrsvp builders.
 type EventRSVP func(*sql.Selector)
+
+// Keuskupan is the predicate function for keuskupan builders.
+type Keuskupan func(*sql.Selector)
+
+// Lingkungan is the predicate function for lingkungan builders.
+type Lingkungan func(*sql.Selector)
 
 // Lookup is the predicate function for lookup builders.
 type Lookup func(*sql.Selector)
@@ -42,11 +45,11 @@ type OrgMember func(*sql.Selector)
 // Organization is the predicate function for organization builders.
 type Organization func(*sql.Selector)
 
-// Parish is the predicate function for parish builders.
-type Parish func(*sql.Selector)
+// Paroki is the predicate function for paroki builders.
+type Paroki func(*sql.Selector)
 
-// ParishMember is the predicate function for parishmember builders.
-type ParishMember func(*sql.Selector)
+// ParokiMember is the predicate function for parokimember builders.
+type ParokiMember func(*sql.Selector)
 
 // Period is the predicate function for period builders.
 type Period func(*sql.Selector)
@@ -66,8 +69,5 @@ type UserOTP func(*sql.Selector)
 // UserSession is the predicate function for usersession builders.
 type UserSession func(*sql.Selector)
 
-// Ward is the predicate function for ward builders.
-type Ward func(*sql.Selector)
-
-// Zone is the predicate function for zone builders.
-type Zone func(*sql.Selector)
+// Wilayah is the predicate function for wilayah builders.
+type Wilayah func(*sql.Selector)

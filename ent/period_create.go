@@ -11,7 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/paroki/domus/ent/parish"
+	"github.com/paroki/domus/ent/paroki"
 	"github.com/paroki/domus/ent/period"
 )
 
@@ -64,9 +64,9 @@ func (_c *PeriodCreate) SetNillableDeletedAt(v *time.Time) *PeriodCreate {
 	return _c
 }
 
-// SetParishID sets the "parish_id" field.
-func (_c *PeriodCreate) SetParishID(v uuid.UUID) *PeriodCreate {
-	_c.mutation.SetParishID(v)
+// SetParokiID sets the "paroki_id" field.
+func (_c *PeriodCreate) SetParokiID(v uuid.UUID) *PeriodCreate {
+	_c.mutation.SetParokiID(v)
 	return _c
 }
 
@@ -150,9 +150,9 @@ func (_c *PeriodCreate) SetNillableID(v *uuid.UUID) *PeriodCreate {
 	return _c
 }
 
-// SetParish sets the "parish" edge to the Parish entity.
-func (_c *PeriodCreate) SetParish(v *Parish) *PeriodCreate {
-	return _c.SetParishID(v.ID)
+// SetParoki sets the "paroki" edge to the Paroki entity.
+func (_c *PeriodCreate) SetParoki(v *Paroki) *PeriodCreate {
+	return _c.SetParokiID(v.ID)
 }
 
 // Mutation returns the PeriodMutation object of the builder.
@@ -224,8 +224,8 @@ func (_c *PeriodCreate) check() error {
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Period.updated_at"`)}
 	}
-	if _, ok := _c.mutation.ParishID(); !ok {
-		return &ValidationError{Name: "parish_id", err: errors.New(`ent: missing required field "Period.parish_id"`)}
+	if _, ok := _c.mutation.ParokiID(); !ok {
+		return &ValidationError{Name: "paroki_id", err: errors.New(`ent: missing required field "Period.paroki_id"`)}
 	}
 	if _, ok := _c.mutation.GetType(); !ok {
 		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "Period.type"`)}
@@ -278,8 +278,8 @@ func (_c *PeriodCreate) check() error {
 	if _, ok := _c.mutation.IsCurrent(); !ok {
 		return &ValidationError{Name: "is_current", err: errors.New(`ent: missing required field "Period.is_current"`)}
 	}
-	if len(_c.mutation.ParishIDs()) == 0 {
-		return &ValidationError{Name: "parish", err: errors.New(`ent: missing required edge "Period.parish"`)}
+	if len(_c.mutation.ParokiIDs()) == 0 {
+		return &ValidationError{Name: "paroki", err: errors.New(`ent: missing required edge "Period.paroki"`)}
 	}
 	return nil
 }
@@ -356,21 +356,21 @@ func (_c *PeriodCreate) createSpec() (*Period, *sqlgraph.CreateSpec) {
 		_spec.SetField(period.FieldIsCurrent, field.TypeBool, value)
 		_node.IsCurrent = value
 	}
-	if nodes := _c.mutation.ParishIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.ParokiIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   period.ParishTable,
-			Columns: []string{period.ParishColumn},
+			Table:   period.ParokiTable,
+			Columns: []string{period.ParokiColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(parish.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(paroki.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.ParishID = nodes[0]
+		_node.ParokiID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

@@ -31,8 +31,8 @@ const (
 	FieldDisplayName = "display_name"
 	// FieldAvatarURL holds the string denoting the avatar_url field in the database.
 	FieldAvatarURL = "avatar_url"
-	// FieldActiveParishID holds the string denoting the active_parish_id field in the database.
-	FieldActiveParishID = "active_parish_id"
+	// FieldActiveParokiID holds the string denoting the active_paroki_id field in the database.
+	FieldActiveParokiID = "active_paroki_id"
 	// FieldLastUsedAt holds the string denoting the last_used_at field in the database.
 	FieldLastUsedAt = "last_used_at"
 	// EdgeUser holds the string denoting the user edge name in mutations.
@@ -59,7 +59,7 @@ var Columns = []string{
 	FieldEmail,
 	FieldDisplayName,
 	FieldAvatarURL,
-	FieldActiveParishID,
+	FieldActiveParokiID,
 	FieldLastUsedAt,
 }
 
@@ -136,9 +136,9 @@ func ByAvatarURL(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAvatarURL, opts...).ToFunc()
 }
 
-// ByActiveParishID orders the results by the active_parish_id field.
-func ByActiveParishID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldActiveParishID, opts...).ToFunc()
+// ByActiveParokiID orders the results by the active_paroki_id field.
+func ByActiveParokiID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldActiveParokiID, opts...).ToFunc()
 }
 
 // ByLastUsedAt orders the results by the last_used_at field.

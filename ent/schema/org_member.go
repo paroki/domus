@@ -24,7 +24,7 @@ func (OrgMember) Mixin() []ent.Mixin {
 // Fields returns the fields of the OrgMember entity.
 func (OrgMember) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("parish_id", uuid.UUID{}),
+		field.UUID("paroki_id", uuid.UUID{}),
 		field.UUID("org_id", uuid.UUID{}),
 		field.UUID("user_id", uuid.UUID{}),
 		field.Enum("role").Values("admin", "member").Default("member"),
@@ -51,7 +51,7 @@ func (OrgMember) Edges() []ent.Edge {
 func (OrgMember) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("org_id", "user_id").Unique(),
-		index.Fields("parish_id", "user_id"),
+		index.Fields("paroki_id", "user_id"),
 		index.Fields("org_id", "role", "status"),
 	}
 }

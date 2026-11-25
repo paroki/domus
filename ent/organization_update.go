@@ -57,16 +57,16 @@ func (_u *OrganizationUpdate) ClearDeletedAt() *OrganizationUpdate {
 	return _u
 }
 
-// SetParishID sets the "parish_id" field.
-func (_u *OrganizationUpdate) SetParishID(v uuid.UUID) *OrganizationUpdate {
-	_u.mutation.SetParishID(v)
+// SetParokiID sets the "paroki_id" field.
+func (_u *OrganizationUpdate) SetParokiID(v uuid.UUID) *OrganizationUpdate {
+	_u.mutation.SetParokiID(v)
 	return _u
 }
 
-// SetNillableParishID sets the "parish_id" field if the given value is not nil.
-func (_u *OrganizationUpdate) SetNillableParishID(v *uuid.UUID) *OrganizationUpdate {
+// SetNillableParokiID sets the "paroki_id" field if the given value is not nil.
+func (_u *OrganizationUpdate) SetNillableParokiID(v *uuid.UUID) *OrganizationUpdate {
 	if v != nil {
-		_u.SetParishID(*v)
+		_u.SetParokiID(*v)
 	}
 	return _u
 }
@@ -91,43 +91,43 @@ func (_u *OrganizationUpdate) ClearParentID() *OrganizationUpdate {
 	return _u
 }
 
-// SetZoneID sets the "zone_id" field.
-func (_u *OrganizationUpdate) SetZoneID(v uuid.UUID) *OrganizationUpdate {
-	_u.mutation.SetZoneID(v)
+// SetWilayahID sets the "wilayah_id" field.
+func (_u *OrganizationUpdate) SetWilayahID(v uuid.UUID) *OrganizationUpdate {
+	_u.mutation.SetWilayahID(v)
 	return _u
 }
 
-// SetNillableZoneID sets the "zone_id" field if the given value is not nil.
-func (_u *OrganizationUpdate) SetNillableZoneID(v *uuid.UUID) *OrganizationUpdate {
+// SetNillableWilayahID sets the "wilayah_id" field if the given value is not nil.
+func (_u *OrganizationUpdate) SetNillableWilayahID(v *uuid.UUID) *OrganizationUpdate {
 	if v != nil {
-		_u.SetZoneID(*v)
+		_u.SetWilayahID(*v)
 	}
 	return _u
 }
 
-// ClearZoneID clears the value of the "zone_id" field.
-func (_u *OrganizationUpdate) ClearZoneID() *OrganizationUpdate {
-	_u.mutation.ClearZoneID()
+// ClearWilayahID clears the value of the "wilayah_id" field.
+func (_u *OrganizationUpdate) ClearWilayahID() *OrganizationUpdate {
+	_u.mutation.ClearWilayahID()
 	return _u
 }
 
-// SetWardID sets the "ward_id" field.
-func (_u *OrganizationUpdate) SetWardID(v uuid.UUID) *OrganizationUpdate {
-	_u.mutation.SetWardID(v)
+// SetLingkunganID sets the "lingkungan_id" field.
+func (_u *OrganizationUpdate) SetLingkunganID(v uuid.UUID) *OrganizationUpdate {
+	_u.mutation.SetLingkunganID(v)
 	return _u
 }
 
-// SetNillableWardID sets the "ward_id" field if the given value is not nil.
-func (_u *OrganizationUpdate) SetNillableWardID(v *uuid.UUID) *OrganizationUpdate {
+// SetNillableLingkunganID sets the "lingkungan_id" field if the given value is not nil.
+func (_u *OrganizationUpdate) SetNillableLingkunganID(v *uuid.UUID) *OrganizationUpdate {
 	if v != nil {
-		_u.SetWardID(*v)
+		_u.SetLingkunganID(*v)
 	}
 	return _u
 }
 
-// ClearWardID clears the value of the "ward_id" field.
-func (_u *OrganizationUpdate) ClearWardID() *OrganizationUpdate {
-	_u.mutation.ClearWardID()
+// ClearLingkunganID clears the value of the "lingkungan_id" field.
+func (_u *OrganizationUpdate) ClearLingkunganID() *OrganizationUpdate {
+	_u.mutation.ClearLingkunganID()
 	return _u
 }
 
@@ -408,20 +408,20 @@ func (_u *OrganizationUpdate) sqlSave(ctx context.Context) (_node int, err error
 	if _u.mutation.DeletedAtCleared() {
 		_spec.ClearField(organization.FieldDeletedAt, field.TypeTime)
 	}
-	if value, ok := _u.mutation.ParishID(); ok {
-		_spec.SetField(organization.FieldParishID, field.TypeUUID, value)
+	if value, ok := _u.mutation.ParokiID(); ok {
+		_spec.SetField(organization.FieldParokiID, field.TypeUUID, value)
 	}
-	if value, ok := _u.mutation.ZoneID(); ok {
-		_spec.SetField(organization.FieldZoneID, field.TypeUUID, value)
+	if value, ok := _u.mutation.WilayahID(); ok {
+		_spec.SetField(organization.FieldWilayahID, field.TypeUUID, value)
 	}
-	if _u.mutation.ZoneIDCleared() {
-		_spec.ClearField(organization.FieldZoneID, field.TypeUUID)
+	if _u.mutation.WilayahIDCleared() {
+		_spec.ClearField(organization.FieldWilayahID, field.TypeUUID)
 	}
-	if value, ok := _u.mutation.WardID(); ok {
-		_spec.SetField(organization.FieldWardID, field.TypeUUID, value)
+	if value, ok := _u.mutation.LingkunganID(); ok {
+		_spec.SetField(organization.FieldLingkunganID, field.TypeUUID, value)
 	}
-	if _u.mutation.WardIDCleared() {
-		_spec.ClearField(organization.FieldWardID, field.TypeUUID)
+	if _u.mutation.LingkunganIDCleared() {
+		_spec.ClearField(organization.FieldLingkunganID, field.TypeUUID)
 	}
 	if value, ok := _u.mutation.Kind(); ok {
 		_spec.SetField(organization.FieldKind, field.TypeEnum, value)
@@ -651,16 +651,16 @@ func (_u *OrganizationUpdateOne) ClearDeletedAt() *OrganizationUpdateOne {
 	return _u
 }
 
-// SetParishID sets the "parish_id" field.
-func (_u *OrganizationUpdateOne) SetParishID(v uuid.UUID) *OrganizationUpdateOne {
-	_u.mutation.SetParishID(v)
+// SetParokiID sets the "paroki_id" field.
+func (_u *OrganizationUpdateOne) SetParokiID(v uuid.UUID) *OrganizationUpdateOne {
+	_u.mutation.SetParokiID(v)
 	return _u
 }
 
-// SetNillableParishID sets the "parish_id" field if the given value is not nil.
-func (_u *OrganizationUpdateOne) SetNillableParishID(v *uuid.UUID) *OrganizationUpdateOne {
+// SetNillableParokiID sets the "paroki_id" field if the given value is not nil.
+func (_u *OrganizationUpdateOne) SetNillableParokiID(v *uuid.UUID) *OrganizationUpdateOne {
 	if v != nil {
-		_u.SetParishID(*v)
+		_u.SetParokiID(*v)
 	}
 	return _u
 }
@@ -685,43 +685,43 @@ func (_u *OrganizationUpdateOne) ClearParentID() *OrganizationUpdateOne {
 	return _u
 }
 
-// SetZoneID sets the "zone_id" field.
-func (_u *OrganizationUpdateOne) SetZoneID(v uuid.UUID) *OrganizationUpdateOne {
-	_u.mutation.SetZoneID(v)
+// SetWilayahID sets the "wilayah_id" field.
+func (_u *OrganizationUpdateOne) SetWilayahID(v uuid.UUID) *OrganizationUpdateOne {
+	_u.mutation.SetWilayahID(v)
 	return _u
 }
 
-// SetNillableZoneID sets the "zone_id" field if the given value is not nil.
-func (_u *OrganizationUpdateOne) SetNillableZoneID(v *uuid.UUID) *OrganizationUpdateOne {
+// SetNillableWilayahID sets the "wilayah_id" field if the given value is not nil.
+func (_u *OrganizationUpdateOne) SetNillableWilayahID(v *uuid.UUID) *OrganizationUpdateOne {
 	if v != nil {
-		_u.SetZoneID(*v)
+		_u.SetWilayahID(*v)
 	}
 	return _u
 }
 
-// ClearZoneID clears the value of the "zone_id" field.
-func (_u *OrganizationUpdateOne) ClearZoneID() *OrganizationUpdateOne {
-	_u.mutation.ClearZoneID()
+// ClearWilayahID clears the value of the "wilayah_id" field.
+func (_u *OrganizationUpdateOne) ClearWilayahID() *OrganizationUpdateOne {
+	_u.mutation.ClearWilayahID()
 	return _u
 }
 
-// SetWardID sets the "ward_id" field.
-func (_u *OrganizationUpdateOne) SetWardID(v uuid.UUID) *OrganizationUpdateOne {
-	_u.mutation.SetWardID(v)
+// SetLingkunganID sets the "lingkungan_id" field.
+func (_u *OrganizationUpdateOne) SetLingkunganID(v uuid.UUID) *OrganizationUpdateOne {
+	_u.mutation.SetLingkunganID(v)
 	return _u
 }
 
-// SetNillableWardID sets the "ward_id" field if the given value is not nil.
-func (_u *OrganizationUpdateOne) SetNillableWardID(v *uuid.UUID) *OrganizationUpdateOne {
+// SetNillableLingkunganID sets the "lingkungan_id" field if the given value is not nil.
+func (_u *OrganizationUpdateOne) SetNillableLingkunganID(v *uuid.UUID) *OrganizationUpdateOne {
 	if v != nil {
-		_u.SetWardID(*v)
+		_u.SetLingkunganID(*v)
 	}
 	return _u
 }
 
-// ClearWardID clears the value of the "ward_id" field.
-func (_u *OrganizationUpdateOne) ClearWardID() *OrganizationUpdateOne {
-	_u.mutation.ClearWardID()
+// ClearLingkunganID clears the value of the "lingkungan_id" field.
+func (_u *OrganizationUpdateOne) ClearLingkunganID() *OrganizationUpdateOne {
+	_u.mutation.ClearLingkunganID()
 	return _u
 }
 
@@ -1032,20 +1032,20 @@ func (_u *OrganizationUpdateOne) sqlSave(ctx context.Context) (_node *Organizati
 	if _u.mutation.DeletedAtCleared() {
 		_spec.ClearField(organization.FieldDeletedAt, field.TypeTime)
 	}
-	if value, ok := _u.mutation.ParishID(); ok {
-		_spec.SetField(organization.FieldParishID, field.TypeUUID, value)
+	if value, ok := _u.mutation.ParokiID(); ok {
+		_spec.SetField(organization.FieldParokiID, field.TypeUUID, value)
 	}
-	if value, ok := _u.mutation.ZoneID(); ok {
-		_spec.SetField(organization.FieldZoneID, field.TypeUUID, value)
+	if value, ok := _u.mutation.WilayahID(); ok {
+		_spec.SetField(organization.FieldWilayahID, field.TypeUUID, value)
 	}
-	if _u.mutation.ZoneIDCleared() {
-		_spec.ClearField(organization.FieldZoneID, field.TypeUUID)
+	if _u.mutation.WilayahIDCleared() {
+		_spec.ClearField(organization.FieldWilayahID, field.TypeUUID)
 	}
-	if value, ok := _u.mutation.WardID(); ok {
-		_spec.SetField(organization.FieldWardID, field.TypeUUID, value)
+	if value, ok := _u.mutation.LingkunganID(); ok {
+		_spec.SetField(organization.FieldLingkunganID, field.TypeUUID, value)
 	}
-	if _u.mutation.WardIDCleared() {
-		_spec.ClearField(organization.FieldWardID, field.TypeUUID)
+	if _u.mutation.LingkunganIDCleared() {
+		_spec.ClearField(organization.FieldLingkunganID, field.TypeUUID)
 	}
 	if value, ok := _u.mutation.Kind(); ok {
 		_spec.SetField(organization.FieldKind, field.TypeEnum, value)

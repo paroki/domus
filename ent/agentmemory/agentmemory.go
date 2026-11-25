@@ -19,8 +19,8 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
-	// FieldParishID holds the string denoting the parish_id field in the database.
-	FieldParishID = "parish_id"
+	// FieldParokiID holds the string denoting the paroki_id field in the database.
+	FieldParokiID = "paroki_id"
 	// FieldUserID holds the string denoting the user_id field in the database.
 	FieldUserID = "user_id"
 	// FieldCategory holds the string denoting the category field in the database.
@@ -38,7 +38,7 @@ var Columns = []string{
 	FieldID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
-	FieldParishID,
+	FieldParokiID,
 	FieldUserID,
 	FieldCategory,
 	FieldContent,
@@ -113,9 +113,9 @@ func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
 }
 
-// ByParishID orders the results by the parish_id field.
-func ByParishID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldParishID, opts...).ToFunc()
+// ByParokiID orders the results by the paroki_id field.
+func ByParokiID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldParokiID, opts...).ToFunc()
 }
 
 // ByUserID orders the results by the user_id field.

@@ -110,16 +110,16 @@ func (_c *UserAccountCreate) SetNillableAvatarURL(v *string) *UserAccountCreate 
 	return _c
 }
 
-// SetActiveParishID sets the "active_parish_id" field.
-func (_c *UserAccountCreate) SetActiveParishID(v uuid.UUID) *UserAccountCreate {
-	_c.mutation.SetActiveParishID(v)
+// SetActiveParokiID sets the "active_paroki_id" field.
+func (_c *UserAccountCreate) SetActiveParokiID(v uuid.UUID) *UserAccountCreate {
+	_c.mutation.SetActiveParokiID(v)
 	return _c
 }
 
-// SetNillableActiveParishID sets the "active_parish_id" field if the given value is not nil.
-func (_c *UserAccountCreate) SetNillableActiveParishID(v *uuid.UUID) *UserAccountCreate {
+// SetNillableActiveParokiID sets the "active_paroki_id" field if the given value is not nil.
+func (_c *UserAccountCreate) SetNillableActiveParokiID(v *uuid.UUID) *UserAccountCreate {
 	if v != nil {
-		_c.SetActiveParishID(*v)
+		_c.SetActiveParokiID(*v)
 	}
 	return _c
 }
@@ -299,9 +299,9 @@ func (_c *UserAccountCreate) createSpec() (*UserAccount, *sqlgraph.CreateSpec) {
 		_spec.SetField(useraccount.FieldAvatarURL, field.TypeString, value)
 		_node.AvatarURL = &value
 	}
-	if value, ok := _c.mutation.ActiveParishID(); ok {
-		_spec.SetField(useraccount.FieldActiveParishID, field.TypeUUID, value)
-		_node.ActiveParishID = &value
+	if value, ok := _c.mutation.ActiveParokiID(); ok {
+		_spec.SetField(useraccount.FieldActiveParokiID, field.TypeUUID, value)
+		_node.ActiveParokiID = &value
 	}
 	if value, ok := _c.mutation.LastUsedAt(); ok {
 		_spec.SetField(useraccount.FieldLastUsedAt, field.TypeTime, value)
