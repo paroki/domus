@@ -29,13 +29,13 @@
             "authz.RoleScope": {
                 "enum": [
                     "global",
-                    "parish",
+                    "paroki",
                     "org"
                 ],
                 "type": "string",
                 "x-enum-varnames": [
                     "RoleScopeGlobal",
-                    "RoleScopeParish",
+                    "RoleScopeParoki",
                     "RoleScopeOrg"
                 ]
             },
@@ -82,7 +82,7 @@
                 },
                 "type": "object"
             },
-            "domain.AddParishMemberRequest": {
+            "domain.AddParokiMemberRequest": {
                 "properties": {
                     "email": {
                         "type": "string"
@@ -210,7 +210,7 @@
             },
             "domain.AuthSessionResponse": {
                 "properties": {
-                    "activeParishId": {
+                    "activeParokiId": {
                         "type": "string"
                     },
                     "expiresAt": {
@@ -274,40 +274,6 @@
                 ],
                 "type": "object"
             },
-            "domain.CreateDioceseRequest": {
-                "properties": {
-                    "active": {
-                        "type": "boolean"
-                    },
-                    "address": {
-                        "type": "string"
-                    },
-                    "bishopName": {
-                        "type": "string"
-                    },
-                    "code": {
-                        "type": "string"
-                    },
-                    "email": {
-                        "type": "string"
-                    },
-                    "name": {
-                        "minLength": 1,
-                        "type": "string"
-                    },
-                    "phone": {
-                        "type": "string"
-                    },
-                    "website": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "code",
-                    "name"
-                ],
-                "type": "object"
-            },
             "domain.CreateEventRequest": {
                 "properties": {
                     "description": {
@@ -348,6 +314,69 @@
                     "orgId",
                     "startAt",
                     "title"
+                ],
+                "type": "object"
+            },
+            "domain.CreateKeuskupanRequest": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "alamat": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "kode": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "telepon": {
+                        "type": "string"
+                    },
+                    "uskup": {
+                        "type": "string"
+                    },
+                    "website": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "kode",
+                    "nama"
+                ],
+                "type": "object"
+            },
+            "domain.CreateLingkunganRequest": {
+                "properties": {
+                    "ketua": {
+                        "type": "string"
+                    },
+                    "kode": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "pelindung": {
+                        "type": "string"
+                    },
+                    "teleponKetua": {
+                        "type": "string"
+                    },
+                    "wilayahId": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "kode",
+                    "nama",
+                    "wilayahId"
                 ],
                 "type": "object"
             },
@@ -444,10 +473,13 @@
                             "bgkp",
                             "section",
                             "categorical",
-                            "zone",
-                            "ward",
+                            "wilayah",
+                            "lingkungan",
                             "community"
                         ],
+                        "type": "string"
+                    },
+                    "lingkunganId": {
                         "type": "string"
                     },
                     "name": {
@@ -457,10 +489,7 @@
                     "parentId": {
                         "type": "string"
                     },
-                    "wardId": {
-                        "type": "string"
-                    },
-                    "zoneId": {
+                    "wilayahId": {
                         "type": "string"
                     }
                 },
@@ -470,40 +499,40 @@
                 ],
                 "type": "object"
             },
-            "domain.CreateParishRequest": {
+            "domain.CreateParokiRequest": {
                 "properties": {
                     "active": {
                         "type": "boolean"
                     },
-                    "address": {
-                        "type": "string"
-                    },
-                    "code": {
-                        "type": "string"
-                    },
-                    "dioceseId": {
+                    "alamat": {
                         "type": "string"
                     },
                     "email": {
                         "type": "string"
                     },
-                    "letterhead": {
+                    "keuskupanId": {
+                        "type": "string"
+                    },
+                    "kode": {
+                        "type": "string"
+                    },
+                    "kopSurat": {
                         "type": "string"
                     },
                     "logoUrl": {
                         "type": "string"
                     },
-                    "name": {
+                    "nama": {
                         "minLength": 1,
                         "type": "string"
                     },
-                    "pastorName": {
+                    "pastor": {
                         "type": "string"
                     },
-                    "patronSaint": {
+                    "pelindung": {
                         "type": "string"
                     },
-                    "phone": {
+                    "telepon": {
                         "type": "string"
                     },
                     "website": {
@@ -511,9 +540,9 @@
                     }
                 },
                 "required": [
-                    "code",
-                    "dioceseId",
-                    "name"
+                    "keuskupanId",
+                    "kode",
+                    "nama"
                 ],
                 "type": "object"
             },
@@ -551,108 +580,33 @@
                 ],
                 "type": "object"
             },
-            "domain.CreateWardRequest": {
+            "domain.CreateWilayahRequest": {
                 "properties": {
-                    "code": {
-                        "type": "string"
-                    },
-                    "headName": {
-                        "type": "string"
-                    },
-                    "headPhone": {
-                        "type": "string"
-                    },
-                    "name": {
-                        "minLength": 1,
-                        "type": "string"
-                    },
-                    "patronSaint": {
-                        "type": "string"
-                    },
-                    "zoneId": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "code",
-                    "name",
-                    "zoneId"
-                ],
-                "type": "object"
-            },
-            "domain.CreateZoneRequest": {
-                "properties": {
-                    "code": {
-                        "type": "string"
-                    },
-                    "coordinatorName": {
-                        "type": "string"
-                    },
-                    "coordinatorPhone": {
-                        "type": "string"
-                    },
-                    "name": {
-                        "minLength": 1,
-                        "type": "string"
-                    },
-                    "type": {
+                    "jenis": {
                         "enum": [
-                            "zone",
-                            "station"
+                            "wilayah",
+                            "stasi"
                         ],
                         "type": "string"
+                    },
+                    "kode": {
+                        "type": "string"
+                    },
+                    "koordinator": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "teleponKoordinator": {
+                        "type": "string"
                     }
                 },
                 "required": [
-                    "code",
-                    "name"
+                    "kode",
+                    "nama"
                 ],
-                "type": "object"
-            },
-            "domain.DioceseResponse": {
-                "properties": {
-                    "active": {
-                        "type": "boolean"
-                    },
-                    "address": {
-                        "type": "string"
-                    },
-                    "bishopName": {
-                        "type": "string"
-                    },
-                    "code": {
-                        "type": "string"
-                    },
-                    "createdAt": {
-                        "type": "string"
-                    },
-                    "email": {
-                        "type": "string"
-                    },
-                    "id": {
-                        "type": "string"
-                    },
-                    "name": {
-                        "type": "string"
-                    },
-                    "phone": {
-                        "type": "string"
-                    },
-                    "updatedAt": {
-                        "type": "string"
-                    },
-                    "website": {
-                        "type": "string"
-                    }
-                },
-                "type": "object"
-            },
-            "domain.DioceseSearchFilter": {
-                "properties": {
-                    "active": {
-                        "type": "boolean"
-                    }
-                },
                 "type": "object"
             },
             "domain.EventRSVPResponse": {
@@ -681,7 +635,7 @@
                     "orgRole": {
                         "type": "string"
                     },
-                    "parishId": {
+                    "parokiId": {
                         "type": "string"
                     },
                     "phone": {
@@ -776,7 +730,7 @@
                     "orgName": {
                         "type": "string"
                     },
-                    "parishId": {
+                    "parokiId": {
                         "type": "string"
                     },
                     "rsvpDeadline": {
@@ -840,6 +794,101 @@
                 },
                 "type": "object"
             },
+            "domain.KeuskupanResponse": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "alamat": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "kode": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "type": "string"
+                    },
+                    "telepon": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    },
+                    "uskup": {
+                        "type": "string"
+                    },
+                    "website": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.KeuskupanSearchFilter": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.LingkunganResponse": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "ketua": {
+                        "type": "string"
+                    },
+                    "kode": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "type": "string"
+                    },
+                    "parokiId": {
+                        "type": "string"
+                    },
+                    "pelindung": {
+                        "type": "string"
+                    },
+                    "teleponKetua": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    },
+                    "wilayahId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.LingkunganSearchFilter": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "wilayahId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.LinkAccountOTPRequest": {
                 "properties": {
                     "channel": {
@@ -878,7 +927,7 @@
                     "label": {
                         "type": "string"
                     },
-                    "parishId": {
+                    "parokiId": {
                         "type": "string"
                     },
                     "sortOrder": {
@@ -902,7 +951,7 @@
                         "enum": [
                             "all",
                             "global",
-                            "parish"
+                            "paroki"
                         ],
                         "type": "string"
                     }
@@ -923,7 +972,7 @@
                     "id": {
                         "type": "string"
                     },
-                    "parishId": {
+                    "parokiId": {
                         "type": "string"
                     },
                     "score": {
@@ -972,7 +1021,7 @@
                         "additionalProperties": {},
                         "type": "object"
                     },
-                    "parishId": {
+                    "parokiId": {
                         "type": "string"
                     },
                     "role": {
@@ -1026,13 +1075,13 @@
                     "orgName": {
                         "type": "string"
                     },
-                    "parishCode": {
+                    "parokiCode": {
                         "type": "string"
                     },
-                    "parishId": {
+                    "parokiId": {
                         "type": "string"
                     },
-                    "parishName": {
+                    "parokiName": {
                         "type": "string"
                     },
                     "role": {
@@ -1073,7 +1122,7 @@
                     "orgId": {
                         "type": "string"
                     },
-                    "parishId": {
+                    "parokiId": {
                         "type": "string"
                     },
                     "revokedAt": {
@@ -1125,7 +1174,7 @@
                     "orgId": {
                         "type": "string"
                     },
-                    "parishId": {
+                    "parokiId": {
                         "type": "string"
                     },
                     "periodId": {
@@ -1197,6 +1246,9 @@
                     "kind": {
                         "type": "string"
                     },
+                    "lingkunganId": {
+                        "type": "string"
+                    },
                     "myRole": {
                         "type": "string"
                     },
@@ -1206,16 +1258,13 @@
                     "parentId": {
                         "type": "string"
                     },
-                    "parishId": {
+                    "parokiId": {
                         "type": "string"
                     },
                     "updatedAt": {
                         "type": "string"
                     },
-                    "wardId": {
-                        "type": "string"
-                    },
-                    "zoneId": {
+                    "wilayahId": {
                         "type": "string"
                     }
                 },
@@ -1232,8 +1281,8 @@
                             "bgkp",
                             "section",
                             "categorical",
-                            "zone",
-                            "ward",
+                            "wilayah",
+                            "lingkungan",
                             "community"
                         ],
                         "type": "string"
@@ -1247,7 +1296,7 @@
                 },
                 "type": "object"
             },
-            "domain.ParishMemberResponse": {
+            "domain.ParokiMemberResponse": {
                 "properties": {
                     "createdAt": {
                         "type": "string"
@@ -1261,7 +1310,7 @@
                     "name": {
                         "type": "string"
                     },
-                    "parishId": {
+                    "parokiId": {
                         "type": "string"
                     },
                     "phone": {
@@ -1279,7 +1328,7 @@
                 },
                 "type": "object"
             },
-            "domain.ParishMemberSearchFilter": {
+            "domain.ParokiMemberSearchFilter": {
                 "properties": {
                     "role": {
                         "enum": [
@@ -1291,21 +1340,15 @@
                 },
                 "type": "object"
             },
-            "domain.ParishResponse": {
+            "domain.ParokiResponse": {
                 "properties": {
                     "active": {
                         "type": "boolean"
                     },
-                    "address": {
-                        "type": "string"
-                    },
-                    "code": {
+                    "alamat": {
                         "type": "string"
                     },
                     "createdAt": {
-                        "type": "string"
-                    },
-                    "dioceseId": {
                         "type": "string"
                     },
                     "email": {
@@ -1314,22 +1357,28 @@
                     "id": {
                         "type": "string"
                     },
-                    "letterhead": {
+                    "keuskupanId": {
+                        "type": "string"
+                    },
+                    "kode": {
+                        "type": "string"
+                    },
+                    "kopSurat": {
                         "type": "string"
                     },
                     "logoUrl": {
                         "type": "string"
                     },
-                    "name": {
+                    "nama": {
                         "type": "string"
                     },
-                    "pastorName": {
+                    "pastor": {
                         "type": "string"
                     },
-                    "patronSaint": {
+                    "pelindung": {
                         "type": "string"
                     },
-                    "phone": {
+                    "telepon": {
                         "type": "string"
                     },
                     "updatedAt": {
@@ -1341,12 +1390,12 @@
                 },
                 "type": "object"
             },
-            "domain.ParishSearchFilter": {
+            "domain.ParokiSearchFilter": {
                 "properties": {
                     "active": {
                         "type": "boolean"
                     },
-                    "dioceseId": {
+                    "keuskupanId": {
                         "type": "string"
                     },
                     "memberOnly": {
@@ -1375,7 +1424,7 @@
                     "name": {
                         "type": "string"
                     },
-                    "parishId": {
+                    "parokiId": {
                         "type": "string"
                     },
                     "startDate": {
@@ -1441,7 +1490,7 @@
                     "organization": {
                         "$ref": "#/components/schemas/domain.OrganizationResponse"
                     },
-                    "parishId": {
+                    "parokiId": {
                         "type": "string"
                     }
                 },
@@ -1488,25 +1537,6 @@
                 },
                 "type": "object"
             },
-            "domain.SearchDiocesesRequest": {
-                "properties": {
-                    "cursor": {
-                        "type": "string"
-                    },
-                    "filter": {
-                        "$ref": "#/components/schemas/domain.DioceseSearchFilter"
-                    },
-                    "limit": {
-                        "maximum": 100,
-                        "minimum": 1,
-                        "type": "integer"
-                    },
-                    "q": {
-                        "type": "string"
-                    }
-                },
-                "type": "object"
-            },
             "domain.SearchEventRSVPsRequest": {
                 "properties": {
                     "cursor": {
@@ -1533,6 +1563,44 @@
                     },
                     "filter": {
                         "$ref": "#/components/schemas/domain.EventSearchFilter"
+                    },
+                    "limit": {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "q": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.SearchKeuskupanRequest": {
+                "properties": {
+                    "cursor": {
+                        "type": "string"
+                    },
+                    "filter": {
+                        "$ref": "#/components/schemas/domain.KeuskupanSearchFilter"
+                    },
+                    "limit": {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "q": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.SearchLingkunganRequest": {
+                "properties": {
+                    "cursor": {
+                        "type": "string"
+                    },
+                    "filter": {
+                        "$ref": "#/components/schemas/domain.LingkunganSearchFilter"
                     },
                     "limit": {
                         "maximum": 100,
@@ -1637,13 +1705,13 @@
                 },
                 "type": "object"
             },
-            "domain.SearchParishMembersRequest": {
+            "domain.SearchParokiMembersRequest": {
                 "properties": {
                     "cursor": {
                         "type": "string"
                     },
                     "filter": {
-                        "$ref": "#/components/schemas/domain.ParishMemberSearchFilter"
+                        "$ref": "#/components/schemas/domain.ParokiMemberSearchFilter"
                     },
                     "limit": {
                         "maximum": 100,
@@ -1656,13 +1724,13 @@
                 },
                 "type": "object"
             },
-            "domain.SearchParishesRequest": {
+            "domain.SearchParokiRequest": {
                 "properties": {
                     "cursor": {
                         "type": "string"
                     },
                     "filter": {
-                        "$ref": "#/components/schemas/domain.ParishSearchFilter"
+                        "$ref": "#/components/schemas/domain.ParokiSearchFilter"
                     },
                     "limit": {
                         "maximum": 100,
@@ -1713,32 +1781,13 @@
                 },
                 "type": "object"
             },
-            "domain.SearchWardsRequest": {
+            "domain.SearchWilayahRequest": {
                 "properties": {
                     "cursor": {
                         "type": "string"
                     },
                     "filter": {
-                        "$ref": "#/components/schemas/domain.WardSearchFilter"
-                    },
-                    "limit": {
-                        "maximum": 100,
-                        "minimum": 1,
-                        "type": "integer"
-                    },
-                    "q": {
-                        "type": "string"
-                    }
-                },
-                "type": "object"
-            },
-            "domain.SearchZonesRequest": {
-                "properties": {
-                    "cursor": {
-                        "type": "string"
-                    },
-                    "filter": {
-                        "$ref": "#/components/schemas/domain.ZoneSearchFilter"
+                        "$ref": "#/components/schemas/domain.WilayahSearchFilter"
                     },
                     "limit": {
                         "maximum": 100,
@@ -1778,7 +1827,7 @@
                     "modelId": {
                         "type": "string"
                     },
-                    "parishId": {
+                    "parokiId": {
                         "type": "string"
                     },
                     "providerId": {
@@ -1810,7 +1859,7 @@
                     "modelId": {
                         "type": "string"
                     },
-                    "parishId": {
+                    "parokiId": {
                         "type": "string"
                     },
                     "providerId": {
@@ -1828,14 +1877,14 @@
                 },
                 "type": "object"
             },
-            "domain.SwitchSessionParishRequest": {
+            "domain.SwitchSessionParokiRequest": {
                 "properties": {
-                    "activeParishId": {
+                    "activeParokiId": {
                         "type": "string"
                     }
                 },
                 "required": [
-                    "activeParishId"
+                    "activeParokiId"
                 ],
                 "type": "object"
             },
@@ -1914,36 +1963,6 @@
                 },
                 "type": "object"
             },
-            "domain.UpdateDioceseRequest": {
-                "properties": {
-                    "active": {
-                        "type": "boolean"
-                    },
-                    "address": {
-                        "type": "string"
-                    },
-                    "bishopName": {
-                        "type": "string"
-                    },
-                    "code": {
-                        "type": "string"
-                    },
-                    "email": {
-                        "type": "string"
-                    },
-                    "name": {
-                        "minLength": 1,
-                        "type": "string"
-                    },
-                    "phone": {
-                        "type": "string"
-                    },
-                    "website": {
-                        "type": "string"
-                    }
-                },
-                "type": "object"
-            },
             "domain.UpdateEventRequest": {
                 "properties": {
                     "clearRsvpDeadline": {
@@ -1988,6 +2007,63 @@
                 },
                 "type": "object"
             },
+            "domain.UpdateKeuskupanRequest": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "alamat": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "kode": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "telepon": {
+                        "type": "string"
+                    },
+                    "uskup": {
+                        "type": "string"
+                    },
+                    "website": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.UpdateLingkunganRequest": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "ketua": {
+                        "type": "string"
+                    },
+                    "kode": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "pelindung": {
+                        "type": "string"
+                    },
+                    "teleponKetua": {
+                        "type": "string"
+                    },
+                    "wilayahId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.UpdateLookupRequest": {
                 "properties": {
                     "active": {
@@ -2017,7 +2093,7 @@
                     "birthDate": {
                         "type": "string"
                     },
-                    "defaultParishId": {
+                    "defaultParokiId": {
                         "type": "string"
                     },
                     "gender": {
@@ -2100,10 +2176,13 @@
                             "bgkp",
                             "section",
                             "categorical",
-                            "zone",
-                            "ward",
+                            "wilayah",
+                            "lingkungan",
                             "community"
                         ],
+                        "type": "string"
+                    },
+                    "lingkunganId": {
                         "type": "string"
                     },
                     "name": {
@@ -2113,16 +2192,13 @@
                     "parentId": {
                         "type": "string"
                     },
-                    "wardId": {
-                        "type": "string"
-                    },
-                    "zoneId": {
+                    "wilayahId": {
                         "type": "string"
                     }
                 },
                 "type": "object"
             },
-            "domain.UpdateParishMemberRequest": {
+            "domain.UpdateParokiMemberRequest": {
                 "properties": {
                     "role": {
                         "enum": [
@@ -2137,31 +2213,31 @@
                 ],
                 "type": "object"
             },
-            "domain.UpdateParishProfileRequest": {
+            "domain.UpdateParokiProfileRequest": {
                 "properties": {
-                    "address": {
+                    "alamat": {
                         "type": "string"
                     },
                     "email": {
                         "type": "string"
                     },
-                    "letterhead": {
+                    "kopSurat": {
                         "type": "string"
                     },
                     "logoUrl": {
                         "type": "string"
                     },
-                    "name": {
+                    "nama": {
                         "minLength": 1,
                         "type": "string"
                     },
-                    "pastorName": {
+                    "pastor": {
                         "type": "string"
                     },
-                    "patronSaint": {
+                    "pelindung": {
                         "type": "string"
                     },
-                    "phone": {
+                    "telepon": {
                         "type": "string"
                     },
                     "website": {
@@ -2170,40 +2246,40 @@
                 },
                 "type": "object"
             },
-            "domain.UpdateParishRequest": {
+            "domain.UpdateParokiRequest": {
                 "properties": {
                     "active": {
                         "type": "boolean"
                     },
-                    "address": {
-                        "type": "string"
-                    },
-                    "code": {
-                        "type": "string"
-                    },
-                    "dioceseId": {
+                    "alamat": {
                         "type": "string"
                     },
                     "email": {
                         "type": "string"
                     },
-                    "letterhead": {
+                    "keuskupanId": {
+                        "type": "string"
+                    },
+                    "kode": {
+                        "type": "string"
+                    },
+                    "kopSurat": {
                         "type": "string"
                     },
                     "logoUrl": {
                         "type": "string"
                     },
-                    "name": {
+                    "nama": {
                         "minLength": 1,
                         "type": "string"
                     },
-                    "pastorName": {
+                    "pastor": {
                         "type": "string"
                     },
-                    "patronSaint": {
+                    "pelindung": {
                         "type": "string"
                     },
-                    "phone": {
+                    "telepon": {
                         "type": "string"
                     },
                     "website": {
@@ -2254,56 +2330,29 @@
                 },
                 "type": "object"
             },
-            "domain.UpdateWardRequest": {
+            "domain.UpdateWilayahRequest": {
                 "properties": {
                     "active": {
                         "type": "boolean"
                     },
-                    "code": {
-                        "type": "string"
-                    },
-                    "headName": {
-                        "type": "string"
-                    },
-                    "headPhone": {
-                        "type": "string"
-                    },
-                    "name": {
-                        "minLength": 1,
-                        "type": "string"
-                    },
-                    "patronSaint": {
-                        "type": "string"
-                    },
-                    "zoneId": {
-                        "type": "string"
-                    }
-                },
-                "type": "object"
-            },
-            "domain.UpdateZoneRequest": {
-                "properties": {
-                    "active": {
-                        "type": "boolean"
-                    },
-                    "code": {
-                        "type": "string"
-                    },
-                    "coordinatorName": {
-                        "type": "string"
-                    },
-                    "coordinatorPhone": {
-                        "type": "string"
-                    },
-                    "name": {
-                        "minLength": 1,
-                        "type": "string"
-                    },
-                    "type": {
+                    "jenis": {
                         "enum": [
-                            "zone",
-                            "station"
+                            "wilayah",
+                            "stasi"
                         ],
+                        "type": "string"
+                    },
+                    "kode": {
+                        "type": "string"
+                    },
+                    "koordinator": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "teleponKoordinator": {
                         "type": "string"
                     }
                 },
@@ -2330,7 +2379,7 @@
             },
             "domain.UserAccountResponse": {
                 "properties": {
-                    "activeParishId": {
+                    "activeParokiId": {
                         "type": "string"
                     },
                     "avatarUrl": {
@@ -2362,7 +2411,7 @@
             },
             "domain.UserResponse": {
                 "properties": {
-                    "activeParishId": {
+                    "activeParokiId": {
                         "type": "string"
                     },
                     "avatarUrl": {
@@ -2374,7 +2423,7 @@
                     "createdAt": {
                         "type": "string"
                     },
-                    "defaultParishId": {
+                    "defaultParokiId": {
                         "type": "string"
                     },
                     "email": {
@@ -2442,7 +2491,7 @@
             },
             "domain.UserSessionResponse": {
                 "properties": {
-                    "activeParishId": {
+                    "activeParokiId": {
                         "type": "string"
                     },
                     "createdAt": {
@@ -2520,68 +2569,10 @@
                 ],
                 "type": "object"
             },
-            "domain.WardResponse": {
+            "domain.WilayahResponse": {
                 "properties": {
                     "active": {
                         "type": "boolean"
-                    },
-                    "code": {
-                        "type": "string"
-                    },
-                    "createdAt": {
-                        "type": "string"
-                    },
-                    "headName": {
-                        "type": "string"
-                    },
-                    "headPhone": {
-                        "type": "string"
-                    },
-                    "id": {
-                        "type": "string"
-                    },
-                    "name": {
-                        "type": "string"
-                    },
-                    "parishId": {
-                        "type": "string"
-                    },
-                    "patronSaint": {
-                        "type": "string"
-                    },
-                    "updatedAt": {
-                        "type": "string"
-                    },
-                    "zoneId": {
-                        "type": "string"
-                    }
-                },
-                "type": "object"
-            },
-            "domain.WardSearchFilter": {
-                "properties": {
-                    "active": {
-                        "type": "boolean"
-                    },
-                    "zoneId": {
-                        "type": "string"
-                    }
-                },
-                "type": "object"
-            },
-            "domain.ZoneResponse": {
-                "properties": {
-                    "active": {
-                        "type": "boolean"
-                    },
-                    "code": {
-                        "type": "string"
-                    },
-                    "coordinatorName": {
-                        "type": "string"
-                    },
-                    "coordinatorPhone": {
-                        "type": "string"
                     },
                     "createdAt": {
                         "type": "string"
@@ -2589,13 +2580,22 @@
                     "id": {
                         "type": "string"
                     },
-                    "name": {
+                    "jenis": {
                         "type": "string"
                     },
-                    "parishId": {
+                    "kode": {
                         "type": "string"
                     },
-                    "type": {
+                    "koordinator": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "type": "string"
+                    },
+                    "parokiId": {
+                        "type": "string"
+                    },
+                    "teleponKoordinator": {
                         "type": "string"
                     },
                     "updatedAt": {
@@ -2604,15 +2604,15 @@
                 },
                 "type": "object"
             },
-            "domain.ZoneSearchFilter": {
+            "domain.WilayahSearchFilter": {
                 "properties": {
                     "active": {
                         "type": "boolean"
                     },
-                    "type": {
+                    "jenis": {
                         "enum": [
-                            "zone",
-                            "station"
+                            "wilayah",
+                            "stasi"
                         ],
                         "type": "string"
                     }
@@ -2710,24 +2710,6 @@
                 },
                 "type": "object"
             },
-            "httpx.Envelope-array_domain_DioceseResponse": {
-                "properties": {
-                    "data": {
-                        "items": {
-                            "$ref": "#/components/schemas/domain.DioceseResponse"
-                        },
-                        "type": "array",
-                        "uniqueItems": false
-                    },
-                    "error": {
-                        "$ref": "#/components/schemas/httpx.ErrorPayload"
-                    },
-                    "meta": {
-                        "$ref": "#/components/schemas/httpx.Meta"
-                    }
-                },
-                "type": "object"
-            },
             "httpx.Envelope-array_domain_EventRSVPResponse": {
                 "properties": {
                     "data": {
@@ -2751,6 +2733,42 @@
                     "data": {
                         "items": {
                             "$ref": "#/components/schemas/domain.EventResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-array_domain_KeuskupanResponse": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.KeuskupanResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-array_domain_LingkunganResponse": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.LingkunganResponse"
                         },
                         "type": "array",
                         "uniqueItems": false
@@ -2854,11 +2872,11 @@
                 },
                 "type": "object"
             },
-            "httpx.Envelope-array_domain_ParishMemberResponse": {
+            "httpx.Envelope-array_domain_ParokiMemberResponse": {
                 "properties": {
                     "data": {
                         "items": {
-                            "$ref": "#/components/schemas/domain.ParishMemberResponse"
+                            "$ref": "#/components/schemas/domain.ParokiMemberResponse"
                         },
                         "type": "array",
                         "uniqueItems": false
@@ -2872,11 +2890,11 @@
                 },
                 "type": "object"
             },
-            "httpx.Envelope-array_domain_ParishResponse": {
+            "httpx.Envelope-array_domain_ParokiResponse": {
                 "properties": {
                     "data": {
                         "items": {
-                            "$ref": "#/components/schemas/domain.ParishResponse"
+                            "$ref": "#/components/schemas/domain.ParokiResponse"
                         },
                         "type": "array",
                         "uniqueItems": false
@@ -2980,29 +2998,11 @@
                 },
                 "type": "object"
             },
-            "httpx.Envelope-array_domain_WardResponse": {
+            "httpx.Envelope-array_domain_WilayahResponse": {
                 "properties": {
                     "data": {
                         "items": {
-                            "$ref": "#/components/schemas/domain.WardResponse"
-                        },
-                        "type": "array",
-                        "uniqueItems": false
-                    },
-                    "error": {
-                        "$ref": "#/components/schemas/httpx.ErrorPayload"
-                    },
-                    "meta": {
-                        "$ref": "#/components/schemas/httpx.Meta"
-                    }
-                },
-                "type": "object"
-            },
-            "httpx.Envelope-array_domain_ZoneResponse": {
-                "properties": {
-                    "data": {
-                        "items": {
-                            "$ref": "#/components/schemas/domain.ZoneResponse"
+                            "$ref": "#/components/schemas/domain.WilayahResponse"
                         },
                         "type": "array",
                         "uniqueItems": false
@@ -3076,20 +3076,6 @@
                 },
                 "type": "object"
             },
-            "httpx.Envelope-domain_DioceseResponse": {
-                "properties": {
-                    "data": {
-                        "$ref": "#/components/schemas/domain.DioceseResponse"
-                    },
-                    "error": {
-                        "$ref": "#/components/schemas/httpx.ErrorPayload"
-                    },
-                    "meta": {
-                        "$ref": "#/components/schemas/httpx.Meta"
-                    }
-                },
-                "type": "object"
-            },
             "httpx.Envelope-domain_EventRSVPResponse": {
                 "properties": {
                     "data": {
@@ -3122,6 +3108,34 @@
                 "properties": {
                     "data": {
                         "$ref": "#/components/schemas/domain.EventResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_KeuskupanResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.KeuskupanResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_LingkunganResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.LingkunganResponse"
                     },
                     "error": {
                         "$ref": "#/components/schemas/httpx.ErrorPayload"
@@ -3216,10 +3230,10 @@
                 },
                 "type": "object"
             },
-            "httpx.Envelope-domain_ParishMemberResponse": {
+            "httpx.Envelope-domain_ParokiMemberResponse": {
                 "properties": {
                     "data": {
-                        "$ref": "#/components/schemas/domain.ParishMemberResponse"
+                        "$ref": "#/components/schemas/domain.ParokiMemberResponse"
                     },
                     "error": {
                         "$ref": "#/components/schemas/httpx.ErrorPayload"
@@ -3230,10 +3244,10 @@
                 },
                 "type": "object"
             },
-            "httpx.Envelope-domain_ParishResponse": {
+            "httpx.Envelope-domain_ParokiResponse": {
                 "properties": {
                     "data": {
-                        "$ref": "#/components/schemas/domain.ParishResponse"
+                        "$ref": "#/components/schemas/domain.ParokiResponse"
                     },
                     "error": {
                         "$ref": "#/components/schemas/httpx.ErrorPayload"
@@ -3370,24 +3384,10 @@
                 },
                 "type": "object"
             },
-            "httpx.Envelope-domain_WardResponse": {
+            "httpx.Envelope-domain_WilayahResponse": {
                 "properties": {
                     "data": {
-                        "$ref": "#/components/schemas/domain.WardResponse"
-                    },
-                    "error": {
-                        "$ref": "#/components/schemas/httpx.ErrorPayload"
-                    },
-                    "meta": {
-                        "$ref": "#/components/schemas/httpx.Meta"
-                    }
-                },
-                "type": "object"
-            },
-            "httpx.Envelope-domain_ZoneResponse": {
-                "properties": {
-                    "data": {
-                        "$ref": "#/components/schemas/domain.ZoneResponse"
+                        "$ref": "#/components/schemas/domain.WilayahResponse"
                     },
                     "error": {
                         "$ref": "#/components/schemas/httpx.ErrorPayload"
@@ -5680,7 +5680,7 @@
         },
         "/me": {
             "get": {
-                "description": "Returns the authenticated user's profile, active parish, and global roles.",
+                "description": "Returns the authenticated user's profile, active paroki, and global roles.",
                 "operationId": "getMe",
                 "responses": {
                     "200": {
@@ -5710,7 +5710,7 @@
                 ]
             },
             "patch": {
-                "description": "Updates name, phone (normalized to E.164), gender, birthDate, avatarUrl, defaultParishId, or onboarded status.",
+                "description": "Updates name, phone (normalized to E.164), gender, birthDate, avatarUrl, defaultParokiId, or onboarded status.",
                 "operationId": "updateMe",
                 "requestBody": {
                     "content": {
@@ -6097,19 +6097,19 @@
         },
         "/me/session": {
             "patch": {
-                "description": "Updates activeParishId on the current session and initializes user defaultParishId if unset.",
-                "operationId": "switchMeSessionParish",
+                "description": "Updates activeParokiId on the current session and initializes user defaultParokiId if unset.",
+                "operationId": "switchMeSessionParoki",
                 "requestBody": {
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/domain.SwitchSessionParishRequest",
+                                "$ref": "#/components/schemas/domain.SwitchSessionParokiRequest",
                                 "summary": "body",
-                                "description": "Active parish payload"
+                                "description": "Active paroki payload"
                             }
                         }
                     },
-                    "description": "Active parish payload",
+                    "description": "Active paroki payload",
                     "required": true
                 },
                 "responses": {
@@ -6157,7 +6157,7 @@
                         "description": "Unprocessable Entity"
                     }
                 },
-                "summary": "Switch active session parish",
+                "summary": "Switch active session paroki",
                 "tags": [
                     "Me"
                 ]
@@ -6275,7 +6275,7 @@
         },
         "/orgs": {
             "post": {
-                "description": "Creates an organization (or reactivates a soft-deleted one) in the active parish (requires ref:parish-admin).",
+                "description": "Creates an organization (or reactivates a soft-deleted one) in the active paroki (requires ref:paroki-admin).",
                 "operationId": "createOrganization",
                 "requestBody": {
                     "content": {
@@ -6413,7 +6413,7 @@
         },
         "/orgs/invites/{code}/redeem": {
             "post": {
-                "description": "Idempotently redeems an invite code, ensures parish/org membership, syncs Casbin, and switches active parish.",
+                "description": "Idempotently redeems an invite code, ensures paroki/org membership, syncs Casbin, and switches active paroki.",
                 "operationId": "redeemOrgInvite",
                 "parameters": [
                     {
@@ -6486,7 +6486,7 @@
         },
         "/orgs/search": {
             "post": {
-                "description": "Searches organizations within the active parish with optional filters and cursor pagination.",
+                "description": "Searches organizations within the active paroki with optional filters and cursor pagination.",
                 "operationId": "searchOrganizations",
                 "requestBody": {
                     "content": {
@@ -6550,7 +6550,7 @@
         },
         "/orgs/{id}": {
             "delete": {
-                "description": "Soft-deletes an organization if it has no active child organizations (requires ref:parish-admin).",
+                "description": "Soft-deletes an organization if it has no active child organizations (requires ref:paroki-admin).",
                 "operationId": "deleteOrganization",
                 "parameters": [
                     {
@@ -6624,7 +6624,7 @@
                 ]
             },
             "get": {
-                "description": "Returns a single non-deleted organization in the active parish.",
+                "description": "Returns a single non-deleted organization in the active paroki.",
                 "operationId": "getOrganization",
                 "parameters": [
                     {
@@ -6685,7 +6685,7 @@
                 ]
             },
             "patch": {
-                "description": "Updates an organization in the active parish (requires org:admin or ref:parish-admin).",
+                "description": "Updates an organization in the active paroki (requires org:admin or ref:paroki-admin).",
                 "operationId": "updateOrganization",
                 "parameters": [
                     {
@@ -7047,7 +7047,7 @@
         },
         "/orgs/{id}/members": {
             "post": {
-                "description": "Adds a member to an organization with optional user onboarding (requires org:admin, or ref:parish-admin appointing admin).",
+                "description": "Adds a member to an organization with optional user onboarding (requires org:admin, or ref:paroki-admin appointing admin).",
                 "operationId": "addOrgMember",
                 "parameters": [
                     {
@@ -7434,21 +7434,21 @@
                 ]
             }
         },
-        "/ref/dioceses": {
+        "/ref/keuskupan": {
             "post": {
-                "description": "Creates a diocese or reactivates a soft-deleted diocese with the same code.",
-                "operationId": "createDiocese",
+                "description": "Creates a keuskupan or reactivates a soft-deleted keuskupan with the same kode.",
+                "operationId": "createKeuskupan",
                 "requestBody": {
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/domain.CreateDioceseRequest",
+                                "$ref": "#/components/schemas/domain.CreateKeuskupanRequest",
                                 "summary": "body",
-                                "description": "Diocese creation payload"
+                                "description": "Keuskupan creation payload"
                             }
                         }
                     },
-                    "description": "Diocese creation payload",
+                    "description": "Keuskupan creation payload",
                     "required": true
                 },
                 "responses": {
@@ -7456,7 +7456,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-domain_DioceseResponse"
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_KeuskupanResponse"
                                 }
                             }
                         },
@@ -7513,21 +7513,21 @@
                         "description": "Unprocessable Entity"
                     }
                 },
-                "summary": "Create diocese",
+                "summary": "Create keuskupan",
                 "tags": [
                     "Ref"
                 ]
             }
         },
-        "/ref/dioceses/search": {
+        "/ref/keuskupan/search": {
             "post": {
-                "description": "Searches dioceses with optional query, active filter, and cursor pagination.",
-                "operationId": "searchDioceses",
+                "description": "Searches keuskupan with optional query, active filter, and cursor pagination.",
+                "operationId": "searchKeuskupan",
                 "requestBody": {
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/domain.SearchDiocesesRequest",
+                                "$ref": "#/components/schemas/domain.SearchKeuskupanRequest",
                                 "summary": "body",
                                 "description": "Search parameters"
                             }
@@ -7540,7 +7540,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_DioceseResponse"
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_KeuskupanResponse"
                                 }
                             }
                         },
@@ -7577,19 +7577,19 @@
                         "description": "Forbidden"
                     }
                 },
-                "summary": "Search dioceses",
+                "summary": "Search keuskupan",
                 "tags": [
                     "Ref"
                 ]
             }
         },
-        "/ref/dioceses/{id}": {
+        "/ref/keuskupan/{id}": {
             "delete": {
-                "description": "Soft-deletes a diocese when no active parishes reference it.",
-                "operationId": "deleteDiocese",
+                "description": "Soft-deletes a keuskupan when no active paroki reference it.",
+                "operationId": "deleteKeuskupan",
                 "parameters": [
                     {
-                        "description": "Diocese UUID",
+                        "description": "Keuskupan UUID",
                         "in": "path",
                         "name": "id",
                         "required": true,
@@ -7653,17 +7653,17 @@
                         "description": "Conflict"
                     }
                 },
-                "summary": "Delete diocese",
+                "summary": "Delete keuskupan",
                 "tags": [
                     "Ref"
                 ]
             },
             "get": {
-                "description": "Returns a single non-deleted diocese by ID.",
-                "operationId": "getDiocese",
+                "description": "Returns a single non-deleted keuskupan by ID.",
+                "operationId": "getKeuskupan",
                 "parameters": [
                     {
-                        "description": "Diocese UUID",
+                        "description": "Keuskupan UUID",
                         "in": "path",
                         "name": "id",
                         "required": true,
@@ -7677,7 +7677,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-domain_DioceseResponse"
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_KeuskupanResponse"
                                 }
                             }
                         },
@@ -7714,17 +7714,17 @@
                         "description": "Not Found"
                     }
                 },
-                "summary": "Get diocese",
+                "summary": "Get keuskupan",
                 "tags": [
                     "Ref"
                 ]
             },
             "patch": {
-                "description": "Updates mutable fields of a diocese.",
-                "operationId": "updateDiocese",
+                "description": "Updates mutable fields of a keuskupan.",
+                "operationId": "updateKeuskupan",
                 "parameters": [
                     {
-                        "description": "Diocese UUID",
+                        "description": "Keuskupan UUID",
                         "in": "path",
                         "name": "id",
                         "required": true,
@@ -7737,13 +7737,13 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/domain.UpdateDioceseRequest",
+                                "$ref": "#/components/schemas/domain.UpdateKeuskupanRequest",
                                 "summary": "body",
-                                "description": "Diocese update payload"
+                                "description": "Keuskupan update payload"
                             }
                         }
                     },
-                    "description": "Diocese update payload",
+                    "description": "Keuskupan update payload",
                     "required": true
                 },
                 "responses": {
@@ -7751,7 +7751,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-domain_DioceseResponse"
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_KeuskupanResponse"
                                 }
                             }
                         },
@@ -7818,7 +7818,397 @@
                         "description": "Unprocessable Entity"
                     }
                 },
-                "summary": "Update diocese",
+                "summary": "Update keuskupan",
+                "tags": [
+                    "Ref"
+                ]
+            }
+        },
+        "/ref/lingkungan": {
+            "post": {
+                "description": "Creates a lingkungan or reactivates a soft-deleted match in the active paroki.",
+                "operationId": "createLingkungan",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.CreateLingkunganRequest",
+                                "summary": "body",
+                                "description": "Lingkungan creation payload"
+                            }
+                        }
+                    },
+                    "description": "Lingkungan creation payload",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_LingkunganResponse"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Create lingkungan",
+                "tags": [
+                    "Ref"
+                ]
+            }
+        },
+        "/ref/lingkungan/search": {
+            "post": {
+                "description": "Searches lingkungan in the active paroki with optional query, wilayah/active filters, and cursor pagination.",
+                "operationId": "searchLingkungan",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.SearchLingkunganRequest",
+                                "summary": "body",
+                                "description": "Search parameters"
+                            }
+                        }
+                    },
+                    "description": "Search parameters"
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_LingkunganResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    }
+                },
+                "summary": "Search lingkungan",
+                "tags": [
+                    "Ref"
+                ]
+            }
+        },
+        "/ref/lingkungan/{id}": {
+            "delete": {
+                "description": "Soft-deletes a lingkungan in the active paroki.",
+                "operationId": "deleteLingkungan",
+                "parameters": [
+                    {
+                        "description": "Lingkungan UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Delete lingkungan",
+                "tags": [
+                    "Ref"
+                ]
+            },
+            "get": {
+                "description": "Returns a single non-deleted lingkungan in the active paroki.",
+                "operationId": "getLingkungan",
+                "parameters": [
+                    {
+                        "description": "Lingkungan UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_LingkunganResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Get lingkungan",
+                "tags": [
+                    "Ref"
+                ]
+            },
+            "patch": {
+                "description": "Updates mutable fields of a lingkungan in the active paroki.",
+                "operationId": "updateLingkungan",
+                "parameters": [
+                    {
+                        "description": "Lingkungan UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.UpdateLingkunganRequest",
+                                "summary": "body",
+                                "description": "Lingkungan update payload"
+                            }
+                        }
+                    },
+                    "description": "Lingkungan update payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_LingkunganResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Update lingkungan",
                 "tags": [
                     "Ref"
                 ]
@@ -8204,21 +8594,21 @@
                 ]
             }
         },
-        "/ref/parishes": {
+        "/ref/paroki": {
             "post": {
-                "description": "Creates a parish or reactivates a soft-deleted parish with the same code.",
-                "operationId": "createParish",
+                "description": "Creates a paroki or reactivates a soft-deleted paroki with the same kode.",
+                "operationId": "createParoki",
                 "requestBody": {
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/domain.CreateParishRequest",
+                                "$ref": "#/components/schemas/domain.CreateParokiRequest",
                                 "summary": "body",
-                                "description": "Parish creation payload"
+                                "description": "Paroki creation payload"
                             }
                         }
                     },
-                    "description": "Parish creation payload",
+                    "description": "Paroki creation payload",
                     "required": true
                 },
                 "responses": {
@@ -8226,7 +8616,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-domain_ParishResponse"
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_ParokiResponse"
                                 }
                             }
                         },
@@ -8293,22 +8683,22 @@
                         "description": "Unprocessable Entity"
                     }
                 },
-                "summary": "Create parish",
+                "summary": "Create paroki",
                 "tags": [
                     "Ref"
                 ]
             }
         },
-        "/ref/parishes/current": {
+        "/ref/paroki/current": {
             "get": {
-                "description": "Returns the parish resolved from the active session or X-Parish-Id header.",
-                "operationId": "getCurrentParish",
+                "description": "Returns the paroki resolved from the active session or X-Paroki-Id header.",
+                "operationId": "getCurrentParoki",
                 "responses": {
                     "200": {
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-domain_ParishResponse"
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_ParokiResponse"
                                 }
                             }
                         },
@@ -8345,25 +8735,25 @@
                         "description": "Not Found"
                     }
                 },
-                "summary": "Get current parish",
+                "summary": "Get current paroki",
                 "tags": [
                     "Ref"
                 ]
             },
             "patch": {
-                "description": "Updates mutable profile fields of the active parish (requires ref:parish-admin).",
-                "operationId": "updateCurrentParishProfile",
+                "description": "Updates mutable profile fields of the active paroki (requires ref:paroki-admin).",
+                "operationId": "updateCurrentParokiProfile",
                 "requestBody": {
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/domain.UpdateParishProfileRequest",
+                                "$ref": "#/components/schemas/domain.UpdateParokiProfileRequest",
                                 "summary": "body",
-                                "description": "Parish profile payload"
+                                "description": "Paroki profile payload"
                             }
                         }
                     },
-                    "description": "Parish profile payload",
+                    "description": "Paroki profile payload",
                     "required": true
                 },
                 "responses": {
@@ -8371,7 +8761,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-domain_ParishResponse"
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_ParokiResponse"
                                 }
                             }
                         },
@@ -8428,21 +8818,21 @@
                         "description": "Unprocessable Entity"
                     }
                 },
-                "summary": "Update current parish profile",
+                "summary": "Update current paroki profile",
                 "tags": [
                     "Ref"
                 ]
             }
         },
-        "/ref/parishes/search": {
+        "/ref/paroki/search": {
             "post": {
-                "description": "Searches parishes with optional query, diocese/active/memberOnly filters, and cursor pagination.",
-                "operationId": "searchParishes",
+                "description": "Searches paroki with optional query, keuskupan/active/memberOnly filters, and cursor pagination.",
+                "operationId": "searchParoki",
                 "requestBody": {
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/domain.SearchParishesRequest",
+                                "$ref": "#/components/schemas/domain.SearchParokiRequest",
                                 "summary": "body",
                                 "description": "Search parameters"
                             }
@@ -8455,7 +8845,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_ParishResponse"
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_ParokiResponse"
                                 }
                             }
                         },
@@ -8492,19 +8882,19 @@
                         "description": "Forbidden"
                     }
                 },
-                "summary": "Search parishes",
+                "summary": "Search paroki",
                 "tags": [
                     "Ref"
                 ]
             }
         },
-        "/ref/parishes/{id}": {
+        "/ref/paroki/{id}": {
             "delete": {
-                "description": "Soft-deletes a parish when no zones, wards, lookups, or periods reference it.",
-                "operationId": "deleteParish",
+                "description": "Soft-deletes a paroki when no wilayah, lingkungan, lookups, or periods reference it.",
+                "operationId": "deleteParoki",
                 "parameters": [
                     {
-                        "description": "Parish UUID",
+                        "description": "Paroki UUID",
                         "in": "path",
                         "name": "id",
                         "required": true,
@@ -8568,17 +8958,17 @@
                         "description": "Conflict"
                     }
                 },
-                "summary": "Delete parish",
+                "summary": "Delete paroki",
                 "tags": [
                     "Ref"
                 ]
             },
             "get": {
-                "description": "Returns a single non-deleted parish by ID.",
-                "operationId": "getParish",
+                "description": "Returns a single non-deleted paroki by ID.",
+                "operationId": "getParoki",
                 "parameters": [
                     {
-                        "description": "Parish UUID",
+                        "description": "Paroki UUID",
                         "in": "path",
                         "name": "id",
                         "required": true,
@@ -8592,7 +8982,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-domain_ParishResponse"
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_ParokiResponse"
                                 }
                             }
                         },
@@ -8629,17 +9019,17 @@
                         "description": "Not Found"
                     }
                 },
-                "summary": "Get parish",
+                "summary": "Get paroki",
                 "tags": [
                     "Ref"
                 ]
             },
             "patch": {
-                "description": "Updates parish fields (super-admin) or profile fields (parish-admin).",
-                "operationId": "updateParish",
+                "description": "Updates paroki fields (super-admin) or profile fields (paroki-admin).",
+                "operationId": "updateParoki",
                 "parameters": [
                     {
-                        "description": "Parish UUID",
+                        "description": "Paroki UUID",
                         "in": "path",
                         "name": "id",
                         "required": true,
@@ -8652,13 +9042,13 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/domain.UpdateParishRequest",
+                                "$ref": "#/components/schemas/domain.UpdateParokiRequest",
                                 "summary": "body",
-                                "description": "Parish update payload"
+                                "description": "Paroki update payload"
                             }
                         }
                     },
-                    "description": "Parish update payload",
+                    "description": "Paroki update payload",
                     "required": true
                 },
                 "responses": {
@@ -8666,7 +9056,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-domain_ParishResponse"
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_ParokiResponse"
                                 }
                             }
                         },
@@ -8733,19 +9123,19 @@
                         "description": "Unprocessable Entity"
                     }
                 },
-                "summary": "Update parish",
+                "summary": "Update paroki",
                 "tags": [
                     "Ref"
                 ]
             }
         },
-        "/ref/parishes/{id}/members": {
+        "/ref/paroki/{id}/members": {
             "post": {
-                "description": "Adds a user (or creates/invites via email) as a member or admin of a parish.",
-                "operationId": "addParishMember",
+                "description": "Adds a user (or creates/invites via email) as a member or admin of a paroki.",
+                "operationId": "addParokiMember",
                 "parameters": [
                     {
-                        "description": "Parish UUID",
+                        "description": "Paroki UUID",
                         "in": "path",
                         "name": "id",
                         "required": true,
@@ -8758,7 +9148,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/domain.AddParishMemberRequest",
+                                "$ref": "#/components/schemas/domain.AddParokiMemberRequest",
                                 "summary": "body",
                                 "description": "Member payload"
                             }
@@ -8772,7 +9162,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-domain_ParishMemberResponse"
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_ParokiMemberResponse"
                                 }
                             }
                         },
@@ -8839,19 +9229,19 @@
                         "description": "Unprocessable Entity"
                     }
                 },
-                "summary": "Add parish member",
+                "summary": "Add paroki member",
                 "tags": [
                     "Ref"
                 ]
             }
         },
-        "/ref/parishes/{id}/members/search": {
+        "/ref/paroki/{id}/members/search": {
             "post": {
-                "description": "Searches members of a parish with optional query, role filter, and cursor pagination.",
-                "operationId": "searchParishMembers",
+                "description": "Searches members of a paroki with optional query, role filter, and cursor pagination.",
+                "operationId": "searchParokiMembers",
                 "parameters": [
                     {
-                        "description": "Parish UUID",
+                        "description": "Paroki UUID",
                         "in": "path",
                         "name": "id",
                         "required": true,
@@ -8864,7 +9254,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/domain.SearchParishMembersRequest",
+                                "$ref": "#/components/schemas/domain.SearchParokiMembersRequest",
                                 "summary": "body",
                                 "description": "Search parameters"
                             }
@@ -8877,7 +9267,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_ParishMemberResponse"
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_ParokiMemberResponse"
                                 }
                             }
                         },
@@ -8924,19 +9314,19 @@
                         "description": "Not Found"
                     }
                 },
-                "summary": "Search parish members",
+                "summary": "Search paroki members",
                 "tags": [
                     "Ref"
                 ]
             }
         },
-        "/ref/parishes/{id}/members/{userId}": {
+        "/ref/paroki/{id}/members/{userId}": {
             "delete": {
-                "description": "Removes a member from a parish and revokes Casbin parish-admin policy.",
-                "operationId": "removeParishMember",
+                "description": "Removes a member from a paroki and revokes Casbin paroki-admin policy.",
+                "operationId": "removeParokiMember",
                 "parameters": [
                     {
-                        "description": "Parish UUID",
+                        "description": "Paroki UUID",
                         "in": "path",
                         "name": "id",
                         "required": true,
@@ -9009,17 +9399,17 @@
                         "description": "Conflict"
                     }
                 },
-                "summary": "Remove parish member",
+                "summary": "Remove paroki member",
                 "tags": [
                     "Ref"
                 ]
             },
             "patch": {
-                "description": "Updates a parish member role and syncs Casbin parish-admin policy.",
-                "operationId": "updateParishMember",
+                "description": "Updates a paroki member role and syncs Casbin paroki-admin policy.",
+                "operationId": "updateParokiMember",
                 "parameters": [
                     {
-                        "description": "Parish UUID",
+                        "description": "Paroki UUID",
                         "in": "path",
                         "name": "id",
                         "required": true,
@@ -9041,7 +9431,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/domain.UpdateParishMemberRequest",
+                                "$ref": "#/components/schemas/domain.UpdateParokiMemberRequest",
                                 "summary": "body",
                                 "description": "Role update payload"
                             }
@@ -9055,7 +9445,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-domain_ParishMemberResponse"
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_ParokiMemberResponse"
                                 }
                             }
                         },
@@ -9122,7 +9512,7 @@
                         "description": "Unprocessable Entity"
                     }
                 },
-                "summary": "Update parish member",
+                "summary": "Update paroki member",
                 "tags": [
                     "Ref"
                 ]
@@ -9508,21 +9898,21 @@
                 ]
             }
         },
-        "/ref/wards": {
+        "/ref/wilayah": {
             "post": {
-                "description": "Creates a ward or reactivates a soft-deleted match in the active parish.",
-                "operationId": "createWard",
+                "description": "Creates a wilayah/stasi or reactivates a soft-deleted match in the active paroki.",
+                "operationId": "createWilayah",
                 "requestBody": {
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/domain.CreateWardRequest",
+                                "$ref": "#/components/schemas/domain.CreateWilayahRequest",
                                 "summary": "body",
-                                "description": "Ward creation payload"
+                                "description": "Wilayah creation payload"
                             }
                         }
                     },
-                    "description": "Ward creation payload",
+                    "description": "Wilayah creation payload",
                     "required": true
                 },
                 "responses": {
@@ -9530,397 +9920,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-domain_WardResponse"
-                                }
-                            }
-                        },
-                        "description": "Created"
-                    },
-                    "400": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Bad Request"
-                    },
-                    "401": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Unauthorized"
-                    },
-                    "403": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Forbidden"
-                    },
-                    "404": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Not Found"
-                    },
-                    "409": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Conflict"
-                    },
-                    "422": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Unprocessable Entity"
-                    }
-                },
-                "summary": "Create ward",
-                "tags": [
-                    "Ref"
-                ]
-            }
-        },
-        "/ref/wards/search": {
-            "post": {
-                "description": "Searches wards in the active parish with optional query, zone/active filters, and cursor pagination.",
-                "operationId": "searchWards",
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/domain.SearchWardsRequest",
-                                "summary": "body",
-                                "description": "Search parameters"
-                            }
-                        }
-                    },
-                    "description": "Search parameters"
-                },
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_WardResponse"
-                                }
-                            }
-                        },
-                        "description": "OK"
-                    },
-                    "400": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Bad Request"
-                    },
-                    "401": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Unauthorized"
-                    },
-                    "403": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Forbidden"
-                    }
-                },
-                "summary": "Search wards",
-                "tags": [
-                    "Ref"
-                ]
-            }
-        },
-        "/ref/wards/{id}": {
-            "delete": {
-                "description": "Soft-deletes a ward in the active parish.",
-                "operationId": "deleteWard",
-                "parameters": [
-                    {
-                        "description": "Ward UUID",
-                        "in": "path",
-                        "name": "id",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No Content"
-                    },
-                    "400": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Bad Request"
-                    },
-                    "401": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Unauthorized"
-                    },
-                    "403": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Forbidden"
-                    },
-                    "404": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Not Found"
-                    }
-                },
-                "summary": "Delete ward",
-                "tags": [
-                    "Ref"
-                ]
-            },
-            "get": {
-                "description": "Returns a single non-deleted ward in the active parish.",
-                "operationId": "getWard",
-                "parameters": [
-                    {
-                        "description": "Ward UUID",
-                        "in": "path",
-                        "name": "id",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-domain_WardResponse"
-                                }
-                            }
-                        },
-                        "description": "OK"
-                    },
-                    "400": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Bad Request"
-                    },
-                    "401": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Unauthorized"
-                    },
-                    "404": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Not Found"
-                    }
-                },
-                "summary": "Get ward",
-                "tags": [
-                    "Ref"
-                ]
-            },
-            "patch": {
-                "description": "Updates mutable fields of a ward in the active parish.",
-                "operationId": "updateWard",
-                "parameters": [
-                    {
-                        "description": "Ward UUID",
-                        "in": "path",
-                        "name": "id",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/domain.UpdateWardRequest",
-                                "summary": "body",
-                                "description": "Ward update payload"
-                            }
-                        }
-                    },
-                    "description": "Ward update payload",
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-domain_WardResponse"
-                                }
-                            }
-                        },
-                        "description": "OK"
-                    },
-                    "400": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Bad Request"
-                    },
-                    "401": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Unauthorized"
-                    },
-                    "403": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Forbidden"
-                    },
-                    "404": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Not Found"
-                    },
-                    "409": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Conflict"
-                    },
-                    "422": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Unprocessable Entity"
-                    }
-                },
-                "summary": "Update ward",
-                "tags": [
-                    "Ref"
-                ]
-            }
-        },
-        "/ref/zones": {
-            "post": {
-                "description": "Creates a zone/station or reactivates a soft-deleted match in the active parish.",
-                "operationId": "createZone",
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/domain.CreateZoneRequest",
-                                "summary": "body",
-                                "description": "Zone creation payload"
-                            }
-                        }
-                    },
-                    "description": "Zone creation payload",
-                    "required": true
-                },
-                "responses": {
-                    "201": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-domain_ZoneResponse"
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_WilayahResponse"
                                 }
                             }
                         },
@@ -9977,21 +9977,21 @@
                         "description": "Unprocessable Entity"
                     }
                 },
-                "summary": "Create zone",
+                "summary": "Create wilayah",
                 "tags": [
                     "Ref"
                 ]
             }
         },
-        "/ref/zones/search": {
+        "/ref/wilayah/search": {
             "post": {
-                "description": "Searches zones/stations in the active parish with optional query, type/active filters, and cursor pagination.",
-                "operationId": "searchZones",
+                "description": "Searches wilayah/stasi in the active paroki with optional query, jenis/active filters, and cursor pagination.",
+                "operationId": "searchWilayah",
                 "requestBody": {
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/domain.SearchZonesRequest",
+                                "$ref": "#/components/schemas/domain.SearchWilayahRequest",
                                 "summary": "body",
                                 "description": "Search parameters"
                             }
@@ -10004,7 +10004,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_ZoneResponse"
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_WilayahResponse"
                                 }
                             }
                         },
@@ -10041,19 +10041,19 @@
                         "description": "Forbidden"
                     }
                 },
-                "summary": "Search zones",
+                "summary": "Search wilayah",
                 "tags": [
                     "Ref"
                 ]
             }
         },
-        "/ref/zones/{id}": {
+        "/ref/wilayah/{id}": {
             "delete": {
-                "description": "Soft-deletes a zone when no non-deleted wards reference it.",
-                "operationId": "deleteZone",
+                "description": "Soft-deletes a wilayah when no non-deleted lingkungan reference it.",
+                "operationId": "deleteWilayah",
                 "parameters": [
                     {
-                        "description": "Zone UUID",
+                        "description": "Wilayah UUID",
                         "in": "path",
                         "name": "id",
                         "required": true,
@@ -10117,17 +10117,17 @@
                         "description": "Conflict"
                     }
                 },
-                "summary": "Delete zone",
+                "summary": "Delete wilayah",
                 "tags": [
                     "Ref"
                 ]
             },
             "get": {
-                "description": "Returns a single non-deleted zone in the active parish.",
-                "operationId": "getZone",
+                "description": "Returns a single non-deleted wilayah in the active paroki.",
+                "operationId": "getWilayah",
                 "parameters": [
                     {
-                        "description": "Zone UUID",
+                        "description": "Wilayah UUID",
                         "in": "path",
                         "name": "id",
                         "required": true,
@@ -10141,7 +10141,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-domain_ZoneResponse"
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_WilayahResponse"
                                 }
                             }
                         },
@@ -10178,17 +10178,17 @@
                         "description": "Not Found"
                     }
                 },
-                "summary": "Get zone",
+                "summary": "Get wilayah",
                 "tags": [
                     "Ref"
                 ]
             },
             "patch": {
-                "description": "Updates mutable fields of a zone/station in the active parish.",
-                "operationId": "updateZone",
+                "description": "Updates mutable fields of a wilayah/stasi in the active paroki.",
+                "operationId": "updateWilayah",
                 "parameters": [
                     {
-                        "description": "Zone UUID",
+                        "description": "Wilayah UUID",
                         "in": "path",
                         "name": "id",
                         "required": true,
@@ -10201,13 +10201,13 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/domain.UpdateZoneRequest",
+                                "$ref": "#/components/schemas/domain.UpdateWilayahRequest",
                                 "summary": "body",
-                                "description": "Zone update payload"
+                                "description": "Wilayah update payload"
                             }
                         }
                     },
-                    "description": "Zone update payload",
+                    "description": "Wilayah update payload",
                     "required": true
                 },
                 "responses": {
@@ -10215,7 +10215,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-domain_ZoneResponse"
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_WilayahResponse"
                                 }
                             }
                         },
@@ -10282,7 +10282,7 @@
                         "description": "Unprocessable Entity"
                     }
                 },
-                "summary": "Update zone",
+                "summary": "Update wilayah",
                 "tags": [
                     "Ref"
                 ]
