@@ -13,6 +13,7 @@ services:
     environment:
       MISE_DATA_DIR: /mnt/mise-data
       APP_DB_URL: postgres://domus:domus@postgres:5432/domus?sslmode=disable
+      APP_AUTO_MIGRATE: "true"
       TEST_DSN: postgres://domus:domus@postgres:5432/domus_test?sslmode=disable
       APP_SECRET: 6171ce314c622f9a4cdb542c810d40b91edde2f659bcd5224c6aeee7d7ea4925
     depends_on:

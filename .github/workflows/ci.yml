@@ -105,6 +105,7 @@ jobs:
 
       - name: Run Go tests
         env:
+          APP_AUTO_MIGRATE: "true"
           TEST_DSN: postgres://domus:domus@localhost:5432/domus?sslmode=disable
         run: go test -v -race ./...
 
@@ -177,6 +178,7 @@ jobs:
 
       - name: Run E2E tests
         env:
+          APP_AUTO_MIGRATE: "true"
           APP_DB_URL: postgres://domus:domus@localhost:5432/domus?sslmode=disable
         run: bun run --cwd e2e e2e
 
