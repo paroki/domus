@@ -38,7 +38,7 @@ import {
   DEFAULT_POSITION_SUGGESTIONS,
   INVITE_TTL_OPTIONS,
   inviteStatusMeta,
-  isParishAdmin,
+  isParokiAdmin,
   kindLabel,
 } from "../model";
 import type { Route } from "./+types/OrgDetailPage";
@@ -52,8 +52,8 @@ export default function OrgDetailPage() {
   const { orgId = "" } = useParams();
   const navigate = useNavigate();
   const { data: me, isLoading: meLoading } = useMe();
-  const hasParish = Boolean(me?.activeParokiId);
-  const parishAdmin = isParishAdmin(me?.roles);
+  const hasParoki = Boolean(me?.activeParokiId);
+  const parokiAdmin = isParokiAdmin(me?.roles);
 
   const orgQuery = useOrg(orgId);
   const org = orgQuery.data;
@@ -201,7 +201,7 @@ export default function OrgDetailPage() {
     }
   }
 
-  if (!meLoading && !hasParish) {
+  if (!meLoading && !hasParoki) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-8">
         <Card className="p-6 text-center">
@@ -292,13 +292,13 @@ export default function OrgDetailPage() {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {(isOrgAdmin || parishAdmin) && (
+            {(isOrgAdmin || parokiAdmin) && (
               <Button variant="outline" onClick={startEdit}>
                 <Pencil aria-hidden className="size-4" />
                 {t("org.editOrg")}
               </Button>
             )}
-            {parishAdmin && (
+            {parokiAdmin && (
               <Button
                 variant="danger"
                 disabled={deleteOrg.isPending}
@@ -356,7 +356,7 @@ export default function OrgDetailPage() {
         )}
       </Card>
 
-      {!isOrgMember && !parishAdmin && (
+      {!isOrgMember && !parokiAdmin && (
         <Card className="p-6 text-center">
           <h2 className="text-base font-semibold text-fg">
             {t("org.rosterRestrictedTitle")}

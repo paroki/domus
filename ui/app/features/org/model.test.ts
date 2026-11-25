@@ -4,16 +4,16 @@ import {
   buildInviteJoinUrl,
   computeInviteStatus,
   inviteStatusMeta,
-  isParishAdmin,
+  isParokiAdmin,
   kindLabel,
-  ROLE_PARISH_ADMIN,
+  ROLE_PAROKI_ADMIN,
   slugifyCode,
 } from "./model";
 
-test("isParishAdmin checks ref:paroki-admin role", () => {
-  assert.equal(isParishAdmin([ROLE_PARISH_ADMIN]), true);
-  assert.equal(isParishAdmin(["user:user"]), false);
-  assert.equal(isParishAdmin(undefined), false);
+test("isParokiAdmin checks ref:paroki-admin role", () => {
+  assert.equal(isParokiAdmin([ROLE_PAROKI_ADMIN]), true);
+  assert.equal(isParokiAdmin(["user:user"]), false);
+  assert.equal(isParokiAdmin(undefined), false);
 });
 
 test("slugifyCode normalizes mixed case and punctuation", () => {

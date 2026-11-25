@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, setActiveParish, unwrap, unwrapVoid } from "~/shared/api/client";
+import { api, setActiveParoki, unwrap, unwrapVoid } from "~/shared/api/client";
 import { sessionKeys } from "~/shared/api/session";
 import { orgKeys } from "./keys";
 import type {
@@ -141,10 +141,10 @@ export function useRedeemOrgInvite(code: string) {
         }),
       ),
     onSuccess: async (res) => {
-      setActiveParish(res.parokiId ?? null);
+      setActiveParoki(res.parokiId ?? null);
       await Promise.all([
         qc.invalidateQueries({ queryKey: sessionKeys.me }),
-        qc.invalidateQueries({ queryKey: sessionKeys.parishes() }),
+        qc.invalidateQueries({ queryKey: sessionKeys.paroki() }),
         qc.invalidateQueries({ queryKey: orgKeys.all }),
       ]);
     },
@@ -164,13 +164,13 @@ export function useOrgVerifyOTP() {
     mutationFn: (body: VerifyOTPRequest) =>
       unwrap(api.POST("/auth/otp/verify", { body })),
     onSuccess: async (res) => {
-      const parishId = res.activeParokiId ?? null;
-      if (parishId) {
-        setActiveParish(parishId);
+      const parokiId = res.activeParokiId ?? null;
+      if (parokiId) {
+        setActiveParoki(parokiId);
       }
       await Promise.all([
         qc.invalidateQueries({ queryKey: sessionKeys.me }),
-        qc.invalidateQueries({ queryKey: sessionKeys.parishes() }),
+        qc.invalidateQueries({ queryKey: sessionKeys.paroki() }),
         qc.invalidateQueries({ queryKey: orgKeys.all }),
       ]);
     },

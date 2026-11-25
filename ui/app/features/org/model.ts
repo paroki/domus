@@ -1,6 +1,6 @@
 import type { BadgeTone } from "~/shared/ui/Badge";
 
-export const ROLE_PARISH_ADMIN = "ref:paroki-admin";
+export const ROLE_PAROKI_ADMIN = "ref:paroki-admin";
 
 export type OrgKind =
   | "dpp"
@@ -36,8 +36,8 @@ export const INVITE_TTL_OPTIONS: { label: string; seconds: number }[] = [
   { label: "7 hari", seconds: 604800 },
 ];
 
-export function isParishAdmin(roles?: string[]): boolean {
-  return Boolean(roles?.includes(ROLE_PARISH_ADMIN));
+export function isParokiAdmin(roles?: string[]): boolean {
+  return Boolean(roles?.includes(ROLE_PAROKI_ADMIN));
 }
 
 export function slugifyCode(raw: string): string {

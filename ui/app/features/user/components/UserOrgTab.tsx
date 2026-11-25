@@ -18,9 +18,9 @@ import { ConfirmDialog } from "./DirectoryShared";
 export function UserOrgTab({
   userId,
   userDisplayName,
-  activeParishId,
-  activeParishName,
-  parishAdminCaller,
+  activeParokiId,
+  activeParokiName,
+  parokiAdminCaller,
   orgs,
   memberships,
   isLoading,
@@ -28,9 +28,9 @@ export function UserOrgTab({
 }: {
   userId: string;
   userDisplayName: string;
-  activeParishId: string;
-  activeParishName?: string;
-  parishAdminCaller: boolean;
+  activeParokiId: string;
+  activeParokiName?: string;
+  parokiAdminCaller: boolean;
   orgs: Organization[];
   memberships: Array<{ org: Organization; member: OrgMember }>;
   isLoading: boolean;
@@ -40,28 +40,28 @@ export function UserOrgTab({
 
   const lookupsQuery = useDirectoryLookups(
     "org_position",
-    Boolean(activeParishId),
+    Boolean(activeParokiId),
   );
   const periodsQuery = useDirectoryPeriods(
-    activeParishId,
-    Boolean(activeParishId),
+    activeParokiId,
+    Boolean(activeParokiId),
   );
   const positionLookups = lookupsQuery.data ?? [];
   const periods = periodsQuery.data ?? [];
 
-  const addOrgMember = useAddUserOrgMember(activeParishId);
-  const updateOrgMember = useUpdateUserOrgMember(activeParishId);
-  const removeOrgMember = useRemoveUserOrgMember(activeParishId);
+  const addOrgMember = useAddUserOrgMember(activeParokiId);
+  const updateOrgMember = useUpdateUserOrgMember(activeParokiId);
+  const removeOrgMember = useRemoveUserOrgMember(activeParokiId);
 
   const joinedOrgIds = new Set(memberships.map((m) => m.org.id));
   const availableOrgs = orgs.filter(
     (o) =>
       o.id &&
       !joinedOrgIds.has(o.id) &&
-      (o.myRole === "admin" || parishAdminCaller),
+      (o.myRole === "admin" || parokiAdminCaller),
   );
   const hasAnyManageableOrg =
-    parishAdminCaller || orgs.some((o) => o.myRole === "admin");
+    parokiAdminCaller || orgs.some((o) => o.myRole === "admin");
 
   const [selectedOrgId, setSelectedOrgId] = useState("");
   const [newRole, setNewRole] = useState<"admin" | "member">("member");
@@ -91,7 +91,7 @@ export function UserOrgTab({
   const canOnlyAppointAdmin =
     Boolean(selectedOrg) &&
     selectedOrg?.myRole !== "admin" &&
-    parishAdminCaller;
+    parokiAdminCaller;
 
   useEffect(() => {
     if (canOnlyAppointAdmin) {
@@ -99,7 +99,7 @@ export function UserOrgTab({
     }
   }, [canOnlyAppointAdmin]);
 
-  if (!activeParishId) {
+  if (!activeParokiId) {
     return (
       <Card className="p-6 text-sm text-muted">
         {t("users.noActiveParish")}
@@ -233,9 +233,9 @@ export function UserOrgTab({
               {t("users.orgSectionHint")}
             </p>
           </div>
-          {activeParishName && (
+          {activeParokiName && (
             <Badge tone="neutral">
-              {t("users.activeParishContext", { name: activeParishName })}
+              {t("users.activeParishContext", { name: activeParokiName })}
             </Badge>
           )}
         </div>
@@ -354,7 +354,7 @@ export function UserOrgTab({
                           </Button>
                         </>
                       ) : (
-                        parishAdminCaller &&
+                        parokiAdminCaller &&
                         !isMemberAdmin && (
                           <Button
                             variant="outline"

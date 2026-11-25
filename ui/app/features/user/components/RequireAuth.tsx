@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, Outlet, useLocation } from "react-router";
-import { ApiError, setActiveParish } from "~/shared/api/client";
+import { ApiError, setActiveParoki } from "~/shared/api/client";
 import { useMe } from "../api/queries";
 import { shouldRedirectToOnboarding } from "../model";
 
@@ -12,9 +12,9 @@ export default function RequireAuth() {
 
   useEffect(() => {
     if (me) {
-      setActiveParish(me.activeParokiId ?? null);
+      setActiveParoki(me.activeParokiId ?? null);
     } else if (error instanceof ApiError && error.status === 401) {
-      setActiveParish(null);
+      setActiveParoki(null);
     }
   }, [me, error]);
 

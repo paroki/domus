@@ -5,12 +5,12 @@ type Schemas = components["schemas"];
 export type RoleDescriptor = Schemas["authz.RoleDescriptor"];
 export type User = Schemas["domain.UserResponse"];
 export type AuthProviders = Schemas["domain.AuthProvidersResponse"];
-export type Parish = Schemas["domain.ParokiResponse"];
-export type ParishMember = Schemas["domain.ParokiMemberResponse"];
-export type AddParishMemberRequest = Schemas["domain.AddParokiMemberRequest"];
-export type UpdateParishMemberRequest =
+export type Paroki = Schemas["domain.ParokiResponse"];
+export type ParokiMember = Schemas["domain.ParokiMemberResponse"];
+export type AddParokiMemberRequest = Schemas["domain.AddParokiMemberRequest"];
+export type UpdateParokiMemberRequest =
   Schemas["domain.UpdateParokiMemberRequest"];
-export type SearchParishMembersRequest =
+export type SearchParokiMembersRequest =
   Schemas["domain.SearchParokiMembersRequest"];
 export type Organization = Schemas["domain.OrganizationResponse"];
 export type OrgMember = Schemas["domain.OrgMemberResponse"];
@@ -24,7 +24,7 @@ export type RequestOTPRequest = Schemas["domain.RequestOTPRequest"];
 export type RequestOTPResponse = Schemas["domain.RequestOTPResponse"];
 export type VerifyOTPRequest = Schemas["domain.VerifyOTPRequest"];
 export type UpdateMeRequest = Schemas["domain.UpdateMeRequest"];
-export type SwitchSessionParishRequest =
+export type SwitchSessionParokiRequest =
   Schemas["domain.SwitchSessionParokiRequest"];
 export type UserSession = Schemas["domain.UserSessionResponse"];
 export type SearchSessionsRequest =

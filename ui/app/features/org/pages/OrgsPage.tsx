@@ -9,9 +9,9 @@ import { Button } from "~/shared/ui/Button";
 import { Card } from "~/shared/ui/Card";
 import { useCreateOrg } from "../api/actions";
 import { resolveOrgError } from "../api/errors";
-import { useOrgs, useOrgWards, useOrgZones } from "../api/queries";
+import { useOrgLingkungan, useOrgs, useOrgWilayah } from "../api/queries";
 import {
-  isParishAdmin,
+  isParokiAdmin,
   kindLabel,
   ORG_KINDS,
   type OrgKind,
@@ -26,8 +26,8 @@ export function meta({}: Route.MetaArgs) {
 export default function OrgsPage() {
   const { t } = useTranslation();
   const { data: me } = useMe();
-  const hasParish = Boolean(me?.activeParokiId);
-  const parishAdmin = isParishAdmin(me?.roles);
+  const hasParoki = Boolean(me?.activeParokiId);
+  const parokiAdmin = isParokiAdmin(me?.roles);
 
   const [myOrgsOnly, setMyOrgsOnly] = useState(false);
   const [kindFilter, setKindFilter] = useState("");
@@ -40,8 +40,8 @@ export default function OrgsPage() {
   const [codeEdited, setCodeEdited] = useState(false);
   const [description, setDescription] = useState("");
   const [parentId, setParentId] = useState("");
-  const [zoneId, setZoneId] = useState("");
-  const [wardId, setWardId] = useState("");
+  const [wilayahId, setWilayahId] = useState("");
+  const [lingkunganId, setLingkunganId] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
 
   const orgsQuery = useOrgs(
@@ -52,12 +52,14 @@ export default function OrgsPage() {
         myOrgsOnly: myOrgsOnly || undefined,
       },
     },
-    hasParish,
+    hasParoki,
   );
-  const allOrgsForParent = useOrgs({ limit: 100 }, hasParish && showCreate);
-  const zonesQuery = useOrgZones(hasParish && showCreate && kind === "wilayah");
-  const wardsQuery = useOrgWards(
-    hasParish && showCreate && kind === "lingkungan",
+  const allOrgsForParent = useOrgs({ limit: 100 }, hasParoki && showCreate);
+  const wilayahQuery = useOrgWilayah(
+    hasParoki && showCreate && kind === "wilayah",
+  );
+  const lingkunganQuery = useOrgLingkungan(
+    hasParoki && showCreate && kind === "lingkungan",
   );
 
   const createOrg = useCreateOrg();
@@ -83,23 +85,24 @@ export default function OrgsPage() {
         name: name.trim(),
         description: description.trim() || undefined,
         parentId: parentId || undefined,
-        wilayahId: kind === "wilayah" && zoneId ? zoneId : undefined,
-        lingkunganId: kind === "lingkungan" && wardId ? wardId : undefined,
+        wilayahId: kind === "wilayah" && wilayahId ? wilayahId : undefined,
+        lingkunganId:
+          kind === "lingkungan" && lingkunganId ? lingkunganId : undefined,
       });
       setName("");
       setCode("");
       setCodeEdited(false);
       setDescription("");
       setParentId("");
-      setZoneId("");
-      setWardId("");
+      setWilayahId("");
+      setLingkunganId("");
       setShowCreate(false);
     } catch (err) {
       setFormError(resolveOrgError(err));
     }
   }
 
-  if (!hasParish) {
+  if (!hasParoki) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-8">
         <Card className="p-6 text-center">
@@ -122,7 +125,7 @@ export default function OrgsPage() {
           <h1 className="text-2xl font-bold text-fg">{t("org.title")}</h1>
           <p className="mt-1 text-sm text-muted">{t("org.subtitle")}</p>
         </div>
-        {parishAdmin && (
+        {parokiAdmin && (
           <Button onClick={() => setShowCreate((v) => !v)}>
             <Plus aria-hidden className="size-4" />
             {t("org.addOrg")}
@@ -130,7 +133,7 @@ export default function OrgsPage() {
         )}
       </div>
 
-      {parishAdmin && showCreate && (
+      {parokiAdmin && showCreate && (
         <Card className="p-5">
           <h2 className="mb-4 text-base font-semibold text-fg">
             {t("org.createOrgTitle")}
@@ -206,12 +209,12 @@ export default function OrgsPage() {
               <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
                 Wilayah / Stasi (opsional)
                 <select
-                  value={zoneId}
-                  onChange={(e) => setZoneId(e.target.value)}
+                  value={wilayahId}
+                  onChange={(e) => setWilayahId(e.target.value)}
                   className="h-11 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
                 >
                   <option value="">Pilih wilayah</option>
-                  {(zonesQuery.data ?? []).map((z) => (
+                  {(wilayahQuery.data ?? []).map((z) => (
                     <option key={z.id} value={z.id}>
                       {z.nama} ({z.kode})
                     </option>
@@ -224,12 +227,12 @@ export default function OrgsPage() {
               <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
                 Lingkungan (opsional)
                 <select
-                  value={wardId}
-                  onChange={(e) => setWardId(e.target.value)}
+                  value={lingkunganId}
+                  onChange={(e) => setLingkunganId(e.target.value)}
                   className="h-11 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
                 >
                   <option value="">Pilih lingkungan</option>
-                  {(wardsQuery.data ?? []).map((w) => (
+                  {(lingkunganQuery.data ?? []).map((w) => (
                     <option key={w.id} value={w.id}>
                       {w.nama} ({w.kode})
                     </option>

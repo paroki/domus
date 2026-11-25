@@ -25,19 +25,19 @@ import { Badge } from "~/shared/ui/Badge";
 import { Button, buttonClass } from "~/shared/ui/Button";
 import { Card } from "~/shared/ui/Card";
 import {
-  useAddParishMember,
+  useAddParokiMember,
   useAdminDeleteUser,
   useAdminUpdateUser,
-  useRemoveParishMember,
-  useUpdateParishMember,
+  useRemoveParokiMember,
+  useUpdateParokiMember,
 } from "../api/actions";
 import {
   useDirectoryManagedOrgUsers,
-  useDirectoryParishMembers,
+  useDirectoryParokiMembers,
   useMe,
   useUserDetail,
   useUserOrgMemberships,
-  useUserParishMemberships,
+  useUserParokiMemberships,
 } from "../api/queries";
 import { ConfirmDialog, UserAvatar } from "../components/DirectoryShared";
 import { UserOrgTab } from "../components/UserOrgTab";
@@ -45,7 +45,7 @@ import {
   canManageUsers,
   getAvailableUserDetailTabs,
   isOrgAdmin,
-  isParishAdmin,
+  isParokiAdmin,
   isSuperAdmin,
   parseUserDetailTab,
   providerLabel,
@@ -62,8 +62,8 @@ type PendingConfirm =
   | { kind: "deleteUser" }
   | { kind: "demoteSuperAdmin" }
   | { kind: "disableUser" }
-  | { kind: "demoteParishAdmin"; parishId: string; parishName: string }
-  | { kind: "removeParishMember"; parishId: string; parishName: string };
+  | { kind: "demoteParokiAdmin"; parokiId: string; parokiName: string }
+  | { kind: "removeParokiMember"; parokiId: string; parokiName: string };
 
 function formatDate(iso?: string | null): string | null {
   if (!iso) return null;
@@ -85,9 +85,9 @@ export default function UserDetailPage() {
   const { data: me } = useMe();
   const allowedCaller = canManageUsers(me);
   const superAdminCaller = isSuperAdmin(me);
-  const parishAdminCaller = isParishAdmin(me);
+  const parokiAdminCaller = isParokiAdmin(me);
   const orgAdminCaller = isOrgAdmin(me);
-  const activeParishId = me?.activeParokiId ?? "";
+  const activeParokiId = me?.activeParokiId ?? "";
 
   const navPreview = (
     location.state as { userPreview?: UserDirectoryPreview } | null
@@ -97,34 +97,34 @@ export default function UserDetailPage() {
 
   const userQuery = useUserDetail(id, superAdminCaller);
 
-  const parishFallbackQuery = useDirectoryParishMembers(
-    activeParishId,
+  const parokiFallbackQuery = useDirectoryParokiMembers(
+    activeParokiId,
     { limit: 100 },
     Boolean(
       !superAdminCaller &&
         !matchedPreview?.email &&
-        parishAdminCaller &&
-        activeParishId &&
+        parokiAdminCaller &&
+        activeParokiId &&
         id,
     ),
   );
   const orgFallbackQuery = useDirectoryManagedOrgUsers(
-    activeParishId,
+    activeParokiId,
     "",
     Boolean(
       !superAdminCaller &&
         !matchedPreview?.email &&
-        !parishAdminCaller &&
+        !parokiAdminCaller &&
         orgAdminCaller &&
-        activeParishId &&
+        activeParokiId &&
         id,
     ),
   );
 
   const resolvedPreview = (() => {
     if (matchedPreview) return matchedPreview;
-    if (parishAdminCaller) {
-      const m = parishFallbackQuery.data?.pages
+    if (parokiAdminCaller) {
+      const m = parokiFallbackQuery.data?.pages
         .flatMap((p) => p.data ?? [])
         .find((item) => item.userId === id);
       if (m?.userId) {
@@ -154,25 +154,25 @@ export default function UserDetailPage() {
   const isUserLoading = superAdminCaller
     ? userQuery.isLoading
     : !resolvedPreview &&
-      ((parishAdminCaller && parishFallbackQuery.isLoading) ||
+      ((parokiAdminCaller && parokiFallbackQuery.isLoading) ||
         (orgAdminCaller && orgFallbackQuery.isLoading));
 
   const {
-    parishes: allParishes,
-    memberships: allParishMemberships,
-    isLoading: parishesLoading,
-  } = useUserParishMemberships(
+    paroki: allParoki,
+    memberships: allParokiMemberships,
+    isLoading: parokiLoading,
+  } = useUserParokiMemberships(
     user?.id,
     user?.email,
-    Boolean((superAdminCaller || parishAdminCaller) && user?.id && user?.email),
+    Boolean((superAdminCaller || parokiAdminCaller) && user?.id && user?.email),
   );
 
-  const parishes = superAdminCaller
-    ? allParishes
-    : allParishes.filter((p) => p.id === activeParishId);
-  const parishMemberships = superAdminCaller
-    ? allParishMemberships
-    : allParishMemberships.filter((m) => m.parish.id === activeParishId);
+  const parokiList = superAdminCaller
+    ? allParoki
+    : allParoki.filter((p) => p.id === activeParokiId);
+  const parokiMemberships = superAdminCaller
+    ? allParokiMemberships
+    : allParokiMemberships.filter((m) => m.paroki.id === activeParokiId);
 
   const {
     orgs,
@@ -181,20 +181,20 @@ export default function UserDetailPage() {
   } = useUserOrgMemberships(
     user?.id,
     user?.email,
-    activeParishId,
-    Boolean(allowedCaller && user?.id && user?.email && activeParishId),
+    activeParokiId,
+    Boolean(allowedCaller && user?.id && user?.email && activeParokiId),
   );
 
   const updateUser = useAdminUpdateUser();
   const deleteUser = useAdminDeleteUser();
-  const addParishMember = useAddParishMember();
-  const updateParishMember = useUpdateParishMember();
-  const removeParishMember = useRemoveParishMember();
+  const addParokiMember = useAddParokiMember();
+  const updateParokiMember = useUpdateParokiMember();
+  const removeParokiMember = useRemoveParokiMember();
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [selectedParishId, setSelectedParishId] = useState("");
-  const [newParishRole, setNewParishRole] = useState<"admin" | "member">(
+  const [selectedParokiId, setSelectedParokiId] = useState("");
+  const [newParokiRole, setNewParokiRole] = useState<"admin" | "member">(
     "admin",
   );
   const [feedback, setFeedback] = useState<DirectoryFeedback | null>(null);
@@ -226,18 +226,18 @@ export default function UserDetailPage() {
     setPhone(user.phone ?? "");
   }, [user]);
 
-  const joinedParishIds = new Set(parishMemberships.map((m) => m.parish.id));
-  const availableParishes = parishes.filter((p) => !joinedParishIds.has(p.id));
+  const joinedParokiIds = new Set(parokiMemberships.map((m) => m.paroki.id));
+  const availableParoki = parokiList.filter((p) => !joinedParokiIds.has(p.id));
 
   useEffect(() => {
-    if (!availableParishes.length) {
-      setSelectedParishId("");
+    if (!availableParoki.length) {
+      setSelectedParokiId("");
       return;
     }
-    if (!availableParishes.some((p) => p.id === selectedParishId)) {
-      setSelectedParishId(availableParishes[0]?.id ?? "");
+    if (!availableParoki.some((p) => p.id === selectedParokiId)) {
+      setSelectedParokiId(availableParoki[0]?.id ?? "");
     }
-  }, [availableParishes, selectedParishId]);
+  }, [availableParoki, selectedParokiId]);
 
   useEffect(() => {
     if (feedback?.tone !== "success") return;
@@ -293,7 +293,9 @@ export default function UserDetailPage() {
   const providers = fullUser?.linkedProviders?.map(providerLabel) ?? [];
   const lastLoginText = formatDate(fullUser?.lastLoginAt);
   const createdAtText = formatDate(fullUser?.createdAt);
-  const activeParishName = parishes.find((p) => p.id === activeParishId)?.nama;
+  const activeParokiName = parokiList.find(
+    (p) => p.id === activeParokiId,
+  )?.nama;
 
   async function handleSaveProfile(e: FormEvent) {
     e.preventDefault();
@@ -321,16 +323,16 @@ export default function UserDetailPage() {
     }
   }
 
-  async function handleAddToParish(e: FormEvent) {
+  async function handleAddToParoki(e: FormEvent) {
     e.preventDefault();
-    if (!selectedParishId) return;
+    if (!selectedParokiId) return;
     setFeedback(null);
     try {
-      await addParishMember.mutateAsync({
-        parishId: selectedParishId,
+      await addParokiMember.mutateAsync({
+        parokiId: selectedParokiId,
         body: {
           userId,
-          role: newParishRole,
+          role: newParokiRole,
         },
       });
       setFeedback({
@@ -347,14 +349,14 @@ export default function UserDetailPage() {
     }
   }
 
-  async function executeUpdateParishRole(
-    parishId: string,
+  async function executeUpdateParokiRole(
+    parokiId: string,
     role: "admin" | "member",
   ) {
     setFeedback(null);
     try {
-      await updateParishMember.mutateAsync({
-        parishId,
+      await updateParokiMember.mutateAsync({
+        parokiId,
         userId,
         body: { role },
       });
@@ -402,9 +404,9 @@ export default function UserDetailPage() {
         });
         return;
       }
-      if (action.kind === "demoteParishAdmin") {
-        await updateParishMember.mutateAsync({
-          parishId: action.parishId,
+      if (action.kind === "demoteParokiAdmin") {
+        await updateParokiMember.mutateAsync({
+          parokiId: action.parokiId,
           userId,
           body: { role: "member" },
         });
@@ -414,9 +416,9 @@ export default function UserDetailPage() {
         });
         return;
       }
-      if (action.kind === "removeParishMember") {
-        await removeParishMember.mutateAsync({
-          parishId: action.parishId,
+      if (action.kind === "removeParokiMember") {
+        await removeParokiMember.mutateAsync({
+          parokiId: action.parokiId,
           userId,
         });
         setFeedback({
@@ -458,20 +460,20 @@ export default function UserDetailPage() {
           }),
           confirmLabel: t("users.disableUser"),
         };
-      case "demoteParishAdmin":
+      case "demoteParokiAdmin":
         return {
           title: t("users.confirmDemoteParishAdminTitle"),
           description: `${t("users.confirmDemoteParishAdminDescription", {
             name: userDisplayName,
-          })} (${pendingConfirm.parishName})`,
+          })} (${pendingConfirm.parokiName})`,
           confirmLabel: t("users.demoteParishAdmin"),
         };
-      case "removeParishMember":
+      case "removeParokiMember":
         return {
           title: t("users.confirmDeleteTitle"),
           description: `${t("users.confirmDeleteDescription", {
             name: userDisplayName,
-          })} (${pendingConfirm.parishName})`,
+          })} (${pendingConfirm.parokiName})`,
           confirmLabel: t("users.deleteUser"),
         };
     }
@@ -485,16 +487,16 @@ export default function UserDetailPage() {
   }> = [
     { id: "profile", label: t("users.tabProfile"), icon: UserCog },
     {
-      id: "parish",
+      id: "paroki",
       label: t("users.tabParish"),
       icon: Church,
-      count: parishesLoading ? undefined : parishMemberships.length,
+      count: parokiLoading ? undefined : parokiMemberships.length,
     },
     {
       id: "org",
       label: t("users.tabOrg"),
       icon: Building2,
-      count: activeParishId && !orgsLoading ? orgMemberships.length : undefined,
+      count: activeParokiId && !orgsLoading ? orgMemberships.length : undefined,
     },
   ];
   const tabs = allTabs.filter((tab) => allowedTabs.includes(tab.id));
@@ -777,11 +779,11 @@ export default function UserDetailPage() {
         </div>
       )}
 
-      {activeTab === "parish" && (
+      {activeTab === "paroki" && (
         <div
           role="tabpanel"
-          id="user-tabpanel-parish"
-          aria-labelledby="user-tab-parish"
+          id="user-tabpanel-paroki"
+          aria-labelledby="user-tab-paroki"
         >
           <Card className="p-6">
             <div className="mb-4">
@@ -795,23 +797,23 @@ export default function UserDetailPage() {
             </div>
 
             <div className="divide-y divide-line rounded-lg border border-line">
-              {parishesLoading ? (
+              {parokiLoading ? (
                 <p className="p-4 text-sm text-muted">{t("auth.loading")}</p>
-              ) : parishMemberships.length === 0 ? (
+              ) : parokiMemberships.length === 0 ? (
                 <p className="p-4 text-sm text-muted">
                   {t("users.noParishesJoined")}
                 </p>
               ) : (
-                parishMemberships.map(({ parish, member }) => {
+                parokiMemberships.map(({ paroki, member }) => {
                   const isAdmin = member.role === "admin";
                   return (
                     <div
-                      key={parish.id}
+                      key={paroki.id}
                       className="flex flex-wrap items-center justify-between gap-3 p-4"
                     >
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-sm font-bold text-fg">
-                          {parish.nama}
+                          {paroki.nama}
                         </span>
                         <Badge tone={isAdmin ? "warning" : "neutral"}>
                           {isAdmin
@@ -825,13 +827,13 @@ export default function UserDetailPage() {
                           <Button
                             variant="outline"
                             className="h-9 px-3 text-xs"
-                            disabled={updateParishMember.isPending}
+                            disabled={updateParokiMember.isPending}
                             onClick={() =>
-                              parish.id &&
+                              paroki.id &&
                               setPendingConfirm({
-                                kind: "demoteParishAdmin",
-                                parishId: parish.id,
-                                parishName: parish.nama ?? "",
+                                kind: "demoteParokiAdmin",
+                                parokiId: paroki.id,
+                                parokiName: paroki.nama ?? "",
                               })
                             }
                           >
@@ -841,10 +843,10 @@ export default function UserDetailPage() {
                           <Button
                             variant="outline"
                             className="h-9 px-3 text-xs"
-                            disabled={updateParishMember.isPending}
+                            disabled={updateParokiMember.isPending}
                             onClick={() =>
-                              parish.id &&
-                              executeUpdateParishRole(parish.id, "admin")
+                              paroki.id &&
+                              executeUpdateParokiRole(paroki.id, "admin")
                             }
                           >
                             <ShieldCheck aria-hidden className="size-3.5" />
@@ -855,16 +857,16 @@ export default function UserDetailPage() {
                         <Button
                           variant="danger"
                           className="h-9 px-3"
-                          disabled={removeParishMember.isPending}
+                          disabled={removeParokiMember.isPending}
                           onClick={() =>
-                            parish.id &&
+                            paroki.id &&
                             setPendingConfirm({
-                              kind: "removeParishMember",
-                              parishId: parish.id,
-                              parishName: parish.nama ?? "",
+                              kind: "removeParokiMember",
+                              parokiId: paroki.id,
+                              parokiName: paroki.nama ?? "",
                             })
                           }
-                          aria-label={`${t("users.deleteUser")} ${parish.nama ?? ""}`}
+                          aria-label={`${t("users.deleteUser")} ${paroki.nama ?? ""}`}
                         >
                           <Trash2 aria-hidden className="size-4" />
                         </Button>
@@ -876,10 +878,10 @@ export default function UserDetailPage() {
             </div>
 
             <form
-              onSubmit={handleAddToParish}
+              onSubmit={handleAddToParoki}
               className="mt-5 flex flex-wrap items-end gap-3 border-t border-line pt-5"
             >
-              {availableParishes.length === 0 && !parishesLoading ? (
+              {availableParoki.length === 0 && !parokiLoading ? (
                 <p className="text-sm text-muted">
                   {t("users.allParishesJoined")}
                 </p>
@@ -888,11 +890,11 @@ export default function UserDetailPage() {
                   <label className="flex min-w-52 flex-1 flex-col gap-1.5 text-sm font-medium text-fg">
                     {t("users.selectParish")}
                     <select
-                      value={selectedParishId}
-                      onChange={(e) => setSelectedParishId(e.target.value)}
+                      value={selectedParokiId}
+                      onChange={(e) => setSelectedParokiId(e.target.value)}
                       className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
                     >
-                      {availableParishes.map((p) => (
+                      {availableParoki.map((p) => (
                         <option key={p.id} value={p.id}>
                           {p.nama}
                         </option>
@@ -903,9 +905,9 @@ export default function UserDetailPage() {
                   <label className="flex min-w-44 flex-col gap-1.5 text-sm font-medium text-fg">
                     {t("users.roleLabel")}
                     <select
-                      value={newParishRole}
+                      value={newParokiRole}
                       onChange={(e) =>
-                        setNewParishRole(e.target.value as "admin" | "member")
+                        setNewParokiRole(e.target.value as "admin" | "member")
                       }
                       className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
                     >
@@ -918,7 +920,7 @@ export default function UserDetailPage() {
 
                   <Button
                     type="submit"
-                    disabled={!selectedParishId || addParishMember.isPending}
+                    disabled={!selectedParokiId || addParokiMember.isPending}
                   >
                     <Plus aria-hidden className="size-4" />
                     {t("users.addToParish")}
@@ -939,9 +941,9 @@ export default function UserDetailPage() {
           <UserOrgTab
             userId={userId}
             userDisplayName={userDisplayName}
-            activeParishId={activeParishId}
-            activeParishName={activeParishName}
-            parishAdminCaller={parishAdminCaller}
+            activeParokiId={activeParokiId}
+            activeParokiName={activeParokiName}
+            parokiAdminCaller={parokiAdminCaller}
             orgs={orgs}
             memberships={orgMemberships}
             isLoading={orgsLoading}
@@ -960,8 +962,8 @@ export default function UserDetailPage() {
         pending={
           updateUser.isPending ||
           deleteUser.isPending ||
-          updateParishMember.isPending ||
-          removeParishMember.isPending
+          updateParokiMember.isPending ||
+          removeParokiMember.isPending
         }
         onConfirm={executeConfirm}
         onCancel={() => setPendingConfirm(null)}

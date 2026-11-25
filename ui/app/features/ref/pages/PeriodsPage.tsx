@@ -10,7 +10,7 @@ import {
 } from "../api/actions";
 import { useCurrentIdentity, usePeriodsSearch } from "../api/queries";
 import type { Period } from "../api/types";
-import { isParishAdmin, slugifyCode } from "../model";
+import { isParokiAdmin, slugifyCode } from "../model";
 
 export function meta() {
   return [{ title: "Periode — Domus" }];
@@ -19,7 +19,7 @@ export function meta() {
 export default function PeriodsPage() {
   const { t } = useTranslation();
   const { data: me } = useCurrentIdentity();
-  const allowed = isParishAdmin(me?.roles);
+  const allowed = isParokiAdmin(me?.roles);
   const hasTenant = Boolean(me?.activeParokiId);
   const enabled = allowed && hasTenant;
 

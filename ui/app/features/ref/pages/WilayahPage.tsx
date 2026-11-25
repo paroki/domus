@@ -4,138 +4,146 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 
 import {
-  useCreateWard,
-  useCreateZone,
-  useDeleteWard,
-  useDeleteZone,
-  useUpdateWard,
-  useUpdateZone,
+  useCreateLingkungan,
+  useCreateWilayah,
+  useDeleteLingkungan,
+  useDeleteWilayah,
+  useUpdateLingkungan,
+  useUpdateWilayah,
 } from "../api/actions";
 import {
   useCurrentIdentity,
-  useWardsSearch,
-  useZonesSearch,
+  useLingkunganSearch,
+  useWilayahSearch,
 } from "../api/queries";
-import type { Ward, Zone } from "../api/types";
-import { isParishAdmin, slugifyCode } from "../model";
+import type { Lingkungan, Wilayah } from "../api/types";
+import { isParokiAdmin, slugifyCode } from "../model";
 
 export function meta() {
   return [{ title: "Wilayah & Lingkungan — Domus" }];
 }
 
-export default function TerritoryPage() {
+export default function WilayahPage() {
   const { t } = useTranslation();
   const { data: me } = useCurrentIdentity();
-  const allowed = isParishAdmin(me?.roles);
+  const allowed = isParokiAdmin(me?.roles);
   const hasTenant = Boolean(me?.activeParokiId);
   const enabled = allowed && hasTenant;
 
-  const [zoneTypeFilter, setZoneTypeFilter] = useState<
+  const [wilayahJenisFilter, setWilayahJenisFilter] = useState<
     "" | "wilayah" | "stasi"
   >("");
-  const [selectedZoneId, setSelectedZoneId] = useState<string>("");
+  const [selectedWilayahId, setSelectedWilayahId] = useState<string>("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Zone form state
-  const [editingZone, setEditingZone] = useState<Zone | null>(null);
-  const [zType, setZType] = useState<"wilayah" | "stasi">("wilayah");
-  const [zCode, setZCode] = useState("");
-  const [zName, setZName] = useState("");
-  const [zCoordName, setZCoordName] = useState("");
-  const [zCoordPhone, setZCoordPhone] = useState("");
+  // Wilayah form state
+  const [editingWilayah, setEditingWilayah] = useState<Wilayah | null>(null);
+  const [wJenis, setWJenis] = useState<"wilayah" | "stasi">("wilayah");
+  const [wKode, setWKode] = useState("");
+  const [wNama, setWNama] = useState("");
+  const [wKoordinator, setWKoordinator] = useState("");
+  const [wTelepon, setWTelepon] = useState("");
 
-  // Ward form state
-  const [editingWard, setEditingWard] = useState<Ward | null>(null);
-  const [wZoneId, setWZoneId] = useState("");
-  const [wCode, setWCode] = useState("");
-  const [wName, setWName] = useState("");
-  const [wPatron, setWPatron] = useState("");
-  const [wHeadName, setWHeadName] = useState("");
-  const [wHeadPhone, setWHeadPhone] = useState("");
+  // Lingkungan form state
+  const [editingLingkungan, setEditingLingkungan] = useState<Lingkungan | null>(
+    null,
+  );
+  const [lWilayahId, setLWilayahId] = useState("");
+  const [lKode, setLKode] = useState("");
+  const [lNama, setLNama] = useState("");
+  const [lPelindung, setLPelindung] = useState("");
+  const [lKetua, setLKetua] = useState("");
+  const [lTelepon, setLTelepon] = useState("");
 
-  const zonesQuery = useZonesSearch(
-    { filter: zoneTypeFilter ? { jenis: zoneTypeFilter } : undefined },
+  const wilayahQuery = useWilayahSearch(
+    {
+      filter: wilayahJenisFilter ? { jenis: wilayahJenisFilter } : undefined,
+    },
     enabled,
   );
-  const wardsQuery = useWardsSearch(
-    { filter: selectedZoneId ? { wilayahId: selectedZoneId } : undefined },
+  const lingkunganQuery = useLingkunganSearch(
+    {
+      filter: selectedWilayahId ? { wilayahId: selectedWilayahId } : undefined,
+    },
     enabled,
   );
-  const zones = zonesQuery.data?.pages.flatMap((p) => p.data ?? []) ?? [];
-  const wards = wardsQuery.data?.pages.flatMap((p) => p.data ?? []) ?? [];
+  const wilayahList =
+    wilayahQuery.data?.pages.flatMap((p) => p.data ?? []) ?? [];
+  const lingkunganList =
+    lingkunganQuery.data?.pages.flatMap((p) => p.data ?? []) ?? [];
 
-  const createZone = useCreateZone();
-  const updateZone = useUpdateZone();
-  const deleteZone = useDeleteZone();
-  const createWard = useCreateWard();
-  const updateWard = useUpdateWard();
-  const deleteWard = useDeleteWard();
+  const createWilayah = useCreateWilayah();
+  const updateWilayah = useUpdateWilayah();
+  const deleteWilayah = useDeleteWilayah();
+  const createLingkungan = useCreateLingkungan();
+  const updateLingkungan = useUpdateLingkungan();
+  const deleteLingkungan = useDeleteLingkungan();
 
-  function resetZoneForm() {
-    setEditingZone(null);
-    setZType("wilayah");
-    setZCode("");
-    setZName("");
-    setZCoordName("");
-    setZCoordPhone("");
+  function resetWilayahForm() {
+    setEditingWilayah(null);
+    setWJenis("wilayah");
+    setWKode("");
+    setWNama("");
+    setWKoordinator("");
+    setWTelepon("");
   }
 
-  function startEditZone(z: Zone) {
-    setEditingZone(z);
-    setZType((z.jenis as "wilayah" | "stasi") || "wilayah");
-    setZCode(z.kode ?? "");
-    setZName(z.nama ?? "");
-    setZCoordName(z.koordinator ?? "");
-    setZCoordPhone(z.teleponKoordinator ?? "");
+  function startEditWilayah(z: Wilayah) {
+    setEditingWilayah(z);
+    setWJenis((z.jenis as "wilayah" | "stasi") || "wilayah");
+    setWKode(z.kode ?? "");
+    setWNama(z.nama ?? "");
+    setWKoordinator(z.koordinator ?? "");
+    setWTelepon(z.teleponKoordinator ?? "");
   }
 
-  function resetWardForm() {
-    setEditingWard(null);
-    setWZoneId(selectedZoneId || zones[0]?.id || "");
-    setWCode("");
-    setWName("");
-    setWPatron("");
-    setWHeadName("");
-    setWHeadPhone("");
+  function resetLingkunganForm() {
+    setEditingLingkungan(null);
+    setLWilayahId(selectedWilayahId || wilayahList[0]?.id || "");
+    setLKode("");
+    setLNama("");
+    setLPelindung("");
+    setLKetua("");
+    setLTelepon("");
   }
 
-  function startEditWard(w: Ward) {
-    setEditingWard(w);
-    setWZoneId(w.wilayahId ?? "");
-    setWCode(w.kode ?? "");
-    setWName(w.nama ?? "");
-    setWPatron(w.pelindung ?? "");
-    setWHeadName(w.ketua ?? "");
-    setWHeadPhone(w.teleponKetua ?? "");
+  function startEditLingkungan(w: Lingkungan) {
+    setEditingLingkungan(w);
+    setLWilayahId(w.wilayahId ?? "");
+    setLKode(w.kode ?? "");
+    setLNama(w.nama ?? "");
+    setLPelindung(w.pelindung ?? "");
+    setLKetua(w.ketua ?? "");
+    setLTelepon(w.teleponKetua ?? "");
   }
 
-  async function handleSubmitZone(e: FormEvent) {
+  async function handleSubmitWilayah(e: FormEvent) {
     e.preventDefault();
     setErrorMsg(null);
     try {
-      const code = slugifyCode(zCode || zName);
-      if (editingZone?.id) {
-        await updateZone.mutateAsync({
-          id: editingZone.id,
+      const kode = slugifyCode(wKode || wNama);
+      if (editingWilayah?.id) {
+        await updateWilayah.mutateAsync({
+          id: editingWilayah.id,
           body: {
-            jenis: zType,
-            kode: code,
-            nama: zName.trim(),
-            koordinator: zCoordName.trim(),
-            teleponKoordinator: zCoordPhone.trim(),
+            jenis: wJenis,
+            kode,
+            nama: wNama.trim(),
+            koordinator: wKoordinator.trim(),
+            teleponKoordinator: wTelepon.trim(),
           },
         });
       } else {
-        const created = await createZone.mutateAsync({
-          jenis: zType,
-          kode: code,
-          nama: zName.trim(),
-          koordinator: zCoordName.trim() || undefined,
-          teleponKoordinator: zCoordPhone.trim() || undefined,
+        const created = await createWilayah.mutateAsync({
+          jenis: wJenis,
+          kode,
+          nama: wNama.trim(),
+          koordinator: wKoordinator.trim() || undefined,
+          teleponKoordinator: wTelepon.trim() || undefined,
         });
-        if (!wZoneId && created.id) setWZoneId(created.id);
+        if (!lWilayahId && created.id) setLWilayahId(created.id);
       }
-      resetZoneForm();
+      resetWilayahForm();
     } catch (err) {
       setErrorMsg(
         err instanceof Error ? err.message : "Gagal menyimpan wilayah.",
@@ -143,39 +151,40 @@ export default function TerritoryPage() {
     }
   }
 
-  async function handleSubmitWard(e: FormEvent) {
+  async function handleSubmitLingkungan(e: FormEvent) {
     e.preventDefault();
-    const targetZoneId = wZoneId || selectedZoneId || zones[0]?.id;
-    if (!targetZoneId) {
+    const targetWilayahId =
+      lWilayahId || selectedWilayahId || wilayahList[0]?.id;
+    if (!targetWilayahId) {
       setErrorMsg(t("ref.selectZoneFirst"));
       return;
     }
     setErrorMsg(null);
     try {
-      const code = slugifyCode(wCode || wName);
-      if (editingWard?.id) {
-        await updateWard.mutateAsync({
-          id: editingWard.id,
+      const kode = slugifyCode(lKode || lNama);
+      if (editingLingkungan?.id) {
+        await updateLingkungan.mutateAsync({
+          id: editingLingkungan.id,
           body: {
-            wilayahId: targetZoneId,
-            kode: code,
-            nama: wName.trim(),
-            pelindung: wPatron.trim(),
-            ketua: wHeadName.trim(),
-            teleponKetua: wHeadPhone.trim(),
+            wilayahId: targetWilayahId,
+            kode,
+            nama: lNama.trim(),
+            pelindung: lPelindung.trim(),
+            ketua: lKetua.trim(),
+            teleponKetua: lTelepon.trim(),
           },
         });
       } else {
-        await createWard.mutateAsync({
-          wilayahId: targetZoneId,
-          kode: code,
-          nama: wName.trim(),
-          pelindung: wPatron.trim() || undefined,
-          ketua: wHeadName.trim() || undefined,
-          teleponKetua: wHeadPhone.trim() || undefined,
+        await createLingkungan.mutateAsync({
+          wilayahId: targetWilayahId,
+          kode,
+          nama: lNama.trim(),
+          pelindung: lPelindung.trim() || undefined,
+          ketua: lKetua.trim() || undefined,
+          teleponKetua: lTelepon.trim() || undefined,
         });
       }
-      resetWardForm();
+      resetLingkunganForm();
     } catch (err) {
       setErrorMsg(
         err instanceof Error ? err.message : "Gagal menyimpan lingkungan.",
@@ -183,7 +192,9 @@ export default function TerritoryPage() {
     }
   }
 
-  const zoneNameById = new Map(zones.map((z) => [z.id ?? "", z.nama ?? ""]));
+  const wilayahNameById = new Map(
+    wilayahList.map((z) => [z.id ?? "", z.nama ?? ""]),
+  );
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6">
@@ -221,7 +232,7 @@ export default function TerritoryPage() {
           )}
 
           <div className="grid gap-6 lg:grid-cols-2">
-            {/* Zones / Stations */}
+            {/* Wilayah / Stasi */}
             <section className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-6">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-lg font-semibold text-fg">
@@ -229,9 +240,9 @@ export default function TerritoryPage() {
                 </h2>
                 <select
                   aria-label={t("ref.zoneTypeLabel")}
-                  value={zoneTypeFilter}
+                  value={wilayahJenisFilter}
                   onChange={(e) =>
-                    setZoneTypeFilter(
+                    setWilayahJenisFilter(
                       e.target.value as "" | "wilayah" | "stasi",
                     )
                   }
@@ -244,13 +255,13 @@ export default function TerritoryPage() {
               </div>
 
               <form
-                onSubmit={handleSubmitZone}
+                onSubmit={handleSubmitWilayah}
                 className="grid gap-2.5 rounded-xl border border-line bg-canvas p-4 sm:grid-cols-2"
               >
                 <select
-                  value={zType}
+                  value={wJenis}
                   onChange={(e) =>
-                    setZType(e.target.value as "wilayah" | "stasi")
+                    setWJenis(e.target.value as "wilayah" | "stasi")
                   }
                   className="h-9 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
                 >
@@ -259,35 +270,35 @@ export default function TerritoryPage() {
                 </select>
                 <input
                   required
-                  value={zCode}
-                  onChange={(e) => setZCode(e.target.value)}
+                  value={wKode}
+                  onChange={(e) => setWKode(e.target.value)}
                   placeholder={t("ref.zoneCodePlaceholder")}
                   className="h-9 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
                 />
                 <input
                   required
-                  value={zName}
-                  onChange={(e) => setZName(e.target.value)}
+                  value={wNama}
+                  onChange={(e) => setWNama(e.target.value)}
                   placeholder={t("ref.zoneNamePlaceholder")}
                   className="h-9 rounded-lg border border-line bg-surface px-3 text-sm text-fg sm:col-span-2"
                 />
                 <input
-                  value={zCoordName}
-                  onChange={(e) => setZCoordName(e.target.value)}
+                  value={wKoordinator}
+                  onChange={(e) => setWKoordinator(e.target.value)}
                   placeholder={t("ref.coordinatorNamePlaceholder")}
                   className="h-9 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
                 />
                 <input
-                  value={zCoordPhone}
-                  onChange={(e) => setZCoordPhone(e.target.value)}
+                  value={wTelepon}
+                  onChange={(e) => setWTelepon(e.target.value)}
                   placeholder={t("ref.phoneLabel")}
                   className="h-9 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
                 />
                 <div className="flex justify-end gap-2 sm:col-span-2">
-                  {editingZone && (
+                  {editingWilayah && (
                     <button
                       type="button"
-                      onClick={resetZoneForm}
+                      onClick={resetWilayahForm}
                       className="h-9 rounded-lg border border-line px-3 text-xs font-medium text-fg"
                     >
                       {t("users.cancel")}
@@ -295,21 +306,23 @@ export default function TerritoryPage() {
                   )}
                   <button
                     type="submit"
-                    disabled={createZone.isPending || updateZone.isPending}
+                    disabled={
+                      createWilayah.isPending || updateWilayah.isPending
+                    }
                     className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-on-primary disabled:opacity-50"
                   >
                     <Plus aria-hidden className="size-4" />
-                    {editingZone ? t("ref.updateItem") : t("ref.addZone")}
+                    {editingWilayah ? t("ref.updateItem") : t("ref.addZone")}
                   </button>
                 </div>
               </form>
 
               <div className="divide-y divide-line">
-                {zones.map((z) => (
+                {wilayahList.map((z) => (
                   <div
                     key={z.id}
                     className={`flex items-center justify-between gap-2 py-2.5 ${
-                      selectedZoneId === z.id
+                      selectedWilayahId === z.id
                         ? "bg-primary/5 px-2 rounded-lg"
                         : ""
                     }`}
@@ -317,7 +330,7 @@ export default function TerritoryPage() {
                     <button
                       type="button"
                       onClick={() =>
-                        setSelectedZoneId((prev) =>
+                        setSelectedWilayahId((prev) =>
                           prev === z.id ? "" : (z.id ?? ""),
                         )
                       }
@@ -350,7 +363,7 @@ export default function TerritoryPage() {
                           if (!z.id) return;
                           setErrorMsg(null);
                           try {
-                            await updateZone.mutateAsync({
+                            await updateWilayah.mutateAsync({
                               id: z.id,
                               body: { active: !z.active },
                             });
@@ -371,7 +384,7 @@ export default function TerritoryPage() {
                       <button
                         type="button"
                         aria-label={`${t("ref.editItem")} ${z.nama}`}
-                        onClick={() => startEditZone(z)}
+                        onClick={() => startEditWilayah(z)}
                         className="inline-flex size-8 items-center justify-center rounded-lg text-muted hover:bg-fg/8 hover:text-fg"
                       >
                         <Pencil aria-hidden className="size-4" />
@@ -383,8 +396,9 @@ export default function TerritoryPage() {
                           if (!z.id) return;
                           setErrorMsg(null);
                           try {
-                            await deleteZone.mutateAsync(z.id);
-                            if (selectedZoneId === z.id) setSelectedZoneId("");
+                            await deleteWilayah.mutateAsync(z.id);
+                            if (selectedWilayahId === z.id)
+                              setSelectedWilayahId("");
                           } catch (err) {
                             setErrorMsg(
                               err instanceof Error
@@ -400,7 +414,7 @@ export default function TerritoryPage() {
                     </div>
                   </div>
                 ))}
-                {zones.length === 0 && (
+                {wilayahList.length === 0 && (
                   <p className="py-3 text-sm text-muted">
                     {t("ref.emptyList")}
                   </p>
@@ -408,7 +422,7 @@ export default function TerritoryPage() {
               </div>
             </section>
 
-            {/* Wards */}
+            {/* Lingkungan */}
             <section className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-6">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-lg font-semibold text-fg">
@@ -416,12 +430,12 @@ export default function TerritoryPage() {
                 </h2>
                 <select
                   aria-label={t("ref.filterByZone")}
-                  value={selectedZoneId}
-                  onChange={(e) => setSelectedZoneId(e.target.value)}
+                  value={selectedWilayahId}
+                  onChange={(e) => setSelectedWilayahId(e.target.value)}
                   className="h-8 rounded-lg border border-line bg-canvas px-2 text-xs text-fg"
                 >
                   <option value="">{t("ref.allZones")}</option>
-                  {zones.map((z) => (
+                  {wilayahList.map((z) => (
                     <option key={z.id} value={z.id}>
                       {z.nama}
                     </option>
@@ -430,16 +444,18 @@ export default function TerritoryPage() {
               </div>
 
               <form
-                onSubmit={handleSubmitWard}
+                onSubmit={handleSubmitLingkungan}
                 className="grid gap-2.5 rounded-xl border border-line bg-canvas p-4 sm:grid-cols-2"
               >
                 <select
-                  value={wZoneId || selectedZoneId || zones[0]?.id || ""}
-                  onChange={(e) => setWZoneId(e.target.value)}
+                  value={
+                    lWilayahId || selectedWilayahId || wilayahList[0]?.id || ""
+                  }
+                  onChange={(e) => setLWilayahId(e.target.value)}
                   className="h-9 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
                 >
                   <option value="">{t("ref.selectZone")}</option>
-                  {zones.map((z) => (
+                  {wilayahList.map((z) => (
                     <option key={z.id} value={z.id}>
                       {z.nama}
                     </option>
@@ -447,41 +463,41 @@ export default function TerritoryPage() {
                 </select>
                 <input
                   required
-                  value={wCode}
-                  onChange={(e) => setWCode(e.target.value)}
+                  value={lKode}
+                  onChange={(e) => setLKode(e.target.value)}
                   placeholder={t("ref.wardCodePlaceholder")}
                   className="h-9 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
                 />
                 <input
                   required
-                  value={wName}
-                  onChange={(e) => setWName(e.target.value)}
+                  value={lNama}
+                  onChange={(e) => setLNama(e.target.value)}
                   placeholder={t("ref.wardNamePlaceholder")}
                   className="h-9 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
                 />
                 <input
-                  value={wPatron}
-                  onChange={(e) => setWPatron(e.target.value)}
+                  value={lPelindung}
+                  onChange={(e) => setLPelindung(e.target.value)}
                   placeholder={t("ref.patronSaintLabel")}
                   className="h-9 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
                 />
                 <input
-                  value={wHeadName}
-                  onChange={(e) => setWHeadName(e.target.value)}
+                  value={lKetua}
+                  onChange={(e) => setLKetua(e.target.value)}
                   placeholder={t("ref.headNamePlaceholder")}
                   className="h-9 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
                 />
                 <input
-                  value={wHeadPhone}
-                  onChange={(e) => setWHeadPhone(e.target.value)}
+                  value={lTelepon}
+                  onChange={(e) => setLTelepon(e.target.value)}
                   placeholder={t("ref.phoneLabel")}
                   className="h-9 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
                 />
                 <div className="flex justify-end gap-2 sm:col-span-2">
-                  {editingWard && (
+                  {editingLingkungan && (
                     <button
                       type="button"
-                      onClick={resetWardForm}
+                      onClick={resetLingkunganForm}
                       className="h-9 rounded-lg border border-line px-3 text-xs font-medium text-fg"
                     >
                       {t("users.cancel")}
@@ -489,17 +505,19 @@ export default function TerritoryPage() {
                   )}
                   <button
                     type="submit"
-                    disabled={createWard.isPending || updateWard.isPending}
+                    disabled={
+                      createLingkungan.isPending || updateLingkungan.isPending
+                    }
                     className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-on-primary disabled:opacity-50"
                   >
                     <Plus aria-hidden className="size-4" />
-                    {editingWard ? t("ref.updateItem") : t("ref.addWard")}
+                    {editingLingkungan ? t("ref.updateItem") : t("ref.addWard")}
                   </button>
                 </div>
               </form>
 
               <div className="divide-y divide-line">
-                {wards.map((w) => (
+                {lingkunganList.map((w) => (
                   <div
                     key={w.id}
                     className="flex items-center justify-between gap-2 py-2.5"
@@ -509,8 +527,8 @@ export default function TerritoryPage() {
                         {w.nama}{" "}
                         <span className="text-xs font-normal text-muted">
                           ({w.kode}
-                          {w.wilayahId && zoneNameById.get(w.wilayahId)
-                            ? ` · ${zoneNameById.get(w.wilayahId)}`
+                          {w.wilayahId && wilayahNameById.get(w.wilayahId)
+                            ? ` · ${wilayahNameById.get(w.wilayahId)}`
                             : ""}
                           )
                         </span>
@@ -530,7 +548,7 @@ export default function TerritoryPage() {
                           if (!w.id) return;
                           setErrorMsg(null);
                           try {
-                            await updateWard.mutateAsync({
+                            await updateLingkungan.mutateAsync({
                               id: w.id,
                               body: { active: !w.active },
                             });
@@ -551,7 +569,7 @@ export default function TerritoryPage() {
                       <button
                         type="button"
                         aria-label={`${t("ref.editItem")} ${w.nama}`}
-                        onClick={() => startEditWard(w)}
+                        onClick={() => startEditLingkungan(w)}
                         className="inline-flex size-8 items-center justify-center rounded-lg text-muted hover:bg-fg/8 hover:text-fg"
                       >
                         <Pencil aria-hidden className="size-4" />
@@ -563,7 +581,7 @@ export default function TerritoryPage() {
                           if (!w.id) return;
                           setErrorMsg(null);
                           try {
-                            await deleteWard.mutateAsync(w.id);
+                            await deleteLingkungan.mutateAsync(w.id);
                           } catch (err) {
                             setErrorMsg(
                               err instanceof Error
@@ -579,7 +597,7 @@ export default function TerritoryPage() {
                     </div>
                   </div>
                 ))}
-                {wards.length === 0 && (
+                {lingkunganList.length === 0 && (
                   <p className="py-3 text-sm text-muted">
                     {t("ref.emptyList")}
                   </p>

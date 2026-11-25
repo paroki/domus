@@ -3,8 +3,8 @@ import test from "node:test";
 import {
   ApiError,
   api,
-  getActiveParishId,
-  setActiveParishId,
+  getActiveParokiId,
+  setActiveParokiId,
   unwrap,
   unwrapMeta,
   unwrapVoid,
@@ -137,7 +137,7 @@ test("throws ApiError with structured details on 4xx and 5xx", async () => {
   assert.equal(caught500.message, "Friendly feature message");
 });
 
-test("injects X-Paroki-Id header when active parish is set", async () => {
+test("injects X-Paroki-Id header when active paroki is set", async () => {
   const seenHeaders: (string | null)[] = [];
   const mockFetch = (async (input: RequestInfo | URL) => {
     const req = input as Request;
@@ -149,20 +149,20 @@ test("injects X-Paroki-Id header when active parish is set", async () => {
   }) as typeof fetch;
 
   try {
-    setActiveParishId("parish-abc");
-    assert.equal(getActiveParishId(), "parish-abc");
+    setActiveParokiId("paroki-abc");
+    assert.equal(getActiveParokiId(), "paroki-abc");
     await unwrap(
       api.GET("/health", { baseUrl: "http://localhost/api", fetch: mockFetch }),
     );
 
-    setActiveParishId(null);
+    setActiveParokiId(null);
     await unwrap(
       api.GET("/health", { baseUrl: "http://localhost/api", fetch: mockFetch }),
     );
 
-    assert.deepEqual(seenHeaders, ["parish-abc", null]);
+    assert.deepEqual(seenHeaders, ["paroki-abc", null]);
   } finally {
-    setActiveParishId(null);
+    setActiveParokiId(null);
   }
 });
 

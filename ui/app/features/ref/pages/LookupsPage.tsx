@@ -11,7 +11,7 @@ import {
 import { useCurrentIdentity, useLookupsSearch } from "../api/queries";
 import type { Lookup } from "../api/types";
 import {
-  isParishAdmin,
+  isParokiAdmin,
   isSuperAdmin,
   LOOKUP_CATEGORIES,
   slugifyCode,
@@ -25,9 +25,9 @@ export default function LookupsPage() {
   const { t } = useTranslation();
   const { data: me } = useCurrentIdentity();
   const superAdmin = isSuperAdmin(me?.roles);
-  const parishAdmin = isParishAdmin(me?.roles);
-  const allowed = superAdmin || parishAdmin;
-  const bothRoles = superAdmin && parishAdmin;
+  const parokiAdmin = isParokiAdmin(me?.roles);
+  const allowed = superAdmin || parokiAdmin;
+  const bothRoles = superAdmin && parokiAdmin;
 
   const [categoryFilter, setCategoryFilter] = useState("");
   const [scopeFilter, setScopeFilter] = useState<"all" | "global" | "paroki">(
@@ -38,7 +38,7 @@ export default function LookupsPage() {
   const [code, setCode] = useState("");
   const [label, setLabel] = useState("");
   const [sortOrder, setSortOrder] = useState("0");
-  const [asGlobal, setAsGlobal] = useState(superAdmin && !parishAdmin);
+  const [asGlobal, setAsGlobal] = useState(superAdmin && !parokiAdmin);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const lookupsQuery = useLookupsSearch(
@@ -61,7 +61,7 @@ export default function LookupsPage() {
     setCode("");
     setLabel("");
     setSortOrder("0");
-    setAsGlobal(superAdmin && !parishAdmin);
+    setAsGlobal(superAdmin && !parokiAdmin);
   }
 
   function startEdit(item: Lookup) {
@@ -74,7 +74,7 @@ export default function LookupsPage() {
 
   function canModify(item: Lookup): boolean {
     if (!item.parokiId) return superAdmin;
-    return parishAdmin && Boolean(me?.activeParokiId);
+    return parokiAdmin && Boolean(me?.activeParokiId);
   }
 
   async function handleSubmit(e: FormEvent) {

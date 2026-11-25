@@ -3,45 +3,45 @@ import { type FormEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 
-import { useUpdateCurrentParishProfile } from "../api/actions";
-import { useCurrentIdentity, useCurrentParish } from "../api/queries";
-import { isParishAdmin } from "../model";
+import { useUpdateCurrentParokiProfile } from "../api/actions";
+import { useCurrentIdentity, useCurrentParoki } from "../api/queries";
+import { isParokiAdmin } from "../model";
 
 export function meta() {
   return [{ title: "Profil Paroki — Domus" }];
 }
 
-export default function ParishProfilePage() {
+export default function ParokiProfilePage() {
   const { t } = useTranslation();
   const { data: me } = useCurrentIdentity();
-  const canManage = isParishAdmin(me?.roles);
+  const canManage = isParokiAdmin(me?.roles);
   const {
-    data: parish,
+    data: paroki,
     isLoading,
-    error: parishError,
-  } = useCurrentParish(Boolean(me?.activeParokiId));
-  const updateProfile = useUpdateCurrentParishProfile();
+    error: parokiError,
+  } = useCurrentParoki(Boolean(me?.activeParokiId));
+  const updateProfile = useUpdateCurrentParokiProfile();
 
-  const [name, setName] = useState("");
-  const [patronSaint, setPatronSaint] = useState("");
-  const [pastorName, setPastorName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [nama, setNama] = useState("");
+  const [pelindung, setPelindung] = useState("");
+  const [pastor, setPastor] = useState("");
+  const [telepon, setTelepon] = useState("");
   const [email, setEmail] = useState("");
-  const [address, setAddress] = useState("");
+  const [alamat, setAlamat] = useState("");
   const [website, setWebsite] = useState("");
   const [profileSaved, setProfileSaved] = useState(false);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!parish) return;
-    setName(parish.nama ?? "");
-    setPatronSaint(parish.pelindung ?? "");
-    setPastorName(parish.pastor ?? "");
-    setPhone(parish.telepon ?? "");
-    setEmail(parish.email ?? "");
-    setAddress(parish.alamat ?? "");
-    setWebsite(parish.website ?? "");
-  }, [parish]);
+    if (!paroki) return;
+    setNama(paroki.nama ?? "");
+    setPelindung(paroki.pelindung ?? "");
+    setPastor(paroki.pastor ?? "");
+    setTelepon(paroki.telepon ?? "");
+    setEmail(paroki.email ?? "");
+    setAlamat(paroki.alamat ?? "");
+    setWebsite(paroki.website ?? "");
+  }, [paroki]);
 
   async function handleSaveProfile(e: FormEvent) {
     e.preventDefault();
@@ -49,12 +49,12 @@ export default function ParishProfilePage() {
     setProfileSaved(false);
     try {
       await updateProfile.mutateAsync({
-        nama: name.trim(),
-        pelindung: patronSaint.trim(),
-        pastor: pastorName.trim(),
-        telepon: phone.trim(),
+        nama: nama.trim(),
+        pelindung: pelindung.trim(),
+        pastor: pastor.trim(),
+        telepon: telepon.trim(),
         email: email.trim(),
-        alamat: address.trim(),
+        alamat: alamat.trim(),
         website: website.trim(),
       });
       setProfileSaved(true);
@@ -89,8 +89,8 @@ export default function ParishProfilePage() {
         </div>
       ) : isLoading ? (
         <p className="text-sm text-muted">{t("auth.loading")}</p>
-      ) : parishError ? (
-        <p className="text-sm text-danger">{parishError.message}</p>
+      ) : parokiError ? (
+        <p className="text-sm text-danger">{parokiError.message}</p>
       ) : (
         <>
           {feedbackError && (
@@ -108,7 +108,7 @@ export default function ParishProfilePage() {
           >
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-fg">
-                {parish?.nama} ({parish?.kode})
+                {paroki?.nama} ({paroki?.kode})
               </h2>
               {profileSaved && (
                 <span className="text-xs font-medium text-primary">
@@ -124,8 +124,8 @@ export default function ParishProfilePage() {
                 </span>
                 <input
                   required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  value={nama}
+                  onChange={(e) => setNama(e.target.value)}
                   className="h-10 rounded-lg border border-line bg-canvas px-3 text-fg"
                 />
               </label>
@@ -134,8 +134,8 @@ export default function ParishProfilePage() {
                   {t("ref.patronSaintLabel")}
                 </span>
                 <input
-                  value={patronSaint}
-                  onChange={(e) => setPatronSaint(e.target.value)}
+                  value={pelindung}
+                  onChange={(e) => setPelindung(e.target.value)}
                   className="h-10 rounded-lg border border-line bg-canvas px-3 text-fg"
                 />
               </label>
@@ -144,8 +144,8 @@ export default function ParishProfilePage() {
                   {t("ref.pastorNameLabel")}
                 </span>
                 <input
-                  value={pastorName}
-                  onChange={(e) => setPastorName(e.target.value)}
+                  value={pastor}
+                  onChange={(e) => setPastor(e.target.value)}
                   className="h-10 rounded-lg border border-line bg-canvas px-3 text-fg"
                 />
               </label>
@@ -154,8 +154,8 @@ export default function ParishProfilePage() {
                   {t("ref.phoneLabel")}
                 </span>
                 <input
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  value={telepon}
+                  onChange={(e) => setTelepon(e.target.value)}
                   placeholder="+62812..."
                   className="h-10 rounded-lg border border-line bg-canvas px-3 text-fg"
                 />
@@ -189,8 +189,8 @@ export default function ParishProfilePage() {
               </span>
               <textarea
                 rows={2}
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
+                value={alamat}
+                onChange={(e) => setAlamat(e.target.value)}
                 className="rounded-lg border border-line bg-canvas p-3 text-fg"
               />
             </label>

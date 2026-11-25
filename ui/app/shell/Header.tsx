@@ -6,8 +6,8 @@ import { Link, useNavigate } from "react-router";
 import {
   useLogout,
   useMe,
-  useSessionParishes,
-  useSwitchParish,
+  useSessionParoki,
+  useSwitchParoki,
 } from "~/shared/api/session";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -24,9 +24,9 @@ export function Header() {
   const navigate = useNavigate();
   const { data: me } = useMe();
   const logout = useLogout();
-  const switchParish = useSwitchParish();
+  const switchParoki = useSwitchParoki();
   const isSuperAdmin = Boolean(me?.roles?.includes("user:super-admin"));
-  const parishesQuery = useSessionParishes(
+  const parokiQuery = useSessionParoki(
     {
       filter: isSuperAdmin
         ? { active: true }
@@ -34,28 +34,28 @@ export function Header() {
     },
     Boolean(me),
   );
-  const parishes =
-    parishesQuery.data?.pages.flatMap((page) => page.data ?? []) ?? [];
-  const activeParish = parishes.find((p) => p.id === me?.activeParokiId);
-  const [parishOpen, setParishOpen] = useState(false);
-  const parishRef = useRef<HTMLDivElement>(null);
+  const parokiList =
+    parokiQuery.data?.pages.flatMap((page) => page.data ?? []) ?? [];
+  const activeParoki = parokiList.find((p) => p.id === me?.activeParokiId);
+  const [parokiOpen, setParokiOpen] = useState(false);
+  const parokiRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!open && !parishOpen) return;
+    if (!open && !parokiOpen) return;
     function onPointerDown(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
-      if (parishRef.current && !parishRef.current.contains(e.target as Node)) {
-        setParishOpen(false);
+      if (parokiRef.current && !parokiRef.current.contains(e.target as Node)) {
+        setParokiOpen(false);
       }
     }
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
         setOpen(false);
-        setParishOpen(false);
+        setParokiOpen(false);
       }
     }
     document.addEventListener("mousedown", onPointerDown);
@@ -64,7 +64,7 @@ export function Header() {
       document.removeEventListener("mousedown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [open, parishOpen]);
+  }, [open, parokiOpen]);
 
   async function handleLogout() {
     setOpen(false);
@@ -87,45 +87,45 @@ export function Header() {
 
       <div className="ml-auto flex items-center gap-1">
         {me && (
-          <div ref={parishRef} className="relative mr-1">
+          <div ref={parokiRef} className="relative mr-1">
             <button
               type="button"
               aria-label={t("header.parishSwitcher")}
-              aria-expanded={parishOpen}
+              aria-expanded={parokiOpen}
               aria-haspopup="menu"
-              onClick={() => setParishOpen((v) => !v)}
+              onClick={() => setParokiOpen((v) => !v)}
               className="inline-flex h-9 max-w-44 items-center gap-1.5 rounded-full border border-line bg-canvas px-3 text-xs font-semibold text-fg hover:bg-fg/8"
             >
               <Church aria-hidden className="size-3.5 shrink-0 text-muted" />
               <span className="truncate">
-                {activeParish?.nama ?? t("header.selectParish")}
+                {activeParoki?.nama ?? t("header.selectParish")}
               </span>
               <ChevronDown
                 aria-hidden
                 className="size-3.5 shrink-0 text-muted"
               />
             </button>
-            {parishOpen && (
+            {parokiOpen && (
               <div
                 role="menu"
                 aria-label={t("header.parishSwitcher")}
                 className="absolute right-0 z-50 mt-2 max-h-64 w-60 overflow-y-auto rounded-xl border border-line bg-surface p-1.5 shadow-lg"
               >
-                {parishes.length === 0 ? (
+                {parokiList.length === 0 ? (
                   <p className="px-3 py-2 text-xs text-muted">
                     {t("ref.emptyList")}
                   </p>
                 ) : (
-                  parishes.map((p) => (
+                  parokiList.map((p) => (
                     <button
                       key={p.id}
                       type="button"
                       role="menuitem"
-                      disabled={switchParish.isPending}
+                      disabled={switchParoki.isPending}
                       onClick={async () => {
                         if (!p.id) return;
-                        setParishOpen(false);
-                        await switchParish.mutateAsync({
+                        setParokiOpen(false);
+                        await switchParoki.mutateAsync({
                           activeParokiId: p.id,
                         });
                       }}

@@ -4,16 +4,16 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 
 import {
-  useActivateSessionParish,
-  useCreateDiocese,
-  useCreateParish,
-  useDeleteDiocese,
-  useDeleteParish,
+  useActivateSessionParoki,
+  useCreateKeuskupan,
+  useCreateParoki,
+  useDeleteKeuskupan,
+  useDeleteParoki,
 } from "../api/actions";
 import {
   useCurrentIdentity,
-  useDiocesesSearch,
-  useParishesSearch,
+  useKeuskupanSearch,
+  useParokiSearch,
 } from "../api/queries";
 import { isSuperAdmin, slugifyCode } from "../model";
 
@@ -21,44 +21,45 @@ export function meta() {
   return [{ title: "Keuskupan & Paroki — Domus" }];
 }
 
-export default function ParishesPage() {
+export default function ParokiPage() {
   const { t } = useTranslation();
   const { data: me } = useCurrentIdentity();
   const allowed = isSuperAdmin(me?.roles);
 
-  const diocesesQuery = useDiocesesSearch({}, allowed);
-  const parishesQuery = useParishesSearch({}, allowed);
-  const dioceses = diocesesQuery.data?.pages.flatMap((p) => p.data ?? []) ?? [];
-  const parishes = parishesQuery.data?.pages.flatMap((p) => p.data ?? []) ?? [];
+  const keuskupanQuery = useKeuskupanSearch({}, allowed);
+  const parokiQuery = useParokiSearch({}, allowed);
+  const keuskupanList =
+    keuskupanQuery.data?.pages.flatMap((p) => p.data ?? []) ?? [];
+  const parokiList = parokiQuery.data?.pages.flatMap((p) => p.data ?? []) ?? [];
 
-  const createDiocese = useCreateDiocese();
-  const deleteDiocese = useDeleteDiocese();
-  const createParish = useCreateParish();
-  const deleteParish = useDeleteParish();
-  const activateSessionParish = useActivateSessionParish();
+  const createKeuskupan = useCreateKeuskupan();
+  const deleteKeuskupan = useDeleteKeuskupan();
+  const createParoki = useCreateParoki();
+  const deleteParoki = useDeleteParoki();
+  const activateSessionParoki = useActivateSessionParoki();
 
-  const [dCode, setDCode] = useState("");
-  const [dName, setDName] = useState("");
-  const [dBishop, setDBishop] = useState("");
+  const [kKode, setKKode] = useState("");
+  const [kNama, setKNama] = useState("");
+  const [kUskup, setKUskup] = useState("");
 
-  const [pDioceseId, setPDioceseId] = useState("");
-  const [pCode, setPCode] = useState("");
-  const [pName, setPName] = useState("");
+  const [pKeuskupanId, setPKeuskupanId] = useState("");
+  const [pKode, setPKode] = useState("");
+  const [pNama, setPNama] = useState("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  async function handleCreateDiocese(e: FormEvent) {
+  async function handleCreateKeuskupan(e: FormEvent) {
     e.preventDefault();
     setErrorMsg(null);
     try {
-      const created = await createDiocese.mutateAsync({
-        kode: slugifyCode(dCode || dName),
-        nama: dName.trim(),
-        uskup: dBishop.trim() || undefined,
+      const created = await createKeuskupan.mutateAsync({
+        kode: slugifyCode(kKode || kNama),
+        nama: kNama.trim(),
+        uskup: kUskup.trim() || undefined,
       });
-      setDCode("");
-      setDName("");
-      setDBishop("");
-      if (!pDioceseId && created.id) setPDioceseId(created.id);
+      setKKode("");
+      setKNama("");
+      setKUskup("");
+      if (!pKeuskupanId && created.id) setPKeuskupanId(created.id);
     } catch (err) {
       setErrorMsg(
         err instanceof Error ? err.message : "Gagal membuat keuskupan.",
@@ -66,24 +67,24 @@ export default function ParishesPage() {
     }
   }
 
-  async function handleCreateParish(e: FormEvent) {
+  async function handleCreateParoki(e: FormEvent) {
     e.preventDefault();
     setErrorMsg(null);
-    const keuskupanId = pDioceseId || dioceses[0]?.id;
+    const keuskupanId = pKeuskupanId || keuskupanList[0]?.id;
     if (!keuskupanId) {
       setErrorMsg(t("ref.selectDioceseFirst"));
       return;
     }
     try {
-      const created = await createParish.mutateAsync({
+      const created = await createParoki.mutateAsync({
         keuskupanId,
-        kode: slugifyCode(pCode || pName),
-        nama: pName.trim(),
+        kode: slugifyCode(pKode || pNama),
+        nama: pNama.trim(),
       });
-      setPCode("");
-      setPName("");
+      setPKode("");
+      setPNama("");
       if (!me?.activeParokiId && created.id) {
-        await activateSessionParish.mutateAsync(created.id);
+        await activateSessionParoki.mutateAsync(created.id);
       }
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "Gagal membuat paroki.");
@@ -126,32 +127,32 @@ export default function ParishesPage() {
               {t("ref.diocesesSection")}
             </h2>
             <form
-              onSubmit={handleCreateDiocese}
+              onSubmit={handleCreateKeuskupan}
               className="grid gap-3 sm:grid-cols-4"
             >
               <input
                 required
-                value={dCode}
-                onChange={(e) => setDCode(e.target.value)}
+                value={kKode}
+                onChange={(e) => setKKode(e.target.value)}
                 placeholder={t("ref.codePlaceholder")}
                 className="h-9 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
               />
               <input
                 required
-                value={dName}
-                onChange={(e) => setDName(e.target.value)}
+                value={kNama}
+                onChange={(e) => setKNama(e.target.value)}
                 placeholder={t("ref.dioceseNamePlaceholder")}
                 className="h-9 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
               />
               <input
-                value={dBishop}
-                onChange={(e) => setDBishop(e.target.value)}
+                value={kUskup}
+                onChange={(e) => setKUskup(e.target.value)}
                 placeholder={t("ref.bishopPlaceholder")}
                 className="h-9 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
               />
               <button
                 type="submit"
-                disabled={createDiocese.isPending}
+                disabled={createKeuskupan.isPending}
                 className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-on-primary disabled:opacity-50"
               >
                 <Plus aria-hidden className="size-4" />
@@ -160,7 +161,7 @@ export default function ParishesPage() {
             </form>
 
             <div className="divide-y divide-line">
-              {dioceses.map((d) => (
+              {keuskupanList.map((d) => (
                 <div
                   key={d.id}
                   className="flex items-center justify-between py-2.5"
@@ -181,7 +182,7 @@ export default function ParishesPage() {
                       if (!d.id) return;
                       setErrorMsg(null);
                       try {
-                        await deleteDiocese.mutateAsync(d.id);
+                        await deleteKeuskupan.mutateAsync(d.id);
                       } catch (err) {
                         setErrorMsg(
                           err instanceof Error
@@ -196,7 +197,7 @@ export default function ParishesPage() {
                   </button>
                 </div>
               ))}
-              {dioceses.length === 0 && (
+              {keuskupanList.length === 0 && (
                 <p className="py-3 text-sm text-muted">{t("ref.emptyList")}</p>
               )}
             </div>
@@ -207,16 +208,16 @@ export default function ParishesPage() {
               {t("ref.parishesSection")}
             </h2>
             <form
-              onSubmit={handleCreateParish}
+              onSubmit={handleCreateParoki}
               className="grid gap-3 sm:grid-cols-4"
             >
               <select
-                value={pDioceseId || dioceses[0]?.id || ""}
-                onChange={(e) => setPDioceseId(e.target.value)}
+                value={pKeuskupanId || keuskupanList[0]?.id || ""}
+                onChange={(e) => setPKeuskupanId(e.target.value)}
                 className="h-9 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
               >
                 <option value="">{t("ref.selectDiocese")}</option>
-                {dioceses.map((d) => (
+                {keuskupanList.map((d) => (
                   <option key={d.id} value={d.id}>
                     {d.nama}
                   </option>
@@ -224,21 +225,21 @@ export default function ParishesPage() {
               </select>
               <input
                 required
-                value={pCode}
-                onChange={(e) => setPCode(e.target.value)}
+                value={pKode}
+                onChange={(e) => setPKode(e.target.value)}
                 placeholder={t("ref.codePlaceholder")}
                 className="h-9 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
               />
               <input
                 required
-                value={pName}
-                onChange={(e) => setPName(e.target.value)}
+                value={pNama}
+                onChange={(e) => setPNama(e.target.value)}
                 placeholder={t("ref.parishNamePlaceholder")}
                 className="h-9 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
               />
               <button
                 type="submit"
-                disabled={createParish.isPending}
+                disabled={createParoki.isPending}
                 className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-on-primary disabled:opacity-50"
               >
                 <Plus aria-hidden className="size-4" />
@@ -247,7 +248,7 @@ export default function ParishesPage() {
             </form>
 
             <div className="divide-y divide-line">
-              {parishes.map((p) => (
+              {parokiList.map((p) => (
                 <div
                   key={p.id}
                   className="flex items-center justify-between py-2.5"
@@ -267,7 +268,7 @@ export default function ParishesPage() {
                       if (!p.id) return;
                       setErrorMsg(null);
                       try {
-                        await deleteParish.mutateAsync(p.id);
+                        await deleteParoki.mutateAsync(p.id);
                       } catch (err) {
                         setErrorMsg(
                           err instanceof Error
@@ -282,7 +283,7 @@ export default function ParishesPage() {
                   </button>
                 </div>
               ))}
-              {parishes.length === 0 && (
+              {parokiList.length === 0 && (
                 <p className="py-3 text-sm text-muted">{t("ref.emptyList")}</p>
               )}
             </div>

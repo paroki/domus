@@ -8,7 +8,7 @@ import {
 } from "@tanstack/react-query";
 import {
   api,
-  setActiveParish,
+  setActiveParoki,
   unwrap,
   unwrapMeta,
   unwrapVoid,
@@ -23,7 +23,7 @@ export const sessionKeys = {
   me: ["user", "me"] as const,
   sessions: ["user", "sessions"] as const,
   ref: ["ref"] as const,
-  parishes: (params: Omit<SearchParokiRequest, "cursor"> = {}) =>
+  paroki: (params: Omit<SearchParokiRequest, "cursor"> = {}) =>
     ["ref", "paroki", params] as const,
 };
 
@@ -39,7 +39,7 @@ export function useMe() {
   return useQuery(meQueryOptions());
 }
 
-export function useSwitchParish() {
+export function useSwitchParoki() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (body: SwitchSessionParokiRequest) => {
@@ -47,7 +47,7 @@ export function useSwitchParish() {
       return body.activeParokiId;
     },
     onSuccess: async (parokiId) => {
-      setActiveParish(parokiId);
+      setActiveParoki(parokiId);
       await Promise.all([
         qc.invalidateQueries({ queryKey: sessionKeys.me }),
         qc.invalidateQueries({ queryKey: sessionKeys.sessions }),
@@ -64,19 +64,19 @@ export function useLogout() {
       await api.POST("/auth/logout");
     },
     onSettled: () => {
-      setActiveParish(null);
+      setActiveParoki(null);
       qc.clear();
     },
   });
 }
 
-export function useSessionParishes(
+export function useSessionParoki(
   filter: Omit<SearchParokiRequest, "cursor"> = {},
   enabled = true,
 ) {
   return useInfiniteQuery(
     infiniteQueryOptions({
-      queryKey: sessionKeys.parishes(filter),
+      queryKey: sessionKeys.paroki(filter),
       initialPageParam: undefined as string | undefined,
       enabled,
       queryFn: ({ pageParam }) =>

@@ -1,7 +1,7 @@
 import type {
   SearchAccountsRequest,
   SearchOrgMembersRequest,
-  SearchParishMembersRequest,
+  SearchParokiMembersRequest,
   SearchSessionsRequest,
   SearchUsersRequest,
 } from "./types";
@@ -18,18 +18,18 @@ export const userKeys = {
   list: (params?: Omit<SearchUsersRequest, "cursor">) =>
     [...userKeys.all, "list", params ?? {}] as const,
   detail: (id: string) => [...userKeys.all, "detail", id] as const,
-  parishes: (q?: string) => [...userKeys.all, "parishes", q ?? ""] as const,
-  parishMembers: (
-    parishId: string,
-    params?: Omit<SearchParishMembersRequest, "cursor">,
-  ) => [...userKeys.all, "parishMembers", parishId, params ?? {}] as const,
-  orgs: (parishId: string) => [...userKeys.all, "orgs", parishId] as const,
+  paroki: (q?: string) => [...userKeys.all, "paroki", q ?? ""] as const,
+  parokiMembers: (
+    parokiId: string,
+    params?: Omit<SearchParokiMembersRequest, "cursor">,
+  ) => [...userKeys.all, "parokiMembers", parokiId, params ?? {}] as const,
+  orgs: (parokiId: string) => [...userKeys.all, "orgs", parokiId] as const,
   orgMembers: (
     orgId: string,
     params?: Omit<SearchOrgMembersRequest, "cursor">,
   ) => [...userKeys.all, "orgMembers", orgId, params ?? {}] as const,
   lookups: (category: string) =>
     [...userKeys.all, "lookups", category] as const,
-  periods: (parishId: string) =>
-    [...userKeys.all, "periods", parishId] as const,
+  periods: (parokiId: string) =>
+    [...userKeys.all, "periods", parokiId] as const,
 };

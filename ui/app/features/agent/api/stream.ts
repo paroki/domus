@@ -1,7 +1,7 @@
 import {
   type ApiEnvelope,
   ApiError,
-  getActiveParishId,
+  getActiveParokiId,
 } from "~/shared/api/client";
 import { resolveErrorMessage } from "~/shared/api/errors";
 import { createSSEParser, type SSEFrame } from "../model";
@@ -23,9 +23,9 @@ export async function streamAgentChat({
     "Content-Type": "application/json",
     Accept: "text/event-stream",
   });
-  const parishId = getActiveParishId();
-  if (parishId) {
-    headers.set("X-Paroki-Id", parishId);
+  const parokiId = getActiveParokiId();
+  if (parokiId) {
+    headers.set("X-Paroki-Id", parokiId);
   }
 
   const response = await fetch("/api/agent/chat", {

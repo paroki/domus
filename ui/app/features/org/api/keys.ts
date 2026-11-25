@@ -15,8 +15,8 @@ export const orgKeys = {
     [...orgKeys.all, "invites", orgId, params ?? {}] as const,
   invitePreview: (code: string) =>
     [...orgKeys.all, "invite-preview", code] as const,
-  zones: () => [...orgKeys.all, "ref-zones"] as const,
-  wards: () => [...orgKeys.all, "ref-wards"] as const,
+  wilayah: () => [...orgKeys.all, "ref-wilayah"] as const,
+  lingkungan: () => [...orgKeys.all, "ref-lingkungan"] as const,
   positionLookups: () => [...orgKeys.all, "ref-position-lookups"] as const,
   periods: () => [...orgKeys.all, "ref-periods"] as const,
   authProviders: () => ["auth", "providers"] as const,

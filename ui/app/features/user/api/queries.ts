@@ -12,7 +12,7 @@ import { USER_ERRORS } from "./errors";
 import { userKeys } from "./keys";
 import type {
   SearchOrgMembersRequest,
-  SearchParishMembersRequest,
+  SearchParokiMembersRequest,
   SearchUsersRequest,
 } from "./types";
 
@@ -104,9 +104,9 @@ export function useUserDetail(id: string | undefined, enabled = true) {
   });
 }
 
-export function useDirectoryParishes(enabled = true) {
+export function useDirectoryParoki(enabled = true) {
   return useQuery({
-    queryKey: userKeys.parishes(),
+    queryKey: userKeys.paroki(),
     enabled,
     queryFn: () =>
       unwrap(
@@ -116,25 +116,25 @@ export function useDirectoryParishes(enabled = true) {
   });
 }
 
-export function useUserParishMemberships(
+export function useUserParokiMemberships(
   userId: string | undefined,
   email: string | undefined,
   enabled = true,
 ) {
-  const parishesQuery = useDirectoryParishes(enabled);
-  const parishes = parishesQuery.data ?? [];
+  const parokiQuery = useDirectoryParoki(enabled);
+  const parokiList = parokiQuery.data ?? [];
 
   const memberQueries = useQueries({
-    queries: parishes.map((parish) => ({
-      queryKey: userKeys.parishMembers(parish.id ?? "", {
+    queries: parokiList.map((paroki) => ({
+      queryKey: userKeys.parokiMembers(paroki.id ?? "", {
         q: email,
         limit: 20,
       }),
-      enabled: Boolean(enabled && userId && email && parish.id),
+      enabled: Boolean(enabled && userId && email && paroki.id),
       queryFn: () =>
         unwrap(
           api.POST("/ref/paroki/{id}/members/search", {
-            params: { path: { id: parish.id ?? "" } },
+            params: { path: { id: paroki.id ?? "" } },
             body: { q: email, limit: 20 },
           }),
           USER_ERRORS,
@@ -142,33 +142,32 @@ export function useUserParishMemberships(
     })),
   });
 
-  const memberships = parishes.flatMap((parish, idx) => {
+  const memberships = parokiList.flatMap((paroki, idx) => {
     const match = memberQueries[idx]?.data?.find((m) => m.userId === userId);
-    return match ? [{ parish, member: match }] : [];
+    return match ? [{ paroki, member: match }] : [];
   });
 
   return {
-    parishes,
+    paroki: parokiList,
     memberships,
-    isLoading:
-      parishesQuery.isLoading || memberQueries.some((q) => q.isLoading),
+    isLoading: parokiQuery.isLoading || memberQueries.some((q) => q.isLoading),
   };
 }
 
-export function useDirectoryParishMembers(
-  parishId: string | undefined,
-  filter: Omit<SearchParishMembersRequest, "cursor"> = {},
+export function useDirectoryParokiMembers(
+  parokiId: string | undefined,
+  filter: Omit<SearchParokiMembersRequest, "cursor"> = {},
   enabled = true,
 ) {
   return useInfiniteQuery(
     infiniteQueryOptions({
-      queryKey: userKeys.parishMembers(parishId ?? "", filter),
-      enabled: Boolean(parishId) && enabled,
+      queryKey: userKeys.parokiMembers(parokiId ?? "", filter),
+      enabled: Boolean(parokiId) && enabled,
       initialPageParam: undefined as string | undefined,
       queryFn: ({ pageParam }) =>
         unwrapMeta(
           api.POST("/ref/paroki/{id}/members/search", {
-            params: { path: { id: parishId ?? "" } },
+            params: { path: { id: parokiId ?? "" } },
             body: {
               ...filter,
               cursor: pageParam,
@@ -183,10 +182,10 @@ export function useDirectoryParishMembers(
   );
 }
 
-export function useDirectoryOrgs(parishId: string | undefined, enabled = true) {
+export function useDirectoryOrgs(parokiId: string | undefined, enabled = true) {
   return useQuery({
-    queryKey: userKeys.orgs(parishId ?? ""),
-    enabled: Boolean(parishId) && enabled,
+    queryKey: userKeys.orgs(parokiId ?? ""),
+    enabled: Boolean(parokiId) && enabled,
     queryFn: () =>
       unwrap(
         api.POST("/orgs/search", {
@@ -200,10 +199,10 @@ export function useDirectoryOrgs(parishId: string | undefined, enabled = true) {
 export function useUserOrgMemberships(
   userId: string | undefined,
   email: string | undefined,
-  parishId: string | undefined,
+  parokiId: string | undefined,
   enabled = true,
 ) {
-  const orgsQuery = useDirectoryOrgs(parishId, enabled);
+  const orgsQuery = useDirectoryOrgs(parokiId, enabled);
   const orgs = orgsQuery.data ?? [];
   const inspectableOrgs = orgs.filter(
     (o) => Boolean(o.id) && (o.myRole === "admin" || o.myRole === "member"),
@@ -283,12 +282,12 @@ export function useDirectoryLookups(category: string, enabled = true) {
 }
 
 export function useDirectoryPeriods(
-  parishId: string | undefined,
+  parokiId: string | undefined,
   enabled = true,
 ) {
   return useQuery({
-    queryKey: userKeys.periods(parishId ?? ""),
-    enabled: Boolean(parishId) && enabled,
+    queryKey: userKeys.periods(parokiId ?? ""),
+    enabled: Boolean(parokiId) && enabled,
     queryFn: () =>
       unwrap(
         api.POST("/ref/periods/search", { body: { limit: 100 } }),
@@ -298,14 +297,14 @@ export function useDirectoryPeriods(
 }
 
 export function useDirectoryManagedOrgUsers(
-  parishId: string | undefined,
+  parokiId: string | undefined,
   q: string,
   enabled = true,
 ): {
   users: DirectoryOrgUser[];
   isLoading: boolean;
 } {
-  const orgsQuery = useDirectoryOrgs(parishId, enabled);
+  const orgsQuery = useDirectoryOrgs(parokiId, enabled);
   const manageableOrgs = (orgsQuery.data ?? []).filter(
     (o) => Boolean(o.id) && o.myRole === "admin",
   );
@@ -317,7 +316,7 @@ export function useDirectoryManagedOrgUsers(
         q: q || undefined,
         limit: 100,
       }),
-      enabled: Boolean(enabled && parishId && org.id),
+      enabled: Boolean(enabled && parokiId && org.id),
       queryFn: () =>
         unwrap(
           api.POST("/orgs/{id}/members/search", {

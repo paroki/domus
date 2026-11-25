@@ -50,25 +50,25 @@ export class ApiError extends Error {
   }
 }
 
-let activeParishId: string | null = null;
+let activeParokiId: string | null = null;
 
-export function setActiveParishId(parishId: string | null): void {
-  activeParishId = parishId;
+export function setActiveParokiId(parokiId: string | null): void {
+  activeParokiId = parokiId;
 }
 
-export function getActiveParishId(): string | null {
-  return activeParishId;
+export function getActiveParokiId(): string | null {
+  return activeParokiId;
 }
 
-export const setActiveParish = setActiveParishId;
-export const getActiveParish = getActiveParishId;
+export const setActiveParoki = setActiveParokiId;
+export const getActiveParoki = getActiveParokiId;
 
 export const api = createClient<paths>({ baseUrl: "/api" });
 
 api.use({
   onRequest({ request }) {
-    if (activeParishId) {
-      request.headers.set("X-Paroki-Id", activeParishId);
+    if (activeParokiId) {
+      request.headers.set("X-Paroki-Id", activeParokiId);
     }
     return request;
   },

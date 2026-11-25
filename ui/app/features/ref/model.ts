@@ -9,7 +9,7 @@ import {
 import type { AppDef } from "~/shared/app-def";
 
 export const ROLE_SUPER_ADMIN = "user:super-admin";
-export const ROLE_PARISH_ADMIN = "ref:paroki-admin";
+export const ROLE_PAROKI_ADMIN = "ref:paroki-admin";
 
 export const LOOKUP_CATEGORIES = [
   "sacrament",
@@ -25,12 +25,12 @@ export function isSuperAdmin(roles?: string[]): boolean {
   return Boolean(roles?.includes(ROLE_SUPER_ADMIN));
 }
 
-export function isParishAdmin(roles?: string[]): boolean {
-  return Boolean(roles?.includes(ROLE_PARISH_ADMIN));
+export function isParokiAdmin(roles?: string[]): boolean {
+  return Boolean(roles?.includes(ROLE_PAROKI_ADMIN));
 }
 
 export function hasAnyRefAdminRole(roles?: string[]): boolean {
-  return isSuperAdmin(roles) || isParishAdmin(roles);
+  return isSuperAdmin(roles) || isParokiAdmin(roles);
 }
 
 export function slugifyCode(raw: string): string {
@@ -43,7 +43,7 @@ export function slugifyCode(raw: string): string {
 }
 
 export interface SettingsItem {
-  id: "profile" | "territory" | "lookups" | "periods" | "parishes";
+  id: "profile" | "wilayah" | "lookups" | "periods" | "paroki";
   path: string;
   label: string;
   description: string;
@@ -60,16 +60,16 @@ export const SETTINGS_ITEMS: SettingsItem[] = [
     description: "Identitas paroki aktif dan daftar admin atau anggota paroki.",
     icon: Church,
     plate: 1,
-    roles: [ROLE_PARISH_ADMIN],
+    roles: [ROLE_PAROKI_ADMIN],
   },
   {
-    id: "territory",
-    path: "/ref/territory",
+    id: "wilayah",
+    path: "/ref/wilayah",
     label: "Wilayah & Lingkungan",
     description: "Kelola wilayah, stasi, dan lingkungan paroki.",
     icon: MapPin,
     plate: 2,
-    roles: [ROLE_PARISH_ADMIN],
+    roles: [ROLE_PAROKI_ADMIN],
   },
   {
     id: "lookups",
@@ -78,7 +78,7 @@ export const SETTINGS_ITEMS: SettingsItem[] = [
     description: "Daftar nilai referensi global maupun khusus paroki.",
     icon: BookOpen,
     plate: 3,
-    roles: [ROLE_PARISH_ADMIN, ROLE_SUPER_ADMIN],
+    roles: [ROLE_PAROKI_ADMIN, ROLE_SUPER_ADMIN],
   },
   {
     id: "periods",
@@ -87,11 +87,11 @@ export const SETTINGS_ITEMS: SettingsItem[] = [
     description: "Periode tahun buku dan tahun liturgi paroki.",
     icon: CalendarRange,
     plate: 5,
-    roles: [ROLE_PARISH_ADMIN],
+    roles: [ROLE_PAROKI_ADMIN],
   },
   {
-    id: "parishes",
-    path: "/ref/parishes",
+    id: "paroki",
+    path: "/ref/paroki",
     label: "Keuskupan & Paroki",
     description: "Kelola keuskupan, tenant paroki, dan admin paroki.",
     icon: Building2,

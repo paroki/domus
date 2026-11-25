@@ -9,7 +9,7 @@ import { Card } from "~/shared/ui/Card";
 import {
   useAuthRoles,
   useDirectoryManagedOrgUsers,
-  useDirectoryParishMembers,
+  useDirectoryParokiMembers,
   useMe,
   useUsersSearch,
 } from "../api/queries";
@@ -17,7 +17,7 @@ import { UserAvatar, useDebouncedValue } from "../components/DirectoryShared";
 import {
   canManageUsers,
   isOrgAdmin,
-  isParishAdmin,
+  isParokiAdmin,
   isSuperAdmin,
   providerLabel,
 } from "../model";
@@ -58,16 +58,16 @@ export default function UserPage() {
   const [statusFilter, setStatusFilter] = useState<
     "all" | "active" | "disabled"
   >("all");
-  const [parishRoleFilter, setParishRoleFilter] = useState<
+  const [parokiRoleFilter, setParokiRoleFilter] = useState<
     "all" | "admin" | "member"
   >("all");
 
   const allowed = canManageUsers(me);
   const superAdminCaller = isSuperAdmin(me);
-  const parishAdminCaller = !superAdminCaller && isParishAdmin(me);
+  const parokiAdminCaller = !superAdminCaller && isParokiAdmin(me);
   const orgAdminCaller =
-    !superAdminCaller && !parishAdminCaller && isOrgAdmin(me);
-  const activeParishId = me?.activeParokiId ?? "";
+    !superAdminCaller && !parokiAdminCaller && isOrgAdmin(me);
+  const activeParokiId = me?.activeParokiId ?? "";
 
   const usersQuery = useUsersSearch(
     {
@@ -77,20 +77,20 @@ export default function UserPage() {
     Boolean(me && superAdminCaller),
   );
 
-  const parishMembersQuery = useDirectoryParishMembers(
-    activeParishId,
+  const parokiMembersQuery = useDirectoryParokiMembers(
+    activeParokiId,
     {
       q: debouncedQ || undefined,
       filter:
-        parishRoleFilter === "all" ? undefined : { role: parishRoleFilter },
+        parokiRoleFilter === "all" ? undefined : { role: parokiRoleFilter },
     },
-    Boolean(me && parishAdminCaller && activeParishId),
+    Boolean(me && parokiAdminCaller && activeParokiId),
   );
 
   const orgUsersQuery = useDirectoryManagedOrgUsers(
-    activeParishId,
+    activeParokiId,
     debouncedQ,
-    Boolean(me && orgAdminCaller && activeParishId),
+    Boolean(me && orgAdminCaller && activeParokiId),
   );
 
   if (me && !allowed) {
@@ -107,7 +107,7 @@ export default function UserPage() {
     );
   }
 
-  const needsActiveParish = Boolean(me) && !superAdminCaller && !activeParishId;
+  const needsActiveParoki = Boolean(me) && !superAdminCaller && !activeParokiId;
 
   const rows: UnifiedUserRow[] = (() => {
     if (superAdminCaller) {
@@ -137,9 +137,9 @@ export default function UserPage() {
         });
     }
 
-    if (parishAdminCaller) {
+    if (parokiAdminCaller) {
       const members =
-        parishMembersQuery.data?.pages.flatMap((p) => p.data ?? []) ?? [];
+        parokiMembersQuery.data?.pages.flatMap((p) => p.data ?? []) ?? [];
       return members
         .filter((m): m is typeof m & { userId: string } => Boolean(m.userId))
         .map((m) => ({
@@ -183,23 +183,23 @@ export default function UserPage() {
     !me ||
     (superAdminCaller
       ? usersQuery.isLoading
-      : parishAdminCaller
-        ? Boolean(activeParishId) && parishMembersQuery.isLoading
-        : Boolean(activeParishId) && orgUsersQuery.isLoading);
+      : parokiAdminCaller
+        ? Boolean(activeParokiId) && parokiMembersQuery.isLoading
+        : Boolean(activeParokiId) && orgUsersQuery.isLoading);
 
   const hasNextPage = superAdminCaller
     ? usersQuery.hasNextPage
-    : parishAdminCaller
-      ? parishMembersQuery.hasNextPage
+    : parokiAdminCaller
+      ? parokiMembersQuery.hasNextPage
       : false;
   const isFetchingNextPage = superAdminCaller
     ? usersQuery.isFetchingNextPage
-    : parishAdminCaller
-      ? parishMembersQuery.isFetchingNextPage
+    : parokiAdminCaller
+      ? parokiMembersQuery.isFetchingNextPage
       : false;
   const fetchNextPage = superAdminCaller
     ? () => usersQuery.fetchNextPage()
-    : () => parishMembersQuery.fetchNextPage();
+    : () => parokiMembersQuery.fetchNextPage();
 
   const statusOptions: Array<{
     value: "all" | "active" | "disabled";
@@ -226,7 +226,7 @@ export default function UserPage() {
         <p className="text-sm text-muted">{t("users.subtitle")}</p>
       </div>
 
-      {needsActiveParish ? (
+      {needsActiveParoki ? (
         <Card className="p-6 text-sm text-muted">
           {t("users.noActiveParish")}
         </Card>
@@ -267,15 +267,15 @@ export default function UserPage() {
               </div>
             )}
 
-            {parishAdminCaller && (
+            {parokiAdminCaller && (
               <div className="flex flex-wrap items-center gap-1.5">
                 {parishRoleOptions.map((opt) => (
                   <button
                     key={opt.value}
                     type="button"
-                    onClick={() => setParishRoleFilter(opt.value)}
+                    onClick={() => setParokiRoleFilter(opt.value)}
                     className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
-                      parishRoleFilter === opt.value
+                      parokiRoleFilter === opt.value
                         ? "bg-primary text-on-primary"
                         : "border border-line bg-surface text-muted hover:text-fg"
                     }`}

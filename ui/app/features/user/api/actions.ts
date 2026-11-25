@@ -1,23 +1,23 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, setActiveParish, unwrap, unwrapVoid } from "~/shared/api/client";
-import { useLogout, useSwitchParish } from "~/shared/api/session";
+import { api, setActiveParoki, unwrap, unwrapVoid } from "~/shared/api/client";
+import { useLogout, useSwitchParoki } from "~/shared/api/session";
 import { USER_ERRORS } from "./errors";
 import { userKeys } from "./keys";
 import type {
   AddOrgMemberRequest,
-  AddParishMemberRequest,
+  AddParokiMemberRequest,
   AdminCreateUserRequest,
   AdminUpdateUserRequest,
   LinkAccountOTPRequest,
   RequestOTPRequest,
   UpdateMeRequest,
   UpdateOrgMemberRequest,
-  UpdateParishMemberRequest,
+  UpdateParokiMemberRequest,
   VerifyLinkAccountRequest,
   VerifyOTPRequest,
 } from "./types";
 
-export { useLogout, useSwitchParish };
+export { useLogout, useSwitchParoki };
 
 export function useRequestOTP() {
   return useMutation({
@@ -32,7 +32,7 @@ export function useVerifyOTP() {
     mutationFn: (body: VerifyOTPRequest) =>
       unwrap(api.POST("/auth/otp/verify", { body }), USER_ERRORS),
     onSuccess: async (data) => {
-      setActiveParish(data.activeParokiId ?? null);
+      setActiveParoki(data.activeParokiId ?? null);
       await qc.invalidateQueries({ queryKey: userKeys.me() });
     },
   });
@@ -139,71 +139,71 @@ export function useAdminDeleteUser() {
   });
 }
 
-export function useAddParishMember() {
+export function useAddParokiMember() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({
-      parishId,
+      parokiId,
       body,
     }: {
-      parishId: string;
-      body: AddParishMemberRequest;
+      parokiId: string;
+      body: AddParokiMemberRequest;
     }) =>
       unwrap(
         api.POST("/ref/paroki/{id}/members", {
-          params: { path: { id: parishId } },
+          params: { path: { id: parokiId } },
           body,
         }),
         USER_ERRORS,
       ),
-    onSuccess: (_data, { parishId }) =>
+    onSuccess: (_data, { parokiId }) =>
       Promise.all([
-        qc.invalidateQueries({ queryKey: userKeys.parishMembers(parishId) }),
+        qc.invalidateQueries({ queryKey: userKeys.parokiMembers(parokiId) }),
         qc.invalidateQueries({ queryKey: userKeys.me() }),
       ]),
   });
 }
 
-export function useUpdateParishMember() {
+export function useUpdateParokiMember() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({
-      parishId,
+      parokiId,
       userId,
       body,
     }: {
-      parishId: string;
+      parokiId: string;
       userId: string;
-      body: UpdateParishMemberRequest;
+      body: UpdateParokiMemberRequest;
     }) =>
       unwrap(
         api.PATCH("/ref/paroki/{id}/members/{userId}", {
-          params: { path: { id: parishId, userId } },
+          params: { path: { id: parokiId, userId } },
           body,
         }),
         USER_ERRORS,
       ),
-    onSuccess: (_data, { parishId }) =>
+    onSuccess: (_data, { parokiId }) =>
       Promise.all([
-        qc.invalidateQueries({ queryKey: userKeys.parishMembers(parishId) }),
+        qc.invalidateQueries({ queryKey: userKeys.parokiMembers(parokiId) }),
         qc.invalidateQueries({ queryKey: userKeys.me() }),
       ]),
   });
 }
 
-export function useRemoveParishMember() {
+export function useRemoveParokiMember() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ parishId, userId }: { parishId: string; userId: string }) =>
+    mutationFn: ({ parokiId, userId }: { parokiId: string; userId: string }) =>
       unwrapVoid(
         api.DELETE("/ref/paroki/{id}/members/{userId}", {
-          params: { path: { id: parishId, userId } },
+          params: { path: { id: parokiId, userId } },
         }),
         USER_ERRORS,
       ),
-    onSuccess: (_data, { parishId }) =>
+    onSuccess: (_data, { parokiId }) =>
       Promise.all([
-        qc.invalidateQueries({ queryKey: userKeys.parishMembers(parishId) }),
+        qc.invalidateQueries({ queryKey: userKeys.parokiMembers(parokiId) }),
         qc.invalidateQueries({ queryKey: userKeys.me() }),
       ]),
   });

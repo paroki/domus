@@ -11,12 +11,12 @@ import {
   getBirthDateBounds,
   getInitials,
   isOrgAdmin,
-  isParishAdmin,
+  isParokiAdmin,
   isSuperAdmin,
   parseUserDetailTab,
   providerLabel,
   ROLE_ORG_ADMIN,
-  ROLE_PARISH_ADMIN,
+  ROLE_PAROKI_ADMIN,
   ROLE_SUPER_ADMIN,
   ROLE_USER,
   sanitizeRedirect,
@@ -59,19 +59,19 @@ test("isSuperAdmin checks user:super-admin role", () => {
 
 test("role helpers and getAvailableUserScopes resolve directory scopes", () => {
   const superUser = { roles: [ROLE_SUPER_ADMIN, ROLE_USER] } as User;
-  const parishUser = { roles: [ROLE_PARISH_ADMIN, ROLE_USER] } as User;
+  const parokiUser = { roles: [ROLE_PAROKI_ADMIN, ROLE_USER] } as User;
   const orgUser = { roles: [ROLE_ORG_ADMIN, ROLE_USER] } as User;
   const plainUser = { roles: [ROLE_USER] } as User;
 
-  assert.equal(isParishAdmin(parishUser), true);
+  assert.equal(isParokiAdmin(parokiUser), true);
   assert.equal(isOrgAdmin(orgUser), true);
   assert.equal(canManageUsers(superUser), true);
-  assert.equal(canManageUsers(parishUser), true);
+  assert.equal(canManageUsers(parokiUser), true);
   assert.equal(canManageUsers(orgUser), true);
   assert.equal(canManageUsers(plainUser), false);
 
   assert.deepEqual(getAvailableUserScopes(superUser.roles), ["global"]);
-  assert.deepEqual(getAvailableUserScopes(parishUser.roles), ["org"]);
+  assert.deepEqual(getAvailableUserScopes(parokiUser.roles), ["org"]);
   assert.deepEqual(getAvailableUserScopes(orgUser.roles), ["org"]);
   assert.deepEqual(getAvailableUserScopes([ROLE_SUPER_ADMIN, ROLE_ORG_ADMIN]), [
     "global",
@@ -134,11 +134,11 @@ test("getInitials derives two-letter initials from name or email", () => {
 test("parseUserDetailTab and getAvailableUserDetailTabs respect caller roles", () => {
   assert.deepEqual(getAvailableUserDetailTabs([ROLE_SUPER_ADMIN]), [
     "profile",
-    "parish",
+    "paroki",
     "org",
   ]);
-  assert.deepEqual(getAvailableUserDetailTabs([ROLE_PARISH_ADMIN]), [
-    "parish",
+  assert.deepEqual(getAvailableUserDetailTabs([ROLE_PAROKI_ADMIN]), [
+    "paroki",
     "org",
   ]);
   assert.deepEqual(getAvailableUserDetailTabs([ROLE_ORG_ADMIN]), ["org"]);
@@ -146,11 +146,11 @@ test("parseUserDetailTab and getAvailableUserDetailTabs respect caller roles", (
 
   assert.equal(parseUserDetailTab(null), "profile");
   assert.equal(parseUserDetailTab("profile"), "profile");
-  assert.equal(parseUserDetailTab("parish"), "parish");
+  assert.equal(parseUserDetailTab("paroki"), "paroki");
   assert.equal(parseUserDetailTab("org"), "org");
   assert.equal(parseUserDetailTab("unknown"), "profile");
-  assert.equal(parseUserDetailTab("profile", ["parish", "org"]), "parish");
-  assert.equal(parseUserDetailTab("parish", ["org"]), "org");
+  assert.equal(parseUserDetailTab("profile", ["paroki", "org"]), "paroki");
+  assert.equal(parseUserDetailTab("paroki", ["org"]), "org");
 });
 
 test("deduplicateOrgMembers merges multi-org memberships per user", () => {

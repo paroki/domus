@@ -9,26 +9,26 @@ import { useMe } from "~/shared/api/session";
 import { REF_ERRORS } from "./errors";
 import { refKeys } from "./keys";
 import type {
-  SearchDiocesesRequest,
+  SearchKeuskupanRequest,
+  SearchLingkunganRequest,
   SearchLookupsRequest,
-  SearchParishesRequest,
-  SearchParishMembersRequest,
+  SearchParokiMembersRequest,
+  SearchParokiRequest,
   SearchPeriodsRequest,
-  SearchWardsRequest,
-  SearchZonesRequest,
+  SearchWilayahRequest,
 } from "./types";
 
 export function useCurrentIdentity() {
   return useMe();
 }
 
-export function useDiocesesSearch(
-  filter: Omit<SearchDiocesesRequest, "cursor"> = {},
+export function useKeuskupanSearch(
+  filter: Omit<SearchKeuskupanRequest, "cursor"> = {},
   enabled = true,
 ) {
   return useInfiniteQuery(
     infiniteQueryOptions({
-      queryKey: refKeys.dioceses(filter),
+      queryKey: refKeys.keuskupan(filter),
       initialPageParam: undefined as string | undefined,
       enabled,
       queryFn: ({ pageParam }) =>
@@ -44,13 +44,13 @@ export function useDiocesesSearch(
   );
 }
 
-export function useParishesSearch(
-  filter: Omit<SearchParishesRequest, "cursor"> = {},
+export function useParokiSearch(
+  filter: Omit<SearchParokiRequest, "cursor"> = {},
   enabled = true,
 ) {
   return useInfiniteQuery(
     infiniteQueryOptions({
-      queryKey: refKeys.parishes(filter),
+      queryKey: refKeys.paroki(filter),
       initialPageParam: undefined as string | undefined,
       enabled,
       queryFn: ({ pageParam }) =>
@@ -66,10 +66,10 @@ export function useParishesSearch(
   );
 }
 
-export function useCurrentParish(enabled = true) {
+export function useCurrentParoki(enabled = true) {
   return useQuery(
     queryOptions({
-      queryKey: refKeys.currentParish(),
+      queryKey: refKeys.currentParoki(),
       enabled,
       queryFn: () => unwrap(api.GET("/ref/paroki/current"), REF_ERRORS),
       retry: false,
@@ -77,20 +77,20 @@ export function useCurrentParish(enabled = true) {
   );
 }
 
-export function useParishMembersSearch(
-  parishId: string,
-  filter: Omit<SearchParishMembersRequest, "cursor"> = {},
+export function useParokiMembersSearch(
+  parokiId: string,
+  filter: Omit<SearchParokiMembersRequest, "cursor"> = {},
   enabled = true,
 ) {
   return useInfiniteQuery(
     infiniteQueryOptions({
-      queryKey: refKeys.parishMembers(parishId, filter),
+      queryKey: refKeys.parokiMembers(parokiId, filter),
       initialPageParam: undefined as string | undefined,
-      enabled: enabled && Boolean(parishId),
+      enabled: enabled && Boolean(parokiId),
       queryFn: ({ pageParam }) =>
         unwrapMeta(
           api.POST("/ref/paroki/{id}/members/search", {
-            params: { path: { id: parishId } },
+            params: { path: { id: parokiId } },
             body: { ...filter, cursor: pageParam, limit: filter.limit ?? 50 },
           }),
           REF_ERRORS,
@@ -101,13 +101,13 @@ export function useParishMembersSearch(
   );
 }
 
-export function useZonesSearch(
-  filter: Omit<SearchZonesRequest, "cursor"> = {},
+export function useWilayahSearch(
+  filter: Omit<SearchWilayahRequest, "cursor"> = {},
   enabled = true,
 ) {
   return useInfiniteQuery(
     infiniteQueryOptions({
-      queryKey: refKeys.zones(filter),
+      queryKey: refKeys.wilayah(filter),
       initialPageParam: undefined as string | undefined,
       enabled,
       queryFn: ({ pageParam }) =>
@@ -123,13 +123,13 @@ export function useZonesSearch(
   );
 }
 
-export function useWardsSearch(
-  filter: Omit<SearchWardsRequest, "cursor"> = {},
+export function useLingkunganSearch(
+  filter: Omit<SearchLingkunganRequest, "cursor"> = {},
   enabled = true,
 ) {
   return useInfiniteQuery(
     infiniteQueryOptions({
-      queryKey: refKeys.wards(filter),
+      queryKey: refKeys.lingkungan(filter),
       initialPageParam: undefined as string | undefined,
       enabled,
       queryFn: ({ pageParam }) =>

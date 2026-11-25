@@ -1,50 +1,50 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, unwrap, unwrapVoid } from "~/shared/api/client";
-import { useSwitchParish } from "~/shared/api/session";
+import { useSwitchParoki } from "~/shared/api/session";
 import { REF_ERRORS } from "./errors";
 import { refKeys } from "./keys";
 import type {
-  AddParishMemberRequest,
-  CreateDioceseRequest,
+  AddParokiMemberRequest,
+  CreateKeuskupanRequest,
+  CreateLingkunganRequest,
   CreateLookupRequest,
-  CreateParishRequest,
+  CreateParokiRequest,
   CreatePeriodRequest,
-  CreateWardRequest,
-  CreateZoneRequest,
-  UpdateDioceseRequest,
+  CreateWilayahRequest,
+  UpdateKeuskupanRequest,
+  UpdateLingkunganRequest,
   UpdateLookupRequest,
-  UpdateParishMemberRequest,
-  UpdateParishProfileRequest,
-  UpdateParishRequest,
+  UpdateParokiMemberRequest,
+  UpdateParokiProfileRequest,
+  UpdateParokiRequest,
   UpdatePeriodRequest,
-  UpdateWardRequest,
-  UpdateZoneRequest,
+  UpdateWilayahRequest,
 } from "./types";
 
-export function useActivateSessionParish() {
-  const switchParish = useSwitchParish();
+export function useActivateSessionParoki() {
+  const switchParoki = useSwitchParoki();
   return {
-    ...switchParish,
-    mutate: (parishId: string) =>
-      switchParish.mutate({ activeParokiId: parishId }),
-    mutateAsync: (parishId: string) =>
-      switchParish.mutateAsync({ activeParokiId: parishId }),
+    ...switchParoki,
+    mutate: (parokiId: string) =>
+      switchParoki.mutate({ activeParokiId: parokiId }),
+    mutateAsync: (parokiId: string) =>
+      switchParoki.mutateAsync({ activeParokiId: parokiId }),
   };
 }
 
-export function useCreateDiocese() {
+export function useCreateKeuskupan() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: CreateDioceseRequest) =>
+    mutationFn: (body: CreateKeuskupanRequest) =>
       unwrap(api.POST("/ref/keuskupan", { body }), REF_ERRORS),
     onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
   });
 }
 
-export function useUpdateDiocese() {
+export function useUpdateKeuskupan() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, body }: { id: string; body: UpdateDioceseRequest }) =>
+    mutationFn: ({ id, body }: { id: string; body: UpdateKeuskupanRequest }) =>
       unwrap(
         api.PATCH("/ref/keuskupan/{id}", { params: { path: { id } }, body }),
         REF_ERRORS,
@@ -53,7 +53,7 @@ export function useUpdateDiocese() {
   });
 }
 
-export function useDeleteDiocese() {
+export function useDeleteKeuskupan() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) =>
@@ -65,19 +65,19 @@ export function useDeleteDiocese() {
   });
 }
 
-export function useCreateParish() {
+export function useCreateParoki() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: CreateParishRequest) =>
+    mutationFn: (body: CreateParokiRequest) =>
       unwrap(api.POST("/ref/paroki", { body }), REF_ERRORS),
     onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
   });
 }
 
-export function useUpdateParish() {
+export function useUpdateParoki() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, body }: { id: string; body: UpdateParishRequest }) =>
+    mutationFn: ({ id, body }: { id: string; body: UpdateParokiRequest }) =>
       unwrap(
         api.PATCH("/ref/paroki/{id}", { params: { path: { id } }, body }),
         REF_ERRORS,
@@ -86,16 +86,16 @@ export function useUpdateParish() {
   });
 }
 
-export function useUpdateCurrentParishProfile() {
+export function useUpdateCurrentParokiProfile() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: UpdateParishProfileRequest) =>
+    mutationFn: (body: UpdateParokiProfileRequest) =>
       unwrap(api.PATCH("/ref/paroki/current", { body }), REF_ERRORS),
     onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
   });
 }
 
-export function useDeleteParish() {
+export function useDeleteParoki() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) =>
@@ -107,19 +107,19 @@ export function useDeleteParish() {
   });
 }
 
-export function useAddParishMember() {
+export function useAddParokiMember() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({
-      parishId,
+      parokiId,
       body,
     }: {
-      parishId: string;
-      body: AddParishMemberRequest;
+      parokiId: string;
+      body: AddParokiMemberRequest;
     }) =>
       unwrap(
         api.POST("/ref/paroki/{id}/members", {
-          params: { path: { id: parishId } },
+          params: { path: { id: parokiId } },
           body,
         }),
         REF_ERRORS,
@@ -132,21 +132,21 @@ export function useAddParishMember() {
   });
 }
 
-export function useUpdateParishMember() {
+export function useUpdateParokiMember() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({
-      parishId,
+      parokiId,
       userId,
       body,
     }: {
-      parishId: string;
+      parokiId: string;
       userId: string;
-      body: UpdateParishMemberRequest;
+      body: UpdateParokiMemberRequest;
     }) =>
       unwrap(
         api.PATCH("/ref/paroki/{id}/members/{userId}", {
-          params: { path: { id: parishId, userId } },
+          params: { path: { id: parokiId, userId } },
           body,
         }),
         REF_ERRORS,
@@ -159,13 +159,13 @@ export function useUpdateParishMember() {
   });
 }
 
-export function useRemoveParishMember() {
+export function useRemoveParokiMember() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ parishId, userId }: { parishId: string; userId: string }) =>
+    mutationFn: ({ parokiId, userId }: { parokiId: string; userId: string }) =>
       unwrapVoid(
         api.DELETE("/ref/paroki/{id}/members/{userId}", {
-          params: { path: { id: parishId, userId } },
+          params: { path: { id: parokiId, userId } },
         }),
         REF_ERRORS,
       ),
@@ -177,19 +177,19 @@ export function useRemoveParishMember() {
   });
 }
 
-export function useCreateZone() {
+export function useCreateWilayah() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: CreateZoneRequest) =>
+    mutationFn: (body: CreateWilayahRequest) =>
       unwrap(api.POST("/ref/wilayah", { body }), REF_ERRORS),
     onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
   });
 }
 
-export function useUpdateZone() {
+export function useUpdateWilayah() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, body }: { id: string; body: UpdateZoneRequest }) =>
+    mutationFn: ({ id, body }: { id: string; body: UpdateWilayahRequest }) =>
       unwrap(
         api.PATCH("/ref/wilayah/{id}", { params: { path: { id } }, body }),
         REF_ERRORS,
@@ -198,7 +198,7 @@ export function useUpdateZone() {
   });
 }
 
-export function useDeleteZone() {
+export function useDeleteWilayah() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) =>
@@ -210,19 +210,19 @@ export function useDeleteZone() {
   });
 }
 
-export function useCreateWard() {
+export function useCreateLingkungan() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: CreateWardRequest) =>
+    mutationFn: (body: CreateLingkunganRequest) =>
       unwrap(api.POST("/ref/lingkungan", { body }), REF_ERRORS),
     onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
   });
 }
 
-export function useUpdateWard() {
+export function useUpdateLingkungan() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, body }: { id: string; body: UpdateWardRequest }) =>
+    mutationFn: ({ id, body }: { id: string; body: UpdateLingkunganRequest }) =>
       unwrap(
         api.PATCH("/ref/lingkungan/{id}", { params: { path: { id } }, body }),
         REF_ERRORS,
@@ -231,7 +231,7 @@ export function useUpdateWard() {
   });
 }
 
-export function useDeleteWard() {
+export function useDeleteLingkungan() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) =>

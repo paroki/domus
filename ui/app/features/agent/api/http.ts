@@ -2,7 +2,7 @@ import {
   type ApiEnvelope,
   ApiError,
   type ApiMeta,
-  getActiveParishId,
+  getActiveParokiId,
 } from "~/shared/api/client";
 import { resolveErrorMessage } from "~/shared/api/errors";
 import { AGENT_ERRORS } from "./errors";
@@ -20,9 +20,9 @@ export async function agentRequest<T>(
   if (init.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
-  const parishId = getActiveParishId();
-  if (parishId) {
-    headers.set("X-Paroki-Id", parishId);
+  const parokiId = getActiveParokiId();
+  if (parokiId) {
+    headers.set("X-Paroki-Id", parokiId);
   }
 
   const response = await fetch(`/api${path}`, {

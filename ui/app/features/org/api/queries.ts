@@ -119,9 +119,9 @@ export function useOrgInvitePreview(code: string) {
   });
 }
 
-export function useOrgZones(enabled = true) {
+export function useOrgWilayah(enabled = true) {
   return useQuery({
-    queryKey: orgKeys.zones(),
+    queryKey: orgKeys.wilayah(),
     enabled,
     queryFn: () =>
       unwrap(
@@ -132,9 +132,9 @@ export function useOrgZones(enabled = true) {
   });
 }
 
-export function useOrgWards(enabled = true) {
+export function useOrgLingkungan(enabled = true) {
   return useQuery({
-    queryKey: orgKeys.wards(),
+    queryKey: orgKeys.lingkungan(),
     enabled,
     queryFn: () =>
       unwrap(

@@ -7,7 +7,7 @@ import type {
 
 export const ROLE_SUPER_ADMIN = "user:super-admin";
 export const ROLE_USER = "user:user";
-export const ROLE_PARISH_ADMIN = "ref:paroki-admin";
+export const ROLE_PAROKI_ADMIN = "ref:paroki-admin";
 export const ROLE_ORG_ADMIN = "org:admin";
 export const ROLE_ORG_MEMBER = "org:member";
 
@@ -27,7 +27,7 @@ export const ROLE_DESCRIPTORS: RoleDescriptor[] = [
       "Pengguna terdaftar aplikasi yang dapat bergabung ke paroki dan organisasi.",
   },
   {
-    code: ROLE_PARISH_ADMIN,
+    code: ROLE_PAROKI_ADMIN,
     name: "Admin Paroki",
     scope: "paroki",
     description:
@@ -50,7 +50,7 @@ export const ROLE_DESCRIPTORS: RoleDescriptor[] = [
 ];
 
 export type UserDirectoryScope = "global" | "org";
-export type UserDetailTab = "profile" | "parish" | "org";
+export type UserDetailTab = "profile" | "paroki" | "org";
 
 export function getAvailableUserDetailTabs(
   roles?: string[] | null,
@@ -58,11 +58,11 @@ export function getAvailableUserDetailTabs(
   if (!roles?.length) return [];
   const tabs: UserDetailTab[] = [];
   if (roles.includes(ROLE_SUPER_ADMIN)) {
-    tabs.push("profile", "parish", "org");
+    tabs.push("profile", "paroki", "org");
     return tabs;
   }
-  if (roles.includes(ROLE_PARISH_ADMIN)) {
-    tabs.push("parish", "org");
+  if (roles.includes(ROLE_PAROKI_ADMIN)) {
+    tabs.push("paroki", "org");
     return tabs;
   }
   if (roles.includes(ROLE_ORG_ADMIN)) {
@@ -73,10 +73,10 @@ export function getAvailableUserDetailTabs(
 
 export function parseUserDetailTab(
   raw: string | null,
-  allowed: UserDetailTab[] = ["profile", "parish", "org"],
+  allowed: UserDetailTab[] = ["profile", "paroki", "org"],
 ): UserDetailTab {
   if (
-    (raw === "profile" || raw === "parish" || raw === "org") &&
+    (raw === "profile" || raw === "paroki" || raw === "org") &&
     allowed.includes(raw)
   ) {
     return raw;
@@ -133,8 +133,8 @@ export function isSuperAdmin(user?: User | null): boolean {
   return Boolean(user?.roles?.includes(ROLE_SUPER_ADMIN));
 }
 
-export function isParishAdmin(user?: User | null): boolean {
-  return Boolean(user?.roles?.includes(ROLE_PARISH_ADMIN));
+export function isParokiAdmin(user?: User | null): boolean {
+  return Boolean(user?.roles?.includes(ROLE_PAROKI_ADMIN));
 }
 
 export function isOrgAdmin(user?: User | null): boolean {
@@ -149,7 +149,7 @@ export function getAvailableUserScopes(
   if (roles.includes(ROLE_SUPER_ADMIN)) {
     scopes.push("global");
   }
-  if (roles.includes(ROLE_PARISH_ADMIN) || roles.includes(ROLE_ORG_ADMIN)) {
+  if (roles.includes(ROLE_PAROKI_ADMIN) || roles.includes(ROLE_ORG_ADMIN)) {
     scopes.push("org");
   }
   return scopes;
