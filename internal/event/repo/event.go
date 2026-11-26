@@ -17,6 +17,7 @@ type CreateEventInput struct {
 	OrgID        *uuid.UUID
 	CreatedBy    uuid.UUID
 	Title        string
+	Jenis        *string
 	Description  *string
 	Location     *string
 	StartAt      time.Time
@@ -32,6 +33,7 @@ type SearchEventsInput struct {
 	MemberOrgIDs   []uuid.UUID
 	OrgID          *uuid.UUID
 	ParokiWideOnly bool
+	Jenis          string
 	Visibility     string
 	Status         string
 	MyOrgsOnly     bool
@@ -67,6 +69,9 @@ func (r *Repository) SearchEvents(ctx context.Context, in SearchEventsInput) ([]
 	}
 	if in.ParokiWideOnly {
 		query = query.Where(event.OrgIDIsNil())
+	}
+	if in.Jenis != "" {
+		query = query.Where(event.JenisEQ(in.Jenis))
 	}
 	if in.Visibility != "" {
 		query = query.Where(event.VisibilityEQ(event.Visibility(in.Visibility)))
@@ -122,6 +127,9 @@ func (r *Repository) CreateEvent(ctx context.Context, in CreateEventInput) (*ent
 	if in.OrgID != nil {
 		q.SetOrgID(*in.OrgID)
 	}
+	if in.Jenis != nil && *in.Jenis != "" {
+		q.SetJenis(*in.Jenis)
+	}
 
 	if in.Description != nil && *in.Description != "" {
 		q.SetDescription(*in.Description)
@@ -138,6 +146,8 @@ func (r *Repository) CreateEvent(ctx context.Context, in CreateEventInput) (*ent
 // UpdateEventInput holds optional fields for updating an Event.
 type UpdateEventInput struct {
 	Title             *string
+	Jenis             *string
+	ClearJenis        bool
 	Description       *string
 	Location          *string
 	StartAt           *time.Time
@@ -154,6 +164,11 @@ func (r *Repository) UpdateEvent(ctx context.Context, eventID uuid.UUID, in Upda
 	q := r.client.Event.UpdateOneID(eventID)
 	if in.Title != nil {
 		q.SetTitle(*in.Title)
+	}
+	if in.ClearJenis {
+		q.ClearJenis()
+	} else if in.Jenis != nil {
+		q.SetJenis(*in.Jenis)
 	}
 	if in.Description != nil {
 		if *in.Description == "" {

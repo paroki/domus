@@ -659,3 +659,87 @@ func (s *EventFeatureSuite) TestParishLevelEventsAndOpenRSVP() {
 	s.Request(fmt.Sprintf("/api/events/%s", parishEv.ID), http.MethodDelete, nil)
 	s.NoContent()
 }
+
+func (s *EventFeatureSuite) TestEventJenisLookupValidationAndFilter() {
+	parokiID, orgID := s.seedParokiAndOrg()
+	startAt := time.Now().UTC().Add(24 * time.Hour)
+	endAt := startAt.Add(2 * time.Hour)
+
+	// 1. Create custom active event_type lookup for this paroki via ref:paroki-admin.
+	s.loginViaOTP("padmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+	s.Request("/api/ref/lookups", http.MethodPost, refdomain.CreateLookupRequest{
+		Category: "event_type",
+		Code:     "ziarah",
+		Label:    "Ziarah Rohani",
+	})
+	s.Created()
+
+	// 2. org:admin creates event with built-in jenis (trimmed & lowercased) and custom lookup jenis.
+	s.loginViaOTP("orgadmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+	misaJenis := "  MISA "
+	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
+		OrgID:   &orgID,
+		Title:   "Misa OMK",
+		Jenis:   &misaJenis,
+		StartAt: startAt,
+		EndAt:   endAt,
+	})
+	s.Created()
+	misaEv := testutil.DecodeAs[domain.EventResponse](s).Data
+	s.Require().NotNil(misaEv.Jenis)
+	s.Equal("misa", *misaEv.Jenis)
+
+	ziarahJenis := "ziarah"
+	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
+		OrgID:   &orgID,
+		Title:   "Ziarah Gua Maria",
+		Jenis:   &ziarahJenis,
+		StartAt: startAt.Add(24 * time.Hour),
+		EndAt:   endAt.Add(24 * time.Hour),
+	})
+	s.Created()
+	ziarahEv := testutil.DecodeAs[domain.EventResponse](s).Data
+	s.Require().NotNil(ziarahEv.Jenis)
+	s.Equal("ziarah", *ziarahEv.Jenis)
+
+	// 3. Unknown jenis returns 422 VALIDATION_ERROR.
+	badJenis := "tidak-ada"
+	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
+		OrgID:   &orgID,
+		Title:   "Invalid Jenis",
+		Jenis:   &badJenis,
+		StartAt: startAt,
+		EndAt:   endAt,
+	})
+	s.UnprocessableEntity()
+	s.Equal("VALIDATION_ERROR", s.GetErrorResponse().Error.Code)
+
+	// 4. Filter by jenis.
+	s.Request("/api/events/search", http.MethodPost, domain.SearchEventsRequest{
+		Filter: &domain.EventSearchFilter{Jenis: "ziarah"},
+	})
+	s.OK()
+	filtered := testutil.DecodeAs[[]domain.EventResponse](s).Data
+	s.Require().Len(filtered, 1)
+	s.Equal(ziarahEv.ID, filtered[0].ID)
+
+	// 5. Update jenis and clear jenis with empty string "".
+	rapatJenis := "rapat"
+	s.Request(fmt.Sprintf("/api/events/%s", misaEv.ID), http.MethodPatch, domain.UpdateEventRequest{
+		Jenis: &rapatJenis,
+	})
+	s.OK()
+	updated := testutil.DecodeAs[domain.EventResponse](s).Data
+	s.Require().NotNil(updated.Jenis)
+	s.Equal("rapat", *updated.Jenis)
+
+	emptyJenis := ""
+	s.Request(fmt.Sprintf("/api/events/%s", misaEv.ID), http.MethodPatch, domain.UpdateEventRequest{
+		Jenis: &emptyJenis,
+	})
+	s.OK()
+	cleared := testutil.DecodeAs[domain.EventResponse](s).Data
+	s.Nil(cleared.Jenis)
+}

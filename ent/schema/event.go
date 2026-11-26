@@ -29,6 +29,7 @@ func (Event) Fields() []ent.Field {
 		field.UUID("org_id", uuid.UUID{}).Optional().Nillable(),
 		field.UUID("created_by", uuid.UUID{}),
 		field.String("title").NotEmpty(),
+		field.String("jenis").Optional().Nillable(),
 		field.String("description").Optional().Nillable(),
 		field.String("location").Optional().Nillable(),
 		field.Time("start_at"),
@@ -51,6 +52,7 @@ func (Event) Edges() []ent.Edge {
 func (Event) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("paroki_id", "start_at"),
+		index.Fields("paroki_id", "jenis", "start_at"),
 		index.Fields("paroki_id", "org_id", "start_at"),
 		index.Fields("paroki_id", "visibility", "status", "start_at"),
 		index.Fields("org_id"),

@@ -42,9 +42,10 @@ type OrgReader interface {
 	ListUserOrgs(ctx context.Context, parokiID, userID uuid.UUID) ([]OrgInfo, error)
 }
 
-// ParokiReader reads active parish metadata (including timezone) from the ref feature.
+// ParokiReader reads active parish metadata (including timezone) and lookups from the ref feature.
 type ParokiReader interface {
 	GetParoki(ctx context.Context, parokiID uuid.UUID) (*ParokiInfo, error)
+	HasActiveLookup(ctx context.Context, parokiID uuid.UUID, category, code string) (bool, error)
 }
 
 // Config holds runtime configuration for the event service.

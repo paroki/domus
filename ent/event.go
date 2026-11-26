@@ -32,6 +32,8 @@ type Event struct {
 	CreatedBy uuid.UUID `json:"created_by,omitempty"`
 	// Title holds the value of the "title" field.
 	Title string `json:"title,omitempty"`
+	// Jenis holds the value of the "jenis" field.
+	Jenis *string `json:"jenis,omitempty"`
 	// Description holds the value of the "description" field.
 	Description *string `json:"description,omitempty"`
 	// Location holds the value of the "location" field.
@@ -81,7 +83,7 @@ func (*Event) scanValues(columns []string) ([]any, error) {
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case event.FieldRsvpEnabled:
 			values[i] = new(sql.NullBool)
-		case event.FieldTitle, event.FieldDescription, event.FieldLocation, event.FieldVisibility, event.FieldStatus:
+		case event.FieldTitle, event.FieldJenis, event.FieldDescription, event.FieldLocation, event.FieldVisibility, event.FieldStatus:
 			values[i] = new(sql.NullString)
 		case event.FieldCreatedAt, event.FieldUpdatedAt, event.FieldDeletedAt, event.FieldStartAt, event.FieldEndAt, event.FieldRsvpDeadline:
 			values[i] = new(sql.NullTime)
@@ -151,6 +153,13 @@ func (_m *Event) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field title", values[i])
 			} else if value.Valid {
 				_m.Title = value.String
+			}
+		case event.FieldJenis:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field jenis", values[i])
+			} else if value.Valid {
+				_m.Jenis = new(string)
+				*_m.Jenis = value.String
 			}
 		case event.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -268,6 +277,11 @@ func (_m *Event) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("title=")
 	builder.WriteString(_m.Title)
+	builder.WriteString(", ")
+	if v := _m.Jenis; v != nil {
+		builder.WriteString("jenis=")
+		builder.WriteString(*v)
+	}
 	builder.WriteString(", ")
 	if v := _m.Description; v != nil {
 		builder.WriteString("description=")

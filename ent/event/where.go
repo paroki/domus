@@ -91,6 +91,11 @@ func Title(v string) predicate.Event {
 	return predicate.Event(sql.FieldEQ(FieldTitle, v))
 }
 
+// Jenis applies equality check predicate on the "jenis" field. It's identical to JenisEQ.
+func Jenis(v string) predicate.Event {
+	return predicate.Event(sql.FieldEQ(FieldJenis, v))
+}
+
 // Description applies equality check predicate on the "description" field. It's identical to DescriptionEQ.
 func Description(v string) predicate.Event {
 	return predicate.Event(sql.FieldEQ(FieldDescription, v))
@@ -444,6 +449,81 @@ func TitleEqualFold(v string) predicate.Event {
 // TitleContainsFold applies the ContainsFold predicate on the "title" field.
 func TitleContainsFold(v string) predicate.Event {
 	return predicate.Event(sql.FieldContainsFold(FieldTitle, v))
+}
+
+// JenisEQ applies the EQ predicate on the "jenis" field.
+func JenisEQ(v string) predicate.Event {
+	return predicate.Event(sql.FieldEQ(FieldJenis, v))
+}
+
+// JenisNEQ applies the NEQ predicate on the "jenis" field.
+func JenisNEQ(v string) predicate.Event {
+	return predicate.Event(sql.FieldNEQ(FieldJenis, v))
+}
+
+// JenisIn applies the In predicate on the "jenis" field.
+func JenisIn(vs ...string) predicate.Event {
+	return predicate.Event(sql.FieldIn(FieldJenis, vs...))
+}
+
+// JenisNotIn applies the NotIn predicate on the "jenis" field.
+func JenisNotIn(vs ...string) predicate.Event {
+	return predicate.Event(sql.FieldNotIn(FieldJenis, vs...))
+}
+
+// JenisGT applies the GT predicate on the "jenis" field.
+func JenisGT(v string) predicate.Event {
+	return predicate.Event(sql.FieldGT(FieldJenis, v))
+}
+
+// JenisGTE applies the GTE predicate on the "jenis" field.
+func JenisGTE(v string) predicate.Event {
+	return predicate.Event(sql.FieldGTE(FieldJenis, v))
+}
+
+// JenisLT applies the LT predicate on the "jenis" field.
+func JenisLT(v string) predicate.Event {
+	return predicate.Event(sql.FieldLT(FieldJenis, v))
+}
+
+// JenisLTE applies the LTE predicate on the "jenis" field.
+func JenisLTE(v string) predicate.Event {
+	return predicate.Event(sql.FieldLTE(FieldJenis, v))
+}
+
+// JenisContains applies the Contains predicate on the "jenis" field.
+func JenisContains(v string) predicate.Event {
+	return predicate.Event(sql.FieldContains(FieldJenis, v))
+}
+
+// JenisHasPrefix applies the HasPrefix predicate on the "jenis" field.
+func JenisHasPrefix(v string) predicate.Event {
+	return predicate.Event(sql.FieldHasPrefix(FieldJenis, v))
+}
+
+// JenisHasSuffix applies the HasSuffix predicate on the "jenis" field.
+func JenisHasSuffix(v string) predicate.Event {
+	return predicate.Event(sql.FieldHasSuffix(FieldJenis, v))
+}
+
+// JenisIsNil applies the IsNil predicate on the "jenis" field.
+func JenisIsNil() predicate.Event {
+	return predicate.Event(sql.FieldIsNull(FieldJenis))
+}
+
+// JenisNotNil applies the NotNil predicate on the "jenis" field.
+func JenisNotNil() predicate.Event {
+	return predicate.Event(sql.FieldNotNull(FieldJenis))
+}
+
+// JenisEqualFold applies the EqualFold predicate on the "jenis" field.
+func JenisEqualFold(v string) predicate.Event {
+	return predicate.Event(sql.FieldEqualFold(FieldJenis, v))
+}
+
+// JenisContainsFold applies the ContainsFold predicate on the "jenis" field.
+func JenisContainsFold(v string) predicate.Event {
+	return predicate.Event(sql.FieldContainsFold(FieldJenis, v))
 }
 
 // DescriptionEQ applies the EQ predicate on the "description" field.

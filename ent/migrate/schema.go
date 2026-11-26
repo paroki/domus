@@ -153,6 +153,7 @@ var (
 		{Name: "org_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "created_by", Type: field.TypeUUID},
 		{Name: "title", Type: field.TypeString},
+		{Name: "jenis", Type: field.TypeString, Nullable: true},
 		{Name: "description", Type: field.TypeString, Nullable: true},
 		{Name: "location", Type: field.TypeString, Nullable: true},
 		{Name: "start_at", Type: field.TypeTime},
@@ -171,17 +172,22 @@ var (
 			{
 				Name:    "event_paroki_id_start_at",
 				Unique:  false,
-				Columns: []*schema.Column{EventsColumns[4], EventsColumns[10]},
+				Columns: []*schema.Column{EventsColumns[4], EventsColumns[11]},
+			},
+			{
+				Name:    "event_paroki_id_jenis_start_at",
+				Unique:  false,
+				Columns: []*schema.Column{EventsColumns[4], EventsColumns[8], EventsColumns[11]},
 			},
 			{
 				Name:    "event_paroki_id_org_id_start_at",
 				Unique:  false,
-				Columns: []*schema.Column{EventsColumns[4], EventsColumns[5], EventsColumns[10]},
+				Columns: []*schema.Column{EventsColumns[4], EventsColumns[5], EventsColumns[11]},
 			},
 			{
 				Name:    "event_paroki_id_visibility_status_start_at",
 				Unique:  false,
-				Columns: []*schema.Column{EventsColumns[4], EventsColumns[12], EventsColumns[15], EventsColumns[10]},
+				Columns: []*schema.Column{EventsColumns[4], EventsColumns[13], EventsColumns[16], EventsColumns[11]},
 			},
 			{
 				Name:    "event_org_id",

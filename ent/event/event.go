@@ -30,6 +30,8 @@ const (
 	FieldCreatedBy = "created_by"
 	// FieldTitle holds the string denoting the title field in the database.
 	FieldTitle = "title"
+	// FieldJenis holds the string denoting the jenis field in the database.
+	FieldJenis = "jenis"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
 	// FieldLocation holds the string denoting the location field in the database.
@@ -69,6 +71,7 @@ var Columns = []string{
 	FieldOrgID,
 	FieldCreatedBy,
 	FieldTitle,
+	FieldJenis,
 	FieldDescription,
 	FieldLocation,
 	FieldStartAt,
@@ -197,6 +200,11 @@ func ByCreatedBy(opts ...sql.OrderTermOption) OrderOption {
 // ByTitle orders the results by the title field.
 func ByTitle(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTitle, opts...).ToFunc()
+}
+
+// ByJenis orders the results by the jenis field.
+func ByJenis(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldJenis, opts...).ToFunc()
 }
 
 // ByDescription orders the results by the description field.

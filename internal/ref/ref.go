@@ -170,6 +170,11 @@ func (f *Feature) GetParokiByCode(ctx context.Context, code string) (*Paroki, er
 	return f.service.GetParokiByCode(ctx, code)
 }
 
+// HasActiveLookup reports whether code is an active lookup in category for global or parokiID.
+func (f *Feature) HasActiveLookup(ctx context.Context, parokiID uuid.UUID, category, code string) (bool, error) {
+	return f.service.HasActiveLookup(ctx, parokiID, category, code)
+}
+
 // ValidateWilayahInParoki returns a non-deleted Wilayah if it belongs to parokiID.
 func (f *Feature) ValidateWilayahInParoki(ctx context.Context, parokiID, wilayahID uuid.UUID) (*Wilayah, error) {
 	return f.service.ValidateWilayahInParoki(ctx, parokiID, wilayahID)

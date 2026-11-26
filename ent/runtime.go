@@ -223,7 +223,7 @@ func init() {
 	// event.TitleValidator is a validator for the "title" field. It is called by the builders before save.
 	event.TitleValidator = eventDescTitle.Validators[0].(func(string) error)
 	// eventDescRsvpEnabled is the schema descriptor for rsvp_enabled field.
-	eventDescRsvpEnabled := eventFields[9].Descriptor()
+	eventDescRsvpEnabled := eventFields[10].Descriptor()
 	// event.DefaultRsvpEnabled holds the default value on creation for the rsvp_enabled field.
 	event.DefaultRsvpEnabled = eventDescRsvpEnabled.Default.(bool)
 	// eventDescID is the schema descriptor for id field.

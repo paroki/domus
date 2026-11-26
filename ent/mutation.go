@@ -4147,6 +4147,7 @@ type EventMutation struct {
 	org_id        *uuid.UUID
 	created_by    *uuid.UUID
 	title         *string
+	jenis         *string
 	description   *string
 	location      *string
 	start_at      *time.Time
@@ -4544,6 +4545,55 @@ func (m *EventMutation) OldTitle(ctx context.Context) (v string, err error) {
 // ResetTitle resets all changes to the "title" field.
 func (m *EventMutation) ResetTitle() {
 	m.title = nil
+}
+
+// SetJenis sets the "jenis" field.
+func (m *EventMutation) SetJenis(s string) {
+	m.jenis = &s
+}
+
+// Jenis returns the value of the "jenis" field in the mutation.
+func (m *EventMutation) Jenis() (r string, exists bool) {
+	v := m.jenis
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldJenis returns the old "jenis" field's value of the Event entity.
+// If the Event object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EventMutation) OldJenis(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldJenis is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldJenis requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldJenis: %w", err)
+	}
+	return oldValue.Jenis, nil
+}
+
+// ClearJenis clears the value of the "jenis" field.
+func (m *EventMutation) ClearJenis() {
+	m.jenis = nil
+	m.clearedFields[event.FieldJenis] = struct{}{}
+}
+
+// JenisCleared returns if the "jenis" field was cleared in this mutation.
+func (m *EventMutation) JenisCleared() bool {
+	_, ok := m.clearedFields[event.FieldJenis]
+	return ok
+}
+
+// ResetJenis resets all changes to the "jenis" field.
+func (m *EventMutation) ResetJenis() {
+	m.jenis = nil
+	delete(m.clearedFields, event.FieldJenis)
 }
 
 // SetDescription sets the "description" field.
@@ -4961,7 +5011,7 @@ func (m *EventMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *EventMutation) Fields() []string {
-	fields := make([]string, 0, 15)
+	fields := make([]string, 0, 16)
 	if m.created_at != nil {
 		fields = append(fields, event.FieldCreatedAt)
 	}
@@ -4982,6 +5032,9 @@ func (m *EventMutation) Fields() []string {
 	}
 	if m.title != nil {
 		fields = append(fields, event.FieldTitle)
+	}
+	if m.jenis != nil {
+		fields = append(fields, event.FieldJenis)
 	}
 	if m.description != nil {
 		fields = append(fields, event.FieldDescription)
@@ -5029,6 +5082,8 @@ func (m *EventMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedBy()
 	case event.FieldTitle:
 		return m.Title()
+	case event.FieldJenis:
+		return m.Jenis()
 	case event.FieldDescription:
 		return m.Description()
 	case event.FieldLocation:
@@ -5068,6 +5123,8 @@ func (m *EventMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldCreatedBy(ctx)
 	case event.FieldTitle:
 		return m.OldTitle(ctx)
+	case event.FieldJenis:
+		return m.OldJenis(ctx)
 	case event.FieldDescription:
 		return m.OldDescription(ctx)
 	case event.FieldLocation:
@@ -5141,6 +5198,13 @@ func (m *EventMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetTitle(v)
+		return nil
+	case event.FieldJenis:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetJenis(v)
 		return nil
 	case event.FieldDescription:
 		v, ok := value.(string)
@@ -5234,6 +5298,9 @@ func (m *EventMutation) ClearedFields() []string {
 	if m.FieldCleared(event.FieldOrgID) {
 		fields = append(fields, event.FieldOrgID)
 	}
+	if m.FieldCleared(event.FieldJenis) {
+		fields = append(fields, event.FieldJenis)
+	}
 	if m.FieldCleared(event.FieldDescription) {
 		fields = append(fields, event.FieldDescription)
 	}
@@ -5262,6 +5329,9 @@ func (m *EventMutation) ClearField(name string) error {
 		return nil
 	case event.FieldOrgID:
 		m.ClearOrgID()
+		return nil
+	case event.FieldJenis:
+		m.ClearJenis()
 		return nil
 	case event.FieldDescription:
 		m.ClearDescription()
@@ -5300,6 +5370,9 @@ func (m *EventMutation) ResetField(name string) error {
 		return nil
 	case event.FieldTitle:
 		m.ResetTitle()
+		return nil
+	case event.FieldJenis:
+		m.ResetJenis()
 		return nil
 	case event.FieldDescription:
 		m.ResetDescription()

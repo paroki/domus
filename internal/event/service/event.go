@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"regexp"
 	"strings"
 	"time"
 
@@ -11,6 +12,20 @@ import (
 	"github.com/paroki/domus/internal/event/domain"
 	"github.com/paroki/domus/internal/event/repo"
 	"github.com/paroki/domus/internal/platform/authx"
+)
+
+var (
+	eventTypeCodeRe   = regexp.MustCompile(`^[a-z0-9][a-z0-9_-]{1,63}$`)
+	defaultEventTypes = map[string]struct{}{
+		"misa":         {},
+		"ibadat":       {},
+		"rapat":        {},
+		"latihan":      {},
+		"rekoleksi":    {},
+		"katekese":     {},
+		"bakti-sosial": {},
+		"lainnya":      {},
+	}
 )
 
 // SearchEvents returns paginated visible events in the caller's active paroki.
@@ -44,6 +59,7 @@ func (s *Service) SearchEvents(
 	}
 	if req.Filter != nil {
 		in.OrgID = req.Filter.OrgID
+		in.Jenis = strings.ToLower(strings.TrimSpace(req.Filter.Jenis))
 		in.Visibility = req.Filter.Visibility
 		in.Status = req.Filter.Status
 		in.From = req.Filter.From
@@ -331,11 +347,17 @@ func (s *Service) CreateEvent(ctx context.Context, p authx.Principal, req domain
 		rsvpEnabled = *req.RsvpEnabled
 	}
 
+	jenis, _, err := s.resolveEventJenis(ctx, p.ParokiID, req.Jenis)
+	if err != nil {
+		return domain.EventResponse{}, err
+	}
+
 	created, err := s.repo.CreateEvent(ctx, repo.CreateEventInput{
 		ParokiID:     p.ParokiID,
 		OrgID:        orgID,
 		CreatedBy:    p.UserID,
 		Title:        title,
+		Jenis:        jenis,
 		Description:  trimOptString(req.Description),
 		Location:     trimOptString(req.Location),
 		StartAt:      startAt,
@@ -389,6 +411,14 @@ func (s *Service) UpdateEvent(ctx context.Context, p authx.Principal, eventID uu
 		Description: trimOptString(req.Description),
 		Location:    trimOptString(req.Location),
 		RsvpEnabled: req.RsvpEnabled,
+	}
+	if req.Jenis != nil {
+		jenis, clearJenis, err := s.resolveEventJenis(ctx, p.ParokiID, req.Jenis)
+		if err != nil {
+			return domain.EventResponse{}, err
+		}
+		in.Jenis = jenis
+		in.ClearJenis = clearJenis
 	}
 	if req.Title != nil {
 		title := strings.TrimSpace(*req.Title)
@@ -544,6 +574,7 @@ func (s *Service) toEventResponse(row *ent.Event, info OrgInfo, myRole *string, 
 		OrgKind:      info.Kind,
 		CreatedBy:    row.CreatedBy,
 		Title:        row.Title,
+		Jenis:        row.Jenis,
 		Description:  row.Description,
 		Location:     row.Location,
 		StartAt:      row.StartAt.UTC(),
@@ -559,6 +590,32 @@ func (s *Service) toEventResponse(row *ent.Event, info OrgInfo, myRole *string, 
 		CreatedAt:    row.CreatedAt,
 		UpdatedAt:    row.UpdatedAt,
 	}
+}
+
+func (s *Service) resolveEventJenis(ctx context.Context, parokiID uuid.UUID, raw *string) (*string, bool, error) {
+	if raw == nil {
+		return nil, false, nil
+	}
+	code := strings.ToLower(strings.TrimSpace(*raw))
+	if code == "" {
+		return nil, true, nil
+	}
+	if !eventTypeCodeRe.MatchString(code) {
+		return nil, false, domain.ValidationError("jenis", "INVALID_EVENT_TYPE", "Invalid event type.")
+	}
+	if _, ok := defaultEventTypes[code]; ok {
+		return &code, false, nil
+	}
+	if s.parokis != nil {
+		active, err := s.parokis.HasActiveLookup(ctx, parokiID, "event_type", code)
+		if err != nil {
+			return nil, false, err
+		}
+		if active {
+			return &code, false, nil
+		}
+	}
+	return nil, false, domain.ValidationError("jenis", "INVALID_EVENT_TYPE", "Invalid event type.")
 }
 
 func validateTimeRange(startAt, endAt time.Time, rsvpDeadline *time.Time) error {

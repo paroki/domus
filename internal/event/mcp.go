@@ -49,6 +49,7 @@ type MCPEvent struct {
 	OrgKind      string               `json:"orgKind,omitempty"`
 	CreatedBy    string               `json:"createdBy"`
 	Title        string               `json:"title"`
+	Jenis        *string              `json:"jenis,omitempty"`
 	Description  *string              `json:"description,omitempty"`
 	Location     *string              `json:"location,omitempty"`
 	StartAt      string               `json:"startAt"`
@@ -73,6 +74,7 @@ type EventListInput struct {
 	Query          string `json:"query,omitempty" jsonschema:"Optional text search query matching event title, description, or location"`
 	OrgID          string `json:"orgId,omitempty" jsonschema:"Optional organization UUID filter"`
 	ParokiWideOnly bool   `json:"parokiWideOnly,omitempty" jsonschema:"If true, restrict results to parish-level events (not owned by an organization)"`
+	Jenis          string `json:"jenis,omitempty" jsonschema:"Optional event type code filter (e.g. misa, ibadat, rapat, latihan, rekoleksi, katekese, bakti-sosial, lainnya, or active event_type lookup code)"`
 	From           string `json:"from,omitempty" jsonschema:"Optional inclusive start timestamp in local wall-clock YYYY-MM-DDTHH:MM:SS, YYYY-MM-DD, or RFC3339 with explicit offset (never append Z to a local wall-clock time)"`
 	To             string `json:"to,omitempty" jsonschema:"Optional inclusive end timestamp in local wall-clock YYYY-MM-DDTHH:MM:SS, YYYY-MM-DD, or RFC3339 with explicit offset (never append Z to a local wall-clock time)"`
 	Visibility     string `json:"visibility,omitempty" jsonschema:"Optional visibility filter: public or private"`
@@ -95,6 +97,7 @@ type EventGetInput struct {
 type EventCreateInput struct {
 	OrgID        string  `json:"orgId,omitempty" jsonschema:"Optional organization UUID; omit to create a parish-level event (requires ref:paroki-admin)"`
 	Title        string  `json:"title"`
+	Jenis        *string `json:"jenis,omitempty" jsonschema:"Optional event type code (e.g. misa, ibadat, rapat, latihan, rekoleksi, katekese, bakti-sosial, lainnya, or active event_type lookup code)"`
 	Description  *string `json:"description,omitempty"`
 	Location     *string `json:"location,omitempty"`
 	StartAt      string  `json:"startAt" jsonschema:"Start timestamp in parish local wall-clock YYYY-MM-DDTHH:MM:SS or RFC3339 with explicit offset (never append Z to a local wall-clock time)"`
@@ -108,6 +111,7 @@ type EventCreateInput struct {
 type EventUpdateInput struct {
 	EventID           string  `json:"eventId"`
 	Title             *string `json:"title,omitempty"`
+	Jenis             *string `json:"jenis,omitempty" jsonschema:"Optional event type code; pass empty string to clear"`
 	Description       *string `json:"description,omitempty"`
 	Location          *string `json:"location,omitempty"`
 	StartAt           *string `json:"startAt,omitempty" jsonschema:"Start timestamp in parish local wall-clock YYYY-MM-DDTHH:MM:SS or RFC3339 with explicit offset (never append Z to a local wall-clock time)"`
@@ -181,8 +185,9 @@ func (f *Feature) mcpEventList(ctx context.Context, _ *mcp.CallToolRequest, in E
 	loc := f.service.ResolveParokiLocation(ctx, p.ParokiID)
 
 	var filter *domain.EventSearchFilter
-	if in.OrgID != "" || in.ParokiWideOnly || in.From != "" || in.To != "" || in.Visibility != "" || in.Status != "" || in.MyOrgsOnly {
+	if in.OrgID != "" || in.ParokiWideOnly || in.Jenis != "" || in.From != "" || in.To != "" || in.Visibility != "" || in.Status != "" || in.MyOrgsOnly {
 		filter = &domain.EventSearchFilter{
+			Jenis:      in.Jenis,
 			Visibility: in.Visibility,
 			Status:     in.Status,
 		}
@@ -287,6 +292,7 @@ func (f *Feature) mcpEventCreate(ctx context.Context, _ *mcp.CallToolRequest, in
 	res, err := f.service.CreateEvent(ctx, p, domain.CreateEventRequest{
 		OrgID:        orgID,
 		Title:        in.Title,
+		Jenis:        in.Jenis,
 		Description:  in.Description,
 		Location:     in.Location,
 		StartAt:      startAt,
@@ -314,6 +320,7 @@ func (f *Feature) mcpEventUpdate(ctx context.Context, _ *mcp.CallToolRequest, in
 
 	req := domain.UpdateEventRequest{
 		Title:             in.Title,
+		Jenis:             in.Jenis,
 		Description:       in.Description,
 		Location:          in.Location,
 		Visibility:        in.Visibility,
@@ -461,6 +468,7 @@ func toMCPEvent(e domain.EventResponse, loc *time.Location) MCPEvent {
 		OrgKind:      e.OrgKind,
 		CreatedBy:    e.CreatedBy.String(),
 		Title:        e.Title,
+		Jenis:        e.Jenis,
 		Description:  e.Description,
 		Location:     e.Location,
 		StartAt:      e.StartAt.In(loc).Format(time.RFC3339),

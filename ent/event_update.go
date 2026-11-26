@@ -118,6 +118,26 @@ func (_u *EventUpdate) SetNillableTitle(v *string) *EventUpdate {
 	return _u
 }
 
+// SetJenis sets the "jenis" field.
+func (_u *EventUpdate) SetJenis(v string) *EventUpdate {
+	_u.mutation.SetJenis(v)
+	return _u
+}
+
+// SetNillableJenis sets the "jenis" field if the given value is not nil.
+func (_u *EventUpdate) SetNillableJenis(v *string) *EventUpdate {
+	if v != nil {
+		_u.SetJenis(*v)
+	}
+	return _u
+}
+
+// ClearJenis clears the value of the "jenis" field.
+func (_u *EventUpdate) ClearJenis() *EventUpdate {
+	_u.mutation.ClearJenis()
+	return _u
+}
+
 // SetDescription sets the "description" field.
 func (_u *EventUpdate) SetDescription(v string) *EventUpdate {
 	_u.mutation.SetDescription(v)
@@ -381,6 +401,12 @@ func (_u *EventUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.Title(); ok {
 		_spec.SetField(event.FieldTitle, field.TypeString, value)
 	}
+	if value, ok := _u.mutation.Jenis(); ok {
+		_spec.SetField(event.FieldJenis, field.TypeString, value)
+	}
+	if _u.mutation.JenisCleared() {
+		_spec.ClearField(event.FieldJenis, field.TypeString)
+	}
 	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(event.FieldDescription, field.TypeString, value)
 	}
@@ -564,6 +590,26 @@ func (_u *EventUpdateOne) SetNillableTitle(v *string) *EventUpdateOne {
 	if v != nil {
 		_u.SetTitle(*v)
 	}
+	return _u
+}
+
+// SetJenis sets the "jenis" field.
+func (_u *EventUpdateOne) SetJenis(v string) *EventUpdateOne {
+	_u.mutation.SetJenis(v)
+	return _u
+}
+
+// SetNillableJenis sets the "jenis" field if the given value is not nil.
+func (_u *EventUpdateOne) SetNillableJenis(v *string) *EventUpdateOne {
+	if v != nil {
+		_u.SetJenis(*v)
+	}
+	return _u
+}
+
+// ClearJenis clears the value of the "jenis" field.
+func (_u *EventUpdateOne) ClearJenis() *EventUpdateOne {
+	_u.mutation.ClearJenis()
 	return _u
 }
 
@@ -859,6 +905,12 @@ func (_u *EventUpdateOne) sqlSave(ctx context.Context) (_node *Event, err error)
 	}
 	if value, ok := _u.mutation.Title(); ok {
 		_spec.SetField(event.FieldTitle, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Jenis(); ok {
+		_spec.SetField(event.FieldJenis, field.TypeString, value)
+	}
+	if _u.mutation.JenisCleared() {
+		_spec.ClearField(event.FieldJenis, field.TypeString)
 	}
 	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(event.FieldDescription, field.TypeString, value)

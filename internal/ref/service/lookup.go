@@ -95,6 +95,34 @@ func (s *Service) SearchLookups(
 	return items, hasMore, nil
 }
 
+// HasActiveLookup reports whether code exists and is active in category for global or parokiID (with paroki override).
+func (s *Service) HasActiveLookup(ctx context.Context, parokiID uuid.UUID, category, code string) (bool, error) {
+	cat := strings.ToLower(strings.TrimSpace(category))
+	c := strings.ToLower(strings.TrimSpace(code))
+	if cat == "" || c == "" {
+		return false, nil
+	}
+	globalRows, err := s.repo.ListGlobalLookups(ctx, "", cat, nil)
+	if err != nil {
+		return false, err
+	}
+	merged := make(map[string]*ent.Lookup, len(globalRows))
+	for _, row := range globalRows {
+		merged[row.Code] = row
+	}
+	if parokiID != uuid.Nil {
+		parokiRows, err := s.repo.ListParokiLookups(ctx, parokiID, "", cat, nil)
+		if err != nil {
+			return false, err
+		}
+		for _, row := range parokiRows {
+			merged[row.Code] = row
+		}
+	}
+	row, ok := merged[c]
+	return ok && row.Active, nil
+}
+
 // GetLookup returns a non-deleted Lookup if global or belonging to p.ParokiID.
 func (s *Service) GetLookup(ctx context.Context, p authx.Principal, id uuid.UUID) (domain.LookupResponse, error) {
 	row, err := s.repo.FindLookupByID(ctx, id)

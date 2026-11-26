@@ -16,6 +16,7 @@ type EventResponse struct {
 	OrgKind      string                    `json:"orgKind,omitempty"`
 	CreatedBy    uuid.UUID                 `json:"createdBy"`
 	Title        string                    `json:"title"`
+	Jenis        *string                   `json:"jenis,omitempty"`
 	Description  *string                   `json:"description,omitempty"`
 	Location     *string                   `json:"location,omitempty"`
 	StartAt      time.Time                 `json:"startAt"`
@@ -38,6 +39,7 @@ type EventResponse struct {
 type EventSearchFilter struct {
 	OrgID          *uuid.UUID `json:"orgId,omitempty"`
 	ParokiWideOnly *bool      `json:"parokiWideOnly,omitempty"`
+	Jenis          string     `json:"jenis,omitempty"`
 	Visibility     string     `json:"visibility,omitempty" validate:"omitempty,oneof=public private"`
 	Status         string     `json:"status,omitempty" validate:"omitempty,oneof=scheduled cancelled"`
 	MyOrgsOnly     *bool      `json:"myOrgsOnly,omitempty"`
@@ -57,6 +59,7 @@ type SearchEventsRequest struct {
 type CreateEventRequest struct {
 	OrgID        *uuid.UUID `json:"orgId,omitempty"`
 	Title        string     `json:"title" validate:"required,min=1"`
+	Jenis        *string    `json:"jenis,omitempty"`
 	Description  *string    `json:"description,omitempty"`
 	Location     *string    `json:"location,omitempty"`
 	StartAt      time.Time  `json:"startAt" validate:"required"`
@@ -69,6 +72,7 @@ type CreateEventRequest struct {
 // UpdateEventRequest updates an existing Event.
 type UpdateEventRequest struct {
 	Title             *string    `json:"title,omitempty" validate:"omitempty,min=1"`
+	Jenis             *string    `json:"jenis,omitempty"`
 	Description       *string    `json:"description,omitempty"`
 	Location          *string    `json:"location,omitempty"`
 	StartAt           *time.Time `json:"startAt,omitempty"`

@@ -96,6 +96,20 @@ func (_c *EventCreate) SetTitle(v string) *EventCreate {
 	return _c
 }
 
+// SetJenis sets the "jenis" field.
+func (_c *EventCreate) SetJenis(v string) *EventCreate {
+	_c.mutation.SetJenis(v)
+	return _c
+}
+
+// SetNillableJenis sets the "jenis" field if the given value is not nil.
+func (_c *EventCreate) SetNillableJenis(v *string) *EventCreate {
+	if v != nil {
+		_c.SetJenis(*v)
+	}
+	return _c
+}
+
 // SetDescription sets the "description" field.
 func (_c *EventCreate) SetDescription(v string) *EventCreate {
 	_c.mutation.SetDescription(v)
@@ -391,6 +405,10 @@ func (_c *EventCreate) createSpec() (*Event, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Title(); ok {
 		_spec.SetField(event.FieldTitle, field.TypeString, value)
 		_node.Title = value
+	}
+	if value, ok := _c.mutation.Jenis(); ok {
+		_spec.SetField(event.FieldJenis, field.TypeString, value)
+		_node.Jenis = &value
 	}
 	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(event.FieldDescription, field.TypeString, value)

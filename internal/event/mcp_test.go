@@ -474,4 +474,53 @@ func (s *EventMCPSuite) TestEventMCPTools_ParishEventAndTimezone() {
 		},
 	})
 	s.Contains(rsvpBody, `"status":"going"`)
+
+	// MCP event_create, event_list, event_update with jenis.
+	_, createJenisBody := s.mcpPost(padminSess, padminCookies, parokiID, map[string]any{
+		"jsonrpc": "2.0",
+		"id":      3,
+		"method":  "tools/call",
+		"params": map[string]any{
+			"name": "event_create",
+			"arguments": map[string]any{
+				"title":   "Ibadat Sabda Paroki",
+				"jenis":   "ibadat",
+				"startAt": "2026-12-02T18:00:00",
+				"endAt":   "2026-12-02T19:00:00",
+			},
+		},
+	})
+	s.Contains(createJenisBody, `"jenis":"ibadat"`)
+
+	_, listJenisBody := s.mcpPost(padminSess, padminCookies, parokiID, map[string]any{
+		"jsonrpc": "2.0",
+		"id":      4,
+		"method":  "tools/call",
+		"params": map[string]any{
+			"name":      "event_list",
+			"arguments": map[string]any{"jenis": "ibadat"},
+		},
+	})
+	s.Contains(listJenisBody, "Ibadat Sabda Paroki")
+	s.NotContains(listJenisBody, "Misa Pagi Paroki")
+
+	var ibadatSearch struct{ Data []event.Event }
+	s.Equal(http.StatusOK, s.apiJSON(http.MethodPost, "/api/events/search", map[string]any{
+		"filter": map[string]any{"jenis": "ibadat"},
+	}, padminCookies, parokiID, &ibadatSearch))
+	s.Require().Len(ibadatSearch.Data, 1)
+
+	_, clearJenisBody := s.mcpPost(padminSess, padminCookies, parokiID, map[string]any{
+		"jsonrpc": "2.0",
+		"id":      5,
+		"method":  "tools/call",
+		"params": map[string]any{
+			"name": "event_update",
+			"arguments": map[string]any{
+				"eventId": ibadatSearch.Data[0].ID.String(),
+				"jenis":   "",
+			},
+		},
+	})
+	s.NotContains(clearJenisBody, `"jenis":"ibadat"`)
 }

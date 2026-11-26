@@ -88,6 +88,10 @@ func (a parokiReaderAdapter) GetParoki(ctx context.Context, parokiID uuid.UUID) 
 	}, nil
 }
 
+func (a parokiReaderAdapter) HasActiveLookup(ctx context.Context, parokiID uuid.UUID, category, code string) (bool, error) {
+	return a.refs.HasActiveLookup(ctx, parokiID, category, code)
+}
+
 // Option configures optional dependencies on the event Feature.
 type Option func(*options)
 

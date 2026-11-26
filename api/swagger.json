@@ -282,6 +282,9 @@
                     "endAt": {
                         "type": "string"
                     },
+                    "jenis": {
+                        "type": "string"
+                    },
                     "location": {
                         "type": "string"
                     },
@@ -885,6 +888,9 @@
                     "id": {
                         "type": "string"
                     },
+                    "jenis": {
+                        "type": "string"
+                    },
                     "location": {
                         "type": "string"
                     },
@@ -942,6 +948,9 @@
             "domain.EventSearchFilter": {
                 "properties": {
                     "from": {
+                        "type": "string"
+                    },
+                    "jenis": {
                         "type": "string"
                     },
                     "myOrgsOnly": {
@@ -2424,6 +2433,9 @@
                         "type": "string"
                     },
                     "endAt": {
+                        "type": "string"
+                    },
+                    "jenis": {
                         "type": "string"
                     },
                     "location": {
