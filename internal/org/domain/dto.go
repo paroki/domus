@@ -199,6 +199,76 @@ type UpdateOrgPeriodeRequest struct {
 	IsCurrent      *bool   `json:"isCurrent,omitempty"`
 }
 
+// OrgJabatanResponse is the public API representation of an OrgJabatan.
+type OrgJabatanResponse struct {
+	ID        uuid.UUID  `json:"id"`
+	ParokiID  uuid.UUID  `json:"parokiId"`
+	OrgID     uuid.UUID  `json:"orgId"`
+	PeriodeID uuid.UUID  `json:"periodeId"`
+	ParentID  *uuid.UUID `json:"parentId,omitempty"`
+	Jabatan   string     `json:"jabatan"`
+	UserID    *uuid.UUID `json:"userId,omitempty"`
+	UmatID    *uuid.UUID `json:"umatId,omitempty"`
+	Nama      *string    `json:"nama,omitempty"`
+	StartDate *string    `json:"startDate,omitempty"`
+	EndDate   *string    `json:"endDate,omitempty"`
+	Urutan    int        `json:"urutan"`
+	Active    bool       `json:"active"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt time.Time  `json:"updatedAt"`
+}
+
+// OrgJabatanSearchFilter filters organization position search results.
+type OrgJabatanSearchFilter struct {
+	PeriodeID *uuid.UUID `json:"periodeId,omitempty"`
+	ParentID  *uuid.UUID `json:"parentId,omitempty"`
+	UserID    *uuid.UUID `json:"userId,omitempty"`
+	UmatID    *uuid.UUID `json:"umatId,omitempty"`
+	Jabatan   string     `json:"jabatan,omitempty"`
+	Active    *bool      `json:"active,omitempty"`
+}
+
+// SearchOrgJabatanRequest searches positions of an Organization.
+type SearchOrgJabatanRequest struct {
+	Q      string                  `json:"q,omitempty"`
+	Filter *OrgJabatanSearchFilter `json:"filter,omitempty"`
+	Cursor string                  `json:"cursor,omitempty"`
+	Limit  int                     `json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
+}
+
+// CreateOrgJabatanRequest creates a position node in an Organization period.
+type CreateOrgJabatanRequest struct {
+	PeriodeID uuid.UUID  `json:"periodeId" validate:"required"`
+	ParentID  *uuid.UUID `json:"parentId,omitempty"`
+	Jabatan   string     `json:"jabatan" validate:"required,min=1"`
+	UserID    *uuid.UUID `json:"userId,omitempty"`
+	UmatID    *uuid.UUID `json:"umatId,omitempty"`
+	Nama      *string    `json:"nama,omitempty"`
+	StartDate *string    `json:"startDate,omitempty"`
+	EndDate   *string    `json:"endDate,omitempty"`
+	Urutan    *int       `json:"urutan,omitempty"`
+	Active    *bool      `json:"active,omitempty"`
+}
+
+// UpdateOrgJabatanRequest updates mutable fields of an OrgJabatan.
+type UpdateOrgJabatanRequest struct {
+	ParentID       *uuid.UUID `json:"parentId,omitempty"`
+	ClearParentID  bool       `json:"clearParentId,omitempty"`
+	Jabatan        *string    `json:"jabatan,omitempty" validate:"omitempty,min=1"`
+	UserID         *uuid.UUID `json:"userId,omitempty"`
+	ClearUserID    bool       `json:"clearUserId,omitempty"`
+	UmatID         *uuid.UUID `json:"umatId,omitempty"`
+	ClearUmatID    bool       `json:"clearUmatId,omitempty"`
+	Nama           *string    `json:"nama,omitempty"`
+	ClearNama      bool       `json:"clearNama,omitempty"`
+	StartDate      *string    `json:"startDate,omitempty"`
+	ClearStartDate bool       `json:"clearStartDate,omitempty"`
+	EndDate        *string    `json:"endDate,omitempty"`
+	ClearEndDate   bool       `json:"clearEndDate,omitempty"`
+	Urutan         *int       `json:"urutan,omitempty"`
+	Active         *bool      `json:"active,omitempty"`
+}
+
 // OrgInviteSearchFilter filters organization invite search results.
 type OrgInviteSearchFilter struct {
 	Status string `json:"status,omitempty" validate:"omitempty,oneof=active expired revoked exhausted"`

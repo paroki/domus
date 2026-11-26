@@ -53,6 +53,7 @@ func (OrgPeriode) Edges() []ent.Edge {
 			Field("org_id").
 			Unique().
 			Required(),
+		edge.To("jabatan", OrgJabatan.Type),
 	}
 }
 

@@ -12,6 +12,7 @@ import (
 	"github.com/paroki/domus/internal/org/service"
 	"github.com/paroki/domus/internal/platform/authz"
 	"github.com/paroki/domus/internal/ref"
+	"github.com/paroki/domus/internal/umat"
 	"github.com/paroki/domus/internal/user"
 )
 
@@ -22,6 +23,7 @@ type (
 	Invite        = domain.OrgInviteResponse
 	InvitePreview = domain.OrgInvitePreviewResponse
 	OrgPeriode    = domain.OrgPeriodeResponse
+	OrgJabatan    = domain.OrgJabatanResponse
 )
 
 // Feature-owned Casbin roles and resource permissions.
@@ -43,6 +45,14 @@ func (a userEnsurerAdapter) EnsureUser(ctx context.Context, email, name, phone, 
 		return uuid.Nil, err
 	}
 	return u.ID, nil
+}
+
+func (a userEnsurerAdapter) GetUserName(ctx context.Context, userID uuid.UUID) (string, error) {
+	u, err := a.users.GetUser(ctx, userID)
+	if err != nil {
+		return "", err
+	}
+	return u.Name, nil
 }
 
 type refValidatorAdapter struct {
@@ -80,8 +90,20 @@ type Feature struct {
 	cfg     Config
 }
 
+// Option configures optional dependencies on the org Feature.
+type Option func(*Feature)
+
+// WithUmat attaches the umat Feature for user_id <-> umat_id <-> nama resolution.
+func WithUmat(u *umat.Feature) Option {
+	return func(f *Feature) {
+		if u != nil {
+			f.service.SetUmatReader(u)
+		}
+	}
+}
+
 // New constructs the org Feature.
-func New(db *ent.Client, enforcer *authz.Enforcer, users *user.Feature, refs *ref.Feature, cfg Config) *Feature {
+func New(db *ent.Client, enforcer *authz.Enforcer, users *user.Feature, refs *ref.Feature, cfg Config, opts ...Option) *Feature {
 	r := repo.New(db)
 	var ensurer service.UserEnsurer
 	var sessions service.SessionSwitcher
@@ -98,12 +120,18 @@ func New(db *ent.Client, enforcer *authz.Enforcer, users *user.Feature, refs *re
 		MaxTTL:     cfg.InviteMaxTTL,
 	})
 	h := handler.New(svc)
-	return &Feature{
+	f := &Feature{
 		service: svc,
 		handler: h,
 		users:   users,
 		cfg:     cfg,
 	}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(f)
+		}
+	}
+	return f
 }
 
 // Register mounts /orgs routes under /api.

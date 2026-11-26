@@ -155,6 +155,58 @@ type OrgListPeriodeOutput struct {
 	Periode []MCPOrgPeriode `json:"periode"`
 }
 
+// OrgListJabatanInput is the input schema for org_list_jabatan.
+type OrgListJabatanInput struct {
+	OrgID     string  `json:"orgId"`
+	PeriodeID *string `json:"periodeId,omitempty"`
+	ParentID  *string `json:"parentId,omitempty"`
+	UserID    *string `json:"userId,omitempty"`
+	UmatID    *string `json:"umatId,omitempty"`
+	Active    *bool   `json:"active,omitempty"`
+	Query     string  `json:"query,omitempty"`
+	Limit     int     `json:"limit,omitempty"`
+}
+
+// MCPOrgJabatan is the MCP-safe representation of an OrgJabatan (UUIDs as strings).
+type MCPOrgJabatan struct {
+	ID        string    `json:"id"`
+	ParokiID  string    `json:"parokiId"`
+	OrgID     string    `json:"orgId"`
+	PeriodeID string    `json:"periodeId"`
+	ParentID  *string   `json:"parentId,omitempty"`
+	Jabatan   string    `json:"jabatan"`
+	UserID    *string   `json:"userId,omitempty"`
+	UmatID    *string   `json:"umatId,omitempty"`
+	Nama      *string   `json:"nama,omitempty"`
+	StartDate *string   `json:"startDate,omitempty"`
+	EndDate   *string   `json:"endDate,omitempty"`
+	Urutan    int       `json:"urutan"`
+	Active    bool      `json:"active"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+// OrgListJabatanOutput is the output schema for org_list_jabatan.
+type OrgListJabatanOutput struct {
+	Jabatan []MCPOrgJabatan `json:"jabatan"`
+}
+
+// OrgSetJabatanInput is the input schema for org_set_jabatan.
+type OrgSetJabatanInput struct {
+	OrgID     string  `json:"orgId"`
+	JabatanID *string `json:"jabatanId,omitempty"`
+	PeriodeID *string `json:"periodeId,omitempty"`
+	ParentID  *string `json:"parentId,omitempty"`
+	Jabatan   *string `json:"jabatan,omitempty"`
+	UserID    *string `json:"userId,omitempty"`
+	UmatID    *string `json:"umatId,omitempty"`
+	Nama      *string `json:"nama,omitempty"`
+	StartDate *string `json:"startDate,omitempty"`
+	EndDate   *string `json:"endDate,omitempty"`
+	Urutan    *int    `json:"urutan,omitempty"`
+	Active    *bool   `json:"active,omitempty"`
+}
+
 // OrgRevokeInviteInput is the input schema for org_revoke_invite.
 type OrgRevokeInviteInput struct {
 	OrgID    string `json:"orgId"`
@@ -224,6 +276,16 @@ func (f *Feature) RegisterMCP(s *mcp.Server) {
 		Name:        "org_list_periode",
 		Description: "List periods of an organization (requires org:admin, org:member, or ref:paroki-admin).",
 	}, f.mcpOrgListPeriode)
+
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "org_list_jabatan",
+		Description: "List position nodes (org_jabatan) of an organization, defaulting to the current active period when periodeId is omitted.",
+	}, f.mcpOrgListJabatan)
+
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "org_set_jabatan",
+		Description: "Create or update a position node (org_jabatan) in an organization (requires org:admin or ref:paroki-admin).",
+	}, f.mcpOrgSetJabatan)
 }
 
 func (f *Feature) mcpOrgList(ctx context.Context, _ *mcp.CallToolRequest, in OrgListInput) (*mcp.CallToolResult, OrgListOutput, error) {
@@ -586,4 +648,169 @@ func (f *Feature) mcpOrgListPeriode(ctx context.Context, _ *mcp.CallToolRequest,
 		})
 	}
 	return nil, OrgListPeriodeOutput{Periode: out}, nil
+}
+
+func (f *Feature) mcpOrgListJabatan(ctx context.Context, _ *mcp.CallToolRequest, in OrgListJabatanInput) (*mcp.CallToolResult, OrgListJabatanOutput, error) {
+	p, err := requireMCPTenant(ctx)
+	if err != nil {
+		return nil, OrgListJabatanOutput{}, err
+	}
+	orgID, err := uuid.Parse(in.OrgID)
+	if err != nil {
+		return nil, OrgListJabatanOutput{}, httpx.BadRequest("Invalid organization ID.")
+	}
+	periodeID, err := parseOptionalUUID(in.PeriodeID, "periodeId")
+	if err != nil {
+		return nil, OrgListJabatanOutput{}, err
+	}
+	if periodeID == nil {
+		curID, curErr := f.service.CurrentOrgPeriodeID(ctx, p, orgID)
+		if curErr != nil {
+			return nil, OrgListJabatanOutput{}, curErr
+		}
+		periodeID = &curID
+	}
+	parentID, err := parseOptionalUUID(in.ParentID, "parentId")
+	if err != nil {
+		return nil, OrgListJabatanOutput{}, err
+	}
+	userID, err := parseOptionalUUID(in.UserID, "userId")
+	if err != nil {
+		return nil, OrgListJabatanOutput{}, err
+	}
+	umatID, err := parseOptionalUUID(in.UmatID, "umatId")
+	if err != nil {
+		return nil, OrgListJabatanOutput{}, err
+	}
+	items, _, err := f.service.SearchOrgJabatan(
+		ctx,
+		p,
+		orgID,
+		domain.SearchOrgJabatanRequest{
+			Q: in.Query,
+			Filter: &domain.OrgJabatanSearchFilter{
+				PeriodeID: periodeID,
+				ParentID:  parentID,
+				UserID:    userID,
+				UmatID:    umatID,
+				Active:    in.Active,
+			},
+		},
+		nil,
+		nil,
+		nil,
+		clampMCPLimit(in.Limit),
+	)
+	if err != nil {
+		return nil, OrgListJabatanOutput{}, err
+	}
+	out := make([]MCPOrgJabatan, 0, len(items))
+	for _, item := range items {
+		out = append(out, toMCPOrgJabatan(item))
+	}
+	return nil, OrgListJabatanOutput{Jabatan: out}, nil
+}
+
+func (f *Feature) mcpOrgSetJabatan(ctx context.Context, _ *mcp.CallToolRequest, in OrgSetJabatanInput) (*mcp.CallToolResult, MCPOrgJabatan, error) {
+	p, err := requireMCPTenant(ctx)
+	if err != nil {
+		return nil, MCPOrgJabatan{}, err
+	}
+	orgID, err := uuid.Parse(in.OrgID)
+	if err != nil {
+		return nil, MCPOrgJabatan{}, httpx.BadRequest("Invalid organization ID.")
+	}
+	jabatanID, err := parseOptionalUUID(in.JabatanID, "jabatanId")
+	if err != nil {
+		return nil, MCPOrgJabatan{}, err
+	}
+	parentID, err := parseOptionalUUID(in.ParentID, "parentId")
+	if err != nil {
+		return nil, MCPOrgJabatan{}, err
+	}
+	userID, err := parseOptionalUUID(in.UserID, "userId")
+	if err != nil {
+		return nil, MCPOrgJabatan{}, err
+	}
+	umatID, err := parseOptionalUUID(in.UmatID, "umatId")
+	if err != nil {
+		return nil, MCPOrgJabatan{}, err
+	}
+
+	if jabatanID != nil && *jabatanID != uuid.Nil {
+		req := domain.UpdateOrgJabatanRequest{
+			ParentID:       parentID,
+			ClearParentID:  in.ParentID != nil && *in.ParentID == "",
+			Jabatan:        in.Jabatan,
+			UserID:         userID,
+			ClearUserID:    in.UserID != nil && *in.UserID == "",
+			UmatID:         umatID,
+			ClearUmatID:    in.UmatID != nil && *in.UmatID == "",
+			Nama:           in.Nama,
+			ClearNama:      in.Nama != nil && *in.Nama == "",
+			StartDate:      in.StartDate,
+			ClearStartDate: in.StartDate != nil && *in.StartDate == "",
+			EndDate:        in.EndDate,
+			ClearEndDate:   in.EndDate != nil && *in.EndDate == "",
+			Urutan:         in.Urutan,
+			Active:         in.Active,
+		}
+		res, err := f.service.UpdateOrgJabatan(ctx, p, orgID, *jabatanID, req)
+		if err != nil {
+			return nil, MCPOrgJabatan{}, err
+		}
+		return nil, toMCPOrgJabatan(res), nil
+	}
+
+	periodeID, err := parseOptionalUUID(in.PeriodeID, "periodeId")
+	if err != nil {
+		return nil, MCPOrgJabatan{}, err
+	}
+	if periodeID == nil || *periodeID == uuid.Nil {
+		curID, curErr := f.service.CurrentOrgPeriodeID(ctx, p, orgID)
+		if curErr != nil {
+			return nil, MCPOrgJabatan{}, curErr
+		}
+		periodeID = &curID
+	}
+	var jabatan string
+	if in.Jabatan != nil {
+		jabatan = *in.Jabatan
+	}
+	res, err := f.service.CreateOrgJabatan(ctx, p, orgID, domain.CreateOrgJabatanRequest{
+		PeriodeID: *periodeID,
+		ParentID:  parentID,
+		Jabatan:   jabatan,
+		UserID:    userID,
+		UmatID:    umatID,
+		Nama:      in.Nama,
+		StartDate: in.StartDate,
+		EndDate:   in.EndDate,
+		Urutan:    in.Urutan,
+		Active:    in.Active,
+	})
+	if err != nil {
+		return nil, MCPOrgJabatan{}, err
+	}
+	return nil, toMCPOrgJabatan(res), nil
+}
+
+func toMCPOrgJabatan(j domain.OrgJabatanResponse) MCPOrgJabatan {
+	return MCPOrgJabatan{
+		ID:        j.ID.String(),
+		ParokiID:  j.ParokiID.String(),
+		OrgID:     j.OrgID.String(),
+		PeriodeID: j.PeriodeID.String(),
+		ParentID:  uuidPtrStr(j.ParentID),
+		Jabatan:   j.Jabatan,
+		UserID:    uuidPtrStr(j.UserID),
+		UmatID:    uuidPtrStr(j.UmatID),
+		Nama:      j.Nama,
+		StartDate: j.StartDate,
+		EndDate:   j.EndDate,
+		Urutan:    j.Urutan,
+		Active:    j.Active,
+		CreatedAt: j.CreatedAt,
+		UpdatedAt: j.UpdatedAt,
+	}
 }

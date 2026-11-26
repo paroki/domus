@@ -7,6 +7,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/ent/keluarga"
+	"github.com/paroki/domus/ent/orgjabatan"
+	"github.com/paroki/domus/ent/orgmember"
 	"github.com/paroki/domus/ent/umat"
 	"github.com/paroki/domus/ent/umatsakramen"
 )
@@ -229,6 +231,75 @@ func (r *Repository) UpdateUmat(ctx context.Context, id uuid.UUID, build func(*e
 // SoftDeleteUmat sets deleted_at on an Umat.
 func (r *Repository) SoftDeleteUmat(ctx context.Context, id uuid.UUID, at time.Time) error {
 	return r.client.Umat.UpdateOneID(id).SetDeletedAt(at).Exec(ctx)
+}
+
+// LookupUmat returns non-deleted, non-deceased Umat rows in parokiID ordered by nama ASC, id ASC.
+func (r *Repository) LookupUmat(
+	ctx context.Context,
+	parokiID uuid.UUID,
+	q string,
+	wilayahID, lingkunganID *uuid.UUID,
+	limit int,
+) ([]*ent.Umat, error) {
+	query := r.client.Umat.Query().
+		Where(
+			umat.ParokiIDEQ(parokiID),
+			umat.DeletedAtIsNil(),
+			umat.AlmarhumEQ(false),
+		)
+	if q != "" {
+		query = query.Where(umat.Or(
+			umat.NamaContainsFold(q),
+			umat.NamaBaptisContainsFold(q),
+		))
+	}
+	if wilayahID != nil && *wilayahID != uuid.Nil {
+		query = query.Where(umat.WilayahIDEQ(*wilayahID))
+	}
+	if lingkunganID != nil && *lingkunganID != uuid.Nil {
+		query = query.Where(umat.LingkunganIDEQ(*lingkunganID))
+	}
+	return query.
+		Order(ent.Asc(umat.FieldNama), ent.Asc(umat.FieldID)).
+		Limit(limit).
+		All(ctx)
+}
+
+// FindUmatBasicByID returns a non-deleted Umat by ID within parokiID.
+func (r *Repository) FindUmatBasicByID(ctx context.Context, parokiID, umatID uuid.UUID) (*ent.Umat, error) {
+	return r.client.Umat.Query().
+		Where(umat.IDEQ(umatID), umat.ParokiIDEQ(parokiID), umat.DeletedAtIsNil()).
+		Only(ctx)
+}
+
+// FindUmatByUserID returns a non-deleted Umat linked to userID within parokiID.
+func (r *Repository) FindUmatByUserID(ctx context.Context, parokiID, userID uuid.UUID) (*ent.Umat, error) {
+	return r.client.Umat.Query().
+		Where(umat.ParokiIDEQ(parokiID), umat.UserIDEQ(userID), umat.DeletedAtIsNil()).
+		Only(ctx)
+}
+
+// HasActiveOrgAdminInParoki reports whether userID holds an active org:admin membership in parokiID.
+func (r *Repository) HasActiveOrgAdminInParoki(ctx context.Context, parokiID, userID uuid.UUID) (bool, error) {
+	return r.client.OrgMember.Query().
+		Where(
+			orgmember.ParokiIDEQ(parokiID),
+			orgmember.UserIDEQ(userID),
+			orgmember.RoleEQ(orgmember.RoleAdmin),
+			orgmember.StatusEQ(orgmember.StatusActive),
+		).
+		Exist(ctx)
+}
+
+// HasOrgJabatanByUmat reports whether any non-deleted OrgJabatan in parokiID references umatID.
+func (r *Repository) HasOrgJabatanByUmat(ctx context.Context, parokiID, umatID uuid.UUID) (bool, error) {
+	return r.client.OrgJabatan.Query().
+		Where(
+			orgjabatan.ParokiIDEQ(parokiID),
+			orgjabatan.UmatIDEQ(umatID),
+			orgjabatan.DeletedAtIsNil(),
+		).
+		Exist(ctx)
 }
 
 // HasActiveNomorKKHash reports whether an active Keluarga in parokiID already uses hash (excluding excludeID if non-nil).

@@ -15,6 +15,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orginvite"
+	"github.com/paroki/domus/ent/orgjabatan"
 	"github.com/paroki/domus/ent/orgmember"
 	"github.com/paroki/domus/ent/orgperiode"
 	"github.com/paroki/domus/ent/predicate"
@@ -32,6 +33,7 @@ type OrganizationQuery struct {
 	withMembers  *OrgMemberQuery
 	withInvites  *OrgInviteQuery
 	withPeriode  *OrgPeriodeQuery
+	withJabatan  *OrgJabatanQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -171,6 +173,28 @@ func (_q *OrganizationQuery) QueryPeriode() *OrgPeriodeQuery {
 			sqlgraph.From(organization.Table, organization.FieldID, selector),
 			sqlgraph.To(orgperiode.Table, orgperiode.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, organization.PeriodeTable, organization.PeriodeColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryJabatan chains the current query on the "jabatan" edge.
+func (_q *OrganizationQuery) QueryJabatan() *OrgJabatanQuery {
+	query := (&OrgJabatanClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(organization.Table, organization.FieldID, selector),
+			sqlgraph.To(orgjabatan.Table, orgjabatan.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, organization.JabatanTable, organization.JabatanColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -375,6 +399,7 @@ func (_q *OrganizationQuery) Clone() *OrganizationQuery {
 		withMembers:  _q.withMembers.Clone(),
 		withInvites:  _q.withInvites.Clone(),
 		withPeriode:  _q.withPeriode.Clone(),
+		withJabatan:  _q.withJabatan.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -433,6 +458,17 @@ func (_q *OrganizationQuery) WithPeriode(opts ...func(*OrgPeriodeQuery)) *Organi
 		opt(query)
 	}
 	_q.withPeriode = query
+	return _q
+}
+
+// WithJabatan tells the query-builder to eager-load the nodes that are connected to
+// the "jabatan" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *OrganizationQuery) WithJabatan(opts ...func(*OrgJabatanQuery)) *OrganizationQuery {
+	query := (&OrgJabatanClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withJabatan = query
 	return _q
 }
 
@@ -514,12 +550,13 @@ func (_q *OrganizationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	var (
 		nodes       = []*Organization{}
 		_spec       = _q.querySpec()
-		loadedTypes = [5]bool{
+		loadedTypes = [6]bool{
 			_q.withParent != nil,
 			_q.withChildren != nil,
 			_q.withMembers != nil,
 			_q.withInvites != nil,
 			_q.withPeriode != nil,
+			_q.withJabatan != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -571,6 +608,13 @@ func (_q *OrganizationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 		if err := _q.loadPeriode(ctx, query, nodes,
 			func(n *Organization) { n.Edges.Periode = []*OrgPeriode{} },
 			func(n *Organization, e *OrgPeriode) { n.Edges.Periode = append(n.Edges.Periode, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withJabatan; query != nil {
+		if err := _q.loadJabatan(ctx, query, nodes,
+			func(n *Organization) { n.Edges.Jabatan = []*OrgJabatan{} },
+			func(n *Organization, e *OrgJabatan) { n.Edges.Jabatan = append(n.Edges.Jabatan, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -717,6 +761,36 @@ func (_q *OrganizationQuery) loadPeriode(ctx context.Context, query *OrgPeriodeQ
 	}
 	query.Where(predicate.OrgPeriode(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(organization.PeriodeColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.OrgID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "org_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *OrganizationQuery) loadJabatan(ctx context.Context, query *OrgJabatanQuery, nodes []*Organization, init func(*Organization), assign func(*Organization, *OrgJabatan)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Organization)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(orgjabatan.FieldOrgID)
+	}
+	query.Where(predicate.OrgJabatan(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(organization.JabatanColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

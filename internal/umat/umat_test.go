@@ -2,6 +2,7 @@ package umat_test
 
 import (
 	"context"
+	"io"
 	"log/slog"
 	"net/http"
 	"testing"
@@ -628,4 +629,156 @@ func (s *UmatSuite) TestUmatSakramen_UpsertUpdateDeleteAndCanonicalOrdering() {
 	s.Request("/api/umat/"+u.ID.String()+"/sakramen/"+krisma.ID.String(), http.MethodDelete, nil)
 	s.NotFound()
 	s.Equal("UMAT_SAKRAMEN_NOT_FOUND", s.GetErrorResponse().Error.Code)
+}
+
+func (s *UmatSuite) TestUmatLookup_RBAC_PIIFree_AndDeleteInUseGuard() {
+	ctx := context.Background()
+	s.loginViaOTP("admin@paroki.org")
+
+	s.Request("/api/ref/keuskupan", http.MethodPost, refdomain.CreateKeuskupanRequest{
+		Kode: "kaj-lookup",
+		Nama: "Keuskupan Lookup",
+	})
+	s.Created()
+	dio := testutil.DecodeAs[refdomain.KeuskupanResponse](s).Data
+
+	s.Request("/api/ref/paroki", http.MethodPost, refdomain.CreateParokiRequest{
+		KeuskupanID: dio.ID,
+		Kode:        "p-lookup",
+		Nama:        "Paroki Lookup",
+	})
+	s.Created()
+	par := testutil.DecodeAs[refdomain.ParokiResponse](s).Data
+	s.SetHeader("X-Paroki-Id", par.ID.String())
+
+	// Seed users: paroki-admin, umat-admin, org-admin, plain paroki member.
+	pAdmin, err := s.userFeature.EnsureUser(ctx, "padmin@paroki.org", "Paroki Admin", "", "email", "padmin@paroki.org")
+	s.Require().NoError(err)
+	_, err = s.refFeature.EnsureParokiMember(ctx, par.ID, pAdmin.ID)
+	s.Require().NoError(err)
+	s.Require().NoError(s.enforcer.AssignRole(ctx, authz.UserSubject(pAdmin.ID), ref.RoleParokiAdmin, authz.ParokiDomain(par.ID)))
+
+	uAdmin, err := s.userFeature.EnsureUser(ctx, "umatadmin@paroki.org", "Umat Admin", "", "email", "umatadmin@paroki.org")
+	s.Require().NoError(err)
+	_, err = s.refFeature.EnsureParokiMember(ctx, par.ID, uAdmin.ID)
+	s.Require().NoError(err)
+	s.Require().NoError(s.enforcer.AssignRole(ctx, authz.UserSubject(uAdmin.ID), umat.RoleAdmin, authz.ParokiDomain(par.ID)))
+
+	orgAdmin, err := s.userFeature.EnsureUser(ctx, "orgadmin@paroki.org", "Org Admin", "", "email", "orgadmin@paroki.org")
+	s.Require().NoError(err)
+	_, err = s.refFeature.EnsureParokiMember(ctx, par.ID, orgAdmin.ID)
+	s.Require().NoError(err)
+
+	plainUser, err := s.userFeature.EnsureUser(ctx, "plain@paroki.org", "Plain Member", "", "email", "plain@paroki.org")
+	s.Require().NoError(err)
+	_, err = s.refFeature.EnsureParokiMember(ctx, par.ID, plainUser.ID)
+	s.Require().NoError(err)
+
+	orgRow, err := s.client.Organization.Create().
+		SetParokiID(par.ID).
+		SetKind("section").
+		SetCode("sek-lookup").
+		SetName("Seksi Lookup").
+		Save(ctx)
+	s.Require().NoError(err)
+	_, err = s.client.OrgMember.Create().
+		SetParokiID(par.ID).
+		SetOrgID(orgRow.ID).
+		SetUserID(orgAdmin.ID).
+		SetRole("admin").
+		SetStatus("active").
+		Save(ctx)
+	s.Require().NoError(err)
+
+	// Create one active Umat (with PII) and one deceased Umat.
+	s.loginViaOTP("umatadmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", par.ID.String())
+	s.Request("/api/umat", http.MethodPost, domain.CreateUmatRequest{
+		Nama:         "Budi Santoso",
+		NamaBaptis:   new("Yohanes"),
+		JenisKelamin: "pria",
+		NIK:          new("3273010101900001"),
+		Telepon:      new("+628123456789"),
+		Email:        new("budi.pii@example.com"),
+		UserID:       &orgAdmin.ID,
+	})
+	s.Created()
+	budi := testutil.DecodeAs[domain.UmatDetailResponse](s).Data
+
+	s.Request("/api/umat", http.MethodPost, domain.CreateUmatRequest{
+		Nama:         "Almarhum Test",
+		JenisKelamin: "pria",
+		Almarhum:     new(true),
+	})
+	s.Created()
+
+	// Verify umat:admin, ref:paroki-admin, and active org:admin can call POST /api/umat/lookup without PII.
+	for _, email := range []string{"umatadmin@paroki.org", "padmin@paroki.org", "orgadmin@paroki.org"} {
+		s.loginViaOTP(email)
+		s.SetHeader("X-Paroki-Id", par.ID.String())
+		s.Request("/api/umat/lookup", http.MethodPost, domain.LookupUmatRequest{Q: "Budi"})
+		s.OK()
+		rawBytes, readErr := io.ReadAll(s.HttpResponse.Body)
+		s.Require().NoError(readErr)
+		rawBody := string(rawBytes)
+		s.NotContains(rawBody, "3273010101900001")
+		s.NotContains(rawBody, "+628123456789")
+		s.NotContains(rawBody, "budi.pii@example.com")
+
+		s.Request("/api/umat/lookup", http.MethodPost, domain.LookupUmatRequest{Q: "Budi"})
+		s.OK()
+		items := testutil.DecodeAs[[]domain.UmatLookupItemResponse](s).Data
+		s.Require().Len(items, 1)
+		s.Equal(budi.ID, items[0].ID)
+		s.Equal("Budi Santoso", items[0].Nama)
+		s.Require().NotNil(items[0].UserID)
+		s.Equal(orgAdmin.ID, *items[0].UserID)
+	}
+
+	// Regular member gets 403 UMAT_FORBIDDEN.
+	s.loginViaOTP("plain@paroki.org")
+	s.SetHeader("X-Paroki-Id", par.ID.String())
+	s.Request("/api/umat/lookup", http.MethodPost, domain.LookupUmatRequest{})
+	s.Forbidden()
+	s.Equal("UMAT_FORBIDDEN", s.GetErrorResponse().Error.Code)
+
+	// Facade helpers GetBasic & GetByUserID.
+	basic, err := s.umatFeature.GetBasic(ctx, par.ID, budi.ID)
+	s.Require().NoError(err)
+	s.Equal("Budi Santoso", basic.Nama)
+	byUser, err := s.umatFeature.GetByUserID(ctx, par.ID, orgAdmin.ID)
+	s.Require().NoError(err)
+	s.Require().NotNil(byUser)
+	s.Equal(budi.ID, byUser.ID)
+
+	// 409 UMAT_IN_USE when referenced by an active OrgJabatan.
+	perRow, err := s.client.OrgPeriode.Create().
+		SetParokiID(par.ID).
+		SetOrgID(orgRow.ID).
+		SetKode("2026").
+		SetNama("2026").
+		SetTanggalMulai("2026-01-01").
+		SetTanggalSelesai("2026-12-31").
+		Save(ctx)
+	s.Require().NoError(err)
+	jabRow, err := s.client.OrgJabatan.Create().
+		SetParokiID(par.ID).
+		SetOrgID(orgRow.ID).
+		SetPeriodeID(perRow.ID).
+		SetJabatan("Ketua").
+		SetUmatID(budi.ID).
+		Save(ctx)
+	s.Require().NoError(err)
+
+	s.loginViaOTP("umatadmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", par.ID.String())
+	s.Request("/api/umat/"+budi.ID.String(), http.MethodDelete, nil)
+	s.Conflict()
+	s.Equal("UMAT_IN_USE", s.GetErrorResponse().Error.Code)
+
+	// Soft-delete OrgJabatan -> DeleteUmat succeeds.
+	_, err = s.client.OrgJabatan.UpdateOneID(jabRow.ID).SetDeletedAt(time.Now().UTC()).Save(ctx)
+	s.Require().NoError(err)
+	s.Request("/api/umat/"+budi.ID.String(), http.MethodDelete, nil)
+	s.NoContent()
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orginvite"
+	"github.com/paroki/domus/ent/orgjabatan"
 	"github.com/paroki/domus/ent/orgmember"
 	"github.com/paroki/domus/ent/orgperiode"
 )
@@ -245,6 +246,21 @@ func (_c *OrganizationCreate) AddPeriode(v ...*OrgPeriode) *OrganizationCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddPeriodeIDs(ids...)
+}
+
+// AddJabatanIDs adds the "jabatan" edge to the OrgJabatan entity by IDs.
+func (_c *OrganizationCreate) AddJabatanIDs(ids ...uuid.UUID) *OrganizationCreate {
+	_c.mutation.AddJabatanIDs(ids...)
+	return _c
+}
+
+// AddJabatan adds the "jabatan" edges to the OrgJabatan entity.
+func (_c *OrganizationCreate) AddJabatan(v ...*OrgJabatan) *OrganizationCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddJabatanIDs(ids...)
 }
 
 // Mutation returns the OrganizationMutation object of the builder.
@@ -495,6 +511,22 @@ func (_c *OrganizationCreate) createSpec() (*Organization, *sqlgraph.CreateSpec)
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(orgperiode.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.JabatanIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.JabatanTable,
+			Columns: []string{organization.JabatanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgjabatan.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

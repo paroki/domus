@@ -13,6 +13,7 @@ import (
 	"github.com/paroki/domus/internal/org/repo"
 	"github.com/paroki/domus/internal/platform/authx"
 	"github.com/paroki/domus/internal/platform/authz"
+	"github.com/paroki/domus/internal/umat"
 )
 
 const (
@@ -29,6 +30,13 @@ var (
 // UserEnsurer finds or creates a user by email/profile and returns their user ID.
 type UserEnsurer interface {
 	EnsureUser(ctx context.Context, email, name, phone, provider, subject string) (uuid.UUID, error)
+	GetUserName(ctx context.Context, userID uuid.UUID) (string, error)
+}
+
+// UmatReader reads PII-free parishioner summaries from internal/umat.
+type UmatReader interface {
+	GetBasic(ctx context.Context, parokiID, umatID uuid.UUID) (*umat.UmatBasic, error)
+	GetByUserID(ctx context.Context, parokiID, userID uuid.UUID) (*umat.UmatBasic, error)
 }
 
 // RefValidator validates cross-feature reference entities within a paroki.
@@ -55,8 +63,14 @@ type Service struct {
 	enforcer *authz.Enforcer
 	users    UserEnsurer
 	refs     RefValidator
+	umats    UmatReader
 	sessions SessionSwitcher
 	cfg      InviteConfig
+}
+
+// SetUmatReader attaches an optional UmatReader to the org Service.
+func (s *Service) SetUmatReader(u UmatReader) {
+	s.umats = u
 }
 
 // New constructs an org Service.

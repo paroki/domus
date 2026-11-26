@@ -18,8 +18,10 @@ import (
 	"github.com/paroki/domus/internal/org"
 	"github.com/paroki/domus/internal/org/domain"
 	"github.com/paroki/domus/internal/platform/authz"
+	"github.com/paroki/domus/internal/platform/crypt"
 	"github.com/paroki/domus/internal/ref"
 	refdomain "github.com/paroki/domus/internal/ref/domain"
+	"github.com/paroki/domus/internal/umat"
 	"github.com/paroki/domus/internal/user"
 	userdomain "github.com/paroki/domus/internal/user/domain"
 	"github.com/paroki/domus/testutil"
@@ -33,6 +35,7 @@ type OrgMCPSuite struct {
 	sender      *stubOTPSender
 	userFeature *user.Feature
 	refFeature  *ref.Feature
+	umatFeature *umat.Feature
 	orgFeature  *org.Feature
 	fiberApp    *fiber.App
 }
@@ -62,16 +65,20 @@ func (s *OrgMCPSuite) SetupTest() {
 		InviteMaxTTL:     168 * time.Hour,
 	}
 
+	cipher, err := crypt.New("test-secret-key-at-least-32-bytes!!")
+	s.Require().NoError(err)
+
 	s.userFeature = user.New(s.client, s.enforcer, userCfg, slog.New(slog.DiscardHandler), user.WithOTPSender(s.sender))
 	s.refFeature = ref.New(s.client, s.enforcer, s.userFeature)
-	s.orgFeature = org.New(s.client, s.enforcer, s.userFeature, s.refFeature, orgCfg)
+	s.umatFeature = umat.New(s.client, s.enforcer, s.userFeature, s.refFeature, cipher)
+	s.orgFeature = org.New(s.client, s.enforcer, s.userFeature, s.refFeature, orgCfg, org.WithUmat(s.umatFeature))
 	s.userFeature.SetInviteJoiner(s.orgFeature)
 
 	ctx := context.Background()
-	s.Require().NoError(authz.RegisterFeatures(ctx, s.enforcer, s.userFeature, s.refFeature, s.orgFeature))
+	s.Require().NoError(authz.RegisterFeatures(ctx, s.enforcer, s.userFeature, s.refFeature, s.umatFeature, s.orgFeature))
 	s.Require().NoError(s.userFeature.Bootstrap(ctx))
 
-	s.fiberApp = app.GetFiber(app.Config{}, slog.New(slog.DiscardHandler), s.userFeature, s.refFeature, s.orgFeature)
+	s.fiberApp = app.GetFiber(app.Config{}, slog.New(slog.DiscardHandler), s.userFeature, s.refFeature, s.umatFeature, s.orgFeature)
 }
 
 func (s *OrgMCPSuite) loginCookies(email string) []*http.Cookie {
@@ -395,4 +402,77 @@ func (s *OrgMCPSuite) TestOrgMCP_DiscoveryToolsAndRBAC() {
 		},
 	})
 	s.Contains(listPeriodeDenied, `"isError":true`)
+
+	// 10. org_set_jabatan (defaults to is_current period) & org_list_jabatan.
+	_, setJabBody := s.mcpPost(sessionID, orgAdminCookies, parokiID, map[string]any{
+		"jsonrpc": "2.0",
+		"id":      15,
+		"method":  "tools/call",
+		"params": map[string]any{
+			"name": "org_set_jabatan",
+			"arguments": map[string]any{
+				"orgId":   orgID,
+				"jabatan": "Ketua Katekese",
+				"nama":    "Budi Katekese",
+				"urutan":  1,
+			},
+		},
+	})
+	s.NotContains(setJabBody, `"isError":true`)
+	s.Contains(setJabBody, `"jabatan":"Ketua Katekese"`)
+
+	var rpcJab struct {
+		Result struct {
+			StructuredContent org.MCPOrgJabatan `json:"structuredContent"`
+		} `json:"result"`
+	}
+	s.Require().NoError(json.Unmarshal([]byte(setJabBody), &rpcJab))
+	jabID := rpcJab.Result.StructuredContent.ID
+	s.NotEmpty(jabID)
+
+	// Update existing jabatan via org_set_jabatan.
+	_, updJabBody := s.mcpPost(sessionID, orgAdminCookies, parokiID, map[string]any{
+		"jsonrpc": "2.0",
+		"id":      16,
+		"method":  "tools/call",
+		"params": map[string]any{
+			"name": "org_set_jabatan",
+			"arguments": map[string]any{
+				"orgId":     orgID,
+				"jabatanId": jabID,
+				"jabatan":   "Ketua Katekese Paroki",
+			},
+		},
+	})
+	s.NotContains(updJabBody, `"isError":true`)
+	s.Contains(updJabBody, `"jabatan":"Ketua Katekese Paroki"`)
+
+	// List jabatan defaulting to is_current period.
+	_, listJabBody := s.mcpPost(sessionID, orgAdminCookies, parokiID, map[string]any{
+		"jsonrpc": "2.0",
+		"id":      17,
+		"method":  "tools/call",
+		"params": map[string]any{
+			"name":      "org_list_jabatan",
+			"arguments": map[string]any{"orgId": orgID},
+		},
+	})
+	s.NotContains(listJabBody, `"isError":true`)
+	s.Contains(listJabBody, `"jabatan":"Ketua Katekese Paroki"`)
+
+	// Non-admin member cannot call org_set_jabatan.
+	_, setJabDenied := s.mcpPost(guestParishSessionID, guestCookies, parokiID, map[string]any{
+		"jsonrpc": "2.0",
+		"id":      18,
+		"method":  "tools/call",
+		"params": map[string]any{
+			"name": "org_set_jabatan",
+			"arguments": map[string]any{
+				"orgId":   orgID,
+				"jabatan": "Unauthorized",
+			},
+		},
+	})
+	s.Contains(setJabDenied, `"isError":true`)
+	s.Contains(setJabDenied, domain.ErrForbidden.Error())
 }

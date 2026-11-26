@@ -60,6 +60,9 @@ type Lookup func(*sql.Selector)
 // OrgInvite is the predicate function for orginvite builders.
 type OrgInvite func(*sql.Selector)
 
+// OrgJabatan is the predicate function for orgjabatan builders.
+type OrgJabatan func(*sql.Selector)
+
 // OrgMember is the predicate function for orgmember builders.
 type OrgMember func(*sql.Selector)
 

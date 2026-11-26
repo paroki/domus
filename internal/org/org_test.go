@@ -17,8 +17,11 @@ import (
 	"github.com/paroki/domus/internal/org/domain"
 	orgrepo "github.com/paroki/domus/internal/org/repo"
 	"github.com/paroki/domus/internal/platform/authz"
+	"github.com/paroki/domus/internal/platform/crypt"
 	"github.com/paroki/domus/internal/ref"
 	refdomain "github.com/paroki/domus/internal/ref/domain"
+	"github.com/paroki/domus/internal/umat"
+	umatdomain "github.com/paroki/domus/internal/umat/domain"
 	"github.com/paroki/domus/internal/user"
 	userdomain "github.com/paroki/domus/internal/user/domain"
 	"github.com/paroki/domus/testutil"
@@ -41,6 +44,7 @@ type OrgFeatureSuite struct {
 	sender      *stubOTPSender
 	userFeature *user.Feature
 	refFeature  *ref.Feature
+	umatFeature *umat.Feature
 	orgFeature  *org.Feature
 }
 
@@ -70,16 +74,20 @@ func (s *OrgFeatureSuite) SetupTest() {
 		InviteMaxTTL:     168 * time.Hour,
 	}
 
+	cipher, err := crypt.New("test-secret-key-at-least-32-bytes!!")
+	s.Require().NoError(err)
+
 	s.userFeature = user.New(s.client, s.enforcer, userCfg, slog.New(slog.DiscardHandler), user.WithOTPSender(s.sender))
 	s.refFeature = ref.New(s.client, s.enforcer, s.userFeature)
-	s.orgFeature = org.New(s.client, s.enforcer, s.userFeature, s.refFeature, orgCfg)
+	s.umatFeature = umat.New(s.client, s.enforcer, s.userFeature, s.refFeature, cipher)
+	s.orgFeature = org.New(s.client, s.enforcer, s.userFeature, s.refFeature, orgCfg, org.WithUmat(s.umatFeature))
 	s.userFeature.SetInviteJoiner(s.orgFeature)
 
 	ctx := context.Background()
-	s.Require().NoError(authz.RegisterFeatures(ctx, s.enforcer, s.userFeature, s.refFeature, s.orgFeature))
+	s.Require().NoError(authz.RegisterFeatures(ctx, s.enforcer, s.userFeature, s.refFeature, s.umatFeature, s.orgFeature))
 	s.Require().NoError(s.userFeature.Bootstrap(ctx))
 
-	s.WithFeatures(s.userFeature, s.refFeature, s.orgFeature)
+	s.WithFeatures(s.userFeature, s.refFeature, s.umatFeature, s.orgFeature)
 }
 
 func (s *OrgFeatureSuite) loginViaOTP(email string) {
@@ -832,6 +840,244 @@ func (s *OrgFeatureSuite) TestDeleteOrganization_InUseWithEvent() {
 	s.Require().NoError(err)
 
 	s.Request(fmt.Sprintf("/api/orgs/%s", orgRow.ID), http.MethodDelete, nil)
+	s.NoContent()
+}
+
+func (s *OrgFeatureSuite) TestOrgJabatan_Hierarchy_Cycle_AutoSync_Rangkap_AndInUseGuards() {
+	ctx := context.Background()
+	parokiID, _, _, _ := s.seedParokiWithAdmin("padmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+
+	// Create org with org:admin.
+	s.Request("/api/orgs", http.MethodPost, domain.CreateOrganizationRequest{
+		Kind:              "section",
+		Code:              "sek-komsos",
+		Name:              "Seksi Komsos",
+		InitialAdminEmail: "komsosadmin@paroki.org",
+		InitialAdminName:  "Komsos Admin",
+	})
+	s.Created()
+	orgRow := testutil.DecodeAs[domain.OrganizationResponse](s).Data
+
+	// Create two periods.
+	s.loginViaOTP("komsosadmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+	s.Request(fmt.Sprintf("/api/orgs/%s/periode", orgRow.ID), http.MethodPost, domain.CreateOrgPeriodeRequest{
+		Kode:           "2025-2027",
+		Nama:           "Periode 2025-2027",
+		TanggalMulai:   "2025-01-01",
+		TanggalSelesai: "2027-12-31",
+		IsCurrent:      true,
+	})
+	s.Created()
+	p1 := testutil.DecodeAs[domain.OrgPeriodeResponse](s).Data
+
+	s.Request(fmt.Sprintf("/api/orgs/%s/periode", orgRow.ID), http.MethodPost, domain.CreateOrgPeriodeRequest{
+		Kode:           "2028-2030",
+		Nama:           "Periode 2028-2030",
+		TanggalMulai:   "2028-01-01",
+		TanggalSelesai: "2030-12-31",
+	})
+	s.Created()
+	p2 := testutil.DecodeAs[domain.OrgPeriodeResponse](s).Data
+
+	// Seed users + umat records for auto-sync & conflict tests.
+	u1, err := s.userFeature.EnsureUser(ctx, "u1@paroki.org", "User Satu", "", "email", "u1@paroki.org")
+	s.Require().NoError(err)
+	_, err = s.refFeature.EnsureParokiMember(ctx, parokiID, u1.ID)
+	s.Require().NoError(err)
+	u2, err := s.userFeature.EnsureUser(ctx, "u2@paroki.org", "User Dua", "", "email", "u2@paroki.org")
+	s.Require().NoError(err)
+	_, err = s.refFeature.EnsureParokiMember(ctx, parokiID, u2.ID)
+	s.Require().NoError(err)
+	outsider, err := s.userFeature.EnsureUser(ctx, "outsider@paroki.org", "Outsider", "", "email", "outsider@paroki.org")
+	s.Require().NoError(err)
+	_, err = s.refFeature.EnsureParokiMember(ctx, parokiID, outsider.ID)
+	s.Require().NoError(err)
+
+	// Add u2 as org:member for RBAC checks.
+	s.Request(fmt.Sprintf("/api/orgs/%s/members", orgRow.ID), http.MethodPost, domain.AddOrgMemberRequest{
+		UserID: &u2.ID,
+		Role:   "member",
+	})
+	s.Created()
+
+	// Create Umat records as ref:paroki-admin (who also has umat:admin? assign umat:admin to padmin).
+	pAdminUser, err := s.userFeature.EnsureUser(ctx, "padmin@paroki.org", "Paroki Admin", "", "email", "padmin@paroki.org")
+	s.Require().NoError(err)
+	s.Require().NoError(s.enforcer.AssignRole(ctx, authz.UserSubject(pAdminUser.ID), umat.RoleAdmin, authz.ParokiDomain(parokiID)))
+	s.loginViaOTP("padmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+
+	s.Request("/api/umat", http.MethodPost, umatdomain.CreateUmatRequest{
+		Nama:         "Umat Satu",
+		JenisKelamin: "pria",
+		UserID:       &u1.ID,
+	})
+	s.Created()
+	um1 := testutil.DecodeAs[umatdomain.UmatDetailResponse](s).Data
+
+	s.Request("/api/umat", http.MethodPost, umatdomain.CreateUmatRequest{
+		Nama:         "Umat Tanpa Akun",
+		JenisKelamin: "wanita",
+	})
+	s.Created()
+	um2 := testutil.DecodeAs[umatdomain.UmatDetailResponse](s).Data
+
+	s.Request("/api/umat", http.MethodPost, umatdomain.CreateUmatRequest{
+		Nama:         "Umat Lain",
+		JenisKelamin: "pria",
+	})
+	s.Created()
+	um3 := testutil.DecodeAs[umatdomain.UmatDetailResponse](s).Data
+
+	// Switch back to org:admin.
+	s.loginViaOTP("komsosadmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+
+	// 1. Auto-sync userId -> umatId + nama.
+	urutan1 := 1
+	s.Request(fmt.Sprintf("/api/orgs/%s/jabatan", orgRow.ID), http.MethodPost, domain.CreateOrgJabatanRequest{
+		PeriodeID: p1.ID,
+		Jabatan:   "Ketua",
+		UserID:    &u1.ID,
+		Urutan:    &urutan1,
+	})
+	s.Created()
+	ketua := testutil.DecodeAs[domain.OrgJabatanResponse](s).Data
+	s.Require().NotNil(ketua.UserID)
+	s.Equal(u1.ID, *ketua.UserID)
+	s.Require().NotNil(ketua.UmatID)
+	s.Equal(um1.ID, *ketua.UmatID)
+	s.Require().NotNil(ketua.Nama)
+	s.Equal("User Satu", *ketua.Nama)
+
+	// 2. Auto-sync umatId -> userId + nama, plus rangkap jabatan (u1 holds 2nd position in same period).
+	urutan2 := 2
+	s.Request(fmt.Sprintf("/api/orgs/%s/jabatan", orgRow.ID), http.MethodPost, domain.CreateOrgJabatanRequest{
+		PeriodeID: p1.ID,
+		ParentID:  &ketua.ID,
+		Jabatan:   "Koordinator Media",
+		UmatID:    &um1.ID,
+		Urutan:    &urutan2,
+	})
+	s.Created()
+	rangkap := testutil.DecodeAs[domain.OrgJabatanResponse](s).Data
+	s.Require().NotNil(rangkap.UserID)
+	s.Equal(u1.ID, *rangkap.UserID)
+	s.Require().NotNil(rangkap.Nama)
+	s.Equal("Umat Satu", *rangkap.Nama)
+
+	// 3. Conflict: u1.ID + um3.ID -> 422 VALIDATION_ERROR.
+	s.Request(fmt.Sprintf("/api/orgs/%s/jabatan", orgRow.ID), http.MethodPost, domain.CreateOrgJabatanRequest{
+		PeriodeID: p1.ID,
+		Jabatan:   "Conflict",
+		UserID:    &u1.ID,
+		UmatID:    &um3.ID,
+	})
+	s.UnprocessableEntity()
+	s.Equal("VALIDATION_ERROR", s.GetErrorResponse().Error.Code)
+
+	// 4. Child under rangkap + manual nama + vacant position.
+	urutan3 := 3
+	s.Request(fmt.Sprintf("/api/orgs/%s/jabatan", orgRow.ID), http.MethodPost, domain.CreateOrgJabatanRequest{
+		PeriodeID: p1.ID,
+		ParentID:  &rangkap.ID,
+		Jabatan:   "Editor Video",
+		UmatID:    &um2.ID,
+		Urutan:    &urutan3,
+	})
+	s.Created()
+	child := testutil.DecodeAs[domain.OrgJabatanResponse](s).Data
+	s.Nil(child.UserID)
+	s.Require().NotNil(child.UmatID)
+	s.Equal(um2.ID, *child.UmatID)
+	s.Require().NotNil(child.Nama)
+	s.Equal("Umat Tanpa Akun", *child.Nama)
+
+	urutan4 := 4
+	s.Request(fmt.Sprintf("/api/orgs/%s/jabatan", orgRow.ID), http.MethodPost, domain.CreateOrgJabatanRequest{
+		PeriodeID: p1.ID,
+		Jabatan:   "Penasihat",
+		Nama:      new("Bpk. Anton"),
+		Urutan:    &urutan4,
+	})
+	s.Created()
+	manual := testutil.DecodeAs[domain.OrgJabatanResponse](s).Data
+	s.Require().NotNil(manual.Nama)
+	s.Equal("Bpk. Anton", *manual.Nama)
+
+	// 5. Cycle detection: setting ketua.parentId = child.ID -> 422; self-parent -> 422; cross-period -> 422.
+	s.Request(fmt.Sprintf("/api/orgs/%s/jabatan/%s", orgRow.ID, ketua.ID), http.MethodPatch, domain.UpdateOrgJabatanRequest{
+		ParentID: &child.ID,
+	})
+	s.UnprocessableEntity()
+	s.Equal("VALIDATION_ERROR", s.GetErrorResponse().Error.Code)
+
+	s.Request(fmt.Sprintf("/api/orgs/%s/jabatan/%s", orgRow.ID, ketua.ID), http.MethodPatch, domain.UpdateOrgJabatanRequest{
+		ParentID: &ketua.ID,
+	})
+	s.UnprocessableEntity()
+
+	s.Request(fmt.Sprintf("/api/orgs/%s/jabatan", orgRow.ID), http.MethodPost, domain.CreateOrgJabatanRequest{
+		PeriodeID: p2.ID,
+		ParentID:  &ketua.ID,
+		Jabatan:   "Cross Period",
+	})
+	s.UnprocessableEntity()
+
+	// 6. Search ordered by urutan ASC.
+	s.Request(fmt.Sprintf("/api/orgs/%s/jabatan/search", orgRow.ID), http.MethodPost, domain.SearchOrgJabatanRequest{
+		Filter: &domain.OrgJabatanSearchFilter{PeriodeID: &p1.ID},
+	})
+	s.OK()
+	listed := testutil.DecodeAs[[]domain.OrgJabatanResponse](s).Data
+	s.Require().Len(listed, 4)
+	s.Equal(ketua.ID, listed[0].ID)
+	s.Equal(rangkap.ID, listed[1].ID)
+	s.Equal(child.ID, listed[2].ID)
+	s.Equal(manual.ID, listed[3].ID)
+
+	// 7. RBAC: org:member can read, cannot write; outsider cannot read.
+	s.loginViaOTP("u2@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+	s.Request(fmt.Sprintf("/api/orgs/%s/jabatan/search", orgRow.ID), http.MethodPost, domain.SearchOrgJabatanRequest{})
+	s.OK()
+	s.Request(fmt.Sprintf("/api/orgs/%s/jabatan/%s", orgRow.ID, ketua.ID), http.MethodGet, nil)
+	s.OK()
+	s.Request(fmt.Sprintf("/api/orgs/%s/jabatan", orgRow.ID), http.MethodPost, domain.CreateOrgJabatanRequest{
+		PeriodeID: p1.ID,
+		Jabatan:   "Denied",
+	})
+	s.Forbidden()
+	s.Equal("ORG_FORBIDDEN", s.GetErrorResponse().Error.Code)
+
+	s.loginViaOTP("outsider@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+	s.Request(fmt.Sprintf("/api/orgs/%s/jabatan/search", orgRow.ID), http.MethodPost, domain.SearchOrgJabatanRequest{})
+	s.Forbidden()
+
+	// 8. Delete guards: 409 ORG_IN_USE on period with active OrgJabatan, and on parent OrgJabatan with children.
+	s.loginViaOTP("komsosadmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+	s.Request(fmt.Sprintf("/api/orgs/%s/periode/%s", orgRow.ID, p1.ID), http.MethodDelete, nil)
+	s.Conflict()
+	s.Equal("ORG_IN_USE", s.GetErrorResponse().Error.Code)
+
+	s.Request(fmt.Sprintf("/api/orgs/%s/jabatan/%s", orgRow.ID, ketua.ID), http.MethodDelete, nil)
+	s.Conflict()
+	s.Equal("ORG_IN_USE", s.GetErrorResponse().Error.Code)
+
+	// Delete leaf -> parent -> root -> period succeeds.
+	s.Request(fmt.Sprintf("/api/orgs/%s/jabatan/%s", orgRow.ID, child.ID), http.MethodDelete, nil)
+	s.NoContent()
+	s.Request(fmt.Sprintf("/api/orgs/%s/jabatan/%s", orgRow.ID, rangkap.ID), http.MethodDelete, nil)
+	s.NoContent()
+	s.Request(fmt.Sprintf("/api/orgs/%s/jabatan/%s", orgRow.ID, manual.ID), http.MethodDelete, nil)
+	s.NoContent()
+	s.Request(fmt.Sprintf("/api/orgs/%s/jabatan/%s", orgRow.ID, ketua.ID), http.MethodDelete, nil)
+	s.NoContent()
+	s.Request(fmt.Sprintf("/api/orgs/%s/periode/%s", orgRow.ID, p1.ID), http.MethodDelete, nil)
 	s.NoContent()
 }
 

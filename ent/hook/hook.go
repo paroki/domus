@@ -225,6 +225,18 @@ func (f OrgInviteFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, e
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.OrgInviteMutation", m)
 }
 
+// The OrgJabatanFunc type is an adapter to allow the use of ordinary
+// function as OrgJabatan mutator.
+type OrgJabatanFunc func(context.Context, *ent.OrgJabatanMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f OrgJabatanFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.OrgJabatanMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.OrgJabatanMutation", m)
+}
+
 // The OrgMemberFunc type is an adapter to allow the use of ordinary
 // function as OrgMember mutator.
 type OrgMemberFunc func(context.Context, *ent.OrgMemberMutation) (ent.Value, error)

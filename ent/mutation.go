@@ -31,6 +31,7 @@ import (
 	"github.com/paroki/domus/ent/lookup"
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orginvite"
+	"github.com/paroki/domus/ent/orgjabatan"
 	"github.com/paroki/domus/ent/orgmember"
 	"github.com/paroki/domus/ent/orgperiode"
 	"github.com/paroki/domus/ent/paroki"
@@ -75,6 +76,7 @@ const (
 	TypeLingkungan    = "Lingkungan"
 	TypeLookup        = "Lookup"
 	TypeOrgInvite     = "OrgInvite"
+	TypeOrgJabatan    = "OrgJabatan"
 	TypeOrgMember     = "OrgMember"
 	TypeOrgPeriode    = "OrgPeriode"
 	TypeOrganization  = "Organization"
@@ -17691,6 +17693,1510 @@ func (m *OrgInviteMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown OrgInvite edge %s", name)
 }
 
+// OrgJabatanMutation represents an operation that mutates the OrgJabatan nodes in the graph.
+type OrgJabatanMutation struct {
+	config
+	op                  Op
+	typ                 string
+	id                  *uuid.UUID
+	created_at          *time.Time
+	updated_at          *time.Time
+	deleted_at          *time.Time
+	paroki_id           *uuid.UUID
+	jabatan             *string
+	user_id             *uuid.UUID
+	umat_id             *uuid.UUID
+	nama                *string
+	start_date          *string
+	end_date            *string
+	urutan              *int
+	addurutan           *int
+	active              *bool
+	clearedFields       map[string]struct{}
+	organization        *uuid.UUID
+	clearedorganization bool
+	periode             *uuid.UUID
+	clearedperiode      bool
+	parent              *uuid.UUID
+	clearedparent       bool
+	children            map[uuid.UUID]struct{}
+	removedchildren     map[uuid.UUID]struct{}
+	clearedchildren     bool
+	done                bool
+	oldValue            func(context.Context) (*OrgJabatan, error)
+	predicates          []predicate.OrgJabatan
+}
+
+var _ ent.Mutation = (*OrgJabatanMutation)(nil)
+
+// orgjabatanOption allows management of the mutation configuration using functional options.
+type orgjabatanOption func(*OrgJabatanMutation)
+
+// newOrgJabatanMutation creates new mutation for the OrgJabatan entity.
+func newOrgJabatanMutation(c config, op Op, opts ...orgjabatanOption) *OrgJabatanMutation {
+	m := &OrgJabatanMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeOrgJabatan,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withOrgJabatanID sets the ID field of the mutation.
+func withOrgJabatanID(id uuid.UUID) orgjabatanOption {
+	return func(m *OrgJabatanMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *OrgJabatan
+		)
+		m.oldValue = func(ctx context.Context) (*OrgJabatan, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().OrgJabatan.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withOrgJabatan sets the old OrgJabatan of the mutation.
+func withOrgJabatan(node *OrgJabatan) orgjabatanOption {
+	return func(m *OrgJabatanMutation) {
+		m.oldValue = func(context.Context) (*OrgJabatan, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m OrgJabatanMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m OrgJabatanMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of OrgJabatan entities.
+func (m *OrgJabatanMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *OrgJabatanMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *OrgJabatanMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().OrgJabatan.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *OrgJabatanMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *OrgJabatanMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the OrgJabatan entity.
+// If the OrgJabatan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OrgJabatanMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *OrgJabatanMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *OrgJabatanMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *OrgJabatanMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the OrgJabatan entity.
+// If the OrgJabatan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OrgJabatanMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *OrgJabatanMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *OrgJabatanMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *OrgJabatanMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the OrgJabatan entity.
+// If the OrgJabatan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OrgJabatanMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *OrgJabatanMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[orgjabatan.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *OrgJabatanMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[orgjabatan.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *OrgJabatanMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, orgjabatan.FieldDeletedAt)
+}
+
+// SetParokiID sets the "paroki_id" field.
+func (m *OrgJabatanMutation) SetParokiID(u uuid.UUID) {
+	m.paroki_id = &u
+}
+
+// ParokiID returns the value of the "paroki_id" field in the mutation.
+func (m *OrgJabatanMutation) ParokiID() (r uuid.UUID, exists bool) {
+	v := m.paroki_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldParokiID returns the old "paroki_id" field's value of the OrgJabatan entity.
+// If the OrgJabatan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OrgJabatanMutation) OldParokiID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldParokiID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldParokiID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldParokiID: %w", err)
+	}
+	return oldValue.ParokiID, nil
+}
+
+// ResetParokiID resets all changes to the "paroki_id" field.
+func (m *OrgJabatanMutation) ResetParokiID() {
+	m.paroki_id = nil
+}
+
+// SetOrgID sets the "org_id" field.
+func (m *OrgJabatanMutation) SetOrgID(u uuid.UUID) {
+	m.organization = &u
+}
+
+// OrgID returns the value of the "org_id" field in the mutation.
+func (m *OrgJabatanMutation) OrgID() (r uuid.UUID, exists bool) {
+	v := m.organization
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOrgID returns the old "org_id" field's value of the OrgJabatan entity.
+// If the OrgJabatan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OrgJabatanMutation) OldOrgID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOrgID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOrgID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOrgID: %w", err)
+	}
+	return oldValue.OrgID, nil
+}
+
+// ResetOrgID resets all changes to the "org_id" field.
+func (m *OrgJabatanMutation) ResetOrgID() {
+	m.organization = nil
+}
+
+// SetPeriodeID sets the "periode_id" field.
+func (m *OrgJabatanMutation) SetPeriodeID(u uuid.UUID) {
+	m.periode = &u
+}
+
+// PeriodeID returns the value of the "periode_id" field in the mutation.
+func (m *OrgJabatanMutation) PeriodeID() (r uuid.UUID, exists bool) {
+	v := m.periode
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPeriodeID returns the old "periode_id" field's value of the OrgJabatan entity.
+// If the OrgJabatan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OrgJabatanMutation) OldPeriodeID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPeriodeID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPeriodeID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPeriodeID: %w", err)
+	}
+	return oldValue.PeriodeID, nil
+}
+
+// ResetPeriodeID resets all changes to the "periode_id" field.
+func (m *OrgJabatanMutation) ResetPeriodeID() {
+	m.periode = nil
+}
+
+// SetParentID sets the "parent_id" field.
+func (m *OrgJabatanMutation) SetParentID(u uuid.UUID) {
+	m.parent = &u
+}
+
+// ParentID returns the value of the "parent_id" field in the mutation.
+func (m *OrgJabatanMutation) ParentID() (r uuid.UUID, exists bool) {
+	v := m.parent
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldParentID returns the old "parent_id" field's value of the OrgJabatan entity.
+// If the OrgJabatan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OrgJabatanMutation) OldParentID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldParentID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldParentID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldParentID: %w", err)
+	}
+	return oldValue.ParentID, nil
+}
+
+// ClearParentID clears the value of the "parent_id" field.
+func (m *OrgJabatanMutation) ClearParentID() {
+	m.parent = nil
+	m.clearedFields[orgjabatan.FieldParentID] = struct{}{}
+}
+
+// ParentIDCleared returns if the "parent_id" field was cleared in this mutation.
+func (m *OrgJabatanMutation) ParentIDCleared() bool {
+	_, ok := m.clearedFields[orgjabatan.FieldParentID]
+	return ok
+}
+
+// ResetParentID resets all changes to the "parent_id" field.
+func (m *OrgJabatanMutation) ResetParentID() {
+	m.parent = nil
+	delete(m.clearedFields, orgjabatan.FieldParentID)
+}
+
+// SetJabatan sets the "jabatan" field.
+func (m *OrgJabatanMutation) SetJabatan(s string) {
+	m.jabatan = &s
+}
+
+// Jabatan returns the value of the "jabatan" field in the mutation.
+func (m *OrgJabatanMutation) Jabatan() (r string, exists bool) {
+	v := m.jabatan
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldJabatan returns the old "jabatan" field's value of the OrgJabatan entity.
+// If the OrgJabatan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OrgJabatanMutation) OldJabatan(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldJabatan is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldJabatan requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldJabatan: %w", err)
+	}
+	return oldValue.Jabatan, nil
+}
+
+// ResetJabatan resets all changes to the "jabatan" field.
+func (m *OrgJabatanMutation) ResetJabatan() {
+	m.jabatan = nil
+}
+
+// SetUserID sets the "user_id" field.
+func (m *OrgJabatanMutation) SetUserID(u uuid.UUID) {
+	m.user_id = &u
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *OrgJabatanMutation) UserID() (r uuid.UUID, exists bool) {
+	v := m.user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the OrgJabatan entity.
+// If the OrgJabatan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OrgJabatanMutation) OldUserID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// ClearUserID clears the value of the "user_id" field.
+func (m *OrgJabatanMutation) ClearUserID() {
+	m.user_id = nil
+	m.clearedFields[orgjabatan.FieldUserID] = struct{}{}
+}
+
+// UserIDCleared returns if the "user_id" field was cleared in this mutation.
+func (m *OrgJabatanMutation) UserIDCleared() bool {
+	_, ok := m.clearedFields[orgjabatan.FieldUserID]
+	return ok
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *OrgJabatanMutation) ResetUserID() {
+	m.user_id = nil
+	delete(m.clearedFields, orgjabatan.FieldUserID)
+}
+
+// SetUmatID sets the "umat_id" field.
+func (m *OrgJabatanMutation) SetUmatID(u uuid.UUID) {
+	m.umat_id = &u
+}
+
+// UmatID returns the value of the "umat_id" field in the mutation.
+func (m *OrgJabatanMutation) UmatID() (r uuid.UUID, exists bool) {
+	v := m.umat_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUmatID returns the old "umat_id" field's value of the OrgJabatan entity.
+// If the OrgJabatan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OrgJabatanMutation) OldUmatID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUmatID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUmatID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUmatID: %w", err)
+	}
+	return oldValue.UmatID, nil
+}
+
+// ClearUmatID clears the value of the "umat_id" field.
+func (m *OrgJabatanMutation) ClearUmatID() {
+	m.umat_id = nil
+	m.clearedFields[orgjabatan.FieldUmatID] = struct{}{}
+}
+
+// UmatIDCleared returns if the "umat_id" field was cleared in this mutation.
+func (m *OrgJabatanMutation) UmatIDCleared() bool {
+	_, ok := m.clearedFields[orgjabatan.FieldUmatID]
+	return ok
+}
+
+// ResetUmatID resets all changes to the "umat_id" field.
+func (m *OrgJabatanMutation) ResetUmatID() {
+	m.umat_id = nil
+	delete(m.clearedFields, orgjabatan.FieldUmatID)
+}
+
+// SetNama sets the "nama" field.
+func (m *OrgJabatanMutation) SetNama(s string) {
+	m.nama = &s
+}
+
+// Nama returns the value of the "nama" field in the mutation.
+func (m *OrgJabatanMutation) Nama() (r string, exists bool) {
+	v := m.nama
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNama returns the old "nama" field's value of the OrgJabatan entity.
+// If the OrgJabatan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OrgJabatanMutation) OldNama(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNama is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNama requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNama: %w", err)
+	}
+	return oldValue.Nama, nil
+}
+
+// ClearNama clears the value of the "nama" field.
+func (m *OrgJabatanMutation) ClearNama() {
+	m.nama = nil
+	m.clearedFields[orgjabatan.FieldNama] = struct{}{}
+}
+
+// NamaCleared returns if the "nama" field was cleared in this mutation.
+func (m *OrgJabatanMutation) NamaCleared() bool {
+	_, ok := m.clearedFields[orgjabatan.FieldNama]
+	return ok
+}
+
+// ResetNama resets all changes to the "nama" field.
+func (m *OrgJabatanMutation) ResetNama() {
+	m.nama = nil
+	delete(m.clearedFields, orgjabatan.FieldNama)
+}
+
+// SetStartDate sets the "start_date" field.
+func (m *OrgJabatanMutation) SetStartDate(s string) {
+	m.start_date = &s
+}
+
+// StartDate returns the value of the "start_date" field in the mutation.
+func (m *OrgJabatanMutation) StartDate() (r string, exists bool) {
+	v := m.start_date
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStartDate returns the old "start_date" field's value of the OrgJabatan entity.
+// If the OrgJabatan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OrgJabatanMutation) OldStartDate(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStartDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStartDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStartDate: %w", err)
+	}
+	return oldValue.StartDate, nil
+}
+
+// ClearStartDate clears the value of the "start_date" field.
+func (m *OrgJabatanMutation) ClearStartDate() {
+	m.start_date = nil
+	m.clearedFields[orgjabatan.FieldStartDate] = struct{}{}
+}
+
+// StartDateCleared returns if the "start_date" field was cleared in this mutation.
+func (m *OrgJabatanMutation) StartDateCleared() bool {
+	_, ok := m.clearedFields[orgjabatan.FieldStartDate]
+	return ok
+}
+
+// ResetStartDate resets all changes to the "start_date" field.
+func (m *OrgJabatanMutation) ResetStartDate() {
+	m.start_date = nil
+	delete(m.clearedFields, orgjabatan.FieldStartDate)
+}
+
+// SetEndDate sets the "end_date" field.
+func (m *OrgJabatanMutation) SetEndDate(s string) {
+	m.end_date = &s
+}
+
+// EndDate returns the value of the "end_date" field in the mutation.
+func (m *OrgJabatanMutation) EndDate() (r string, exists bool) {
+	v := m.end_date
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEndDate returns the old "end_date" field's value of the OrgJabatan entity.
+// If the OrgJabatan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OrgJabatanMutation) OldEndDate(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEndDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEndDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEndDate: %w", err)
+	}
+	return oldValue.EndDate, nil
+}
+
+// ClearEndDate clears the value of the "end_date" field.
+func (m *OrgJabatanMutation) ClearEndDate() {
+	m.end_date = nil
+	m.clearedFields[orgjabatan.FieldEndDate] = struct{}{}
+}
+
+// EndDateCleared returns if the "end_date" field was cleared in this mutation.
+func (m *OrgJabatanMutation) EndDateCleared() bool {
+	_, ok := m.clearedFields[orgjabatan.FieldEndDate]
+	return ok
+}
+
+// ResetEndDate resets all changes to the "end_date" field.
+func (m *OrgJabatanMutation) ResetEndDate() {
+	m.end_date = nil
+	delete(m.clearedFields, orgjabatan.FieldEndDate)
+}
+
+// SetUrutan sets the "urutan" field.
+func (m *OrgJabatanMutation) SetUrutan(i int) {
+	m.urutan = &i
+	m.addurutan = nil
+}
+
+// Urutan returns the value of the "urutan" field in the mutation.
+func (m *OrgJabatanMutation) Urutan() (r int, exists bool) {
+	v := m.urutan
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUrutan returns the old "urutan" field's value of the OrgJabatan entity.
+// If the OrgJabatan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OrgJabatanMutation) OldUrutan(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUrutan is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUrutan requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUrutan: %w", err)
+	}
+	return oldValue.Urutan, nil
+}
+
+// AddUrutan adds i to the "urutan" field.
+func (m *OrgJabatanMutation) AddUrutan(i int) {
+	if m.addurutan != nil {
+		*m.addurutan += i
+	} else {
+		m.addurutan = &i
+	}
+}
+
+// AddedUrutan returns the value that was added to the "urutan" field in this mutation.
+func (m *OrgJabatanMutation) AddedUrutan() (r int, exists bool) {
+	v := m.addurutan
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetUrutan resets all changes to the "urutan" field.
+func (m *OrgJabatanMutation) ResetUrutan() {
+	m.urutan = nil
+	m.addurutan = nil
+}
+
+// SetActive sets the "active" field.
+func (m *OrgJabatanMutation) SetActive(b bool) {
+	m.active = &b
+}
+
+// Active returns the value of the "active" field in the mutation.
+func (m *OrgJabatanMutation) Active() (r bool, exists bool) {
+	v := m.active
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldActive returns the old "active" field's value of the OrgJabatan entity.
+// If the OrgJabatan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OrgJabatanMutation) OldActive(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldActive is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldActive requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldActive: %w", err)
+	}
+	return oldValue.Active, nil
+}
+
+// ResetActive resets all changes to the "active" field.
+func (m *OrgJabatanMutation) ResetActive() {
+	m.active = nil
+}
+
+// SetOrganizationID sets the "organization" edge to the Organization entity by id.
+func (m *OrgJabatanMutation) SetOrganizationID(id uuid.UUID) {
+	m.organization = &id
+}
+
+// ClearOrganization clears the "organization" edge to the Organization entity.
+func (m *OrgJabatanMutation) ClearOrganization() {
+	m.clearedorganization = true
+	m.clearedFields[orgjabatan.FieldOrgID] = struct{}{}
+}
+
+// OrganizationCleared reports if the "organization" edge to the Organization entity was cleared.
+func (m *OrgJabatanMutation) OrganizationCleared() bool {
+	return m.clearedorganization
+}
+
+// OrganizationID returns the "organization" edge ID in the mutation.
+func (m *OrgJabatanMutation) OrganizationID() (id uuid.UUID, exists bool) {
+	if m.organization != nil {
+		return *m.organization, true
+	}
+	return
+}
+
+// OrganizationIDs returns the "organization" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// OrganizationID instead. It exists only for internal usage by the builders.
+func (m *OrgJabatanMutation) OrganizationIDs() (ids []uuid.UUID) {
+	if id := m.organization; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetOrganization resets all changes to the "organization" edge.
+func (m *OrgJabatanMutation) ResetOrganization() {
+	m.organization = nil
+	m.clearedorganization = false
+}
+
+// ClearPeriode clears the "periode" edge to the OrgPeriode entity.
+func (m *OrgJabatanMutation) ClearPeriode() {
+	m.clearedperiode = true
+	m.clearedFields[orgjabatan.FieldPeriodeID] = struct{}{}
+}
+
+// PeriodeCleared reports if the "periode" edge to the OrgPeriode entity was cleared.
+func (m *OrgJabatanMutation) PeriodeCleared() bool {
+	return m.clearedperiode
+}
+
+// PeriodeIDs returns the "periode" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// PeriodeID instead. It exists only for internal usage by the builders.
+func (m *OrgJabatanMutation) PeriodeIDs() (ids []uuid.UUID) {
+	if id := m.periode; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetPeriode resets all changes to the "periode" edge.
+func (m *OrgJabatanMutation) ResetPeriode() {
+	m.periode = nil
+	m.clearedperiode = false
+}
+
+// ClearParent clears the "parent" edge to the OrgJabatan entity.
+func (m *OrgJabatanMutation) ClearParent() {
+	m.clearedparent = true
+	m.clearedFields[orgjabatan.FieldParentID] = struct{}{}
+}
+
+// ParentCleared reports if the "parent" edge to the OrgJabatan entity was cleared.
+func (m *OrgJabatanMutation) ParentCleared() bool {
+	return m.ParentIDCleared() || m.clearedparent
+}
+
+// ParentIDs returns the "parent" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ParentID instead. It exists only for internal usage by the builders.
+func (m *OrgJabatanMutation) ParentIDs() (ids []uuid.UUID) {
+	if id := m.parent; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetParent resets all changes to the "parent" edge.
+func (m *OrgJabatanMutation) ResetParent() {
+	m.parent = nil
+	m.clearedparent = false
+}
+
+// AddChildIDs adds the "children" edge to the OrgJabatan entity by ids.
+func (m *OrgJabatanMutation) AddChildIDs(ids ...uuid.UUID) {
+	if m.children == nil {
+		m.children = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.children[ids[i]] = struct{}{}
+	}
+}
+
+// ClearChildren clears the "children" edge to the OrgJabatan entity.
+func (m *OrgJabatanMutation) ClearChildren() {
+	m.clearedchildren = true
+}
+
+// ChildrenCleared reports if the "children" edge to the OrgJabatan entity was cleared.
+func (m *OrgJabatanMutation) ChildrenCleared() bool {
+	return m.clearedchildren
+}
+
+// RemoveChildIDs removes the "children" edge to the OrgJabatan entity by IDs.
+func (m *OrgJabatanMutation) RemoveChildIDs(ids ...uuid.UUID) {
+	if m.removedchildren == nil {
+		m.removedchildren = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.children, ids[i])
+		m.removedchildren[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedChildren returns the removed IDs of the "children" edge to the OrgJabatan entity.
+func (m *OrgJabatanMutation) RemovedChildrenIDs() (ids []uuid.UUID) {
+	for id := range m.removedchildren {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ChildrenIDs returns the "children" edge IDs in the mutation.
+func (m *OrgJabatanMutation) ChildrenIDs() (ids []uuid.UUID) {
+	for id := range m.children {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetChildren resets all changes to the "children" edge.
+func (m *OrgJabatanMutation) ResetChildren() {
+	m.children = nil
+	m.clearedchildren = false
+	m.removedchildren = nil
+}
+
+// Where appends a list predicates to the OrgJabatanMutation builder.
+func (m *OrgJabatanMutation) Where(ps ...predicate.OrgJabatan) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the OrgJabatanMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *OrgJabatanMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.OrgJabatan, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *OrgJabatanMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *OrgJabatanMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (OrgJabatan).
+func (m *OrgJabatanMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *OrgJabatanMutation) Fields() []string {
+	fields := make([]string, 0, 15)
+	if m.created_at != nil {
+		fields = append(fields, orgjabatan.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, orgjabatan.FieldUpdatedAt)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, orgjabatan.FieldDeletedAt)
+	}
+	if m.paroki_id != nil {
+		fields = append(fields, orgjabatan.FieldParokiID)
+	}
+	if m.organization != nil {
+		fields = append(fields, orgjabatan.FieldOrgID)
+	}
+	if m.periode != nil {
+		fields = append(fields, orgjabatan.FieldPeriodeID)
+	}
+	if m.parent != nil {
+		fields = append(fields, orgjabatan.FieldParentID)
+	}
+	if m.jabatan != nil {
+		fields = append(fields, orgjabatan.FieldJabatan)
+	}
+	if m.user_id != nil {
+		fields = append(fields, orgjabatan.FieldUserID)
+	}
+	if m.umat_id != nil {
+		fields = append(fields, orgjabatan.FieldUmatID)
+	}
+	if m.nama != nil {
+		fields = append(fields, orgjabatan.FieldNama)
+	}
+	if m.start_date != nil {
+		fields = append(fields, orgjabatan.FieldStartDate)
+	}
+	if m.end_date != nil {
+		fields = append(fields, orgjabatan.FieldEndDate)
+	}
+	if m.urutan != nil {
+		fields = append(fields, orgjabatan.FieldUrutan)
+	}
+	if m.active != nil {
+		fields = append(fields, orgjabatan.FieldActive)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *OrgJabatanMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case orgjabatan.FieldCreatedAt:
+		return m.CreatedAt()
+	case orgjabatan.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case orgjabatan.FieldDeletedAt:
+		return m.DeletedAt()
+	case orgjabatan.FieldParokiID:
+		return m.ParokiID()
+	case orgjabatan.FieldOrgID:
+		return m.OrgID()
+	case orgjabatan.FieldPeriodeID:
+		return m.PeriodeID()
+	case orgjabatan.FieldParentID:
+		return m.ParentID()
+	case orgjabatan.FieldJabatan:
+		return m.Jabatan()
+	case orgjabatan.FieldUserID:
+		return m.UserID()
+	case orgjabatan.FieldUmatID:
+		return m.UmatID()
+	case orgjabatan.FieldNama:
+		return m.Nama()
+	case orgjabatan.FieldStartDate:
+		return m.StartDate()
+	case orgjabatan.FieldEndDate:
+		return m.EndDate()
+	case orgjabatan.FieldUrutan:
+		return m.Urutan()
+	case orgjabatan.FieldActive:
+		return m.Active()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *OrgJabatanMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case orgjabatan.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case orgjabatan.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case orgjabatan.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case orgjabatan.FieldParokiID:
+		return m.OldParokiID(ctx)
+	case orgjabatan.FieldOrgID:
+		return m.OldOrgID(ctx)
+	case orgjabatan.FieldPeriodeID:
+		return m.OldPeriodeID(ctx)
+	case orgjabatan.FieldParentID:
+		return m.OldParentID(ctx)
+	case orgjabatan.FieldJabatan:
+		return m.OldJabatan(ctx)
+	case orgjabatan.FieldUserID:
+		return m.OldUserID(ctx)
+	case orgjabatan.FieldUmatID:
+		return m.OldUmatID(ctx)
+	case orgjabatan.FieldNama:
+		return m.OldNama(ctx)
+	case orgjabatan.FieldStartDate:
+		return m.OldStartDate(ctx)
+	case orgjabatan.FieldEndDate:
+		return m.OldEndDate(ctx)
+	case orgjabatan.FieldUrutan:
+		return m.OldUrutan(ctx)
+	case orgjabatan.FieldActive:
+		return m.OldActive(ctx)
+	}
+	return nil, fmt.Errorf("unknown OrgJabatan field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *OrgJabatanMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case orgjabatan.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case orgjabatan.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case orgjabatan.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case orgjabatan.FieldParokiID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetParokiID(v)
+		return nil
+	case orgjabatan.FieldOrgID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOrgID(v)
+		return nil
+	case orgjabatan.FieldPeriodeID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPeriodeID(v)
+		return nil
+	case orgjabatan.FieldParentID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetParentID(v)
+		return nil
+	case orgjabatan.FieldJabatan:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetJabatan(v)
+		return nil
+	case orgjabatan.FieldUserID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case orgjabatan.FieldUmatID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUmatID(v)
+		return nil
+	case orgjabatan.FieldNama:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNama(v)
+		return nil
+	case orgjabatan.FieldStartDate:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStartDate(v)
+		return nil
+	case orgjabatan.FieldEndDate:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEndDate(v)
+		return nil
+	case orgjabatan.FieldUrutan:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUrutan(v)
+		return nil
+	case orgjabatan.FieldActive:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetActive(v)
+		return nil
+	}
+	return fmt.Errorf("unknown OrgJabatan field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *OrgJabatanMutation) AddedFields() []string {
+	var fields []string
+	if m.addurutan != nil {
+		fields = append(fields, orgjabatan.FieldUrutan)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *OrgJabatanMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case orgjabatan.FieldUrutan:
+		return m.AddedUrutan()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *OrgJabatanMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case orgjabatan.FieldUrutan:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUrutan(v)
+		return nil
+	}
+	return fmt.Errorf("unknown OrgJabatan numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *OrgJabatanMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(orgjabatan.FieldDeletedAt) {
+		fields = append(fields, orgjabatan.FieldDeletedAt)
+	}
+	if m.FieldCleared(orgjabatan.FieldParentID) {
+		fields = append(fields, orgjabatan.FieldParentID)
+	}
+	if m.FieldCleared(orgjabatan.FieldUserID) {
+		fields = append(fields, orgjabatan.FieldUserID)
+	}
+	if m.FieldCleared(orgjabatan.FieldUmatID) {
+		fields = append(fields, orgjabatan.FieldUmatID)
+	}
+	if m.FieldCleared(orgjabatan.FieldNama) {
+		fields = append(fields, orgjabatan.FieldNama)
+	}
+	if m.FieldCleared(orgjabatan.FieldStartDate) {
+		fields = append(fields, orgjabatan.FieldStartDate)
+	}
+	if m.FieldCleared(orgjabatan.FieldEndDate) {
+		fields = append(fields, orgjabatan.FieldEndDate)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *OrgJabatanMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *OrgJabatanMutation) ClearField(name string) error {
+	switch name {
+	case orgjabatan.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case orgjabatan.FieldParentID:
+		m.ClearParentID()
+		return nil
+	case orgjabatan.FieldUserID:
+		m.ClearUserID()
+		return nil
+	case orgjabatan.FieldUmatID:
+		m.ClearUmatID()
+		return nil
+	case orgjabatan.FieldNama:
+		m.ClearNama()
+		return nil
+	case orgjabatan.FieldStartDate:
+		m.ClearStartDate()
+		return nil
+	case orgjabatan.FieldEndDate:
+		m.ClearEndDate()
+		return nil
+	}
+	return fmt.Errorf("unknown OrgJabatan nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *OrgJabatanMutation) ResetField(name string) error {
+	switch name {
+	case orgjabatan.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case orgjabatan.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case orgjabatan.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case orgjabatan.FieldParokiID:
+		m.ResetParokiID()
+		return nil
+	case orgjabatan.FieldOrgID:
+		m.ResetOrgID()
+		return nil
+	case orgjabatan.FieldPeriodeID:
+		m.ResetPeriodeID()
+		return nil
+	case orgjabatan.FieldParentID:
+		m.ResetParentID()
+		return nil
+	case orgjabatan.FieldJabatan:
+		m.ResetJabatan()
+		return nil
+	case orgjabatan.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case orgjabatan.FieldUmatID:
+		m.ResetUmatID()
+		return nil
+	case orgjabatan.FieldNama:
+		m.ResetNama()
+		return nil
+	case orgjabatan.FieldStartDate:
+		m.ResetStartDate()
+		return nil
+	case orgjabatan.FieldEndDate:
+		m.ResetEndDate()
+		return nil
+	case orgjabatan.FieldUrutan:
+		m.ResetUrutan()
+		return nil
+	case orgjabatan.FieldActive:
+		m.ResetActive()
+		return nil
+	}
+	return fmt.Errorf("unknown OrgJabatan field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *OrgJabatanMutation) AddedEdges() []string {
+	edges := make([]string, 0, 4)
+	if m.organization != nil {
+		edges = append(edges, orgjabatan.EdgeOrganization)
+	}
+	if m.periode != nil {
+		edges = append(edges, orgjabatan.EdgePeriode)
+	}
+	if m.parent != nil {
+		edges = append(edges, orgjabatan.EdgeParent)
+	}
+	if m.children != nil {
+		edges = append(edges, orgjabatan.EdgeChildren)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *OrgJabatanMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case orgjabatan.EdgeOrganization:
+		if id := m.organization; id != nil {
+			return []ent.Value{*id}
+		}
+	case orgjabatan.EdgePeriode:
+		if id := m.periode; id != nil {
+			return []ent.Value{*id}
+		}
+	case orgjabatan.EdgeParent:
+		if id := m.parent; id != nil {
+			return []ent.Value{*id}
+		}
+	case orgjabatan.EdgeChildren:
+		ids := make([]ent.Value, 0, len(m.children))
+		for id := range m.children {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *OrgJabatanMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 4)
+	if m.removedchildren != nil {
+		edges = append(edges, orgjabatan.EdgeChildren)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *OrgJabatanMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case orgjabatan.EdgeChildren:
+		ids := make([]ent.Value, 0, len(m.removedchildren))
+		for id := range m.removedchildren {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *OrgJabatanMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 4)
+	if m.clearedorganization {
+		edges = append(edges, orgjabatan.EdgeOrganization)
+	}
+	if m.clearedperiode {
+		edges = append(edges, orgjabatan.EdgePeriode)
+	}
+	if m.clearedparent {
+		edges = append(edges, orgjabatan.EdgeParent)
+	}
+	if m.clearedchildren {
+		edges = append(edges, orgjabatan.EdgeChildren)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *OrgJabatanMutation) EdgeCleared(name string) bool {
+	switch name {
+	case orgjabatan.EdgeOrganization:
+		return m.clearedorganization
+	case orgjabatan.EdgePeriode:
+		return m.clearedperiode
+	case orgjabatan.EdgeParent:
+		return m.clearedparent
+	case orgjabatan.EdgeChildren:
+		return m.clearedchildren
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *OrgJabatanMutation) ClearEdge(name string) error {
+	switch name {
+	case orgjabatan.EdgeOrganization:
+		m.ClearOrganization()
+		return nil
+	case orgjabatan.EdgePeriode:
+		m.ClearPeriode()
+		return nil
+	case orgjabatan.EdgeParent:
+		m.ClearParent()
+		return nil
+	}
+	return fmt.Errorf("unknown OrgJabatan unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *OrgJabatanMutation) ResetEdge(name string) error {
+	switch name {
+	case orgjabatan.EdgeOrganization:
+		m.ResetOrganization()
+		return nil
+	case orgjabatan.EdgePeriode:
+		m.ResetPeriode()
+		return nil
+	case orgjabatan.EdgeParent:
+		m.ResetParent()
+		return nil
+	case orgjabatan.EdgeChildren:
+		m.ResetChildren()
+		return nil
+	}
+	return fmt.Errorf("unknown OrgJabatan edge %s", name)
+}
+
 // OrgMemberMutation represents an operation that mutates the OrgMember nodes in the graph.
 type OrgMemberMutation struct {
 	config
@@ -18433,6 +19939,9 @@ type OrgPeriodeMutation struct {
 	clearedFields       map[string]struct{}
 	organization        *uuid.UUID
 	clearedorganization bool
+	jabatan             map[uuid.UUID]struct{}
+	removedjabatan      map[uuid.UUID]struct{}
+	clearedjabatan      bool
 	done                bool
 	oldValue            func(context.Context) (*OrgPeriode, error)
 	predicates          []predicate.OrgPeriode
@@ -18991,6 +20500,60 @@ func (m *OrgPeriodeMutation) ResetOrganization() {
 	m.clearedorganization = false
 }
 
+// AddJabatanIDs adds the "jabatan" edge to the OrgJabatan entity by ids.
+func (m *OrgPeriodeMutation) AddJabatanIDs(ids ...uuid.UUID) {
+	if m.jabatan == nil {
+		m.jabatan = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.jabatan[ids[i]] = struct{}{}
+	}
+}
+
+// ClearJabatan clears the "jabatan" edge to the OrgJabatan entity.
+func (m *OrgPeriodeMutation) ClearJabatan() {
+	m.clearedjabatan = true
+}
+
+// JabatanCleared reports if the "jabatan" edge to the OrgJabatan entity was cleared.
+func (m *OrgPeriodeMutation) JabatanCleared() bool {
+	return m.clearedjabatan
+}
+
+// RemoveJabatanIDs removes the "jabatan" edge to the OrgJabatan entity by IDs.
+func (m *OrgPeriodeMutation) RemoveJabatanIDs(ids ...uuid.UUID) {
+	if m.removedjabatan == nil {
+		m.removedjabatan = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.jabatan, ids[i])
+		m.removedjabatan[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedJabatan returns the removed IDs of the "jabatan" edge to the OrgJabatan entity.
+func (m *OrgPeriodeMutation) RemovedJabatanIDs() (ids []uuid.UUID) {
+	for id := range m.removedjabatan {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// JabatanIDs returns the "jabatan" edge IDs in the mutation.
+func (m *OrgPeriodeMutation) JabatanIDs() (ids []uuid.UUID) {
+	for id := range m.jabatan {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetJabatan resets all changes to the "jabatan" edge.
+func (m *OrgPeriodeMutation) ResetJabatan() {
+	m.jabatan = nil
+	m.clearedjabatan = false
+	m.removedjabatan = nil
+}
+
 // Where appends a list predicates to the OrgPeriodeMutation builder.
 func (m *OrgPeriodeMutation) Where(ps ...predicate.OrgPeriode) {
 	m.predicates = append(m.predicates, ps...)
@@ -19303,9 +20866,12 @@ func (m *OrgPeriodeMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *OrgPeriodeMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.organization != nil {
 		edges = append(edges, orgperiode.EdgeOrganization)
+	}
+	if m.jabatan != nil {
+		edges = append(edges, orgperiode.EdgeJabatan)
 	}
 	return edges
 }
@@ -19318,27 +20884,47 @@ func (m *OrgPeriodeMutation) AddedIDs(name string) []ent.Value {
 		if id := m.organization; id != nil {
 			return []ent.Value{*id}
 		}
+	case orgperiode.EdgeJabatan:
+		ids := make([]ent.Value, 0, len(m.jabatan))
+		for id := range m.jabatan {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *OrgPeriodeMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
+	if m.removedjabatan != nil {
+		edges = append(edges, orgperiode.EdgeJabatan)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *OrgPeriodeMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case orgperiode.EdgeJabatan:
+		ids := make([]ent.Value, 0, len(m.removedjabatan))
+		for id := range m.removedjabatan {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *OrgPeriodeMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedorganization {
 		edges = append(edges, orgperiode.EdgeOrganization)
+	}
+	if m.clearedjabatan {
+		edges = append(edges, orgperiode.EdgeJabatan)
 	}
 	return edges
 }
@@ -19349,6 +20935,8 @@ func (m *OrgPeriodeMutation) EdgeCleared(name string) bool {
 	switch name {
 	case orgperiode.EdgeOrganization:
 		return m.clearedorganization
+	case orgperiode.EdgeJabatan:
+		return m.clearedjabatan
 	}
 	return false
 }
@@ -19370,6 +20958,9 @@ func (m *OrgPeriodeMutation) ResetEdge(name string) error {
 	switch name {
 	case orgperiode.EdgeOrganization:
 		m.ResetOrganization()
+		return nil
+	case orgperiode.EdgeJabatan:
+		m.ResetJabatan()
 		return nil
 	}
 	return fmt.Errorf("unknown OrgPeriode edge %s", name)
@@ -19407,6 +20998,9 @@ type OrganizationMutation struct {
 	periode         map[uuid.UUID]struct{}
 	removedperiode  map[uuid.UUID]struct{}
 	clearedperiode  bool
+	jabatan         map[uuid.UUID]struct{}
+	removedjabatan  map[uuid.UUID]struct{}
+	clearedjabatan  bool
 	done            bool
 	oldValue        func(context.Context) (*Organization, error)
 	predicates      []predicate.Organization
@@ -20256,6 +21850,60 @@ func (m *OrganizationMutation) ResetPeriode() {
 	m.removedperiode = nil
 }
 
+// AddJabatanIDs adds the "jabatan" edge to the OrgJabatan entity by ids.
+func (m *OrganizationMutation) AddJabatanIDs(ids ...uuid.UUID) {
+	if m.jabatan == nil {
+		m.jabatan = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.jabatan[ids[i]] = struct{}{}
+	}
+}
+
+// ClearJabatan clears the "jabatan" edge to the OrgJabatan entity.
+func (m *OrganizationMutation) ClearJabatan() {
+	m.clearedjabatan = true
+}
+
+// JabatanCleared reports if the "jabatan" edge to the OrgJabatan entity was cleared.
+func (m *OrganizationMutation) JabatanCleared() bool {
+	return m.clearedjabatan
+}
+
+// RemoveJabatanIDs removes the "jabatan" edge to the OrgJabatan entity by IDs.
+func (m *OrganizationMutation) RemoveJabatanIDs(ids ...uuid.UUID) {
+	if m.removedjabatan == nil {
+		m.removedjabatan = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.jabatan, ids[i])
+		m.removedjabatan[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedJabatan returns the removed IDs of the "jabatan" edge to the OrgJabatan entity.
+func (m *OrganizationMutation) RemovedJabatanIDs() (ids []uuid.UUID) {
+	for id := range m.removedjabatan {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// JabatanIDs returns the "jabatan" edge IDs in the mutation.
+func (m *OrganizationMutation) JabatanIDs() (ids []uuid.UUID) {
+	for id := range m.jabatan {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetJabatan resets all changes to the "jabatan" edge.
+func (m *OrganizationMutation) ResetJabatan() {
+	m.jabatan = nil
+	m.clearedjabatan = false
+	m.removedjabatan = nil
+}
+
 // Where appends a list predicates to the OrganizationMutation builder.
 func (m *OrganizationMutation) Where(ps ...predicate.Organization) {
 	m.predicates = append(m.predicates, ps...)
@@ -20609,7 +22257,7 @@ func (m *OrganizationMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *OrganizationMutation) AddedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.parent != nil {
 		edges = append(edges, organization.EdgeParent)
 	}
@@ -20624,6 +22272,9 @@ func (m *OrganizationMutation) AddedEdges() []string {
 	}
 	if m.periode != nil {
 		edges = append(edges, organization.EdgePeriode)
+	}
+	if m.jabatan != nil {
+		edges = append(edges, organization.EdgeJabatan)
 	}
 	return edges
 }
@@ -20660,13 +22311,19 @@ func (m *OrganizationMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case organization.EdgeJabatan:
+		ids := make([]ent.Value, 0, len(m.jabatan))
+		for id := range m.jabatan {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *OrganizationMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.removedchildren != nil {
 		edges = append(edges, organization.EdgeChildren)
 	}
@@ -20678,6 +22335,9 @@ func (m *OrganizationMutation) RemovedEdges() []string {
 	}
 	if m.removedperiode != nil {
 		edges = append(edges, organization.EdgePeriode)
+	}
+	if m.removedjabatan != nil {
+		edges = append(edges, organization.EdgeJabatan)
 	}
 	return edges
 }
@@ -20710,13 +22370,19 @@ func (m *OrganizationMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case organization.EdgeJabatan:
+		ids := make([]ent.Value, 0, len(m.removedjabatan))
+		for id := range m.removedjabatan {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *OrganizationMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.clearedparent {
 		edges = append(edges, organization.EdgeParent)
 	}
@@ -20731,6 +22397,9 @@ func (m *OrganizationMutation) ClearedEdges() []string {
 	}
 	if m.clearedperiode {
 		edges = append(edges, organization.EdgePeriode)
+	}
+	if m.clearedjabatan {
+		edges = append(edges, organization.EdgeJabatan)
 	}
 	return edges
 }
@@ -20749,6 +22418,8 @@ func (m *OrganizationMutation) EdgeCleared(name string) bool {
 		return m.clearedinvites
 	case organization.EdgePeriode:
 		return m.clearedperiode
+	case organization.EdgeJabatan:
+		return m.clearedjabatan
 	}
 	return false
 }
@@ -20782,6 +22453,9 @@ func (m *OrganizationMutation) ResetEdge(name string) error {
 		return nil
 	case organization.EdgePeriode:
 		m.ResetPeriode()
+		return nil
+	case organization.EdgeJabatan:
+		m.ResetJabatan()
 		return nil
 	}
 	return fmt.Errorf("unknown Organization edge %s", name)

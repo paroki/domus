@@ -645,6 +645,46 @@
                 },
                 "type": "object"
             },
+            "domain.CreateOrgJabatanRequest": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "endDate": {
+                        "type": "string"
+                    },
+                    "jabatan": {
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "nama": {
+                        "type": "string"
+                    },
+                    "parentId": {
+                        "type": "string"
+                    },
+                    "periodeId": {
+                        "type": "string"
+                    },
+                    "startDate": {
+                        "type": "string"
+                    },
+                    "umatId": {
+                        "type": "string"
+                    },
+                    "urutan": {
+                        "type": "integer"
+                    },
+                    "userId": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "jabatan",
+                    "periodeId"
+                ],
+                "type": "object"
+            },
             "domain.CreateOrgPeriodeRequest": {
                 "properties": {
                     "isCurrent": {
@@ -1775,6 +1815,25 @@
                 },
                 "type": "object"
             },
+            "domain.LookupUmatRequest": {
+                "properties": {
+                    "limit": {
+                        "maximum": 50,
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "lingkunganId": {
+                        "type": "string"
+                    },
+                    "q": {
+                        "type": "string"
+                    },
+                    "wilayahId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.MemoryResponse": {
                 "properties": {
                     "category": {
@@ -1960,6 +2019,79 @@
                             "revoked",
                             "exhausted"
                         ],
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.OrgJabatanResponse": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "endDate": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "jabatan": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "type": "string"
+                    },
+                    "orgId": {
+                        "type": "string"
+                    },
+                    "parentId": {
+                        "type": "string"
+                    },
+                    "parokiId": {
+                        "type": "string"
+                    },
+                    "periodeId": {
+                        "type": "string"
+                    },
+                    "startDate": {
+                        "type": "string"
+                    },
+                    "umatId": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    },
+                    "urutan": {
+                        "type": "integer"
+                    },
+                    "userId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.OrgJabatanSearchFilter": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "jabatan": {
+                        "type": "string"
+                    },
+                    "parentId": {
+                        "type": "string"
+                    },
+                    "periodeId": {
+                        "type": "string"
+                    },
+                    "umatId": {
+                        "type": "string"
+                    },
+                    "userId": {
                         "type": "string"
                     }
                 },
@@ -2601,6 +2733,25 @@
                 },
                 "type": "object"
             },
+            "domain.SearchOrgJabatanRequest": {
+                "properties": {
+                    "cursor": {
+                        "type": "string"
+                    },
+                    "filter": {
+                        "$ref": "#/components/schemas/domain.OrgJabatanSearchFilter"
+                    },
+                    "limit": {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "q": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.SearchOrgMembersRequest": {
                 "properties": {
                     "cursor": {
@@ -3167,6 +3318,32 @@
                 },
                 "type": "object"
             },
+            "domain.UmatLookupItemResponse": {
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "lingkunganId": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "type": "string"
+                    },
+                    "namaBaptis": {
+                        "type": "string"
+                    },
+                    "parokiId": {
+                        "type": "string"
+                    },
+                    "userId": {
+                        "type": "string"
+                    },
+                    "wilayahId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.UmatSakramenResponse": {
                 "properties": {
                     "buku": {
@@ -3621,6 +3798,57 @@
                         "type": "string"
                     },
                     "content": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.UpdateOrgJabatanRequest": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "clearEndDate": {
+                        "type": "boolean"
+                    },
+                    "clearNama": {
+                        "type": "boolean"
+                    },
+                    "clearParentId": {
+                        "type": "boolean"
+                    },
+                    "clearStartDate": {
+                        "type": "boolean"
+                    },
+                    "clearUmatId": {
+                        "type": "boolean"
+                    },
+                    "clearUserId": {
+                        "type": "boolean"
+                    },
+                    "endDate": {
+                        "type": "string"
+                    },
+                    "jabatan": {
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "nama": {
+                        "type": "string"
+                    },
+                    "parentId": {
+                        "type": "string"
+                    },
+                    "startDate": {
+                        "type": "string"
+                    },
+                    "umatId": {
+                        "type": "string"
+                    },
+                    "urutan": {
+                        "type": "integer"
+                    },
+                    "userId": {
                         "type": "string"
                     }
                 },
@@ -4688,6 +4916,24 @@
                 },
                 "type": "object"
             },
+            "httpx.Envelope-array_domain_OrgJabatanResponse": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.OrgJabatanResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
             "httpx.Envelope-array_domain_OrgMemberResponse": {
                 "properties": {
                     "data": {
@@ -4801,6 +5047,24 @@
                     "data": {
                         "items": {
                             "$ref": "#/components/schemas/domain.UmatListItemResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-array_domain_UmatLookupItemResponse": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.UmatLookupItemResponse"
                         },
                         "type": "array",
                         "uniqueItems": false
@@ -5192,6 +5456,20 @@
                 "properties": {
                     "data": {
                         "$ref": "#/components/schemas/domain.OrgInviteResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_OrgJabatanResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.OrgJabatanResponse"
                     },
                     "error": {
                         "$ref": "#/components/schemas/httpx.ErrorPayload"
@@ -9791,6 +10069,455 @@
                     }
                 },
                 "summary": "Revoke organization invite",
+                "tags": [
+                    "Org"
+                ]
+            }
+        },
+        "/orgs/{id}/jabatan": {
+            "post": {
+                "description": "Creates an organization position node with hierarchy validation and automatic userId/umatId/nama synchronization.",
+                "operationId": "createOrgJabatan",
+                "parameters": [
+                    {
+                        "description": "Organization UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.CreateOrgJabatanRequest",
+                                "summary": "body",
+                                "description": "Position creation payload"
+                            }
+                        }
+                    },
+                    "description": "Position creation payload",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_OrgJabatanResponse"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Create organization position",
+                "tags": [
+                    "Org"
+                ]
+            }
+        },
+        "/orgs/{id}/jabatan/search": {
+            "post": {
+                "description": "Searches non-deleted position nodes (org_jabatan) for an organization with optional filters and cursor pagination, ordered by urutan ASC, createdAt ASC, id ASC.",
+                "operationId": "searchOrgJabatan",
+                "parameters": [
+                    {
+                        "description": "Organization UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.SearchOrgJabatanRequest",
+                                "summary": "body",
+                                "description": "Search parameters"
+                            }
+                        }
+                    },
+                    "description": "Search parameters"
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_OrgJabatanResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Search organization positions",
+                "tags": [
+                    "Org"
+                ]
+            }
+        },
+        "/orgs/{id}/jabatan/{jabatanId}": {
+            "delete": {
+                "description": "Soft-deletes an organization position node if it has no active child positions.",
+                "operationId": "deleteOrgJabatan",
+                "parameters": [
+                    {
+                        "description": "Organization UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Position UUID",
+                        "in": "path",
+                        "name": "jabatanId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    }
+                },
+                "summary": "Delete organization position",
+                "tags": [
+                    "Org"
+                ]
+            },
+            "get": {
+                "description": "Returns a single non-deleted position node for an organization.",
+                "operationId": "getOrgJabatan",
+                "parameters": [
+                    {
+                        "description": "Organization UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Position UUID",
+                        "in": "path",
+                        "name": "jabatanId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_OrgJabatanResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Get organization position",
+                "tags": [
+                    "Org"
+                ]
+            },
+            "patch": {
+                "description": "Updates mutable fields of an organization position node with cycle detection and automatic userId/umatId/nama synchronization.",
+                "operationId": "updateOrgJabatan",
+                "parameters": [
+                    {
+                        "description": "Organization UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Position UUID",
+                        "in": "path",
+                        "name": "jabatanId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.UpdateOrgJabatanRequest",
+                                "summary": "body",
+                                "description": "Position update payload"
+                            }
+                        }
+                    },
+                    "description": "Position update payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_OrgJabatanResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Update organization position",
                 "tags": [
                     "Org"
                 ]
@@ -15392,6 +16119,70 @@
                     }
                 },
                 "summary": "Update keluarga",
+                "tags": [
+                    "Umat"
+                ]
+            }
+        },
+        "/umat/lookup": {
+            "post": {
+                "description": "Searches active, non-deceased parishioners in the active paroki without PII fields. Allowed for umat:admin, ref:paroki-admin, or active org:admin.",
+                "operationId": "lookupUmat",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.LookupUmatRequest",
+                                "summary": "body",
+                                "description": "Lookup parameters"
+                            }
+                        }
+                    },
+                    "description": "Lookup parameters"
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_UmatLookupItemResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    }
+                },
+                "summary": "Lookup umat (PII-free)",
                 "tags": [
                     "Umat"
                 ]

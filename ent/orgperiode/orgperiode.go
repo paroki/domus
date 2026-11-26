@@ -40,6 +40,8 @@ const (
 	FieldIsCurrent = "is_current"
 	// EdgeOrganization holds the string denoting the organization edge name in mutations.
 	EdgeOrganization = "organization"
+	// EdgeJabatan holds the string denoting the jabatan edge name in mutations.
+	EdgeJabatan = "jabatan"
 	// Table holds the table name of the orgperiode in the database.
 	Table = "org_periode"
 	// OrganizationTable is the table that holds the organization relation/edge.
@@ -49,6 +51,13 @@ const (
 	OrganizationInverseTable = "organizations"
 	// OrganizationColumn is the table column denoting the organization relation/edge.
 	OrganizationColumn = "org_id"
+	// JabatanTable is the table that holds the jabatan relation/edge.
+	JabatanTable = "org_jabatan"
+	// JabatanInverseTable is the table name for the OrgJabatan entity.
+	// It exists in this package in order to avoid circular dependency with the "orgjabatan" package.
+	JabatanInverseTable = "org_jabatan"
+	// JabatanColumn is the table column denoting the jabatan relation/edge.
+	JabatanColumn = "periode_id"
 )
 
 // Columns holds all SQL columns for orgperiode fields.
@@ -193,10 +202,31 @@ func ByOrganizationField(field string, opts ...sql.OrderTermOption) OrderOption 
 		sqlgraph.OrderByNeighborTerms(s, newOrganizationStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByJabatanCount orders the results by jabatan count.
+func ByJabatanCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newJabatanStep(), opts...)
+	}
+}
+
+// ByJabatan orders the results by jabatan terms.
+func ByJabatan(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newJabatanStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newOrganizationStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(OrganizationInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, OrganizationTable, OrganizationColumn),
+	)
+}
+func newJabatanStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(JabatanInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, JabatanTable, JabatanColumn),
 	)
 }

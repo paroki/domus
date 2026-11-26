@@ -82,18 +82,18 @@ func newServeCmd() *cobra.Command {
 			userFeature := user.New(db, enforcer, userCfg, logger, userOpts...)
 			refFeature := ref.New(db, enforcer, userFeature)
 			userFeature.SetParokiMemberDirectory(refFeature)
+			umatFeature := umat.New(db, enforcer, userFeature, refFeature, cipher)
 			orgCfg, err := org.GetConfig(ctx)
 			if err != nil {
 				return err
 			}
-			orgFeature := org.New(db, enforcer, userFeature, refFeature, orgCfg)
+			orgFeature := org.New(db, enforcer, userFeature, refFeature, orgCfg, org.WithUmat(umatFeature))
 			userFeature.SetInviteJoiner(orgFeature)
 			eventCfg, err := event.GetConfig(ctx)
 			if err != nil {
 				return err
 			}
 			eventFeature := event.New(db, enforcer, userFeature, orgFeature, eventCfg, event.WithRef(refFeature))
-			umatFeature := umat.New(db, enforcer, userFeature, refFeature, cipher)
 			settingStore := setting.NewStore(db, setting.WithCipher(cipher))
 			agentFeature := agent.New(
 				nil,

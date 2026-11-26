@@ -609,6 +609,29 @@ func HasOrganizationWith(preds ...predicate.Organization) predicate.OrgPeriode {
 	})
 }
 
+// HasJabatan applies the HasEdge predicate on the "jabatan" edge.
+func HasJabatan() predicate.OrgPeriode {
+	return predicate.OrgPeriode(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, JabatanTable, JabatanColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasJabatanWith applies the HasEdge predicate on the "jabatan" edge with a given conditions (other predicates).
+func HasJabatanWith(preds ...predicate.OrgJabatan) predicate.OrgPeriode {
+	return predicate.OrgPeriode(func(s *sql.Selector) {
+		step := newJabatanStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.OrgPeriode) predicate.OrgPeriode {
 	return predicate.OrgPeriode(sql.AndPredicates(predicates...))

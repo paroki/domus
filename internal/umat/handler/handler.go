@@ -45,6 +45,7 @@ func (h *Handler) Register(
 	keluarga.Delete("/:id", requireKeluargaWrite, h.DeleteKeluarga)
 
 	u.Post("/search", requireUmatRead, h.SearchUmat)
+	u.Post("/lookup", h.LookupUmat)
 	u.Get("/:id", requireUmatRead, h.GetUmat)
 	u.Post("", requireUmatWrite, h.CreateUmat)
 	u.Patch("/:id", requireUmatWrite, h.UpdateUmat)
@@ -380,6 +381,36 @@ func (h *Handler) DeleteUmat(c fiber.Ctx) error {
 		return err
 	}
 	return httpx.NoContent(c)
+}
+
+// LookupUmat returns PII-free parishioner summaries for organization position assignment.
+//
+//	@Summary		Lookup umat (PII-free)
+//	@Description	Searches active, non-deceased parishioners in the active paroki without PII fields. Allowed for umat:admin, ref:paroki-admin, or active org:admin.
+//	@ID				lookupUmat
+//	@Tags			Umat
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		domain.LookupUmatRequest	false	"Lookup parameters"
+//	@Success		200		{object}	httpx.Envelope[[]domain.UmatLookupItemResponse]
+//	@Failure		400		{object}	httpx.Envelope[any]
+//	@Failure		401		{object}	httpx.Envelope[any]
+//	@Failure		403		{object}	httpx.Envelope[any]
+//	@Router			/umat/lookup [post]
+func (h *Handler) LookupUmat(c fiber.Ctx) error {
+	p, ok := authx.UserContext(c.Context())
+	if !ok {
+		return httpx.Unauthorized("Authentication is required.")
+	}
+	var req domain.LookupUmatRequest
+	if err := decodeEmptyOrStrictJSON(c, &req); err != nil {
+		return err
+	}
+	items, err := h.service.LookupUmat(c.Context(), p, req)
+	if err != nil {
+		return err
+	}
+	return httpx.OK(c, items)
 }
 
 func decodeStrictJSON(c fiber.Ctx, dst any) error {

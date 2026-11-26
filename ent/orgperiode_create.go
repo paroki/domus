@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent/organization"
+	"github.com/paroki/domus/ent/orgjabatan"
 	"github.com/paroki/domus/ent/orgperiode"
 )
 
@@ -151,6 +152,21 @@ func (_c *OrgPeriodeCreate) SetOrganizationID(id uuid.UUID) *OrgPeriodeCreate {
 // SetOrganization sets the "organization" edge to the Organization entity.
 func (_c *OrgPeriodeCreate) SetOrganization(v *Organization) *OrgPeriodeCreate {
 	return _c.SetOrganizationID(v.ID)
+}
+
+// AddJabatanIDs adds the "jabatan" edge to the OrgJabatan entity by IDs.
+func (_c *OrgPeriodeCreate) AddJabatanIDs(ids ...uuid.UUID) *OrgPeriodeCreate {
+	_c.mutation.AddJabatanIDs(ids...)
+	return _c
+}
+
+// AddJabatan adds the "jabatan" edges to the OrgJabatan entity.
+func (_c *OrgPeriodeCreate) AddJabatan(v ...*OrgJabatan) *OrgPeriodeCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddJabatanIDs(ids...)
 }
 
 // Mutation returns the OrgPeriodeMutation object of the builder.
@@ -360,6 +376,22 @@ func (_c *OrgPeriodeCreate) createSpec() (*OrgPeriode, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.OrgID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.JabatanIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   orgperiode.JabatanTable,
+			Columns: []string{orgperiode.JabatanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgjabatan.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

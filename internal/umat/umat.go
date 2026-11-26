@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/internal/platform/authz"
 	"github.com/paroki/domus/internal/platform/crypt"
@@ -14,6 +15,9 @@ import (
 	"github.com/paroki/domus/internal/umat/service"
 	"github.com/paroki/domus/internal/user"
 )
+
+// Re-export read-only DTO types for downstream features.
+type UmatBasic = domain.UmatLookupItemResponse
 
 // Feature-owned Casbin roles and resource permissions.
 var (
@@ -90,6 +94,16 @@ func (f *Feature) RegisterPermissions(ctx context.Context, e *authz.Enforcer) er
 		}
 	}
 	return nil
+}
+
+// GetBasic returns a PII-free Umat summary by ID within parokiID.
+func (f *Feature) GetBasic(ctx context.Context, parokiID, umatID uuid.UUID) (*UmatBasic, error) {
+	return f.service.GetBasic(ctx, parokiID, umatID)
+}
+
+// GetByUserID returns a PII-free Umat summary linked to userID within parokiID, or (nil, nil) if none exists.
+func (f *Feature) GetByUserID(ctx context.Context, parokiID, userID uuid.UUID) (*UmatBasic, error) {
+	return f.service.GetByUserID(ctx, parokiID, userID)
 }
 
 func requireTenantMiddleware() fiber.Handler {

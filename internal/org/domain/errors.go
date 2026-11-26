@@ -17,6 +17,7 @@ var (
 	ErrInviteMaxUsesReached = errx.Conflict("ORG_INVITE_MAX_USES_REACHED", "Organization invite link has reached its maximum uses.")
 	ErrPeriodeNotFound      = errx.NotFound("ORG_PERIODE_NOT_FOUND", "Organization period not found.")
 	ErrPeriodeOverlap       = errx.Conflict("ORG_PERIODE_OVERLAP", "Organization period dates overlap an existing period.")
+	ErrJabatanNotFound      = errx.NotFound("ORG_JABATAN_NOT_FOUND", "Organization position not found.")
 )
 
 // ValidationError constructs a 422 VALIDATION_ERROR domain error for a single field.

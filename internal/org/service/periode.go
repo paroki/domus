@@ -295,7 +295,7 @@ func (s *Service) UpdateOrgPeriode(
 	return toOrgPeriodeResponse(updated), nil
 }
 
-// DeleteOrgPeriode soft-deletes an OrgPeriode in orgID and clears is_current.
+// DeleteOrgPeriode soft-deletes an OrgPeriode in orgID if no active OrgJabatan references it, and clears is_current.
 func (s *Service) DeleteOrgPeriode(ctx context.Context, p authx.Principal, orgID, periodeID uuid.UUID) error {
 	if _, err := s.requireOrgPeriodeWrite(ctx, p, orgID); err != nil {
 		return err
@@ -304,6 +304,13 @@ func (s *Service) DeleteOrgPeriode(ctx context.Context, p authx.Principal, orgID
 		return domain.ErrPeriodeNotFound
 	} else if err != nil {
 		return err
+	}
+	inUse, err := s.repo.HasOrgJabatanByPeriode(ctx, orgID, periodeID)
+	if err != nil {
+		return err
+	}
+	if inUse {
+		return domain.ErrInUse
 	}
 	return s.repo.SoftDeleteOrgPeriode(ctx, periodeID, time.Now().UTC())
 }

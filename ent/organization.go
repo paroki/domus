@@ -60,9 +60,11 @@ type OrganizationEdges struct {
 	Invites []*OrgInvite `json:"invites,omitempty"`
 	// Periode holds the value of the periode edge.
 	Periode []*OrgPeriode `json:"periode,omitempty"`
+	// Jabatan holds the value of the jabatan edge.
+	Jabatan []*OrgJabatan `json:"jabatan,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [5]bool
+	loadedTypes [6]bool
 }
 
 // ParentOrErr returns the Parent value or an error if the edge
@@ -110,6 +112,15 @@ func (e OrganizationEdges) PeriodeOrErr() ([]*OrgPeriode, error) {
 		return e.Periode, nil
 	}
 	return nil, &NotLoadedError{edge: "periode"}
+}
+
+// JabatanOrErr returns the Jabatan value or an error if the edge
+// was not loaded in eager-loading.
+func (e OrganizationEdges) JabatanOrErr() ([]*OrgJabatan, error) {
+	if e.loadedTypes[5] {
+		return e.Jabatan, nil
+	}
+	return nil, &NotLoadedError{edge: "jabatan"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -261,6 +272,11 @@ func (_m *Organization) QueryInvites() *OrgInviteQuery {
 // QueryPeriode queries the "periode" edge of the Organization entity.
 func (_m *Organization) QueryPeriode() *OrgPeriodeQuery {
 	return NewOrganizationClient(_m.config).QueryPeriode(_m)
+}
+
+// QueryJabatan queries the "jabatan" edge of the Organization entity.
+func (_m *Organization) QueryJabatan() *OrgJabatanQuery {
+	return NewOrganizationClient(_m.config).QueryJabatan(_m)
 }
 
 // Update returns a builder for updating this Organization.

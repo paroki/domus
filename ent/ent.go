@@ -31,6 +31,7 @@ import (
 	"github.com/paroki/domus/ent/lookup"
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orginvite"
+	"github.com/paroki/domus/ent/orgjabatan"
 	"github.com/paroki/domus/ent/orgmember"
 	"github.com/paroki/domus/ent/orgperiode"
 	"github.com/paroki/domus/ent/paroki"
@@ -122,6 +123,7 @@ func checkColumn(t, c string) error {
 			lingkungan.Table:    lingkungan.ValidColumn,
 			lookup.Table:        lookup.ValidColumn,
 			orginvite.Table:     orginvite.ValidColumn,
+			orgjabatan.Table:    orgjabatan.ValidColumn,
 			orgmember.Table:     orgmember.ValidColumn,
 			orgperiode.Table:    orgperiode.ValidColumn,
 			organization.Table:  organization.ValidColumn,

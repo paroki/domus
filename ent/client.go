@@ -35,6 +35,7 @@ import (
 	"github.com/paroki/domus/ent/lookup"
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orginvite"
+	"github.com/paroki/domus/ent/orgjabatan"
 	"github.com/paroki/domus/ent/orgmember"
 	"github.com/paroki/domus/ent/orgperiode"
 	"github.com/paroki/domus/ent/paroki"
@@ -91,6 +92,8 @@ type Client struct {
 	Lookup *LookupClient
 	// OrgInvite is the client for interacting with the OrgInvite builders.
 	OrgInvite *OrgInviteClient
+	// OrgJabatan is the client for interacting with the OrgJabatan builders.
+	OrgJabatan *OrgJabatanClient
 	// OrgMember is the client for interacting with the OrgMember builders.
 	OrgMember *OrgMemberClient
 	// OrgPeriode is the client for interacting with the OrgPeriode builders.
@@ -148,6 +151,7 @@ func (c *Client) init() {
 	c.Lingkungan = NewLingkunganClient(c.config)
 	c.Lookup = NewLookupClient(c.config)
 	c.OrgInvite = NewOrgInviteClient(c.config)
+	c.OrgJabatan = NewOrgJabatanClient(c.config)
 	c.OrgMember = NewOrgMemberClient(c.config)
 	c.OrgPeriode = NewOrgPeriodeClient(c.config)
 	c.Organization = NewOrganizationClient(c.config)
@@ -272,6 +276,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Lingkungan:    NewLingkunganClient(cfg),
 		Lookup:        NewLookupClient(cfg),
 		OrgInvite:     NewOrgInviteClient(cfg),
+		OrgJabatan:    NewOrgJabatanClient(cfg),
 		OrgMember:     NewOrgMemberClient(cfg),
 		OrgPeriode:    NewOrgPeriodeClient(cfg),
 		Organization:  NewOrganizationClient(cfg),
@@ -323,6 +328,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Lingkungan:    NewLingkunganClient(cfg),
 		Lookup:        NewLookupClient(cfg),
 		OrgInvite:     NewOrgInviteClient(cfg),
+		OrgJabatan:    NewOrgJabatanClient(cfg),
 		OrgMember:     NewOrgMemberClient(cfg),
 		OrgPeriode:    NewOrgPeriodeClient(cfg),
 		Organization:  NewOrganizationClient(cfg),
@@ -369,7 +375,7 @@ func (c *Client) Use(hooks ...Hook) {
 		c.AgentMemory, c.AgentMessage, c.AgentProvider, c.AgentSession, c.CasbinRule,
 		c.Event, c.EventLagu, c.EventPetugas, c.EventRSVP, c.Kecamatan, c.Keluarga,
 		c.Kelurahan, c.Keuskupan, c.Kevikepan, c.Kota, c.Lingkungan, c.Lookup,
-		c.OrgInvite, c.OrgMember, c.OrgPeriode, c.Organization, c.Paroki,
+		c.OrgInvite, c.OrgJabatan, c.OrgMember, c.OrgPeriode, c.Organization, c.Paroki,
 		c.ParokiMember, c.Setting, c.Umat, c.UmatSakramen, c.User, c.UserAccount,
 		c.UserOTP, c.UserSession, c.UserToken, c.Wilayah,
 	} {
@@ -384,7 +390,7 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.AgentMemory, c.AgentMessage, c.AgentProvider, c.AgentSession, c.CasbinRule,
 		c.Event, c.EventLagu, c.EventPetugas, c.EventRSVP, c.Kecamatan, c.Keluarga,
 		c.Kelurahan, c.Keuskupan, c.Kevikepan, c.Kota, c.Lingkungan, c.Lookup,
-		c.OrgInvite, c.OrgMember, c.OrgPeriode, c.Organization, c.Paroki,
+		c.OrgInvite, c.OrgJabatan, c.OrgMember, c.OrgPeriode, c.Organization, c.Paroki,
 		c.ParokiMember, c.Setting, c.Umat, c.UmatSakramen, c.User, c.UserAccount,
 		c.UserOTP, c.UserSession, c.UserToken, c.Wilayah,
 	} {
@@ -431,6 +437,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Lookup.mutate(ctx, m)
 	case *OrgInviteMutation:
 		return c.OrgInvite.mutate(ctx, m)
+	case *OrgJabatanMutation:
+		return c.OrgJabatan.mutate(ctx, m)
 	case *OrgMemberMutation:
 		return c.OrgMember.mutate(ctx, m)
 	case *OrgPeriodeMutation:
@@ -3242,6 +3250,203 @@ func (c *OrgInviteClient) mutate(ctx context.Context, m *OrgInviteMutation) (Val
 	}
 }
 
+// OrgJabatanClient is a client for the OrgJabatan schema.
+type OrgJabatanClient struct {
+	config
+}
+
+// NewOrgJabatanClient returns a client for the OrgJabatan from the given config.
+func NewOrgJabatanClient(c config) *OrgJabatanClient {
+	return &OrgJabatanClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `orgjabatan.Hooks(f(g(h())))`.
+func (c *OrgJabatanClient) Use(hooks ...Hook) {
+	c.hooks.OrgJabatan = append(c.hooks.OrgJabatan, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `orgjabatan.Intercept(f(g(h())))`.
+func (c *OrgJabatanClient) Intercept(interceptors ...Interceptor) {
+	c.inters.OrgJabatan = append(c.inters.OrgJabatan, interceptors...)
+}
+
+// Create returns a builder for creating a OrgJabatan entity.
+func (c *OrgJabatanClient) Create() *OrgJabatanCreate {
+	mutation := newOrgJabatanMutation(c.config, OpCreate)
+	return &OrgJabatanCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of OrgJabatan entities.
+func (c *OrgJabatanClient) CreateBulk(builders ...*OrgJabatanCreate) *OrgJabatanCreateBulk {
+	return &OrgJabatanCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *OrgJabatanClient) MapCreateBulk(slice any, setFunc func(*OrgJabatanCreate, int)) *OrgJabatanCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &OrgJabatanCreateBulk{err: fmt.Errorf("calling to OrgJabatanClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*OrgJabatanCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &OrgJabatanCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for OrgJabatan.
+func (c *OrgJabatanClient) Update() *OrgJabatanUpdate {
+	mutation := newOrgJabatanMutation(c.config, OpUpdate)
+	return &OrgJabatanUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *OrgJabatanClient) UpdateOne(_m *OrgJabatan) *OrgJabatanUpdateOne {
+	mutation := newOrgJabatanMutation(c.config, OpUpdateOne, withOrgJabatan(_m))
+	return &OrgJabatanUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *OrgJabatanClient) UpdateOneID(id uuid.UUID) *OrgJabatanUpdateOne {
+	mutation := newOrgJabatanMutation(c.config, OpUpdateOne, withOrgJabatanID(id))
+	return &OrgJabatanUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for OrgJabatan.
+func (c *OrgJabatanClient) Delete() *OrgJabatanDelete {
+	mutation := newOrgJabatanMutation(c.config, OpDelete)
+	return &OrgJabatanDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *OrgJabatanClient) DeleteOne(_m *OrgJabatan) *OrgJabatanDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *OrgJabatanClient) DeleteOneID(id uuid.UUID) *OrgJabatanDeleteOne {
+	builder := c.Delete().Where(orgjabatan.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &OrgJabatanDeleteOne{builder}
+}
+
+// Query returns a query builder for OrgJabatan.
+func (c *OrgJabatanClient) Query() *OrgJabatanQuery {
+	return &OrgJabatanQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeOrgJabatan},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a OrgJabatan entity by its id.
+func (c *OrgJabatanClient) Get(ctx context.Context, id uuid.UUID) (*OrgJabatan, error) {
+	return c.Query().Where(orgjabatan.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *OrgJabatanClient) GetX(ctx context.Context, id uuid.UUID) *OrgJabatan {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryOrganization queries the organization edge of a OrgJabatan.
+func (c *OrgJabatanClient) QueryOrganization(_m *OrgJabatan) *OrganizationQuery {
+	query := (&OrganizationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(orgjabatan.Table, orgjabatan.FieldID, id),
+			sqlgraph.To(organization.Table, organization.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, orgjabatan.OrganizationTable, orgjabatan.OrganizationColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryPeriode queries the periode edge of a OrgJabatan.
+func (c *OrgJabatanClient) QueryPeriode(_m *OrgJabatan) *OrgPeriodeQuery {
+	query := (&OrgPeriodeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(orgjabatan.Table, orgjabatan.FieldID, id),
+			sqlgraph.To(orgperiode.Table, orgperiode.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, orgjabatan.PeriodeTable, orgjabatan.PeriodeColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryParent queries the parent edge of a OrgJabatan.
+func (c *OrgJabatanClient) QueryParent(_m *OrgJabatan) *OrgJabatanQuery {
+	query := (&OrgJabatanClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(orgjabatan.Table, orgjabatan.FieldID, id),
+			sqlgraph.To(orgjabatan.Table, orgjabatan.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, orgjabatan.ParentTable, orgjabatan.ParentColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryChildren queries the children edge of a OrgJabatan.
+func (c *OrgJabatanClient) QueryChildren(_m *OrgJabatan) *OrgJabatanQuery {
+	query := (&OrgJabatanClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(orgjabatan.Table, orgjabatan.FieldID, id),
+			sqlgraph.To(orgjabatan.Table, orgjabatan.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, orgjabatan.ChildrenTable, orgjabatan.ChildrenColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *OrgJabatanClient) Hooks() []Hook {
+	return c.hooks.OrgJabatan
+}
+
+// Interceptors returns the client interceptors.
+func (c *OrgJabatanClient) Interceptors() []Interceptor {
+	return c.inters.OrgJabatan
+}
+
+func (c *OrgJabatanClient) mutate(ctx context.Context, m *OrgJabatanMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&OrgJabatanCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&OrgJabatanUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&OrgJabatanUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&OrgJabatanDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown OrgJabatan mutation op: %q", m.Op())
+	}
+}
+
 // OrgMemberClient is a client for the OrgMember schema.
 type OrgMemberClient struct {
 	config
@@ -3515,6 +3720,22 @@ func (c *OrgPeriodeClient) QueryOrganization(_m *OrgPeriode) *OrganizationQuery 
 	return query
 }
 
+// QueryJabatan queries the jabatan edge of a OrgPeriode.
+func (c *OrgPeriodeClient) QueryJabatan(_m *OrgPeriode) *OrgJabatanQuery {
+	query := (&OrgJabatanClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(orgperiode.Table, orgperiode.FieldID, id),
+			sqlgraph.To(orgjabatan.Table, orgjabatan.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, orgperiode.JabatanTable, orgperiode.JabatanColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *OrgPeriodeClient) Hooks() []Hook {
 	return c.hooks.OrgPeriode
@@ -3721,6 +3942,22 @@ func (c *OrganizationClient) QueryPeriode(_m *Organization) *OrgPeriodeQuery {
 			sqlgraph.From(organization.Table, organization.FieldID, id),
 			sqlgraph.To(orgperiode.Table, orgperiode.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, organization.PeriodeTable, organization.PeriodeColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryJabatan queries the jabatan edge of a Organization.
+func (c *OrganizationClient) QueryJabatan(_m *Organization) *OrgJabatanQuery {
+	query := (&OrgJabatanClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(organization.Table, organization.FieldID, id),
+			sqlgraph.To(orgjabatan.Table, orgjabatan.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, organization.JabatanTable, organization.JabatanColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -5589,15 +5826,15 @@ type (
 	hooks struct {
 		AgentMemory, AgentMessage, AgentProvider, AgentSession, CasbinRule, Event,
 		EventLagu, EventPetugas, EventRSVP, Kecamatan, Keluarga, Kelurahan, Keuskupan,
-		Kevikepan, Kota, Lingkungan, Lookup, OrgInvite, OrgMember, OrgPeriode,
-		Organization, Paroki, ParokiMember, Setting, Umat, UmatSakramen, User,
-		UserAccount, UserOTP, UserSession, UserToken, Wilayah []ent.Hook
+		Kevikepan, Kota, Lingkungan, Lookup, OrgInvite, OrgJabatan, OrgMember,
+		OrgPeriode, Organization, Paroki, ParokiMember, Setting, Umat, UmatSakramen,
+		User, UserAccount, UserOTP, UserSession, UserToken, Wilayah []ent.Hook
 	}
 	inters struct {
 		AgentMemory, AgentMessage, AgentProvider, AgentSession, CasbinRule, Event,
 		EventLagu, EventPetugas, EventRSVP, Kecamatan, Keluarga, Kelurahan, Keuskupan,
-		Kevikepan, Kota, Lingkungan, Lookup, OrgInvite, OrgMember, OrgPeriode,
-		Organization, Paroki, ParokiMember, Setting, Umat, UmatSakramen, User,
-		UserAccount, UserOTP, UserSession, UserToken, Wilayah []ent.Interceptor
+		Kevikepan, Kota, Lingkungan, Lookup, OrgInvite, OrgJabatan, OrgMember,
+		OrgPeriode, Organization, Paroki, ParokiMember, Setting, Umat, UmatSakramen,
+		User, UserAccount, UserOTP, UserSession, UserToken, Wilayah []ent.Interceptor
 	}
 )

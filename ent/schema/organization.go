@@ -47,6 +47,7 @@ func (Organization) Edges() []ent.Edge {
 		edge.To("members", OrgMember.Type),
 		edge.To("invites", OrgInvite.Type),
 		edge.To("periode", OrgPeriode.Type),
+		edge.To("jabatan", OrgJabatan.Type),
 	}
 }
 

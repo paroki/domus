@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orginvite"
+	"github.com/paroki/domus/ent/orgjabatan"
 	"github.com/paroki/domus/ent/orgmember"
 	"github.com/paroki/domus/ent/orgperiode"
 	"github.com/paroki/domus/ent/predicate"
@@ -273,6 +274,21 @@ func (_u *OrganizationUpdate) AddPeriode(v ...*OrgPeriode) *OrganizationUpdate {
 	return _u.AddPeriodeIDs(ids...)
 }
 
+// AddJabatanIDs adds the "jabatan" edge to the OrgJabatan entity by IDs.
+func (_u *OrganizationUpdate) AddJabatanIDs(ids ...uuid.UUID) *OrganizationUpdate {
+	_u.mutation.AddJabatanIDs(ids...)
+	return _u
+}
+
+// AddJabatan adds the "jabatan" edges to the OrgJabatan entity.
+func (_u *OrganizationUpdate) AddJabatan(v ...*OrgJabatan) *OrganizationUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddJabatanIDs(ids...)
+}
+
 // Mutation returns the OrganizationMutation object of the builder.
 func (_u *OrganizationUpdate) Mutation() *OrganizationMutation {
 	return _u.mutation
@@ -366,6 +382,27 @@ func (_u *OrganizationUpdate) RemovePeriode(v ...*OrgPeriode) *OrganizationUpdat
 		ids[i] = v[i].ID
 	}
 	return _u.RemovePeriodeIDs(ids...)
+}
+
+// ClearJabatan clears all "jabatan" edges to the OrgJabatan entity.
+func (_u *OrganizationUpdate) ClearJabatan() *OrganizationUpdate {
+	_u.mutation.ClearJabatan()
+	return _u
+}
+
+// RemoveJabatanIDs removes the "jabatan" edge to OrgJabatan entities by IDs.
+func (_u *OrganizationUpdate) RemoveJabatanIDs(ids ...uuid.UUID) *OrganizationUpdate {
+	_u.mutation.RemoveJabatanIDs(ids...)
+	return _u
+}
+
+// RemoveJabatan removes "jabatan" edges to OrgJabatan entities.
+func (_u *OrganizationUpdate) RemoveJabatan(v ...*OrgJabatan) *OrganizationUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveJabatanIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -687,6 +724,51 @@ func (_u *OrganizationUpdate) sqlSave(ctx context.Context) (_node int, err error
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.JabatanCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.JabatanTable,
+			Columns: []string{organization.JabatanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgjabatan.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedJabatanIDs(); len(nodes) > 0 && !_u.mutation.JabatanCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.JabatanTable,
+			Columns: []string{organization.JabatanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgjabatan.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.JabatanIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.JabatanTable,
+			Columns: []string{organization.JabatanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgjabatan.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{organization.Label}
@@ -948,6 +1030,21 @@ func (_u *OrganizationUpdateOne) AddPeriode(v ...*OrgPeriode) *OrganizationUpdat
 	return _u.AddPeriodeIDs(ids...)
 }
 
+// AddJabatanIDs adds the "jabatan" edge to the OrgJabatan entity by IDs.
+func (_u *OrganizationUpdateOne) AddJabatanIDs(ids ...uuid.UUID) *OrganizationUpdateOne {
+	_u.mutation.AddJabatanIDs(ids...)
+	return _u
+}
+
+// AddJabatan adds the "jabatan" edges to the OrgJabatan entity.
+func (_u *OrganizationUpdateOne) AddJabatan(v ...*OrgJabatan) *OrganizationUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddJabatanIDs(ids...)
+}
+
 // Mutation returns the OrganizationMutation object of the builder.
 func (_u *OrganizationUpdateOne) Mutation() *OrganizationMutation {
 	return _u.mutation
@@ -1041,6 +1138,27 @@ func (_u *OrganizationUpdateOne) RemovePeriode(v ...*OrgPeriode) *OrganizationUp
 		ids[i] = v[i].ID
 	}
 	return _u.RemovePeriodeIDs(ids...)
+}
+
+// ClearJabatan clears all "jabatan" edges to the OrgJabatan entity.
+func (_u *OrganizationUpdateOne) ClearJabatan() *OrganizationUpdateOne {
+	_u.mutation.ClearJabatan()
+	return _u
+}
+
+// RemoveJabatanIDs removes the "jabatan" edge to OrgJabatan entities by IDs.
+func (_u *OrganizationUpdateOne) RemoveJabatanIDs(ids ...uuid.UUID) *OrganizationUpdateOne {
+	_u.mutation.RemoveJabatanIDs(ids...)
+	return _u
+}
+
+// RemoveJabatan removes "jabatan" edges to OrgJabatan entities.
+func (_u *OrganizationUpdateOne) RemoveJabatan(v ...*OrgJabatan) *OrganizationUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveJabatanIDs(ids...)
 }
 
 // Where appends a list predicates to the OrganizationUpdate builder.
@@ -1385,6 +1503,51 @@ func (_u *OrganizationUpdateOne) sqlSave(ctx context.Context) (_node *Organizati
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(orgperiode.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.JabatanCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.JabatanTable,
+			Columns: []string{organization.JabatanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgjabatan.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedJabatanIDs(); len(nodes) > 0 && !_u.mutation.JabatanCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.JabatanTable,
+			Columns: []string{organization.JabatanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgjabatan.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.JabatanIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.JabatanTable,
+			Columns: []string{organization.JabatanColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgjabatan.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

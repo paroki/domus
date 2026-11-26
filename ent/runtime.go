@@ -25,6 +25,7 @@ import (
 	"github.com/paroki/domus/ent/lookup"
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orginvite"
+	"github.com/paroki/domus/ent/orgjabatan"
 	"github.com/paroki/domus/ent/orgmember"
 	"github.com/paroki/domus/ent/orgperiode"
 	"github.com/paroki/domus/ent/paroki"
@@ -619,6 +620,39 @@ func init() {
 	orginviteDescID := orginviteMixinFields0[0].Descriptor()
 	// orginvite.DefaultID holds the default value on creation for the id field.
 	orginvite.DefaultID = orginviteDescID.Default.(func() uuid.UUID)
+	orgjabatanMixin := schema.OrgJabatan{}.Mixin()
+	orgjabatanMixinFields0 := orgjabatanMixin[0].Fields()
+	_ = orgjabatanMixinFields0
+	orgjabatanMixinFields1 := orgjabatanMixin[1].Fields()
+	_ = orgjabatanMixinFields1
+	orgjabatanFields := schema.OrgJabatan{}.Fields()
+	_ = orgjabatanFields
+	// orgjabatanDescCreatedAt is the schema descriptor for created_at field.
+	orgjabatanDescCreatedAt := orgjabatanMixinFields1[0].Descriptor()
+	// orgjabatan.DefaultCreatedAt holds the default value on creation for the created_at field.
+	orgjabatan.DefaultCreatedAt = orgjabatanDescCreatedAt.Default.(func() time.Time)
+	// orgjabatanDescUpdatedAt is the schema descriptor for updated_at field.
+	orgjabatanDescUpdatedAt := orgjabatanMixinFields1[1].Descriptor()
+	// orgjabatan.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	orgjabatan.DefaultUpdatedAt = orgjabatanDescUpdatedAt.Default.(func() time.Time)
+	// orgjabatan.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	orgjabatan.UpdateDefaultUpdatedAt = orgjabatanDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// orgjabatanDescJabatan is the schema descriptor for jabatan field.
+	orgjabatanDescJabatan := orgjabatanFields[4].Descriptor()
+	// orgjabatan.JabatanValidator is a validator for the "jabatan" field. It is called by the builders before save.
+	orgjabatan.JabatanValidator = orgjabatanDescJabatan.Validators[0].(func(string) error)
+	// orgjabatanDescUrutan is the schema descriptor for urutan field.
+	orgjabatanDescUrutan := orgjabatanFields[10].Descriptor()
+	// orgjabatan.DefaultUrutan holds the default value on creation for the urutan field.
+	orgjabatan.DefaultUrutan = orgjabatanDescUrutan.Default.(int)
+	// orgjabatanDescActive is the schema descriptor for active field.
+	orgjabatanDescActive := orgjabatanFields[11].Descriptor()
+	// orgjabatan.DefaultActive holds the default value on creation for the active field.
+	orgjabatan.DefaultActive = orgjabatanDescActive.Default.(bool)
+	// orgjabatanDescID is the schema descriptor for id field.
+	orgjabatanDescID := orgjabatanMixinFields0[0].Descriptor()
+	// orgjabatan.DefaultID holds the default value on creation for the id field.
+	orgjabatan.DefaultID = orgjabatanDescID.Default.(func() uuid.UUID)
 	orgmemberMixin := schema.OrgMember{}.Mixin()
 	orgmemberMixinFields0 := orgmemberMixin[0].Fields()
 	_ = orgmemberMixinFields0

@@ -682,6 +682,78 @@ var (
 			},
 		},
 	}
+	// OrgJabatanColumns holds the columns for the "org_jabatan" table.
+	OrgJabatanColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "paroki_id", Type: field.TypeUUID},
+		{Name: "jabatan", Type: field.TypeString},
+		{Name: "user_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "umat_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "nama", Type: field.TypeString, Nullable: true},
+		{Name: "start_date", Type: field.TypeString, Nullable: true},
+		{Name: "end_date", Type: field.TypeString, Nullable: true},
+		{Name: "urutan", Type: field.TypeInt, Default: 0},
+		{Name: "active", Type: field.TypeBool, Default: true},
+		{Name: "parent_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "periode_id", Type: field.TypeUUID},
+		{Name: "org_id", Type: field.TypeUUID},
+	}
+	// OrgJabatanTable holds the schema information for the "org_jabatan" table.
+	OrgJabatanTable = &schema.Table{
+		Name:       "org_jabatan",
+		Columns:    OrgJabatanColumns,
+		PrimaryKey: []*schema.Column{OrgJabatanColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "org_jabatan_org_jabatan_children",
+				Columns:    []*schema.Column{OrgJabatanColumns[13]},
+				RefColumns: []*schema.Column{OrgJabatanColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "org_jabatan_org_periode_jabatan",
+				Columns:    []*schema.Column{OrgJabatanColumns[14]},
+				RefColumns: []*schema.Column{OrgPeriodeColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "org_jabatan_organizations_jabatan",
+				Columns:    []*schema.Column{OrgJabatanColumns[15]},
+				RefColumns: []*schema.Column{OrganizationsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "orgjabatan_org_id_periode_id_parent_id_urutan",
+				Unique:  false,
+				Columns: []*schema.Column{OrgJabatanColumns[15], OrgJabatanColumns[14], OrgJabatanColumns[13], OrgJabatanColumns[11]},
+			},
+			{
+				Name:    "orgjabatan_org_id_periode_id_active",
+				Unique:  false,
+				Columns: []*schema.Column{OrgJabatanColumns[15], OrgJabatanColumns[14], OrgJabatanColumns[12]},
+			},
+			{
+				Name:    "orgjabatan_paroki_id_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{OrgJabatanColumns[4], OrgJabatanColumns[6]},
+			},
+			{
+				Name:    "orgjabatan_paroki_id_umat_id",
+				Unique:  false,
+				Columns: []*schema.Column{OrgJabatanColumns[4], OrgJabatanColumns[7]},
+			},
+			{
+				Name:    "orgjabatan_paroki_id_org_id",
+				Unique:  false,
+				Columns: []*schema.Column{OrgJabatanColumns[4], OrgJabatanColumns[15]},
+			},
+		},
+	}
 	// OrgMembersColumns holds the columns for the "org_members" table.
 	OrgMembersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -1346,6 +1418,7 @@ var (
 		LingkunganTable,
 		LookupsTable,
 		OrgInvitesTable,
+		OrgJabatanTable,
 		OrgMembersTable,
 		OrgPeriodeTable,
 		OrganizationsTable,
@@ -1417,6 +1490,12 @@ func init() {
 	}
 	LookupsTable.ForeignKeys[0].RefTable = ParokiTable
 	OrgInvitesTable.ForeignKeys[0].RefTable = OrganizationsTable
+	OrgJabatanTable.ForeignKeys[0].RefTable = OrgJabatanTable
+	OrgJabatanTable.ForeignKeys[1].RefTable = OrgPeriodeTable
+	OrgJabatanTable.ForeignKeys[2].RefTable = OrganizationsTable
+	OrgJabatanTable.Annotation = &entsql.Annotation{
+		Table: "org_jabatan",
+	}
 	OrgMembersTable.ForeignKeys[0].RefTable = OrganizationsTable
 	OrgPeriodeTable.ForeignKeys[0].RefTable = OrganizationsTable
 	OrgPeriodeTable.Annotation = &entsql.Annotation{

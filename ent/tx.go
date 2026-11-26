@@ -48,6 +48,8 @@ type Tx struct {
 	Lookup *LookupClient
 	// OrgInvite is the client for interacting with the OrgInvite builders.
 	OrgInvite *OrgInviteClient
+	// OrgJabatan is the client for interacting with the OrgJabatan builders.
+	OrgJabatan *OrgJabatanClient
 	// OrgMember is the client for interacting with the OrgMember builders.
 	OrgMember *OrgMemberClient
 	// OrgPeriode is the client for interacting with the OrgPeriode builders.
@@ -225,6 +227,7 @@ func (tx *Tx) init() {
 	tx.Lingkungan = NewLingkunganClient(tx.config)
 	tx.Lookup = NewLookupClient(tx.config)
 	tx.OrgInvite = NewOrgInviteClient(tx.config)
+	tx.OrgJabatan = NewOrgJabatanClient(tx.config)
 	tx.OrgMember = NewOrgMemberClient(tx.config)
 	tx.OrgPeriode = NewOrgPeriodeClient(tx.config)
 	tx.Organization = NewOrganizationClient(tx.config)

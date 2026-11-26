@@ -9,7 +9,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/ent/umat"
+	"github.com/paroki/domus/internal/platform/authx"
+	"github.com/paroki/domus/internal/platform/authz"
 	"github.com/paroki/domus/internal/platform/httpx"
+	"github.com/paroki/domus/internal/ref"
 	"github.com/paroki/domus/internal/umat/domain"
 	"github.com/paroki/domus/internal/umat/repo"
 )
@@ -497,14 +500,110 @@ func (s *Service) UpdateUmat(ctx context.Context, parokiID, id uuid.UUID, req do
 	return s.toUmatDetail(refetched), nil
 }
 
-// DeleteUmat soft-deletes an Umat in parokiID.
+// DeleteUmat soft-deletes an Umat in parokiID if no active OrgJabatan references it.
 func (s *Service) DeleteUmat(ctx context.Context, parokiID, id uuid.UUID) error {
 	if _, err := s.repo.FindUmatByID(ctx, parokiID, id); ent.IsNotFound(err) {
 		return domain.ErrUmatNotFound
 	} else if err != nil {
 		return err
 	}
+	inUse, err := s.repo.HasOrgJabatanByUmat(ctx, parokiID, id)
+	if err != nil {
+		return err
+	}
+	if inUse {
+		return domain.ErrInUse
+	}
 	return s.repo.SoftDeleteUmat(ctx, id, time.Now().UTC())
+}
+
+// LookupUmat returns PII-free parishioner summaries for umat:admin, ref:paroki-admin, or active org:admin callers.
+func (s *Service) LookupUmat(ctx context.Context, p authx.Principal, req domain.LookupUmatRequest) ([]domain.UmatLookupItemResponse, error) {
+	allowed, err := s.canLookupUmat(ctx, p)
+	if err != nil {
+		return nil, err
+	}
+	if !allowed {
+		return nil, domain.ErrForbidden
+	}
+
+	limit := req.Limit
+	if limit <= 0 {
+		limit = 20
+	}
+	if limit > 50 {
+		limit = 50
+	}
+
+	rows, err := s.repo.LookupUmat(ctx, p.ParokiID, strings.TrimSpace(req.Q), req.WilayahID, req.LingkunganID, limit)
+	if err != nil {
+		return nil, err
+	}
+	items := make([]domain.UmatLookupItemResponse, 0, len(rows))
+	for _, row := range rows {
+		items = append(items, toUmatBasic(row))
+	}
+	return items, nil
+}
+
+// GetBasic returns a PII-free Umat summary by ID within parokiID.
+func (s *Service) GetBasic(ctx context.Context, parokiID, umatID uuid.UUID) (*domain.UmatLookupItemResponse, error) {
+	row, err := s.repo.FindUmatBasicByID(ctx, parokiID, umatID)
+	if ent.IsNotFound(err) {
+		return nil, domain.ErrUmatNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	res := toUmatBasic(row)
+	return &res, nil
+}
+
+// GetByUserID returns a PII-free Umat summary linked to userID within parokiID, or (nil, nil) if none exists.
+func (s *Service) GetByUserID(ctx context.Context, parokiID, userID uuid.UUID) (*domain.UmatLookupItemResponse, error) {
+	row, err := s.repo.FindUmatByUserID(ctx, parokiID, userID)
+	if ent.IsNotFound(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	res := toUmatBasic(row)
+	return &res, nil
+}
+
+func (s *Service) canLookupUmat(ctx context.Context, p authx.Principal) (bool, error) {
+	if s.enforcer != nil {
+		sub := authz.UserSubject(p.UserID)
+		dom := authz.ParokiDomain(p.ParokiID)
+		isUmatAdm, err := s.enforcer.HasRoleInDomain(sub, domain.RoleAdmin, dom)
+		if err != nil {
+			return false, err
+		}
+		if isUmatAdm {
+			return true, nil
+		}
+		isParokiAdm, err := s.enforcer.HasRoleInDomain(sub, ref.RoleParokiAdmin, dom)
+		if err != nil {
+			return false, err
+		}
+		if isParokiAdm {
+			return true, nil
+		}
+	}
+	return s.repo.HasActiveOrgAdminInParoki(ctx, p.ParokiID, p.UserID)
+}
+
+func toUmatBasic(u *ent.Umat) domain.UmatLookupItemResponse {
+	return domain.UmatLookupItemResponse{
+		ID:           u.ID,
+		ParokiID:     u.ParokiID,
+		Nama:         u.Nama,
+		NamaBaptis:   u.NamaBaptis,
+		WilayahID:    u.WilayahID,
+		LingkunganID: u.LingkunganID,
+		UserID:       u.UserID,
+	}
 }
 
 func (s *Service) validateUserLink(ctx context.Context, parokiID, userID uuid.UUID, excludeUmatID *uuid.UUID) error {

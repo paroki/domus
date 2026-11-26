@@ -367,3 +367,22 @@ type UpdateUmatSakramenRequest struct {
 	Nomor            *string    `json:"nomor,omitempty"`
 	Catatan          *string    `json:"catatan,omitempty"`
 }
+
+// UmatLookupItemResponse is the PII-free parishioner summary returned by POST /api/umat/lookup and facade helpers.
+type UmatLookupItemResponse struct {
+	ID           uuid.UUID  `json:"id"`
+	ParokiID     uuid.UUID  `json:"parokiId"`
+	Nama         string     `json:"nama"`
+	NamaBaptis   *string    `json:"namaBaptis,omitempty"`
+	WilayahID    *uuid.UUID `json:"wilayahId,omitempty"`
+	LingkunganID *uuid.UUID `json:"lingkunganId,omitempty"`
+	UserID       *uuid.UUID `json:"userId,omitempty"`
+}
+
+// LookupUmatRequest searches active, non-deceased parishioners for position assignment.
+type LookupUmatRequest struct {
+	Q            string     `json:"q,omitempty"`
+	WilayahID    *uuid.UUID `json:"wilayahId,omitempty"`
+	LingkunganID *uuid.UUID `json:"lingkunganId,omitempty"`
+	Limit        int        `json:"limit,omitempty" validate:"omitempty,min=1,max=50"`
+}
