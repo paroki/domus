@@ -21,6 +21,7 @@ import {
   useEventRSVPs,
   useEventTypeLookups,
 } from "../api/queries";
+import { LaguSection } from "../components/LaguSection";
 import { PetugasSection } from "../components/PetugasSection";
 import {
   computeEventLifecycle,
@@ -484,6 +485,12 @@ export default function EventDetailPage() {
         orgId={ev.orgId}
         canManage={canManage}
         petugas={ev.petugas ?? []}
+      />
+
+      <LaguSection
+        eventId={eventId}
+        canManage={canManage}
+        lagu={ev.lagu ?? []}
       />
 
       {!canRsvp ? (

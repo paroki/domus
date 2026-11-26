@@ -28,6 +28,7 @@ export const LOOKUP_CATEGORIES = [
   "org_position",
   "event_type",
   "event_role",
+  "event_song_part",
 ] as const;
 
 export type LookupCategory = (typeof LOOKUP_CATEGORIES)[number];
@@ -120,6 +121,12 @@ export const LOOKUP_CATEGORY_META: LookupCategoryMeta[] = [
     label: "Peran Petugas Kegiatan",
     description:
       "Daftar peran petugas liturgi dan kegiatan (Selebran, Organis, Dirigen, Lektor, Pemazmur, Tatib, dll.).",
+  },
+  {
+    slug: "event_song_part",
+    label: "Bagian Lagu Liturgi",
+    description:
+      "Bagian nyanyian dalam tata perayaan liturgi atau ibadat (Pembuka, Kyrie, Gloria, Mazmur, Komuni, Penutup, dll.).",
   },
 ];
 

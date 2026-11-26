@@ -4,6 +4,7 @@ import { resolveErrorMessage } from "~/shared/api/errors";
 export const EVENT_ERRORS: Record<string, string> = {
   EVENT_NOT_FOUND: "Kegiatan tidak ditemukan.",
   EVENT_PETUGAS_NOT_FOUND: "Penugasan petugas kegiatan tidak ditemukan.",
+  EVENT_LAGU_NOT_FOUND: "Data lagu kegiatan tidak ditemukan.",
   EVENT_FORBIDDEN:
     "Anda tidak memiliki izin untuk mengakses atau mengelola kegiatan ini.",
   EVENT_INVALID_TIME_RANGE:

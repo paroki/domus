@@ -23,6 +23,20 @@ export const DEFAULT_EVENT_ROLES: readonly string[] = [
   "Notulis",
 ];
 
+export const DEFAULT_EVENT_SONG_PARTS: readonly string[] = [
+  "Pembuka",
+  "Tuhan Kasihanilah (Kyrie)",
+  "Kemuliaan (Gloria)",
+  "Mazmur Tanggapan",
+  "Bait Pengantar Injil",
+  "Persembahan",
+  "Kudus (Sanctus)",
+  "Anak Domba Allah (Agnus Dei)",
+  "Komuni",
+  "Madah Syukur",
+  "Penutup",
+];
+
 export function petugasStatusMeta(status: string): {
   label: string;
   tone: BadgeTone;

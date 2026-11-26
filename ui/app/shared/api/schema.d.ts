@@ -412,6 +412,50 @@ export interface paths {
     patch: operations["updateEvent"];
     trace?: never;
   };
+  "/events/{id}/lagu": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create event lagu
+     * @description Adds a liturgical song entry to an event (requires event manager: org:admin or ref:paroki-admin).
+     */
+    post: operations["createEventLagu"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{id}/lagu/{laguId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Delete event lagu
+     * @description Removes a liturgical song entry from an event (requires event manager).
+     */
+    delete: operations["deleteEventLagu"];
+    options?: never;
+    head?: never;
+    /**
+     * Update event lagu
+     * @description Updates a liturgical song entry in an event (requires event manager).
+     */
+    patch: operations["updateEventLagu"];
+    trace?: never;
+  };
   "/events/{id}/petugas": {
     parameters: {
       query?: never;
@@ -1977,6 +2021,15 @@ export interface components {
       /** @enum {string} */
       provider: "gemini" | "anthropic" | "openai" | "openrouter";
     };
+    "domain.CreateEventLaguRequest": {
+      bagian: string;
+      judul: string;
+      nadaDasar?: string;
+      nomor?: string;
+      note?: string;
+      sumber?: string;
+      urutan?: number;
+    };
     "domain.CreateEventPetugasRequest": {
       name?: string;
       note?: string;
@@ -2138,6 +2191,20 @@ export interface components {
       nama: string;
       teleponKoordinator?: string;
     };
+    "domain.EventLaguResponse": {
+      bagian?: string;
+      createdAt?: string;
+      eventId?: string;
+      id?: string;
+      judul?: string;
+      nadaDasar?: string;
+      nomor?: string;
+      note?: string;
+      parokiId?: string;
+      sumber?: string;
+      updatedAt?: string;
+      urutan?: number;
+    };
     "domain.EventPetugasResponse": {
       canConfirm?: boolean;
       createdAt?: string;
@@ -2190,6 +2257,7 @@ export interface components {
       endAt?: string;
       id?: string;
       jenis?: string;
+      lagu?: components["schemas"]["domain.EventLaguResponse"][];
       location?: string;
       myOrgRole?: string;
       myRsvp?: components["schemas"]["domain.EventRSVPResponse"];
@@ -2704,6 +2772,15 @@ export interface components {
       /** @enum {string} */
       provider?: "gemini" | "anthropic" | "openai" | "openrouter";
     };
+    "domain.UpdateEventLaguRequest": {
+      bagian?: string;
+      judul?: string;
+      nadaDasar?: string;
+      nomor?: string;
+      note?: string;
+      sumber?: string;
+      urutan?: number;
+    };
     "domain.UpdateEventPetugasRequest": {
       name?: string;
       note?: string;
@@ -3144,6 +3221,11 @@ export interface components {
     };
     "httpx.Envelope-domain_CreateUserTokenResponse": {
       data?: components["schemas"]["domain.CreateUserTokenResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_EventLaguResponse": {
+      data?: components["schemas"]["domain.EventLaguResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -4753,6 +4835,213 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["httpx.Envelope-domain_EventResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  createEventLagu: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Event UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Song entry payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.CreateEventLaguRequest"];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_EventLaguResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  deleteEventLagu: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Event UUID */
+        id: string;
+        /** @description Lagu UUID */
+        laguId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  updateEventLagu: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Event UUID */
+        id: string;
+        /** @description Lagu UUID */
+        laguId: string;
+      };
+      cookie?: never;
+    };
+    /** @description Song update payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UpdateEventLaguRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_EventLaguResponse"];
         };
       };
       /** @description Bad Request */

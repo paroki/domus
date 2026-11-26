@@ -5,6 +5,7 @@ import { resolveEventError } from "./api/errors";
 import {
   computeEventLifecycle,
   DEFAULT_EVENT_ROLES,
+  DEFAULT_EVENT_SONG_PARTS,
   DEFAULT_EVENT_TYPES,
   DEFAULT_PAROKI_TIMEZONE,
   eventTypeLabel,
@@ -170,6 +171,8 @@ test("event type helpers merge built-in defaults and custom lookups", () => {
 
 test("petugas role defaults and status metadata helpers work", () => {
   assert.equal(DEFAULT_EVENT_ROLES.includes("Organis"), true);
+  assert.equal(DEFAULT_EVENT_SONG_PARTS.includes("Pembuka"), true);
+  assert.equal(DEFAULT_EVENT_SONG_PARTS.length, 11);
   assert.deepEqual(petugasStatusMeta("assigned"), {
     label: "Ditugaskan",
     tone: "neutral",

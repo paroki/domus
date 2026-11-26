@@ -13,6 +13,7 @@ export const eventKeys = {
   paroki: () => [...eventKeys.all, "paroki"] as const,
   eventTypes: () => [...eventKeys.all, "event-types"] as const,
   eventRoles: () => [...eventKeys.all, "event-roles"] as const,
+  eventSongParts: () => [...eventKeys.all, "event-song-parts"] as const,
   parokiMembers: (parokiId: string) =>
     [...eventKeys.all, "paroki-members", parokiId] as const,
   orgMembers: (orgId: string) =>

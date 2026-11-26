@@ -141,6 +141,22 @@ export function useEventRoleLookups(enabled = true) {
   });
 }
 
+export function useEventSongPartLookups(enabled = true) {
+  return useQuery({
+    queryKey: eventKeys.eventSongParts(),
+    enabled,
+    queryFn: () =>
+      unwrap(
+        api.POST("/ref/lookups/search", {
+          body: {
+            filter: { category: "event_song_part", active: true },
+            limit: 100,
+          },
+        }),
+      ),
+  });
+}
+
 export function useParokiMembersForEvent(parokiId: string, enabled = true) {
   return useQuery({
     queryKey: eventKeys.parokiMembers(parokiId),

@@ -2,8 +2,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, unwrap, unwrapVoid } from "~/shared/api/client";
 import { eventKeys } from "./keys";
 import type {
+  CreateEventLaguRequest,
   CreateEventPetugasRequest,
   CreateEventRequest,
+  UpdateEventLaguRequest,
   UpdateEventPetugasRequest,
   UpdateEventRequest,
   UpsertEventRSVPRequest,
@@ -112,6 +114,53 @@ export function useDeleteEventPetugas(eventId: string) {
       unwrapVoid(
         api.DELETE("/events/{id}/petugas/{petugasId}", {
           params: { path: { id: eventId, petugasId } },
+        }),
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: eventKeys.all }),
+  });
+}
+
+export function useCreateEventLagu(eventId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: CreateEventLaguRequest) =>
+      unwrap(
+        api.POST("/events/{id}/lagu", {
+          params: { path: { id: eventId } },
+          body,
+        }),
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: eventKeys.all }),
+  });
+}
+
+export function useUpdateEventLagu(eventId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      laguId,
+      body,
+    }: {
+      laguId: string;
+      body: UpdateEventLaguRequest;
+    }) =>
+      unwrap(
+        api.PATCH("/events/{id}/lagu/{laguId}", {
+          params: { path: { id: eventId, laguId } },
+          body,
+        }),
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: eventKeys.all }),
+  });
+}
+
+export function useDeleteEventLagu(eventId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (laguId: string) =>
+      unwrapVoid(
+        api.DELETE("/events/{id}/lagu/{laguId}", {
+          params: { path: { id: eventId, laguId } },
         }),
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: eventKeys.all }),
