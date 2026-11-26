@@ -100,3 +100,87 @@ export function buildInviteJoinUrl(origin: string, code: string): string {
   const base = origin.replace(/\/+$/, "");
   return `${base}/org/join/${encodeURIComponent(code)}`;
 }
+
+export interface JabatanTreeItem {
+  id?: string;
+  parentId?: string | null;
+  jabatan?: string;
+  nama?: string | null;
+  userId?: string | null;
+  umatId?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  urutan?: number;
+  active?: boolean;
+}
+
+export interface OrgJabatanNode<T extends JabatanTreeItem = JabatanTreeItem> {
+  item: T;
+  depth: number;
+  children: OrgJabatanNode<T>[];
+}
+
+export function buildJabatanTree<T extends JabatanTreeItem>(
+  items: T[],
+): OrgJabatanNode<T>[] {
+  const sorted = [...items].sort((a, b) => {
+    const au = a.urutan ?? 0;
+    const bu = b.urutan ?? 0;
+    if (au !== bu) return au - bu;
+    return (a.jabatan ?? "").localeCompare(b.jabatan ?? "", "id");
+  });
+
+  const nodeMap = new Map<string, OrgJabatanNode<T>>();
+  for (const item of sorted) {
+    if (!item.id) continue;
+    nodeMap.set(item.id, { item, depth: 0, children: [] });
+  }
+
+  const roots: OrgJabatanNode<T>[] = [];
+  for (const item of sorted) {
+    if (!item.id) continue;
+    const node = nodeMap.get(item.id);
+    if (!node) continue;
+    const parentNode = item.parentId ? nodeMap.get(item.parentId) : undefined;
+    if (parentNode && parentNode.item.id !== item.id) {
+      parentNode.children.push(node);
+    } else {
+      roots.push(node);
+    }
+  }
+
+  function assignDepth(nodes: OrgJabatanNode<T>[], depth: number) {
+    for (const node of nodes) {
+      node.depth = depth;
+      assignDepth(node.children, depth + 1);
+    }
+  }
+  assignDepth(roots, 0);
+
+  return roots;
+}
+
+export function flattenJabatanTreeForSelect<T extends JabatanTreeItem>(
+  tree: OrgJabatanNode<T>[],
+  excludeId?: string,
+): Array<{ id: string; label: string; depth: number }> {
+  const out: Array<{ id: string; label: string; depth: number }> = [];
+  function walk(nodes: OrgJabatanNode<T>[]) {
+    for (const node of nodes) {
+      const id = node.item.id ?? "";
+      if (!id || (excludeId && id === excludeId)) {
+        continue;
+      }
+      const prefix = node.depth > 0 ? `${"— ".repeat(node.depth)}` : "";
+      const holder = node.item.nama ? ` (${node.item.nama})` : "";
+      out.push({
+        id,
+        label: `${prefix}${node.item.jabatan ?? ""}${holder}`,
+        depth: node.depth,
+      });
+      walk(node.children);
+    }
+  }
+  walk(tree);
+  return out;
+}

@@ -1,7 +1,10 @@
 import type {
+  LookupUmatRequest,
   SearchOrganizationsRequest,
   SearchOrgInvitesRequest,
+  SearchOrgJabatanRequest,
   SearchOrgMembersRequest,
+  SearchOrgPeriodeRequest,
 } from "./types";
 
 export const orgKeys = {
@@ -15,6 +18,20 @@ export const orgKeys = {
     [...orgKeys.all, "invites", orgId, params ?? {}] as const,
   invitePreview: (code: string) =>
     [...orgKeys.all, "invite-preview", code] as const,
+  periodeList: (
+    orgId: string,
+    params?: Omit<SearchOrgPeriodeRequest, "cursor">,
+  ) => [...orgKeys.all, "periode", orgId, params ?? {}] as const,
+  periodeDetail: (orgId: string, periodeId: string) =>
+    [...orgKeys.all, "periode-detail", orgId, periodeId] as const,
+  jabatanList: (
+    orgId: string,
+    params?: Omit<SearchOrgJabatanRequest, "cursor">,
+  ) => [...orgKeys.all, "jabatan", orgId, params ?? {}] as const,
+  jabatanDetail: (orgId: string, jabatanId: string) =>
+    [...orgKeys.all, "jabatan-detail", orgId, jabatanId] as const,
+  umatLookup: (params?: LookupUmatRequest) =>
+    [...orgKeys.all, "umat-lookup", params ?? {}] as const,
   wilayah: () => [...orgKeys.all, "ref-wilayah"] as const,
   lingkungan: () => [...orgKeys.all, "ref-lingkungan"] as const,
   positionLookups: () => [...orgKeys.all, "ref-position-lookups"] as const,

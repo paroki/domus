@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   buildInviteJoinUrl,
+  buildJabatanTree,
   computeInviteStatus,
+  flattenJabatanTreeForSelect,
   inviteStatusMeta,
   isParokiAdmin,
   kindLabel,
@@ -58,5 +60,73 @@ test("buildInviteJoinUrl formats shareable join URL", () => {
   assert.equal(
     buildInviteJoinUrl("https://domus.example.com/", "Abc123xyz"),
     "https://domus.example.com/org/join/Abc123xyz",
+  );
+});
+
+test("buildJabatanTree builds sorted multi-level hierarchy and handles orphans", () => {
+  const tree = buildJabatanTree([
+    {
+      id: "child-b",
+      parentId: "root",
+      jabatan: "Sekretaris",
+      urutan: 2,
+      active: true,
+    },
+    {
+      id: "child-a",
+      parentId: "root",
+      jabatan: "Bendahara",
+      urutan: 1,
+      active: true,
+    },
+    {
+      id: "grandchild",
+      parentId: "child-b",
+      jabatan: "Wakil Sekretaris",
+      urutan: 1,
+      active: true,
+    },
+    {
+      id: "root",
+      parentId: null,
+      jabatan: "Ketua",
+      nama: "Bpk. Budi",
+      urutan: 1,
+      active: true,
+    },
+    {
+      id: "orphan",
+      parentId: "missing-parent",
+      jabatan: "Penasihat",
+      urutan: 2,
+      active: true,
+    },
+  ]);
+
+  assert.equal(tree.length, 2);
+  assert.equal(tree[0].item.id, "root");
+  assert.equal(tree[0].depth, 0);
+  assert.equal(tree[1].item.id, "orphan");
+  assert.equal(
+    tree[0].children.map((c) => c.item.id).join(","),
+    "child-a,child-b",
+  );
+  assert.equal(tree[0].children[1].depth, 1);
+  assert.equal(tree[0].children[1].children[0].item.id, "grandchild");
+  assert.equal(tree[0].children[1].children[0].depth, 2);
+
+  const flatAll = flattenJabatanTreeForSelect(tree);
+  assert.deepEqual(
+    flatAll.map((f) => f.id),
+    ["root", "child-a", "child-b", "grandchild", "orphan"],
+  );
+  assert.equal(flatAll[0].label, "Ketua (Bpk. Budi)");
+  assert.equal(flatAll[3].label, "— — Wakil Sekretaris");
+
+  // Excluding child-b must also exclude its descendant grandchild.
+  const flatExcl = flattenJabatanTreeForSelect(tree, "child-b");
+  assert.deepEqual(
+    flatExcl.map((f) => f.id),
+    ["root", "child-a", "orphan"],
   );
 });

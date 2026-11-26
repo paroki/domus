@@ -6,9 +6,13 @@ import type {
   AddOrgMemberRequest,
   CreateOrganizationRequest,
   CreateOrgInviteRequest,
+  CreateOrgJabatanRequest,
+  CreateOrgPeriodeRequest,
   RequestOTPRequest,
   UpdateOrganizationRequest,
+  UpdateOrgJabatanRequest,
   UpdateOrgMemberRequest,
+  UpdateOrgPeriodeRequest,
   VerifyOTPRequest,
 } from "./types";
 
@@ -148,6 +152,100 @@ export function useRedeemOrgInvite(code: string) {
         qc.invalidateQueries({ queryKey: orgKeys.all }),
       ]);
     },
+  });
+}
+
+export function useCreateOrgPeriode(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: CreateOrgPeriodeRequest) =>
+      unwrap(
+        api.POST("/orgs/{id}/periode", {
+          params: { path: { id: orgId } },
+          body,
+        }),
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: orgKeys.all }),
+  });
+}
+
+export function useUpdateOrgPeriode(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      periodeId,
+      body,
+    }: {
+      periodeId: string;
+      body: UpdateOrgPeriodeRequest;
+    }) =>
+      unwrap(
+        api.PATCH("/orgs/{id}/periode/{periodeId}", {
+          params: { path: { id: orgId, periodeId } },
+          body,
+        }),
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: orgKeys.all }),
+  });
+}
+
+export function useDeleteOrgPeriode(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (periodeId: string) =>
+      unwrapVoid(
+        api.DELETE("/orgs/{id}/periode/{periodeId}", {
+          params: { path: { id: orgId, periodeId } },
+        }),
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: orgKeys.all }),
+  });
+}
+
+export function useCreateOrgJabatan(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: CreateOrgJabatanRequest) =>
+      unwrap(
+        api.POST("/orgs/{id}/jabatan", {
+          params: { path: { id: orgId } },
+          body,
+        }),
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: orgKeys.all }),
+  });
+}
+
+export function useUpdateOrgJabatan(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      jabatanId,
+      body,
+    }: {
+      jabatanId: string;
+      body: UpdateOrgJabatanRequest;
+    }) =>
+      unwrap(
+        api.PATCH("/orgs/{id}/jabatan/{jabatanId}", {
+          params: { path: { id: orgId, jabatanId } },
+          body,
+        }),
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: orgKeys.all }),
+  });
+}
+
+export function useDeleteOrgJabatan(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (jabatanId: string) =>
+      unwrapVoid(
+        api.DELETE("/orgs/{id}/jabatan/{jabatanId}", {
+          params: { path: { id: orgId, jabatanId } },
+        }),
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: orgKeys.all }),
   });
 }
 

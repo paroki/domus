@@ -23,7 +23,7 @@ export default function ParokiHubPage() {
           { label: "Administrasi Paroki" },
         ]}
         title="Administrasi Paroki"
-        subtitle="Kelola identitas paroki aktif, wilayah/stasi, lingkungan, dan periode."
+        subtitle="Kelola identitas paroki aktif, wilayah/stasi, dan lingkungan."
       />
 
       {!meLoading && !canManage ? (

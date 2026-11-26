@@ -1,15 +1,24 @@
 import {
   ArrowLeft,
   Building2,
+  CalendarRange,
   Check,
   Copy,
   Link2,
   LogOut,
+  Network,
   Pencil,
+  Plus,
   Search,
   Trash2,
 } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import {
+  type FormEvent,
+  type ReactNode,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router";
 import { useMe } from "~/shared/api/session";
@@ -17,22 +26,35 @@ import i18n from "~/shared/i18n";
 import { Badge } from "~/shared/ui/Badge";
 import { Button } from "~/shared/ui/Button";
 import { Card } from "~/shared/ui/Card";
+import { ConfirmDialog } from "~/shared/ui/ConfirmDialog";
 import {
   useCreateOrgInvite,
   useDeleteOrg,
+  useDeleteOrgJabatan,
+  useDeleteOrgPeriode,
   useRemoveOrgMember,
   useRevokeOrgInvite,
   useUpdateOrg,
+  useUpdateOrgPeriode,
 } from "../api/actions";
 import { resolveOrgError } from "../api/errors";
-import { useOrg, useOrgInvites, useOrgMembers } from "../api/queries";
+import {
+  useOrg,
+  useOrgInvites,
+  useOrgJabatanList,
+  useOrgMembers,
+  useOrgPeriodeList,
+} from "../api/queries";
+import type { OrgJabatanResponse, OrgPeriodeResponse } from "../api/types";
 import {
   buildInviteJoinUrl,
+  buildJabatanTree,
   computeInviteStatus,
   INVITE_TTL_OPTIONS,
   inviteStatusMeta,
   isParokiAdmin,
   kindLabel,
+  type OrgJabatanNode,
 } from "../model";
 import type { Route } from "./+types/OrgDetailPage";
 
@@ -52,6 +74,8 @@ export default function OrgDetailPage() {
   const org = orgQuery.data;
   const isOrgAdmin = org?.myRole === "admin";
   const isOrgMember = org?.myRole === "member" || isOrgAdmin;
+  const canReadOrgInternal = isOrgMember || parokiAdmin;
+  const canManageOrg = isOrgAdmin || parokiAdmin;
 
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState("");
@@ -86,6 +110,43 @@ export default function OrgDetailPage() {
   const removeMember = useRemoveOrgMember(orgId);
   const createInvite = useCreateOrgInvite(orgId);
   const revokeInvite = useRevokeOrgInvite(orgId);
+  const updatePeriode = useUpdateOrgPeriode(orgId);
+  const deletePeriode = useDeleteOrgPeriode(orgId);
+  const deleteJabatan = useDeleteOrgJabatan(orgId);
+
+  const periodeQuery = useOrgPeriodeList(
+    orgId,
+    {},
+    Boolean(org) && canReadOrgInternal,
+  );
+  const periods = periodeQuery.data ?? [];
+
+  const [selectedPeriodeId, setSelectedPeriodeId] = useState("");
+  useEffect(() => {
+    if (periods.length === 0) {
+      setSelectedPeriodeId("");
+      return;
+    }
+    if (!periods.some((p) => p.id === selectedPeriodeId)) {
+      const current = periods.find((p) => p.isCurrent) ?? periods[0];
+      setSelectedPeriodeId(current?.id ?? "");
+    }
+  }, [periods, selectedPeriodeId]);
+
+  const jabatanQuery = useOrgJabatanList(
+    orgId,
+    { filter: { periodeId: selectedPeriodeId || undefined } },
+    Boolean(org) && canReadOrgInternal && Boolean(selectedPeriodeId),
+  );
+  const jabatanTree = useMemo(
+    () => buildJabatanTree(jabatanQuery.data ?? []),
+    [jabatanQuery.data],
+  );
+
+  const [pendingDeletePeriode, setPendingDeletePeriode] =
+    useState<OrgPeriodeResponse | null>(null);
+  const [pendingDeleteJabatan, setPendingDeleteJabatan] =
+    useState<OrgJabatanResponse | null>(null);
 
   function startEdit() {
     if (!org) return;
@@ -332,7 +393,7 @@ export default function OrgDetailPage() {
         )}
       </Card>
 
-      {!isOrgMember && !parokiAdmin && (
+      {!canReadOrgInternal && (
         <Card className="p-6 text-center">
           <h2 className="text-base font-semibold text-fg">
             {t("org.rosterRestrictedTitle")}
@@ -340,6 +401,182 @@ export default function OrgDetailPage() {
           <p className="mt-1 text-sm text-muted">
             {t("org.rosterRestrictedDescription")}
           </p>
+        </Card>
+      )}
+
+      {canReadOrgInternal && (
+        <Card className="flex flex-col gap-4 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <CalendarRange aria-hidden className="size-5 text-primary" />
+              <h2 className="text-lg font-semibold text-fg">
+                Periode Kepengurusan
+              </h2>
+            </div>
+            {canManageOrg && (
+              <Link to={`/org/${orgId}/periode/new`}>
+                <Button className="h-9 px-3 text-xs">
+                  <Plus aria-hidden className="size-4" />
+                  Tambah Periode
+                </Button>
+              </Link>
+            )}
+          </div>
+
+          {periodeQuery.isLoading ? (
+            <p className="text-sm text-muted">Memuat periode kepengurusan…</p>
+          ) : periods.length === 0 ? (
+            <p className="text-sm text-muted">
+              Belum ada periode kepengurusan yang terdaftar.
+            </p>
+          ) : (
+            <div className="divide-y divide-line">
+              {periods.map((p) => (
+                <div
+                  key={p.id}
+                  className="flex flex-wrap items-center justify-between gap-3 py-3"
+                >
+                  <div className="flex flex-col gap-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-semibold text-fg">{p.nama}</span>
+                      <span className="font-mono text-xs text-muted">
+                        ({p.kode})
+                      </span>
+                      <Badge tone={p.status === "open" ? "success" : "neutral"}>
+                        {p.status === "open" ? "Terbuka" : "Ditutup"}
+                      </Badge>
+                      {p.isCurrent && (
+                        <Badge tone="warning">Periode Aktif</Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted">
+                      {p.tanggalMulai} – {p.tanggalSelesai}
+                    </p>
+                  </div>
+
+                  {canManageOrg && (
+                    <div className="flex flex-wrap items-center gap-2">
+                      {!p.isCurrent && (
+                        <Button
+                          variant="outline"
+                          className="h-8 px-2.5 text-xs"
+                          disabled={updatePeriode.isPending}
+                          onClick={async () => {
+                            setPageError(null);
+                            try {
+                              await updatePeriode.mutateAsync({
+                                periodeId: p.id ?? "",
+                                body: { isCurrent: true },
+                              });
+                            } catch (err) {
+                              setPageError(resolveOrgError(err));
+                            }
+                          }}
+                        >
+                          Jadikan Aktif
+                        </Button>
+                      )}
+                      <Button
+                        variant="outline"
+                        className="h-8 px-2.5 text-xs"
+                        disabled={updatePeriode.isPending}
+                        onClick={async () => {
+                          setPageError(null);
+                          try {
+                            await updatePeriode.mutateAsync({
+                              periodeId: p.id ?? "",
+                              body: {
+                                status: p.status === "open" ? "closed" : "open",
+                              },
+                            });
+                          } catch (err) {
+                            setPageError(resolveOrgError(err));
+                          }
+                        }}
+                      >
+                        {p.status === "open" ? "Tutup" : "Buka"}
+                      </Button>
+                      <Link to={`/org/${orgId}/periode/${p.id}/edit`}>
+                        <Button
+                          variant="outline"
+                          className="h-8 px-2.5 text-xs"
+                        >
+                          <Pencil aria-hidden className="size-3.5" />
+                          Ubah
+                        </Button>
+                      </Link>
+                      <Button
+                        variant="danger"
+                        className="h-8 px-2.5 text-xs"
+                        disabled={deletePeriode.isPending}
+                        onClick={() => setPendingDeletePeriode(p)}
+                      >
+                        <Trash2 aria-hidden className="size-3.5" />
+                        Hapus
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      )}
+
+      {canReadOrgInternal && (
+        <Card className="flex flex-col gap-4 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Network aria-hidden className="size-5 text-primary" />
+              <h2 className="text-lg font-semibold text-fg">
+                Struktur &amp; Jabatan Organisasi
+              </h2>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {periods.length > 0 && (
+                <select
+                  aria-label="Pilih periode struktur jabatan"
+                  value={selectedPeriodeId}
+                  onChange={(e) => setSelectedPeriodeId(e.target.value)}
+                  className="h-9 rounded-lg border border-line bg-canvas px-3 text-xs text-fg"
+                >
+                  {periods.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.nama}
+                      {p.isCurrent ? " (Aktif)" : ""}
+                    </option>
+                  ))}
+                </select>
+              )}
+              {canManageOrg && selectedPeriodeId && (
+                <Link
+                  to={`/org/${orgId}/periode/${selectedPeriodeId}/jabatan/new`}
+                >
+                  <Button className="h-9 px-3 text-xs">
+                    <Plus aria-hidden className="size-4" />
+                    Tambah Jabatan
+                  </Button>
+                </Link>
+              )}
+            </div>
+          </div>
+
+          {!selectedPeriodeId ? (
+            <p className="text-sm text-muted">
+              Buat periode kepengurusan terlebih dahulu untuk menyusun struktur
+              jabatan.
+            </p>
+          ) : jabatanQuery.isLoading ? (
+            <p className="text-sm text-muted">Memuat struktur jabatan…</p>
+          ) : jabatanTree.length === 0 ? (
+            <p className="text-sm text-muted">
+              Belum ada jabatan pada periode ini.
+            </p>
+          ) : (
+            <div className="divide-y divide-line">
+              {renderJabatanNodes(jabatanTree)}
+            </div>
+          )}
         </Card>
       )}
 
@@ -371,7 +608,7 @@ export default function OrgDetailPage() {
                 type="search"
                 value={memberQ}
                 onChange={(e) => setMemberQ(e.target.value)}
-                placeholder="Cari nama, email, atau jabatan…"
+                placeholder="Cari nama atau email…"
                 className="h-10 w-full rounded-lg border border-line bg-canvas pl-9 pr-3 text-sm text-fg"
               />
             </div>
@@ -578,6 +815,118 @@ export default function OrgDetailPage() {
           )}
         </Card>
       )}
+
+      <ConfirmDialog
+        open={Boolean(pendingDeletePeriode)}
+        title="Hapus periode kepengurusan?"
+        description={
+          pendingDeletePeriode
+            ? `Periode "${pendingDeletePeriode.nama}" akan dihapus dari organisasi ini.`
+            : ""
+        }
+        pending={deletePeriode.isPending}
+        onCancel={() => setPendingDeletePeriode(null)}
+        onConfirm={async () => {
+          if (!pendingDeletePeriode?.id) return;
+          setPageError(null);
+          try {
+            await deletePeriode.mutateAsync(pendingDeletePeriode.id);
+            setPendingDeletePeriode(null);
+          } catch (err) {
+            setPendingDeletePeriode(null);
+            setPageError(resolveOrgError(err));
+          }
+        }}
+      />
+
+      <ConfirmDialog
+        open={Boolean(pendingDeleteJabatan)}
+        title="Hapus jabatan organisasi?"
+        description={
+          pendingDeleteJabatan
+            ? `Jabatan "${pendingDeleteJabatan.jabatan}" akan dihapus dari periode ini.`
+            : ""
+        }
+        pending={deleteJabatan.isPending}
+        onCancel={() => setPendingDeleteJabatan(null)}
+        onConfirm={async () => {
+          if (!pendingDeleteJabatan?.id) return;
+          setPageError(null);
+          try {
+            await deleteJabatan.mutateAsync(pendingDeleteJabatan.id);
+            setPendingDeleteJabatan(null);
+          } catch (err) {
+            setPendingDeleteJabatan(null);
+            setPageError(resolveOrgError(err));
+          }
+        }}
+      />
     </div>
   );
+
+  function renderJabatanNodes(
+    nodes: OrgJabatanNode<OrgJabatanResponse>[],
+  ): ReactNode[] {
+    return nodes.flatMap((node) => {
+      const j = node.item;
+      const row = (
+        <div
+          key={j.id}
+          className="flex flex-wrap items-center justify-between gap-3 py-3"
+          style={{ paddingLeft: `${node.depth * 24}px` }}
+        >
+          <div className="flex flex-col gap-1">
+            <div className="flex flex-wrap items-center gap-2">
+              {node.depth > 0 && <span className="text-xs text-muted">↳</span>}
+              <span className="font-semibold text-fg">{j.jabatan}</span>
+              {j.nama ? (
+                <span className="text-sm text-fg">· {j.nama}</span>
+              ) : (
+                <Badge tone="neutral">Belum ditentukan</Badge>
+              )}
+              {j.userId && <Badge tone="neutral">Akun Pengguna</Badge>}
+              {j.umatId && <Badge tone="neutral">Data Umat</Badge>}
+              {!j.active && <Badge tone="danger">Nonaktif</Badge>}
+            </div>
+            {(j.startDate || j.endDate) && (
+              <p className="text-xs text-muted">
+                Masa jabatan: {j.startDate ?? "—"} – {j.endDate ?? "—"}
+              </p>
+            )}
+          </div>
+
+          {canManageOrg && (
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                to={`/org/${orgId}/periode/${selectedPeriodeId}/jabatan/new?parentId=${j.id}`}
+              >
+                <Button variant="outline" className="h-8 px-2.5 text-xs">
+                  <Plus aria-hidden className="size-3.5" />
+                  Tambah Sub-Jabatan
+                </Button>
+              </Link>
+              <Link
+                to={`/org/${orgId}/periode/${selectedPeriodeId}/jabatan/${j.id}/edit`}
+              >
+                <Button variant="outline" className="h-8 px-2.5 text-xs">
+                  <Pencil aria-hidden className="size-3.5" />
+                  Ubah
+                </Button>
+              </Link>
+              <Button
+                variant="danger"
+                className="h-8 px-2.5 text-xs"
+                disabled={deleteJabatan.isPending}
+                onClick={() => setPendingDeleteJabatan(j)}
+              >
+                <Trash2 aria-hidden className="size-3.5" />
+                Hapus
+              </Button>
+            </div>
+          )}
+        </div>
+      );
+      return [row, ...renderJabatanNodes(node.children)];
+    });
+  }
 }

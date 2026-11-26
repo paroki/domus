@@ -43,7 +43,7 @@ const id = {
     },
     ref: {
       name: "Referensi",
-      description: "Keuskupan, paroki, wilayah, kamus referensi, dan periode.",
+      description: "Keuskupan, paroki, wilayah, dan kamus referensi.",
     },
     umat: {
       name: "Data Umat",
@@ -302,9 +302,9 @@ const id = {
     parishSection: "Keanggotaan & Admin Paroki",
     parishSectionHint:
       "Atur keanggotaan paroki dan tunjuk pengguna sebagai Admin Paroki.",
-    orgSection: "Keanggotaan & Pengurus Organisasi",
+    orgSection: "Keanggotaan Organisasi",
     orgSectionHint:
-      "Kelola keanggotaan, peran admin, jabatan, dan periode organisasi pada paroki aktif.",
+      "Kelola keanggotaan dan peran admin organisasi pada paroki aktif.",
     detailTabsLabel: "Bagian pengelolaan pengguna",
     tabProfile: "Profil",
     tabParish: "Paroki",
@@ -331,7 +331,7 @@ const id = {
   ref: {
     settingsTitle: "Referensi",
     settingsSubtitle:
-      "Kelola profil paroki, struktur wilayah, kamus, dan periode.",
+      "Kelola profil paroki, struktur wilayah, dan kamus referensi.",
     settingsEmpty: "Tidak ada menu referensi yang tersedia.",
     searchPlaceholder: "Cari referensi…",
     backToSettings: "Referensi",
@@ -445,7 +445,6 @@ const id = {
     allOrgs: "Semua Organisasi",
     myOrgs: "Organisasi Saya",
     allKinds: "Semua Jenis",
-    allPeriods: "Semua Periode",
     loadMore: "Muat Lebih Banyak",
     editMember: "Ubah Jabatan",
     noMembers: "Belum ada anggota yang sesuai filter.",

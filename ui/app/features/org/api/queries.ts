@@ -7,9 +7,12 @@ import {
 import { api, unwrap, unwrapMeta } from "~/shared/api/client";
 import { orgKeys } from "./keys";
 import type {
+  LookupUmatRequest,
   SearchOrganizationsRequest,
   SearchOrgInvitesRequest,
+  SearchOrgJabatanRequest,
   SearchOrgMembersRequest,
+  SearchOrgPeriodeRequest,
 } from "./types";
 
 export function orgsInfiniteOptions(
@@ -156,6 +159,92 @@ export function useOrgPositionLookups(enabled = true) {
             filter: { category: "org_position", active: true },
             limit: 100,
           },
+        }),
+      ),
+  });
+}
+
+export function useOrgPeriodeList(
+  orgId: string,
+  params: Omit<SearchOrgPeriodeRequest, "cursor"> = {},
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: orgKeys.periodeList(orgId, params),
+    enabled: Boolean(orgId) && enabled,
+    queryFn: () =>
+      unwrap(
+        api.POST("/orgs/{id}/periode/search", {
+          params: { path: { id: orgId } },
+          body: { ...params, limit: params.limit ?? 100 },
+        }),
+      ),
+  });
+}
+
+export function useOrgPeriodeDetail(
+  orgId: string,
+  periodeId: string,
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: orgKeys.periodeDetail(orgId, periodeId),
+    enabled: Boolean(orgId) && Boolean(periodeId) && enabled,
+    queryFn: () =>
+      unwrap(
+        api.GET("/orgs/{id}/periode/{periodeId}", {
+          params: { path: { id: orgId, periodeId } },
+        }),
+      ),
+  });
+}
+
+export function useOrgJabatanList(
+  orgId: string,
+  params: Omit<SearchOrgJabatanRequest, "cursor"> = {},
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: orgKeys.jabatanList(orgId, params),
+    enabled: Boolean(orgId) && enabled,
+    queryFn: () =>
+      unwrap(
+        api.POST("/orgs/{id}/jabatan/search", {
+          params: { path: { id: orgId } },
+          body: { ...params, limit: params.limit ?? 100 },
+        }),
+      ),
+  });
+}
+
+export function useOrgJabatanDetail(
+  orgId: string,
+  jabatanId: string,
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: orgKeys.jabatanDetail(orgId, jabatanId),
+    enabled: Boolean(orgId) && Boolean(jabatanId) && enabled,
+    queryFn: () =>
+      unwrap(
+        api.GET("/orgs/{id}/jabatan/{jabatanId}", {
+          params: { path: { id: orgId, jabatanId } },
+        }),
+      ),
+  });
+}
+
+export function useOrgUmatLookup(
+  params: LookupUmatRequest = {},
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: orgKeys.umatLookup(params),
+    enabled,
+    queryFn: () =>
+      unwrap(
+        api.POST("/umat/lookup", {
+          body: { ...params, limit: params.limit ?? 50 },
         }),
       ),
   });

@@ -40,6 +40,33 @@ export type LingkunganResponse =
   components["schemas"]["domain.LingkunganResponse"];
 export type LookupResponse = components["schemas"]["domain.LookupResponse"];
 
+export type OrgPeriodeResponse =
+  components["schemas"]["domain.OrgPeriodeResponse"];
+export type OrgPeriodeSearchFilter =
+  components["schemas"]["domain.OrgPeriodeSearchFilter"];
+export type SearchOrgPeriodeRequest =
+  components["schemas"]["domain.SearchOrgPeriodeRequest"];
+export type CreateOrgPeriodeRequest =
+  components["schemas"]["domain.CreateOrgPeriodeRequest"];
+export type UpdateOrgPeriodeRequest =
+  components["schemas"]["domain.UpdateOrgPeriodeRequest"];
+
+export type OrgJabatanResponse =
+  components["schemas"]["domain.OrgJabatanResponse"];
+export type OrgJabatanSearchFilter =
+  components["schemas"]["domain.OrgJabatanSearchFilter"];
+export type SearchOrgJabatanRequest =
+  components["schemas"]["domain.SearchOrgJabatanRequest"];
+export type CreateOrgJabatanRequest =
+  components["schemas"]["domain.CreateOrgJabatanRequest"];
+export type UpdateOrgJabatanRequest =
+  components["schemas"]["domain.UpdateOrgJabatanRequest"];
+
+export type UmatLookupItemResponse =
+  components["schemas"]["domain.UmatLookupItemResponse"];
+export type LookupUmatRequest =
+  components["schemas"]["domain.LookupUmatRequest"];
+
 export type RequestOTPRequest =
   components["schemas"]["domain.RequestOTPRequest"];
 export type VerifyOTPRequest = components["schemas"]["domain.VerifyOTPRequest"];

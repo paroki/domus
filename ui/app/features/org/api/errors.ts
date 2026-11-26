@@ -5,8 +5,12 @@ export const ORG_ERRORS: Record<string, string> = {
   ORG_NOT_FOUND: "Organisasi tidak ditemukan.",
   ORG_CODE_CONFLICT: "Kode organisasi sudah digunakan di paroki ini.",
   ORG_IN_USE:
-    "Organisasi masih memiliki sub-organisasi atau data aktif sehingga tidak dapat dihapus.",
+    "Data organisasi masih digunakan oleh periode, sub-organisasi, atau struktur jabatan aktif sehingga tidak dapat dihapus.",
   ORG_FORBIDDEN: "Anda tidak memiliki izin untuk melakukan tindakan ini.",
+  ORG_PERIODE_NOT_FOUND: "Periode kepengurusan tidak ditemukan.",
+  ORG_PERIODE_OVERLAP:
+    "Rentang tanggal periode bertumpuk dengan periode lain yang sudah ada.",
+  ORG_JABATAN_NOT_FOUND: "Jabatan organisasi tidak ditemukan.",
   ORG_MEMBER_NOT_FOUND: "Anggota organisasi tidak ditemukan.",
   ORG_MEMBER_ALREADY_EXISTS:
     "Pengguna sudah terdaftar sebagai anggota organisasi ini.",

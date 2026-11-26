@@ -52,7 +52,7 @@ export const SETTINGS_HUBS: SettingsHubItem[] = [
     id: "paroki",
     path: "/settings/paroki",
     title: "Administrasi Paroki",
-    description: "Profil paroki aktif, wilayah/stasi, lingkungan, dan periode.",
+    description: "Profil paroki aktif, wilayah/stasi, dan lingkungan.",
     plate: 3,
     icon: Church,
     roles: [ROLE_PAROKI_ADMIN],
