@@ -5,6 +5,53 @@ export type EventVisibility = "public" | "private";
 export type EventStatus = "scheduled" | "cancelled";
 export type RSVPStatus = "going" | "maybe" | "not_going";
 
+export interface EventTypeOption {
+  code: string;
+  label: string;
+}
+
+export const DEFAULT_EVENT_TYPES: readonly EventTypeOption[] = [
+  { code: "misa", label: "Misa / Ekaristi" },
+  { code: "ibadat", label: "Ibadat" },
+  { code: "rapat", label: "Rapat" },
+  { code: "latihan", label: "Latihan" },
+  { code: "rekoleksi", label: "Rekoleksi / Retret" },
+  { code: "katekese", label: "Katekese / Pembinaan" },
+  { code: "bakti-sosial", label: "Bakti Sosial" },
+  { code: "lainnya", label: "Lainnya" },
+];
+
+export function mergeEventTypeOptions(
+  lookups?: Array<{ code?: string; label?: string }>,
+): EventTypeOption[] {
+  const byCode = new Map<string, string>();
+  for (const item of DEFAULT_EVENT_TYPES) {
+    byCode.set(item.code, item.label);
+  }
+  for (const row of lookups ?? []) {
+    const code = row.code?.trim().toLowerCase();
+    const label = row.label?.trim();
+    if (code && label) {
+      byCode.set(code, label);
+    }
+  }
+  return Array.from(byCode, ([code, label]) => ({ code, label }));
+}
+
+export function eventTypeLabel(
+  code?: string,
+  lookups?: Array<{ code?: string; label?: string }>,
+): string {
+  if (!code) return "";
+  const normalized = code.trim().toLowerCase();
+  const matched = (lookups ?? []).find(
+    (row) => row.code?.trim().toLowerCase() === normalized && row.label?.trim(),
+  );
+  if (matched?.label) return matched.label.trim();
+  const def = DEFAULT_EVENT_TYPES.find((item) => item.code === normalized);
+  return def?.label ?? code;
+}
+
 export function computeEventLifecycle(
   event: { status?: string; startAt?: string; endAt?: string },
   nowMs = Date.now(),

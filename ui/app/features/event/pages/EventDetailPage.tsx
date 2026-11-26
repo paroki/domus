@@ -19,14 +19,17 @@ import {
   useEvent,
   useEventRSVPSummary,
   useEventRSVPs,
+  useEventTypeLookups,
 } from "../api/queries";
 import {
   computeEventLifecycle,
   DEFAULT_PAROKI_TIMEZONE,
   type EventVisibility,
+  eventTypeLabel,
   formatEventRange,
   fromLocalDatetimeInputValue,
   lifecycleMeta,
+  mergeEventTypeOptions,
   type RSVPStatus,
   rsvpStatusMeta,
   toLocalDatetimeInputValue,
@@ -48,6 +51,10 @@ export default function EventDetailPage() {
   const activeParokiQuery = useActiveParoki(hasParish);
   const activeParoki = activeParokiQuery.data;
   const parokiTimezone = activeParoki?.timezone || DEFAULT_PAROKI_TIMEZONE;
+
+  const typeLookupsQuery = useEventTypeLookups(hasParish);
+  const typeLookups = typeLookupsQuery.data ?? [];
+  const eventTypeOptions = mergeEventTypeOptions(typeLookups);
 
   const eventQuery = useEvent(eventId, hasParish);
   const ev = eventQuery.data;
@@ -73,6 +80,7 @@ export default function EventDetailPage() {
 
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState("");
+  const [jenis, setJenis] = useState("");
   const [startAt, setStartAt] = useState("");
   const [endAt, setEndAt] = useState("");
   const [location, setLocation] = useState("");
@@ -88,6 +96,7 @@ export default function EventDetailPage() {
   useEffect(() => {
     if (!ev) return;
     setTitle(ev.title ?? "");
+    setJenis(ev.jenis ?? "");
     setStartAt(toLocalDatetimeInputValue(ev.startAt, parokiTimezone));
     setEndAt(toLocalDatetimeInputValue(ev.endAt, parokiTimezone));
     setLocation(ev.location ?? "");
@@ -156,6 +165,7 @@ export default function EventDetailPage() {
     try {
       await updateEvent.mutateAsync({
         title: title.trim(),
+        jenis,
         startAt: fromLocalDatetimeInputValue(startAt, parokiTimezone),
         endAt: fromLocalDatetimeInputValue(endAt, parokiTimezone),
         location,
@@ -254,6 +264,11 @@ export default function EventDetailPage() {
               ) : (
                 <Badge tone="neutral">{activeParoki?.nama ?? "Paroki"}</Badge>
               )}
+              {ev.jenis && (
+                <Badge tone="neutral">
+                  {eventTypeLabel(ev.jenis, typeLookups)}
+                </Badge>
+              )}
               <Badge tone={visMeta.tone}>{visMeta.label}</Badge>
               <Badge tone={lcMeta.tone}>{lcMeta.label}</Badge>
             </div>
@@ -323,16 +338,33 @@ export default function EventDetailPage() {
             {t("event.editEvent")}
           </h2>
           <form onSubmit={handleSaveEdit} className="mt-4 space-y-4">
-            <label className="block text-sm font-medium text-ink">
-              Judul Kegiatan
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
-                required
-              />
-            </label>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block text-sm font-medium text-ink">
+                Judul Kegiatan
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
+                  required
+                />
+              </label>
+              <label className="block text-sm font-medium text-ink">
+                Jenis Kegiatan
+                <select
+                  value={jenis}
+                  onChange={(e) => setJenis(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
+                >
+                  <option value="">Tanpa Jenis / Umum</option>
+                  {eventTypeOptions.map((opt) => (
+                    <option key={opt.code} value={opt.code}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block text-sm font-medium text-ink">

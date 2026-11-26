@@ -9,15 +9,22 @@ import { Button } from "~/shared/ui/Button";
 import { Card } from "~/shared/ui/Card";
 import { useCreateEvent, useUpsertEventRSVP } from "../api/actions";
 import { resolveEventError } from "../api/errors";
-import { useActiveParoki, useEventOrgs, useEvents } from "../api/queries";
+import {
+  useActiveParoki,
+  useEventOrgs,
+  useEvents,
+  useEventTypeLookups,
+} from "../api/queries";
 import {
   computeEventLifecycle,
   DEFAULT_PAROKI_TIMEZONE,
   type EventStatus,
   type EventVisibility,
+  eventTypeLabel,
   formatEventRange,
   fromLocalDatetimeInputValue,
   lifecycleMeta,
+  mergeEventTypeOptions,
   type RSVPStatus,
   rsvpStatusMeta,
   visibilityMeta,
@@ -37,6 +44,7 @@ export default function EventsPage() {
 
   const [myOrgsOnly, setMyOrgsOnly] = useState(false);
   const [orgFilter, setOrgFilter] = useState("");
+  const [jenisFilter, setJenisFilter] = useState("");
   const [visibilityFilter, setVisibilityFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [q, setQ] = useState("");
@@ -44,6 +52,7 @@ export default function EventsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [orgId, setOrgId] = useState("");
   const [title, setTitle] = useState("");
+  const [jenis, setJenis] = useState("");
   const [startAt, setStartAt] = useState("");
   const [endAt, setEndAt] = useState("");
   const [location, setLocation] = useState("");
@@ -64,12 +73,17 @@ export default function EventsPage() {
   const adminOrgs = orgs.filter((o) => o.myRole === "admin");
   const canCreateEvent = isParokiAdmin || adminOrgs.length > 0;
 
+  const typeLookupsQuery = useEventTypeLookups(hasParish);
+  const typeLookups = typeLookupsQuery.data ?? [];
+  const eventTypeOptions = mergeEventTypeOptions(typeLookups);
+
   const eventsQuery = useEvents(
     {
       q: q.trim() || undefined,
       filter: {
         orgId: orgFilter && orgFilter !== PAROKI_OPTION ? orgFilter : undefined,
         parokiWideOnly: orgFilter === PAROKI_OPTION ? true : undefined,
+        jenis: jenisFilter || undefined,
         visibility: (visibilityFilter as EventVisibility) || undefined,
         status: (statusFilter as EventStatus) || undefined,
         myOrgsOnly: myOrgsOnly || undefined,
@@ -97,6 +111,7 @@ export default function EventsPage() {
       await createEvent.mutateAsync({
         orgId: isCreatingParokiEvent ? undefined : selectedOrgId,
         title: title.trim(),
+        jenis: jenis || undefined,
         startAt: fromLocalDatetimeInputValue(startAt, parokiTimezone),
         endAt: fromLocalDatetimeInputValue(endAt, parokiTimezone),
         location: location.trim() || undefined,
@@ -108,6 +123,7 @@ export default function EventsPage() {
           : undefined,
       });
       setTitle("");
+      setJenis("");
       setStartAt("");
       setEndAt("");
       setLocation("");
@@ -226,17 +242,34 @@ export default function EventsPage() {
               </label>
             </div>
 
-            <label className="block text-sm font-medium text-ink">
-              Judul Kegiatan
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Contoh: Rapat Pleno DPP"
-                className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
-                required
-              />
-            </label>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block text-sm font-medium text-ink">
+                Judul Kegiatan
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Contoh: Rapat Pleno DPP"
+                  className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
+                  required
+                />
+              </label>
+              <label className="block text-sm font-medium text-ink">
+                Jenis Kegiatan
+                <select
+                  value={jenis}
+                  onChange={(e) => setJenis(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
+                >
+                  <option value="">Tanpa Jenis / Umum</option>
+                  {eventTypeOptions.map((opt) => (
+                    <option key={opt.code} value={opt.code}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block text-sm font-medium text-ink">
@@ -361,6 +394,19 @@ export default function EventsPage() {
           </select>
 
           <select
+            value={jenisFilter}
+            onChange={(e) => setJenisFilter(e.target.value)}
+            className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
+          >
+            <option value="">Semua Jenis</option>
+            {eventTypeOptions.map((opt) => (
+              <option key={opt.code} value={opt.code}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+
+          <select
             value={visibilityFilter}
             onChange={(e) => setVisibilityFilter(e.target.value)}
             className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
@@ -429,6 +475,11 @@ export default function EventsPage() {
                           ? ev.orgName
                           : (activeParoki?.nama ?? "Paroki")}
                       </Badge>
+                      {ev.jenis && (
+                        <Badge tone="neutral">
+                          {eventTypeLabel(ev.jenis, typeLookups)}
+                        </Badge>
+                      )}
                       <Badge tone={visMeta.tone}>{visMeta.label}</Badge>
                       <Badge tone={lcMeta.tone}>{lcMeta.label}</Badge>
                       {myRsvpMeta && (

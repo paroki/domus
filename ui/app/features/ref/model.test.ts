@@ -27,7 +27,7 @@ test("role helpers detect user:super-admin and ref:paroki-admin", () => {
   assert.equal(hasAnyRefAdminRole([ROLE_PAROKI_ADMIN]), true);
 });
 
-test("LOOKUP_CATEGORIES contains all 14 Bahasa Indonesia categories", () => {
+test("LOOKUP_CATEGORIES contains all 15 Bahasa Indonesia categories", () => {
   assert.deepEqual(LOOKUP_CATEGORIES, [
     "status_paroki",
     "agama",
@@ -43,9 +43,11 @@ test("LOOKUP_CATEGORIES contains all 14 Bahasa Indonesia categories", () => {
     "status_ekonomi",
     "aktivitas_sosial",
     "org_position",
+    "event_type",
   ]);
-  assert.equal(LOOKUP_CATEGORY_META.length, 14);
+  assert.equal(LOOKUP_CATEGORY_META.length, 15);
   assert.equal(getLookupCategoryLabel("status_paroki"), "Status Paroki");
+  assert.equal(getLookupCategoryLabel("event_type"), "Jenis Kegiatan");
 });
 
 test("GEREJAWI_STEPS and PAROKI_STEPS point to /settings/* IUI routes", () => {

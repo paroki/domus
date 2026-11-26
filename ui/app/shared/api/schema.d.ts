@@ -1936,6 +1936,7 @@ export interface components {
     "domain.CreateEventRequest": {
       description?: string;
       endAt: string;
+      jenis?: string;
       location?: string;
       orgId?: string;
       rsvpDeadline?: string;
@@ -2119,6 +2120,7 @@ export interface components {
       description?: string;
       endAt?: string;
       id?: string;
+      jenis?: string;
       location?: string;
       myOrgRole?: string;
       myRsvp?: components["schemas"]["domain.EventRSVPResponse"];
@@ -2139,6 +2141,7 @@ export interface components {
     };
     "domain.EventSearchFilter": {
       from?: string;
+      jenis?: string;
       myOrgsOnly?: boolean;
       orgId?: string;
       parokiWideOnly?: boolean;
@@ -2633,6 +2636,7 @@ export interface components {
       clearRsvpDeadline?: boolean;
       description?: string;
       endAt?: string;
+      jenis?: string;
       location?: string;
       rsvpDeadline?: string;
       rsvpEnabled?: boolean;

@@ -11,4 +11,5 @@ export const eventKeys = {
     [...eventKeys.all, "rsvps", eventId, params ?? {}] as const,
   orgs: () => [...eventKeys.all, "orgs"] as const,
   paroki: () => [...eventKeys.all, "paroki"] as const,
+  eventTypes: () => [...eventKeys.all, "event-types"] as const,
 };

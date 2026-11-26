@@ -108,3 +108,19 @@ export function useActiveParoki(enabled = true) {
     queryFn: () => unwrap(api.GET("/ref/paroki/current")),
   });
 }
+
+export function useEventTypeLookups(enabled = true) {
+  return useQuery({
+    queryKey: eventKeys.eventTypes(),
+    enabled,
+    queryFn: () =>
+      unwrap(
+        api.POST("/ref/lookups/search", {
+          body: {
+            filter: { category: "event_type", active: true },
+            limit: 100,
+          },
+        }),
+      ),
+  });
+}

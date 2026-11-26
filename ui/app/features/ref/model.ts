@@ -26,6 +26,7 @@ export const LOOKUP_CATEGORIES = [
   "status_ekonomi",
   "aktivitas_sosial",
   "org_position",
+  "event_type",
 ] as const;
 
 export type LookupCategory = (typeof LOOKUP_CATEGORIES)[number];
@@ -106,6 +107,12 @@ export const LOOKUP_CATEGORY_META: LookupCategoryMeta[] = [
     slug: "org_position",
     label: "Jabatan Organisasi",
     description: "Jabatan pengurus organisasi dan dewan paroki.",
+  },
+  {
+    slug: "event_type",
+    label: "Jenis Kegiatan",
+    description:
+      "Klasifikasi jenis kegiatan paroki dan organisasi (Misa, Ibadat, Rapat, Latihan, dll.).",
   },
 ];
 

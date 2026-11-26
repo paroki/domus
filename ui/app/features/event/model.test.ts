@@ -4,11 +4,14 @@ import { ApiError } from "~/shared/api/client";
 import { resolveEventError } from "./api/errors";
 import {
   computeEventLifecycle,
+  DEFAULT_EVENT_TYPES,
   DEFAULT_PAROKI_TIMEZONE,
+  eventTypeLabel,
   formatEventRange,
   formatParokiTimezoneShort,
   fromLocalDatetimeInputValue,
   lifecycleMeta,
+  mergeEventTypeOptions,
   rsvpStatusMeta,
   toLocalDatetimeInputValue,
   visibilityMeta,
@@ -142,4 +145,23 @@ test("resolveEventError maps known event error codes and falls back safely", () 
     "Anda tidak memiliki izin untuk mengakses atau mengelola kegiatan ini.",
   );
   assert.equal(resolveEventError(new Error("boom"), "Fallback"), "Fallback");
+});
+
+test("event type helpers merge built-in defaults and custom lookups", () => {
+  assert.equal(DEFAULT_EVENT_TYPES.length, 8);
+  const merged = mergeEventTypeOptions([
+    { code: "misa", label: "Perayaan Ekaristi" },
+    { code: "ziarah", label: "Ziarah Rohani" },
+  ]);
+  assert.equal(
+    merged.find((o) => o.code === "misa")?.label,
+    "Perayaan Ekaristi",
+  );
+  assert.equal(merged.find((o) => o.code === "ziarah")?.label, "Ziarah Rohani");
+  assert.equal(eventTypeLabel("misa"), "Misa / Ekaristi");
+  assert.equal(
+    eventTypeLabel("ziarah", [{ code: "ziarah", label: "Ziarah Rohani" }]),
+    "Ziarah Rohani",
+  );
+  assert.equal(eventTypeLabel("custom_code"), "custom_code");
 });
