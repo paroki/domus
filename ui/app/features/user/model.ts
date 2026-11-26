@@ -8,6 +8,7 @@ import type {
 export const ROLE_SUPER_ADMIN = "user:super-admin";
 export const ROLE_USER = "user:user";
 export const ROLE_PAROKI_ADMIN = "ref:paroki-admin";
+export const ROLE_UMAT_ADMIN = "umat:admin";
 export const ROLE_ORG_ADMIN = "org:admin";
 export const ROLE_ORG_MEMBER = "org:member";
 
@@ -32,6 +33,13 @@ export const ROLE_DESCRIPTORS: RoleDescriptor[] = [
     scope: "paroki",
     description:
       "Mengelola profil paroki, wilayah & lingkungan, kamus referensi, periode, dan organisasi paroki.",
+  },
+  {
+    code: ROLE_UMAT_ADMIN,
+    name: "Admin Data Umat",
+    scope: "paroki",
+    description:
+      "Mengelola buku induk kartu keluarga, profil individu umat, dan riwayat sakramen paroki.",
   },
   {
     code: ROLE_ORG_ADMIN,
@@ -64,6 +72,9 @@ export function getAvailableUserDetailTabs(
   if (roles.includes(ROLE_PAROKI_ADMIN)) {
     tabs.push("paroki", "org");
     return tabs;
+  }
+  if (roles.includes(ROLE_UMAT_ADMIN)) {
+    tabs.push("paroki");
   }
   if (roles.includes(ROLE_ORG_ADMIN)) {
     tabs.push("org");
@@ -137,6 +148,10 @@ export function isParokiAdmin(user?: User | null): boolean {
   return Boolean(user?.roles?.includes(ROLE_PAROKI_ADMIN));
 }
 
+export function isUmatAdmin(user?: User | null): boolean {
+  return Boolean(user?.roles?.includes(ROLE_UMAT_ADMIN));
+}
+
 export function isOrgAdmin(user?: User | null): boolean {
   return Boolean(user?.roles?.includes(ROLE_ORG_ADMIN));
 }
@@ -149,7 +164,11 @@ export function getAvailableUserScopes(
   if (roles.includes(ROLE_SUPER_ADMIN)) {
     scopes.push("global");
   }
-  if (roles.includes(ROLE_PAROKI_ADMIN) || roles.includes(ROLE_ORG_ADMIN)) {
+  if (
+    roles.includes(ROLE_PAROKI_ADMIN) ||
+    roles.includes(ROLE_UMAT_ADMIN) ||
+    roles.includes(ROLE_ORG_ADMIN)
+  ) {
     scopes.push("org");
   }
   return scopes;

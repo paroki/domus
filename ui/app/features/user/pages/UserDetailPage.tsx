@@ -47,6 +47,7 @@ import {
   isOrgAdmin,
   isParokiAdmin,
   isSuperAdmin,
+  isUmatAdmin,
   parseUserDetailTab,
   providerLabel,
   type UserDetailTab,
@@ -63,6 +64,7 @@ type PendingConfirm =
   | { kind: "demoteSuperAdmin" }
   | { kind: "disableUser" }
   | { kind: "demoteParokiAdmin"; parokiId: string; parokiName: string }
+  | { kind: "revokeUmatAdmin"; parokiId: string; parokiName: string }
   | { kind: "removeParokiMember"; parokiId: string; parokiName: string };
 
 function formatDate(iso?: string | null): string | null {
@@ -86,6 +88,10 @@ export default function UserDetailPage() {
   const allowedCaller = canManageUsers(me);
   const superAdminCaller = isSuperAdmin(me);
   const parokiAdminCaller = isParokiAdmin(me);
+  const umatAdminCaller = isUmatAdmin(me);
+  const canAccessParokiDirectory =
+    superAdminCaller || parokiAdminCaller || umatAdminCaller;
+  const canDelegateParokiRole = superAdminCaller || parokiAdminCaller;
   const orgAdminCaller = isOrgAdmin(me);
   const activeParokiId = me?.activeParokiId ?? "";
 
@@ -103,7 +109,7 @@ export default function UserDetailPage() {
     Boolean(
       !superAdminCaller &&
         !matchedPreview?.email &&
-        parokiAdminCaller &&
+        (parokiAdminCaller || umatAdminCaller) &&
         activeParokiId &&
         id,
     ),
@@ -115,6 +121,7 @@ export default function UserDetailPage() {
       !superAdminCaller &&
         !matchedPreview?.email &&
         !parokiAdminCaller &&
+        !umatAdminCaller &&
         orgAdminCaller &&
         activeParokiId &&
         id,
@@ -123,7 +130,7 @@ export default function UserDetailPage() {
 
   const resolvedPreview = (() => {
     if (matchedPreview) return matchedPreview;
-    if (parokiAdminCaller) {
+    if (parokiAdminCaller || umatAdminCaller) {
       const m = parokiFallbackQuery.data?.pages
         .flatMap((p) => p.data ?? [])
         .find((item) => item.userId === id);
@@ -154,7 +161,8 @@ export default function UserDetailPage() {
   const isUserLoading = superAdminCaller
     ? userQuery.isLoading
     : !resolvedPreview &&
-      ((parokiAdminCaller && parokiFallbackQuery.isLoading) ||
+      (((parokiAdminCaller || umatAdminCaller) &&
+        parokiFallbackQuery.isLoading) ||
         (orgAdminCaller && orgFallbackQuery.isLoading));
 
   const {
@@ -164,7 +172,7 @@ export default function UserDetailPage() {
   } = useUserParokiMemberships(
     user?.id,
     user?.email,
-    Boolean((superAdminCaller || parokiAdminCaller) && user?.id && user?.email),
+    Boolean(canAccessParokiDirectory && user?.id && user?.email),
   );
 
   const parokiList = superAdminCaller
@@ -195,8 +203,9 @@ export default function UserDetailPage() {
   const [phone, setPhone] = useState("");
   const [selectedParokiId, setSelectedParokiId] = useState("");
   const [newParokiRole, setNewParokiRole] = useState<"admin" | "member">(
-    "admin",
+    "member",
   );
+  const [newParokiUmatAdmin, setNewParokiUmatAdmin] = useState(false);
   const [feedback, setFeedback] = useState<DirectoryFeedback | null>(null);
   const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm | null>(
     null,
@@ -332,7 +341,8 @@ export default function UserDetailPage() {
         parokiId: selectedParokiId,
         body: {
           userId,
-          role: newParokiRole,
+          role: canDelegateParokiRole ? newParokiRole : "member",
+          ...(newParokiUmatAdmin ? { umatAdmin: true } : {}),
         },
       });
       setFeedback({
@@ -351,14 +361,14 @@ export default function UserDetailPage() {
 
   async function executeUpdateParokiRole(
     parokiId: string,
-    role: "admin" | "member",
+    body: { role?: "admin" | "member"; umatAdmin?: boolean },
   ) {
     setFeedback(null);
     try {
       await updateParokiMember.mutateAsync({
         parokiId,
         userId,
-        body: { role },
+        body,
       });
       setFeedback({
         tone: "success",
@@ -409,6 +419,18 @@ export default function UserDetailPage() {
           parokiId: action.parokiId,
           userId,
           body: { role: "member" },
+        });
+        setFeedback({
+          tone: "success",
+          message: t("users.parishMemberUpdated", { name: userDisplayName }),
+        });
+        return;
+      }
+      if (action.kind === "revokeUmatAdmin") {
+        await updateParokiMember.mutateAsync({
+          parokiId: action.parokiId,
+          userId,
+          body: { umatAdmin: false },
         });
         setFeedback({
           tone: "success",
@@ -467,6 +489,14 @@ export default function UserDetailPage() {
             name: userDisplayName,
           })} (${pendingConfirm.parokiName})`,
           confirmLabel: t("users.demoteParishAdmin"),
+        };
+      case "revokeUmatAdmin":
+        return {
+          title: t("users.confirmRevokeUmatAdminTitle"),
+          description: `${t("users.confirmRevokeUmatAdminDescription", {
+            name: userDisplayName,
+          })} (${pendingConfirm.parokiName})`,
+          confirmLabel: t("users.revokeUmatAdmin"),
         };
       case "removeParokiMember":
         return {
@@ -820,10 +850,15 @@ export default function UserDetailPage() {
                             ? t("users.roleParishAdmin")
                             : t("users.roleMember")}
                         </Badge>
+                        {member.umatAdmin ? (
+                          <Badge tone="success">
+                            {t("users.roleUmatAdmin")}
+                          </Badge>
+                        ) : null}
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2">
-                        {isAdmin ? (
+                        {member.umatAdmin ? (
                           <Button
                             variant="outline"
                             className="h-9 px-3 text-xs"
@@ -831,13 +866,13 @@ export default function UserDetailPage() {
                             onClick={() =>
                               paroki.id &&
                               setPendingConfirm({
-                                kind: "demoteParokiAdmin",
+                                kind: "revokeUmatAdmin",
                                 parokiId: paroki.id,
                                 parokiName: paroki.nama ?? "",
                               })
                             }
                           >
-                            {t("users.demoteParishAdmin")}
+                            {t("users.revokeUmatAdmin")}
                           </Button>
                         ) : (
                           <Button
@@ -846,30 +881,68 @@ export default function UserDetailPage() {
                             disabled={updateParokiMember.isPending}
                             onClick={() =>
                               paroki.id &&
-                              executeUpdateParokiRole(paroki.id, "admin")
+                              executeUpdateParokiRole(paroki.id, {
+                                umatAdmin: true,
+                              })
                             }
                           >
                             <ShieldCheck aria-hidden className="size-3.5" />
-                            {t("users.promoteParishAdmin")}
+                            {t("users.grantUmatAdmin")}
                           </Button>
                         )}
 
-                        <Button
-                          variant="danger"
-                          className="h-9 px-3"
-                          disabled={removeParokiMember.isPending}
-                          onClick={() =>
-                            paroki.id &&
-                            setPendingConfirm({
-                              kind: "removeParokiMember",
-                              parokiId: paroki.id,
-                              parokiName: paroki.nama ?? "",
-                            })
-                          }
-                          aria-label={`${t("users.deleteUser")} ${paroki.nama ?? ""}`}
-                        >
-                          <Trash2 aria-hidden className="size-4" />
-                        </Button>
+                        {canDelegateParokiRole &&
+                          (isAdmin ? (
+                            <Button
+                              variant="outline"
+                              className="h-9 px-3 text-xs"
+                              disabled={updateParokiMember.isPending}
+                              onClick={() =>
+                                paroki.id &&
+                                setPendingConfirm({
+                                  kind: "demoteParokiAdmin",
+                                  parokiId: paroki.id,
+                                  parokiName: paroki.nama ?? "",
+                                })
+                              }
+                            >
+                              {t("users.demoteParishAdmin")}
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              className="h-9 px-3 text-xs"
+                              disabled={updateParokiMember.isPending}
+                              onClick={() =>
+                                paroki.id &&
+                                executeUpdateParokiRole(paroki.id, {
+                                  role: "admin",
+                                })
+                              }
+                            >
+                              <ShieldCheck aria-hidden className="size-3.5" />
+                              {t("users.promoteParishAdmin")}
+                            </Button>
+                          ))}
+
+                        {canDelegateParokiRole && (
+                          <Button
+                            variant="danger"
+                            className="h-9 px-3"
+                            disabled={removeParokiMember.isPending}
+                            onClick={() =>
+                              paroki.id &&
+                              setPendingConfirm({
+                                kind: "removeParokiMember",
+                                parokiId: paroki.id,
+                                parokiName: paroki.nama ?? "",
+                              })
+                            }
+                            aria-label={`${t("users.deleteUser")} ${paroki.nama ?? ""}`}
+                          >
+                            <Trash2 aria-hidden className="size-4" />
+                          </Button>
+                        )}
                       </div>
                     </div>
                   );
@@ -902,20 +975,32 @@ export default function UserDetailPage() {
                     </select>
                   </label>
 
-                  <label className="flex min-w-44 flex-col gap-1.5 text-sm font-medium text-fg">
-                    {t("users.roleLabel")}
-                    <select
-                      value={newParokiRole}
-                      onChange={(e) =>
-                        setNewParokiRole(e.target.value as "admin" | "member")
-                      }
-                      className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
-                    >
-                      <option value="admin">
-                        {t("users.roleParishAdmin")}
-                      </option>
-                      <option value="member">{t("users.roleMember")}</option>
-                    </select>
+                  {canDelegateParokiRole && (
+                    <label className="flex min-w-44 flex-col gap-1.5 text-sm font-medium text-fg">
+                      {t("users.roleLabel")}
+                      <select
+                        value={newParokiRole}
+                        onChange={(e) =>
+                          setNewParokiRole(e.target.value as "admin" | "member")
+                        }
+                        className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
+                      >
+                        <option value="admin">
+                          {t("users.roleParishAdmin")}
+                        </option>
+                        <option value="member">{t("users.roleMember")}</option>
+                      </select>
+                    </label>
+                  )}
+
+                  <label className="flex h-11 items-center gap-2 text-sm font-medium text-fg">
+                    <input
+                      type="checkbox"
+                      checked={newParokiUmatAdmin}
+                      onChange={(e) => setNewParokiUmatAdmin(e.target.checked)}
+                      className="size-4 rounded border-line"
+                    />
+                    {t("users.roleUmatAdmin")}
                   </label>
 
                   <Button

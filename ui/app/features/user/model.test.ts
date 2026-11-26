@@ -13,11 +13,13 @@ import {
   isOrgAdmin,
   isParokiAdmin,
   isSuperAdmin,
+  isUmatAdmin,
   parseUserDetailTab,
   providerLabel,
   ROLE_ORG_ADMIN,
   ROLE_PAROKI_ADMIN,
   ROLE_SUPER_ADMIN,
+  ROLE_UMAT_ADMIN,
   ROLE_USER,
   sanitizeRedirect,
   shouldRedirectToOnboarding,
@@ -61,17 +63,21 @@ test("role helpers and getAvailableUserScopes resolve directory scopes", () => {
   const superUser = { roles: [ROLE_SUPER_ADMIN, ROLE_USER] } as User;
   const parokiUser = { roles: [ROLE_PAROKI_ADMIN, ROLE_USER] } as User;
   const orgUser = { roles: [ROLE_ORG_ADMIN, ROLE_USER] } as User;
+  const umatUser = { roles: [ROLE_UMAT_ADMIN, ROLE_USER] } as User;
   const plainUser = { roles: [ROLE_USER] } as User;
 
   assert.equal(isParokiAdmin(parokiUser), true);
+  assert.equal(isUmatAdmin(umatUser), true);
   assert.equal(isOrgAdmin(orgUser), true);
   assert.equal(canManageUsers(superUser), true);
   assert.equal(canManageUsers(parokiUser), true);
+  assert.equal(canManageUsers(umatUser), true);
   assert.equal(canManageUsers(orgUser), true);
   assert.equal(canManageUsers(plainUser), false);
 
   assert.deepEqual(getAvailableUserScopes(superUser.roles), ["global"]);
   assert.deepEqual(getAvailableUserScopes(parokiUser.roles), ["org"]);
+  assert.deepEqual(getAvailableUserScopes(umatUser.roles), ["org"]);
   assert.deepEqual(getAvailableUserScopes(orgUser.roles), ["org"]);
   assert.deepEqual(getAvailableUserScopes([ROLE_SUPER_ADMIN, ROLE_ORG_ADMIN]), [
     "global",
@@ -141,6 +147,11 @@ test("parseUserDetailTab and getAvailableUserDetailTabs respect caller roles", (
     "paroki",
     "org",
   ]);
+  assert.deepEqual(getAvailableUserDetailTabs([ROLE_UMAT_ADMIN]), ["paroki"]);
+  assert.deepEqual(
+    getAvailableUserDetailTabs([ROLE_UMAT_ADMIN, ROLE_ORG_ADMIN]),
+    ["paroki", "org"],
+  );
   assert.deepEqual(getAvailableUserDetailTabs([ROLE_ORG_ADMIN]), ["org"]);
   assert.deepEqual(getAvailableUserDetailTabs([ROLE_USER]), []);
 

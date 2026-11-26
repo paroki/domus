@@ -19,6 +19,7 @@ import {
   isOrgAdmin,
   isParokiAdmin,
   isSuperAdmin,
+  isUmatAdmin,
   providerLabel,
 } from "../model";
 import type { Route } from "./+types/UserPage";
@@ -40,6 +41,7 @@ type UnifiedUserRow = UserDirectoryPreview & {
   highlight?: boolean;
   isSuperAdmin?: boolean;
   parishRole?: string;
+  umatAdmin?: boolean;
   onboarded?: boolean;
   metaLine: string;
 };
@@ -59,14 +61,15 @@ export default function UserPage() {
     "all" | "active" | "disabled"
   >("all");
   const [parokiRoleFilter, setParokiRoleFilter] = useState<
-    "all" | "admin" | "member"
+    "all" | "admin" | "umatAdmin" | "member"
   >("all");
 
   const allowed = canManageUsers(me);
   const superAdminCaller = isSuperAdmin(me);
-  const parokiAdminCaller = !superAdminCaller && isParokiAdmin(me);
+  const parokiDirectoryCaller =
+    !superAdminCaller && (isParokiAdmin(me) || isUmatAdmin(me));
   const orgAdminCaller =
-    !superAdminCaller && !parokiAdminCaller && isOrgAdmin(me);
+    !superAdminCaller && !parokiDirectoryCaller && isOrgAdmin(me);
   const activeParokiId = me?.activeParokiId ?? "";
 
   const usersQuery = useUsersSearch(
@@ -82,9 +85,13 @@ export default function UserPage() {
     {
       q: debouncedQ || undefined,
       filter:
-        parokiRoleFilter === "all" ? undefined : { role: parokiRoleFilter },
+        parokiRoleFilter === "all"
+          ? undefined
+          : parokiRoleFilter === "umatAdmin"
+            ? { umatAdmin: true }
+            : { role: parokiRoleFilter },
     },
-    Boolean(me && parokiAdminCaller && activeParokiId),
+    Boolean(me && parokiDirectoryCaller && activeParokiId),
   );
 
   const orgUsersQuery = useDirectoryManagedOrgUsers(
@@ -137,7 +144,7 @@ export default function UserPage() {
         });
     }
 
-    if (parokiAdminCaller) {
+    if (parokiDirectoryCaller) {
       const members =
         parokiMembersQuery.data?.pages.flatMap((p) => p.data ?? []) ?? [];
       return members
@@ -147,8 +154,9 @@ export default function UserPage() {
           name: m.name ?? "",
           email: m.email ?? "",
           phone: m.phone,
-          highlight: m.role === "admin",
+          highlight: m.role === "admin" || Boolean(m.umatAdmin),
           parishRole: m.role,
+          umatAdmin: Boolean(m.umatAdmin),
           metaLine: [m.email, m.phone].filter(Boolean).join(" · "),
         }));
     }
@@ -183,18 +191,18 @@ export default function UserPage() {
     !me ||
     (superAdminCaller
       ? usersQuery.isLoading
-      : parokiAdminCaller
+      : parokiDirectoryCaller
         ? Boolean(activeParokiId) && parokiMembersQuery.isLoading
         : Boolean(activeParokiId) && orgUsersQuery.isLoading);
 
   const hasNextPage = superAdminCaller
     ? usersQuery.hasNextPage
-    : parokiAdminCaller
+    : parokiDirectoryCaller
       ? parokiMembersQuery.hasNextPage
       : false;
   const isFetchingNextPage = superAdminCaller
     ? usersQuery.isFetchingNextPage
-    : parokiAdminCaller
+    : parokiDirectoryCaller
       ? parokiMembersQuery.isFetchingNextPage
       : false;
   const fetchNextPage = superAdminCaller
@@ -211,11 +219,12 @@ export default function UserPage() {
   ];
 
   const parishRoleOptions: Array<{
-    value: "all" | "admin" | "member";
+    value: "all" | "admin" | "umatAdmin" | "member";
     label: string;
   }> = [
     { value: "all", label: t("users.roleAll") },
     { value: "admin", label: t("users.roleParishAdmin") },
+    { value: "umatAdmin", label: t("users.roleUmatAdmin") },
     { value: "member", label: t("users.roleMember") },
   ];
 
@@ -267,7 +276,7 @@ export default function UserPage() {
               </div>
             )}
 
-            {parokiAdminCaller && (
+            {parokiDirectoryCaller && (
               <div className="flex flex-wrap items-center gap-1.5">
                 {parishRoleOptions.map((opt) => (
                   <button
@@ -347,6 +356,11 @@ export default function UserPage() {
                               {u.parishRole === "admin"
                                 ? t("users.roleParishAdmin")
                                 : t("users.roleMember")}
+                            </Badge>
+                          )}
+                          {u.umatAdmin && (
+                            <Badge tone="success">
+                              {t("users.roleUmatAdmin")}
                             </Badge>
                           )}
                           {u.onboarded === false && (

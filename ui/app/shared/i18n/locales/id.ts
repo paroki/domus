@@ -45,6 +45,10 @@ const id = {
       name: "Referensi",
       description: "Keuskupan, paroki, wilayah, kamus referensi, dan periode.",
     },
+    umat: {
+      name: "Data Umat",
+      description: "Kartu keluarga, profil umat, dan riwayat sakramen paroki.",
+    },
     agent: {
       name: "Asisten AI",
       description: "Asisten AI paroki untuk jadwal, organisasi, dan memori.",
@@ -236,6 +240,12 @@ const id = {
     roleSuperAdmin: "Super Admin",
     roleUser: "Pengguna",
     roleParishAdmin: "Admin Paroki",
+    roleUmatAdmin: "Admin Data Umat",
+    grantUmatAdmin: "Jadikan Admin Data Umat",
+    revokeUmatAdmin: "Cabut Admin Data Umat",
+    confirmRevokeUmatAdminTitle: "Cabut peran Admin Data Umat?",
+    confirmRevokeUmatAdminDescription:
+      "{{name}} tidak akan lagi dapat mengelola data umat paroki ini.",
     roleOrgAdmin: "Admin Organisasi",
     roleMember: "Anggota",
     positionLabel: "Jabatan",
