@@ -1,0 +1,80 @@
+package umat
+
+import (
+	"context"
+
+	"github.com/gofiber/fiber/v3"
+	"github.com/paroki/domus/ent"
+	"github.com/paroki/domus/internal/platform/authz"
+	"github.com/paroki/domus/internal/platform/crypt"
+	"github.com/paroki/domus/internal/ref"
+	"github.com/paroki/domus/internal/umat/domain"
+	"github.com/paroki/domus/internal/umat/handler"
+	"github.com/paroki/domus/internal/umat/repo"
+	"github.com/paroki/domus/internal/umat/service"
+	"github.com/paroki/domus/internal/user"
+)
+
+// Feature-owned Casbin roles and resource permissions.
+var (
+	RoleAdmin    = domain.RoleAdmin
+	PermKeluarga = domain.PermKeluarga
+	PermUmat     = domain.PermUmat
+)
+
+// Feature wires parishioner (umat) and household (keluarga) administration.
+type Feature struct {
+	service  *service.Service
+	handler  *handler.Handler
+	enforcer *authz.Enforcer
+	users    *user.Feature
+	refs     *ref.Feature
+}
+
+// New constructs the umat Feature.
+func New(db *ent.Client, enforcer *authz.Enforcer, users *user.Feature, refs *ref.Feature, cipher *crypt.Cipher) *Feature {
+	r := repo.New(db)
+	svc := service.New(r, enforcer, cipher)
+	h := handler.New(svc)
+	return &Feature{
+		service:  svc,
+		handler:  h,
+		enforcer: enforcer,
+		users:    users,
+		refs:     refs,
+	}
+}
+
+// Register mounts /umat routes under /api.
+func (f *Feature) Register(api fiber.Router) {
+	f.handler.Register(api)
+}
+
+// RegisterPermissions registers umat feature roles and policies with the Casbin enforcer.
+func (f *Feature) RegisterPermissions(ctx context.Context, e *authz.Enforcer) error {
+	if e == nil {
+		return nil
+	}
+	e.RegisterRole(authz.RoleDescriptor{
+		Code:        RoleAdmin,
+		Name:        "Admin Data Umat",
+		Scope:       authz.RoleScopeParoki,
+		Description: "Mengelola buku induk kartu keluarga, profil individu umat, dan riwayat sakramen paroki.",
+	})
+	policies := []struct {
+		role string
+		perm string
+		act  authz.Action
+	}{
+		{RoleAdmin, PermKeluarga, authz.ActionRead},
+		{RoleAdmin, PermKeluarga, authz.ActionWrite},
+		{RoleAdmin, PermUmat, authz.ActionRead},
+		{RoleAdmin, PermUmat, authz.ActionWrite},
+	}
+	for _, p := range policies {
+		if err := e.AddPermissionForRole(ctx, p.role, authz.DomainGlobal, p.perm, p.act); err != nil {
+			return err
+		}
+	}
+	return nil
+}

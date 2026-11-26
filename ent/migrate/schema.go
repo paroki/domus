@@ -357,6 +357,54 @@ var (
 			},
 		},
 	}
+	// KeluargaColumns holds the columns for the "keluarga" table.
+	KeluargaColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "paroki_id", Type: field.TypeUUID},
+		{Name: "wilayah_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "lingkungan_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "nomor_kk_enc", Type: field.TypeString, Nullable: true},
+		{Name: "nomor_kk_hash", Type: field.TypeString, Nullable: true},
+		{Name: "nama_keluarga", Type: field.TypeString},
+		{Name: "alamat", Type: field.TypeString, Nullable: true},
+		{Name: "kota_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "kecamatan_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "kelurahan_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "kode_pos", Type: field.TypeString, Nullable: true},
+		{Name: "status_rumah", Type: field.TypeString, Nullable: true},
+		{Name: "status_ekonomi", Type: field.TypeString, Nullable: true},
+		{Name: "aktif", Type: field.TypeBool, Default: true},
+		{Name: "catatan", Type: field.TypeString, Nullable: true},
+	}
+	// KeluargaTable holds the schema information for the "keluarga" table.
+	KeluargaTable = &schema.Table{
+		Name:       "keluarga",
+		Columns:    KeluargaColumns,
+		PrimaryKey: []*schema.Column{KeluargaColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "keluarga_paroki_nomor_kk_hash_active",
+				Unique:  true,
+				Columns: []*schema.Column{KeluargaColumns[4], KeluargaColumns[8]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "nomor_kk_hash IS NOT NULL AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "keluarga_paroki_id_wilayah_id_lingkungan_id_aktif",
+				Unique:  false,
+				Columns: []*schema.Column{KeluargaColumns[4], KeluargaColumns[5], KeluargaColumns[6], KeluargaColumns[17]},
+			},
+			{
+				Name:    "keluarga_paroki_id_nama_keluarga",
+				Unique:  false,
+				Columns: []*schema.Column{KeluargaColumns[4], KeluargaColumns[9]},
+			},
+		},
+	}
 	// KelurahanColumns holds the columns for the "kelurahan" table.
 	KelurahanColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -836,6 +884,7 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "user_id", Type: field.TypeUUID},
 		{Name: "role", Type: field.TypeEnum, Enums: []string{"admin", "member"}, Default: "member"},
+		{Name: "umat_admin", Type: field.TypeBool, Default: false},
 		{Name: "paroki_id", Type: field.TypeUUID},
 	}
 	// ParokiMembersTable holds the schema information for the "paroki_members" table.
@@ -846,7 +895,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "paroki_members_paroki_members",
-				Columns:    []*schema.Column{ParokiMembersColumns[5]},
+				Columns:    []*schema.Column{ParokiMembersColumns[6]},
 				RefColumns: []*schema.Column{ParokiColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -855,7 +904,7 @@ var (
 			{
 				Name:    "parokimember_paroki_id_user_id",
 				Unique:  true,
-				Columns: []*schema.Column{ParokiMembersColumns[5], ParokiMembersColumns[3]},
+				Columns: []*schema.Column{ParokiMembersColumns[6], ParokiMembersColumns[3]},
 			},
 			{
 				Name:    "parokimember_user_id",
@@ -918,6 +967,138 @@ var (
 		Name:       "settings",
 		Columns:    SettingsColumns,
 		PrimaryKey: []*schema.Column{SettingsColumns[0]},
+	}
+	// UmatColumns holds the columns for the "umat" table.
+	UmatColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "paroki_id", Type: field.TypeUUID},
+		{Name: "wilayah_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "lingkungan_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "user_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "nama", Type: field.TypeString},
+		{Name: "nama_baptis", Type: field.TypeString, Nullable: true},
+		{Name: "nik_enc", Type: field.TypeString, Nullable: true},
+		{Name: "nik_hash", Type: field.TypeString, Nullable: true},
+		{Name: "jenis_kelamin", Type: field.TypeEnum, Enums: []string{"pria", "wanita"}},
+		{Name: "tempat_lahir", Type: field.TypeString, Nullable: true},
+		{Name: "tanggal_lahir", Type: field.TypeString, Nullable: true},
+		{Name: "golongan_darah", Type: field.TypeString, Nullable: true},
+		{Name: "suku", Type: field.TypeString, Nullable: true},
+		{Name: "agama", Type: field.TypeString, Nullable: true},
+		{Name: "kewarganegaraan", Type: field.TypeString, Nullable: true},
+		{Name: "negara", Type: field.TypeString, Nullable: true},
+		{Name: "hubungan_keluarga", Type: field.TypeString, Nullable: true},
+		{Name: "status_pernikahan", Type: field.TypeString, Nullable: true},
+		{Name: "almarhum", Type: field.TypeBool, Default: false},
+		{Name: "tanggal_meninggal", Type: field.TypeString, Nullable: true},
+		{Name: "alamat", Type: field.TypeString, Nullable: true},
+		{Name: "kota_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "kecamatan_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "kelurahan_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "telepon", Type: field.TypeString, Nullable: true},
+		{Name: "email", Type: field.TypeString, Nullable: true},
+		{Name: "foto_url", Type: field.TypeString, Nullable: true},
+		{Name: "pendidikan", Type: field.TypeString, Nullable: true},
+		{Name: "jurusan", Type: field.TypeString, Nullable: true},
+		{Name: "pekerjaan", Type: field.TypeString, Nullable: true},
+		{Name: "profesi", Type: field.TypeString, Nullable: true},
+		{Name: "keterampilan", Type: field.TypeString, Nullable: true},
+		{Name: "disabilitas", Type: field.TypeString, Nullable: true},
+		{Name: "aktivitas_sosial", Type: field.TypeString, Nullable: true},
+		{Name: "keluarga_id", Type: field.TypeUUID, Nullable: true},
+	}
+	// UmatTable holds the schema information for the "umat" table.
+	UmatTable = &schema.Table{
+		Name:       "umat",
+		Columns:    UmatColumns,
+		PrimaryKey: []*schema.Column{UmatColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "umat_keluarga_anggota",
+				Columns:    []*schema.Column{UmatColumns[38]},
+				RefColumns: []*schema.Column{KeluargaColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "umat_paroki_nik_hash_active",
+				Unique:  true,
+				Columns: []*schema.Column{UmatColumns[4], UmatColumns[11]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "nik_hash IS NOT NULL AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "umat_paroki_user_id_active",
+				Unique:  true,
+				Columns: []*schema.Column{UmatColumns[4], UmatColumns[7]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "user_id IS NOT NULL AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "umat_paroki_id_keluarga_id",
+				Unique:  false,
+				Columns: []*schema.Column{UmatColumns[4], UmatColumns[38]},
+			},
+			{
+				Name:    "umat_paroki_id_wilayah_id_lingkungan_id_almarhum",
+				Unique:  false,
+				Columns: []*schema.Column{UmatColumns[4], UmatColumns[5], UmatColumns[6], UmatColumns[22]},
+			},
+			{
+				Name:    "umat_paroki_id_nama",
+				Unique:  false,
+				Columns: []*schema.Column{UmatColumns[4], UmatColumns[8]},
+			},
+		},
+	}
+	// UmatSakramenColumns holds the columns for the "umat_sakramen" table.
+	UmatSakramenColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "paroki_id", Type: field.TypeUUID},
+		{Name: "jenis", Type: field.TypeEnum, Enums: []string{"baptis", "komuni_pertama", "krisma", "perkawinan", "imamat", "perminyakan", "kematian"}},
+		{Name: "tanggal", Type: field.TypeString, Nullable: true},
+		{Name: "keuskupan_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "paroki_sakramen_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "keuskupan_nama", Type: field.TypeString, Nullable: true},
+		{Name: "paroki_nama", Type: field.TypeString, Nullable: true},
+		{Name: "buku", Type: field.TypeString, Nullable: true},
+		{Name: "nomor", Type: field.TypeString, Nullable: true},
+		{Name: "catatan", Type: field.TypeString, Nullable: true},
+		{Name: "umat_id", Type: field.TypeUUID},
+	}
+	// UmatSakramenTable holds the schema information for the "umat_sakramen" table.
+	UmatSakramenTable = &schema.Table{
+		Name:       "umat_sakramen",
+		Columns:    UmatSakramenColumns,
+		PrimaryKey: []*schema.Column{UmatSakramenColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "umat_sakramen_umat_sakramen",
+				Columns:    []*schema.Column{UmatSakramenColumns[13]},
+				RefColumns: []*schema.Column{UmatColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "umatsakramen_paroki_id_umat_id_jenis",
+				Unique:  true,
+				Columns: []*schema.Column{UmatSakramenColumns[3], UmatSakramenColumns[13], UmatSakramenColumns[4]},
+			},
+			{
+				Name:    "umatsakramen_paroki_id_jenis_tanggal",
+				Unique:  false,
+				Columns: []*schema.Column{UmatSakramenColumns[3], UmatSakramenColumns[4], UmatSakramenColumns[5]},
+			},
+		},
 	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
@@ -1157,6 +1338,7 @@ var (
 		EventPetugasTable,
 		EventRsvpsTable,
 		KecamatanTable,
+		KeluargaTable,
 		KelurahanTable,
 		KeuskupanTable,
 		KevikepanTable,
@@ -1170,6 +1352,8 @@ var (
 		ParokiMembersTable,
 		PeriodsTable,
 		SettingsTable,
+		UmatTable,
+		UmatSakramenTable,
 		UsersTable,
 		UserAccountsTable,
 		UserOtpsTable,
@@ -1209,6 +1393,9 @@ func init() {
 	KecamatanTable.Annotation = &entsql.Annotation{
 		Table: "kecamatan",
 	}
+	KeluargaTable.Annotation = &entsql.Annotation{
+		Table: "keluarga",
+	}
 	KelurahanTable.ForeignKeys[0].RefTable = KecamatanTable
 	KelurahanTable.Annotation = &entsql.Annotation{
 		Table: "kelurahan",
@@ -1246,6 +1433,14 @@ func init() {
 		Table: "paroki_members",
 	}
 	PeriodsTable.ForeignKeys[0].RefTable = ParokiTable
+	UmatTable.ForeignKeys[0].RefTable = KeluargaTable
+	UmatTable.Annotation = &entsql.Annotation{
+		Table: "umat",
+	}
+	UmatSakramenTable.ForeignKeys[0].RefTable = UmatTable
+	UmatSakramenTable.Annotation = &entsql.Annotation{
+		Table: "umat_sakramen",
+	}
 	UserAccountsTable.ForeignKeys[0].RefTable = UsersTable
 	UserOtpsTable.Annotation = &entsql.Annotation{
 		Table: "user_otps",

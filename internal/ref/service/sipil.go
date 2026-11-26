@@ -200,6 +200,18 @@ func (s *Service) DeleteKota(ctx context.Context, id uuid.UUID) error {
 	if err != nil {
 		return err
 	}
+	if !inUse {
+		inUse, err = s.repo.HasKeluargaByKota(ctx, id)
+		if err != nil {
+			return err
+		}
+	}
+	if !inUse {
+		inUse, err = s.repo.HasUmatByKota(ctx, id)
+		if err != nil {
+			return err
+		}
+	}
 	if inUse {
 		return domain.ErrInUse
 	}
@@ -375,6 +387,18 @@ func (s *Service) DeleteKecamatan(ctx context.Context, id uuid.UUID) error {
 	inUse, err = s.repo.HasParokiByKecamatan(ctx, id)
 	if err != nil {
 		return err
+	}
+	if !inUse {
+		inUse, err = s.repo.HasKeluargaByKecamatan(ctx, id)
+		if err != nil {
+			return err
+		}
+	}
+	if !inUse {
+		inUse, err = s.repo.HasUmatByKecamatan(ctx, id)
+		if err != nil {
+			return err
+		}
 	}
 	if inUse {
 		return domain.ErrInUse
@@ -561,6 +585,18 @@ func (s *Service) DeleteKelurahan(ctx context.Context, id uuid.UUID) error {
 	inUse, err := s.repo.HasParokiByKelurahan(ctx, id)
 	if err != nil {
 		return err
+	}
+	if !inUse {
+		inUse, err = s.repo.HasKeluargaByKelurahan(ctx, id)
+		if err != nil {
+			return err
+		}
+	}
+	if !inUse {
+		inUse, err = s.repo.HasUmatByKelurahan(ctx, id)
+		if err != nil {
+			return err
+		}
 	}
 	if inUse {
 		return domain.ErrInUse

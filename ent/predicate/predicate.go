@@ -36,6 +36,9 @@ type EventRSVP func(*sql.Selector)
 // Kecamatan is the predicate function for kecamatan builders.
 type Kecamatan func(*sql.Selector)
 
+// Keluarga is the predicate function for keluarga builders.
+type Keluarga func(*sql.Selector)
+
 // Kelurahan is the predicate function for kelurahan builders.
 type Kelurahan func(*sql.Selector)
 
@@ -74,6 +77,12 @@ type Period func(*sql.Selector)
 
 // Setting is the predicate function for setting builders.
 type Setting func(*sql.Selector)
+
+// Umat is the predicate function for umat builders.
+type Umat func(*sql.Selector)
+
+// UmatSakramen is the predicate function for umatsakramen builders.
+type UmatSakramen func(*sql.Selector)
 
 // User is the predicate function for user builders.
 type User func(*sql.Selector)

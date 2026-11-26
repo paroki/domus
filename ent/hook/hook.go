@@ -129,6 +129,18 @@ func (f KecamatanFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, e
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.KecamatanMutation", m)
 }
 
+// The KeluargaFunc type is an adapter to allow the use of ordinary
+// function as Keluarga mutator.
+type KeluargaFunc func(context.Context, *ent.KeluargaMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f KeluargaFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.KeluargaMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.KeluargaMutation", m)
+}
+
 // The KelurahanFunc type is an adapter to allow the use of ordinary
 // function as Kelurahan mutator.
 type KelurahanFunc func(context.Context, *ent.KelurahanMutation) (ent.Value, error)
@@ -283,6 +295,30 @@ func (f SettingFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, err
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SettingMutation", m)
+}
+
+// The UmatFunc type is an adapter to allow the use of ordinary
+// function as Umat mutator.
+type UmatFunc func(context.Context, *ent.UmatMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f UmatFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.UmatMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UmatMutation", m)
+}
+
+// The UmatSakramenFunc type is an adapter to allow the use of ordinary
+// function as UmatSakramen mutator.
+type UmatSakramenFunc func(context.Context, *ent.UmatSakramenMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f UmatSakramenFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.UmatSakramenMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UmatSakramenMutation", m)
 }
 
 // The UserFunc type is an adapter to allow the use of ordinary

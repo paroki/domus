@@ -12,6 +12,7 @@ import (
 	"github.com/paroki/domus/internal/platform/mailx"
 	"github.com/paroki/domus/internal/platform/setting"
 	"github.com/paroki/domus/internal/ref"
+	"github.com/paroki/domus/internal/umat"
 	"github.com/paroki/domus/internal/user"
 	"github.com/spf13/cobra"
 )
@@ -92,6 +93,7 @@ func newServeCmd() *cobra.Command {
 				return err
 			}
 			eventFeature := event.New(db, enforcer, userFeature, orgFeature, eventCfg, event.WithRef(refFeature))
+			umatFeature := umat.New(db, enforcer, userFeature, refFeature, cipher)
 			settingStore := setting.NewStore(db, setting.WithCipher(cipher))
 			agentFeature := agent.New(
 				nil,
@@ -102,7 +104,7 @@ func newServeCmd() *cobra.Command {
 				agent.WithCipher(cipher),
 				agent.WithSettings(settingStore),
 			)
-			if err := authz.RegisterFeatures(ctx, enforcer, userFeature, refFeature, orgFeature, eventFeature, agentFeature); err != nil {
+			if err := authz.RegisterFeatures(ctx, enforcer, userFeature, refFeature, orgFeature, eventFeature, umatFeature, agentFeature); err != nil {
 				return err
 			}
 			setting.RegisterFeatures(settingStore, userFeature, refFeature, orgFeature, eventFeature, agentFeature)
@@ -120,7 +122,7 @@ func newServeCmd() *cobra.Command {
 				return err
 			}
 
-			fiberApp := app.GetFiber(cfg, logger, userFeature, refFeature, orgFeature, eventFeature, settingFeature, agentFeature)
+			fiberApp := app.GetFiber(cfg, logger, userFeature, refFeature, orgFeature, eventFeature, umatFeature, settingFeature, agentFeature)
 			return app.New(cfg, fiberApp, logger).Serve(ctx)
 		},
 	}

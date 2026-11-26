@@ -195,6 +195,11 @@ func (f *Feature) EnsureParokiMember(ctx context.Context, parokiID, userID uuid.
 	return f.service.EnsureParokiMember(ctx, parokiID, userID)
 }
 
+// HasParokiMember reports whether userID is a member of parokiID.
+func (f *Feature) HasParokiMember(ctx context.Context, parokiID, userID uuid.UUID) (bool, error) {
+	return f.service.HasParokiMember(ctx, parokiID, userID)
+}
+
 // ListParokiMembers implements user.ParokiMemberDirectory for MCP tools.
 func (f *Feature) ListParokiMembers(ctx context.Context, p user.Principal, parokiID uuid.UUID, query, role string, limit int) ([]user.ParokiMemberItem, error) {
 	var filter *domain.ParokiMemberSearchFilter

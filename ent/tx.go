@@ -32,6 +32,8 @@ type Tx struct {
 	EventRSVP *EventRSVPClient
 	// Kecamatan is the client for interacting with the Kecamatan builders.
 	Kecamatan *KecamatanClient
+	// Keluarga is the client for interacting with the Keluarga builders.
+	Keluarga *KeluargaClient
 	// Kelurahan is the client for interacting with the Kelurahan builders.
 	Kelurahan *KelurahanClient
 	// Keuskupan is the client for interacting with the Keuskupan builders.
@@ -58,6 +60,10 @@ type Tx struct {
 	Period *PeriodClient
 	// Setting is the client for interacting with the Setting builders.
 	Setting *SettingClient
+	// Umat is the client for interacting with the Umat builders.
+	Umat *UmatClient
+	// UmatSakramen is the client for interacting with the UmatSakramen builders.
+	UmatSakramen *UmatSakramenClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// UserAccount is the client for interacting with the UserAccount builders.
@@ -211,6 +217,7 @@ func (tx *Tx) init() {
 	tx.EventPetugas = NewEventPetugasClient(tx.config)
 	tx.EventRSVP = NewEventRSVPClient(tx.config)
 	tx.Kecamatan = NewKecamatanClient(tx.config)
+	tx.Keluarga = NewKeluargaClient(tx.config)
 	tx.Kelurahan = NewKelurahanClient(tx.config)
 	tx.Keuskupan = NewKeuskupanClient(tx.config)
 	tx.Kevikepan = NewKevikepanClient(tx.config)
@@ -224,6 +231,8 @@ func (tx *Tx) init() {
 	tx.ParokiMember = NewParokiMemberClient(tx.config)
 	tx.Period = NewPeriodClient(tx.config)
 	tx.Setting = NewSettingClient(tx.config)
+	tx.Umat = NewUmatClient(tx.config)
+	tx.UmatSakramen = NewUmatSakramenClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.UserAccount = NewUserAccountClient(tx.config)
 	tx.UserOTP = NewUserOTPClient(tx.config)

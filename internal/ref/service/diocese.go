@@ -187,6 +187,13 @@ func (s *Service) DeleteKeuskupan(ctx context.Context, id uuid.UUID) error {
 	if inUse {
 		return domain.ErrInUse
 	}
+	inUse, err = s.repo.HasUmatSakramenByKeuskupan(ctx, id)
+	if err != nil {
+		return err
+	}
+	if inUse {
+		return domain.ErrInUse
+	}
 	return s.repo.SoftDeleteKeuskupan(ctx, id, time.Now().UTC())
 }
 

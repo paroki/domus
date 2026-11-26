@@ -76,6 +76,20 @@ func (_c *ParokiMemberCreate) SetNillableRole(v *parokimember.Role) *ParokiMembe
 	return _c
 }
 
+// SetUmatAdmin sets the "umat_admin" field.
+func (_c *ParokiMemberCreate) SetUmatAdmin(v bool) *ParokiMemberCreate {
+	_c.mutation.SetUmatAdmin(v)
+	return _c
+}
+
+// SetNillableUmatAdmin sets the "umat_admin" field if the given value is not nil.
+func (_c *ParokiMemberCreate) SetNillableUmatAdmin(v *bool) *ParokiMemberCreate {
+	if v != nil {
+		_c.SetUmatAdmin(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *ParokiMemberCreate) SetID(v uuid.UUID) *ParokiMemberCreate {
 	_c.mutation.SetID(v)
@@ -142,6 +156,10 @@ func (_c *ParokiMemberCreate) defaults() {
 		v := parokimember.DefaultRole
 		_c.mutation.SetRole(v)
 	}
+	if _, ok := _c.mutation.UmatAdmin(); !ok {
+		v := parokimember.DefaultUmatAdmin
+		_c.mutation.SetUmatAdmin(v)
+	}
 	if _, ok := _c.mutation.ID(); !ok {
 		v := parokimember.DefaultID()
 		_c.mutation.SetID(v)
@@ -169,6 +187,9 @@ func (_c *ParokiMemberCreate) check() error {
 		if err := parokimember.RoleValidator(v); err != nil {
 			return &ValidationError{Name: "role", err: fmt.Errorf(`ent: validator failed for field "ParokiMember.role": %w`, err)}
 		}
+	}
+	if _, ok := _c.mutation.UmatAdmin(); !ok {
+		return &ValidationError{Name: "umat_admin", err: errors.New(`ent: missing required field "ParokiMember.umat_admin"`)}
 	}
 	if len(_c.mutation.ParokiIDs()) == 0 {
 		return &ValidationError{Name: "paroki", err: errors.New(`ent: missing required edge "ParokiMember.paroki"`)}
@@ -223,6 +244,10 @@ func (_c *ParokiMemberCreate) createSpec() (*ParokiMember, *sqlgraph.CreateSpec)
 	if value, ok := _c.mutation.Role(); ok {
 		_spec.SetField(parokimember.FieldRole, field.TypeEnum, value)
 		_node.Role = value
+	}
+	if value, ok := _c.mutation.UmatAdmin(); ok {
+		_spec.SetField(parokimember.FieldUmatAdmin, field.TypeBool, value)
+		_node.UmatAdmin = value
 	}
 	if nodes := _c.mutation.ParokiIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

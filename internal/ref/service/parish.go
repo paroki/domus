@@ -438,7 +438,11 @@ func (s *Service) SearchParokiMembers(
 		if err != nil {
 			return nil, false, err
 		}
-		if !isAdmin {
+		isUmat, err := s.isUmatAdmin(p, parokiID)
+		if err != nil {
+			return nil, false, err
+		}
+		if !isAdmin && !isUmat {
 			if _, err := s.repo.FindParokiMember(ctx, parokiID, p.UserID); ent.IsNotFound(err) {
 				return nil, false, domain.ErrRefForbidden
 			} else if err != nil {
@@ -448,10 +452,12 @@ func (s *Service) SearchParokiMembers(
 	}
 
 	var role string
+	var umatAdmin *bool
 	if req.Filter != nil {
 		role = req.Filter.Role
+		umatAdmin = req.Filter.UmatAdmin
 	}
-	rows, usersMap, err := s.repo.SearchParokiMembers(ctx, parokiID, strings.TrimSpace(req.Q), role, cursorCreatedAt, cursorID, limit+1)
+	rows, usersMap, err := s.repo.SearchParokiMembers(ctx, parokiID, strings.TrimSpace(req.Q), role, umatAdmin, cursorCreatedAt, cursorID, limit+1)
 	if err != nil {
 		return nil, false, err
 	}
@@ -473,8 +479,20 @@ func (s *Service) AddParokiMember(
 	parokiID uuid.UUID,
 	req domain.AddParokiMemberRequest,
 ) (domain.ParokiMemberResponse, error) {
-	if _, err := s.requireParokiAdminOrSuperAdmin(p, parokiID); err != nil {
+	isSuperAdmin := s.isSuperAdmin(p)
+	isParokiAdmin, err := s.isParokiAdmin(p, parokiID)
+	if err != nil {
 		return domain.ParokiMemberResponse{}, err
+	}
+	isUmatAdmin := false
+	if !isSuperAdmin && !isParokiAdmin {
+		isUmatAdmin, err = s.isUmatAdmin(p, parokiID)
+		if err != nil {
+			return domain.ParokiMemberResponse{}, err
+		}
+		if !isUmatAdmin {
+			return domain.ParokiMemberResponse{}, domain.ErrRefForbidden
+		}
 	}
 	if _, err := s.repo.FindParokiByID(ctx, parokiID); ent.IsNotFound(err) {
 		return domain.ParokiMemberResponse{}, domain.ErrParokiNotFound
@@ -486,6 +504,10 @@ func (s *Service) AddParokiMember(
 	if role == "" {
 		role = string(parokimember.RoleMember)
 	}
+	if !isSuperAdmin && !isParokiAdmin && role == string(parokimember.RoleAdmin) {
+		return domain.ParokiMemberResponse{}, domain.ErrRefForbidden
+	}
+	umatAdmin := req.UmatAdmin != nil && *req.UmatAdmin
 
 	var targetUserID uuid.UUID
 	if req.UserID != nil && *req.UserID != uuid.Nil {
@@ -529,13 +551,13 @@ func (s *Service) AddParokiMember(
 	}
 
 	var created *ent.ParokiMember
-	err := s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
+	err = s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
 		if _, err := txRepo.FindParokiMember(ctx, parokiID, targetUserID); err == nil {
 			return domain.ErrParokiMemberConflict
 		} else if !ent.IsNotFound(err) {
 			return err
 		}
-		pm, err := txRepo.CreateParokiMember(ctx, parokiID, targetUserID, parokimember.Role(role))
+		pm, err := txRepo.CreateParokiMember(ctx, parokiID, targetUserID, parokimember.Role(role), umatAdmin)
 		if err != nil {
 			if ent.IsConstraintError(err) {
 				return domain.ErrParokiMemberConflict
@@ -552,9 +574,18 @@ func (s *Service) AddParokiMember(
 		return domain.ParokiMemberResponse{}, err
 	}
 
-	if role == string(parokimember.RoleAdmin) && s.enforcer != nil {
-		if err := s.enforcer.AssignRole(ctx, authz.UserSubject(targetUserID), roleParokiAdmin, authz.ParokiDomain(parokiID)); err != nil {
-			return domain.ParokiMemberResponse{}, err
+	if s.enforcer != nil {
+		sub := authz.UserSubject(targetUserID)
+		dom := authz.ParokiDomain(parokiID)
+		if role == string(parokimember.RoleAdmin) {
+			if err := s.enforcer.AssignRole(ctx, sub, roleParokiAdmin, dom); err != nil {
+				return domain.ParokiMemberResponse{}, err
+			}
+		}
+		if umatAdmin {
+			if err := s.enforcer.AssignRole(ctx, sub, roleUmatAdmin, dom); err != nil {
+				return domain.ParokiMemberResponse{}, err
+			}
 		}
 	}
 
@@ -565,19 +596,33 @@ func (s *Service) AddParokiMember(
 	return toParokiMemberResponse(created, u), nil
 }
 
-// UpdateParokiMember updates a member's role and syncs Casbin while guarding the last paroki admin.
+// UpdateParokiMember updates a member's role or umatAdmin flag and syncs Casbin while guarding the last paroki admin.
 func (s *Service) UpdateParokiMember(
 	ctx context.Context,
 	p authx.Principal,
 	parokiID, targetUserID uuid.UUID,
 	req domain.UpdateParokiMemberRequest,
 ) (domain.ParokiMemberResponse, error) {
-	if _, err := s.requireParokiAdminOrSuperAdmin(p, parokiID); err != nil {
+	if req.Role == nil && req.UmatAdmin == nil {
+		return domain.ParokiMemberResponse{}, domain.ValidationError("body", "REQUIRED", "At least one of role or umatAdmin is required.")
+	}
+	isSuperAdmin := s.isSuperAdmin(p)
+	isParokiAdmin, err := s.isParokiAdmin(p, parokiID)
+	if err != nil {
 		return domain.ParokiMemberResponse{}, err
+	}
+	if !isSuperAdmin && !isParokiAdmin {
+		isUmatAdmin, err := s.isUmatAdmin(p, parokiID)
+		if err != nil {
+			return domain.ParokiMemberResponse{}, err
+		}
+		if !isUmatAdmin {
+			return domain.ParokiMemberResponse{}, domain.ErrRefForbidden
+		}
 	}
 
 	var updated *ent.ParokiMember
-	err := s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
+	err = s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
 		existing, err := txRepo.FindParokiMember(ctx, parokiID, targetUserID)
 		if ent.IsNotFound(err) {
 			return domain.ErrParokiMemberNotFound
@@ -586,13 +631,22 @@ func (s *Service) UpdateParokiMember(
 			return err
 		}
 
-		if existing.Role == parokimember.RoleAdmin && req.Role == string(parokimember.RoleMember) {
+		if !isSuperAdmin && !isParokiAdmin && req.Role != nil && *req.Role != string(existing.Role) {
+			return domain.ErrRefForbidden
+		}
+
+		if req.Role != nil && existing.Role == parokimember.RoleAdmin && *req.Role == string(parokimember.RoleMember) {
 			if err := guardNotLastParokiAdmin(ctx, txRepo, parokiID); err != nil {
 				return err
 			}
 		}
 
-		u, err := txRepo.UpdateParokiMemberRole(ctx, existing.ID, parokimember.Role(req.Role))
+		var nextRole *parokimember.Role
+		if req.Role != nil {
+			r := parokimember.Role(*req.Role)
+			nextRole = &r
+		}
+		u, err := txRepo.UpdateParokiMember(ctx, existing.ID, nextRole, req.UmatAdmin)
 		if err != nil {
 			return err
 		}
@@ -606,13 +660,26 @@ func (s *Service) UpdateParokiMember(
 	if s.enforcer != nil {
 		sub := authz.UserSubject(targetUserID)
 		dom := authz.ParokiDomain(parokiID)
-		if req.Role == string(parokimember.RoleAdmin) {
-			if err := s.enforcer.AssignRole(ctx, sub, roleParokiAdmin, dom); err != nil {
-				return domain.ParokiMemberResponse{}, err
+		if req.Role != nil {
+			if *req.Role == string(parokimember.RoleAdmin) {
+				if err := s.enforcer.AssignRole(ctx, sub, roleParokiAdmin, dom); err != nil {
+					return domain.ParokiMemberResponse{}, err
+				}
+			} else {
+				if err := s.enforcer.RevokeRole(ctx, sub, roleParokiAdmin, dom); err != nil {
+					return domain.ParokiMemberResponse{}, err
+				}
 			}
-		} else {
-			if err := s.enforcer.RevokeRole(ctx, sub, roleParokiAdmin, dom); err != nil {
-				return domain.ParokiMemberResponse{}, err
+		}
+		if req.UmatAdmin != nil {
+			if *req.UmatAdmin {
+				if err := s.enforcer.AssignRole(ctx, sub, roleUmatAdmin, dom); err != nil {
+					return domain.ParokiMemberResponse{}, err
+				}
+			} else {
+				if err := s.enforcer.RevokeRole(ctx, sub, roleUmatAdmin, dom); err != nil {
+					return domain.ParokiMemberResponse{}, err
+				}
 			}
 		}
 	}
@@ -624,13 +691,13 @@ func (s *Service) UpdateParokiMember(
 	return toParokiMemberResponse(updated, u), nil
 }
 
-// RemoveParokiMember removes a member from parokiID and revokes Casbin paroki-admin role while guarding the last admin.
+// RemoveParokiMember removes a member from parokiID and revokes Casbin paroki-admin/umat-admin roles while guarding the last admin.
 func (s *Service) RemoveParokiMember(ctx context.Context, p authx.Principal, parokiID, targetUserID uuid.UUID) error {
 	if _, err := s.requireParokiAdminOrSuperAdmin(p, parokiID); err != nil {
 		return err
 	}
 
-	var wasAdmin bool
+	var wasAdmin, wasUmatAdmin bool
 	err := s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
 		existing, err := txRepo.FindParokiMember(ctx, parokiID, targetUserID)
 		if ent.IsNotFound(err) {
@@ -646,14 +713,26 @@ func (s *Service) RemoveParokiMember(ctx context.Context, p authx.Principal, par
 			}
 			wasAdmin = true
 		}
+		wasUmatAdmin = existing.UmatAdmin
 
 		return txRepo.DeleteParokiMember(ctx, existing.ID)
 	})
 	if err != nil {
 		return err
 	}
-	if wasAdmin && s.enforcer != nil {
-		return s.enforcer.RevokeRole(ctx, authz.UserSubject(targetUserID), roleParokiAdmin, authz.ParokiDomain(parokiID))
+	if s.enforcer != nil {
+		sub := authz.UserSubject(targetUserID)
+		dom := authz.ParokiDomain(parokiID)
+		if wasAdmin {
+			if err := s.enforcer.RevokeRole(ctx, sub, roleParokiAdmin, dom); err != nil {
+				return err
+			}
+		}
+		if wasUmatAdmin {
+			if err := s.enforcer.RevokeRole(ctx, sub, roleUmatAdmin, dom); err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }
@@ -907,6 +986,7 @@ func toParokiMemberResponse(pm *ent.ParokiMember, u *ent.User) domain.ParokiMemb
 		ParokiID:  pm.ParokiID,
 		UserID:    pm.UserID,
 		Role:      string(pm.Role),
+		UmatAdmin: pm.UmatAdmin,
 		CreatedAt: pm.CreatedAt,
 		UpdatedAt: pm.UpdatedAt,
 	}

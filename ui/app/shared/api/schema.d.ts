@@ -1972,6 +1972,7 @@ export interface components {
       phone?: string;
       /** @enum {string} */
       role?: "admin" | "member";
+      umatAdmin?: boolean;
       userId?: string;
     };
     "domain.AdminCreateUserRequest": {
@@ -2525,12 +2526,14 @@ export interface components {
       parokiId?: string;
       phone?: string;
       role?: string;
+      umatAdmin?: boolean;
       updatedAt?: string;
       userId?: string;
     };
     "domain.ParokiMemberSearchFilter": {
       /** @enum {string} */
       role?: "admin" | "member";
+      umatAdmin?: boolean;
     };
     "domain.ParokiResponse": {
       active?: boolean;
@@ -2901,7 +2904,8 @@ export interface components {
     };
     "domain.UpdateParokiMemberRequest": {
       /** @enum {string} */
-      role: "admin" | "member";
+      role?: "admin" | "member";
+      umatAdmin?: boolean;
     };
     "domain.UpdateParokiProfileRequest": {
       alamat?: string;

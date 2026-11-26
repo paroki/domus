@@ -185,6 +185,18 @@ func (s *Service) DeleteWilayah(ctx context.Context, parokiID, wilayahID uuid.UU
 			return err
 		}
 	}
+	if !inUse {
+		inUse, err = s.repo.HasKeluargaByWilayah(ctx, parokiID, wilayahID)
+		if err != nil {
+			return err
+		}
+	}
+	if !inUse {
+		inUse, err = s.repo.HasUmatByWilayah(ctx, parokiID, wilayahID)
+		if err != nil {
+			return err
+		}
+	}
 	if inUse {
 		return domain.ErrInUse
 	}
@@ -364,6 +376,18 @@ func (s *Service) DeleteLingkungan(ctx context.Context, parokiID, lingkunganID u
 	inUse, err := s.repo.HasOrganizationsByLingkungan(ctx, parokiID, lingkunganID)
 	if err != nil {
 		return err
+	}
+	if !inUse {
+		inUse, err = s.repo.HasKeluargaByLingkungan(ctx, parokiID, lingkunganID)
+		if err != nil {
+			return err
+		}
+	}
+	if !inUse {
+		inUse, err = s.repo.HasUmatByLingkungan(ctx, parokiID, lingkunganID)
+		if err != nil {
+			return err
+		}
 	}
 	if inUse {
 		return domain.ErrInUse

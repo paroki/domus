@@ -189,13 +189,15 @@ type ParokiMemberResponse struct {
 	Name      string    `json:"name"`
 	Phone     *string   `json:"phone,omitempty"`
 	Role      string    `json:"role"`
+	UmatAdmin bool      `json:"umatAdmin"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 // ParokiMemberSearchFilter filters paroki member search results.
 type ParokiMemberSearchFilter struct {
-	Role string `json:"role,omitempty" validate:"omitempty,oneof=admin member"`
+	Role      string `json:"role,omitempty" validate:"omitempty,oneof=admin member"`
+	UmatAdmin *bool  `json:"umatAdmin,omitempty"`
 }
 
 // SearchParokiMembersRequest searches members of a Paroki.
@@ -208,16 +210,18 @@ type SearchParokiMembersRequest struct {
 
 // AddParokiMemberRequest adds an existing or invited user as a member of a Paroki.
 type AddParokiMemberRequest struct {
-	UserID *uuid.UUID `json:"userId,omitempty"`
-	Email  string     `json:"email,omitempty" validate:"omitempty,email"`
-	Name   string     `json:"name,omitempty"`
-	Phone  *string    `json:"phone,omitempty"`
-	Role   string     `json:"role,omitempty" validate:"omitempty,oneof=admin member"`
+	UserID    *uuid.UUID `json:"userId,omitempty"`
+	Email     string     `json:"email,omitempty" validate:"omitempty,email"`
+	Name      string     `json:"name,omitempty"`
+	Phone     *string    `json:"phone,omitempty"`
+	Role      string     `json:"role,omitempty" validate:"omitempty,oneof=admin member"`
+	UmatAdmin *bool      `json:"umatAdmin,omitempty"`
 }
 
-// UpdateParokiMemberRequest updates a paroki member's role.
+// UpdateParokiMemberRequest updates a paroki member's role or umatAdmin flag.
 type UpdateParokiMemberRequest struct {
-	Role string `json:"role" validate:"required,oneof=admin member"`
+	Role      *string `json:"role,omitempty" validate:"omitempty,oneof=admin member"`
+	UmatAdmin *bool   `json:"umatAdmin,omitempty"`
 }
 
 // WilayahResponse is the public API representation of a Wilayah.

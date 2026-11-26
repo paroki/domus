@@ -22,6 +22,7 @@ import (
 	"github.com/paroki/domus/ent/eventpetugas"
 	"github.com/paroki/domus/ent/eventrsvp"
 	"github.com/paroki/domus/ent/kecamatan"
+	"github.com/paroki/domus/ent/keluarga"
 	"github.com/paroki/domus/ent/kelurahan"
 	"github.com/paroki/domus/ent/keuskupan"
 	"github.com/paroki/domus/ent/kevikepan"
@@ -37,6 +38,8 @@ import (
 	"github.com/paroki/domus/ent/predicate"
 	"github.com/paroki/domus/ent/schema"
 	"github.com/paroki/domus/ent/setting"
+	"github.com/paroki/domus/ent/umat"
+	"github.com/paroki/domus/ent/umatsakramen"
 	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/useraccount"
 	"github.com/paroki/domus/ent/userotp"
@@ -64,6 +67,7 @@ const (
 	TypeEventPetugas  = "EventPetugas"
 	TypeEventRSVP     = "EventRSVP"
 	TypeKecamatan     = "Kecamatan"
+	TypeKeluarga      = "Keluarga"
 	TypeKelurahan     = "Kelurahan"
 	TypeKeuskupan     = "Keuskupan"
 	TypeKevikepan     = "Kevikepan"
@@ -77,6 +81,8 @@ const (
 	TypeParokiMember  = "ParokiMember"
 	TypePeriod        = "Period"
 	TypeSetting       = "Setting"
+	TypeUmat          = "Umat"
+	TypeUmatSakramen  = "UmatSakramen"
 	TypeUser          = "User"
 	TypeUserAccount   = "UserAccount"
 	TypeUserOTP       = "UserOTP"
@@ -9349,6 +9355,1599 @@ func (m *KecamatanMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown Kecamatan edge %s", name)
+}
+
+// KeluargaMutation represents an operation that mutates the Keluarga nodes in the graph.
+type KeluargaMutation struct {
+	config
+	op             Op
+	typ            string
+	id             *uuid.UUID
+	created_at     *time.Time
+	updated_at     *time.Time
+	deleted_at     *time.Time
+	paroki_id      *uuid.UUID
+	wilayah_id     *uuid.UUID
+	lingkungan_id  *uuid.UUID
+	nomor_kk_enc   *string
+	nomor_kk_hash  *string
+	nama_keluarga  *string
+	alamat         *string
+	kota_id        *uuid.UUID
+	kecamatan_id   *uuid.UUID
+	kelurahan_id   *uuid.UUID
+	kode_pos       *string
+	status_rumah   *string
+	status_ekonomi *string
+	aktif          *bool
+	catatan        *string
+	clearedFields  map[string]struct{}
+	anggota        map[uuid.UUID]struct{}
+	removedanggota map[uuid.UUID]struct{}
+	clearedanggota bool
+	done           bool
+	oldValue       func(context.Context) (*Keluarga, error)
+	predicates     []predicate.Keluarga
+}
+
+var _ ent.Mutation = (*KeluargaMutation)(nil)
+
+// keluargaOption allows management of the mutation configuration using functional options.
+type keluargaOption func(*KeluargaMutation)
+
+// newKeluargaMutation creates new mutation for the Keluarga entity.
+func newKeluargaMutation(c config, op Op, opts ...keluargaOption) *KeluargaMutation {
+	m := &KeluargaMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeKeluarga,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withKeluargaID sets the ID field of the mutation.
+func withKeluargaID(id uuid.UUID) keluargaOption {
+	return func(m *KeluargaMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Keluarga
+		)
+		m.oldValue = func(ctx context.Context) (*Keluarga, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Keluarga.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withKeluarga sets the old Keluarga of the mutation.
+func withKeluarga(node *Keluarga) keluargaOption {
+	return func(m *KeluargaMutation) {
+		m.oldValue = func(context.Context) (*Keluarga, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m KeluargaMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m KeluargaMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Keluarga entities.
+func (m *KeluargaMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *KeluargaMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *KeluargaMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Keluarga.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *KeluargaMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *KeluargaMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the Keluarga entity.
+// If the Keluarga object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KeluargaMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *KeluargaMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *KeluargaMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *KeluargaMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the Keluarga entity.
+// If the Keluarga object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KeluargaMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *KeluargaMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *KeluargaMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *KeluargaMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the Keluarga entity.
+// If the Keluarga object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KeluargaMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *KeluargaMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[keluarga.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *KeluargaMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[keluarga.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *KeluargaMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, keluarga.FieldDeletedAt)
+}
+
+// SetParokiID sets the "paroki_id" field.
+func (m *KeluargaMutation) SetParokiID(u uuid.UUID) {
+	m.paroki_id = &u
+}
+
+// ParokiID returns the value of the "paroki_id" field in the mutation.
+func (m *KeluargaMutation) ParokiID() (r uuid.UUID, exists bool) {
+	v := m.paroki_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldParokiID returns the old "paroki_id" field's value of the Keluarga entity.
+// If the Keluarga object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KeluargaMutation) OldParokiID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldParokiID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldParokiID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldParokiID: %w", err)
+	}
+	return oldValue.ParokiID, nil
+}
+
+// ResetParokiID resets all changes to the "paroki_id" field.
+func (m *KeluargaMutation) ResetParokiID() {
+	m.paroki_id = nil
+}
+
+// SetWilayahID sets the "wilayah_id" field.
+func (m *KeluargaMutation) SetWilayahID(u uuid.UUID) {
+	m.wilayah_id = &u
+}
+
+// WilayahID returns the value of the "wilayah_id" field in the mutation.
+func (m *KeluargaMutation) WilayahID() (r uuid.UUID, exists bool) {
+	v := m.wilayah_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWilayahID returns the old "wilayah_id" field's value of the Keluarga entity.
+// If the Keluarga object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KeluargaMutation) OldWilayahID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWilayahID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWilayahID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWilayahID: %w", err)
+	}
+	return oldValue.WilayahID, nil
+}
+
+// ClearWilayahID clears the value of the "wilayah_id" field.
+func (m *KeluargaMutation) ClearWilayahID() {
+	m.wilayah_id = nil
+	m.clearedFields[keluarga.FieldWilayahID] = struct{}{}
+}
+
+// WilayahIDCleared returns if the "wilayah_id" field was cleared in this mutation.
+func (m *KeluargaMutation) WilayahIDCleared() bool {
+	_, ok := m.clearedFields[keluarga.FieldWilayahID]
+	return ok
+}
+
+// ResetWilayahID resets all changes to the "wilayah_id" field.
+func (m *KeluargaMutation) ResetWilayahID() {
+	m.wilayah_id = nil
+	delete(m.clearedFields, keluarga.FieldWilayahID)
+}
+
+// SetLingkunganID sets the "lingkungan_id" field.
+func (m *KeluargaMutation) SetLingkunganID(u uuid.UUID) {
+	m.lingkungan_id = &u
+}
+
+// LingkunganID returns the value of the "lingkungan_id" field in the mutation.
+func (m *KeluargaMutation) LingkunganID() (r uuid.UUID, exists bool) {
+	v := m.lingkungan_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLingkunganID returns the old "lingkungan_id" field's value of the Keluarga entity.
+// If the Keluarga object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KeluargaMutation) OldLingkunganID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLingkunganID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLingkunganID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLingkunganID: %w", err)
+	}
+	return oldValue.LingkunganID, nil
+}
+
+// ClearLingkunganID clears the value of the "lingkungan_id" field.
+func (m *KeluargaMutation) ClearLingkunganID() {
+	m.lingkungan_id = nil
+	m.clearedFields[keluarga.FieldLingkunganID] = struct{}{}
+}
+
+// LingkunganIDCleared returns if the "lingkungan_id" field was cleared in this mutation.
+func (m *KeluargaMutation) LingkunganIDCleared() bool {
+	_, ok := m.clearedFields[keluarga.FieldLingkunganID]
+	return ok
+}
+
+// ResetLingkunganID resets all changes to the "lingkungan_id" field.
+func (m *KeluargaMutation) ResetLingkunganID() {
+	m.lingkungan_id = nil
+	delete(m.clearedFields, keluarga.FieldLingkunganID)
+}
+
+// SetNomorKkEnc sets the "nomor_kk_enc" field.
+func (m *KeluargaMutation) SetNomorKkEnc(s string) {
+	m.nomor_kk_enc = &s
+}
+
+// NomorKkEnc returns the value of the "nomor_kk_enc" field in the mutation.
+func (m *KeluargaMutation) NomorKkEnc() (r string, exists bool) {
+	v := m.nomor_kk_enc
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNomorKkEnc returns the old "nomor_kk_enc" field's value of the Keluarga entity.
+// If the Keluarga object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KeluargaMutation) OldNomorKkEnc(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNomorKkEnc is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNomorKkEnc requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNomorKkEnc: %w", err)
+	}
+	return oldValue.NomorKkEnc, nil
+}
+
+// ClearNomorKkEnc clears the value of the "nomor_kk_enc" field.
+func (m *KeluargaMutation) ClearNomorKkEnc() {
+	m.nomor_kk_enc = nil
+	m.clearedFields[keluarga.FieldNomorKkEnc] = struct{}{}
+}
+
+// NomorKkEncCleared returns if the "nomor_kk_enc" field was cleared in this mutation.
+func (m *KeluargaMutation) NomorKkEncCleared() bool {
+	_, ok := m.clearedFields[keluarga.FieldNomorKkEnc]
+	return ok
+}
+
+// ResetNomorKkEnc resets all changes to the "nomor_kk_enc" field.
+func (m *KeluargaMutation) ResetNomorKkEnc() {
+	m.nomor_kk_enc = nil
+	delete(m.clearedFields, keluarga.FieldNomorKkEnc)
+}
+
+// SetNomorKkHash sets the "nomor_kk_hash" field.
+func (m *KeluargaMutation) SetNomorKkHash(s string) {
+	m.nomor_kk_hash = &s
+}
+
+// NomorKkHash returns the value of the "nomor_kk_hash" field in the mutation.
+func (m *KeluargaMutation) NomorKkHash() (r string, exists bool) {
+	v := m.nomor_kk_hash
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNomorKkHash returns the old "nomor_kk_hash" field's value of the Keluarga entity.
+// If the Keluarga object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KeluargaMutation) OldNomorKkHash(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNomorKkHash is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNomorKkHash requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNomorKkHash: %w", err)
+	}
+	return oldValue.NomorKkHash, nil
+}
+
+// ClearNomorKkHash clears the value of the "nomor_kk_hash" field.
+func (m *KeluargaMutation) ClearNomorKkHash() {
+	m.nomor_kk_hash = nil
+	m.clearedFields[keluarga.FieldNomorKkHash] = struct{}{}
+}
+
+// NomorKkHashCleared returns if the "nomor_kk_hash" field was cleared in this mutation.
+func (m *KeluargaMutation) NomorKkHashCleared() bool {
+	_, ok := m.clearedFields[keluarga.FieldNomorKkHash]
+	return ok
+}
+
+// ResetNomorKkHash resets all changes to the "nomor_kk_hash" field.
+func (m *KeluargaMutation) ResetNomorKkHash() {
+	m.nomor_kk_hash = nil
+	delete(m.clearedFields, keluarga.FieldNomorKkHash)
+}
+
+// SetNamaKeluarga sets the "nama_keluarga" field.
+func (m *KeluargaMutation) SetNamaKeluarga(s string) {
+	m.nama_keluarga = &s
+}
+
+// NamaKeluarga returns the value of the "nama_keluarga" field in the mutation.
+func (m *KeluargaMutation) NamaKeluarga() (r string, exists bool) {
+	v := m.nama_keluarga
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNamaKeluarga returns the old "nama_keluarga" field's value of the Keluarga entity.
+// If the Keluarga object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KeluargaMutation) OldNamaKeluarga(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNamaKeluarga is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNamaKeluarga requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNamaKeluarga: %w", err)
+	}
+	return oldValue.NamaKeluarga, nil
+}
+
+// ResetNamaKeluarga resets all changes to the "nama_keluarga" field.
+func (m *KeluargaMutation) ResetNamaKeluarga() {
+	m.nama_keluarga = nil
+}
+
+// SetAlamat sets the "alamat" field.
+func (m *KeluargaMutation) SetAlamat(s string) {
+	m.alamat = &s
+}
+
+// Alamat returns the value of the "alamat" field in the mutation.
+func (m *KeluargaMutation) Alamat() (r string, exists bool) {
+	v := m.alamat
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAlamat returns the old "alamat" field's value of the Keluarga entity.
+// If the Keluarga object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KeluargaMutation) OldAlamat(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAlamat is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAlamat requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAlamat: %w", err)
+	}
+	return oldValue.Alamat, nil
+}
+
+// ClearAlamat clears the value of the "alamat" field.
+func (m *KeluargaMutation) ClearAlamat() {
+	m.alamat = nil
+	m.clearedFields[keluarga.FieldAlamat] = struct{}{}
+}
+
+// AlamatCleared returns if the "alamat" field was cleared in this mutation.
+func (m *KeluargaMutation) AlamatCleared() bool {
+	_, ok := m.clearedFields[keluarga.FieldAlamat]
+	return ok
+}
+
+// ResetAlamat resets all changes to the "alamat" field.
+func (m *KeluargaMutation) ResetAlamat() {
+	m.alamat = nil
+	delete(m.clearedFields, keluarga.FieldAlamat)
+}
+
+// SetKotaID sets the "kota_id" field.
+func (m *KeluargaMutation) SetKotaID(u uuid.UUID) {
+	m.kota_id = &u
+}
+
+// KotaID returns the value of the "kota_id" field in the mutation.
+func (m *KeluargaMutation) KotaID() (r uuid.UUID, exists bool) {
+	v := m.kota_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKotaID returns the old "kota_id" field's value of the Keluarga entity.
+// If the Keluarga object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KeluargaMutation) OldKotaID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldKotaID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldKotaID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKotaID: %w", err)
+	}
+	return oldValue.KotaID, nil
+}
+
+// ClearKotaID clears the value of the "kota_id" field.
+func (m *KeluargaMutation) ClearKotaID() {
+	m.kota_id = nil
+	m.clearedFields[keluarga.FieldKotaID] = struct{}{}
+}
+
+// KotaIDCleared returns if the "kota_id" field was cleared in this mutation.
+func (m *KeluargaMutation) KotaIDCleared() bool {
+	_, ok := m.clearedFields[keluarga.FieldKotaID]
+	return ok
+}
+
+// ResetKotaID resets all changes to the "kota_id" field.
+func (m *KeluargaMutation) ResetKotaID() {
+	m.kota_id = nil
+	delete(m.clearedFields, keluarga.FieldKotaID)
+}
+
+// SetKecamatanID sets the "kecamatan_id" field.
+func (m *KeluargaMutation) SetKecamatanID(u uuid.UUID) {
+	m.kecamatan_id = &u
+}
+
+// KecamatanID returns the value of the "kecamatan_id" field in the mutation.
+func (m *KeluargaMutation) KecamatanID() (r uuid.UUID, exists bool) {
+	v := m.kecamatan_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKecamatanID returns the old "kecamatan_id" field's value of the Keluarga entity.
+// If the Keluarga object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KeluargaMutation) OldKecamatanID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldKecamatanID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldKecamatanID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKecamatanID: %w", err)
+	}
+	return oldValue.KecamatanID, nil
+}
+
+// ClearKecamatanID clears the value of the "kecamatan_id" field.
+func (m *KeluargaMutation) ClearKecamatanID() {
+	m.kecamatan_id = nil
+	m.clearedFields[keluarga.FieldKecamatanID] = struct{}{}
+}
+
+// KecamatanIDCleared returns if the "kecamatan_id" field was cleared in this mutation.
+func (m *KeluargaMutation) KecamatanIDCleared() bool {
+	_, ok := m.clearedFields[keluarga.FieldKecamatanID]
+	return ok
+}
+
+// ResetKecamatanID resets all changes to the "kecamatan_id" field.
+func (m *KeluargaMutation) ResetKecamatanID() {
+	m.kecamatan_id = nil
+	delete(m.clearedFields, keluarga.FieldKecamatanID)
+}
+
+// SetKelurahanID sets the "kelurahan_id" field.
+func (m *KeluargaMutation) SetKelurahanID(u uuid.UUID) {
+	m.kelurahan_id = &u
+}
+
+// KelurahanID returns the value of the "kelurahan_id" field in the mutation.
+func (m *KeluargaMutation) KelurahanID() (r uuid.UUID, exists bool) {
+	v := m.kelurahan_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKelurahanID returns the old "kelurahan_id" field's value of the Keluarga entity.
+// If the Keluarga object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KeluargaMutation) OldKelurahanID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldKelurahanID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldKelurahanID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKelurahanID: %w", err)
+	}
+	return oldValue.KelurahanID, nil
+}
+
+// ClearKelurahanID clears the value of the "kelurahan_id" field.
+func (m *KeluargaMutation) ClearKelurahanID() {
+	m.kelurahan_id = nil
+	m.clearedFields[keluarga.FieldKelurahanID] = struct{}{}
+}
+
+// KelurahanIDCleared returns if the "kelurahan_id" field was cleared in this mutation.
+func (m *KeluargaMutation) KelurahanIDCleared() bool {
+	_, ok := m.clearedFields[keluarga.FieldKelurahanID]
+	return ok
+}
+
+// ResetKelurahanID resets all changes to the "kelurahan_id" field.
+func (m *KeluargaMutation) ResetKelurahanID() {
+	m.kelurahan_id = nil
+	delete(m.clearedFields, keluarga.FieldKelurahanID)
+}
+
+// SetKodePos sets the "kode_pos" field.
+func (m *KeluargaMutation) SetKodePos(s string) {
+	m.kode_pos = &s
+}
+
+// KodePos returns the value of the "kode_pos" field in the mutation.
+func (m *KeluargaMutation) KodePos() (r string, exists bool) {
+	v := m.kode_pos
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKodePos returns the old "kode_pos" field's value of the Keluarga entity.
+// If the Keluarga object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KeluargaMutation) OldKodePos(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldKodePos is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldKodePos requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKodePos: %w", err)
+	}
+	return oldValue.KodePos, nil
+}
+
+// ClearKodePos clears the value of the "kode_pos" field.
+func (m *KeluargaMutation) ClearKodePos() {
+	m.kode_pos = nil
+	m.clearedFields[keluarga.FieldKodePos] = struct{}{}
+}
+
+// KodePosCleared returns if the "kode_pos" field was cleared in this mutation.
+func (m *KeluargaMutation) KodePosCleared() bool {
+	_, ok := m.clearedFields[keluarga.FieldKodePos]
+	return ok
+}
+
+// ResetKodePos resets all changes to the "kode_pos" field.
+func (m *KeluargaMutation) ResetKodePos() {
+	m.kode_pos = nil
+	delete(m.clearedFields, keluarga.FieldKodePos)
+}
+
+// SetStatusRumah sets the "status_rumah" field.
+func (m *KeluargaMutation) SetStatusRumah(s string) {
+	m.status_rumah = &s
+}
+
+// StatusRumah returns the value of the "status_rumah" field in the mutation.
+func (m *KeluargaMutation) StatusRumah() (r string, exists bool) {
+	v := m.status_rumah
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatusRumah returns the old "status_rumah" field's value of the Keluarga entity.
+// If the Keluarga object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KeluargaMutation) OldStatusRumah(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatusRumah is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatusRumah requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatusRumah: %w", err)
+	}
+	return oldValue.StatusRumah, nil
+}
+
+// ClearStatusRumah clears the value of the "status_rumah" field.
+func (m *KeluargaMutation) ClearStatusRumah() {
+	m.status_rumah = nil
+	m.clearedFields[keluarga.FieldStatusRumah] = struct{}{}
+}
+
+// StatusRumahCleared returns if the "status_rumah" field was cleared in this mutation.
+func (m *KeluargaMutation) StatusRumahCleared() bool {
+	_, ok := m.clearedFields[keluarga.FieldStatusRumah]
+	return ok
+}
+
+// ResetStatusRumah resets all changes to the "status_rumah" field.
+func (m *KeluargaMutation) ResetStatusRumah() {
+	m.status_rumah = nil
+	delete(m.clearedFields, keluarga.FieldStatusRumah)
+}
+
+// SetStatusEkonomi sets the "status_ekonomi" field.
+func (m *KeluargaMutation) SetStatusEkonomi(s string) {
+	m.status_ekonomi = &s
+}
+
+// StatusEkonomi returns the value of the "status_ekonomi" field in the mutation.
+func (m *KeluargaMutation) StatusEkonomi() (r string, exists bool) {
+	v := m.status_ekonomi
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatusEkonomi returns the old "status_ekonomi" field's value of the Keluarga entity.
+// If the Keluarga object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KeluargaMutation) OldStatusEkonomi(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatusEkonomi is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatusEkonomi requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatusEkonomi: %w", err)
+	}
+	return oldValue.StatusEkonomi, nil
+}
+
+// ClearStatusEkonomi clears the value of the "status_ekonomi" field.
+func (m *KeluargaMutation) ClearStatusEkonomi() {
+	m.status_ekonomi = nil
+	m.clearedFields[keluarga.FieldStatusEkonomi] = struct{}{}
+}
+
+// StatusEkonomiCleared returns if the "status_ekonomi" field was cleared in this mutation.
+func (m *KeluargaMutation) StatusEkonomiCleared() bool {
+	_, ok := m.clearedFields[keluarga.FieldStatusEkonomi]
+	return ok
+}
+
+// ResetStatusEkonomi resets all changes to the "status_ekonomi" field.
+func (m *KeluargaMutation) ResetStatusEkonomi() {
+	m.status_ekonomi = nil
+	delete(m.clearedFields, keluarga.FieldStatusEkonomi)
+}
+
+// SetAktif sets the "aktif" field.
+func (m *KeluargaMutation) SetAktif(b bool) {
+	m.aktif = &b
+}
+
+// Aktif returns the value of the "aktif" field in the mutation.
+func (m *KeluargaMutation) Aktif() (r bool, exists bool) {
+	v := m.aktif
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAktif returns the old "aktif" field's value of the Keluarga entity.
+// If the Keluarga object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KeluargaMutation) OldAktif(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAktif is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAktif requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAktif: %w", err)
+	}
+	return oldValue.Aktif, nil
+}
+
+// ResetAktif resets all changes to the "aktif" field.
+func (m *KeluargaMutation) ResetAktif() {
+	m.aktif = nil
+}
+
+// SetCatatan sets the "catatan" field.
+func (m *KeluargaMutation) SetCatatan(s string) {
+	m.catatan = &s
+}
+
+// Catatan returns the value of the "catatan" field in the mutation.
+func (m *KeluargaMutation) Catatan() (r string, exists bool) {
+	v := m.catatan
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCatatan returns the old "catatan" field's value of the Keluarga entity.
+// If the Keluarga object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KeluargaMutation) OldCatatan(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCatatan is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCatatan requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCatatan: %w", err)
+	}
+	return oldValue.Catatan, nil
+}
+
+// ClearCatatan clears the value of the "catatan" field.
+func (m *KeluargaMutation) ClearCatatan() {
+	m.catatan = nil
+	m.clearedFields[keluarga.FieldCatatan] = struct{}{}
+}
+
+// CatatanCleared returns if the "catatan" field was cleared in this mutation.
+func (m *KeluargaMutation) CatatanCleared() bool {
+	_, ok := m.clearedFields[keluarga.FieldCatatan]
+	return ok
+}
+
+// ResetCatatan resets all changes to the "catatan" field.
+func (m *KeluargaMutation) ResetCatatan() {
+	m.catatan = nil
+	delete(m.clearedFields, keluarga.FieldCatatan)
+}
+
+// AddAnggotumIDs adds the "anggota" edge to the Umat entity by ids.
+func (m *KeluargaMutation) AddAnggotumIDs(ids ...uuid.UUID) {
+	if m.anggota == nil {
+		m.anggota = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.anggota[ids[i]] = struct{}{}
+	}
+}
+
+// ClearAnggota clears the "anggota" edge to the Umat entity.
+func (m *KeluargaMutation) ClearAnggota() {
+	m.clearedanggota = true
+}
+
+// AnggotaCleared reports if the "anggota" edge to the Umat entity was cleared.
+func (m *KeluargaMutation) AnggotaCleared() bool {
+	return m.clearedanggota
+}
+
+// RemoveAnggotumIDs removes the "anggota" edge to the Umat entity by IDs.
+func (m *KeluargaMutation) RemoveAnggotumIDs(ids ...uuid.UUID) {
+	if m.removedanggota == nil {
+		m.removedanggota = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.anggota, ids[i])
+		m.removedanggota[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedAnggota returns the removed IDs of the "anggota" edge to the Umat entity.
+func (m *KeluargaMutation) RemovedAnggotaIDs() (ids []uuid.UUID) {
+	for id := range m.removedanggota {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// AnggotaIDs returns the "anggota" edge IDs in the mutation.
+func (m *KeluargaMutation) AnggotaIDs() (ids []uuid.UUID) {
+	for id := range m.anggota {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetAnggota resets all changes to the "anggota" edge.
+func (m *KeluargaMutation) ResetAnggota() {
+	m.anggota = nil
+	m.clearedanggota = false
+	m.removedanggota = nil
+}
+
+// Where appends a list predicates to the KeluargaMutation builder.
+func (m *KeluargaMutation) Where(ps ...predicate.Keluarga) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the KeluargaMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *KeluargaMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Keluarga, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *KeluargaMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *KeluargaMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Keluarga).
+func (m *KeluargaMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *KeluargaMutation) Fields() []string {
+	fields := make([]string, 0, 18)
+	if m.created_at != nil {
+		fields = append(fields, keluarga.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, keluarga.FieldUpdatedAt)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, keluarga.FieldDeletedAt)
+	}
+	if m.paroki_id != nil {
+		fields = append(fields, keluarga.FieldParokiID)
+	}
+	if m.wilayah_id != nil {
+		fields = append(fields, keluarga.FieldWilayahID)
+	}
+	if m.lingkungan_id != nil {
+		fields = append(fields, keluarga.FieldLingkunganID)
+	}
+	if m.nomor_kk_enc != nil {
+		fields = append(fields, keluarga.FieldNomorKkEnc)
+	}
+	if m.nomor_kk_hash != nil {
+		fields = append(fields, keluarga.FieldNomorKkHash)
+	}
+	if m.nama_keluarga != nil {
+		fields = append(fields, keluarga.FieldNamaKeluarga)
+	}
+	if m.alamat != nil {
+		fields = append(fields, keluarga.FieldAlamat)
+	}
+	if m.kota_id != nil {
+		fields = append(fields, keluarga.FieldKotaID)
+	}
+	if m.kecamatan_id != nil {
+		fields = append(fields, keluarga.FieldKecamatanID)
+	}
+	if m.kelurahan_id != nil {
+		fields = append(fields, keluarga.FieldKelurahanID)
+	}
+	if m.kode_pos != nil {
+		fields = append(fields, keluarga.FieldKodePos)
+	}
+	if m.status_rumah != nil {
+		fields = append(fields, keluarga.FieldStatusRumah)
+	}
+	if m.status_ekonomi != nil {
+		fields = append(fields, keluarga.FieldStatusEkonomi)
+	}
+	if m.aktif != nil {
+		fields = append(fields, keluarga.FieldAktif)
+	}
+	if m.catatan != nil {
+		fields = append(fields, keluarga.FieldCatatan)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *KeluargaMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case keluarga.FieldCreatedAt:
+		return m.CreatedAt()
+	case keluarga.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case keluarga.FieldDeletedAt:
+		return m.DeletedAt()
+	case keluarga.FieldParokiID:
+		return m.ParokiID()
+	case keluarga.FieldWilayahID:
+		return m.WilayahID()
+	case keluarga.FieldLingkunganID:
+		return m.LingkunganID()
+	case keluarga.FieldNomorKkEnc:
+		return m.NomorKkEnc()
+	case keluarga.FieldNomorKkHash:
+		return m.NomorKkHash()
+	case keluarga.FieldNamaKeluarga:
+		return m.NamaKeluarga()
+	case keluarga.FieldAlamat:
+		return m.Alamat()
+	case keluarga.FieldKotaID:
+		return m.KotaID()
+	case keluarga.FieldKecamatanID:
+		return m.KecamatanID()
+	case keluarga.FieldKelurahanID:
+		return m.KelurahanID()
+	case keluarga.FieldKodePos:
+		return m.KodePos()
+	case keluarga.FieldStatusRumah:
+		return m.StatusRumah()
+	case keluarga.FieldStatusEkonomi:
+		return m.StatusEkonomi()
+	case keluarga.FieldAktif:
+		return m.Aktif()
+	case keluarga.FieldCatatan:
+		return m.Catatan()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *KeluargaMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case keluarga.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case keluarga.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case keluarga.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case keluarga.FieldParokiID:
+		return m.OldParokiID(ctx)
+	case keluarga.FieldWilayahID:
+		return m.OldWilayahID(ctx)
+	case keluarga.FieldLingkunganID:
+		return m.OldLingkunganID(ctx)
+	case keluarga.FieldNomorKkEnc:
+		return m.OldNomorKkEnc(ctx)
+	case keluarga.FieldNomorKkHash:
+		return m.OldNomorKkHash(ctx)
+	case keluarga.FieldNamaKeluarga:
+		return m.OldNamaKeluarga(ctx)
+	case keluarga.FieldAlamat:
+		return m.OldAlamat(ctx)
+	case keluarga.FieldKotaID:
+		return m.OldKotaID(ctx)
+	case keluarga.FieldKecamatanID:
+		return m.OldKecamatanID(ctx)
+	case keluarga.FieldKelurahanID:
+		return m.OldKelurahanID(ctx)
+	case keluarga.FieldKodePos:
+		return m.OldKodePos(ctx)
+	case keluarga.FieldStatusRumah:
+		return m.OldStatusRumah(ctx)
+	case keluarga.FieldStatusEkonomi:
+		return m.OldStatusEkonomi(ctx)
+	case keluarga.FieldAktif:
+		return m.OldAktif(ctx)
+	case keluarga.FieldCatatan:
+		return m.OldCatatan(ctx)
+	}
+	return nil, fmt.Errorf("unknown Keluarga field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *KeluargaMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case keluarga.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case keluarga.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case keluarga.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case keluarga.FieldParokiID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetParokiID(v)
+		return nil
+	case keluarga.FieldWilayahID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWilayahID(v)
+		return nil
+	case keluarga.FieldLingkunganID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLingkunganID(v)
+		return nil
+	case keluarga.FieldNomorKkEnc:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNomorKkEnc(v)
+		return nil
+	case keluarga.FieldNomorKkHash:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNomorKkHash(v)
+		return nil
+	case keluarga.FieldNamaKeluarga:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNamaKeluarga(v)
+		return nil
+	case keluarga.FieldAlamat:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAlamat(v)
+		return nil
+	case keluarga.FieldKotaID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKotaID(v)
+		return nil
+	case keluarga.FieldKecamatanID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKecamatanID(v)
+		return nil
+	case keluarga.FieldKelurahanID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKelurahanID(v)
+		return nil
+	case keluarga.FieldKodePos:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKodePos(v)
+		return nil
+	case keluarga.FieldStatusRumah:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatusRumah(v)
+		return nil
+	case keluarga.FieldStatusEkonomi:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatusEkonomi(v)
+		return nil
+	case keluarga.FieldAktif:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAktif(v)
+		return nil
+	case keluarga.FieldCatatan:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCatatan(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Keluarga field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *KeluargaMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *KeluargaMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *KeluargaMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Keluarga numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *KeluargaMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(keluarga.FieldDeletedAt) {
+		fields = append(fields, keluarga.FieldDeletedAt)
+	}
+	if m.FieldCleared(keluarga.FieldWilayahID) {
+		fields = append(fields, keluarga.FieldWilayahID)
+	}
+	if m.FieldCleared(keluarga.FieldLingkunganID) {
+		fields = append(fields, keluarga.FieldLingkunganID)
+	}
+	if m.FieldCleared(keluarga.FieldNomorKkEnc) {
+		fields = append(fields, keluarga.FieldNomorKkEnc)
+	}
+	if m.FieldCleared(keluarga.FieldNomorKkHash) {
+		fields = append(fields, keluarga.FieldNomorKkHash)
+	}
+	if m.FieldCleared(keluarga.FieldAlamat) {
+		fields = append(fields, keluarga.FieldAlamat)
+	}
+	if m.FieldCleared(keluarga.FieldKotaID) {
+		fields = append(fields, keluarga.FieldKotaID)
+	}
+	if m.FieldCleared(keluarga.FieldKecamatanID) {
+		fields = append(fields, keluarga.FieldKecamatanID)
+	}
+	if m.FieldCleared(keluarga.FieldKelurahanID) {
+		fields = append(fields, keluarga.FieldKelurahanID)
+	}
+	if m.FieldCleared(keluarga.FieldKodePos) {
+		fields = append(fields, keluarga.FieldKodePos)
+	}
+	if m.FieldCleared(keluarga.FieldStatusRumah) {
+		fields = append(fields, keluarga.FieldStatusRumah)
+	}
+	if m.FieldCleared(keluarga.FieldStatusEkonomi) {
+		fields = append(fields, keluarga.FieldStatusEkonomi)
+	}
+	if m.FieldCleared(keluarga.FieldCatatan) {
+		fields = append(fields, keluarga.FieldCatatan)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *KeluargaMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *KeluargaMutation) ClearField(name string) error {
+	switch name {
+	case keluarga.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case keluarga.FieldWilayahID:
+		m.ClearWilayahID()
+		return nil
+	case keluarga.FieldLingkunganID:
+		m.ClearLingkunganID()
+		return nil
+	case keluarga.FieldNomorKkEnc:
+		m.ClearNomorKkEnc()
+		return nil
+	case keluarga.FieldNomorKkHash:
+		m.ClearNomorKkHash()
+		return nil
+	case keluarga.FieldAlamat:
+		m.ClearAlamat()
+		return nil
+	case keluarga.FieldKotaID:
+		m.ClearKotaID()
+		return nil
+	case keluarga.FieldKecamatanID:
+		m.ClearKecamatanID()
+		return nil
+	case keluarga.FieldKelurahanID:
+		m.ClearKelurahanID()
+		return nil
+	case keluarga.FieldKodePos:
+		m.ClearKodePos()
+		return nil
+	case keluarga.FieldStatusRumah:
+		m.ClearStatusRumah()
+		return nil
+	case keluarga.FieldStatusEkonomi:
+		m.ClearStatusEkonomi()
+		return nil
+	case keluarga.FieldCatatan:
+		m.ClearCatatan()
+		return nil
+	}
+	return fmt.Errorf("unknown Keluarga nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *KeluargaMutation) ResetField(name string) error {
+	switch name {
+	case keluarga.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case keluarga.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case keluarga.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case keluarga.FieldParokiID:
+		m.ResetParokiID()
+		return nil
+	case keluarga.FieldWilayahID:
+		m.ResetWilayahID()
+		return nil
+	case keluarga.FieldLingkunganID:
+		m.ResetLingkunganID()
+		return nil
+	case keluarga.FieldNomorKkEnc:
+		m.ResetNomorKkEnc()
+		return nil
+	case keluarga.FieldNomorKkHash:
+		m.ResetNomorKkHash()
+		return nil
+	case keluarga.FieldNamaKeluarga:
+		m.ResetNamaKeluarga()
+		return nil
+	case keluarga.FieldAlamat:
+		m.ResetAlamat()
+		return nil
+	case keluarga.FieldKotaID:
+		m.ResetKotaID()
+		return nil
+	case keluarga.FieldKecamatanID:
+		m.ResetKecamatanID()
+		return nil
+	case keluarga.FieldKelurahanID:
+		m.ResetKelurahanID()
+		return nil
+	case keluarga.FieldKodePos:
+		m.ResetKodePos()
+		return nil
+	case keluarga.FieldStatusRumah:
+		m.ResetStatusRumah()
+		return nil
+	case keluarga.FieldStatusEkonomi:
+		m.ResetStatusEkonomi()
+		return nil
+	case keluarga.FieldAktif:
+		m.ResetAktif()
+		return nil
+	case keluarga.FieldCatatan:
+		m.ResetCatatan()
+		return nil
+	}
+	return fmt.Errorf("unknown Keluarga field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *KeluargaMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.anggota != nil {
+		edges = append(edges, keluarga.EdgeAnggota)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *KeluargaMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case keluarga.EdgeAnggota:
+		ids := make([]ent.Value, 0, len(m.anggota))
+		for id := range m.anggota {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *KeluargaMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.removedanggota != nil {
+		edges = append(edges, keluarga.EdgeAnggota)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *KeluargaMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case keluarga.EdgeAnggota:
+		ids := make([]ent.Value, 0, len(m.removedanggota))
+		for id := range m.removedanggota {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *KeluargaMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedanggota {
+		edges = append(edges, keluarga.EdgeAnggota)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *KeluargaMutation) EdgeCleared(name string) bool {
+	switch name {
+	case keluarga.EdgeAnggota:
+		return m.clearedanggota
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *KeluargaMutation) ClearEdge(name string) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Keluarga unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *KeluargaMutation) ResetEdge(name string) error {
+	switch name {
+	case keluarga.EdgeAnggota:
+		m.ResetAnggota()
+		return nil
+	}
+	return fmt.Errorf("unknown Keluarga edge %s", name)
 }
 
 // KelurahanMutation represents an operation that mutates the Kelurahan nodes in the graph.
@@ -21423,6 +23022,7 @@ type ParokiMemberMutation struct {
 	updated_at    *time.Time
 	user_id       *uuid.UUID
 	role          *parokimember.Role
+	umat_admin    *bool
 	clearedFields map[string]struct{}
 	paroki        *uuid.UUID
 	clearedparoki bool
@@ -21715,6 +23315,42 @@ func (m *ParokiMemberMutation) ResetRole() {
 	m.role = nil
 }
 
+// SetUmatAdmin sets the "umat_admin" field.
+func (m *ParokiMemberMutation) SetUmatAdmin(b bool) {
+	m.umat_admin = &b
+}
+
+// UmatAdmin returns the value of the "umat_admin" field in the mutation.
+func (m *ParokiMemberMutation) UmatAdmin() (r bool, exists bool) {
+	v := m.umat_admin
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUmatAdmin returns the old "umat_admin" field's value of the ParokiMember entity.
+// If the ParokiMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ParokiMemberMutation) OldUmatAdmin(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUmatAdmin is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUmatAdmin requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUmatAdmin: %w", err)
+	}
+	return oldValue.UmatAdmin, nil
+}
+
+// ResetUmatAdmin resets all changes to the "umat_admin" field.
+func (m *ParokiMemberMutation) ResetUmatAdmin() {
+	m.umat_admin = nil
+}
+
 // ClearParoki clears the "paroki" edge to the Paroki entity.
 func (m *ParokiMemberMutation) ClearParoki() {
 	m.clearedparoki = true
@@ -21776,7 +23412,7 @@ func (m *ParokiMemberMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ParokiMemberMutation) Fields() []string {
-	fields := make([]string, 0, 5)
+	fields := make([]string, 0, 6)
 	if m.created_at != nil {
 		fields = append(fields, parokimember.FieldCreatedAt)
 	}
@@ -21791,6 +23427,9 @@ func (m *ParokiMemberMutation) Fields() []string {
 	}
 	if m.role != nil {
 		fields = append(fields, parokimember.FieldRole)
+	}
+	if m.umat_admin != nil {
+		fields = append(fields, parokimember.FieldUmatAdmin)
 	}
 	return fields
 }
@@ -21810,6 +23449,8 @@ func (m *ParokiMemberMutation) Field(name string) (ent.Value, bool) {
 		return m.UserID()
 	case parokimember.FieldRole:
 		return m.Role()
+	case parokimember.FieldUmatAdmin:
+		return m.UmatAdmin()
 	}
 	return nil, false
 }
@@ -21829,6 +23470,8 @@ func (m *ParokiMemberMutation) OldField(ctx context.Context, name string) (ent.V
 		return m.OldUserID(ctx)
 	case parokimember.FieldRole:
 		return m.OldRole(ctx)
+	case parokimember.FieldUmatAdmin:
+		return m.OldUmatAdmin(ctx)
 	}
 	return nil, fmt.Errorf("unknown ParokiMember field %s", name)
 }
@@ -21872,6 +23515,13 @@ func (m *ParokiMemberMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetRole(v)
+		return nil
+	case parokimember.FieldUmatAdmin:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUmatAdmin(v)
 		return nil
 	}
 	return fmt.Errorf("unknown ParokiMember field %s", name)
@@ -21936,6 +23586,9 @@ func (m *ParokiMemberMutation) ResetField(name string) error {
 		return nil
 	case parokimember.FieldRole:
 		m.ResetRole()
+		return nil
+	case parokimember.FieldUmatAdmin:
+		m.ResetUmatAdmin()
 		return nil
 	}
 	return fmt.Errorf("unknown ParokiMember field %s", name)
@@ -23455,6 +25108,4275 @@ func (m *SettingMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *SettingMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown Setting edge %s", name)
+}
+
+// UmatMutation represents an operation that mutates the Umat nodes in the graph.
+type UmatMutation struct {
+	config
+	op                Op
+	typ               string
+	id                *uuid.UUID
+	created_at        *time.Time
+	updated_at        *time.Time
+	deleted_at        *time.Time
+	paroki_id         *uuid.UUID
+	wilayah_id        *uuid.UUID
+	lingkungan_id     *uuid.UUID
+	user_id           *uuid.UUID
+	nama              *string
+	nama_baptis       *string
+	nik_enc           *string
+	nik_hash          *string
+	jenis_kelamin     *umat.JenisKelamin
+	tempat_lahir      *string
+	tanggal_lahir     *string
+	golongan_darah    *string
+	suku              *string
+	agama             *string
+	kewarganegaraan   *string
+	negara            *string
+	hubungan_keluarga *string
+	status_pernikahan *string
+	almarhum          *bool
+	tanggal_meninggal *string
+	alamat            *string
+	kota_id           *uuid.UUID
+	kecamatan_id      *uuid.UUID
+	kelurahan_id      *uuid.UUID
+	telepon           *string
+	email             *string
+	foto_url          *string
+	pendidikan        *string
+	jurusan           *string
+	pekerjaan         *string
+	profesi           *string
+	keterampilan      *string
+	disabilitas       *string
+	aktivitas_sosial  *string
+	clearedFields     map[string]struct{}
+	keluarga          *uuid.UUID
+	clearedkeluarga   bool
+	sakramen          map[uuid.UUID]struct{}
+	removedsakramen   map[uuid.UUID]struct{}
+	clearedsakramen   bool
+	done              bool
+	oldValue          func(context.Context) (*Umat, error)
+	predicates        []predicate.Umat
+}
+
+var _ ent.Mutation = (*UmatMutation)(nil)
+
+// umatOption allows management of the mutation configuration using functional options.
+type umatOption func(*UmatMutation)
+
+// newUmatMutation creates new mutation for the Umat entity.
+func newUmatMutation(c config, op Op, opts ...umatOption) *UmatMutation {
+	m := &UmatMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeUmat,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withUmatID sets the ID field of the mutation.
+func withUmatID(id uuid.UUID) umatOption {
+	return func(m *UmatMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Umat
+		)
+		m.oldValue = func(ctx context.Context) (*Umat, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Umat.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withUmat sets the old Umat of the mutation.
+func withUmat(node *Umat) umatOption {
+	return func(m *UmatMutation) {
+		m.oldValue = func(context.Context) (*Umat, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m UmatMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m UmatMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Umat entities.
+func (m *UmatMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *UmatMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *UmatMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Umat.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *UmatMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *UmatMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *UmatMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *UmatMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *UmatMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *UmatMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *UmatMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *UmatMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *UmatMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[umat.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *UmatMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[umat.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *UmatMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, umat.FieldDeletedAt)
+}
+
+// SetParokiID sets the "paroki_id" field.
+func (m *UmatMutation) SetParokiID(u uuid.UUID) {
+	m.paroki_id = &u
+}
+
+// ParokiID returns the value of the "paroki_id" field in the mutation.
+func (m *UmatMutation) ParokiID() (r uuid.UUID, exists bool) {
+	v := m.paroki_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldParokiID returns the old "paroki_id" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldParokiID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldParokiID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldParokiID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldParokiID: %w", err)
+	}
+	return oldValue.ParokiID, nil
+}
+
+// ResetParokiID resets all changes to the "paroki_id" field.
+func (m *UmatMutation) ResetParokiID() {
+	m.paroki_id = nil
+}
+
+// SetKeluargaID sets the "keluarga_id" field.
+func (m *UmatMutation) SetKeluargaID(u uuid.UUID) {
+	m.keluarga = &u
+}
+
+// KeluargaID returns the value of the "keluarga_id" field in the mutation.
+func (m *UmatMutation) KeluargaID() (r uuid.UUID, exists bool) {
+	v := m.keluarga
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKeluargaID returns the old "keluarga_id" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldKeluargaID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldKeluargaID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldKeluargaID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKeluargaID: %w", err)
+	}
+	return oldValue.KeluargaID, nil
+}
+
+// ClearKeluargaID clears the value of the "keluarga_id" field.
+func (m *UmatMutation) ClearKeluargaID() {
+	m.keluarga = nil
+	m.clearedFields[umat.FieldKeluargaID] = struct{}{}
+}
+
+// KeluargaIDCleared returns if the "keluarga_id" field was cleared in this mutation.
+func (m *UmatMutation) KeluargaIDCleared() bool {
+	_, ok := m.clearedFields[umat.FieldKeluargaID]
+	return ok
+}
+
+// ResetKeluargaID resets all changes to the "keluarga_id" field.
+func (m *UmatMutation) ResetKeluargaID() {
+	m.keluarga = nil
+	delete(m.clearedFields, umat.FieldKeluargaID)
+}
+
+// SetWilayahID sets the "wilayah_id" field.
+func (m *UmatMutation) SetWilayahID(u uuid.UUID) {
+	m.wilayah_id = &u
+}
+
+// WilayahID returns the value of the "wilayah_id" field in the mutation.
+func (m *UmatMutation) WilayahID() (r uuid.UUID, exists bool) {
+	v := m.wilayah_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWilayahID returns the old "wilayah_id" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldWilayahID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWilayahID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWilayahID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWilayahID: %w", err)
+	}
+	return oldValue.WilayahID, nil
+}
+
+// ClearWilayahID clears the value of the "wilayah_id" field.
+func (m *UmatMutation) ClearWilayahID() {
+	m.wilayah_id = nil
+	m.clearedFields[umat.FieldWilayahID] = struct{}{}
+}
+
+// WilayahIDCleared returns if the "wilayah_id" field was cleared in this mutation.
+func (m *UmatMutation) WilayahIDCleared() bool {
+	_, ok := m.clearedFields[umat.FieldWilayahID]
+	return ok
+}
+
+// ResetWilayahID resets all changes to the "wilayah_id" field.
+func (m *UmatMutation) ResetWilayahID() {
+	m.wilayah_id = nil
+	delete(m.clearedFields, umat.FieldWilayahID)
+}
+
+// SetLingkunganID sets the "lingkungan_id" field.
+func (m *UmatMutation) SetLingkunganID(u uuid.UUID) {
+	m.lingkungan_id = &u
+}
+
+// LingkunganID returns the value of the "lingkungan_id" field in the mutation.
+func (m *UmatMutation) LingkunganID() (r uuid.UUID, exists bool) {
+	v := m.lingkungan_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLingkunganID returns the old "lingkungan_id" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldLingkunganID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLingkunganID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLingkunganID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLingkunganID: %w", err)
+	}
+	return oldValue.LingkunganID, nil
+}
+
+// ClearLingkunganID clears the value of the "lingkungan_id" field.
+func (m *UmatMutation) ClearLingkunganID() {
+	m.lingkungan_id = nil
+	m.clearedFields[umat.FieldLingkunganID] = struct{}{}
+}
+
+// LingkunganIDCleared returns if the "lingkungan_id" field was cleared in this mutation.
+func (m *UmatMutation) LingkunganIDCleared() bool {
+	_, ok := m.clearedFields[umat.FieldLingkunganID]
+	return ok
+}
+
+// ResetLingkunganID resets all changes to the "lingkungan_id" field.
+func (m *UmatMutation) ResetLingkunganID() {
+	m.lingkungan_id = nil
+	delete(m.clearedFields, umat.FieldLingkunganID)
+}
+
+// SetUserID sets the "user_id" field.
+func (m *UmatMutation) SetUserID(u uuid.UUID) {
+	m.user_id = &u
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *UmatMutation) UserID() (r uuid.UUID, exists bool) {
+	v := m.user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldUserID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// ClearUserID clears the value of the "user_id" field.
+func (m *UmatMutation) ClearUserID() {
+	m.user_id = nil
+	m.clearedFields[umat.FieldUserID] = struct{}{}
+}
+
+// UserIDCleared returns if the "user_id" field was cleared in this mutation.
+func (m *UmatMutation) UserIDCleared() bool {
+	_, ok := m.clearedFields[umat.FieldUserID]
+	return ok
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *UmatMutation) ResetUserID() {
+	m.user_id = nil
+	delete(m.clearedFields, umat.FieldUserID)
+}
+
+// SetNama sets the "nama" field.
+func (m *UmatMutation) SetNama(s string) {
+	m.nama = &s
+}
+
+// Nama returns the value of the "nama" field in the mutation.
+func (m *UmatMutation) Nama() (r string, exists bool) {
+	v := m.nama
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNama returns the old "nama" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldNama(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNama is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNama requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNama: %w", err)
+	}
+	return oldValue.Nama, nil
+}
+
+// ResetNama resets all changes to the "nama" field.
+func (m *UmatMutation) ResetNama() {
+	m.nama = nil
+}
+
+// SetNamaBaptis sets the "nama_baptis" field.
+func (m *UmatMutation) SetNamaBaptis(s string) {
+	m.nama_baptis = &s
+}
+
+// NamaBaptis returns the value of the "nama_baptis" field in the mutation.
+func (m *UmatMutation) NamaBaptis() (r string, exists bool) {
+	v := m.nama_baptis
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNamaBaptis returns the old "nama_baptis" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldNamaBaptis(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNamaBaptis is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNamaBaptis requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNamaBaptis: %w", err)
+	}
+	return oldValue.NamaBaptis, nil
+}
+
+// ClearNamaBaptis clears the value of the "nama_baptis" field.
+func (m *UmatMutation) ClearNamaBaptis() {
+	m.nama_baptis = nil
+	m.clearedFields[umat.FieldNamaBaptis] = struct{}{}
+}
+
+// NamaBaptisCleared returns if the "nama_baptis" field was cleared in this mutation.
+func (m *UmatMutation) NamaBaptisCleared() bool {
+	_, ok := m.clearedFields[umat.FieldNamaBaptis]
+	return ok
+}
+
+// ResetNamaBaptis resets all changes to the "nama_baptis" field.
+func (m *UmatMutation) ResetNamaBaptis() {
+	m.nama_baptis = nil
+	delete(m.clearedFields, umat.FieldNamaBaptis)
+}
+
+// SetNikEnc sets the "nik_enc" field.
+func (m *UmatMutation) SetNikEnc(s string) {
+	m.nik_enc = &s
+}
+
+// NikEnc returns the value of the "nik_enc" field in the mutation.
+func (m *UmatMutation) NikEnc() (r string, exists bool) {
+	v := m.nik_enc
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNikEnc returns the old "nik_enc" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldNikEnc(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNikEnc is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNikEnc requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNikEnc: %w", err)
+	}
+	return oldValue.NikEnc, nil
+}
+
+// ClearNikEnc clears the value of the "nik_enc" field.
+func (m *UmatMutation) ClearNikEnc() {
+	m.nik_enc = nil
+	m.clearedFields[umat.FieldNikEnc] = struct{}{}
+}
+
+// NikEncCleared returns if the "nik_enc" field was cleared in this mutation.
+func (m *UmatMutation) NikEncCleared() bool {
+	_, ok := m.clearedFields[umat.FieldNikEnc]
+	return ok
+}
+
+// ResetNikEnc resets all changes to the "nik_enc" field.
+func (m *UmatMutation) ResetNikEnc() {
+	m.nik_enc = nil
+	delete(m.clearedFields, umat.FieldNikEnc)
+}
+
+// SetNikHash sets the "nik_hash" field.
+func (m *UmatMutation) SetNikHash(s string) {
+	m.nik_hash = &s
+}
+
+// NikHash returns the value of the "nik_hash" field in the mutation.
+func (m *UmatMutation) NikHash() (r string, exists bool) {
+	v := m.nik_hash
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNikHash returns the old "nik_hash" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldNikHash(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNikHash is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNikHash requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNikHash: %w", err)
+	}
+	return oldValue.NikHash, nil
+}
+
+// ClearNikHash clears the value of the "nik_hash" field.
+func (m *UmatMutation) ClearNikHash() {
+	m.nik_hash = nil
+	m.clearedFields[umat.FieldNikHash] = struct{}{}
+}
+
+// NikHashCleared returns if the "nik_hash" field was cleared in this mutation.
+func (m *UmatMutation) NikHashCleared() bool {
+	_, ok := m.clearedFields[umat.FieldNikHash]
+	return ok
+}
+
+// ResetNikHash resets all changes to the "nik_hash" field.
+func (m *UmatMutation) ResetNikHash() {
+	m.nik_hash = nil
+	delete(m.clearedFields, umat.FieldNikHash)
+}
+
+// SetJenisKelamin sets the "jenis_kelamin" field.
+func (m *UmatMutation) SetJenisKelamin(uk umat.JenisKelamin) {
+	m.jenis_kelamin = &uk
+}
+
+// JenisKelamin returns the value of the "jenis_kelamin" field in the mutation.
+func (m *UmatMutation) JenisKelamin() (r umat.JenisKelamin, exists bool) {
+	v := m.jenis_kelamin
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldJenisKelamin returns the old "jenis_kelamin" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldJenisKelamin(ctx context.Context) (v umat.JenisKelamin, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldJenisKelamin is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldJenisKelamin requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldJenisKelamin: %w", err)
+	}
+	return oldValue.JenisKelamin, nil
+}
+
+// ResetJenisKelamin resets all changes to the "jenis_kelamin" field.
+func (m *UmatMutation) ResetJenisKelamin() {
+	m.jenis_kelamin = nil
+}
+
+// SetTempatLahir sets the "tempat_lahir" field.
+func (m *UmatMutation) SetTempatLahir(s string) {
+	m.tempat_lahir = &s
+}
+
+// TempatLahir returns the value of the "tempat_lahir" field in the mutation.
+func (m *UmatMutation) TempatLahir() (r string, exists bool) {
+	v := m.tempat_lahir
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTempatLahir returns the old "tempat_lahir" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldTempatLahir(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTempatLahir is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTempatLahir requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTempatLahir: %w", err)
+	}
+	return oldValue.TempatLahir, nil
+}
+
+// ClearTempatLahir clears the value of the "tempat_lahir" field.
+func (m *UmatMutation) ClearTempatLahir() {
+	m.tempat_lahir = nil
+	m.clearedFields[umat.FieldTempatLahir] = struct{}{}
+}
+
+// TempatLahirCleared returns if the "tempat_lahir" field was cleared in this mutation.
+func (m *UmatMutation) TempatLahirCleared() bool {
+	_, ok := m.clearedFields[umat.FieldTempatLahir]
+	return ok
+}
+
+// ResetTempatLahir resets all changes to the "tempat_lahir" field.
+func (m *UmatMutation) ResetTempatLahir() {
+	m.tempat_lahir = nil
+	delete(m.clearedFields, umat.FieldTempatLahir)
+}
+
+// SetTanggalLahir sets the "tanggal_lahir" field.
+func (m *UmatMutation) SetTanggalLahir(s string) {
+	m.tanggal_lahir = &s
+}
+
+// TanggalLahir returns the value of the "tanggal_lahir" field in the mutation.
+func (m *UmatMutation) TanggalLahir() (r string, exists bool) {
+	v := m.tanggal_lahir
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTanggalLahir returns the old "tanggal_lahir" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldTanggalLahir(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTanggalLahir is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTanggalLahir requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTanggalLahir: %w", err)
+	}
+	return oldValue.TanggalLahir, nil
+}
+
+// ClearTanggalLahir clears the value of the "tanggal_lahir" field.
+func (m *UmatMutation) ClearTanggalLahir() {
+	m.tanggal_lahir = nil
+	m.clearedFields[umat.FieldTanggalLahir] = struct{}{}
+}
+
+// TanggalLahirCleared returns if the "tanggal_lahir" field was cleared in this mutation.
+func (m *UmatMutation) TanggalLahirCleared() bool {
+	_, ok := m.clearedFields[umat.FieldTanggalLahir]
+	return ok
+}
+
+// ResetTanggalLahir resets all changes to the "tanggal_lahir" field.
+func (m *UmatMutation) ResetTanggalLahir() {
+	m.tanggal_lahir = nil
+	delete(m.clearedFields, umat.FieldTanggalLahir)
+}
+
+// SetGolonganDarah sets the "golongan_darah" field.
+func (m *UmatMutation) SetGolonganDarah(s string) {
+	m.golongan_darah = &s
+}
+
+// GolonganDarah returns the value of the "golongan_darah" field in the mutation.
+func (m *UmatMutation) GolonganDarah() (r string, exists bool) {
+	v := m.golongan_darah
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGolonganDarah returns the old "golongan_darah" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldGolonganDarah(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGolonganDarah is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGolonganDarah requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGolonganDarah: %w", err)
+	}
+	return oldValue.GolonganDarah, nil
+}
+
+// ClearGolonganDarah clears the value of the "golongan_darah" field.
+func (m *UmatMutation) ClearGolonganDarah() {
+	m.golongan_darah = nil
+	m.clearedFields[umat.FieldGolonganDarah] = struct{}{}
+}
+
+// GolonganDarahCleared returns if the "golongan_darah" field was cleared in this mutation.
+func (m *UmatMutation) GolonganDarahCleared() bool {
+	_, ok := m.clearedFields[umat.FieldGolonganDarah]
+	return ok
+}
+
+// ResetGolonganDarah resets all changes to the "golongan_darah" field.
+func (m *UmatMutation) ResetGolonganDarah() {
+	m.golongan_darah = nil
+	delete(m.clearedFields, umat.FieldGolonganDarah)
+}
+
+// SetSuku sets the "suku" field.
+func (m *UmatMutation) SetSuku(s string) {
+	m.suku = &s
+}
+
+// Suku returns the value of the "suku" field in the mutation.
+func (m *UmatMutation) Suku() (r string, exists bool) {
+	v := m.suku
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSuku returns the old "suku" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldSuku(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSuku is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSuku requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSuku: %w", err)
+	}
+	return oldValue.Suku, nil
+}
+
+// ClearSuku clears the value of the "suku" field.
+func (m *UmatMutation) ClearSuku() {
+	m.suku = nil
+	m.clearedFields[umat.FieldSuku] = struct{}{}
+}
+
+// SukuCleared returns if the "suku" field was cleared in this mutation.
+func (m *UmatMutation) SukuCleared() bool {
+	_, ok := m.clearedFields[umat.FieldSuku]
+	return ok
+}
+
+// ResetSuku resets all changes to the "suku" field.
+func (m *UmatMutation) ResetSuku() {
+	m.suku = nil
+	delete(m.clearedFields, umat.FieldSuku)
+}
+
+// SetAgama sets the "agama" field.
+func (m *UmatMutation) SetAgama(s string) {
+	m.agama = &s
+}
+
+// Agama returns the value of the "agama" field in the mutation.
+func (m *UmatMutation) Agama() (r string, exists bool) {
+	v := m.agama
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAgama returns the old "agama" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldAgama(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAgama is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAgama requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAgama: %w", err)
+	}
+	return oldValue.Agama, nil
+}
+
+// ClearAgama clears the value of the "agama" field.
+func (m *UmatMutation) ClearAgama() {
+	m.agama = nil
+	m.clearedFields[umat.FieldAgama] = struct{}{}
+}
+
+// AgamaCleared returns if the "agama" field was cleared in this mutation.
+func (m *UmatMutation) AgamaCleared() bool {
+	_, ok := m.clearedFields[umat.FieldAgama]
+	return ok
+}
+
+// ResetAgama resets all changes to the "agama" field.
+func (m *UmatMutation) ResetAgama() {
+	m.agama = nil
+	delete(m.clearedFields, umat.FieldAgama)
+}
+
+// SetKewarganegaraan sets the "kewarganegaraan" field.
+func (m *UmatMutation) SetKewarganegaraan(s string) {
+	m.kewarganegaraan = &s
+}
+
+// Kewarganegaraan returns the value of the "kewarganegaraan" field in the mutation.
+func (m *UmatMutation) Kewarganegaraan() (r string, exists bool) {
+	v := m.kewarganegaraan
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKewarganegaraan returns the old "kewarganegaraan" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldKewarganegaraan(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldKewarganegaraan is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldKewarganegaraan requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKewarganegaraan: %w", err)
+	}
+	return oldValue.Kewarganegaraan, nil
+}
+
+// ClearKewarganegaraan clears the value of the "kewarganegaraan" field.
+func (m *UmatMutation) ClearKewarganegaraan() {
+	m.kewarganegaraan = nil
+	m.clearedFields[umat.FieldKewarganegaraan] = struct{}{}
+}
+
+// KewarganegaraanCleared returns if the "kewarganegaraan" field was cleared in this mutation.
+func (m *UmatMutation) KewarganegaraanCleared() bool {
+	_, ok := m.clearedFields[umat.FieldKewarganegaraan]
+	return ok
+}
+
+// ResetKewarganegaraan resets all changes to the "kewarganegaraan" field.
+func (m *UmatMutation) ResetKewarganegaraan() {
+	m.kewarganegaraan = nil
+	delete(m.clearedFields, umat.FieldKewarganegaraan)
+}
+
+// SetNegara sets the "negara" field.
+func (m *UmatMutation) SetNegara(s string) {
+	m.negara = &s
+}
+
+// Negara returns the value of the "negara" field in the mutation.
+func (m *UmatMutation) Negara() (r string, exists bool) {
+	v := m.negara
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNegara returns the old "negara" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldNegara(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNegara is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNegara requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNegara: %w", err)
+	}
+	return oldValue.Negara, nil
+}
+
+// ClearNegara clears the value of the "negara" field.
+func (m *UmatMutation) ClearNegara() {
+	m.negara = nil
+	m.clearedFields[umat.FieldNegara] = struct{}{}
+}
+
+// NegaraCleared returns if the "negara" field was cleared in this mutation.
+func (m *UmatMutation) NegaraCleared() bool {
+	_, ok := m.clearedFields[umat.FieldNegara]
+	return ok
+}
+
+// ResetNegara resets all changes to the "negara" field.
+func (m *UmatMutation) ResetNegara() {
+	m.negara = nil
+	delete(m.clearedFields, umat.FieldNegara)
+}
+
+// SetHubunganKeluarga sets the "hubungan_keluarga" field.
+func (m *UmatMutation) SetHubunganKeluarga(s string) {
+	m.hubungan_keluarga = &s
+}
+
+// HubunganKeluarga returns the value of the "hubungan_keluarga" field in the mutation.
+func (m *UmatMutation) HubunganKeluarga() (r string, exists bool) {
+	v := m.hubungan_keluarga
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldHubunganKeluarga returns the old "hubungan_keluarga" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldHubunganKeluarga(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldHubunganKeluarga is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldHubunganKeluarga requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldHubunganKeluarga: %w", err)
+	}
+	return oldValue.HubunganKeluarga, nil
+}
+
+// ClearHubunganKeluarga clears the value of the "hubungan_keluarga" field.
+func (m *UmatMutation) ClearHubunganKeluarga() {
+	m.hubungan_keluarga = nil
+	m.clearedFields[umat.FieldHubunganKeluarga] = struct{}{}
+}
+
+// HubunganKeluargaCleared returns if the "hubungan_keluarga" field was cleared in this mutation.
+func (m *UmatMutation) HubunganKeluargaCleared() bool {
+	_, ok := m.clearedFields[umat.FieldHubunganKeluarga]
+	return ok
+}
+
+// ResetHubunganKeluarga resets all changes to the "hubungan_keluarga" field.
+func (m *UmatMutation) ResetHubunganKeluarga() {
+	m.hubungan_keluarga = nil
+	delete(m.clearedFields, umat.FieldHubunganKeluarga)
+}
+
+// SetStatusPernikahan sets the "status_pernikahan" field.
+func (m *UmatMutation) SetStatusPernikahan(s string) {
+	m.status_pernikahan = &s
+}
+
+// StatusPernikahan returns the value of the "status_pernikahan" field in the mutation.
+func (m *UmatMutation) StatusPernikahan() (r string, exists bool) {
+	v := m.status_pernikahan
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatusPernikahan returns the old "status_pernikahan" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldStatusPernikahan(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatusPernikahan is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatusPernikahan requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatusPernikahan: %w", err)
+	}
+	return oldValue.StatusPernikahan, nil
+}
+
+// ClearStatusPernikahan clears the value of the "status_pernikahan" field.
+func (m *UmatMutation) ClearStatusPernikahan() {
+	m.status_pernikahan = nil
+	m.clearedFields[umat.FieldStatusPernikahan] = struct{}{}
+}
+
+// StatusPernikahanCleared returns if the "status_pernikahan" field was cleared in this mutation.
+func (m *UmatMutation) StatusPernikahanCleared() bool {
+	_, ok := m.clearedFields[umat.FieldStatusPernikahan]
+	return ok
+}
+
+// ResetStatusPernikahan resets all changes to the "status_pernikahan" field.
+func (m *UmatMutation) ResetStatusPernikahan() {
+	m.status_pernikahan = nil
+	delete(m.clearedFields, umat.FieldStatusPernikahan)
+}
+
+// SetAlmarhum sets the "almarhum" field.
+func (m *UmatMutation) SetAlmarhum(b bool) {
+	m.almarhum = &b
+}
+
+// Almarhum returns the value of the "almarhum" field in the mutation.
+func (m *UmatMutation) Almarhum() (r bool, exists bool) {
+	v := m.almarhum
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAlmarhum returns the old "almarhum" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldAlmarhum(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAlmarhum is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAlmarhum requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAlmarhum: %w", err)
+	}
+	return oldValue.Almarhum, nil
+}
+
+// ResetAlmarhum resets all changes to the "almarhum" field.
+func (m *UmatMutation) ResetAlmarhum() {
+	m.almarhum = nil
+}
+
+// SetTanggalMeninggal sets the "tanggal_meninggal" field.
+func (m *UmatMutation) SetTanggalMeninggal(s string) {
+	m.tanggal_meninggal = &s
+}
+
+// TanggalMeninggal returns the value of the "tanggal_meninggal" field in the mutation.
+func (m *UmatMutation) TanggalMeninggal() (r string, exists bool) {
+	v := m.tanggal_meninggal
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTanggalMeninggal returns the old "tanggal_meninggal" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldTanggalMeninggal(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTanggalMeninggal is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTanggalMeninggal requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTanggalMeninggal: %w", err)
+	}
+	return oldValue.TanggalMeninggal, nil
+}
+
+// ClearTanggalMeninggal clears the value of the "tanggal_meninggal" field.
+func (m *UmatMutation) ClearTanggalMeninggal() {
+	m.tanggal_meninggal = nil
+	m.clearedFields[umat.FieldTanggalMeninggal] = struct{}{}
+}
+
+// TanggalMeninggalCleared returns if the "tanggal_meninggal" field was cleared in this mutation.
+func (m *UmatMutation) TanggalMeninggalCleared() bool {
+	_, ok := m.clearedFields[umat.FieldTanggalMeninggal]
+	return ok
+}
+
+// ResetTanggalMeninggal resets all changes to the "tanggal_meninggal" field.
+func (m *UmatMutation) ResetTanggalMeninggal() {
+	m.tanggal_meninggal = nil
+	delete(m.clearedFields, umat.FieldTanggalMeninggal)
+}
+
+// SetAlamat sets the "alamat" field.
+func (m *UmatMutation) SetAlamat(s string) {
+	m.alamat = &s
+}
+
+// Alamat returns the value of the "alamat" field in the mutation.
+func (m *UmatMutation) Alamat() (r string, exists bool) {
+	v := m.alamat
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAlamat returns the old "alamat" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldAlamat(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAlamat is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAlamat requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAlamat: %w", err)
+	}
+	return oldValue.Alamat, nil
+}
+
+// ClearAlamat clears the value of the "alamat" field.
+func (m *UmatMutation) ClearAlamat() {
+	m.alamat = nil
+	m.clearedFields[umat.FieldAlamat] = struct{}{}
+}
+
+// AlamatCleared returns if the "alamat" field was cleared in this mutation.
+func (m *UmatMutation) AlamatCleared() bool {
+	_, ok := m.clearedFields[umat.FieldAlamat]
+	return ok
+}
+
+// ResetAlamat resets all changes to the "alamat" field.
+func (m *UmatMutation) ResetAlamat() {
+	m.alamat = nil
+	delete(m.clearedFields, umat.FieldAlamat)
+}
+
+// SetKotaID sets the "kota_id" field.
+func (m *UmatMutation) SetKotaID(u uuid.UUID) {
+	m.kota_id = &u
+}
+
+// KotaID returns the value of the "kota_id" field in the mutation.
+func (m *UmatMutation) KotaID() (r uuid.UUID, exists bool) {
+	v := m.kota_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKotaID returns the old "kota_id" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldKotaID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldKotaID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldKotaID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKotaID: %w", err)
+	}
+	return oldValue.KotaID, nil
+}
+
+// ClearKotaID clears the value of the "kota_id" field.
+func (m *UmatMutation) ClearKotaID() {
+	m.kota_id = nil
+	m.clearedFields[umat.FieldKotaID] = struct{}{}
+}
+
+// KotaIDCleared returns if the "kota_id" field was cleared in this mutation.
+func (m *UmatMutation) KotaIDCleared() bool {
+	_, ok := m.clearedFields[umat.FieldKotaID]
+	return ok
+}
+
+// ResetKotaID resets all changes to the "kota_id" field.
+func (m *UmatMutation) ResetKotaID() {
+	m.kota_id = nil
+	delete(m.clearedFields, umat.FieldKotaID)
+}
+
+// SetKecamatanID sets the "kecamatan_id" field.
+func (m *UmatMutation) SetKecamatanID(u uuid.UUID) {
+	m.kecamatan_id = &u
+}
+
+// KecamatanID returns the value of the "kecamatan_id" field in the mutation.
+func (m *UmatMutation) KecamatanID() (r uuid.UUID, exists bool) {
+	v := m.kecamatan_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKecamatanID returns the old "kecamatan_id" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldKecamatanID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldKecamatanID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldKecamatanID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKecamatanID: %w", err)
+	}
+	return oldValue.KecamatanID, nil
+}
+
+// ClearKecamatanID clears the value of the "kecamatan_id" field.
+func (m *UmatMutation) ClearKecamatanID() {
+	m.kecamatan_id = nil
+	m.clearedFields[umat.FieldKecamatanID] = struct{}{}
+}
+
+// KecamatanIDCleared returns if the "kecamatan_id" field was cleared in this mutation.
+func (m *UmatMutation) KecamatanIDCleared() bool {
+	_, ok := m.clearedFields[umat.FieldKecamatanID]
+	return ok
+}
+
+// ResetKecamatanID resets all changes to the "kecamatan_id" field.
+func (m *UmatMutation) ResetKecamatanID() {
+	m.kecamatan_id = nil
+	delete(m.clearedFields, umat.FieldKecamatanID)
+}
+
+// SetKelurahanID sets the "kelurahan_id" field.
+func (m *UmatMutation) SetKelurahanID(u uuid.UUID) {
+	m.kelurahan_id = &u
+}
+
+// KelurahanID returns the value of the "kelurahan_id" field in the mutation.
+func (m *UmatMutation) KelurahanID() (r uuid.UUID, exists bool) {
+	v := m.kelurahan_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKelurahanID returns the old "kelurahan_id" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldKelurahanID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldKelurahanID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldKelurahanID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKelurahanID: %w", err)
+	}
+	return oldValue.KelurahanID, nil
+}
+
+// ClearKelurahanID clears the value of the "kelurahan_id" field.
+func (m *UmatMutation) ClearKelurahanID() {
+	m.kelurahan_id = nil
+	m.clearedFields[umat.FieldKelurahanID] = struct{}{}
+}
+
+// KelurahanIDCleared returns if the "kelurahan_id" field was cleared in this mutation.
+func (m *UmatMutation) KelurahanIDCleared() bool {
+	_, ok := m.clearedFields[umat.FieldKelurahanID]
+	return ok
+}
+
+// ResetKelurahanID resets all changes to the "kelurahan_id" field.
+func (m *UmatMutation) ResetKelurahanID() {
+	m.kelurahan_id = nil
+	delete(m.clearedFields, umat.FieldKelurahanID)
+}
+
+// SetTelepon sets the "telepon" field.
+func (m *UmatMutation) SetTelepon(s string) {
+	m.telepon = &s
+}
+
+// Telepon returns the value of the "telepon" field in the mutation.
+func (m *UmatMutation) Telepon() (r string, exists bool) {
+	v := m.telepon
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTelepon returns the old "telepon" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldTelepon(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTelepon is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTelepon requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTelepon: %w", err)
+	}
+	return oldValue.Telepon, nil
+}
+
+// ClearTelepon clears the value of the "telepon" field.
+func (m *UmatMutation) ClearTelepon() {
+	m.telepon = nil
+	m.clearedFields[umat.FieldTelepon] = struct{}{}
+}
+
+// TeleponCleared returns if the "telepon" field was cleared in this mutation.
+func (m *UmatMutation) TeleponCleared() bool {
+	_, ok := m.clearedFields[umat.FieldTelepon]
+	return ok
+}
+
+// ResetTelepon resets all changes to the "telepon" field.
+func (m *UmatMutation) ResetTelepon() {
+	m.telepon = nil
+	delete(m.clearedFields, umat.FieldTelepon)
+}
+
+// SetEmail sets the "email" field.
+func (m *UmatMutation) SetEmail(s string) {
+	m.email = &s
+}
+
+// Email returns the value of the "email" field in the mutation.
+func (m *UmatMutation) Email() (r string, exists bool) {
+	v := m.email
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEmail returns the old "email" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldEmail(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEmail is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEmail requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEmail: %w", err)
+	}
+	return oldValue.Email, nil
+}
+
+// ClearEmail clears the value of the "email" field.
+func (m *UmatMutation) ClearEmail() {
+	m.email = nil
+	m.clearedFields[umat.FieldEmail] = struct{}{}
+}
+
+// EmailCleared returns if the "email" field was cleared in this mutation.
+func (m *UmatMutation) EmailCleared() bool {
+	_, ok := m.clearedFields[umat.FieldEmail]
+	return ok
+}
+
+// ResetEmail resets all changes to the "email" field.
+func (m *UmatMutation) ResetEmail() {
+	m.email = nil
+	delete(m.clearedFields, umat.FieldEmail)
+}
+
+// SetFotoURL sets the "foto_url" field.
+func (m *UmatMutation) SetFotoURL(s string) {
+	m.foto_url = &s
+}
+
+// FotoURL returns the value of the "foto_url" field in the mutation.
+func (m *UmatMutation) FotoURL() (r string, exists bool) {
+	v := m.foto_url
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFotoURL returns the old "foto_url" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldFotoURL(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFotoURL is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFotoURL requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFotoURL: %w", err)
+	}
+	return oldValue.FotoURL, nil
+}
+
+// ClearFotoURL clears the value of the "foto_url" field.
+func (m *UmatMutation) ClearFotoURL() {
+	m.foto_url = nil
+	m.clearedFields[umat.FieldFotoURL] = struct{}{}
+}
+
+// FotoURLCleared returns if the "foto_url" field was cleared in this mutation.
+func (m *UmatMutation) FotoURLCleared() bool {
+	_, ok := m.clearedFields[umat.FieldFotoURL]
+	return ok
+}
+
+// ResetFotoURL resets all changes to the "foto_url" field.
+func (m *UmatMutation) ResetFotoURL() {
+	m.foto_url = nil
+	delete(m.clearedFields, umat.FieldFotoURL)
+}
+
+// SetPendidikan sets the "pendidikan" field.
+func (m *UmatMutation) SetPendidikan(s string) {
+	m.pendidikan = &s
+}
+
+// Pendidikan returns the value of the "pendidikan" field in the mutation.
+func (m *UmatMutation) Pendidikan() (r string, exists bool) {
+	v := m.pendidikan
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPendidikan returns the old "pendidikan" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldPendidikan(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPendidikan is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPendidikan requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPendidikan: %w", err)
+	}
+	return oldValue.Pendidikan, nil
+}
+
+// ClearPendidikan clears the value of the "pendidikan" field.
+func (m *UmatMutation) ClearPendidikan() {
+	m.pendidikan = nil
+	m.clearedFields[umat.FieldPendidikan] = struct{}{}
+}
+
+// PendidikanCleared returns if the "pendidikan" field was cleared in this mutation.
+func (m *UmatMutation) PendidikanCleared() bool {
+	_, ok := m.clearedFields[umat.FieldPendidikan]
+	return ok
+}
+
+// ResetPendidikan resets all changes to the "pendidikan" field.
+func (m *UmatMutation) ResetPendidikan() {
+	m.pendidikan = nil
+	delete(m.clearedFields, umat.FieldPendidikan)
+}
+
+// SetJurusan sets the "jurusan" field.
+func (m *UmatMutation) SetJurusan(s string) {
+	m.jurusan = &s
+}
+
+// Jurusan returns the value of the "jurusan" field in the mutation.
+func (m *UmatMutation) Jurusan() (r string, exists bool) {
+	v := m.jurusan
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldJurusan returns the old "jurusan" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldJurusan(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldJurusan is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldJurusan requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldJurusan: %w", err)
+	}
+	return oldValue.Jurusan, nil
+}
+
+// ClearJurusan clears the value of the "jurusan" field.
+func (m *UmatMutation) ClearJurusan() {
+	m.jurusan = nil
+	m.clearedFields[umat.FieldJurusan] = struct{}{}
+}
+
+// JurusanCleared returns if the "jurusan" field was cleared in this mutation.
+func (m *UmatMutation) JurusanCleared() bool {
+	_, ok := m.clearedFields[umat.FieldJurusan]
+	return ok
+}
+
+// ResetJurusan resets all changes to the "jurusan" field.
+func (m *UmatMutation) ResetJurusan() {
+	m.jurusan = nil
+	delete(m.clearedFields, umat.FieldJurusan)
+}
+
+// SetPekerjaan sets the "pekerjaan" field.
+func (m *UmatMutation) SetPekerjaan(s string) {
+	m.pekerjaan = &s
+}
+
+// Pekerjaan returns the value of the "pekerjaan" field in the mutation.
+func (m *UmatMutation) Pekerjaan() (r string, exists bool) {
+	v := m.pekerjaan
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPekerjaan returns the old "pekerjaan" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldPekerjaan(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPekerjaan is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPekerjaan requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPekerjaan: %w", err)
+	}
+	return oldValue.Pekerjaan, nil
+}
+
+// ClearPekerjaan clears the value of the "pekerjaan" field.
+func (m *UmatMutation) ClearPekerjaan() {
+	m.pekerjaan = nil
+	m.clearedFields[umat.FieldPekerjaan] = struct{}{}
+}
+
+// PekerjaanCleared returns if the "pekerjaan" field was cleared in this mutation.
+func (m *UmatMutation) PekerjaanCleared() bool {
+	_, ok := m.clearedFields[umat.FieldPekerjaan]
+	return ok
+}
+
+// ResetPekerjaan resets all changes to the "pekerjaan" field.
+func (m *UmatMutation) ResetPekerjaan() {
+	m.pekerjaan = nil
+	delete(m.clearedFields, umat.FieldPekerjaan)
+}
+
+// SetProfesi sets the "profesi" field.
+func (m *UmatMutation) SetProfesi(s string) {
+	m.profesi = &s
+}
+
+// Profesi returns the value of the "profesi" field in the mutation.
+func (m *UmatMutation) Profesi() (r string, exists bool) {
+	v := m.profesi
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProfesi returns the old "profesi" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldProfesi(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProfesi is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProfesi requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProfesi: %w", err)
+	}
+	return oldValue.Profesi, nil
+}
+
+// ClearProfesi clears the value of the "profesi" field.
+func (m *UmatMutation) ClearProfesi() {
+	m.profesi = nil
+	m.clearedFields[umat.FieldProfesi] = struct{}{}
+}
+
+// ProfesiCleared returns if the "profesi" field was cleared in this mutation.
+func (m *UmatMutation) ProfesiCleared() bool {
+	_, ok := m.clearedFields[umat.FieldProfesi]
+	return ok
+}
+
+// ResetProfesi resets all changes to the "profesi" field.
+func (m *UmatMutation) ResetProfesi() {
+	m.profesi = nil
+	delete(m.clearedFields, umat.FieldProfesi)
+}
+
+// SetKeterampilan sets the "keterampilan" field.
+func (m *UmatMutation) SetKeterampilan(s string) {
+	m.keterampilan = &s
+}
+
+// Keterampilan returns the value of the "keterampilan" field in the mutation.
+func (m *UmatMutation) Keterampilan() (r string, exists bool) {
+	v := m.keterampilan
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKeterampilan returns the old "keterampilan" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldKeterampilan(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldKeterampilan is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldKeterampilan requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKeterampilan: %w", err)
+	}
+	return oldValue.Keterampilan, nil
+}
+
+// ClearKeterampilan clears the value of the "keterampilan" field.
+func (m *UmatMutation) ClearKeterampilan() {
+	m.keterampilan = nil
+	m.clearedFields[umat.FieldKeterampilan] = struct{}{}
+}
+
+// KeterampilanCleared returns if the "keterampilan" field was cleared in this mutation.
+func (m *UmatMutation) KeterampilanCleared() bool {
+	_, ok := m.clearedFields[umat.FieldKeterampilan]
+	return ok
+}
+
+// ResetKeterampilan resets all changes to the "keterampilan" field.
+func (m *UmatMutation) ResetKeterampilan() {
+	m.keterampilan = nil
+	delete(m.clearedFields, umat.FieldKeterampilan)
+}
+
+// SetDisabilitas sets the "disabilitas" field.
+func (m *UmatMutation) SetDisabilitas(s string) {
+	m.disabilitas = &s
+}
+
+// Disabilitas returns the value of the "disabilitas" field in the mutation.
+func (m *UmatMutation) Disabilitas() (r string, exists bool) {
+	v := m.disabilitas
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDisabilitas returns the old "disabilitas" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldDisabilitas(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDisabilitas is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDisabilitas requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDisabilitas: %w", err)
+	}
+	return oldValue.Disabilitas, nil
+}
+
+// ClearDisabilitas clears the value of the "disabilitas" field.
+func (m *UmatMutation) ClearDisabilitas() {
+	m.disabilitas = nil
+	m.clearedFields[umat.FieldDisabilitas] = struct{}{}
+}
+
+// DisabilitasCleared returns if the "disabilitas" field was cleared in this mutation.
+func (m *UmatMutation) DisabilitasCleared() bool {
+	_, ok := m.clearedFields[umat.FieldDisabilitas]
+	return ok
+}
+
+// ResetDisabilitas resets all changes to the "disabilitas" field.
+func (m *UmatMutation) ResetDisabilitas() {
+	m.disabilitas = nil
+	delete(m.clearedFields, umat.FieldDisabilitas)
+}
+
+// SetAktivitasSosial sets the "aktivitas_sosial" field.
+func (m *UmatMutation) SetAktivitasSosial(s string) {
+	m.aktivitas_sosial = &s
+}
+
+// AktivitasSosial returns the value of the "aktivitas_sosial" field in the mutation.
+func (m *UmatMutation) AktivitasSosial() (r string, exists bool) {
+	v := m.aktivitas_sosial
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAktivitasSosial returns the old "aktivitas_sosial" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldAktivitasSosial(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAktivitasSosial is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAktivitasSosial requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAktivitasSosial: %w", err)
+	}
+	return oldValue.AktivitasSosial, nil
+}
+
+// ClearAktivitasSosial clears the value of the "aktivitas_sosial" field.
+func (m *UmatMutation) ClearAktivitasSosial() {
+	m.aktivitas_sosial = nil
+	m.clearedFields[umat.FieldAktivitasSosial] = struct{}{}
+}
+
+// AktivitasSosialCleared returns if the "aktivitas_sosial" field was cleared in this mutation.
+func (m *UmatMutation) AktivitasSosialCleared() bool {
+	_, ok := m.clearedFields[umat.FieldAktivitasSosial]
+	return ok
+}
+
+// ResetAktivitasSosial resets all changes to the "aktivitas_sosial" field.
+func (m *UmatMutation) ResetAktivitasSosial() {
+	m.aktivitas_sosial = nil
+	delete(m.clearedFields, umat.FieldAktivitasSosial)
+}
+
+// ClearKeluarga clears the "keluarga" edge to the Keluarga entity.
+func (m *UmatMutation) ClearKeluarga() {
+	m.clearedkeluarga = true
+	m.clearedFields[umat.FieldKeluargaID] = struct{}{}
+}
+
+// KeluargaCleared reports if the "keluarga" edge to the Keluarga entity was cleared.
+func (m *UmatMutation) KeluargaCleared() bool {
+	return m.KeluargaIDCleared() || m.clearedkeluarga
+}
+
+// KeluargaIDs returns the "keluarga" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// KeluargaID instead. It exists only for internal usage by the builders.
+func (m *UmatMutation) KeluargaIDs() (ids []uuid.UUID) {
+	if id := m.keluarga; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetKeluarga resets all changes to the "keluarga" edge.
+func (m *UmatMutation) ResetKeluarga() {
+	m.keluarga = nil
+	m.clearedkeluarga = false
+}
+
+// AddSakramanIDs adds the "sakramen" edge to the UmatSakramen entity by ids.
+func (m *UmatMutation) AddSakramanIDs(ids ...uuid.UUID) {
+	if m.sakramen == nil {
+		m.sakramen = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.sakramen[ids[i]] = struct{}{}
+	}
+}
+
+// ClearSakramen clears the "sakramen" edge to the UmatSakramen entity.
+func (m *UmatMutation) ClearSakramen() {
+	m.clearedsakramen = true
+}
+
+// SakramenCleared reports if the "sakramen" edge to the UmatSakramen entity was cleared.
+func (m *UmatMutation) SakramenCleared() bool {
+	return m.clearedsakramen
+}
+
+// RemoveSakramanIDs removes the "sakramen" edge to the UmatSakramen entity by IDs.
+func (m *UmatMutation) RemoveSakramanIDs(ids ...uuid.UUID) {
+	if m.removedsakramen == nil {
+		m.removedsakramen = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.sakramen, ids[i])
+		m.removedsakramen[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedSakramen returns the removed IDs of the "sakramen" edge to the UmatSakramen entity.
+func (m *UmatMutation) RemovedSakramenIDs() (ids []uuid.UUID) {
+	for id := range m.removedsakramen {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// SakramenIDs returns the "sakramen" edge IDs in the mutation.
+func (m *UmatMutation) SakramenIDs() (ids []uuid.UUID) {
+	for id := range m.sakramen {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetSakramen resets all changes to the "sakramen" edge.
+func (m *UmatMutation) ResetSakramen() {
+	m.sakramen = nil
+	m.clearedsakramen = false
+	m.removedsakramen = nil
+}
+
+// Where appends a list predicates to the UmatMutation builder.
+func (m *UmatMutation) Where(ps ...predicate.Umat) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the UmatMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *UmatMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Umat, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *UmatMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *UmatMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Umat).
+func (m *UmatMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *UmatMutation) Fields() []string {
+	fields := make([]string, 0, 38)
+	if m.created_at != nil {
+		fields = append(fields, umat.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, umat.FieldUpdatedAt)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, umat.FieldDeletedAt)
+	}
+	if m.paroki_id != nil {
+		fields = append(fields, umat.FieldParokiID)
+	}
+	if m.keluarga != nil {
+		fields = append(fields, umat.FieldKeluargaID)
+	}
+	if m.wilayah_id != nil {
+		fields = append(fields, umat.FieldWilayahID)
+	}
+	if m.lingkungan_id != nil {
+		fields = append(fields, umat.FieldLingkunganID)
+	}
+	if m.user_id != nil {
+		fields = append(fields, umat.FieldUserID)
+	}
+	if m.nama != nil {
+		fields = append(fields, umat.FieldNama)
+	}
+	if m.nama_baptis != nil {
+		fields = append(fields, umat.FieldNamaBaptis)
+	}
+	if m.nik_enc != nil {
+		fields = append(fields, umat.FieldNikEnc)
+	}
+	if m.nik_hash != nil {
+		fields = append(fields, umat.FieldNikHash)
+	}
+	if m.jenis_kelamin != nil {
+		fields = append(fields, umat.FieldJenisKelamin)
+	}
+	if m.tempat_lahir != nil {
+		fields = append(fields, umat.FieldTempatLahir)
+	}
+	if m.tanggal_lahir != nil {
+		fields = append(fields, umat.FieldTanggalLahir)
+	}
+	if m.golongan_darah != nil {
+		fields = append(fields, umat.FieldGolonganDarah)
+	}
+	if m.suku != nil {
+		fields = append(fields, umat.FieldSuku)
+	}
+	if m.agama != nil {
+		fields = append(fields, umat.FieldAgama)
+	}
+	if m.kewarganegaraan != nil {
+		fields = append(fields, umat.FieldKewarganegaraan)
+	}
+	if m.negara != nil {
+		fields = append(fields, umat.FieldNegara)
+	}
+	if m.hubungan_keluarga != nil {
+		fields = append(fields, umat.FieldHubunganKeluarga)
+	}
+	if m.status_pernikahan != nil {
+		fields = append(fields, umat.FieldStatusPernikahan)
+	}
+	if m.almarhum != nil {
+		fields = append(fields, umat.FieldAlmarhum)
+	}
+	if m.tanggal_meninggal != nil {
+		fields = append(fields, umat.FieldTanggalMeninggal)
+	}
+	if m.alamat != nil {
+		fields = append(fields, umat.FieldAlamat)
+	}
+	if m.kota_id != nil {
+		fields = append(fields, umat.FieldKotaID)
+	}
+	if m.kecamatan_id != nil {
+		fields = append(fields, umat.FieldKecamatanID)
+	}
+	if m.kelurahan_id != nil {
+		fields = append(fields, umat.FieldKelurahanID)
+	}
+	if m.telepon != nil {
+		fields = append(fields, umat.FieldTelepon)
+	}
+	if m.email != nil {
+		fields = append(fields, umat.FieldEmail)
+	}
+	if m.foto_url != nil {
+		fields = append(fields, umat.FieldFotoURL)
+	}
+	if m.pendidikan != nil {
+		fields = append(fields, umat.FieldPendidikan)
+	}
+	if m.jurusan != nil {
+		fields = append(fields, umat.FieldJurusan)
+	}
+	if m.pekerjaan != nil {
+		fields = append(fields, umat.FieldPekerjaan)
+	}
+	if m.profesi != nil {
+		fields = append(fields, umat.FieldProfesi)
+	}
+	if m.keterampilan != nil {
+		fields = append(fields, umat.FieldKeterampilan)
+	}
+	if m.disabilitas != nil {
+		fields = append(fields, umat.FieldDisabilitas)
+	}
+	if m.aktivitas_sosial != nil {
+		fields = append(fields, umat.FieldAktivitasSosial)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *UmatMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case umat.FieldCreatedAt:
+		return m.CreatedAt()
+	case umat.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case umat.FieldDeletedAt:
+		return m.DeletedAt()
+	case umat.FieldParokiID:
+		return m.ParokiID()
+	case umat.FieldKeluargaID:
+		return m.KeluargaID()
+	case umat.FieldWilayahID:
+		return m.WilayahID()
+	case umat.FieldLingkunganID:
+		return m.LingkunganID()
+	case umat.FieldUserID:
+		return m.UserID()
+	case umat.FieldNama:
+		return m.Nama()
+	case umat.FieldNamaBaptis:
+		return m.NamaBaptis()
+	case umat.FieldNikEnc:
+		return m.NikEnc()
+	case umat.FieldNikHash:
+		return m.NikHash()
+	case umat.FieldJenisKelamin:
+		return m.JenisKelamin()
+	case umat.FieldTempatLahir:
+		return m.TempatLahir()
+	case umat.FieldTanggalLahir:
+		return m.TanggalLahir()
+	case umat.FieldGolonganDarah:
+		return m.GolonganDarah()
+	case umat.FieldSuku:
+		return m.Suku()
+	case umat.FieldAgama:
+		return m.Agama()
+	case umat.FieldKewarganegaraan:
+		return m.Kewarganegaraan()
+	case umat.FieldNegara:
+		return m.Negara()
+	case umat.FieldHubunganKeluarga:
+		return m.HubunganKeluarga()
+	case umat.FieldStatusPernikahan:
+		return m.StatusPernikahan()
+	case umat.FieldAlmarhum:
+		return m.Almarhum()
+	case umat.FieldTanggalMeninggal:
+		return m.TanggalMeninggal()
+	case umat.FieldAlamat:
+		return m.Alamat()
+	case umat.FieldKotaID:
+		return m.KotaID()
+	case umat.FieldKecamatanID:
+		return m.KecamatanID()
+	case umat.FieldKelurahanID:
+		return m.KelurahanID()
+	case umat.FieldTelepon:
+		return m.Telepon()
+	case umat.FieldEmail:
+		return m.Email()
+	case umat.FieldFotoURL:
+		return m.FotoURL()
+	case umat.FieldPendidikan:
+		return m.Pendidikan()
+	case umat.FieldJurusan:
+		return m.Jurusan()
+	case umat.FieldPekerjaan:
+		return m.Pekerjaan()
+	case umat.FieldProfesi:
+		return m.Profesi()
+	case umat.FieldKeterampilan:
+		return m.Keterampilan()
+	case umat.FieldDisabilitas:
+		return m.Disabilitas()
+	case umat.FieldAktivitasSosial:
+		return m.AktivitasSosial()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *UmatMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case umat.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case umat.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case umat.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case umat.FieldParokiID:
+		return m.OldParokiID(ctx)
+	case umat.FieldKeluargaID:
+		return m.OldKeluargaID(ctx)
+	case umat.FieldWilayahID:
+		return m.OldWilayahID(ctx)
+	case umat.FieldLingkunganID:
+		return m.OldLingkunganID(ctx)
+	case umat.FieldUserID:
+		return m.OldUserID(ctx)
+	case umat.FieldNama:
+		return m.OldNama(ctx)
+	case umat.FieldNamaBaptis:
+		return m.OldNamaBaptis(ctx)
+	case umat.FieldNikEnc:
+		return m.OldNikEnc(ctx)
+	case umat.FieldNikHash:
+		return m.OldNikHash(ctx)
+	case umat.FieldJenisKelamin:
+		return m.OldJenisKelamin(ctx)
+	case umat.FieldTempatLahir:
+		return m.OldTempatLahir(ctx)
+	case umat.FieldTanggalLahir:
+		return m.OldTanggalLahir(ctx)
+	case umat.FieldGolonganDarah:
+		return m.OldGolonganDarah(ctx)
+	case umat.FieldSuku:
+		return m.OldSuku(ctx)
+	case umat.FieldAgama:
+		return m.OldAgama(ctx)
+	case umat.FieldKewarganegaraan:
+		return m.OldKewarganegaraan(ctx)
+	case umat.FieldNegara:
+		return m.OldNegara(ctx)
+	case umat.FieldHubunganKeluarga:
+		return m.OldHubunganKeluarga(ctx)
+	case umat.FieldStatusPernikahan:
+		return m.OldStatusPernikahan(ctx)
+	case umat.FieldAlmarhum:
+		return m.OldAlmarhum(ctx)
+	case umat.FieldTanggalMeninggal:
+		return m.OldTanggalMeninggal(ctx)
+	case umat.FieldAlamat:
+		return m.OldAlamat(ctx)
+	case umat.FieldKotaID:
+		return m.OldKotaID(ctx)
+	case umat.FieldKecamatanID:
+		return m.OldKecamatanID(ctx)
+	case umat.FieldKelurahanID:
+		return m.OldKelurahanID(ctx)
+	case umat.FieldTelepon:
+		return m.OldTelepon(ctx)
+	case umat.FieldEmail:
+		return m.OldEmail(ctx)
+	case umat.FieldFotoURL:
+		return m.OldFotoURL(ctx)
+	case umat.FieldPendidikan:
+		return m.OldPendidikan(ctx)
+	case umat.FieldJurusan:
+		return m.OldJurusan(ctx)
+	case umat.FieldPekerjaan:
+		return m.OldPekerjaan(ctx)
+	case umat.FieldProfesi:
+		return m.OldProfesi(ctx)
+	case umat.FieldKeterampilan:
+		return m.OldKeterampilan(ctx)
+	case umat.FieldDisabilitas:
+		return m.OldDisabilitas(ctx)
+	case umat.FieldAktivitasSosial:
+		return m.OldAktivitasSosial(ctx)
+	}
+	return nil, fmt.Errorf("unknown Umat field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UmatMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case umat.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case umat.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case umat.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case umat.FieldParokiID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetParokiID(v)
+		return nil
+	case umat.FieldKeluargaID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKeluargaID(v)
+		return nil
+	case umat.FieldWilayahID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWilayahID(v)
+		return nil
+	case umat.FieldLingkunganID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLingkunganID(v)
+		return nil
+	case umat.FieldUserID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case umat.FieldNama:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNama(v)
+		return nil
+	case umat.FieldNamaBaptis:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNamaBaptis(v)
+		return nil
+	case umat.FieldNikEnc:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNikEnc(v)
+		return nil
+	case umat.FieldNikHash:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNikHash(v)
+		return nil
+	case umat.FieldJenisKelamin:
+		v, ok := value.(umat.JenisKelamin)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetJenisKelamin(v)
+		return nil
+	case umat.FieldTempatLahir:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTempatLahir(v)
+		return nil
+	case umat.FieldTanggalLahir:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTanggalLahir(v)
+		return nil
+	case umat.FieldGolonganDarah:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGolonganDarah(v)
+		return nil
+	case umat.FieldSuku:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSuku(v)
+		return nil
+	case umat.FieldAgama:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAgama(v)
+		return nil
+	case umat.FieldKewarganegaraan:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKewarganegaraan(v)
+		return nil
+	case umat.FieldNegara:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNegara(v)
+		return nil
+	case umat.FieldHubunganKeluarga:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetHubunganKeluarga(v)
+		return nil
+	case umat.FieldStatusPernikahan:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatusPernikahan(v)
+		return nil
+	case umat.FieldAlmarhum:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAlmarhum(v)
+		return nil
+	case umat.FieldTanggalMeninggal:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTanggalMeninggal(v)
+		return nil
+	case umat.FieldAlamat:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAlamat(v)
+		return nil
+	case umat.FieldKotaID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKotaID(v)
+		return nil
+	case umat.FieldKecamatanID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKecamatanID(v)
+		return nil
+	case umat.FieldKelurahanID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKelurahanID(v)
+		return nil
+	case umat.FieldTelepon:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTelepon(v)
+		return nil
+	case umat.FieldEmail:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEmail(v)
+		return nil
+	case umat.FieldFotoURL:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFotoURL(v)
+		return nil
+	case umat.FieldPendidikan:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPendidikan(v)
+		return nil
+	case umat.FieldJurusan:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetJurusan(v)
+		return nil
+	case umat.FieldPekerjaan:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPekerjaan(v)
+		return nil
+	case umat.FieldProfesi:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProfesi(v)
+		return nil
+	case umat.FieldKeterampilan:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKeterampilan(v)
+		return nil
+	case umat.FieldDisabilitas:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDisabilitas(v)
+		return nil
+	case umat.FieldAktivitasSosial:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAktivitasSosial(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Umat field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *UmatMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *UmatMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UmatMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Umat numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *UmatMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(umat.FieldDeletedAt) {
+		fields = append(fields, umat.FieldDeletedAt)
+	}
+	if m.FieldCleared(umat.FieldKeluargaID) {
+		fields = append(fields, umat.FieldKeluargaID)
+	}
+	if m.FieldCleared(umat.FieldWilayahID) {
+		fields = append(fields, umat.FieldWilayahID)
+	}
+	if m.FieldCleared(umat.FieldLingkunganID) {
+		fields = append(fields, umat.FieldLingkunganID)
+	}
+	if m.FieldCleared(umat.FieldUserID) {
+		fields = append(fields, umat.FieldUserID)
+	}
+	if m.FieldCleared(umat.FieldNamaBaptis) {
+		fields = append(fields, umat.FieldNamaBaptis)
+	}
+	if m.FieldCleared(umat.FieldNikEnc) {
+		fields = append(fields, umat.FieldNikEnc)
+	}
+	if m.FieldCleared(umat.FieldNikHash) {
+		fields = append(fields, umat.FieldNikHash)
+	}
+	if m.FieldCleared(umat.FieldTempatLahir) {
+		fields = append(fields, umat.FieldTempatLahir)
+	}
+	if m.FieldCleared(umat.FieldTanggalLahir) {
+		fields = append(fields, umat.FieldTanggalLahir)
+	}
+	if m.FieldCleared(umat.FieldGolonganDarah) {
+		fields = append(fields, umat.FieldGolonganDarah)
+	}
+	if m.FieldCleared(umat.FieldSuku) {
+		fields = append(fields, umat.FieldSuku)
+	}
+	if m.FieldCleared(umat.FieldAgama) {
+		fields = append(fields, umat.FieldAgama)
+	}
+	if m.FieldCleared(umat.FieldKewarganegaraan) {
+		fields = append(fields, umat.FieldKewarganegaraan)
+	}
+	if m.FieldCleared(umat.FieldNegara) {
+		fields = append(fields, umat.FieldNegara)
+	}
+	if m.FieldCleared(umat.FieldHubunganKeluarga) {
+		fields = append(fields, umat.FieldHubunganKeluarga)
+	}
+	if m.FieldCleared(umat.FieldStatusPernikahan) {
+		fields = append(fields, umat.FieldStatusPernikahan)
+	}
+	if m.FieldCleared(umat.FieldTanggalMeninggal) {
+		fields = append(fields, umat.FieldTanggalMeninggal)
+	}
+	if m.FieldCleared(umat.FieldAlamat) {
+		fields = append(fields, umat.FieldAlamat)
+	}
+	if m.FieldCleared(umat.FieldKotaID) {
+		fields = append(fields, umat.FieldKotaID)
+	}
+	if m.FieldCleared(umat.FieldKecamatanID) {
+		fields = append(fields, umat.FieldKecamatanID)
+	}
+	if m.FieldCleared(umat.FieldKelurahanID) {
+		fields = append(fields, umat.FieldKelurahanID)
+	}
+	if m.FieldCleared(umat.FieldTelepon) {
+		fields = append(fields, umat.FieldTelepon)
+	}
+	if m.FieldCleared(umat.FieldEmail) {
+		fields = append(fields, umat.FieldEmail)
+	}
+	if m.FieldCleared(umat.FieldFotoURL) {
+		fields = append(fields, umat.FieldFotoURL)
+	}
+	if m.FieldCleared(umat.FieldPendidikan) {
+		fields = append(fields, umat.FieldPendidikan)
+	}
+	if m.FieldCleared(umat.FieldJurusan) {
+		fields = append(fields, umat.FieldJurusan)
+	}
+	if m.FieldCleared(umat.FieldPekerjaan) {
+		fields = append(fields, umat.FieldPekerjaan)
+	}
+	if m.FieldCleared(umat.FieldProfesi) {
+		fields = append(fields, umat.FieldProfesi)
+	}
+	if m.FieldCleared(umat.FieldKeterampilan) {
+		fields = append(fields, umat.FieldKeterampilan)
+	}
+	if m.FieldCleared(umat.FieldDisabilitas) {
+		fields = append(fields, umat.FieldDisabilitas)
+	}
+	if m.FieldCleared(umat.FieldAktivitasSosial) {
+		fields = append(fields, umat.FieldAktivitasSosial)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *UmatMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *UmatMutation) ClearField(name string) error {
+	switch name {
+	case umat.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case umat.FieldKeluargaID:
+		m.ClearKeluargaID()
+		return nil
+	case umat.FieldWilayahID:
+		m.ClearWilayahID()
+		return nil
+	case umat.FieldLingkunganID:
+		m.ClearLingkunganID()
+		return nil
+	case umat.FieldUserID:
+		m.ClearUserID()
+		return nil
+	case umat.FieldNamaBaptis:
+		m.ClearNamaBaptis()
+		return nil
+	case umat.FieldNikEnc:
+		m.ClearNikEnc()
+		return nil
+	case umat.FieldNikHash:
+		m.ClearNikHash()
+		return nil
+	case umat.FieldTempatLahir:
+		m.ClearTempatLahir()
+		return nil
+	case umat.FieldTanggalLahir:
+		m.ClearTanggalLahir()
+		return nil
+	case umat.FieldGolonganDarah:
+		m.ClearGolonganDarah()
+		return nil
+	case umat.FieldSuku:
+		m.ClearSuku()
+		return nil
+	case umat.FieldAgama:
+		m.ClearAgama()
+		return nil
+	case umat.FieldKewarganegaraan:
+		m.ClearKewarganegaraan()
+		return nil
+	case umat.FieldNegara:
+		m.ClearNegara()
+		return nil
+	case umat.FieldHubunganKeluarga:
+		m.ClearHubunganKeluarga()
+		return nil
+	case umat.FieldStatusPernikahan:
+		m.ClearStatusPernikahan()
+		return nil
+	case umat.FieldTanggalMeninggal:
+		m.ClearTanggalMeninggal()
+		return nil
+	case umat.FieldAlamat:
+		m.ClearAlamat()
+		return nil
+	case umat.FieldKotaID:
+		m.ClearKotaID()
+		return nil
+	case umat.FieldKecamatanID:
+		m.ClearKecamatanID()
+		return nil
+	case umat.FieldKelurahanID:
+		m.ClearKelurahanID()
+		return nil
+	case umat.FieldTelepon:
+		m.ClearTelepon()
+		return nil
+	case umat.FieldEmail:
+		m.ClearEmail()
+		return nil
+	case umat.FieldFotoURL:
+		m.ClearFotoURL()
+		return nil
+	case umat.FieldPendidikan:
+		m.ClearPendidikan()
+		return nil
+	case umat.FieldJurusan:
+		m.ClearJurusan()
+		return nil
+	case umat.FieldPekerjaan:
+		m.ClearPekerjaan()
+		return nil
+	case umat.FieldProfesi:
+		m.ClearProfesi()
+		return nil
+	case umat.FieldKeterampilan:
+		m.ClearKeterampilan()
+		return nil
+	case umat.FieldDisabilitas:
+		m.ClearDisabilitas()
+		return nil
+	case umat.FieldAktivitasSosial:
+		m.ClearAktivitasSosial()
+		return nil
+	}
+	return fmt.Errorf("unknown Umat nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *UmatMutation) ResetField(name string) error {
+	switch name {
+	case umat.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case umat.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case umat.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case umat.FieldParokiID:
+		m.ResetParokiID()
+		return nil
+	case umat.FieldKeluargaID:
+		m.ResetKeluargaID()
+		return nil
+	case umat.FieldWilayahID:
+		m.ResetWilayahID()
+		return nil
+	case umat.FieldLingkunganID:
+		m.ResetLingkunganID()
+		return nil
+	case umat.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case umat.FieldNama:
+		m.ResetNama()
+		return nil
+	case umat.FieldNamaBaptis:
+		m.ResetNamaBaptis()
+		return nil
+	case umat.FieldNikEnc:
+		m.ResetNikEnc()
+		return nil
+	case umat.FieldNikHash:
+		m.ResetNikHash()
+		return nil
+	case umat.FieldJenisKelamin:
+		m.ResetJenisKelamin()
+		return nil
+	case umat.FieldTempatLahir:
+		m.ResetTempatLahir()
+		return nil
+	case umat.FieldTanggalLahir:
+		m.ResetTanggalLahir()
+		return nil
+	case umat.FieldGolonganDarah:
+		m.ResetGolonganDarah()
+		return nil
+	case umat.FieldSuku:
+		m.ResetSuku()
+		return nil
+	case umat.FieldAgama:
+		m.ResetAgama()
+		return nil
+	case umat.FieldKewarganegaraan:
+		m.ResetKewarganegaraan()
+		return nil
+	case umat.FieldNegara:
+		m.ResetNegara()
+		return nil
+	case umat.FieldHubunganKeluarga:
+		m.ResetHubunganKeluarga()
+		return nil
+	case umat.FieldStatusPernikahan:
+		m.ResetStatusPernikahan()
+		return nil
+	case umat.FieldAlmarhum:
+		m.ResetAlmarhum()
+		return nil
+	case umat.FieldTanggalMeninggal:
+		m.ResetTanggalMeninggal()
+		return nil
+	case umat.FieldAlamat:
+		m.ResetAlamat()
+		return nil
+	case umat.FieldKotaID:
+		m.ResetKotaID()
+		return nil
+	case umat.FieldKecamatanID:
+		m.ResetKecamatanID()
+		return nil
+	case umat.FieldKelurahanID:
+		m.ResetKelurahanID()
+		return nil
+	case umat.FieldTelepon:
+		m.ResetTelepon()
+		return nil
+	case umat.FieldEmail:
+		m.ResetEmail()
+		return nil
+	case umat.FieldFotoURL:
+		m.ResetFotoURL()
+		return nil
+	case umat.FieldPendidikan:
+		m.ResetPendidikan()
+		return nil
+	case umat.FieldJurusan:
+		m.ResetJurusan()
+		return nil
+	case umat.FieldPekerjaan:
+		m.ResetPekerjaan()
+		return nil
+	case umat.FieldProfesi:
+		m.ResetProfesi()
+		return nil
+	case umat.FieldKeterampilan:
+		m.ResetKeterampilan()
+		return nil
+	case umat.FieldDisabilitas:
+		m.ResetDisabilitas()
+		return nil
+	case umat.FieldAktivitasSosial:
+		m.ResetAktivitasSosial()
+		return nil
+	}
+	return fmt.Errorf("unknown Umat field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *UmatMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.keluarga != nil {
+		edges = append(edges, umat.EdgeKeluarga)
+	}
+	if m.sakramen != nil {
+		edges = append(edges, umat.EdgeSakramen)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *UmatMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case umat.EdgeKeluarga:
+		if id := m.keluarga; id != nil {
+			return []ent.Value{*id}
+		}
+	case umat.EdgeSakramen:
+		ids := make([]ent.Value, 0, len(m.sakramen))
+		for id := range m.sakramen {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *UmatMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.removedsakramen != nil {
+		edges = append(edges, umat.EdgeSakramen)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *UmatMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case umat.EdgeSakramen:
+		ids := make([]ent.Value, 0, len(m.removedsakramen))
+		for id := range m.removedsakramen {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *UmatMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedkeluarga {
+		edges = append(edges, umat.EdgeKeluarga)
+	}
+	if m.clearedsakramen {
+		edges = append(edges, umat.EdgeSakramen)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *UmatMutation) EdgeCleared(name string) bool {
+	switch name {
+	case umat.EdgeKeluarga:
+		return m.clearedkeluarga
+	case umat.EdgeSakramen:
+		return m.clearedsakramen
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *UmatMutation) ClearEdge(name string) error {
+	switch name {
+	case umat.EdgeKeluarga:
+		m.ClearKeluarga()
+		return nil
+	}
+	return fmt.Errorf("unknown Umat unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *UmatMutation) ResetEdge(name string) error {
+	switch name {
+	case umat.EdgeKeluarga:
+		m.ResetKeluarga()
+		return nil
+	case umat.EdgeSakramen:
+		m.ResetSakramen()
+		return nil
+	}
+	return fmt.Errorf("unknown Umat edge %s", name)
+}
+
+// UmatSakramenMutation represents an operation that mutates the UmatSakramen nodes in the graph.
+type UmatSakramenMutation struct {
+	config
+	op                 Op
+	typ                string
+	id                 *uuid.UUID
+	created_at         *time.Time
+	updated_at         *time.Time
+	paroki_id          *uuid.UUID
+	jenis              *umatsakramen.Jenis
+	tanggal            *string
+	keuskupan_id       *uuid.UUID
+	paroki_sakramen_id *uuid.UUID
+	keuskupan_nama     *string
+	paroki_nama        *string
+	buku               *string
+	nomor              *string
+	catatan            *string
+	clearedFields      map[string]struct{}
+	umat               *uuid.UUID
+	clearedumat        bool
+	done               bool
+	oldValue           func(context.Context) (*UmatSakramen, error)
+	predicates         []predicate.UmatSakramen
+}
+
+var _ ent.Mutation = (*UmatSakramenMutation)(nil)
+
+// umatsakramenOption allows management of the mutation configuration using functional options.
+type umatsakramenOption func(*UmatSakramenMutation)
+
+// newUmatSakramenMutation creates new mutation for the UmatSakramen entity.
+func newUmatSakramenMutation(c config, op Op, opts ...umatsakramenOption) *UmatSakramenMutation {
+	m := &UmatSakramenMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeUmatSakramen,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withUmatSakramenID sets the ID field of the mutation.
+func withUmatSakramenID(id uuid.UUID) umatsakramenOption {
+	return func(m *UmatSakramenMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *UmatSakramen
+		)
+		m.oldValue = func(ctx context.Context) (*UmatSakramen, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().UmatSakramen.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withUmatSakramen sets the old UmatSakramen of the mutation.
+func withUmatSakramen(node *UmatSakramen) umatsakramenOption {
+	return func(m *UmatSakramenMutation) {
+		m.oldValue = func(context.Context) (*UmatSakramen, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m UmatSakramenMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m UmatSakramenMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of UmatSakramen entities.
+func (m *UmatSakramenMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *UmatSakramenMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *UmatSakramenMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().UmatSakramen.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *UmatSakramenMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *UmatSakramenMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the UmatSakramen entity.
+// If the UmatSakramen object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatSakramenMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *UmatSakramenMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *UmatSakramenMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *UmatSakramenMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the UmatSakramen entity.
+// If the UmatSakramen object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatSakramenMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *UmatSakramenMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetParokiID sets the "paroki_id" field.
+func (m *UmatSakramenMutation) SetParokiID(u uuid.UUID) {
+	m.paroki_id = &u
+}
+
+// ParokiID returns the value of the "paroki_id" field in the mutation.
+func (m *UmatSakramenMutation) ParokiID() (r uuid.UUID, exists bool) {
+	v := m.paroki_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldParokiID returns the old "paroki_id" field's value of the UmatSakramen entity.
+// If the UmatSakramen object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatSakramenMutation) OldParokiID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldParokiID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldParokiID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldParokiID: %w", err)
+	}
+	return oldValue.ParokiID, nil
+}
+
+// ResetParokiID resets all changes to the "paroki_id" field.
+func (m *UmatSakramenMutation) ResetParokiID() {
+	m.paroki_id = nil
+}
+
+// SetUmatID sets the "umat_id" field.
+func (m *UmatSakramenMutation) SetUmatID(u uuid.UUID) {
+	m.umat = &u
+}
+
+// UmatID returns the value of the "umat_id" field in the mutation.
+func (m *UmatSakramenMutation) UmatID() (r uuid.UUID, exists bool) {
+	v := m.umat
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUmatID returns the old "umat_id" field's value of the UmatSakramen entity.
+// If the UmatSakramen object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatSakramenMutation) OldUmatID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUmatID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUmatID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUmatID: %w", err)
+	}
+	return oldValue.UmatID, nil
+}
+
+// ResetUmatID resets all changes to the "umat_id" field.
+func (m *UmatSakramenMutation) ResetUmatID() {
+	m.umat = nil
+}
+
+// SetJenis sets the "jenis" field.
+func (m *UmatSakramenMutation) SetJenis(u umatsakramen.Jenis) {
+	m.jenis = &u
+}
+
+// Jenis returns the value of the "jenis" field in the mutation.
+func (m *UmatSakramenMutation) Jenis() (r umatsakramen.Jenis, exists bool) {
+	v := m.jenis
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldJenis returns the old "jenis" field's value of the UmatSakramen entity.
+// If the UmatSakramen object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatSakramenMutation) OldJenis(ctx context.Context) (v umatsakramen.Jenis, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldJenis is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldJenis requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldJenis: %w", err)
+	}
+	return oldValue.Jenis, nil
+}
+
+// ResetJenis resets all changes to the "jenis" field.
+func (m *UmatSakramenMutation) ResetJenis() {
+	m.jenis = nil
+}
+
+// SetTanggal sets the "tanggal" field.
+func (m *UmatSakramenMutation) SetTanggal(s string) {
+	m.tanggal = &s
+}
+
+// Tanggal returns the value of the "tanggal" field in the mutation.
+func (m *UmatSakramenMutation) Tanggal() (r string, exists bool) {
+	v := m.tanggal
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTanggal returns the old "tanggal" field's value of the UmatSakramen entity.
+// If the UmatSakramen object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatSakramenMutation) OldTanggal(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTanggal is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTanggal requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTanggal: %w", err)
+	}
+	return oldValue.Tanggal, nil
+}
+
+// ClearTanggal clears the value of the "tanggal" field.
+func (m *UmatSakramenMutation) ClearTanggal() {
+	m.tanggal = nil
+	m.clearedFields[umatsakramen.FieldTanggal] = struct{}{}
+}
+
+// TanggalCleared returns if the "tanggal" field was cleared in this mutation.
+func (m *UmatSakramenMutation) TanggalCleared() bool {
+	_, ok := m.clearedFields[umatsakramen.FieldTanggal]
+	return ok
+}
+
+// ResetTanggal resets all changes to the "tanggal" field.
+func (m *UmatSakramenMutation) ResetTanggal() {
+	m.tanggal = nil
+	delete(m.clearedFields, umatsakramen.FieldTanggal)
+}
+
+// SetKeuskupanID sets the "keuskupan_id" field.
+func (m *UmatSakramenMutation) SetKeuskupanID(u uuid.UUID) {
+	m.keuskupan_id = &u
+}
+
+// KeuskupanID returns the value of the "keuskupan_id" field in the mutation.
+func (m *UmatSakramenMutation) KeuskupanID() (r uuid.UUID, exists bool) {
+	v := m.keuskupan_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKeuskupanID returns the old "keuskupan_id" field's value of the UmatSakramen entity.
+// If the UmatSakramen object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatSakramenMutation) OldKeuskupanID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldKeuskupanID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldKeuskupanID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKeuskupanID: %w", err)
+	}
+	return oldValue.KeuskupanID, nil
+}
+
+// ClearKeuskupanID clears the value of the "keuskupan_id" field.
+func (m *UmatSakramenMutation) ClearKeuskupanID() {
+	m.keuskupan_id = nil
+	m.clearedFields[umatsakramen.FieldKeuskupanID] = struct{}{}
+}
+
+// KeuskupanIDCleared returns if the "keuskupan_id" field was cleared in this mutation.
+func (m *UmatSakramenMutation) KeuskupanIDCleared() bool {
+	_, ok := m.clearedFields[umatsakramen.FieldKeuskupanID]
+	return ok
+}
+
+// ResetKeuskupanID resets all changes to the "keuskupan_id" field.
+func (m *UmatSakramenMutation) ResetKeuskupanID() {
+	m.keuskupan_id = nil
+	delete(m.clearedFields, umatsakramen.FieldKeuskupanID)
+}
+
+// SetParokiSakramenID sets the "paroki_sakramen_id" field.
+func (m *UmatSakramenMutation) SetParokiSakramenID(u uuid.UUID) {
+	m.paroki_sakramen_id = &u
+}
+
+// ParokiSakramenID returns the value of the "paroki_sakramen_id" field in the mutation.
+func (m *UmatSakramenMutation) ParokiSakramenID() (r uuid.UUID, exists bool) {
+	v := m.paroki_sakramen_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldParokiSakramenID returns the old "paroki_sakramen_id" field's value of the UmatSakramen entity.
+// If the UmatSakramen object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatSakramenMutation) OldParokiSakramenID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldParokiSakramenID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldParokiSakramenID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldParokiSakramenID: %w", err)
+	}
+	return oldValue.ParokiSakramenID, nil
+}
+
+// ClearParokiSakramenID clears the value of the "paroki_sakramen_id" field.
+func (m *UmatSakramenMutation) ClearParokiSakramenID() {
+	m.paroki_sakramen_id = nil
+	m.clearedFields[umatsakramen.FieldParokiSakramenID] = struct{}{}
+}
+
+// ParokiSakramenIDCleared returns if the "paroki_sakramen_id" field was cleared in this mutation.
+func (m *UmatSakramenMutation) ParokiSakramenIDCleared() bool {
+	_, ok := m.clearedFields[umatsakramen.FieldParokiSakramenID]
+	return ok
+}
+
+// ResetParokiSakramenID resets all changes to the "paroki_sakramen_id" field.
+func (m *UmatSakramenMutation) ResetParokiSakramenID() {
+	m.paroki_sakramen_id = nil
+	delete(m.clearedFields, umatsakramen.FieldParokiSakramenID)
+}
+
+// SetKeuskupanNama sets the "keuskupan_nama" field.
+func (m *UmatSakramenMutation) SetKeuskupanNama(s string) {
+	m.keuskupan_nama = &s
+}
+
+// KeuskupanNama returns the value of the "keuskupan_nama" field in the mutation.
+func (m *UmatSakramenMutation) KeuskupanNama() (r string, exists bool) {
+	v := m.keuskupan_nama
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKeuskupanNama returns the old "keuskupan_nama" field's value of the UmatSakramen entity.
+// If the UmatSakramen object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatSakramenMutation) OldKeuskupanNama(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldKeuskupanNama is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldKeuskupanNama requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKeuskupanNama: %w", err)
+	}
+	return oldValue.KeuskupanNama, nil
+}
+
+// ClearKeuskupanNama clears the value of the "keuskupan_nama" field.
+func (m *UmatSakramenMutation) ClearKeuskupanNama() {
+	m.keuskupan_nama = nil
+	m.clearedFields[umatsakramen.FieldKeuskupanNama] = struct{}{}
+}
+
+// KeuskupanNamaCleared returns if the "keuskupan_nama" field was cleared in this mutation.
+func (m *UmatSakramenMutation) KeuskupanNamaCleared() bool {
+	_, ok := m.clearedFields[umatsakramen.FieldKeuskupanNama]
+	return ok
+}
+
+// ResetKeuskupanNama resets all changes to the "keuskupan_nama" field.
+func (m *UmatSakramenMutation) ResetKeuskupanNama() {
+	m.keuskupan_nama = nil
+	delete(m.clearedFields, umatsakramen.FieldKeuskupanNama)
+}
+
+// SetParokiNama sets the "paroki_nama" field.
+func (m *UmatSakramenMutation) SetParokiNama(s string) {
+	m.paroki_nama = &s
+}
+
+// ParokiNama returns the value of the "paroki_nama" field in the mutation.
+func (m *UmatSakramenMutation) ParokiNama() (r string, exists bool) {
+	v := m.paroki_nama
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldParokiNama returns the old "paroki_nama" field's value of the UmatSakramen entity.
+// If the UmatSakramen object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatSakramenMutation) OldParokiNama(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldParokiNama is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldParokiNama requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldParokiNama: %w", err)
+	}
+	return oldValue.ParokiNama, nil
+}
+
+// ClearParokiNama clears the value of the "paroki_nama" field.
+func (m *UmatSakramenMutation) ClearParokiNama() {
+	m.paroki_nama = nil
+	m.clearedFields[umatsakramen.FieldParokiNama] = struct{}{}
+}
+
+// ParokiNamaCleared returns if the "paroki_nama" field was cleared in this mutation.
+func (m *UmatSakramenMutation) ParokiNamaCleared() bool {
+	_, ok := m.clearedFields[umatsakramen.FieldParokiNama]
+	return ok
+}
+
+// ResetParokiNama resets all changes to the "paroki_nama" field.
+func (m *UmatSakramenMutation) ResetParokiNama() {
+	m.paroki_nama = nil
+	delete(m.clearedFields, umatsakramen.FieldParokiNama)
+}
+
+// SetBuku sets the "buku" field.
+func (m *UmatSakramenMutation) SetBuku(s string) {
+	m.buku = &s
+}
+
+// Buku returns the value of the "buku" field in the mutation.
+func (m *UmatSakramenMutation) Buku() (r string, exists bool) {
+	v := m.buku
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBuku returns the old "buku" field's value of the UmatSakramen entity.
+// If the UmatSakramen object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatSakramenMutation) OldBuku(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBuku is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBuku requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBuku: %w", err)
+	}
+	return oldValue.Buku, nil
+}
+
+// ClearBuku clears the value of the "buku" field.
+func (m *UmatSakramenMutation) ClearBuku() {
+	m.buku = nil
+	m.clearedFields[umatsakramen.FieldBuku] = struct{}{}
+}
+
+// BukuCleared returns if the "buku" field was cleared in this mutation.
+func (m *UmatSakramenMutation) BukuCleared() bool {
+	_, ok := m.clearedFields[umatsakramen.FieldBuku]
+	return ok
+}
+
+// ResetBuku resets all changes to the "buku" field.
+func (m *UmatSakramenMutation) ResetBuku() {
+	m.buku = nil
+	delete(m.clearedFields, umatsakramen.FieldBuku)
+}
+
+// SetNomor sets the "nomor" field.
+func (m *UmatSakramenMutation) SetNomor(s string) {
+	m.nomor = &s
+}
+
+// Nomor returns the value of the "nomor" field in the mutation.
+func (m *UmatSakramenMutation) Nomor() (r string, exists bool) {
+	v := m.nomor
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNomor returns the old "nomor" field's value of the UmatSakramen entity.
+// If the UmatSakramen object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatSakramenMutation) OldNomor(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNomor is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNomor requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNomor: %w", err)
+	}
+	return oldValue.Nomor, nil
+}
+
+// ClearNomor clears the value of the "nomor" field.
+func (m *UmatSakramenMutation) ClearNomor() {
+	m.nomor = nil
+	m.clearedFields[umatsakramen.FieldNomor] = struct{}{}
+}
+
+// NomorCleared returns if the "nomor" field was cleared in this mutation.
+func (m *UmatSakramenMutation) NomorCleared() bool {
+	_, ok := m.clearedFields[umatsakramen.FieldNomor]
+	return ok
+}
+
+// ResetNomor resets all changes to the "nomor" field.
+func (m *UmatSakramenMutation) ResetNomor() {
+	m.nomor = nil
+	delete(m.clearedFields, umatsakramen.FieldNomor)
+}
+
+// SetCatatan sets the "catatan" field.
+func (m *UmatSakramenMutation) SetCatatan(s string) {
+	m.catatan = &s
+}
+
+// Catatan returns the value of the "catatan" field in the mutation.
+func (m *UmatSakramenMutation) Catatan() (r string, exists bool) {
+	v := m.catatan
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCatatan returns the old "catatan" field's value of the UmatSakramen entity.
+// If the UmatSakramen object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatSakramenMutation) OldCatatan(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCatatan is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCatatan requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCatatan: %w", err)
+	}
+	return oldValue.Catatan, nil
+}
+
+// ClearCatatan clears the value of the "catatan" field.
+func (m *UmatSakramenMutation) ClearCatatan() {
+	m.catatan = nil
+	m.clearedFields[umatsakramen.FieldCatatan] = struct{}{}
+}
+
+// CatatanCleared returns if the "catatan" field was cleared in this mutation.
+func (m *UmatSakramenMutation) CatatanCleared() bool {
+	_, ok := m.clearedFields[umatsakramen.FieldCatatan]
+	return ok
+}
+
+// ResetCatatan resets all changes to the "catatan" field.
+func (m *UmatSakramenMutation) ResetCatatan() {
+	m.catatan = nil
+	delete(m.clearedFields, umatsakramen.FieldCatatan)
+}
+
+// ClearUmat clears the "umat" edge to the Umat entity.
+func (m *UmatSakramenMutation) ClearUmat() {
+	m.clearedumat = true
+	m.clearedFields[umatsakramen.FieldUmatID] = struct{}{}
+}
+
+// UmatCleared reports if the "umat" edge to the Umat entity was cleared.
+func (m *UmatSakramenMutation) UmatCleared() bool {
+	return m.clearedumat
+}
+
+// UmatIDs returns the "umat" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UmatID instead. It exists only for internal usage by the builders.
+func (m *UmatSakramenMutation) UmatIDs() (ids []uuid.UUID) {
+	if id := m.umat; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetUmat resets all changes to the "umat" edge.
+func (m *UmatSakramenMutation) ResetUmat() {
+	m.umat = nil
+	m.clearedumat = false
+}
+
+// Where appends a list predicates to the UmatSakramenMutation builder.
+func (m *UmatSakramenMutation) Where(ps ...predicate.UmatSakramen) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the UmatSakramenMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *UmatSakramenMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.UmatSakramen, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *UmatSakramenMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *UmatSakramenMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (UmatSakramen).
+func (m *UmatSakramenMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *UmatSakramenMutation) Fields() []string {
+	fields := make([]string, 0, 13)
+	if m.created_at != nil {
+		fields = append(fields, umatsakramen.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, umatsakramen.FieldUpdatedAt)
+	}
+	if m.paroki_id != nil {
+		fields = append(fields, umatsakramen.FieldParokiID)
+	}
+	if m.umat != nil {
+		fields = append(fields, umatsakramen.FieldUmatID)
+	}
+	if m.jenis != nil {
+		fields = append(fields, umatsakramen.FieldJenis)
+	}
+	if m.tanggal != nil {
+		fields = append(fields, umatsakramen.FieldTanggal)
+	}
+	if m.keuskupan_id != nil {
+		fields = append(fields, umatsakramen.FieldKeuskupanID)
+	}
+	if m.paroki_sakramen_id != nil {
+		fields = append(fields, umatsakramen.FieldParokiSakramenID)
+	}
+	if m.keuskupan_nama != nil {
+		fields = append(fields, umatsakramen.FieldKeuskupanNama)
+	}
+	if m.paroki_nama != nil {
+		fields = append(fields, umatsakramen.FieldParokiNama)
+	}
+	if m.buku != nil {
+		fields = append(fields, umatsakramen.FieldBuku)
+	}
+	if m.nomor != nil {
+		fields = append(fields, umatsakramen.FieldNomor)
+	}
+	if m.catatan != nil {
+		fields = append(fields, umatsakramen.FieldCatatan)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *UmatSakramenMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case umatsakramen.FieldCreatedAt:
+		return m.CreatedAt()
+	case umatsakramen.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case umatsakramen.FieldParokiID:
+		return m.ParokiID()
+	case umatsakramen.FieldUmatID:
+		return m.UmatID()
+	case umatsakramen.FieldJenis:
+		return m.Jenis()
+	case umatsakramen.FieldTanggal:
+		return m.Tanggal()
+	case umatsakramen.FieldKeuskupanID:
+		return m.KeuskupanID()
+	case umatsakramen.FieldParokiSakramenID:
+		return m.ParokiSakramenID()
+	case umatsakramen.FieldKeuskupanNama:
+		return m.KeuskupanNama()
+	case umatsakramen.FieldParokiNama:
+		return m.ParokiNama()
+	case umatsakramen.FieldBuku:
+		return m.Buku()
+	case umatsakramen.FieldNomor:
+		return m.Nomor()
+	case umatsakramen.FieldCatatan:
+		return m.Catatan()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *UmatSakramenMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case umatsakramen.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case umatsakramen.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case umatsakramen.FieldParokiID:
+		return m.OldParokiID(ctx)
+	case umatsakramen.FieldUmatID:
+		return m.OldUmatID(ctx)
+	case umatsakramen.FieldJenis:
+		return m.OldJenis(ctx)
+	case umatsakramen.FieldTanggal:
+		return m.OldTanggal(ctx)
+	case umatsakramen.FieldKeuskupanID:
+		return m.OldKeuskupanID(ctx)
+	case umatsakramen.FieldParokiSakramenID:
+		return m.OldParokiSakramenID(ctx)
+	case umatsakramen.FieldKeuskupanNama:
+		return m.OldKeuskupanNama(ctx)
+	case umatsakramen.FieldParokiNama:
+		return m.OldParokiNama(ctx)
+	case umatsakramen.FieldBuku:
+		return m.OldBuku(ctx)
+	case umatsakramen.FieldNomor:
+		return m.OldNomor(ctx)
+	case umatsakramen.FieldCatatan:
+		return m.OldCatatan(ctx)
+	}
+	return nil, fmt.Errorf("unknown UmatSakramen field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UmatSakramenMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case umatsakramen.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case umatsakramen.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case umatsakramen.FieldParokiID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetParokiID(v)
+		return nil
+	case umatsakramen.FieldUmatID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUmatID(v)
+		return nil
+	case umatsakramen.FieldJenis:
+		v, ok := value.(umatsakramen.Jenis)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetJenis(v)
+		return nil
+	case umatsakramen.FieldTanggal:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTanggal(v)
+		return nil
+	case umatsakramen.FieldKeuskupanID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKeuskupanID(v)
+		return nil
+	case umatsakramen.FieldParokiSakramenID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetParokiSakramenID(v)
+		return nil
+	case umatsakramen.FieldKeuskupanNama:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKeuskupanNama(v)
+		return nil
+	case umatsakramen.FieldParokiNama:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetParokiNama(v)
+		return nil
+	case umatsakramen.FieldBuku:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBuku(v)
+		return nil
+	case umatsakramen.FieldNomor:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNomor(v)
+		return nil
+	case umatsakramen.FieldCatatan:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCatatan(v)
+		return nil
+	}
+	return fmt.Errorf("unknown UmatSakramen field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *UmatSakramenMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *UmatSakramenMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UmatSakramenMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown UmatSakramen numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *UmatSakramenMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(umatsakramen.FieldTanggal) {
+		fields = append(fields, umatsakramen.FieldTanggal)
+	}
+	if m.FieldCleared(umatsakramen.FieldKeuskupanID) {
+		fields = append(fields, umatsakramen.FieldKeuskupanID)
+	}
+	if m.FieldCleared(umatsakramen.FieldParokiSakramenID) {
+		fields = append(fields, umatsakramen.FieldParokiSakramenID)
+	}
+	if m.FieldCleared(umatsakramen.FieldKeuskupanNama) {
+		fields = append(fields, umatsakramen.FieldKeuskupanNama)
+	}
+	if m.FieldCleared(umatsakramen.FieldParokiNama) {
+		fields = append(fields, umatsakramen.FieldParokiNama)
+	}
+	if m.FieldCleared(umatsakramen.FieldBuku) {
+		fields = append(fields, umatsakramen.FieldBuku)
+	}
+	if m.FieldCleared(umatsakramen.FieldNomor) {
+		fields = append(fields, umatsakramen.FieldNomor)
+	}
+	if m.FieldCleared(umatsakramen.FieldCatatan) {
+		fields = append(fields, umatsakramen.FieldCatatan)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *UmatSakramenMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *UmatSakramenMutation) ClearField(name string) error {
+	switch name {
+	case umatsakramen.FieldTanggal:
+		m.ClearTanggal()
+		return nil
+	case umatsakramen.FieldKeuskupanID:
+		m.ClearKeuskupanID()
+		return nil
+	case umatsakramen.FieldParokiSakramenID:
+		m.ClearParokiSakramenID()
+		return nil
+	case umatsakramen.FieldKeuskupanNama:
+		m.ClearKeuskupanNama()
+		return nil
+	case umatsakramen.FieldParokiNama:
+		m.ClearParokiNama()
+		return nil
+	case umatsakramen.FieldBuku:
+		m.ClearBuku()
+		return nil
+	case umatsakramen.FieldNomor:
+		m.ClearNomor()
+		return nil
+	case umatsakramen.FieldCatatan:
+		m.ClearCatatan()
+		return nil
+	}
+	return fmt.Errorf("unknown UmatSakramen nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *UmatSakramenMutation) ResetField(name string) error {
+	switch name {
+	case umatsakramen.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case umatsakramen.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case umatsakramen.FieldParokiID:
+		m.ResetParokiID()
+		return nil
+	case umatsakramen.FieldUmatID:
+		m.ResetUmatID()
+		return nil
+	case umatsakramen.FieldJenis:
+		m.ResetJenis()
+		return nil
+	case umatsakramen.FieldTanggal:
+		m.ResetTanggal()
+		return nil
+	case umatsakramen.FieldKeuskupanID:
+		m.ResetKeuskupanID()
+		return nil
+	case umatsakramen.FieldParokiSakramenID:
+		m.ResetParokiSakramenID()
+		return nil
+	case umatsakramen.FieldKeuskupanNama:
+		m.ResetKeuskupanNama()
+		return nil
+	case umatsakramen.FieldParokiNama:
+		m.ResetParokiNama()
+		return nil
+	case umatsakramen.FieldBuku:
+		m.ResetBuku()
+		return nil
+	case umatsakramen.FieldNomor:
+		m.ResetNomor()
+		return nil
+	case umatsakramen.FieldCatatan:
+		m.ResetCatatan()
+		return nil
+	}
+	return fmt.Errorf("unknown UmatSakramen field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *UmatSakramenMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.umat != nil {
+		edges = append(edges, umatsakramen.EdgeUmat)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *UmatSakramenMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case umatsakramen.EdgeUmat:
+		if id := m.umat; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *UmatSakramenMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *UmatSakramenMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *UmatSakramenMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedumat {
+		edges = append(edges, umatsakramen.EdgeUmat)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *UmatSakramenMutation) EdgeCleared(name string) bool {
+	switch name {
+	case umatsakramen.EdgeUmat:
+		return m.clearedumat
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *UmatSakramenMutation) ClearEdge(name string) error {
+	switch name {
+	case umatsakramen.EdgeUmat:
+		m.ClearUmat()
+		return nil
+	}
+	return fmt.Errorf("unknown UmatSakramen unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *UmatSakramenMutation) ResetEdge(name string) error {
+	switch name {
+	case umatsakramen.EdgeUmat:
+		m.ResetUmat()
+		return nil
+	}
+	return fmt.Errorf("unknown UmatSakramen edge %s", name)
 }
 
 // UserMutation represents an operation that mutates the User nodes in the graph.

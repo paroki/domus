@@ -100,6 +100,9 @@
                         ],
                         "type": "string"
                     },
+                    "umatAdmin": {
+                        "type": "boolean"
+                    },
                     "userId": {
                         "type": "string"
                     }
@@ -1827,6 +1830,9 @@
                     "role": {
                         "type": "string"
                     },
+                    "umatAdmin": {
+                        "type": "boolean"
+                    },
                     "updatedAt": {
                         "type": "string"
                     },
@@ -1844,6 +1850,9 @@
                             "member"
                         ],
                         "type": "string"
+                    },
+                    "umatAdmin": {
+                        "type": "boolean"
                     }
                 },
                 "type": "object"
@@ -2977,11 +2986,11 @@
                             "member"
                         ],
                         "type": "string"
+                    },
+                    "umatAdmin": {
+                        "type": "boolean"
                     }
                 },
-                "required": [
-                    "role"
-                ],
                 "type": "object"
             },
             "domain.UpdateParokiProfileRequest": {

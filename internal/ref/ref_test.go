@@ -9,6 +9,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
+	"github.com/paroki/domus/ent/umat"
+	"github.com/paroki/domus/ent/umatsakramen"
 	"github.com/paroki/domus/internal/platform/authz"
 	"github.com/paroki/domus/internal/ref"
 	"github.com/paroki/domus/internal/ref/domain"
@@ -285,8 +287,10 @@ func (s *RefFeatureSuite) TestParokiMember_CasbinSyncAndLastAdminGuard() {
 	s.Equal("REF_PAROKI_MEMBER_ALREADY_EXISTS", s.GetErrorResponse().Error.Code)
 
 	// Last admin cannot be demoted or removed.
+	memberRole := "member"
+	adminRole := "admin"
 	s.Request("/api/ref/paroki/"+p1.ID.String()+"/members/"+alice.UserID.String(), http.MethodPatch, domain.UpdateParokiMemberRequest{
-		Role: "member",
+		Role: &memberRole,
 	})
 	s.Conflict()
 	s.Equal("REF_LAST_PAROKI_ADMIN_REQUIRED", s.GetErrorResponse().Error.Code)
@@ -306,7 +310,7 @@ func (s *RefFeatureSuite) TestParokiMember_CasbinSyncAndLastAdminGuard() {
 	bob := testutil.DecodeAs[domain.ParokiMemberResponse](s).Data
 
 	s.Request("/api/ref/paroki/"+p1.ID.String()+"/members/"+bob.UserID.String(), http.MethodPatch, domain.UpdateParokiMemberRequest{
-		Role: "admin",
+		Role: &adminRole,
 	})
 	s.OK()
 	hasAdmin, err := s.enforcer.HasRoleInDomain(authz.UserSubject(bob.UserID), ref.RoleParokiAdmin, authz.ParokiDomain(p1.ID))
@@ -314,7 +318,7 @@ func (s *RefFeatureSuite) TestParokiMember_CasbinSyncAndLastAdminGuard() {
 	s.True(hasAdmin)
 
 	s.Request("/api/ref/paroki/"+p1.ID.String()+"/members/"+bob.UserID.String(), http.MethodPatch, domain.UpdateParokiMemberRequest{
-		Role: "member",
+		Role: &memberRole,
 	})
 	s.OK()
 	hasAdmin, err = s.enforcer.HasRoleInDomain(authz.UserSubject(bob.UserID), ref.RoleParokiAdmin, authz.ParokiDomain(p1.ID))
@@ -1125,4 +1129,273 @@ func (s *RefFeatureSuite) TestParokiEnrichment_TimezoneHierarchyClearingAndDelet
 	s.Equal("+62-21-3456789", *prof.Fax)
 	s.Require().NotNil(prof.KelurahanID)
 	s.Equal(kel.ID, *prof.KelurahanID)
+}
+
+func (s *RefFeatureSuite) TestParokiMember_UmatAdminDelegationAndDualRoles() {
+	s.loginViaOTP("admin@paroki.org")
+
+	s.Request("/api/ref/keuskupan", http.MethodPost, domain.CreateKeuskupanRequest{
+		Kode: "kaj-del",
+		Nama: "KAJ Delegation",
+	})
+	s.Created()
+	keuskupan := testutil.DecodeAs[domain.KeuskupanResponse](s).Data
+
+	s.Request("/api/ref/paroki", http.MethodPost, domain.CreateParokiRequest{
+		KeuskupanID: keuskupan.ID,
+		Kode:        "paroki-del",
+		Nama:        "Paroki Delegation",
+	})
+	s.Created()
+	paroki := testutil.DecodeAs[domain.ParokiResponse](s).Data
+
+	// Add Alice as paroki-admin AND umat-admin (dual role).
+	umatTrue := true
+	umatFalse := false
+	s.Request("/api/ref/paroki/"+paroki.ID.String()+"/members", http.MethodPost, domain.AddParokiMemberRequest{
+		Email:     "alice-del@paroki.org",
+		Name:      "Alice",
+		Role:      "admin",
+		UmatAdmin: &umatTrue,
+	})
+	s.Created()
+	alice := testutil.DecodeAs[domain.ParokiMemberResponse](s).Data
+	s.True(alice.UmatAdmin)
+	s.Equal("admin", alice.Role)
+
+	hasParokiAdmin, err := s.enforcer.HasRoleInDomain(authz.UserSubject(alice.UserID), ref.RoleParokiAdmin, authz.ParokiDomain(paroki.ID))
+	s.Require().NoError(err)
+	s.True(hasParokiAdmin)
+	hasUmatAdmin, err := s.enforcer.HasRoleInDomain(authz.UserSubject(alice.UserID), "umat:admin", authz.ParokiDomain(paroki.ID))
+	s.Require().NoError(err)
+	s.True(hasUmatAdmin)
+
+	// Toggle umatAdmin off on Alice -> preserves ref:paroki-admin.
+	s.Request("/api/ref/paroki/"+paroki.ID.String()+"/members/"+alice.UserID.String(), http.MethodPatch, domain.UpdateParokiMemberRequest{
+		UmatAdmin: &umatFalse,
+	})
+	s.OK()
+	aliceUpdated := testutil.DecodeAs[domain.ParokiMemberResponse](s).Data
+	s.False(aliceUpdated.UmatAdmin)
+	s.Equal("admin", aliceUpdated.Role)
+	hasParokiAdmin, err = s.enforcer.HasRoleInDomain(authz.UserSubject(alice.UserID), ref.RoleParokiAdmin, authz.ParokiDomain(paroki.ID))
+	s.Require().NoError(err)
+	s.True(hasParokiAdmin)
+	hasUmatAdmin, err = s.enforcer.HasRoleInDomain(authz.UserSubject(alice.UserID), "umat:admin", authz.ParokiDomain(paroki.ID))
+	s.Require().NoError(err)
+	s.False(hasUmatAdmin)
+
+	// Empty PATCH (both Role and UmatAdmin nil) -> 422 VALIDATION_ERROR.
+	s.Request("/api/ref/paroki/"+paroki.ID.String()+"/members/"+alice.UserID.String(), http.MethodPatch, domain.UpdateParokiMemberRequest{})
+	s.UnprocessableEntity()
+
+	// Add Bob as member + umatAdmin=true.
+	s.Request("/api/ref/paroki/"+paroki.ID.String()+"/members", http.MethodPost, domain.AddParokiMemberRequest{
+		Email:     "bob-del@paroki.org",
+		Name:      "Bob",
+		Role:      "member",
+		UmatAdmin: &umatTrue,
+	})
+	s.Created()
+	bob := testutil.DecodeAs[domain.ParokiMemberResponse](s).Data
+	s.True(bob.UmatAdmin)
+
+	// Bob (umat:admin only) can search, add member with role=member & umatAdmin=true, and toggle umatAdmin.
+	s.loginViaOTP("bob-del@paroki.org")
+	s.Request("/api/ref/paroki/"+paroki.ID.String()+"/members/search", http.MethodPost, domain.SearchParokiMembersRequest{
+		Filter: &domain.ParokiMemberSearchFilter{UmatAdmin: &umatTrue},
+	})
+	s.OK()
+	filtered := testutil.DecodeAs[[]domain.ParokiMemberResponse](s).Data
+	s.Len(filtered, 1)
+	s.Equal(bob.UserID, filtered[0].UserID)
+
+	// Bob cannot add a member with role=admin -> 403 REF_FORBIDDEN.
+	s.Request("/api/ref/paroki/"+paroki.ID.String()+"/members", http.MethodPost, domain.AddParokiMemberRequest{
+		Email: "carol-del@paroki.org",
+		Name:  "Carol",
+		Role:  "admin",
+	})
+	s.Forbidden()
+	s.Equal("REF_FORBIDDEN", s.GetErrorResponse().Error.Code)
+
+	// Bob CAN add Carol as member with umatAdmin=true.
+	s.Request("/api/ref/paroki/"+paroki.ID.String()+"/members", http.MethodPost, domain.AddParokiMemberRequest{
+		Email:     "carol-del@paroki.org",
+		Name:      "Carol",
+		Role:      "member",
+		UmatAdmin: &umatTrue,
+	})
+	s.Created()
+	carol := testutil.DecodeAs[domain.ParokiMemberResponse](s).Data
+	s.True(carol.UmatAdmin)
+
+	// Bob cannot promote Carol to role=admin -> 403 REF_FORBIDDEN.
+	adminRole := "admin"
+	s.Request("/api/ref/paroki/"+paroki.ID.String()+"/members/"+carol.UserID.String(), http.MethodPatch, domain.UpdateParokiMemberRequest{
+		Role: &adminRole,
+	})
+	s.Forbidden()
+	s.Equal("REF_FORBIDDEN", s.GetErrorResponse().Error.Code)
+
+	// Bob CAN revoke Carol's umatAdmin.
+	s.Request("/api/ref/paroki/"+paroki.ID.String()+"/members/"+carol.UserID.String(), http.MethodPatch, domain.UpdateParokiMemberRequest{
+		UmatAdmin: &umatFalse,
+	})
+	s.OK()
+	carolUpdated := testutil.DecodeAs[domain.ParokiMemberResponse](s).Data
+	s.False(carolUpdated.UmatAdmin)
+
+	// Bob cannot remove members -> 403 REF_FORBIDDEN.
+	s.Request("/api/ref/paroki/"+paroki.ID.String()+"/members/"+carol.UserID.String(), http.MethodDelete, nil)
+	s.Forbidden()
+	s.Equal("REF_FORBIDDEN", s.GetErrorResponse().Error.Code)
+
+	// Alice (paroki-admin) removes Bob -> revokes umat:admin in Casbin.
+	s.loginViaOTP("alice-del@paroki.org")
+	s.Request("/api/ref/paroki/"+paroki.ID.String()+"/members/"+bob.UserID.String(), http.MethodDelete, nil)
+	s.NoContent()
+	hasUmatAdmin, err = s.enforcer.HasRoleInDomain(authz.UserSubject(bob.UserID), "umat:admin", authz.ParokiDomain(paroki.ID))
+	s.Require().NoError(err)
+	s.False(hasUmatAdmin)
+
+	// HasParokiMember check.
+	isMember, err := s.refFeature.HasParokiMember(context.Background(), paroki.ID, alice.UserID)
+	s.Require().NoError(err)
+	s.True(isMember)
+	isMember, err = s.refFeature.HasParokiMember(context.Background(), paroki.ID, bob.UserID)
+	s.Require().NoError(err)
+	s.False(isMember)
+}
+
+func (s *RefFeatureSuite) TestRefDeleteGuards_UmatReferences() {
+	s.loginViaOTP("admin@paroki.org")
+	ctx := context.Background()
+
+	// Setup keuskupan, kota, kecamatan, kelurahan, paroki, wilayah, lingkungan.
+	s.Request("/api/ref/keuskupan", http.MethodPost, domain.CreateKeuskupanRequest{Kode: "kaj-guard", Nama: "KAJ Guard"})
+	s.Created()
+	keuskupan := testutil.DecodeAs[domain.KeuskupanResponse](s).Data
+
+	s.Request("/api/ref/kota", http.MethodPost, domain.CreateKotaRequest{Kode: "jkt-guard", Nama: "Jakarta Guard"})
+	s.Created()
+	kota := testutil.DecodeAs[domain.KotaResponse](s).Data
+
+	s.Request("/api/ref/kecamatan", http.MethodPost, domain.CreateKecamatanRequest{KotaID: kota.ID, Kode: "kec-guard", Nama: "Kecamatan Guard"})
+	s.Created()
+	kec := testutil.DecodeAs[domain.KecamatanResponse](s).Data
+
+	s.Request("/api/ref/kelurahan", http.MethodPost, domain.CreateKelurahanRequest{KecamatanID: kec.ID, Kode: "kel-guard", Nama: "Kelurahan Guard"})
+	s.Created()
+	kel := testutil.DecodeAs[domain.KelurahanResponse](s).Data
+
+	s.Request("/api/ref/paroki", http.MethodPost, domain.CreateParokiRequest{
+		KeuskupanID: keuskupan.ID,
+		Kode:        "paroki-guard",
+		Nama:        "Paroki Guard",
+	})
+	s.Created()
+	paroki := testutil.DecodeAs[domain.ParokiResponse](s).Data
+
+	// Add a paroki-admin to manage wilayah/lingkungan.
+	s.Request("/api/ref/paroki/"+paroki.ID.String()+"/members", http.MethodPost, domain.AddParokiMemberRequest{
+		Email: "padmin-guard@paroki.org",
+		Name:  "Paroki Admin Guard",
+		Role:  "admin",
+	})
+	s.Created()
+
+	s.loginViaOTP("padmin-guard@paroki.org")
+	s.SetHeader("X-Paroki-Id", paroki.ID.String())
+	defer s.SetHeader("X-Paroki-Id", "")
+
+	s.Request("/api/ref/wilayah", http.MethodPost, domain.CreateWilayahRequest{Jenis: "wilayah", Kode: "w1", Nama: "Wilayah 1"})
+	s.Created()
+	wil := testutil.DecodeAs[domain.WilayahResponse](s).Data
+
+	s.Request("/api/ref/lingkungan", http.MethodPost, domain.CreateLingkunganRequest{WilayahID: wil.ID, Kode: "l1", Nama: "Lingkungan 1"})
+	s.Created()
+	ling := testutil.DecodeAs[domain.LingkunganResponse](s).Data
+
+	// Create Keluarga + Umat + UmatSakramen referencing these ref entities.
+	keluargaRow, err := s.client.Keluarga.Create().
+		SetParokiID(paroki.ID).
+		SetWilayahID(wil.ID).
+		SetLingkunganID(ling.ID).
+		SetKotaID(kota.ID).
+		SetKecamatanID(kec.ID).
+		SetKelurahanID(kel.ID).
+		SetNamaKeluarga("Keluarga Guard").
+		Save(ctx)
+	s.Require().NoError(err)
+
+	umatRow, err := s.client.Umat.Create().
+		SetParokiID(paroki.ID).
+		SetKeluargaID(keluargaRow.ID).
+		SetWilayahID(wil.ID).
+		SetLingkunganID(ling.ID).
+		SetKotaID(kota.ID).
+		SetKecamatanID(kec.ID).
+		SetKelurahanID(kel.ID).
+		SetNama("Umat Guard").
+		SetJenisKelamin(umat.JenisKelaminPria).
+		Save(ctx)
+	s.Require().NoError(err)
+
+	sakramenRow, err := s.client.UmatSakramen.Create().
+		SetParokiID(paroki.ID).
+		SetUmatID(umatRow.ID).
+		SetJenis(umatsakramen.JenisBaptis).
+		SetKeuskupanID(keuskupan.ID).
+		SetParokiSakramenID(paroki.ID).
+		Save(ctx)
+	s.Require().NoError(err)
+
+	// All referenced entities must fail delete with 409 REF_IN_USE.
+	for _, path := range []string{
+		"/api/ref/lingkungan/" + ling.ID.String(),
+		"/api/ref/wilayah/" + wil.ID.String(),
+	} {
+		s.Request(path, http.MethodDelete, nil)
+		s.Conflict()
+		s.Equal("REF_IN_USE", s.GetErrorResponse().Error.Code)
+	}
+	s.loginViaOTP("admin@paroki.org")
+	for _, path := range []string{
+		"/api/ref/kelurahan/" + kel.ID.String(),
+		"/api/ref/kecamatan/" + kec.ID.String(),
+		"/api/ref/kota/" + kota.ID.String(),
+		"/api/ref/paroki/" + paroki.ID.String(),
+		"/api/ref/keuskupan/" + keuskupan.ID.String(),
+	} {
+		s.Request(path, http.MethodDelete, nil)
+		s.Conflict()
+		s.Equal("REF_IN_USE", s.GetErrorResponse().Error.Code)
+	}
+
+	// Clean up UmatSakramen and soft-delete Umat + Keluarga -> deletes succeed.
+	s.Require().NoError(s.client.UmatSakramen.DeleteOneID(sakramenRow.ID).Exec(ctx))
+	now := time.Now().UTC()
+	s.Require().NoError(s.client.Umat.UpdateOneID(umatRow.ID).SetDeletedAt(now).Exec(ctx))
+	s.Require().NoError(s.client.Keluarga.UpdateOneID(keluargaRow.ID).SetDeletedAt(now).Exec(ctx))
+
+	s.loginViaOTP("padmin-guard@paroki.org")
+	for _, path := range []string{
+		"/api/ref/lingkungan/" + ling.ID.String(),
+		"/api/ref/wilayah/" + wil.ID.String(),
+	} {
+		s.Request(path, http.MethodDelete, nil)
+		s.NoContent()
+	}
+	s.loginViaOTP("admin@paroki.org")
+	for _, path := range []string{
+		"/api/ref/kelurahan/" + kel.ID.String(),
+		"/api/ref/kecamatan/" + kec.ID.String(),
+		"/api/ref/kota/" + kota.ID.String(),
+		"/api/ref/paroki/" + paroki.ID.String(),
+		"/api/ref/keuskupan/" + keuskupan.ID.String(),
+	} {
+		s.Request(path, http.MethodDelete, nil)
+		s.NoContent()
+	}
 }

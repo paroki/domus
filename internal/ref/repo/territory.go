@@ -6,8 +6,10 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
+	"github.com/paroki/domus/ent/keluarga"
 	"github.com/paroki/domus/ent/lingkungan"
 	"github.com/paroki/domus/ent/organization"
+	"github.com/paroki/domus/ent/umat"
 	"github.com/paroki/domus/ent/wilayah"
 )
 
@@ -159,6 +161,34 @@ func (r *Repository) HasOrganizationsByWilayah(ctx context.Context, parokiID, wi
 func (r *Repository) HasOrganizationsByLingkungan(ctx context.Context, parokiID, lingkunganID uuid.UUID) (bool, error) {
 	return r.client.Organization.Query().
 		Where(organization.ParokiIDEQ(parokiID), organization.LingkunganIDEQ(lingkunganID), organization.DeletedAtIsNil()).
+		Exist(ctx)
+}
+
+// HasKeluargaByWilayah reports whether any non-deleted Keluarga references wilayahID in parokiID.
+func (r *Repository) HasKeluargaByWilayah(ctx context.Context, parokiID, wilayahID uuid.UUID) (bool, error) {
+	return r.client.Keluarga.Query().
+		Where(keluarga.ParokiIDEQ(parokiID), keluarga.WilayahIDEQ(wilayahID), keluarga.DeletedAtIsNil()).
+		Exist(ctx)
+}
+
+// HasUmatByWilayah reports whether any non-deleted Umat references wilayahID in parokiID.
+func (r *Repository) HasUmatByWilayah(ctx context.Context, parokiID, wilayahID uuid.UUID) (bool, error) {
+	return r.client.Umat.Query().
+		Where(umat.ParokiIDEQ(parokiID), umat.WilayahIDEQ(wilayahID), umat.DeletedAtIsNil()).
+		Exist(ctx)
+}
+
+// HasKeluargaByLingkungan reports whether any non-deleted Keluarga references lingkunganID in parokiID.
+func (r *Repository) HasKeluargaByLingkungan(ctx context.Context, parokiID, lingkunganID uuid.UUID) (bool, error) {
+	return r.client.Keluarga.Query().
+		Where(keluarga.ParokiIDEQ(parokiID), keluarga.LingkunganIDEQ(lingkunganID), keluarga.DeletedAtIsNil()).
+		Exist(ctx)
+}
+
+// HasUmatByLingkungan reports whether any non-deleted Umat references lingkunganID in parokiID.
+func (r *Repository) HasUmatByLingkungan(ctx context.Context, parokiID, lingkunganID uuid.UUID) (bool, error) {
+	return r.client.Umat.Query().
+		Where(umat.ParokiIDEQ(parokiID), umat.LingkunganIDEQ(lingkunganID), umat.DeletedAtIsNil()).
 		Exist(ctx)
 }
 

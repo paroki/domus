@@ -7,9 +7,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/ent/kecamatan"
+	"github.com/paroki/domus/ent/keluarga"
 	"github.com/paroki/domus/ent/kelurahan"
 	"github.com/paroki/domus/ent/kota"
 	"github.com/paroki/domus/ent/paroki"
+	"github.com/paroki/domus/ent/umat"
 )
 
 // KotaInput holds mutable fields for creating or reactivating a Kota.
@@ -400,5 +402,47 @@ func (r *Repository) HasParokiByKecamatan(ctx context.Context, kecamatanID uuid.
 func (r *Repository) HasParokiByKelurahan(ctx context.Context, kelurahanID uuid.UUID) (bool, error) {
 	return r.client.Paroki.Query().
 		Where(paroki.KelurahanIDEQ(kelurahanID), paroki.DeletedAtIsNil()).
+		Exist(ctx)
+}
+
+// HasKeluargaByKota reports whether any non-deleted Keluarga references kotaID.
+func (r *Repository) HasKeluargaByKota(ctx context.Context, kotaID uuid.UUID) (bool, error) {
+	return r.client.Keluarga.Query().
+		Where(keluarga.KotaIDEQ(kotaID), keluarga.DeletedAtIsNil()).
+		Exist(ctx)
+}
+
+// HasUmatByKota reports whether any non-deleted Umat references kotaID.
+func (r *Repository) HasUmatByKota(ctx context.Context, kotaID uuid.UUID) (bool, error) {
+	return r.client.Umat.Query().
+		Where(umat.KotaIDEQ(kotaID), umat.DeletedAtIsNil()).
+		Exist(ctx)
+}
+
+// HasKeluargaByKecamatan reports whether any non-deleted Keluarga references kecamatanID.
+func (r *Repository) HasKeluargaByKecamatan(ctx context.Context, kecamatanID uuid.UUID) (bool, error) {
+	return r.client.Keluarga.Query().
+		Where(keluarga.KecamatanIDEQ(kecamatanID), keluarga.DeletedAtIsNil()).
+		Exist(ctx)
+}
+
+// HasUmatByKecamatan reports whether any non-deleted Umat references kecamatanID.
+func (r *Repository) HasUmatByKecamatan(ctx context.Context, kecamatanID uuid.UUID) (bool, error) {
+	return r.client.Umat.Query().
+		Where(umat.KecamatanIDEQ(kecamatanID), umat.DeletedAtIsNil()).
+		Exist(ctx)
+}
+
+// HasKeluargaByKelurahan reports whether any non-deleted Keluarga references kelurahanID.
+func (r *Repository) HasKeluargaByKelurahan(ctx context.Context, kelurahanID uuid.UUID) (bool, error) {
+	return r.client.Keluarga.Query().
+		Where(keluarga.KelurahanIDEQ(kelurahanID), keluarga.DeletedAtIsNil()).
+		Exist(ctx)
+}
+
+// HasUmatByKelurahan reports whether any non-deleted Umat references kelurahanID.
+func (r *Repository) HasUmatByKelurahan(ctx context.Context, kelurahanID uuid.UUID) (bool, error) {
+	return r.client.Umat.Query().
+		Where(umat.KelurahanIDEQ(kelurahanID), umat.DeletedAtIsNil()).
 		Exist(ctx)
 }

@@ -22,6 +22,7 @@ import (
 	"github.com/paroki/domus/ent/eventpetugas"
 	"github.com/paroki/domus/ent/eventrsvp"
 	"github.com/paroki/domus/ent/kecamatan"
+	"github.com/paroki/domus/ent/keluarga"
 	"github.com/paroki/domus/ent/kelurahan"
 	"github.com/paroki/domus/ent/keuskupan"
 	"github.com/paroki/domus/ent/kevikepan"
@@ -35,6 +36,8 @@ import (
 	"github.com/paroki/domus/ent/parokimember"
 	"github.com/paroki/domus/ent/period"
 	"github.com/paroki/domus/ent/setting"
+	"github.com/paroki/domus/ent/umat"
+	"github.com/paroki/domus/ent/umatsakramen"
 	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/useraccount"
 	"github.com/paroki/domus/ent/userotp"
@@ -111,6 +114,7 @@ func checkColumn(t, c string) error {
 			eventpetugas.Table:  eventpetugas.ValidColumn,
 			eventrsvp.Table:     eventrsvp.ValidColumn,
 			kecamatan.Table:     kecamatan.ValidColumn,
+			keluarga.Table:      keluarga.ValidColumn,
 			kelurahan.Table:     kelurahan.ValidColumn,
 			keuskupan.Table:     keuskupan.ValidColumn,
 			kevikepan.Table:     kevikepan.ValidColumn,
@@ -124,6 +128,8 @@ func checkColumn(t, c string) error {
 			parokimember.Table:  parokimember.ValidColumn,
 			period.Table:        period.ValidColumn,
 			setting.Table:       setting.ValidColumn,
+			umat.Table:          umat.ValidColumn,
+			umatsakramen.Table:  umatsakramen.ValidColumn,
 			user.Table:          user.ValidColumn,
 			useraccount.Table:   useraccount.ValidColumn,
 			userotp.Table:       userotp.ValidColumn,

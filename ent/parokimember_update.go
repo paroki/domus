@@ -78,6 +78,20 @@ func (_u *ParokiMemberUpdate) SetNillableRole(v *parokimember.Role) *ParokiMembe
 	return _u
 }
 
+// SetUmatAdmin sets the "umat_admin" field.
+func (_u *ParokiMemberUpdate) SetUmatAdmin(v bool) *ParokiMemberUpdate {
+	_u.mutation.SetUmatAdmin(v)
+	return _u
+}
+
+// SetNillableUmatAdmin sets the "umat_admin" field if the given value is not nil.
+func (_u *ParokiMemberUpdate) SetNillableUmatAdmin(v *bool) *ParokiMemberUpdate {
+	if v != nil {
+		_u.SetUmatAdmin(*v)
+	}
+	return _u
+}
+
 // SetParoki sets the "paroki" edge to the Paroki entity.
 func (_u *ParokiMemberUpdate) SetParoki(v *Paroki) *ParokiMemberUpdate {
 	return _u.SetParokiID(v.ID)
@@ -163,6 +177,9 @@ func (_u *ParokiMemberUpdate) sqlSave(ctx context.Context) (_node int, err error
 	}
 	if value, ok := _u.mutation.Role(); ok {
 		_spec.SetField(parokimember.FieldRole, field.TypeEnum, value)
+	}
+	if value, ok := _u.mutation.UmatAdmin(); ok {
+		_spec.SetField(parokimember.FieldUmatAdmin, field.TypeBool, value)
 	}
 	if _u.mutation.ParokiCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -257,6 +274,20 @@ func (_u *ParokiMemberUpdateOne) SetRole(v parokimember.Role) *ParokiMemberUpdat
 func (_u *ParokiMemberUpdateOne) SetNillableRole(v *parokimember.Role) *ParokiMemberUpdateOne {
 	if v != nil {
 		_u.SetRole(*v)
+	}
+	return _u
+}
+
+// SetUmatAdmin sets the "umat_admin" field.
+func (_u *ParokiMemberUpdateOne) SetUmatAdmin(v bool) *ParokiMemberUpdateOne {
+	_u.mutation.SetUmatAdmin(v)
+	return _u
+}
+
+// SetNillableUmatAdmin sets the "umat_admin" field if the given value is not nil.
+func (_u *ParokiMemberUpdateOne) SetNillableUmatAdmin(v *bool) *ParokiMemberUpdateOne {
+	if v != nil {
+		_u.SetUmatAdmin(*v)
 	}
 	return _u
 }
@@ -376,6 +407,9 @@ func (_u *ParokiMemberUpdateOne) sqlSave(ctx context.Context) (_node *ParokiMemb
 	}
 	if value, ok := _u.mutation.Role(); ok {
 		_spec.SetField(parokimember.FieldRole, field.TypeEnum, value)
+	}
+	if value, ok := _u.mutation.UmatAdmin(); ok {
+		_spec.SetField(parokimember.FieldUmatAdmin, field.TypeBool, value)
 	}
 	if _u.mutation.ParokiCleared() {
 		edge := &sqlgraph.EdgeSpec{

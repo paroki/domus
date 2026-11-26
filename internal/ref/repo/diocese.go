@@ -8,6 +8,7 @@ import (
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/ent/keuskupan"
 	"github.com/paroki/domus/ent/paroki"
+	"github.com/paroki/domus/ent/umatsakramen"
 )
 
 // KeuskupanInput holds mutable fields for creating or updating a Keuskupan.
@@ -153,6 +154,13 @@ func (r *Repository) HasActiveParokiByKeuskupan(ctx context.Context, keuskupanID
 func (r *Repository) HasParokiByKeuskupan(ctx context.Context, keuskupanID uuid.UUID) (bool, error) {
 	return r.client.Paroki.Query().
 		Where(paroki.KeuskupanIDEQ(keuskupanID), paroki.DeletedAtIsNil()).
+		Exist(ctx)
+}
+
+// HasUmatSakramenByKeuskupan reports whether any UmatSakramen references keuskupanID.
+func (r *Repository) HasUmatSakramenByKeuskupan(ctx context.Context, keuskupanID uuid.UUID) (bool, error) {
+	return r.client.UmatSakramen.Query().
+		Where(umatsakramen.KeuskupanIDEQ(keuskupanID)).
 		Exist(ctx)
 }
 

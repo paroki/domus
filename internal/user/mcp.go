@@ -10,7 +10,10 @@ import (
 	"github.com/paroki/domus/internal/platform/httpx"
 )
 
-const roleParokiAdmin = "ref:paroki-admin"
+const (
+	roleParokiAdmin = "ref:paroki-admin"
+	roleUmatAdmin   = "umat:admin"
+)
 
 // UserGetMeInput is the input schema for user_get_me.
 type UserGetMeInput struct{}
@@ -97,7 +100,11 @@ func (f *Feature) mcpUserListParokiMembers(ctx context.Context, _ *mcp.CallToolR
 	if err != nil {
 		return nil, UserListParokiMembersOutput{}, err
 	}
-	if !isSuperAdmin && !isParokiAdmin {
+	isUmatAdmin, err := f.enforcer.HasRoleInDomain(sub, roleUmatAdmin, authz.ParokiDomain(tp.ParokiID))
+	if err != nil {
+		return nil, UserListParokiMembersOutput{}, err
+	}
+	if !isSuperAdmin && !isParokiAdmin && !isUmatAdmin {
 		return nil, UserListParokiMembersOutput{}, httpx.Forbidden("Forbidden.")
 	}
 	if f.parokiMembers == nil {

@@ -18,6 +18,7 @@ import (
 const (
 	roleSuperAdmin  = "user:super-admin"
 	roleParokiAdmin = "ref:paroki-admin"
+	roleUmatAdmin   = "umat:admin"
 )
 
 var (
@@ -111,7 +112,7 @@ func (s *Service) EnsureParokiMember(ctx context.Context, parokiID, userID uuid.
 		if !ent.IsNotFound(findErr) {
 			return findErr
 		}
-		created, createErr := txRepo.CreateParokiMember(ctx, parokiID, userID, parokimember.RoleMember)
+		created, createErr := txRepo.CreateParokiMember(ctx, parokiID, userID, parokimember.RoleMember, false)
 		if createErr != nil {
 			return createErr
 		}
@@ -126,6 +127,18 @@ func (s *Service) EnsureParokiMember(ctx context.Context, parokiID, userID uuid.
 	}
 	res := toParokiMemberResponse(pm, u)
 	return &res, nil
+}
+
+// HasParokiMember reports whether userID is a member of parokiID.
+func (s *Service) HasParokiMember(ctx context.Context, parokiID, userID uuid.UUID) (bool, error) {
+	_, err := s.repo.FindParokiMember(ctx, parokiID, userID)
+	if ent.IsNotFound(err) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func (s *Service) isSuperAdmin(p authx.Principal) bool {
@@ -144,6 +157,13 @@ func (s *Service) isParokiAdmin(p authx.Principal, parokiID uuid.UUID) (bool, er
 		return false, nil
 	}
 	return s.enforcer.HasRoleInDomain(authz.UserSubject(p.UserID), roleParokiAdmin, authz.ParokiDomain(parokiID))
+}
+
+func (s *Service) isUmatAdmin(p authx.Principal, parokiID uuid.UUID) (bool, error) {
+	if s.enforcer == nil || p.UserID == uuid.Nil || parokiID == uuid.Nil {
+		return false, nil
+	}
+	return s.enforcer.HasRoleInDomain(authz.UserSubject(p.UserID), roleUmatAdmin, authz.ParokiDomain(parokiID))
 }
 
 func (s *Service) requireParokiAdminOrSuperAdmin(p authx.Principal, parokiID uuid.UUID) (bool, error) {

@@ -16,6 +16,7 @@ import (
 	"github.com/paroki/domus/ent/eventpetugas"
 	"github.com/paroki/domus/ent/eventrsvp"
 	"github.com/paroki/domus/ent/kecamatan"
+	"github.com/paroki/domus/ent/keluarga"
 	"github.com/paroki/domus/ent/kelurahan"
 	"github.com/paroki/domus/ent/keuskupan"
 	"github.com/paroki/domus/ent/kevikepan"
@@ -30,6 +31,8 @@ import (
 	"github.com/paroki/domus/ent/period"
 	"github.com/paroki/domus/ent/schema"
 	"github.com/paroki/domus/ent/setting"
+	"github.com/paroki/domus/ent/umat"
+	"github.com/paroki/domus/ent/umatsakramen"
 	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/useraccount"
 	"github.com/paroki/domus/ent/userotp"
@@ -352,6 +355,35 @@ func init() {
 	kecamatanDescID := kecamatanMixinFields0[0].Descriptor()
 	// kecamatan.DefaultID holds the default value on creation for the id field.
 	kecamatan.DefaultID = kecamatanDescID.Default.(func() uuid.UUID)
+	keluargaMixin := schema.Keluarga{}.Mixin()
+	keluargaMixinFields0 := keluargaMixin[0].Fields()
+	_ = keluargaMixinFields0
+	keluargaMixinFields1 := keluargaMixin[1].Fields()
+	_ = keluargaMixinFields1
+	keluargaFields := schema.Keluarga{}.Fields()
+	_ = keluargaFields
+	// keluargaDescCreatedAt is the schema descriptor for created_at field.
+	keluargaDescCreatedAt := keluargaMixinFields1[0].Descriptor()
+	// keluarga.DefaultCreatedAt holds the default value on creation for the created_at field.
+	keluarga.DefaultCreatedAt = keluargaDescCreatedAt.Default.(func() time.Time)
+	// keluargaDescUpdatedAt is the schema descriptor for updated_at field.
+	keluargaDescUpdatedAt := keluargaMixinFields1[1].Descriptor()
+	// keluarga.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	keluarga.DefaultUpdatedAt = keluargaDescUpdatedAt.Default.(func() time.Time)
+	// keluarga.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	keluarga.UpdateDefaultUpdatedAt = keluargaDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// keluargaDescNamaKeluarga is the schema descriptor for nama_keluarga field.
+	keluargaDescNamaKeluarga := keluargaFields[5].Descriptor()
+	// keluarga.NamaKeluargaValidator is a validator for the "nama_keluarga" field. It is called by the builders before save.
+	keluarga.NamaKeluargaValidator = keluargaDescNamaKeluarga.Validators[0].(func(string) error)
+	// keluargaDescAktif is the schema descriptor for aktif field.
+	keluargaDescAktif := keluargaFields[13].Descriptor()
+	// keluarga.DefaultAktif holds the default value on creation for the aktif field.
+	keluarga.DefaultAktif = keluargaDescAktif.Default.(bool)
+	// keluargaDescID is the schema descriptor for id field.
+	keluargaDescID := keluargaMixinFields0[0].Descriptor()
+	// keluarga.DefaultID holds the default value on creation for the id field.
+	keluarga.DefaultID = keluargaDescID.Default.(func() uuid.UUID)
 	kelurahanMixin := schema.Kelurahan{}.Mixin()
 	kelurahanMixinFields0 := kelurahanMixin[0].Fields()
 	_ = kelurahanMixinFields0
@@ -697,6 +729,10 @@ func init() {
 	parokimember.DefaultUpdatedAt = parokimemberDescUpdatedAt.Default.(func() time.Time)
 	// parokimember.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	parokimember.UpdateDefaultUpdatedAt = parokimemberDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// parokimemberDescUmatAdmin is the schema descriptor for umat_admin field.
+	parokimemberDescUmatAdmin := parokimemberFields[3].Descriptor()
+	// parokimember.DefaultUmatAdmin holds the default value on creation for the umat_admin field.
+	parokimember.DefaultUmatAdmin = parokimemberDescUmatAdmin.Default.(bool)
 	// parokimemberDescID is the schema descriptor for id field.
 	parokimemberDescID := parokimemberMixinFields0[0].Descriptor()
 	// parokimember.DefaultID holds the default value on creation for the id field.
@@ -771,6 +807,56 @@ func init() {
 	settingDescID := settingMixinFields0[0].Descriptor()
 	// setting.DefaultID holds the default value on creation for the id field.
 	setting.DefaultID = settingDescID.Default.(func() uuid.UUID)
+	umatMixin := schema.Umat{}.Mixin()
+	umatMixinFields0 := umatMixin[0].Fields()
+	_ = umatMixinFields0
+	umatMixinFields1 := umatMixin[1].Fields()
+	_ = umatMixinFields1
+	umatFields := schema.Umat{}.Fields()
+	_ = umatFields
+	// umatDescCreatedAt is the schema descriptor for created_at field.
+	umatDescCreatedAt := umatMixinFields1[0].Descriptor()
+	// umat.DefaultCreatedAt holds the default value on creation for the created_at field.
+	umat.DefaultCreatedAt = umatDescCreatedAt.Default.(func() time.Time)
+	// umatDescUpdatedAt is the schema descriptor for updated_at field.
+	umatDescUpdatedAt := umatMixinFields1[1].Descriptor()
+	// umat.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	umat.DefaultUpdatedAt = umatDescUpdatedAt.Default.(func() time.Time)
+	// umat.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	umat.UpdateDefaultUpdatedAt = umatDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// umatDescNama is the schema descriptor for nama field.
+	umatDescNama := umatFields[5].Descriptor()
+	// umat.NamaValidator is a validator for the "nama" field. It is called by the builders before save.
+	umat.NamaValidator = umatDescNama.Validators[0].(func(string) error)
+	// umatDescAlmarhum is the schema descriptor for almarhum field.
+	umatDescAlmarhum := umatFields[19].Descriptor()
+	// umat.DefaultAlmarhum holds the default value on creation for the almarhum field.
+	umat.DefaultAlmarhum = umatDescAlmarhum.Default.(bool)
+	// umatDescID is the schema descriptor for id field.
+	umatDescID := umatMixinFields0[0].Descriptor()
+	// umat.DefaultID holds the default value on creation for the id field.
+	umat.DefaultID = umatDescID.Default.(func() uuid.UUID)
+	umatsakramenMixin := schema.UmatSakramen{}.Mixin()
+	umatsakramenMixinFields0 := umatsakramenMixin[0].Fields()
+	_ = umatsakramenMixinFields0
+	umatsakramenMixinFields1 := umatsakramenMixin[1].Fields()
+	_ = umatsakramenMixinFields1
+	umatsakramenFields := schema.UmatSakramen{}.Fields()
+	_ = umatsakramenFields
+	// umatsakramenDescCreatedAt is the schema descriptor for created_at field.
+	umatsakramenDescCreatedAt := umatsakramenMixinFields1[0].Descriptor()
+	// umatsakramen.DefaultCreatedAt holds the default value on creation for the created_at field.
+	umatsakramen.DefaultCreatedAt = umatsakramenDescCreatedAt.Default.(func() time.Time)
+	// umatsakramenDescUpdatedAt is the schema descriptor for updated_at field.
+	umatsakramenDescUpdatedAt := umatsakramenMixinFields1[1].Descriptor()
+	// umatsakramen.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	umatsakramen.DefaultUpdatedAt = umatsakramenDescUpdatedAt.Default.(func() time.Time)
+	// umatsakramen.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	umatsakramen.UpdateDefaultUpdatedAt = umatsakramenDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// umatsakramenDescID is the schema descriptor for id field.
+	umatsakramenDescID := umatsakramenMixinFields0[0].Descriptor()
+	// umatsakramen.DefaultID holds the default value on creation for the id field.
+	umatsakramen.DefaultID = umatsakramenDescID.Default.(func() uuid.UUID)
 	userMixin := schema.User{}.Mixin()
 	userMixinFields0 := userMixin[0].Fields()
 	_ = userMixinFields0

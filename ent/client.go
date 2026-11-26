@@ -26,6 +26,7 @@ import (
 	"github.com/paroki/domus/ent/eventpetugas"
 	"github.com/paroki/domus/ent/eventrsvp"
 	"github.com/paroki/domus/ent/kecamatan"
+	"github.com/paroki/domus/ent/keluarga"
 	"github.com/paroki/domus/ent/kelurahan"
 	"github.com/paroki/domus/ent/keuskupan"
 	"github.com/paroki/domus/ent/kevikepan"
@@ -39,6 +40,8 @@ import (
 	"github.com/paroki/domus/ent/parokimember"
 	"github.com/paroki/domus/ent/period"
 	"github.com/paroki/domus/ent/setting"
+	"github.com/paroki/domus/ent/umat"
+	"github.com/paroki/domus/ent/umatsakramen"
 	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/useraccount"
 	"github.com/paroki/domus/ent/userotp"
@@ -72,6 +75,8 @@ type Client struct {
 	EventRSVP *EventRSVPClient
 	// Kecamatan is the client for interacting with the Kecamatan builders.
 	Kecamatan *KecamatanClient
+	// Keluarga is the client for interacting with the Keluarga builders.
+	Keluarga *KeluargaClient
 	// Kelurahan is the client for interacting with the Kelurahan builders.
 	Kelurahan *KelurahanClient
 	// Keuskupan is the client for interacting with the Keuskupan builders.
@@ -98,6 +103,10 @@ type Client struct {
 	Period *PeriodClient
 	// Setting is the client for interacting with the Setting builders.
 	Setting *SettingClient
+	// Umat is the client for interacting with the Umat builders.
+	Umat *UmatClient
+	// UmatSakramen is the client for interacting with the UmatSakramen builders.
+	UmatSakramen *UmatSakramenClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// UserAccount is the client for interacting with the UserAccount builders.
@@ -131,6 +140,7 @@ func (c *Client) init() {
 	c.EventPetugas = NewEventPetugasClient(c.config)
 	c.EventRSVP = NewEventRSVPClient(c.config)
 	c.Kecamatan = NewKecamatanClient(c.config)
+	c.Keluarga = NewKeluargaClient(c.config)
 	c.Kelurahan = NewKelurahanClient(c.config)
 	c.Keuskupan = NewKeuskupanClient(c.config)
 	c.Kevikepan = NewKevikepanClient(c.config)
@@ -144,6 +154,8 @@ func (c *Client) init() {
 	c.ParokiMember = NewParokiMemberClient(c.config)
 	c.Period = NewPeriodClient(c.config)
 	c.Setting = NewSettingClient(c.config)
+	c.Umat = NewUmatClient(c.config)
+	c.UmatSakramen = NewUmatSakramenClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.UserAccount = NewUserAccountClient(c.config)
 	c.UserOTP = NewUserOTPClient(c.config)
@@ -252,6 +264,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		EventPetugas:  NewEventPetugasClient(cfg),
 		EventRSVP:     NewEventRSVPClient(cfg),
 		Kecamatan:     NewKecamatanClient(cfg),
+		Keluarga:      NewKeluargaClient(cfg),
 		Kelurahan:     NewKelurahanClient(cfg),
 		Keuskupan:     NewKeuskupanClient(cfg),
 		Kevikepan:     NewKevikepanClient(cfg),
@@ -265,6 +278,8 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ParokiMember:  NewParokiMemberClient(cfg),
 		Period:        NewPeriodClient(cfg),
 		Setting:       NewSettingClient(cfg),
+		Umat:          NewUmatClient(cfg),
+		UmatSakramen:  NewUmatSakramenClient(cfg),
 		User:          NewUserClient(cfg),
 		UserAccount:   NewUserAccountClient(cfg),
 		UserOTP:       NewUserOTPClient(cfg),
@@ -300,6 +315,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		EventPetugas:  NewEventPetugasClient(cfg),
 		EventRSVP:     NewEventRSVPClient(cfg),
 		Kecamatan:     NewKecamatanClient(cfg),
+		Keluarga:      NewKeluargaClient(cfg),
 		Kelurahan:     NewKelurahanClient(cfg),
 		Keuskupan:     NewKeuskupanClient(cfg),
 		Kevikepan:     NewKevikepanClient(cfg),
@@ -313,6 +329,8 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ParokiMember:  NewParokiMemberClient(cfg),
 		Period:        NewPeriodClient(cfg),
 		Setting:       NewSettingClient(cfg),
+		Umat:          NewUmatClient(cfg),
+		UmatSakramen:  NewUmatSakramenClient(cfg),
 		User:          NewUserClient(cfg),
 		UserAccount:   NewUserAccountClient(cfg),
 		UserOTP:       NewUserOTPClient(cfg),
@@ -349,10 +367,11 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.AgentMemory, c.AgentMessage, c.AgentProvider, c.AgentSession, c.CasbinRule,
-		c.Event, c.EventLagu, c.EventPetugas, c.EventRSVP, c.Kecamatan, c.Kelurahan,
-		c.Keuskupan, c.Kevikepan, c.Kota, c.Lingkungan, c.Lookup, c.OrgInvite,
-		c.OrgMember, c.Organization, c.Paroki, c.ParokiMember, c.Period, c.Setting,
-		c.User, c.UserAccount, c.UserOTP, c.UserSession, c.UserToken, c.Wilayah,
+		c.Event, c.EventLagu, c.EventPetugas, c.EventRSVP, c.Kecamatan, c.Keluarga,
+		c.Kelurahan, c.Keuskupan, c.Kevikepan, c.Kota, c.Lingkungan, c.Lookup,
+		c.OrgInvite, c.OrgMember, c.Organization, c.Paroki, c.ParokiMember, c.Period,
+		c.Setting, c.Umat, c.UmatSakramen, c.User, c.UserAccount, c.UserOTP,
+		c.UserSession, c.UserToken, c.Wilayah,
 	} {
 		n.Use(hooks...)
 	}
@@ -363,10 +382,11 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.AgentMemory, c.AgentMessage, c.AgentProvider, c.AgentSession, c.CasbinRule,
-		c.Event, c.EventLagu, c.EventPetugas, c.EventRSVP, c.Kecamatan, c.Kelurahan,
-		c.Keuskupan, c.Kevikepan, c.Kota, c.Lingkungan, c.Lookup, c.OrgInvite,
-		c.OrgMember, c.Organization, c.Paroki, c.ParokiMember, c.Period, c.Setting,
-		c.User, c.UserAccount, c.UserOTP, c.UserSession, c.UserToken, c.Wilayah,
+		c.Event, c.EventLagu, c.EventPetugas, c.EventRSVP, c.Kecamatan, c.Keluarga,
+		c.Kelurahan, c.Keuskupan, c.Kevikepan, c.Kota, c.Lingkungan, c.Lookup,
+		c.OrgInvite, c.OrgMember, c.Organization, c.Paroki, c.ParokiMember, c.Period,
+		c.Setting, c.Umat, c.UmatSakramen, c.User, c.UserAccount, c.UserOTP,
+		c.UserSession, c.UserToken, c.Wilayah,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -395,6 +415,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.EventRSVP.mutate(ctx, m)
 	case *KecamatanMutation:
 		return c.Kecamatan.mutate(ctx, m)
+	case *KeluargaMutation:
+		return c.Keluarga.mutate(ctx, m)
 	case *KelurahanMutation:
 		return c.Kelurahan.mutate(ctx, m)
 	case *KeuskupanMutation:
@@ -421,6 +443,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Period.mutate(ctx, m)
 	case *SettingMutation:
 		return c.Setting.mutate(ctx, m)
+	case *UmatMutation:
+		return c.Umat.mutate(ctx, m)
+	case *UmatSakramenMutation:
+		return c.UmatSakramen.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
 	case *UserAccountMutation:
@@ -1941,6 +1967,155 @@ func (c *KecamatanClient) mutate(ctx context.Context, m *KecamatanMutation) (Val
 		return (&KecamatanDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Kecamatan mutation op: %q", m.Op())
+	}
+}
+
+// KeluargaClient is a client for the Keluarga schema.
+type KeluargaClient struct {
+	config
+}
+
+// NewKeluargaClient returns a client for the Keluarga from the given config.
+func NewKeluargaClient(c config) *KeluargaClient {
+	return &KeluargaClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `keluarga.Hooks(f(g(h())))`.
+func (c *KeluargaClient) Use(hooks ...Hook) {
+	c.hooks.Keluarga = append(c.hooks.Keluarga, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `keluarga.Intercept(f(g(h())))`.
+func (c *KeluargaClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Keluarga = append(c.inters.Keluarga, interceptors...)
+}
+
+// Create returns a builder for creating a Keluarga entity.
+func (c *KeluargaClient) Create() *KeluargaCreate {
+	mutation := newKeluargaMutation(c.config, OpCreate)
+	return &KeluargaCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Keluarga entities.
+func (c *KeluargaClient) CreateBulk(builders ...*KeluargaCreate) *KeluargaCreateBulk {
+	return &KeluargaCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *KeluargaClient) MapCreateBulk(slice any, setFunc func(*KeluargaCreate, int)) *KeluargaCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &KeluargaCreateBulk{err: fmt.Errorf("calling to KeluargaClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*KeluargaCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &KeluargaCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Keluarga.
+func (c *KeluargaClient) Update() *KeluargaUpdate {
+	mutation := newKeluargaMutation(c.config, OpUpdate)
+	return &KeluargaUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *KeluargaClient) UpdateOne(_m *Keluarga) *KeluargaUpdateOne {
+	mutation := newKeluargaMutation(c.config, OpUpdateOne, withKeluarga(_m))
+	return &KeluargaUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *KeluargaClient) UpdateOneID(id uuid.UUID) *KeluargaUpdateOne {
+	mutation := newKeluargaMutation(c.config, OpUpdateOne, withKeluargaID(id))
+	return &KeluargaUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Keluarga.
+func (c *KeluargaClient) Delete() *KeluargaDelete {
+	mutation := newKeluargaMutation(c.config, OpDelete)
+	return &KeluargaDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *KeluargaClient) DeleteOne(_m *Keluarga) *KeluargaDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *KeluargaClient) DeleteOneID(id uuid.UUID) *KeluargaDeleteOne {
+	builder := c.Delete().Where(keluarga.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &KeluargaDeleteOne{builder}
+}
+
+// Query returns a query builder for Keluarga.
+func (c *KeluargaClient) Query() *KeluargaQuery {
+	return &KeluargaQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeKeluarga},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Keluarga entity by its id.
+func (c *KeluargaClient) Get(ctx context.Context, id uuid.UUID) (*Keluarga, error) {
+	return c.Query().Where(keluarga.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *KeluargaClient) GetX(ctx context.Context, id uuid.UUID) *Keluarga {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryAnggota queries the anggota edge of a Keluarga.
+func (c *KeluargaClient) QueryAnggota(_m *Keluarga) *UmatQuery {
+	query := (&UmatClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(keluarga.Table, keluarga.FieldID, id),
+			sqlgraph.To(umat.Table, umat.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, keluarga.AnggotaTable, keluarga.AnggotaColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *KeluargaClient) Hooks() []Hook {
+	return c.hooks.Keluarga
+}
+
+// Interceptors returns the client interceptors.
+func (c *KeluargaClient) Interceptors() []Interceptor {
+	return c.inters.Keluarga
+}
+
+func (c *KeluargaClient) mutate(ctx context.Context, m *KeluargaMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&KeluargaCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&KeluargaUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&KeluargaUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&KeluargaDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Keluarga mutation op: %q", m.Op())
 	}
 }
 
@@ -4169,6 +4344,320 @@ func (c *SettingClient) mutate(ctx context.Context, m *SettingMutation) (Value, 
 	}
 }
 
+// UmatClient is a client for the Umat schema.
+type UmatClient struct {
+	config
+}
+
+// NewUmatClient returns a client for the Umat from the given config.
+func NewUmatClient(c config) *UmatClient {
+	return &UmatClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `umat.Hooks(f(g(h())))`.
+func (c *UmatClient) Use(hooks ...Hook) {
+	c.hooks.Umat = append(c.hooks.Umat, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `umat.Intercept(f(g(h())))`.
+func (c *UmatClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Umat = append(c.inters.Umat, interceptors...)
+}
+
+// Create returns a builder for creating a Umat entity.
+func (c *UmatClient) Create() *UmatCreate {
+	mutation := newUmatMutation(c.config, OpCreate)
+	return &UmatCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Umat entities.
+func (c *UmatClient) CreateBulk(builders ...*UmatCreate) *UmatCreateBulk {
+	return &UmatCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UmatClient) MapCreateBulk(slice any, setFunc func(*UmatCreate, int)) *UmatCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UmatCreateBulk{err: fmt.Errorf("calling to UmatClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UmatCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UmatCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Umat.
+func (c *UmatClient) Update() *UmatUpdate {
+	mutation := newUmatMutation(c.config, OpUpdate)
+	return &UmatUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UmatClient) UpdateOne(_m *Umat) *UmatUpdateOne {
+	mutation := newUmatMutation(c.config, OpUpdateOne, withUmat(_m))
+	return &UmatUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UmatClient) UpdateOneID(id uuid.UUID) *UmatUpdateOne {
+	mutation := newUmatMutation(c.config, OpUpdateOne, withUmatID(id))
+	return &UmatUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Umat.
+func (c *UmatClient) Delete() *UmatDelete {
+	mutation := newUmatMutation(c.config, OpDelete)
+	return &UmatDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UmatClient) DeleteOne(_m *Umat) *UmatDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UmatClient) DeleteOneID(id uuid.UUID) *UmatDeleteOne {
+	builder := c.Delete().Where(umat.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UmatDeleteOne{builder}
+}
+
+// Query returns a query builder for Umat.
+func (c *UmatClient) Query() *UmatQuery {
+	return &UmatQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUmat},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Umat entity by its id.
+func (c *UmatClient) Get(ctx context.Context, id uuid.UUID) (*Umat, error) {
+	return c.Query().Where(umat.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UmatClient) GetX(ctx context.Context, id uuid.UUID) *Umat {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryKeluarga queries the keluarga edge of a Umat.
+func (c *UmatClient) QueryKeluarga(_m *Umat) *KeluargaQuery {
+	query := (&KeluargaClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(umat.Table, umat.FieldID, id),
+			sqlgraph.To(keluarga.Table, keluarga.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, umat.KeluargaTable, umat.KeluargaColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QuerySakramen queries the sakramen edge of a Umat.
+func (c *UmatClient) QuerySakramen(_m *Umat) *UmatSakramenQuery {
+	query := (&UmatSakramenClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(umat.Table, umat.FieldID, id),
+			sqlgraph.To(umatsakramen.Table, umatsakramen.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, umat.SakramenTable, umat.SakramenColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *UmatClient) Hooks() []Hook {
+	return c.hooks.Umat
+}
+
+// Interceptors returns the client interceptors.
+func (c *UmatClient) Interceptors() []Interceptor {
+	return c.inters.Umat
+}
+
+func (c *UmatClient) mutate(ctx context.Context, m *UmatMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UmatCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UmatUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UmatUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UmatDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Umat mutation op: %q", m.Op())
+	}
+}
+
+// UmatSakramenClient is a client for the UmatSakramen schema.
+type UmatSakramenClient struct {
+	config
+}
+
+// NewUmatSakramenClient returns a client for the UmatSakramen from the given config.
+func NewUmatSakramenClient(c config) *UmatSakramenClient {
+	return &UmatSakramenClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `umatsakramen.Hooks(f(g(h())))`.
+func (c *UmatSakramenClient) Use(hooks ...Hook) {
+	c.hooks.UmatSakramen = append(c.hooks.UmatSakramen, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `umatsakramen.Intercept(f(g(h())))`.
+func (c *UmatSakramenClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UmatSakramen = append(c.inters.UmatSakramen, interceptors...)
+}
+
+// Create returns a builder for creating a UmatSakramen entity.
+func (c *UmatSakramenClient) Create() *UmatSakramenCreate {
+	mutation := newUmatSakramenMutation(c.config, OpCreate)
+	return &UmatSakramenCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UmatSakramen entities.
+func (c *UmatSakramenClient) CreateBulk(builders ...*UmatSakramenCreate) *UmatSakramenCreateBulk {
+	return &UmatSakramenCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UmatSakramenClient) MapCreateBulk(slice any, setFunc func(*UmatSakramenCreate, int)) *UmatSakramenCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UmatSakramenCreateBulk{err: fmt.Errorf("calling to UmatSakramenClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UmatSakramenCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UmatSakramenCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UmatSakramen.
+func (c *UmatSakramenClient) Update() *UmatSakramenUpdate {
+	mutation := newUmatSakramenMutation(c.config, OpUpdate)
+	return &UmatSakramenUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UmatSakramenClient) UpdateOne(_m *UmatSakramen) *UmatSakramenUpdateOne {
+	mutation := newUmatSakramenMutation(c.config, OpUpdateOne, withUmatSakramen(_m))
+	return &UmatSakramenUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UmatSakramenClient) UpdateOneID(id uuid.UUID) *UmatSakramenUpdateOne {
+	mutation := newUmatSakramenMutation(c.config, OpUpdateOne, withUmatSakramenID(id))
+	return &UmatSakramenUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UmatSakramen.
+func (c *UmatSakramenClient) Delete() *UmatSakramenDelete {
+	mutation := newUmatSakramenMutation(c.config, OpDelete)
+	return &UmatSakramenDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UmatSakramenClient) DeleteOne(_m *UmatSakramen) *UmatSakramenDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UmatSakramenClient) DeleteOneID(id uuid.UUID) *UmatSakramenDeleteOne {
+	builder := c.Delete().Where(umatsakramen.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UmatSakramenDeleteOne{builder}
+}
+
+// Query returns a query builder for UmatSakramen.
+func (c *UmatSakramenClient) Query() *UmatSakramenQuery {
+	return &UmatSakramenQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUmatSakramen},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UmatSakramen entity by its id.
+func (c *UmatSakramenClient) Get(ctx context.Context, id uuid.UUID) (*UmatSakramen, error) {
+	return c.Query().Where(umatsakramen.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UmatSakramenClient) GetX(ctx context.Context, id uuid.UUID) *UmatSakramen {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUmat queries the umat edge of a UmatSakramen.
+func (c *UmatSakramenClient) QueryUmat(_m *UmatSakramen) *UmatQuery {
+	query := (&UmatClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(umatsakramen.Table, umatsakramen.FieldID, id),
+			sqlgraph.To(umat.Table, umat.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, umatsakramen.UmatTable, umatsakramen.UmatColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *UmatSakramenClient) Hooks() []Hook {
+	return c.hooks.UmatSakramen
+}
+
+// Interceptors returns the client interceptors.
+func (c *UmatSakramenClient) Interceptors() []Interceptor {
+	return c.inters.UmatSakramen
+}
+
+func (c *UmatSakramenClient) mutate(ctx context.Context, m *UmatSakramenMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UmatSakramenCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UmatSakramenUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UmatSakramenUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UmatSakramenDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UmatSakramen mutation op: %q", m.Op())
+	}
+}
+
 // UserClient is a client for the User schema.
 type UserClient struct {
 	config
@@ -5099,16 +5588,16 @@ func (c *WilayahClient) mutate(ctx context.Context, m *WilayahMutation) (Value, 
 type (
 	hooks struct {
 		AgentMemory, AgentMessage, AgentProvider, AgentSession, CasbinRule, Event,
-		EventLagu, EventPetugas, EventRSVP, Kecamatan, Kelurahan, Keuskupan, Kevikepan,
-		Kota, Lingkungan, Lookup, OrgInvite, OrgMember, Organization, Paroki,
-		ParokiMember, Period, Setting, User, UserAccount, UserOTP, UserSession,
-		UserToken, Wilayah []ent.Hook
+		EventLagu, EventPetugas, EventRSVP, Kecamatan, Keluarga, Kelurahan, Keuskupan,
+		Kevikepan, Kota, Lingkungan, Lookup, OrgInvite, OrgMember, Organization,
+		Paroki, ParokiMember, Period, Setting, Umat, UmatSakramen, User, UserAccount,
+		UserOTP, UserSession, UserToken, Wilayah []ent.Hook
 	}
 	inters struct {
 		AgentMemory, AgentMessage, AgentProvider, AgentSession, CasbinRule, Event,
-		EventLagu, EventPetugas, EventRSVP, Kecamatan, Kelurahan, Keuskupan, Kevikepan,
-		Kota, Lingkungan, Lookup, OrgInvite, OrgMember, Organization, Paroki,
-		ParokiMember, Period, Setting, User, UserAccount, UserOTP, UserSession,
-		UserToken, Wilayah []ent.Interceptor
+		EventLagu, EventPetugas, EventRSVP, Kecamatan, Keluarga, Kelurahan, Keuskupan,
+		Kevikepan, Kota, Lingkungan, Lookup, OrgInvite, OrgMember, Organization,
+		Paroki, ParokiMember, Period, Setting, Umat, UmatSakramen, User, UserAccount,
+		UserOTP, UserSession, UserToken, Wilayah []ent.Interceptor
 	}
 )
