@@ -216,4 +216,63 @@ export class EventDetailPage extends BasePage {
       notGoing: 0,
     });
   }
+
+  async addPetugas(input: {
+    role: string;
+    mode: "manual" | "org" | "user";
+    name?: string;
+    orgLabel?: string;
+  }): Promise<void> {
+    await this.page.getByRole("button", { name: "Tambah Petugas" }).click();
+    const form = this.page.locator("form").filter({
+      has: this.page.getByRole("button", { name: "Simpan Petugas" }),
+    });
+    await form.waitFor({ state: "visible", timeout: 10_000 });
+    await form.getByLabel("Peran Petugas").fill(input.role);
+    const modeLabel =
+      input.mode === "org"
+        ? "Organisasi / Lingkungan"
+        : input.mode === "user"
+          ? "Anggota Organisasi / Paroki"
+          : "Nama Manual";
+    await form.getByLabel("Tipe Penugasan").selectOption({ label: modeLabel });
+    if (input.mode === "manual" && input.name) {
+      await form.getByLabel("Nama Petugas").fill(input.name);
+    }
+    if (input.mode === "org" && input.orgLabel) {
+      await form
+        .getByLabel("Pilih Organisasi / Lingkungan")
+        .selectOption({ label: input.orgLabel });
+    }
+    await form.getByRole("button", { name: "Simpan Petugas" }).click();
+    await form.waitFor({ state: "detached", timeout: 10_000 });
+  }
+
+  async confirmPetugas(
+    role: string,
+    statusLabel: "Siap Bertugas" | "Berhalangan",
+  ): Promise<void> {
+    const row = this.page
+      .locator("div.divide-y > div")
+      .filter({ hasText: role });
+    await row.waitFor({ state: "visible", timeout: 10_000 });
+    await row.getByRole("button", { name: statusLabel, exact: true }).click();
+  }
+
+  async expectPetugasVisible(
+    role: string,
+    name: string,
+    statusLabel: string,
+  ): Promise<void> {
+    const row = this.page
+      .locator("div.divide-y > div")
+      .filter({ hasText: role });
+    await row.waitFor({ state: "visible", timeout: 10_000 });
+    await row
+      .getByText(name, { exact: false })
+      .waitFor({ state: "visible", timeout: 10_000 });
+    await row
+      .getByText(statusLabel, { exact: true })
+      .waitFor({ state: "visible", timeout: 10_000 });
+  }
 }

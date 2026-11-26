@@ -124,6 +124,12 @@ export class EventsPage extends BasePage {
       .click();
   }
 
+  async toggleAssignedToMe(): Promise<void> {
+    await this.filterBar()
+      .getByRole("button", { name: "Jadwal Tugas Saya" })
+      .click();
+  }
+
   async search(query: string): Promise<void> {
     await this.page
       .getByPlaceholder("Cari judul, lokasi, atau deskripsi kegiatan…")

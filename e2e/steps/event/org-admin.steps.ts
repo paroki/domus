@@ -245,6 +245,55 @@ When(
   },
 );
 
+When("I toggle Jadwal Tugas Saya", async function (this: DomusWorld) {
+  await this.pages.event.events.toggleAssignedToMe();
+});
+
+When(
+  "I add manual petugas role {string} name {string}",
+  async function (this: DomusWorld, role: string, name: string) {
+    await this.pages.event.detail.addPetugas({
+      role,
+      mode: "manual",
+      name,
+    });
+  },
+);
+
+When(
+  "I add org petugas role {string} for my organization",
+  async function (this: DomusWorld, role: string) {
+    const orgLabel = `${this.activeOrgName} (${this.activeOrgCode})`;
+    await this.pages.event.detail.addPetugas({
+      role,
+      mode: "org",
+      orgLabel,
+    });
+  },
+);
+
+When(
+  "I confirm petugas {string} as {string}",
+  async function (this: DomusWorld, role: string, statusLabel: string) {
+    await this.pages.event.detail.confirmPetugas(
+      role,
+      statusLabel as "Siap Bertugas" | "Berhalangan",
+    );
+  },
+);
+
+Then(
+  "I see petugas {string} assigned to {string} with status {string}",
+  async function (
+    this: DomusWorld,
+    role: string,
+    name: string,
+    statusLabel: string,
+  ) {
+    await this.pages.event.detail.expectPetugasVisible(role, name, statusLabel);
+  },
+);
+
 When("I delete the event", async function (this: DomusWorld) {
   await this.pages.event.detail.deleteEvent();
 });
