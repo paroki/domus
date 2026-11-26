@@ -18,6 +18,5 @@ export const orgKeys = {
   wilayah: () => [...orgKeys.all, "ref-wilayah"] as const,
   lingkungan: () => [...orgKeys.all, "ref-lingkungan"] as const,
   positionLookups: () => [...orgKeys.all, "ref-position-lookups"] as const,
-  periods: () => [...orgKeys.all, "ref-periods"] as const,
   authProviders: () => ["auth", "providers"] as const,
 };

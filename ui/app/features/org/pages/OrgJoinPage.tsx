@@ -135,9 +135,6 @@ export default function OrgJoinPage() {
                 ? t("org.orgAdminBadge")
                 : t("org.orgMemberBadge")}
             </Badge>
-            {preview.defaultPosition && (
-              <Badge tone="neutral">{preview.defaultPosition}</Badge>
-            )}
           </div>
           <p className="mt-1 text-xs text-muted">
             Berlaku hingga{" "}

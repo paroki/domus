@@ -105,7 +105,6 @@ export default [
     "./features/ref/pages/LingkunganFormPage.tsx",
     { id: "ref-lingkungan-edit" },
   ),
-  route("settings/paroki/periods", "./features/ref/pages/PeriodsPage.tsx"),
   route("settings/lookups", "./features/ref/pages/LookupsPage.tsx"),
   route("settings/lookups/new", "./features/ref/pages/LookupFormPage.tsx", {
     id: "ref-lookup-new",

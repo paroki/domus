@@ -13,7 +13,6 @@ import type {
   CreateLingkunganRequest,
   CreateLookupRequest,
   CreateParokiRequest,
-  CreatePeriodRequest,
   CreateWilayahRequest,
   UpdateKecamatanRequest,
   UpdateKelurahanRequest,
@@ -25,7 +24,6 @@ import type {
   UpdateParokiMemberRequest,
   UpdateParokiProfileRequest,
   UpdateParokiRequest,
-  UpdatePeriodRequest,
   UpdateWilayahRequest,
 } from "./types";
 
@@ -278,39 +276,6 @@ export function useDeleteLookup() {
     mutationFn: (id: string) =>
       unwrapVoid(
         api.DELETE("/ref/lookups/{id}", { params: { path: { id } } }),
-        REF_ERRORS,
-      ),
-    onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
-  });
-}
-
-export function useCreatePeriod() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (body: CreatePeriodRequest) =>
-      unwrap(api.POST("/ref/periods", { body }), REF_ERRORS),
-    onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
-  });
-}
-
-export function useUpdatePeriod() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, body }: { id: string; body: UpdatePeriodRequest }) =>
-      unwrap(
-        api.PATCH("/ref/periods/{id}", { params: { path: { id } }, body }),
-        REF_ERRORS,
-      ),
-    onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
-  });
-}
-
-export function useDeletePeriod() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) =>
-      unwrapVoid(
-        api.DELETE("/ref/periods/{id}", { params: { path: { id } } }),
         REF_ERRORS,
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),

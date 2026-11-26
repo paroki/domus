@@ -665,10 +665,8 @@ export default function EventDetailPage() {
                           <span className="font-medium text-ink">
                             {row.name}
                           </span>
-                          {(row.orgPosition || row.orgRole) && (
-                            <Badge tone="neutral">
-                              {row.orgPosition || row.orgRole}
-                            </Badge>
+                          {row.orgRole && (
+                            <Badge tone="neutral">{row.orgRole}</Badge>
                           )}
                         </div>
                         <p className="text-xs text-ink-muted">{row.email}</p>

@@ -1,6 +1,5 @@
 import {
   Building2,
-  CalendarRange,
   Church,
   Compass,
   type LucideIcon,
@@ -215,14 +214,6 @@ export const PAROKI_STEPS: HubStepDef[] = [
     description: "Kelola lingkungan di bawah setiap wilayah/stasi.",
     icon: MapPin,
     plate: 3,
-  },
-  {
-    id: "periods",
-    path: "/settings/paroki/periods",
-    title: "Periode",
-    description: "Periode tahun buku dan tahun liturgi paroki.",
-    icon: CalendarRange,
-    plate: 5,
   },
 ];
 

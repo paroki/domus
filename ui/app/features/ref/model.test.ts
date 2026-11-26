@@ -72,7 +72,6 @@ test("GEREJAWI_STEPS and PAROKI_STEPS point to /settings/* IUI routes", () => {
       "/settings/paroki/profile",
       "/settings/paroki/wilayah",
       "/settings/paroki/lingkungan",
-      "/settings/paroki/periods",
     ],
   );
 });

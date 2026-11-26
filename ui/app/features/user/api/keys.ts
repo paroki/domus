@@ -33,6 +33,4 @@ export const userKeys = {
   ) => [...userKeys.all, "orgMembers", orgId, params ?? {}] as const,
   lookups: (category: string) =>
     [...userKeys.all, "lookups", category] as const,
-  periods: (parokiId: string) =>
-    [...userKeys.all, "periods", parokiId] as const,
 };

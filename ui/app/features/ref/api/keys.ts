@@ -8,7 +8,6 @@ import type {
   SearchLookupsRequest,
   SearchParokiMembersRequest,
   SearchParokiRequest,
-  SearchPeriodsRequest,
   SearchWilayahRequest,
 } from "./types";
 
@@ -52,6 +51,4 @@ export const refKeys = {
   lookups: (params?: Omit<SearchLookupsRequest, "cursor">) =>
     [...refKeys.all, "lookups", params ?? {}] as const,
   lookupDetail: (id: string) => [...refKeys.all, "lookup-detail", id] as const,
-  periods: (params?: Omit<SearchPeriodsRequest, "cursor">) =>
-    [...refKeys.all, "periods", params ?? {}] as const,
 };

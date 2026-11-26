@@ -18,7 +18,6 @@ export type AddOrgMemberRequest = Schemas["domain.AddOrgMemberRequest"];
 export type UpdateOrgMemberRequest = Schemas["domain.UpdateOrgMemberRequest"];
 export type SearchOrgMembersRequest = Schemas["domain.SearchOrgMembersRequest"];
 export type Lookup = Schemas["domain.LookupResponse"];
-export type Period = Schemas["domain.PeriodResponse"];
 export type AuthSession = Schemas["domain.AuthSessionResponse"];
 export type RequestOTPRequest = Schemas["domain.RequestOTPRequest"];
 export type RequestOTPResponse = Schemas["domain.RequestOTPResponse"];

@@ -9,10 +9,7 @@ export const REF_ERRORS: Record<string, string> = {
   REF_WILAYAH_NOT_FOUND: "Wilayah atau stasi tidak ditemukan.",
   REF_LINGKUNGAN_NOT_FOUND: "Lingkungan tidak ditemukan.",
   REF_LOOKUP_NOT_FOUND: "Item kamus referensi tidak ditemukan.",
-  REF_PERIOD_NOT_FOUND: "Periode tidak ditemukan.",
   REF_CODE_CONFLICT: "Kode sudah digunakan. Gunakan kode lain.",
-  REF_PERIOD_OVERLAP:
-    "Rentang tanggal periode bertumpuk dengan periode lain yang sudah ada.",
   REF_IN_USE: "Data masih digunakan oleh data lain dan tidak dapat dihapus.",
   REF_LAST_PAROKI_ADMIN_REQUIRED:
     "Minimal harus ada satu Admin Paroki yang tersisa.",

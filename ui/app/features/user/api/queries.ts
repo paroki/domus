@@ -292,21 +292,6 @@ export function useDirectoryLookups(category: string, enabled = true) {
   });
 }
 
-export function useDirectoryPeriods(
-  parokiId: string | undefined,
-  enabled = true,
-) {
-  return useQuery({
-    queryKey: userKeys.periods(parokiId ?? ""),
-    enabled: Boolean(parokiId) && enabled,
-    queryFn: () =>
-      unwrap(
-        api.POST("/ref/periods/search", { body: { limit: 100 } }),
-        USER_ERRORS,
-      ),
-  });
-}
-
 export function useDirectoryManagedOrgUsers(
   parokiId: string | undefined,
   q: string,

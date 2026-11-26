@@ -18,7 +18,6 @@ import type {
   SearchLookupsRequest,
   SearchParokiMembersRequest,
   SearchParokiRequest,
-  SearchPeriodsRequest,
   SearchWilayahRequest,
 } from "./types";
 
@@ -161,28 +160,6 @@ export function useLookupsSearch(
       queryFn: ({ pageParam }) =>
         unwrapMeta(
           api.POST("/ref/lookups/search", {
-            body: { ...filter, cursor: pageParam, limit: filter.limit ?? 50 },
-          }),
-          REF_ERRORS,
-        ),
-      getNextPageParam: (lastPage) =>
-        lastPage.meta?.hasMore ? lastPage.meta.nextCursor : undefined,
-    }),
-  );
-}
-
-export function usePeriodsSearch(
-  filter: Omit<SearchPeriodsRequest, "cursor"> = {},
-  enabled = true,
-) {
-  return useInfiniteQuery(
-    infiniteQueryOptions({
-      queryKey: refKeys.periods(filter),
-      initialPageParam: undefined as string | undefined,
-      enabled,
-      queryFn: ({ pageParam }) =>
-        unwrapMeta(
-          api.POST("/ref/periods/search", {
             body: { ...filter, cursor: pageParam, limit: filter.limit ?? 50 },
           }),
           REF_ERRORS,

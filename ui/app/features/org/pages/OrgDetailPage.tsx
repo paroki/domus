@@ -25,17 +25,10 @@ import {
   useUpdateOrg,
 } from "../api/actions";
 import { resolveOrgError } from "../api/errors";
-import {
-  useOrg,
-  useOrgInvites,
-  useOrgMembers,
-  useOrgPeriods,
-  useOrgPositionLookups,
-} from "../api/queries";
+import { useOrg, useOrgInvites, useOrgMembers } from "../api/queries";
 import {
   buildInviteJoinUrl,
   computeInviteStatus,
-  DEFAULT_POSITION_SUGGESTIONS,
   INVITE_TTL_OPTIONS,
   inviteStatusMeta,
   isParokiAdmin,
@@ -69,10 +62,8 @@ export default function OrgDetailPage() {
   const [memberQ, setMemberQ] = useState("");
   const [memberRoleFilter, setMemberRoleFilter] = useState("");
   const [memberStatusFilter, setMemberStatusFilter] = useState("");
-  const [memberPeriodFilter, setMemberPeriodFilter] = useState("");
 
   const [invRole, setInvRole] = useState<"member" | "admin">("member");
-  const [invPosition, setInvPosition] = useState("");
   const [invTTL, setInvTTL] = useState(86400);
   const [invMaxUses, setInvMaxUses] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -84,27 +75,17 @@ export default function OrgDetailPage() {
       filter: {
         role: (memberRoleFilter as "admin" | "member") || undefined,
         status: (memberStatusFilter as "active" | "inactive") || undefined,
-        periodId: memberPeriodFilter || undefined,
       },
     },
     Boolean(org) && isOrgMember,
   );
   const invitesQuery = useOrgInvites(orgId, {}, Boolean(org) && isOrgAdmin);
-  const lookupsQuery = useOrgPositionLookups(isOrgAdmin);
-  const periodsQuery = useOrgPeriods(Boolean(org) && isOrgMember);
 
   const updateOrg = useUpdateOrg(orgId);
   const deleteOrg = useDeleteOrg();
   const removeMember = useRemoveOrgMember(orgId);
   const createInvite = useCreateOrgInvite(orgId);
   const revokeInvite = useRevokeOrgInvite(orgId);
-
-  const positionSuggestions = Array.from(
-    new Set([
-      ...(lookupsQuery.data ?? []).map((l) => l.label),
-      ...DEFAULT_POSITION_SUGGESTIONS,
-    ]),
-  );
 
   function startEdit() {
     if (!org) return;
@@ -169,11 +150,9 @@ export default function OrgDetailPage() {
         : undefined;
       await createInvite.mutateAsync({
         role: invRole,
-        defaultPosition: invPosition.trim() || undefined,
         ttlSeconds: invTTL,
         maxUses: parsedMax && parsedMax > 0 ? parsedMax : undefined,
       });
-      setInvPosition("");
       setInvMaxUses("");
     } catch (err) {
       setPageError(resolveOrgError(err));
@@ -244,9 +223,6 @@ export default function OrgDetailPage() {
 
   const members = membersQuery.data?.pages.flatMap((p) => p.data ?? []) ?? [];
   const invites = invitesQuery.data?.pages.flatMap((p) => p.data ?? []) ?? [];
-  const periodNameById = new Map(
-    (periodsQuery.data ?? []).map((p) => [p.id, p.name]),
-  );
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-6">
@@ -385,12 +361,6 @@ export default function OrgDetailPage() {
             )}
           </div>
 
-          <datalist id="org-position-suggestions">
-            {positionSuggestions.map((pos) => (
-              <option key={pos} value={pos} />
-            ))}
-          </datalist>
-
           <div className="flex flex-wrap gap-2">
             <div className="relative min-w-[200px] flex-1">
               <Search
@@ -423,18 +393,6 @@ export default function OrgDetailPage() {
               <option value="active">Aktif</option>
               <option value="inactive">Nonaktif</option>
             </select>
-            <select
-              value={memberPeriodFilter}
-              onChange={(e) => setMemberPeriodFilter(e.target.value)}
-              className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
-            >
-              <option value="">{t("org.allPeriods")}</option>
-              {(periodsQuery.data ?? []).map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
           </div>
 
           {membersQuery.isLoading ? (
@@ -443,39 +401,30 @@ export default function OrgDetailPage() {
             <p className="text-sm text-muted">{t("org.noMembers")}</p>
           ) : (
             <div className="divide-y divide-line">
-              {members.map((m) => {
-                const periodLabel = m.periodId
-                  ? periodNameById.get(m.periodId)
-                  : undefined;
-                return (
-                  <div key={m.id} className="flex flex-col gap-3 py-3">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-medium text-fg">{m.name}</span>
-                          <Badge
-                            tone={m.role === "admin" ? "warning" : "neutral"}
-                          >
-                            {m.role === "admin"
-                              ? t("org.orgAdminBadge")
-                              : t("org.orgMemberBadge")}
-                          </Badge>
-                          <Badge
-                            tone={m.status === "active" ? "success" : "danger"}
-                          >
-                            {m.status === "active" ? "Aktif" : "Nonaktif"}
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-muted">
-                          {m.email}
-                          {m.position ? ` · ${m.position}` : ""}
-                          {periodLabel ? ` · ${periodLabel}` : ""}
-                        </p>
+              {members.map((m) => (
+                <div key={m.id} className="flex flex-col gap-3 py-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium text-fg">{m.name}</span>
+                        <Badge
+                          tone={m.role === "admin" ? "warning" : "neutral"}
+                        >
+                          {m.role === "admin"
+                            ? t("org.orgAdminBadge")
+                            : t("org.orgMemberBadge")}
+                        </Badge>
+                        <Badge
+                          tone={m.status === "active" ? "success" : "danger"}
+                        >
+                          {m.status === "active" ? "Aktif" : "Nonaktif"}
+                        </Badge>
                       </div>
+                      <p className="text-xs text-muted">{m.email}</p>
                     </div>
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           )}
 
@@ -504,7 +453,7 @@ export default function OrgDetailPage() {
 
           <form
             onSubmit={handleCreateInvite}
-            className="grid gap-3 rounded-lg border border-line bg-canvas p-4 sm:grid-cols-4"
+            className="grid gap-3 rounded-lg border border-line bg-canvas p-4 sm:grid-cols-3"
           >
             <select
               value={invRole}
@@ -514,14 +463,6 @@ export default function OrgDetailPage() {
               <option value="member">Anggota (member)</option>
               <option value="admin">Admin Organisasi (admin)</option>
             </select>
-            <input
-              type="text"
-              list="org-position-suggestions"
-              value={invPosition}
-              onChange={(e) => setInvPosition(e.target.value)}
-              placeholder="Jabatan default (opsional)"
-              className="h-10 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
-            />
             <select
               value={invTTL}
               onChange={(e) => setInvTTL(Number(e.target.value))}
@@ -541,7 +482,7 @@ export default function OrgDetailPage() {
               placeholder="Maks. pakai (opsional)"
               className="h-10 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
             />
-            <div className="sm:col-span-4 flex justify-end">
+            <div className="sm:col-span-3 flex justify-end">
               <Button type="submit" disabled={createInvite.isPending}>
                 {t("org.createInvite")}
               </Button>
@@ -580,11 +521,6 @@ export default function OrgDetailPage() {
                         </span>
                         <Badge tone={meta.tone}>{meta.label}</Badge>
                         <Badge tone="neutral">{inv.role}</Badge>
-                        {inv.defaultPosition && (
-                          <span className="text-xs text-muted">
-                            · {inv.defaultPosition}
-                          </span>
-                        )}
                       </div>
                       <p className="text-xs text-muted">
                         {shareUrl} · Terpakai: {inv.usedCount ?? 0}

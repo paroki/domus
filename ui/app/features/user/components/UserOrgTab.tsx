@@ -1,4 +1,4 @@
-import { Building2, Pencil, Plus, ShieldCheck, Trash2 } from "lucide-react";
+import { Building2, Plus, ShieldCheck, Trash2 } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ApiError } from "~/shared/api/client";
@@ -10,7 +10,6 @@ import {
   useRemoveUserOrgMember,
   useUpdateUserOrgMember,
 } from "../api/actions";
-import { useDirectoryLookups, useDirectoryPeriods } from "../api/queries";
 import type { Organization, OrgMember } from "../api/types";
 import type { DirectoryFeedback } from "../pages/UserPage";
 import { ConfirmDialog } from "./DirectoryShared";
@@ -38,17 +37,6 @@ export function UserOrgTab({
 }) {
   const { t } = useTranslation();
 
-  const lookupsQuery = useDirectoryLookups(
-    "org_position",
-    Boolean(activeParokiId),
-  );
-  const periodsQuery = useDirectoryPeriods(
-    activeParokiId,
-    Boolean(activeParokiId),
-  );
-  const positionLookups = lookupsQuery.data ?? [];
-  const periods = periodsQuery.data ?? [];
-
   const addOrgMember = useAddUserOrgMember(activeParokiId);
   const updateOrgMember = useUpdateUserOrgMember(activeParokiId);
   const removeOrgMember = useRemoveUserOrgMember(activeParokiId);
@@ -65,12 +53,6 @@ export function UserOrgTab({
 
   const [selectedOrgId, setSelectedOrgId] = useState("");
   const [newRole, setNewRole] = useState<"admin" | "member">("member");
-  const [newPosition, setNewPosition] = useState("");
-  const [newPeriodId, setNewPeriodId] = useState("");
-
-  const [editingOrgId, setEditingOrgId] = useState<string | null>(null);
-  const [editPosition, setEditPosition] = useState("");
-  const [editPeriodId, setEditPeriodId] = useState("");
 
   const [pendingRemove, setPendingRemove] = useState<{
     orgId: string;
@@ -117,12 +99,8 @@ export function UserOrgTab({
         body: {
           userId,
           role: canOnlyAppointAdmin ? "admin" : newRole,
-          position: newPosition.trim() || undefined,
-          periodId: newPeriodId || undefined,
         },
       });
-      setNewPosition("");
-      setNewPeriodId("");
       onFeedback({
         tone: "success",
         message: t("users.orgMemberAdded"),
@@ -133,29 +111,6 @@ export function UserOrgTab({
           tone: "error",
           message: err.details[0]?.message ?? err.message,
         });
-      }
-    }
-  }
-
-  async function handleSavePosition(orgId: string) {
-    onFeedback(null);
-    try {
-      await updateOrgMember.mutateAsync({
-        orgId,
-        userId,
-        body: {
-          position: editPosition.trim() || undefined,
-          periodId: editPeriodId || undefined,
-        },
-      });
-      setEditingOrgId(null);
-      onFeedback({
-        tone: "success",
-        message: t("users.orgMemberUpdated", { name: userDisplayName }),
-      });
-    } catch (err) {
-      if (err instanceof ApiError) {
-        onFeedback({ tone: "error", message: err.message });
       }
     }
   }
@@ -240,12 +195,6 @@ export function UserOrgTab({
           )}
         </div>
 
-        <datalist id="user-detail-org-position-options">
-          {positionLookups.map((item) => (
-            <option key={item.id} value={item.label} />
-          ))}
-        </datalist>
-
         <div className="divide-y divide-line rounded-lg border border-line">
           {isLoading ? (
             <p className="p-4 text-sm text-muted">{t("auth.loading")}</p>
@@ -256,10 +205,6 @@ export function UserOrgTab({
               const orgId = org.id ?? "";
               const isOrgAdmin = org.myRole === "admin";
               const isMemberAdmin = member.role === "admin";
-              const isEditing = editingOrgId === orgId;
-              const periodName = periods.find(
-                (p) => p.id === member.periodId,
-              )?.name;
 
               return (
                 <div key={orgId} className="flex flex-col gap-3 p-4">
@@ -284,30 +229,11 @@ export function UserOrgTab({
                             : t("users.statusInactive")}
                         </Badge>
                       </div>
-                      {(member.position || periodName) && (
-                        <p className="mt-1 text-xs text-muted">
-                          {member.position ?? ""}
-                          {member.position && periodName ? " · " : ""}
-                          {periodName ?? ""}
-                        </p>
-                      )}
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
                       {isOrgAdmin ? (
                         <>
-                          <Button
-                            variant="outline"
-                            className="h-9 px-3 text-xs"
-                            onClick={() => {
-                              setEditingOrgId(isEditing ? null : orgId);
-                              setEditPosition(member.position ?? "");
-                              setEditPeriodId(member.periodId ?? "");
-                            }}
-                          >
-                            <Pencil aria-hidden className="size-3.5" />
-                            {t("users.editPosition")}
-                          </Button>
                           <Button
                             variant="outline"
                             className="h-9 px-3 text-xs"
@@ -369,47 +295,6 @@ export function UserOrgTab({
                       )}
                     </div>
                   </div>
-
-                  {isEditing && (
-                    <div className="flex flex-wrap items-end gap-2 rounded-lg border border-line bg-canvas p-3">
-                      <input
-                        type="text"
-                        list="user-detail-org-position-options"
-                        value={editPosition}
-                        onChange={(e) => setEditPosition(e.target.value)}
-                        placeholder={t("users.positionLabel")}
-                        aria-label={t("users.positionLabel")}
-                        className="h-9 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
-                      />
-                      <select
-                        value={editPeriodId}
-                        onChange={(e) => setEditPeriodId(e.target.value)}
-                        aria-label={t("users.periodLabel")}
-                        className="h-9 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
-                      >
-                        <option value="">{t("users.noPeriod")}</option>
-                        {periods.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.name}
-                          </option>
-                        ))}
-                      </select>
-                      <Button
-                        className="h-9 px-4 text-xs"
-                        disabled={updateOrgMember.isPending}
-                        onClick={() => handleSavePosition(orgId)}
-                      >
-                        {t("users.save")}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="h-9 px-4 text-xs"
-                        onClick={() => setEditingOrgId(null)}
-                      >
-                        {t("users.cancel")}
-                      </Button>
-                    </div>
-                  )}
                 </div>
               );
             })
@@ -457,33 +342,6 @@ export function UserOrgTab({
                     <option value="member">{t("users.roleMember")}</option>
                   )}
                   <option value="admin">{t("users.roleOrgAdmin")}</option>
-                </select>
-              </label>
-
-              <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
-                {t("users.positionLabel")}
-                <input
-                  type="text"
-                  list="user-detail-org-position-options"
-                  value={newPosition}
-                  onChange={(e) => setNewPosition(e.target.value)}
-                  className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
-                />
-              </label>
-
-              <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
-                {t("users.periodLabel")}
-                <select
-                  value={newPeriodId}
-                  onChange={(e) => setNewPeriodId(e.target.value)}
-                  className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
-                >
-                  <option value="">{t("users.noPeriod")}</option>
-                  {periods.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
                 </select>
               </label>
 

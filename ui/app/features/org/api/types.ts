@@ -39,7 +39,6 @@ export type WilayahResponse = components["schemas"]["domain.WilayahResponse"];
 export type LingkunganResponse =
   components["schemas"]["domain.LingkunganResponse"];
 export type LookupResponse = components["schemas"]["domain.LookupResponse"];
-export type PeriodResponse = components["schemas"]["domain.PeriodResponse"];
 
 export type RequestOTPRequest =
   components["schemas"]["domain.RequestOTPRequest"];

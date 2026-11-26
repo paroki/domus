@@ -161,15 +161,6 @@ export function useOrgPositionLookups(enabled = true) {
   });
 }
 
-export function useOrgPeriods(enabled = true) {
-  return useQuery({
-    queryKey: orgKeys.periods(),
-    enabled,
-    queryFn: () =>
-      unwrap(api.POST("/ref/periods/search", { body: { limit: 100 } })),
-  });
-}
-
 export function useOrgAuthProviders() {
   return useQuery({
     queryKey: orgKeys.authProviders(),

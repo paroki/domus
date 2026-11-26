@@ -55,8 +55,3 @@ export type Lookup = Schemas["domain.LookupResponse"];
 export type SearchLookupsRequest = Schemas["domain.SearchLookupsRequest"];
 export type CreateLookupRequest = Schemas["domain.CreateLookupRequest"];
 export type UpdateLookupRequest = Schemas["domain.UpdateLookupRequest"];
-
-export type Period = Schemas["domain.PeriodResponse"];
-export type SearchPeriodsRequest = Schemas["domain.SearchPeriodsRequest"];
-export type CreatePeriodRequest = Schemas["domain.CreatePeriodRequest"];
-export type UpdatePeriodRequest = Schemas["domain.UpdatePeriodRequest"];
