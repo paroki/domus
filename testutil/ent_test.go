@@ -592,4 +592,23 @@ func TestNewEntClient_EventAndRSVPSchemas(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, petugasList, 1)
 	assert.Equal(t, "Organis", petugasList[0].Role)
+
+	lagu, err := client.EventLagu.Create().
+		SetParokiID(parokiID).
+		SetEvent(parishEv).
+		SetUrutan(1).
+		SetBagian("Pembuka").
+		SetSumber("Puji Syukur").
+		SetNomor("319").
+		SetJudul("Tuhan, Kasihanilah Kami").
+		SetNadaDasar("G").
+		Save(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, 7, int(lagu.ID.Version()))
+	assert.Equal(t, parishEv.ID, lagu.EventID)
+
+	laguList, err := parishEv.QueryLagu().All(ctx)
+	require.NoError(t, err)
+	require.Len(t, laguList, 1)
+	assert.Equal(t, "Pembuka", laguList[0].Bagian)
 }

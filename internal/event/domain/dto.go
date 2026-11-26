@@ -32,6 +32,7 @@ type EventResponse struct {
 	MyRsvp       *EventRSVPResponse        `json:"myRsvp,omitempty"`
 	RsvpSummary  *EventRSVPSummaryResponse `json:"rsvpSummary,omitempty"`
 	Petugas      []EventPetugasResponse    `json:"petugas,omitempty"`
+	Lagu         []EventLaguResponse       `json:"lagu,omitempty"`
 	CreatedAt    time.Time                 `json:"createdAt"`
 	UpdatedAt    time.Time                 `json:"updatedAt"`
 }
@@ -171,4 +172,42 @@ type UpdateEventPetugasRequest struct {
 	Urutan *int       `json:"urutan,omitempty"`
 	Status *string    `json:"status,omitempty" validate:"omitempty,oneof=assigned confirmed declined"`
 	Note   *string    `json:"note,omitempty"`
+}
+
+// EventLaguResponse is the public API representation of an EventLagu entry.
+type EventLaguResponse struct {
+	ID        uuid.UUID `json:"id"`
+	ParokiID  uuid.UUID `json:"parokiId"`
+	EventID   uuid.UUID `json:"eventId"`
+	Urutan    int       `json:"urutan"`
+	Bagian    string    `json:"bagian"`
+	Sumber    *string   `json:"sumber,omitempty"`
+	Nomor     *string   `json:"nomor,omitempty"`
+	Judul     string    `json:"judul"`
+	NadaDasar *string   `json:"nadaDasar,omitempty"`
+	Note      *string   `json:"note,omitempty"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+// CreateEventLaguRequest adds a liturgical song entry to an Event.
+type CreateEventLaguRequest struct {
+	Bagian    string  `json:"bagian" validate:"required,min=1"`
+	Urutan    *int    `json:"urutan,omitempty"`
+	Sumber    *string `json:"sumber,omitempty"`
+	Nomor     *string `json:"nomor,omitempty"`
+	Judul     string  `json:"judul" validate:"required,min=1"`
+	NadaDasar *string `json:"nadaDasar,omitempty"`
+	Note      *string `json:"note,omitempty"`
+}
+
+// UpdateEventLaguRequest updates an existing EventLagu entry (empty strings clear optional fields).
+type UpdateEventLaguRequest struct {
+	Bagian    *string `json:"bagian,omitempty" validate:"omitempty,min=1"`
+	Urutan    *int    `json:"urutan,omitempty"`
+	Sumber    *string `json:"sumber,omitempty"`
+	Nomor     *string `json:"nomor,omitempty"`
+	Judul     *string `json:"judul,omitempty" validate:"omitempty,min=1"`
+	NadaDasar *string `json:"nadaDasar,omitempty"`
+	Note      *string `json:"note,omitempty"`
 }

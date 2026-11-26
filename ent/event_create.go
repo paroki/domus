@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent/event"
+	"github.com/paroki/domus/ent/eventlagu"
 	"github.com/paroki/domus/ent/eventpetugas"
 	"github.com/paroki/domus/ent/eventrsvp"
 )
@@ -251,6 +252,21 @@ func (_c *EventCreate) AddPetugas(v ...*EventPetugas) *EventCreate {
 	return _c.AddPetugaIDs(ids...)
 }
 
+// AddLaguIDs adds the "lagu" edge to the EventLagu entity by IDs.
+func (_c *EventCreate) AddLaguIDs(ids ...uuid.UUID) *EventCreate {
+	_c.mutation.AddLaguIDs(ids...)
+	return _c
+}
+
+// AddLagu adds the "lagu" edges to the EventLagu entity.
+func (_c *EventCreate) AddLagu(v ...*EventLagu) *EventCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddLaguIDs(ids...)
+}
+
 // Mutation returns the EventMutation object of the builder.
 func (_c *EventCreate) Mutation() *EventMutation {
 	return _c.mutation
@@ -483,6 +499,22 @@ func (_c *EventCreate) createSpec() (*Event, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(eventpetugas.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.LaguIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   event.LaguTable,
+			Columns: []string{event.LaguColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(eventlagu.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

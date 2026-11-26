@@ -906,3 +906,94 @@ func (s *EventFeatureSuite) TestEventPetugasWorkflowAndRBAC() {
 	s.Request(fmt.Sprintf("/api/events/%s/petugas/%s", ev.ID, manualP.ID), http.MethodDelete, nil)
 	s.NoContent()
 }
+
+func (s *EventFeatureSuite) TestEventLaguCRUDAndOrdering() {
+	parokiID, _ := s.seedParokiAndOrg()
+	startAt := time.Now().UTC().Add(24 * time.Hour)
+	endAt := startAt.Add(2 * time.Hour)
+
+	s.loginViaOTP("padmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
+		Title:   "Misa Hari Minggu",
+		StartAt: startAt,
+		EndAt:   endAt,
+	})
+	s.Created()
+	ev := testutil.DecodeAs[domain.EventResponse](s).Data
+
+	// 1. Validation: empty bagian or judul -> 422 VALIDATION_ERROR.
+	s.Request(fmt.Sprintf("/api/events/%s/lagu", ev.ID), http.MethodPost, domain.CreateEventLaguRequest{
+		Bagian: "   ",
+		Judul:  "Lagu Pembuka",
+	})
+	s.UnprocessableEntity()
+	s.Equal("VALIDATION_ERROR", s.GetErrorResponse().Error.Code)
+
+	// 2. Add two songs out of order (urutan 2 then urutan 1).
+	urutan2, urutan1 := 2, 1
+	s.Request(fmt.Sprintf("/api/events/%s/lagu", ev.ID), http.MethodPost, domain.CreateEventLaguRequest{
+		Urutan:    &urutan2,
+		Bagian:    "Kemuliaan (Gloria)",
+		Sumber:    new("Puji Syukur"),
+		Nomor:     new("350"),
+		Judul:     "Kemuliaan Kepada Allah",
+		NadaDasar: new("D"),
+	})
+	s.Created()
+	lagu2 := testutil.DecodeAs[domain.EventLaguResponse](s).Data
+
+	s.Request(fmt.Sprintf("/api/events/%s/lagu", ev.ID), http.MethodPost, domain.CreateEventLaguRequest{
+		Urutan: &urutan1,
+		Bagian: "Pembuka",
+		Sumber: new("Madah Bakti"),
+		Nomor:  new("160"),
+		Judul:  "Mari Kita Bersukacita",
+		Note:   new("2 bait saja"),
+	})
+	s.Created()
+	lagu1 := testutil.DecodeAs[domain.EventLaguResponse](s).Data
+
+	// 3. Non-manager CANNOT add/update/delete lagu -> 403 EVENT_FORBIDDEN.
+	s.loginViaOTP("orgadmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+	s.Request(fmt.Sprintf("/api/events/%s/lagu", ev.ID), http.MethodPost, domain.CreateEventLaguRequest{
+		Bagian: "Penutup",
+		Judul:  "Unauthorized",
+	})
+	s.Forbidden()
+	s.Request(fmt.Sprintf("/api/events/%s/lagu/%s", ev.ID, lagu1.ID), http.MethodPatch, domain.UpdateEventLaguRequest{
+		Judul: new("Unauthorized"),
+	})
+	s.Forbidden()
+	s.Request(fmt.Sprintf("/api/events/%s/lagu/%s", ev.ID, lagu1.ID), http.MethodDelete, nil)
+	s.Forbidden()
+
+	// 4. GET /api/events/:id returns lagu ordered by urutan ASC.
+	s.Request(fmt.Sprintf("/api/events/%s", ev.ID), http.MethodGet, nil)
+	s.OK()
+	detail := testutil.DecodeAs[domain.EventResponse](s).Data
+	s.Require().Len(detail.Lagu, 2)
+	s.Equal(lagu1.ID, detail.Lagu[0].ID)
+	s.Equal(lagu2.ID, detail.Lagu[1].ID)
+
+	// 5. Manager updates lagu2 and clears optional fields with "".
+	s.loginViaOTP("padmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+	s.Request(fmt.Sprintf("/api/events/%s/lagu/%s", ev.ID, lagu2.ID), http.MethodPatch, domain.UpdateEventLaguRequest{
+		Judul:     new("Kemuliaan Agung"),
+		Sumber:    new(""),
+		Nomor:     new(""),
+		NadaDasar: new(""),
+	})
+	s.OK()
+	updated := testutil.DecodeAs[domain.EventLaguResponse](s).Data
+	s.Equal("Kemuliaan Agung", updated.Judul)
+	s.Nil(updated.Sumber)
+	s.Nil(updated.Nomor)
+	s.Nil(updated.NadaDasar)
+
+	// 6. Manager deletes lagu1.
+	s.Request(fmt.Sprintf("/api/events/%s/lagu/%s", ev.ID, lagu1.ID), http.MethodDelete, nil)
+	s.NoContent()
+}

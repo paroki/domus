@@ -296,6 +296,18 @@ func (s *Service) GetEvent(ctx context.Context, p authx.Principal, eventID uuid.
 		}
 		res.Petugas = petugas
 	}
+
+	laguRows, err := s.repo.ListLaguForEvent(ctx, row.ID)
+	if err != nil {
+		return domain.EventResponse{}, err
+	}
+	if len(laguRows) > 0 {
+		lagu := make([]domain.EventLaguResponse, 0, len(laguRows))
+		for _, lr := range laguRows {
+			lagu = append(lagu, toLaguResponse(lr))
+		}
+		res.Lagu = lagu
+	}
 	return res, nil
 }
 

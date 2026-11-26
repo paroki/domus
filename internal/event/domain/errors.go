@@ -6,6 +6,7 @@ import "github.com/paroki/domus/internal/platform/errx"
 var (
 	ErrEventNotFound    = errx.NotFound("EVENT_NOT_FOUND", "Event not found.")
 	ErrPetugasNotFound  = errx.NotFound("EVENT_PETUGAS_NOT_FOUND", "Event officer assignment not found.")
+	ErrLaguNotFound     = errx.NotFound("EVENT_LAGU_NOT_FOUND", "Event song entry not found.")
 	ErrForbidden        = errx.Forbidden("EVENT_FORBIDDEN", "You do not have permission to perform this event action.")
 	ErrInvalidTimeRange = errx.Invalid("EVENT_INVALID_TIME_RANGE", "Event end time must be after start time, and RSVP deadline cannot exceed end time.")
 	ErrRSVPClosed       = errx.Conflict("EVENT_RSVP_CLOSED", "RSVP is closed for this event.")

@@ -274,6 +274,38 @@
                 ],
                 "type": "object"
             },
+            "domain.CreateEventLaguRequest": {
+                "properties": {
+                    "bagian": {
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "judul": {
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "nadaDasar": {
+                        "type": "string"
+                    },
+                    "nomor": {
+                        "type": "string"
+                    },
+                    "note": {
+                        "type": "string"
+                    },
+                    "sumber": {
+                        "type": "string"
+                    },
+                    "urutan": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "bagian",
+                    "judul"
+                ],
+                "type": "object"
+            },
             "domain.CreateEventPetugasRequest": {
                 "properties": {
                     "name": {
@@ -817,6 +849,47 @@
                 ],
                 "type": "object"
             },
+            "domain.EventLaguResponse": {
+                "properties": {
+                    "bagian": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "eventId": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "judul": {
+                        "type": "string"
+                    },
+                    "nadaDasar": {
+                        "type": "string"
+                    },
+                    "nomor": {
+                        "type": "string"
+                    },
+                    "note": {
+                        "type": "string"
+                    },
+                    "parokiId": {
+                        "type": "string"
+                    },
+                    "sumber": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    },
+                    "urutan": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
             "domain.EventPetugasResponse": {
                 "properties": {
                     "canConfirm": {
@@ -969,6 +1042,13 @@
                     },
                     "jenis": {
                         "type": "string"
+                    },
+                    "lagu": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.EventLaguResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
                     },
                     "location": {
                         "type": "string"
@@ -2516,6 +2596,34 @@
                 },
                 "type": "object"
             },
+            "domain.UpdateEventLaguRequest": {
+                "properties": {
+                    "bagian": {
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "judul": {
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "nadaDasar": {
+                        "type": "string"
+                    },
+                    "nomor": {
+                        "type": "string"
+                    },
+                    "note": {
+                        "type": "string"
+                    },
+                    "sumber": {
+                        "type": "string"
+                    },
+                    "urutan": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
             "domain.UpdateEventPetugasRequest": {
                 "properties": {
                     "name": {
@@ -3916,6 +4024,20 @@
                 "properties": {
                     "data": {
                         "$ref": "#/components/schemas/domain.CreateUserTokenResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_EventLaguResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.EventLaguResponse"
                     },
                     "error": {
                         "$ref": "#/components/schemas/httpx.ErrorPayload"
@@ -6234,6 +6356,280 @@
                     }
                 },
                 "summary": "Update event",
+                "tags": [
+                    "Event"
+                ]
+            }
+        },
+        "/events/{id}/lagu": {
+            "post": {
+                "description": "Adds a liturgical song entry to an event (requires event manager: org:admin or ref:paroki-admin).",
+                "operationId": "createEventLagu",
+                "parameters": [
+                    {
+                        "description": "Event UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.CreateEventLaguRequest",
+                                "summary": "body",
+                                "description": "Song entry payload"
+                            }
+                        }
+                    },
+                    "description": "Song entry payload",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_EventLaguResponse"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Create event lagu",
+                "tags": [
+                    "Event"
+                ]
+            }
+        },
+        "/events/{id}/lagu/{laguId}": {
+            "delete": {
+                "description": "Removes a liturgical song entry from an event (requires event manager).",
+                "operationId": "deleteEventLagu",
+                "parameters": [
+                    {
+                        "description": "Event UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Lagu UUID",
+                        "in": "path",
+                        "name": "laguId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Delete event lagu",
+                "tags": [
+                    "Event"
+                ]
+            },
+            "patch": {
+                "description": "Updates a liturgical song entry in an event (requires event manager).",
+                "operationId": "updateEventLagu",
+                "parameters": [
+                    {
+                        "description": "Event UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Lagu UUID",
+                        "in": "path",
+                        "name": "laguId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.UpdateEventLaguRequest",
+                                "summary": "body",
+                                "description": "Song update payload"
+                            }
+                        }
+                    },
+                    "description": "Song update payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_EventLaguResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Update event lagu",
                 "tags": [
                     "Event"
                 ]

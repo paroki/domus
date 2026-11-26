@@ -18,6 +18,7 @@ import (
 	"github.com/paroki/domus/ent/agentsession"
 	"github.com/paroki/domus/ent/casbinrule"
 	"github.com/paroki/domus/ent/event"
+	"github.com/paroki/domus/ent/eventlagu"
 	"github.com/paroki/domus/ent/eventpetugas"
 	"github.com/paroki/domus/ent/eventrsvp"
 	"github.com/paroki/domus/ent/kecamatan"
@@ -106,6 +107,7 @@ func checkColumn(t, c string) error {
 			agentsession.Table:  agentsession.ValidColumn,
 			casbinrule.Table:    casbinrule.ValidColumn,
 			event.Table:         event.ValidColumn,
+			eventlagu.Table:     eventlagu.ValidColumn,
 			eventpetugas.Table:  eventpetugas.ValidColumn,
 			eventrsvp.Table:     eventrsvp.ValidColumn,
 			kecamatan.Table:     kecamatan.ValidColumn,

@@ -81,6 +81,18 @@ func (f EventFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EventMutation", m)
 }
 
+// The EventLaguFunc type is an adapter to allow the use of ordinary
+// function as EventLagu mutator.
+type EventLaguFunc func(context.Context, *ent.EventLaguMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f EventLaguFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.EventLaguMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EventLaguMutation", m)
+}
+
 // The EventPetugasFunc type is an adapter to allow the use of ordinary
 // function as EventPetugas mutator.
 type EventPetugasFunc func(context.Context, *ent.EventPetugasMutation) (ent.Value, error)

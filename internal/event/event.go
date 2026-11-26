@@ -22,6 +22,7 @@ type (
 	RSVP         = domain.EventRSVPResponse
 	RSVPSummary  = domain.EventRSVPSummaryResponse
 	EventPetugas = domain.EventPetugasResponse
+	EventLagu    = domain.EventLaguResponse
 )
 
 // Feature-owned Casbin resource permissions.

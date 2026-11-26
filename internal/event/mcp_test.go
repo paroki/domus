@@ -599,4 +599,58 @@ func (s *EventMCPSuite) TestEventMCPTools_ParishEventAndTimezone() {
 		},
 	})
 	s.NotContains(removePetugasBody, "Pemazmur")
+
+	// MCP event_set_lagu (add, update, remove).
+	_, addLaguBody := s.mcpPost(padminSess, padminCookies, parokiID, map[string]any{
+		"jsonrpc": "2.0",
+		"id":      10,
+		"method":  "tools/call",
+		"params": map[string]any{
+			"name": "event_set_lagu",
+			"arguments": map[string]any{
+				"eventId":   eventID,
+				"urutan":    1,
+				"bagian":    "Pembuka",
+				"sumber":    "Puji Syukur",
+				"nomor":     "319",
+				"judul":     "Tuhan Kasihanilah",
+				"nadaDasar": "G",
+			},
+		},
+	})
+	s.Contains(addLaguBody, "Tuhan Kasihanilah")
+
+	s.Equal(http.StatusOK, s.apiJSON(http.MethodGet, "/api/events/"+eventID, nil, padminCookies, parokiID, &evDetailEnv))
+	s.Require().Len(evDetailEnv.Data.Lagu, 1)
+	laguID := evDetailEnv.Data.Lagu[0].ID.String()
+
+	_, updateLaguBody := s.mcpPost(padminSess, padminCookies, parokiID, map[string]any{
+		"jsonrpc": "2.0",
+		"id":      11,
+		"method":  "tools/call",
+		"params": map[string]any{
+			"name": "event_set_lagu",
+			"arguments": map[string]any{
+				"eventId": eventID,
+				"laguId":  laguID,
+				"judul":   "Tuhan Kasihanilah Kami",
+			},
+		},
+	})
+	s.Contains(updateLaguBody, "Tuhan Kasihanilah Kami")
+
+	_, removeLaguBody := s.mcpPost(padminSess, padminCookies, parokiID, map[string]any{
+		"jsonrpc": "2.0",
+		"id":      12,
+		"method":  "tools/call",
+		"params": map[string]any{
+			"name": "event_set_lagu",
+			"arguments": map[string]any{
+				"eventId": eventID,
+				"laguId":  laguID,
+				"remove":  true,
+			},
+		},
+	})
+	s.NotContains(removeLaguBody, "Tuhan Kasihanilah Kami")
 }

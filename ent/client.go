@@ -22,6 +22,7 @@ import (
 	"github.com/paroki/domus/ent/agentsession"
 	"github.com/paroki/domus/ent/casbinrule"
 	"github.com/paroki/domus/ent/event"
+	"github.com/paroki/domus/ent/eventlagu"
 	"github.com/paroki/domus/ent/eventpetugas"
 	"github.com/paroki/domus/ent/eventrsvp"
 	"github.com/paroki/domus/ent/kecamatan"
@@ -63,6 +64,8 @@ type Client struct {
 	CasbinRule *CasbinRuleClient
 	// Event is the client for interacting with the Event builders.
 	Event *EventClient
+	// EventLagu is the client for interacting with the EventLagu builders.
+	EventLagu *EventLaguClient
 	// EventPetugas is the client for interacting with the EventPetugas builders.
 	EventPetugas *EventPetugasClient
 	// EventRSVP is the client for interacting with the EventRSVP builders.
@@ -124,6 +127,7 @@ func (c *Client) init() {
 	c.AgentSession = NewAgentSessionClient(c.config)
 	c.CasbinRule = NewCasbinRuleClient(c.config)
 	c.Event = NewEventClient(c.config)
+	c.EventLagu = NewEventLaguClient(c.config)
 	c.EventPetugas = NewEventPetugasClient(c.config)
 	c.EventRSVP = NewEventRSVPClient(c.config)
 	c.Kecamatan = NewKecamatanClient(c.config)
@@ -244,6 +248,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		AgentSession:  NewAgentSessionClient(cfg),
 		CasbinRule:    NewCasbinRuleClient(cfg),
 		Event:         NewEventClient(cfg),
+		EventLagu:     NewEventLaguClient(cfg),
 		EventPetugas:  NewEventPetugasClient(cfg),
 		EventRSVP:     NewEventRSVPClient(cfg),
 		Kecamatan:     NewKecamatanClient(cfg),
@@ -291,6 +296,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		AgentSession:  NewAgentSessionClient(cfg),
 		CasbinRule:    NewCasbinRuleClient(cfg),
 		Event:         NewEventClient(cfg),
+		EventLagu:     NewEventLaguClient(cfg),
 		EventPetugas:  NewEventPetugasClient(cfg),
 		EventRSVP:     NewEventRSVPClient(cfg),
 		Kecamatan:     NewKecamatanClient(cfg),
@@ -343,10 +349,10 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.AgentMemory, c.AgentMessage, c.AgentProvider, c.AgentSession, c.CasbinRule,
-		c.Event, c.EventPetugas, c.EventRSVP, c.Kecamatan, c.Kelurahan, c.Keuskupan,
-		c.Kevikepan, c.Kota, c.Lingkungan, c.Lookup, c.OrgInvite, c.OrgMember,
-		c.Organization, c.Paroki, c.ParokiMember, c.Period, c.Setting, c.User,
-		c.UserAccount, c.UserOTP, c.UserSession, c.UserToken, c.Wilayah,
+		c.Event, c.EventLagu, c.EventPetugas, c.EventRSVP, c.Kecamatan, c.Kelurahan,
+		c.Keuskupan, c.Kevikepan, c.Kota, c.Lingkungan, c.Lookup, c.OrgInvite,
+		c.OrgMember, c.Organization, c.Paroki, c.ParokiMember, c.Period, c.Setting,
+		c.User, c.UserAccount, c.UserOTP, c.UserSession, c.UserToken, c.Wilayah,
 	} {
 		n.Use(hooks...)
 	}
@@ -357,10 +363,10 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.AgentMemory, c.AgentMessage, c.AgentProvider, c.AgentSession, c.CasbinRule,
-		c.Event, c.EventPetugas, c.EventRSVP, c.Kecamatan, c.Kelurahan, c.Keuskupan,
-		c.Kevikepan, c.Kota, c.Lingkungan, c.Lookup, c.OrgInvite, c.OrgMember,
-		c.Organization, c.Paroki, c.ParokiMember, c.Period, c.Setting, c.User,
-		c.UserAccount, c.UserOTP, c.UserSession, c.UserToken, c.Wilayah,
+		c.Event, c.EventLagu, c.EventPetugas, c.EventRSVP, c.Kecamatan, c.Kelurahan,
+		c.Keuskupan, c.Kevikepan, c.Kota, c.Lingkungan, c.Lookup, c.OrgInvite,
+		c.OrgMember, c.Organization, c.Paroki, c.ParokiMember, c.Period, c.Setting,
+		c.User, c.UserAccount, c.UserOTP, c.UserSession, c.UserToken, c.Wilayah,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -381,6 +387,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.CasbinRule.mutate(ctx, m)
 	case *EventMutation:
 		return c.Event.mutate(ctx, m)
+	case *EventLaguMutation:
+		return c.EventLagu.mutate(ctx, m)
 	case *EventPetugasMutation:
 		return c.EventPetugas.mutate(ctx, m)
 	case *EventRSVPMutation:
@@ -1267,6 +1275,22 @@ func (c *EventClient) QueryPetugas(_m *Event) *EventPetugasQuery {
 	return query
 }
 
+// QueryLagu queries the lagu edge of a Event.
+func (c *EventClient) QueryLagu(_m *Event) *EventLaguQuery {
+	query := (&EventLaguClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(event.Table, event.FieldID, id),
+			sqlgraph.To(eventlagu.Table, eventlagu.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, event.LaguTable, event.LaguColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *EventClient) Hooks() []Hook {
 	return c.hooks.Event
@@ -1289,6 +1313,155 @@ func (c *EventClient) mutate(ctx context.Context, m *EventMutation) (Value, erro
 		return (&EventDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Event mutation op: %q", m.Op())
+	}
+}
+
+// EventLaguClient is a client for the EventLagu schema.
+type EventLaguClient struct {
+	config
+}
+
+// NewEventLaguClient returns a client for the EventLagu from the given config.
+func NewEventLaguClient(c config) *EventLaguClient {
+	return &EventLaguClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `eventlagu.Hooks(f(g(h())))`.
+func (c *EventLaguClient) Use(hooks ...Hook) {
+	c.hooks.EventLagu = append(c.hooks.EventLagu, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `eventlagu.Intercept(f(g(h())))`.
+func (c *EventLaguClient) Intercept(interceptors ...Interceptor) {
+	c.inters.EventLagu = append(c.inters.EventLagu, interceptors...)
+}
+
+// Create returns a builder for creating a EventLagu entity.
+func (c *EventLaguClient) Create() *EventLaguCreate {
+	mutation := newEventLaguMutation(c.config, OpCreate)
+	return &EventLaguCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of EventLagu entities.
+func (c *EventLaguClient) CreateBulk(builders ...*EventLaguCreate) *EventLaguCreateBulk {
+	return &EventLaguCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *EventLaguClient) MapCreateBulk(slice any, setFunc func(*EventLaguCreate, int)) *EventLaguCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &EventLaguCreateBulk{err: fmt.Errorf("calling to EventLaguClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*EventLaguCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &EventLaguCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for EventLagu.
+func (c *EventLaguClient) Update() *EventLaguUpdate {
+	mutation := newEventLaguMutation(c.config, OpUpdate)
+	return &EventLaguUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *EventLaguClient) UpdateOne(_m *EventLagu) *EventLaguUpdateOne {
+	mutation := newEventLaguMutation(c.config, OpUpdateOne, withEventLagu(_m))
+	return &EventLaguUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *EventLaguClient) UpdateOneID(id uuid.UUID) *EventLaguUpdateOne {
+	mutation := newEventLaguMutation(c.config, OpUpdateOne, withEventLaguID(id))
+	return &EventLaguUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for EventLagu.
+func (c *EventLaguClient) Delete() *EventLaguDelete {
+	mutation := newEventLaguMutation(c.config, OpDelete)
+	return &EventLaguDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *EventLaguClient) DeleteOne(_m *EventLagu) *EventLaguDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *EventLaguClient) DeleteOneID(id uuid.UUID) *EventLaguDeleteOne {
+	builder := c.Delete().Where(eventlagu.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &EventLaguDeleteOne{builder}
+}
+
+// Query returns a query builder for EventLagu.
+func (c *EventLaguClient) Query() *EventLaguQuery {
+	return &EventLaguQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeEventLagu},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a EventLagu entity by its id.
+func (c *EventLaguClient) Get(ctx context.Context, id uuid.UUID) (*EventLagu, error) {
+	return c.Query().Where(eventlagu.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *EventLaguClient) GetX(ctx context.Context, id uuid.UUID) *EventLagu {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryEvent queries the event edge of a EventLagu.
+func (c *EventLaguClient) QueryEvent(_m *EventLagu) *EventQuery {
+	query := (&EventClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(eventlagu.Table, eventlagu.FieldID, id),
+			sqlgraph.To(event.Table, event.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, eventlagu.EventTable, eventlagu.EventColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *EventLaguClient) Hooks() []Hook {
+	return c.hooks.EventLagu
+}
+
+// Interceptors returns the client interceptors.
+func (c *EventLaguClient) Interceptors() []Interceptor {
+	return c.inters.EventLagu
+}
+
+func (c *EventLaguClient) mutate(ctx context.Context, m *EventLaguMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&EventLaguCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&EventLaguUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&EventLaguUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&EventLaguDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown EventLagu mutation op: %q", m.Op())
 	}
 }
 
@@ -4926,16 +5099,16 @@ func (c *WilayahClient) mutate(ctx context.Context, m *WilayahMutation) (Value, 
 type (
 	hooks struct {
 		AgentMemory, AgentMessage, AgentProvider, AgentSession, CasbinRule, Event,
-		EventPetugas, EventRSVP, Kecamatan, Kelurahan, Keuskupan, Kevikepan, Kota,
-		Lingkungan, Lookup, OrgInvite, OrgMember, Organization, Paroki, ParokiMember,
-		Period, Setting, User, UserAccount, UserOTP, UserSession, UserToken,
-		Wilayah []ent.Hook
+		EventLagu, EventPetugas, EventRSVP, Kecamatan, Kelurahan, Keuskupan, Kevikepan,
+		Kota, Lingkungan, Lookup, OrgInvite, OrgMember, Organization, Paroki,
+		ParokiMember, Period, Setting, User, UserAccount, UserOTP, UserSession,
+		UserToken, Wilayah []ent.Hook
 	}
 	inters struct {
 		AgentMemory, AgentMessage, AgentProvider, AgentSession, CasbinRule, Event,
-		EventPetugas, EventRSVP, Kecamatan, Kelurahan, Keuskupan, Kevikepan, Kota,
-		Lingkungan, Lookup, OrgInvite, OrgMember, Organization, Paroki, ParokiMember,
-		Period, Setting, User, UserAccount, UserOTP, UserSession, UserToken,
-		Wilayah []ent.Interceptor
+		EventLagu, EventPetugas, EventRSVP, Kecamatan, Kelurahan, Keuskupan, Kevikepan,
+		Kota, Lingkungan, Lookup, OrgInvite, OrgMember, Organization, Paroki,
+		ParokiMember, Period, Setting, User, UserAccount, UserOTP, UserSession,
+		UserToken, Wilayah []ent.Interceptor
 	}
 )

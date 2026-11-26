@@ -196,6 +196,42 @@ var (
 			},
 		},
 	}
+	// EventLaguColumns holds the columns for the "event_lagu" table.
+	EventLaguColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "paroki_id", Type: field.TypeUUID},
+		{Name: "urutan", Type: field.TypeInt, Default: 0},
+		{Name: "bagian", Type: field.TypeString},
+		{Name: "sumber", Type: field.TypeString, Nullable: true},
+		{Name: "nomor", Type: field.TypeString, Nullable: true},
+		{Name: "judul", Type: field.TypeString},
+		{Name: "nada_dasar", Type: field.TypeString, Nullable: true},
+		{Name: "note", Type: field.TypeString, Nullable: true},
+		{Name: "event_id", Type: field.TypeUUID},
+	}
+	// EventLaguTable holds the schema information for the "event_lagu" table.
+	EventLaguTable = &schema.Table{
+		Name:       "event_lagu",
+		Columns:    EventLaguColumns,
+		PrimaryKey: []*schema.Column{EventLaguColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "event_lagu_events_lagu",
+				Columns:    []*schema.Column{EventLaguColumns[11]},
+				RefColumns: []*schema.Column{EventsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "eventlagu_event_id_urutan",
+				Unique:  false,
+				Columns: []*schema.Column{EventLaguColumns[11], EventLaguColumns[4]},
+			},
+		},
+	}
 	// EventPetugasColumns holds the columns for the "event_petugas" table.
 	EventPetugasColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -1117,6 +1153,7 @@ var (
 		AgentSessionsTable,
 		CasbinRulesTable,
 		EventsTable,
+		EventLaguTable,
 		EventPetugasTable,
 		EventRsvpsTable,
 		KecamatanTable,
@@ -1155,6 +1192,10 @@ func init() {
 	}
 	AgentSessionsTable.Annotation = &entsql.Annotation{
 		Table: "agent_sessions",
+	}
+	EventLaguTable.ForeignKeys[0].RefTable = EventsTable
+	EventLaguTable.Annotation = &entsql.Annotation{
+		Table: "event_lagu",
 	}
 	EventPetugasTable.ForeignKeys[0].RefTable = EventsTable
 	EventPetugasTable.Annotation = &entsql.Annotation{

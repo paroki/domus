@@ -24,6 +24,8 @@ type Tx struct {
 	CasbinRule *CasbinRuleClient
 	// Event is the client for interacting with the Event builders.
 	Event *EventClient
+	// EventLagu is the client for interacting with the EventLagu builders.
+	EventLagu *EventLaguClient
 	// EventPetugas is the client for interacting with the EventPetugas builders.
 	EventPetugas *EventPetugasClient
 	// EventRSVP is the client for interacting with the EventRSVP builders.
@@ -205,6 +207,7 @@ func (tx *Tx) init() {
 	tx.AgentSession = NewAgentSessionClient(tx.config)
 	tx.CasbinRule = NewCasbinRuleClient(tx.config)
 	tx.Event = NewEventClient(tx.config)
+	tx.EventLagu = NewEventLaguClient(tx.config)
 	tx.EventPetugas = NewEventPetugasClient(tx.config)
 	tx.EventRSVP = NewEventRSVPClient(tx.config)
 	tx.Kecamatan = NewKecamatanClient(tx.config)

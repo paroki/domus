@@ -12,6 +12,7 @@ import (
 	"github.com/paroki/domus/ent/agentsession"
 	"github.com/paroki/domus/ent/casbinrule"
 	"github.com/paroki/domus/ent/event"
+	"github.com/paroki/domus/ent/eventlagu"
 	"github.com/paroki/domus/ent/eventpetugas"
 	"github.com/paroki/domus/ent/eventrsvp"
 	"github.com/paroki/domus/ent/kecamatan"
@@ -231,6 +232,39 @@ func init() {
 	eventDescID := eventMixinFields0[0].Descriptor()
 	// event.DefaultID holds the default value on creation for the id field.
 	event.DefaultID = eventDescID.Default.(func() uuid.UUID)
+	eventlaguMixin := schema.EventLagu{}.Mixin()
+	eventlaguMixinFields0 := eventlaguMixin[0].Fields()
+	_ = eventlaguMixinFields0
+	eventlaguMixinFields1 := eventlaguMixin[1].Fields()
+	_ = eventlaguMixinFields1
+	eventlaguFields := schema.EventLagu{}.Fields()
+	_ = eventlaguFields
+	// eventlaguDescCreatedAt is the schema descriptor for created_at field.
+	eventlaguDescCreatedAt := eventlaguMixinFields1[0].Descriptor()
+	// eventlagu.DefaultCreatedAt holds the default value on creation for the created_at field.
+	eventlagu.DefaultCreatedAt = eventlaguDescCreatedAt.Default.(func() time.Time)
+	// eventlaguDescUpdatedAt is the schema descriptor for updated_at field.
+	eventlaguDescUpdatedAt := eventlaguMixinFields1[1].Descriptor()
+	// eventlagu.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	eventlagu.DefaultUpdatedAt = eventlaguDescUpdatedAt.Default.(func() time.Time)
+	// eventlagu.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	eventlagu.UpdateDefaultUpdatedAt = eventlaguDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// eventlaguDescUrutan is the schema descriptor for urutan field.
+	eventlaguDescUrutan := eventlaguFields[2].Descriptor()
+	// eventlagu.DefaultUrutan holds the default value on creation for the urutan field.
+	eventlagu.DefaultUrutan = eventlaguDescUrutan.Default.(int)
+	// eventlaguDescBagian is the schema descriptor for bagian field.
+	eventlaguDescBagian := eventlaguFields[3].Descriptor()
+	// eventlagu.BagianValidator is a validator for the "bagian" field. It is called by the builders before save.
+	eventlagu.BagianValidator = eventlaguDescBagian.Validators[0].(func(string) error)
+	// eventlaguDescJudul is the schema descriptor for judul field.
+	eventlaguDescJudul := eventlaguFields[6].Descriptor()
+	// eventlagu.JudulValidator is a validator for the "judul" field. It is called by the builders before save.
+	eventlagu.JudulValidator = eventlaguDescJudul.Validators[0].(func(string) error)
+	// eventlaguDescID is the schema descriptor for id field.
+	eventlaguDescID := eventlaguMixinFields0[0].Descriptor()
+	// eventlagu.DefaultID holds the default value on creation for the id field.
+	eventlagu.DefaultID = eventlaguDescID.Default.(func() uuid.UUID)
 	eventpetugasMixin := schema.EventPetugas{}.Mixin()
 	eventpetugasMixinFields0 := eventpetugasMixin[0].Fields()
 	_ = eventpetugasMixinFields0

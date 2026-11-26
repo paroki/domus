@@ -56,6 +56,22 @@ type MCPEventPetugas struct {
 	UpdatedAt  string  `json:"updatedAt"`
 }
 
+// MCPEventLagu is the MCP-safe representation of an EventLagu entry.
+type MCPEventLagu struct {
+	ID        string  `json:"id"`
+	ParokiID  string  `json:"parokiId"`
+	EventID   string  `json:"eventId"`
+	Urutan    int     `json:"urutan"`
+	Bagian    string  `json:"bagian"`
+	Sumber    *string `json:"sumber,omitempty"`
+	Nomor     *string `json:"nomor,omitempty"`
+	Judul     string  `json:"judul"`
+	NadaDasar *string `json:"nadaDasar,omitempty"`
+	Note      *string `json:"note,omitempty"`
+	CreatedAt string  `json:"createdAt"`
+	UpdatedAt string  `json:"updatedAt"`
+}
+
 // MCPEvent is the MCP-safe representation of an Event (UUIDs and timestamps as strings).
 type MCPEvent struct {
 	ID           string               `json:"id"`
@@ -83,6 +99,7 @@ type MCPEvent struct {
 	MyRsvp       *MCPEventRSVP        `json:"myRsvp,omitempty"`
 	RsvpSummary  *MCPEventRSVPSummary `json:"rsvpSummary,omitempty"`
 	Petugas      []MCPEventPetugas    `json:"petugas,omitempty"`
+	Lagu         []MCPEventLagu       `json:"lagu,omitempty"`
 	CreatedAt    string               `json:"createdAt"`
 	UpdatedAt    string               `json:"updatedAt"`
 }
@@ -186,6 +203,20 @@ type EventConfirmPetugasInput struct {
 	Note      *string `json:"note,omitempty" jsonschema:"Optional confirmation note"`
 }
 
+// EventSetLaguInput is the input schema for event_set_lagu.
+type EventSetLaguInput struct {
+	EventID   string  `json:"eventId"`
+	LaguID    string  `json:"laguId,omitempty" jsonschema:"Existing lagu UUID when updating or removing; omit to add a new song entry"`
+	Remove    bool    `json:"remove,omitempty" jsonschema:"If true (with laguId), remove the song entry"`
+	Urutan    *int    `json:"urutan,omitempty" jsonschema:"Display sort order"`
+	Bagian    *string `json:"bagian,omitempty" jsonschema:"Liturgical song part (e.g. Pembuka, Kemuliaan, Komuni, Penutup)"`
+	Sumber    *string `json:"sumber,omitempty" jsonschema:"Songbook source (e.g. Puji Syukur, Madah Bakti); pass empty string to clear"`
+	Nomor     *string `json:"nomor,omitempty" jsonschema:"Song number; pass empty string to clear"`
+	Judul     *string `json:"judul,omitempty" jsonschema:"Song title"`
+	NadaDasar *string `json:"nadaDasar,omitempty" jsonschema:"Musical key (e.g. G, Do=F); pass empty string to clear"`
+	Note      *string `json:"note,omitempty" jsonschema:"Optional note; pass empty string to clear"`
+}
+
 // RegisterMCP registers all event_* tools on the MCP server.
 func (f *Feature) RegisterMCP(s *mcp.Server) {
 	mcp.AddTool(s, &mcp.Tool{
@@ -227,6 +258,11 @@ func (f *Feature) RegisterMCP(s *mcp.Server) {
 		Name:        "event_confirm_petugas",
 		Description: "Confirm or decline an officer/minister assignment (requires assigned user, org:admin of assigned org, or event manager).",
 	}, f.mcpEventConfirmPetugas)
+
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "event_set_lagu",
+		Description: "Add, update, or remove a liturgical song entry on an event (requires event manager).",
+	}, f.mcpEventSetLagu)
 }
 
 func (f *Feature) mcpEventList(ctx context.Context, _ *mcp.CallToolRequest, in EventListInput) (*mcp.CallToolResult, EventListOutput, error) {
@@ -598,6 +634,69 @@ func (f *Feature) mcpEventConfirmPetugas(ctx context.Context, _ *mcp.CallToolReq
 	return nil, toMCPEventPetugas(res), nil
 }
 
+func (f *Feature) mcpEventSetLagu(ctx context.Context, _ *mcp.CallToolRequest, in EventSetLaguInput) (*mcp.CallToolResult, MCPEvent, error) {
+	p, err := requireMCPTenant(ctx)
+	if err != nil {
+		return nil, MCPEvent{}, err
+	}
+	loc := f.service.ResolveParokiLocation(ctx, p.ParokiID)
+	eventID, err := uuid.Parse(in.EventID)
+	if err != nil {
+		return nil, MCPEvent{}, httpx.BadRequest("Invalid event ID.")
+	}
+
+	if in.Remove {
+		laguID, err := uuid.Parse(in.LaguID)
+		if err != nil {
+			return nil, MCPEvent{}, httpx.BadRequest("Invalid lagu ID.")
+		}
+		if err := f.service.DeleteEventLagu(ctx, p, eventID, laguID); err != nil {
+			return nil, MCPEvent{}, err
+		}
+	} else if in.LaguID != "" {
+		laguID, err := uuid.Parse(in.LaguID)
+		if err != nil {
+			return nil, MCPEvent{}, httpx.BadRequest("Invalid lagu ID.")
+		}
+		if _, err := f.service.UpdateEventLagu(ctx, p, eventID, laguID, domain.UpdateEventLaguRequest{
+			Urutan:    in.Urutan,
+			Bagian:    in.Bagian,
+			Sumber:    in.Sumber,
+			Nomor:     in.Nomor,
+			Judul:     in.Judul,
+			NadaDasar: in.NadaDasar,
+			Note:      in.Note,
+		}); err != nil {
+			return nil, MCPEvent{}, err
+		}
+	} else {
+		var bagian, judul string
+		if in.Bagian != nil {
+			bagian = *in.Bagian
+		}
+		if in.Judul != nil {
+			judul = *in.Judul
+		}
+		if _, err := f.service.CreateEventLagu(ctx, p, eventID, domain.CreateEventLaguRequest{
+			Urutan:    in.Urutan,
+			Bagian:    bagian,
+			Sumber:    in.Sumber,
+			Nomor:     in.Nomor,
+			Judul:     judul,
+			NadaDasar: in.NadaDasar,
+			Note:      in.Note,
+		}); err != nil {
+			return nil, MCPEvent{}, err
+		}
+	}
+
+	ev, err := f.service.GetEvent(ctx, p, eventID)
+	if err != nil {
+		return nil, MCPEvent{}, err
+	}
+	return nil, toMCPEvent(ev, loc), nil
+}
+
 func requireMCPTenant(ctx context.Context) (user.Principal, error) {
 	p, ok := user.UserContext(ctx)
 	if !ok || p.UserID == uuid.Nil {
@@ -647,6 +746,13 @@ func toMCPEvent(e domain.EventResponse, loc *time.Location) MCPEvent {
 			petugas = append(petugas, toMCPEventPetugas(item))
 		}
 	}
+	var lagu []MCPEventLagu
+	if len(e.Lagu) > 0 {
+		lagu = make([]MCPEventLagu, 0, len(e.Lagu))
+		for _, item := range e.Lagu {
+			lagu = append(lagu, toMCPEventLagu(item))
+		}
+	}
 	return MCPEvent{
 		ID:           e.ID.String(),
 		ParokiID:     e.ParokiID.String(),
@@ -673,6 +779,7 @@ func toMCPEvent(e domain.EventResponse, loc *time.Location) MCPEvent {
 		MyRsvp:       myRsvp,
 		RsvpSummary:  summary,
 		Petugas:      petugas,
+		Lagu:         lagu,
 		CreatedAt:    e.CreatedAt.UTC().Format(time.RFC3339),
 		UpdatedAt:    e.UpdatedAt.UTC().Format(time.RFC3339),
 	}
@@ -703,6 +810,23 @@ func toMCPEventPetugas(p domain.EventPetugasResponse) MCPEventPetugas {
 		CanConfirm: p.CanConfirm,
 		CreatedAt:  p.CreatedAt.UTC().Format(time.RFC3339),
 		UpdatedAt:  p.UpdatedAt.UTC().Format(time.RFC3339),
+	}
+}
+
+func toMCPEventLagu(l domain.EventLaguResponse) MCPEventLagu {
+	return MCPEventLagu{
+		ID:        l.ID.String(),
+		ParokiID:  l.ParokiID.String(),
+		EventID:   l.EventID.String(),
+		Urutan:    l.Urutan,
+		Bagian:    l.Bagian,
+		Sumber:    l.Sumber,
+		Nomor:     l.Nomor,
+		Judul:     l.Judul,
+		NadaDasar: l.NadaDasar,
+		Note:      l.Note,
+		CreatedAt: l.CreatedAt.UTC().Format(time.RFC3339),
+		UpdatedAt: l.UpdatedAt.UTC().Format(time.RFC3339),
 	}
 }
 

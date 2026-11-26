@@ -62,9 +62,11 @@ type EventEdges struct {
 	Rsvps []*EventRSVP `json:"rsvps,omitempty"`
 	// Petugas holds the value of the petugas edge.
 	Petugas []*EventPetugas `json:"petugas,omitempty"`
+	// Lagu holds the value of the lagu edge.
+	Lagu []*EventLagu `json:"lagu,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // RsvpsOrErr returns the Rsvps value or an error if the edge
@@ -83,6 +85,15 @@ func (e EventEdges) PetugasOrErr() ([]*EventPetugas, error) {
 		return e.Petugas, nil
 	}
 	return nil, &NotLoadedError{edge: "petugas"}
+}
+
+// LaguOrErr returns the Lagu value or an error if the edge
+// was not loaded in eager-loading.
+func (e EventEdges) LaguOrErr() ([]*EventLagu, error) {
+	if e.loadedTypes[2] {
+		return e.Lagu, nil
+	}
+	return nil, &NotLoadedError{edge: "lagu"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -244,6 +255,11 @@ func (_m *Event) QueryRsvps() *EventRSVPQuery {
 // QueryPetugas queries the "petugas" edge of the Event entity.
 func (_m *Event) QueryPetugas() *EventPetugasQuery {
 	return NewEventClient(_m.config).QueryPetugas(_m)
+}
+
+// QueryLagu queries the "lagu" edge of the Event entity.
+func (_m *Event) QueryLagu() *EventLaguQuery {
+	return NewEventClient(_m.config).QueryLagu(_m)
 }
 
 // Update returns a builder for updating this Event.

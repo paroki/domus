@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent/event"
+	"github.com/paroki/domus/ent/eventlagu"
 	"github.com/paroki/domus/ent/eventpetugas"
 	"github.com/paroki/domus/ent/eventrsvp"
 	"github.com/paroki/domus/ent/predicate"
@@ -299,6 +300,21 @@ func (_u *EventUpdate) AddPetugas(v ...*EventPetugas) *EventUpdate {
 	return _u.AddPetugaIDs(ids...)
 }
 
+// AddLaguIDs adds the "lagu" edge to the EventLagu entity by IDs.
+func (_u *EventUpdate) AddLaguIDs(ids ...uuid.UUID) *EventUpdate {
+	_u.mutation.AddLaguIDs(ids...)
+	return _u
+}
+
+// AddLagu adds the "lagu" edges to the EventLagu entity.
+func (_u *EventUpdate) AddLagu(v ...*EventLagu) *EventUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddLaguIDs(ids...)
+}
+
 // Mutation returns the EventMutation object of the builder.
 func (_u *EventUpdate) Mutation() *EventMutation {
 	return _u.mutation
@@ -344,6 +360,27 @@ func (_u *EventUpdate) RemovePetugas(v ...*EventPetugas) *EventUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemovePetugaIDs(ids...)
+}
+
+// ClearLagu clears all "lagu" edges to the EventLagu entity.
+func (_u *EventUpdate) ClearLagu() *EventUpdate {
+	_u.mutation.ClearLagu()
+	return _u
+}
+
+// RemoveLaguIDs removes the "lagu" edge to EventLagu entities by IDs.
+func (_u *EventUpdate) RemoveLaguIDs(ids ...uuid.UUID) *EventUpdate {
+	_u.mutation.RemoveLaguIDs(ids...)
+	return _u
+}
+
+// RemoveLagu removes "lagu" edges to EventLagu entities.
+func (_u *EventUpdate) RemoveLagu(v ...*EventLagu) *EventUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveLaguIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -560,6 +597,51 @@ func (_u *EventUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(eventpetugas.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.LaguCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   event.LaguTable,
+			Columns: []string{event.LaguColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(eventlagu.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedLaguIDs(); len(nodes) > 0 && !_u.mutation.LaguCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   event.LaguTable,
+			Columns: []string{event.LaguColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(eventlagu.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.LaguIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   event.LaguTable,
+			Columns: []string{event.LaguColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(eventlagu.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -855,6 +937,21 @@ func (_u *EventUpdateOne) AddPetugas(v ...*EventPetugas) *EventUpdateOne {
 	return _u.AddPetugaIDs(ids...)
 }
 
+// AddLaguIDs adds the "lagu" edge to the EventLagu entity by IDs.
+func (_u *EventUpdateOne) AddLaguIDs(ids ...uuid.UUID) *EventUpdateOne {
+	_u.mutation.AddLaguIDs(ids...)
+	return _u
+}
+
+// AddLagu adds the "lagu" edges to the EventLagu entity.
+func (_u *EventUpdateOne) AddLagu(v ...*EventLagu) *EventUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddLaguIDs(ids...)
+}
+
 // Mutation returns the EventMutation object of the builder.
 func (_u *EventUpdateOne) Mutation() *EventMutation {
 	return _u.mutation
@@ -900,6 +997,27 @@ func (_u *EventUpdateOne) RemovePetugas(v ...*EventPetugas) *EventUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.RemovePetugaIDs(ids...)
+}
+
+// ClearLagu clears all "lagu" edges to the EventLagu entity.
+func (_u *EventUpdateOne) ClearLagu() *EventUpdateOne {
+	_u.mutation.ClearLagu()
+	return _u
+}
+
+// RemoveLaguIDs removes the "lagu" edge to EventLagu entities by IDs.
+func (_u *EventUpdateOne) RemoveLaguIDs(ids ...uuid.UUID) *EventUpdateOne {
+	_u.mutation.RemoveLaguIDs(ids...)
+	return _u
+}
+
+// RemoveLagu removes "lagu" edges to EventLagu entities.
+func (_u *EventUpdateOne) RemoveLagu(v ...*EventLagu) *EventUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveLaguIDs(ids...)
 }
 
 // Where appends a list predicates to the EventUpdate builder.
@@ -1146,6 +1264,51 @@ func (_u *EventUpdateOne) sqlSave(ctx context.Context) (_node *Event, err error)
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(eventpetugas.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.LaguCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   event.LaguTable,
+			Columns: []string{event.LaguColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(eventlagu.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedLaguIDs(); len(nodes) > 0 && !_u.mutation.LaguCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   event.LaguTable,
+			Columns: []string{event.LaguColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(eventlagu.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.LaguIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   event.LaguTable,
+			Columns: []string{event.LaguColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(eventlagu.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
