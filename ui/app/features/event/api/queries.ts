@@ -124,3 +124,47 @@ export function useEventTypeLookups(enabled = true) {
       ),
   });
 }
+
+export function useEventRoleLookups(enabled = true) {
+  return useQuery({
+    queryKey: eventKeys.eventRoles(),
+    enabled,
+    queryFn: () =>
+      unwrap(
+        api.POST("/ref/lookups/search", {
+          body: {
+            filter: { category: "event_role", active: true },
+            limit: 100,
+          },
+        }),
+      ),
+  });
+}
+
+export function useParokiMembersForEvent(parokiId: string, enabled = true) {
+  return useQuery({
+    queryKey: eventKeys.parokiMembers(parokiId),
+    enabled: Boolean(parokiId) && enabled,
+    queryFn: () =>
+      unwrap(
+        api.POST("/ref/paroki/{id}/members/search", {
+          params: { path: { id: parokiId } },
+          body: { limit: 100 },
+        }),
+      ),
+  });
+}
+
+export function useOrgMembersForEvent(orgId: string, enabled = true) {
+  return useQuery({
+    queryKey: eventKeys.orgMembers(orgId),
+    enabled: Boolean(orgId) && enabled,
+    queryFn: () =>
+      unwrap(
+        api.POST("/orgs/{id}/members/search", {
+          params: { path: { id: orgId } },
+          body: { filter: { status: "active" }, limit: 100 },
+        }),
+      ),
+  });
+}

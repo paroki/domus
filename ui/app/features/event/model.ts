@@ -4,6 +4,40 @@ export type EventLifecycle = "upcoming" | "ongoing" | "completed" | "cancelled";
 export type EventVisibility = "public" | "private";
 export type EventStatus = "scheduled" | "cancelled";
 export type RSVPStatus = "going" | "maybe" | "not_going";
+export type PetugasStatus = "assigned" | "confirmed" | "declined";
+
+export const DEFAULT_EVENT_ROLES: readonly string[] = [
+  "Selebran",
+  "Organis",
+  "Dirigen",
+  "Kor",
+  "Pemazmur",
+  "Lektor 1",
+  "Lektor 2",
+  "Prodiakon",
+  "Misdinar",
+  "Kolektan",
+  "Tata Tertib",
+  "Kebersihan Gereja",
+  "MC",
+  "Notulis",
+];
+
+export function petugasStatusMeta(status: string): {
+  label: string;
+  tone: BadgeTone;
+} {
+  switch (status) {
+    case "assigned":
+      return { label: "Ditugaskan", tone: "neutral" };
+    case "confirmed":
+      return { label: "Siap Bertugas", tone: "success" };
+    case "declined":
+      return { label: "Berhalangan", tone: "danger" };
+    default:
+      return { label: status, tone: "neutral" };
+  }
+}
 
 export interface EventTypeOption {
   code: string;

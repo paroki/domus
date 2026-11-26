@@ -27,6 +27,7 @@ export const LOOKUP_CATEGORIES = [
   "aktivitas_sosial",
   "org_position",
   "event_type",
+  "event_role",
 ] as const;
 
 export type LookupCategory = (typeof LOOKUP_CATEGORIES)[number];
@@ -113,6 +114,12 @@ export const LOOKUP_CATEGORY_META: LookupCategoryMeta[] = [
     label: "Jenis Kegiatan",
     description:
       "Klasifikasi jenis kegiatan paroki dan organisasi (Misa, Ibadat, Rapat, Latihan, dll.).",
+  },
+  {
+    slug: "event_role",
+    label: "Peran Petugas Kegiatan",
+    description:
+      "Daftar peran petugas liturgi dan kegiatan (Selebran, Organis, Dirigen, Lektor, Pemazmur, Tatib, dll.).",
   },
 ];
 

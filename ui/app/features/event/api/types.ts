@@ -23,3 +23,10 @@ export type EventRSVPSearchFilter =
 
 export type OrganizationResponse =
   components["schemas"]["domain.OrganizationResponse"];
+
+export type EventPetugasResponse =
+  components["schemas"]["domain.EventPetugasResponse"];
+export type CreateEventPetugasRequest =
+  components["schemas"]["domain.CreateEventPetugasRequest"];
+export type UpdateEventPetugasRequest =
+  components["schemas"]["domain.UpdateEventPetugasRequest"];

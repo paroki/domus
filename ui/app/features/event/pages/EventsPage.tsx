@@ -43,6 +43,7 @@ export default function EventsPage() {
   const hasParish = Boolean(me?.activeParokiId);
 
   const [myOrgsOnly, setMyOrgsOnly] = useState(false);
+  const [assignedToMe, setAssignedToMe] = useState(false);
   const [orgFilter, setOrgFilter] = useState("");
   const [jenisFilter, setJenisFilter] = useState("");
   const [visibilityFilter, setVisibilityFilter] = useState("");
@@ -87,6 +88,7 @@ export default function EventsPage() {
         visibility: (visibilityFilter as EventVisibility) || undefined,
         status: (statusFilter as EventStatus) || undefined,
         myOrgsOnly: myOrgsOnly || undefined,
+        assignedToMe: assignedToMe || undefined,
       },
     },
     hasParish,
@@ -357,9 +359,12 @@ export default function EventsPage() {
           <div className="inline-flex rounded-lg border border-line p-0.5">
             <button
               type="button"
-              onClick={() => setMyOrgsOnly(false)}
+              onClick={() => {
+                setMyOrgsOnly(false);
+                setAssignedToMe(false);
+              }}
               className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
-                !myOrgsOnly
+                !myOrgsOnly && !assignedToMe
                   ? "bg-accent text-white"
                   : "text-ink-muted hover:text-ink"
               }`}
@@ -368,14 +373,31 @@ export default function EventsPage() {
             </button>
             <button
               type="button"
-              onClick={() => setMyOrgsOnly(true)}
+              onClick={() => {
+                setMyOrgsOnly(true);
+                setAssignedToMe(false);
+              }}
               className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
-                myOrgsOnly
+                myOrgsOnly && !assignedToMe
                   ? "bg-accent text-white"
                   : "text-ink-muted hover:text-ink"
               }`}
             >
               {t("event.myOrgsOnly")}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setAssignedToMe((v) => !v);
+                setMyOrgsOnly(false);
+              }}
+              className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
+                assignedToMe
+                  ? "bg-accent text-white"
+                  : "text-ink-muted hover:text-ink"
+              }`}
+            >
+              Jadwal Tugas Saya
             </button>
           </div>
 

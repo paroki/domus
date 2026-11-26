@@ -412,6 +412,50 @@ export interface paths {
     patch: operations["updateEvent"];
     trace?: never;
   };
+  "/events/{id}/petugas": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create event petugas
+     * @description Assigns an officer/minister to an event (requires event manager: org:admin or ref:paroki-admin).
+     */
+    post: operations["createEventPetugas"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/{id}/petugas/{petugasId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Delete event petugas
+     * @description Removes an officer assignment from an event (requires event manager).
+     */
+    delete: operations["deleteEventPetugas"];
+    options?: never;
+    head?: never;
+    /**
+     * Update event petugas
+     * @description Updates an officer assignment (event manager) or confirms/declines duty (assigned user or org:admin).
+     */
+    patch: operations["updateEventPetugas"];
+    trace?: never;
+  };
   "/events/{id}/rsvp": {
     parameters: {
       query?: never;
@@ -1933,6 +1977,16 @@ export interface components {
       /** @enum {string} */
       provider: "gemini" | "anthropic" | "openai" | "openrouter";
     };
+    "domain.CreateEventPetugasRequest": {
+      name?: string;
+      note?: string;
+      orgId?: string;
+      role: string;
+      /** @enum {string} */
+      status?: "assigned" | "confirmed" | "declined";
+      urutan?: number;
+      userId?: string;
+    };
     "domain.CreateEventRequest": {
       description?: string;
       endAt: string;
@@ -2084,6 +2138,21 @@ export interface components {
       nama: string;
       teleponKoordinator?: string;
     };
+    "domain.EventPetugasResponse": {
+      canConfirm?: boolean;
+      createdAt?: string;
+      eventId?: string;
+      id?: string;
+      name?: string;
+      note?: string;
+      orgId?: string;
+      parokiId?: string;
+      role?: string;
+      status?: string;
+      updatedAt?: string;
+      urutan?: number;
+      userId?: string;
+    };
     "domain.EventRSVPResponse": {
       createdAt?: string;
       email?: string;
@@ -2129,6 +2198,7 @@ export interface components {
       orgKind?: string;
       orgName?: string;
       parokiId?: string;
+      petugas?: components["schemas"]["domain.EventPetugasResponse"][];
       rsvpDeadline?: string;
       rsvpEnabled?: boolean;
       rsvpOpen?: boolean;
@@ -2140,6 +2210,8 @@ export interface components {
       visibility?: string;
     };
     "domain.EventSearchFilter": {
+      assignedOrgId?: string;
+      assignedToMe?: boolean;
       from?: string;
       jenis?: string;
       myOrgsOnly?: boolean;
@@ -2632,6 +2704,16 @@ export interface components {
       /** @enum {string} */
       provider?: "gemini" | "anthropic" | "openai" | "openrouter";
     };
+    "domain.UpdateEventPetugasRequest": {
+      name?: string;
+      note?: string;
+      orgId?: string;
+      role?: string;
+      /** @enum {string} */
+      status?: "assigned" | "confirmed" | "declined";
+      urutan?: number;
+      userId?: string;
+    };
     "domain.UpdateEventRequest": {
       clearRsvpDeadline?: boolean;
       description?: string;
@@ -3062,6 +3144,11 @@ export interface components {
     };
     "httpx.Envelope-domain_CreateUserTokenResponse": {
       data?: components["schemas"]["domain.CreateUserTokenResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_EventPetugasResponse": {
+      data?: components["schemas"]["domain.EventPetugasResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -4666,6 +4753,213 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["httpx.Envelope-domain_EventResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  createEventPetugas: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Event UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Officer assignment payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.CreateEventPetugasRequest"];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_EventPetugasResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  deleteEventPetugas: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Event UUID */
+        id: string;
+        /** @description Petugas UUID */
+        petugasId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  updateEventPetugas: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Event UUID */
+        id: string;
+        /** @description Petugas UUID */
+        petugasId: string;
+      };
+      cookie?: never;
+    };
+    /** @description Officer update payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UpdateEventPetugasRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_EventPetugasResponse"];
         };
       };
       /** @description Bad Request */

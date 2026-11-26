@@ -12,4 +12,9 @@ export const eventKeys = {
   orgs: () => [...eventKeys.all, "orgs"] as const,
   paroki: () => [...eventKeys.all, "paroki"] as const,
   eventTypes: () => [...eventKeys.all, "event-types"] as const,
+  eventRoles: () => [...eventKeys.all, "event-roles"] as const,
+  parokiMembers: (parokiId: string) =>
+    [...eventKeys.all, "paroki-members", parokiId] as const,
+  orgMembers: (orgId: string) =>
+    [...eventKeys.all, "org-members", orgId] as const,
 };

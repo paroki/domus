@@ -4,6 +4,7 @@ import { ApiError } from "~/shared/api/client";
 import { resolveEventError } from "./api/errors";
 import {
   computeEventLifecycle,
+  DEFAULT_EVENT_ROLES,
   DEFAULT_EVENT_TYPES,
   DEFAULT_PAROKI_TIMEZONE,
   eventTypeLabel,
@@ -12,6 +13,7 @@ import {
   fromLocalDatetimeInputValue,
   lifecycleMeta,
   mergeEventTypeOptions,
+  petugasStatusMeta,
   rsvpStatusMeta,
   toLocalDatetimeInputValue,
   visibilityMeta,
@@ -164,4 +166,20 @@ test("event type helpers merge built-in defaults and custom lookups", () => {
     "Ziarah Rohani",
   );
   assert.equal(eventTypeLabel("custom_code"), "custom_code");
+});
+
+test("petugas role defaults and status metadata helpers work", () => {
+  assert.equal(DEFAULT_EVENT_ROLES.includes("Organis"), true);
+  assert.deepEqual(petugasStatusMeta("assigned"), {
+    label: "Ditugaskan",
+    tone: "neutral",
+  });
+  assert.deepEqual(petugasStatusMeta("confirmed"), {
+    label: "Siap Bertugas",
+    tone: "success",
+  });
+  assert.deepEqual(petugasStatusMeta("declined"), {
+    label: "Berhalangan",
+    tone: "danger",
+  });
 });
