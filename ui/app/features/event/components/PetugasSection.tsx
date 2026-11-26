@@ -131,12 +131,12 @@ export function PetugasSection({
           <Users className="h-5 w-5 text-accent" />
           Petugas Pelayanan
         </h2>
-        {canManage && (
+        {canManage && !showAdd && (
           <Button
             type="button"
             variant="outline"
             onClick={() => {
-              setShowAdd((v) => !v);
+              setShowAdd(true);
               setError(null);
               setUrutan(String(petugas.length + 1));
             }}
