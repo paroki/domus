@@ -51,6 +51,7 @@ export class EventDetailPage extends BasePage {
 
   async editEvent(input: {
     title?: string;
+    jenisLabel?: string;
     location?: string;
     visibilityLabel?: "Publik Paroki" | "Internal Organisasi";
     description?: string;
@@ -64,6 +65,11 @@ export class EventDetailPage extends BasePage {
 
     if (input.title !== undefined) {
       await form.getByLabel("Judul Kegiatan").fill(input.title);
+    }
+    if (input.jenisLabel !== undefined) {
+      await form
+        .getByLabel("Jenis Kegiatan")
+        .selectOption({ label: input.jenisLabel });
     }
     if (input.location !== undefined) {
       await form.getByLabel("Lokasi").fill(input.location);

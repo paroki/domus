@@ -29,6 +29,7 @@ export class EventsPage extends BasePage {
 
   async createEvent(input: {
     orgLabel?: string;
+    jenisLabel?: string;
     visibilityLabel?: "Publik Paroki" | "Internal Organisasi";
     title: string;
     startAt: string;
@@ -50,6 +51,11 @@ export class EventsPage extends BasePage {
       await form
         .getByLabel("Penyelenggara")
         .selectOption({ label: input.orgLabel });
+    }
+    if (input.jenisLabel) {
+      await form
+        .getByLabel("Jenis Kegiatan")
+        .selectOption({ label: input.jenisLabel });
     }
     if (input.visibilityLabel) {
       await form
@@ -98,12 +104,16 @@ export class EventsPage extends BasePage {
     await this.filterBar().locator("select").nth(0).selectOption({ label });
   }
 
-  async filterByVisibility(label: string): Promise<void> {
+  async filterByJenis(label: string): Promise<void> {
     await this.filterBar().locator("select").nth(1).selectOption({ label });
   }
 
-  async filterByStatus(label: string): Promise<void> {
+  async filterByVisibility(label: string): Promise<void> {
     await this.filterBar().locator("select").nth(2).selectOption({ label });
+  }
+
+  async filterByStatus(label: string): Promise<void> {
+    await this.filterBar().locator("select").nth(3).selectOption({ label });
   }
 
   async toggleMyOrgsOnly(myOrgsOnly: boolean): Promise<void> {
@@ -123,6 +133,7 @@ export class EventsPage extends BasePage {
   async expectEventCardVisible(
     title: string,
     options?: {
+      jenisBadge?: string;
       visibilityBadge?: string;
       statusBadge?: string;
       location?: string;
@@ -130,6 +141,11 @@ export class EventsPage extends BasePage {
   ): Promise<void> {
     const card = this.cardFor(title);
     await card.waitFor({ state: "visible", timeout: 10_000 });
+    if (options?.jenisBadge) {
+      await card
+        .getByText(options.jenisBadge, { exact: true })
+        .waitFor({ state: "visible", timeout: 10_000 });
+    }
     if (options?.visibilityBadge) {
       await card
         .getByText(options.visibilityBadge, { exact: true })

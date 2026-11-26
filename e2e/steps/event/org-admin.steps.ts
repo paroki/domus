@@ -197,6 +197,54 @@ Then(
   },
 );
 
+When(
+  "I create an event with title {string} jenis {string} start {string} end {string} visibility {string} location {string}",
+  async function (
+    this: DomusWorld,
+    title: string,
+    jenisLabel: string,
+    startAt: string,
+    endAt: string,
+    visibilityLabel: string,
+    location: string,
+  ) {
+    await this.pages.event.events.createEvent({
+      title,
+      jenisLabel,
+      startAt,
+      endAt,
+      visibilityLabel: visibilityLabel as
+        | "Publik Paroki"
+        | "Internal Organisasi",
+      location,
+    });
+    await this.pages.event.events.expectFormClosed();
+  },
+);
+
+Then(
+  "I see event card {string} with jenis {string}",
+  async function (this: DomusWorld, title: string, jenisBadge: string) {
+    await this.pages.event.events.expectEventCardVisible(title, {
+      jenisBadge,
+    });
+  },
+);
+
+When(
+  "I filter events by jenis {string}",
+  async function (this: DomusWorld, label: string) {
+    await this.pages.event.events.filterByJenis(label);
+  },
+);
+
+When(
+  "I edit the event jenis to {string}",
+  async function (this: DomusWorld, jenisLabel: string) {
+    await this.pages.event.detail.editEvent({ jenisLabel });
+  },
+);
+
 When("I delete the event", async function (this: DomusWorld) {
   await this.pages.event.detail.deleteEvent();
 });
