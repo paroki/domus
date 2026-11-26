@@ -77,7 +77,7 @@ func (s *EventFeatureSuite) SetupTest() {
 	s.refFeature = ref.New(s.client, s.enforcer, s.userFeature)
 	s.orgFeature = org.New(s.client, s.enforcer, s.userFeature, s.refFeature, orgCfg)
 	s.userFeature.SetInviteJoiner(s.orgFeature)
-	s.eventFeature = event.New(s.client, s.enforcer, s.userFeature, s.orgFeature, eventCfg)
+	s.eventFeature = event.New(s.client, s.enforcer, s.userFeature, s.orgFeature, eventCfg, event.WithRef(s.refFeature))
 
 	ctx := context.Background()
 	s.Require().NoError(authz.RegisterFeatures(ctx, s.enforcer, s.userFeature, s.refFeature, s.orgFeature, s.eventFeature))
@@ -174,7 +174,7 @@ func (s *EventFeatureSuite) TestEventCRUD_VisibilityAndRBAC() {
 	s.loginViaOTP("padmin@paroki.org")
 	s.SetHeader("X-Paroki-Id", parokiID.String())
 	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
-		OrgID:   orgID,
+		OrgID:   &orgID,
 		Title:   "Unauthorized Parish Admin Event",
 		StartAt: startAt,
 		EndAt:   endAt,
@@ -186,7 +186,7 @@ func (s *EventFeatureSuite) TestEventCRUD_VisibilityAndRBAC() {
 	s.loginViaOTP("orgmember@paroki.org")
 	s.SetHeader("X-Paroki-Id", parokiID.String())
 	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
-		OrgID:   orgID,
+		OrgID:   &orgID,
 		Title:   "Unauthorized Member Event",
 		StartAt: startAt,
 		EndAt:   endAt,
@@ -199,7 +199,7 @@ func (s *EventFeatureSuite) TestEventCRUD_VisibilityAndRBAC() {
 	s.SetHeader("X-Paroki-Id", parokiID.String())
 
 	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
-		OrgID:   orgID,
+		OrgID:   &orgID,
 		Title:   "Invalid Range",
 		StartAt: endAt,
 		EndAt:   startAt,
@@ -208,7 +208,7 @@ func (s *EventFeatureSuite) TestEventCRUD_VisibilityAndRBAC() {
 	s.Equal("EVENT_INVALID_TIME_RANGE", s.GetErrorResponse().Error.Code)
 
 	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
-		OrgID:        orgID,
+		OrgID:        &orgID,
 		Title:        "Misa OMK",
 		Location:     new("Gereja Katedral"),
 		StartAt:      startAt,
@@ -226,7 +226,7 @@ func (s *EventFeatureSuite) TestEventCRUD_VisibilityAndRBAC() {
 	s.Equal("admin", *pubEv.MyOrgRole)
 
 	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
-		OrgID:      orgID,
+		OrgID:      &orgID,
 		Title:      "Rapat Internal OMK",
 		StartAt:    startAt.Add(24 * time.Hour),
 		EndAt:      endAt.Add(24 * time.Hour),
@@ -317,7 +317,7 @@ func (s *EventFeatureSuite) TestEventRSVP_UpsertDeleteCutoffSummaryAndRoster() {
 	endAt := startAt.Add(2 * time.Hour)
 
 	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
-		OrgID:   orgID,
+		OrgID:   &orgID,
 		Title:   "Latihan Koor",
 		StartAt: startAt,
 		EndAt:   endAt,
@@ -450,7 +450,7 @@ func (s *EventFeatureSuite) TestEventRSVP_UpsertDeleteCutoffSummaryAndRoster() {
 	s.SetHeader("X-Paroki-Id", parokiID.String())
 	graceStart := time.Now().UTC().Add(-10 * time.Minute)
 	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
-		OrgID:   orgID,
+		OrgID:   &orgID,
 		Title:   "Within Grace Period",
 		StartAt: graceStart,
 		EndAt:   graceStart.Add(2 * time.Hour),
@@ -464,7 +464,7 @@ func (s *EventFeatureSuite) TestEventRSVP_UpsertDeleteCutoffSummaryAndRoster() {
 	// Past grace period (startAt 45m ago) -> 409 EVENT_RSVP_CLOSED.
 	pastGraceStart := time.Now().UTC().Add(-45 * time.Minute)
 	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
-		OrgID:   orgID,
+		OrgID:   &orgID,
 		Title:   "Past Grace Period",
 		StartAt: pastGraceStart,
 		EndAt:   pastGraceStart.Add(2 * time.Hour),
@@ -479,7 +479,7 @@ func (s *EventFeatureSuite) TestEventRSVP_UpsertDeleteCutoffSummaryAndRoster() {
 	// Past rsvpDeadline -> 409 EVENT_RSVP_CLOSED.
 	pastDL := time.Now().UTC().Add(-5 * time.Minute)
 	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
-		OrgID:        orgID,
+		OrgID:        &orgID,
 		Title:        "Past Deadline",
 		StartAt:      startAt,
 		EndAt:        endAt,
@@ -494,7 +494,7 @@ func (s *EventFeatureSuite) TestEventRSVP_UpsertDeleteCutoffSummaryAndRoster() {
 	// rsvpEnabled=false -> 409 EVENT_RSVP_CLOSED.
 	disabled := false
 	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
-		OrgID:       orgID,
+		OrgID:       &orgID,
 		Title:       "RSVP Disabled",
 		StartAt:     startAt,
 		EndAt:       endAt,
@@ -521,4 +521,141 @@ func (s *EventFeatureSuite) TestEventRSVP_UpsertDeleteCutoffSummaryAndRoster() {
 	s.OK()
 	s.Request(fmt.Sprintf("/api/events/%s/rsvps/search", ev.ID), http.MethodPost, domain.SearchEventRSVPsRequest{})
 	s.OK()
+}
+
+func (s *EventFeatureSuite) TestParishLevelEventsAndOpenRSVP() {
+	parokiID, orgID := s.seedParokiAndOrg()
+	startAt := time.Now().UTC().Add(24 * time.Hour)
+	endAt := startAt.Add(2 * time.Hour)
+
+	// 1. org:admin CANNOT create parish-level event (orgId nil or uuid.Nil) -> 403 EVENT_FORBIDDEN.
+	s.loginViaOTP("orgadmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
+		Title:   "Unauthorized Parish Event",
+		StartAt: startAt,
+		EndAt:   endAt,
+	})
+	s.Forbidden()
+	s.Equal("EVENT_FORBIDDEN", s.GetErrorResponse().Error.Code)
+
+	nilOrg := uuid.Nil
+	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
+		OrgID:   &nilOrg,
+		Title:   "Unauthorized Nil UUID Parish Event",
+		StartAt: startAt,
+		EndAt:   endAt,
+	})
+	s.Forbidden()
+	s.Equal("EVENT_FORBIDDEN", s.GetErrorResponse().Error.Code)
+
+	// 2. ref:paroki-admin CANNOT create private parish-level event -> 422 VALIDATION_ERROR.
+	s.loginViaOTP("padmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
+		Title:      "Private Parish Event",
+		StartAt:    startAt,
+		EndAt:      endAt,
+		Visibility: "private",
+	})
+	s.UnprocessableEntity()
+	s.Equal("VALIDATION_ERROR", s.GetErrorResponse().Error.Code)
+
+	// 3. ref:paroki-admin creates public parish-level event.
+	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
+		Title:   "Misa Syukur Paroki",
+		StartAt: startAt,
+		EndAt:   endAt,
+	})
+	s.Created()
+	parishEv := testutil.DecodeAs[domain.EventResponse](s).Data
+	s.Nil(parishEv.OrgID)
+	s.Equal("public", parishEv.Visibility)
+	s.True(parishEv.CanManage)
+	s.True(parishEv.CanRsvp)
+
+	// 4. Cannot update parish-level event to private -> 422 VALIDATION_ERROR.
+	privVis := "private"
+	s.Request(fmt.Sprintf("/api/events/%s", parishEv.ID), http.MethodPatch, domain.UpdateEventRequest{
+		Visibility: &privVis,
+	})
+	s.UnprocessableEntity()
+	s.Equal("VALIDATION_ERROR", s.GetErrorResponse().Error.Code)
+
+	// 5. org:admin CANNOT update or delete parish-level event -> 403 EVENT_FORBIDDEN.
+	s.loginViaOTP("orgadmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+	newTitle := "Hijack"
+	s.Request(fmt.Sprintf("/api/events/%s", parishEv.ID), http.MethodPatch, domain.UpdateEventRequest{Title: &newTitle})
+	s.Forbidden()
+	s.Equal("EVENT_FORBIDDEN", s.GetErrorResponse().Error.Code)
+	s.Request(fmt.Sprintf("/api/events/%s", parishEv.ID), http.MethodDelete, nil)
+	s.Forbidden()
+	s.Equal("EVENT_FORBIDDEN", s.GetErrorResponse().Error.Code)
+
+	// Create an org event as well to test parokiWideOnly filter.
+	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
+		OrgID:   &orgID,
+		Title:   "Rapat OMK",
+		StartAt: startAt,
+		EndAt:   endAt,
+	})
+	s.Created()
+
+	// 6. Regular parish member (outsider@paroki.org) can see, RSVP, view summary & roster on parish-level event.
+	s.loginViaOTP("outsider@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+
+	parokiWide := true
+	s.Request("/api/events/search", http.MethodPost, domain.SearchEventsRequest{
+		Filter: &domain.EventSearchFilter{ParokiWideOnly: &parokiWide},
+	})
+	s.OK()
+	wideList := testutil.DecodeAs[[]domain.EventResponse](s).Data
+	s.Require().Len(wideList, 1)
+	s.Equal(parishEv.ID, wideList[0].ID)
+	s.False(wideList[0].CanManage)
+	s.True(wideList[0].CanRsvp)
+
+	s.Request(fmt.Sprintf("/api/events/%s/rsvp", parishEv.ID), http.MethodPost, domain.UpsertEventRSVPRequest{
+		Status: "going",
+		Note:   new("Hadir bersama keluarga"),
+	})
+	s.OK()
+	rsvp := testutil.DecodeAs[domain.EventRSVPResponse](s).Data
+	s.Equal("going", rsvp.Status)
+	s.Empty(rsvp.OrgRole)
+	s.Nil(rsvp.OrgPosition)
+
+	s.Request(fmt.Sprintf("/api/events/%s/rsvps/summary", parishEv.ID), http.MethodGet, nil)
+	s.OK()
+	summary := testutil.DecodeAs[domain.EventRSVPSummaryResponse](s).Data
+	s.Equal(1, summary.Going)
+	// seedParokiAndOrg adds 4 ParokiMembers: padmin, outsider, orgadmin, orgmember.
+	s.Equal(4, summary.TotalActiveMembers)
+	s.Equal(3, summary.Unresponded)
+
+	s.Request(fmt.Sprintf("/api/events/%s/rsvps/search", parishEv.ID), http.MethodPost, domain.SearchEventRSVPsRequest{})
+	s.OK()
+	roster := testutil.DecodeAs[[]domain.EventRSVPResponse](s).Data
+	s.Require().Len(roster, 1)
+	s.Equal("outsider@paroki.org", roster[0].Email)
+
+	// 7. Non-member of parish (super@paroki.org has no ParokiMember row) gets 403 on RSVP endpoints.
+	s.loginViaOTP("super@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+	s.Request(fmt.Sprintf("/api/events/%s/rsvp", parishEv.ID), http.MethodPost, domain.UpsertEventRSVPRequest{Status: "going"})
+	s.Forbidden()
+	s.Equal("EVENT_FORBIDDEN", s.GetErrorResponse().Error.Code)
+
+	// 8. ref:paroki-admin can update and delete the parish-level event.
+	s.loginViaOTP("padmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+	updatedTitle := "Misa Syukur Agung Paroki"
+	s.Request(fmt.Sprintf("/api/events/%s", parishEv.ID), http.MethodPatch, domain.UpdateEventRequest{Title: &updatedTitle})
+	s.OK()
+	s.Equal(updatedTitle, testutil.DecodeAs[domain.EventResponse](s).Data.Title)
+
+	s.Request(fmt.Sprintf("/api/events/%s", parishEv.ID), http.MethodDelete, nil)
+	s.NoContent()
 }

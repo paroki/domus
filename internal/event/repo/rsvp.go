@@ -9,6 +9,7 @@ import (
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/ent/eventrsvp"
 	"github.com/paroki/domus/ent/orgmember"
+	"github.com/paroki/domus/ent/parokimember"
 	"github.com/paroki/domus/ent/user"
 )
 
@@ -88,8 +89,44 @@ func (r *Repository) FindUserRSVPsForEvents(ctx context.Context, eventIDs []uuid
 	return out, nil
 }
 
+// IsParokiMember reports whether userID has a ParokiMember row in parokiID.
+func (r *Repository) IsParokiMember(ctx context.Context, parokiID, userID uuid.UUID) (bool, error) {
+	return r.client.ParokiMember.Query().
+		Where(parokimember.ParokiIDEQ(parokiID), parokimember.UserIDEQ(userID)).
+		Exist(ctx)
+}
+
+// IsParokiAdmin reports whether userID has an admin ParokiMember row in parokiID.
+func (r *Repository) IsParokiAdmin(ctx context.Context, parokiID, userID uuid.UUID) (bool, error) {
+	return r.client.ParokiMember.Query().
+		Where(
+			parokimember.ParokiIDEQ(parokiID),
+			parokimember.UserIDEQ(userID),
+			parokimember.RoleEQ(parokimember.RoleAdmin),
+		).
+		Exist(ctx)
+}
+
+// CountActiveParokiMembers returns the number of ParokiMember rows in parokiID whose User is not deleted.
+func (r *Repository) CountActiveParokiMembers(ctx context.Context, parokiID uuid.UUID) (int, error) {
+	var userIDs []uuid.UUID
+	err := r.client.ParokiMember.Query().
+		Where(parokimember.ParokiIDEQ(parokiID)).
+		Select(parokimember.FieldUserID).
+		Scan(ctx, &userIDs)
+	if err != nil {
+		return 0, err
+	}
+	if len(userIDs) == 0 {
+		return 0, nil
+	}
+	return r.client.User.Query().
+		Where(user.IDIn(userIDs...), user.DeletedAtIsNil()).
+		Count(ctx)
+}
+
 // GetRSVPSummary returns RSVP counts by status and active member count for an event.
-func (r *Repository) GetRSVPSummary(ctx context.Context, eventID, orgID uuid.UUID) (RSVPSummaryCounts, error) {
+func (r *Repository) GetRSVPSummary(ctx context.Context, parokiID, eventID uuid.UUID, orgID *uuid.UUID) (RSVPSummaryCounts, error) {
 	var counts RSVPSummaryCounts
 	rows, err := r.client.EventRSVP.Query().
 		Where(eventrsvp.EventIDEQ(eventID)).
@@ -107,18 +144,26 @@ func (r *Repository) GetRSVPSummary(ctx context.Context, eventID, orgID uuid.UUI
 			counts.NotGoing++
 		}
 	}
-	activeCount, err := r.client.OrgMember.Query().
-		Where(orgmember.OrgIDEQ(orgID), orgmember.StatusEQ(orgmember.StatusActive)).
-		Count(ctx)
-	if err != nil {
-		return counts, err
+	if orgID != nil {
+		activeCount, err := r.client.OrgMember.Query().
+			Where(orgmember.OrgIDEQ(*orgID), orgmember.StatusEQ(orgmember.StatusActive)).
+			Count(ctx)
+		if err != nil {
+			return counts, err
+		}
+		counts.TotalActiveMembers = activeCount
+	} else {
+		activeCount, err := r.CountActiveParokiMembers(ctx, parokiID)
+		if err != nil {
+			return counts, err
+		}
+		counts.TotalActiveMembers = activeCount
 	}
-	counts.TotalActiveMembers = activeCount
 	return counts, nil
 }
 
-// GetRSVPSummariesForEvents returns RSVP summaries keyed by eventID for a map of eventID -> orgID.
-func (r *Repository) GetRSVPSummariesForEvents(ctx context.Context, eventOrgMap map[uuid.UUID]uuid.UUID) (map[uuid.UUID]RSVPSummaryCounts, error) {
+// GetRSVPSummariesForEvents returns RSVP summaries keyed by eventID for a map of eventID -> optional orgID.
+func (r *Repository) GetRSVPSummariesForEvents(ctx context.Context, parokiID uuid.UUID, eventOrgMap map[uuid.UUID]*uuid.UUID) (map[uuid.UUID]RSVPSummaryCounts, error) {
 	out := make(map[uuid.UUID]RSVPSummaryCounts, len(eventOrgMap))
 	if len(eventOrgMap) == 0 {
 		return out, nil
@@ -126,9 +171,14 @@ func (r *Repository) GetRSVPSummariesForEvents(ctx context.Context, eventOrgMap 
 
 	eventIDs := make([]uuid.UUID, 0, len(eventOrgMap))
 	orgIDSet := make(map[uuid.UUID]struct{})
+	hasParokiEvent := false
 	for evID, orgID := range eventOrgMap {
 		eventIDs = append(eventIDs, evID)
-		orgIDSet[orgID] = struct{}{}
+		if orgID != nil {
+			orgIDSet[*orgID] = struct{}{}
+		} else {
+			hasParokiEvent = true
+		}
 	}
 
 	rows, err := r.client.EventRSVP.Query().
@@ -150,24 +200,38 @@ func (r *Repository) GetRSVPSummariesForEvents(ctx context.Context, eventOrgMap 
 		out[row.EventID] = c
 	}
 
-	orgIDs := make([]uuid.UUID, 0, len(orgIDSet))
-	for orgID := range orgIDSet {
-		orgIDs = append(orgIDs, orgID)
+	orgMemberCounts := make(map[uuid.UUID]int, len(orgIDSet))
+	if len(orgIDSet) > 0 {
+		orgIDs := make([]uuid.UUID, 0, len(orgIDSet))
+		for orgID := range orgIDSet {
+			orgIDs = append(orgIDs, orgID)
+		}
+		activeMembers, err := r.client.OrgMember.Query().
+			Where(orgmember.OrgIDIn(orgIDs...), orgmember.StatusEQ(orgmember.StatusActive)).
+			All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, m := range activeMembers {
+			orgMemberCounts[m.OrgID]++
+		}
 	}
-	activeMembers, err := r.client.OrgMember.Query().
-		Where(orgmember.OrgIDIn(orgIDs...), orgmember.StatusEQ(orgmember.StatusActive)).
-		All(ctx)
-	if err != nil {
-		return nil, err
-	}
-	orgMemberCounts := make(map[uuid.UUID]int, len(orgIDs))
-	for _, m := range activeMembers {
-		orgMemberCounts[m.OrgID]++
+
+	var parokiActiveCount int
+	if hasParokiEvent {
+		parokiActiveCount, err = r.CountActiveParokiMembers(ctx, parokiID)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	for evID, orgID := range eventOrgMap {
 		c := out[evID]
-		c.TotalActiveMembers = orgMemberCounts[orgID]
+		if orgID != nil {
+			c.TotalActiveMembers = orgMemberCounts[*orgID]
+		} else {
+			c.TotalActiveMembers = parokiActiveCount
+		}
 		out[evID] = c
 	}
 	return out, nil
@@ -176,7 +240,8 @@ func (r *Repository) GetRSVPSummariesForEvents(ctx context.Context, eventOrgMap 
 // SearchRSVPs returns paginated EventRSVP rows for eventID along with User and OrgMember lookup maps.
 func (r *Repository) SearchRSVPs(
 	ctx context.Context,
-	eventID, orgID uuid.UUID,
+	eventID uuid.UUID,
+	orgID *uuid.UUID,
 	q, status string,
 	cursorAt *time.Time,
 	cursorID *uuid.UUID,
@@ -224,11 +289,34 @@ func (r *Repository) SearchRSVPs(
 	for _, row := range rows {
 		ids = append(ids, row.UserID)
 	}
-	usersMap, membersMap, err := r.LoadUsersAndOrgMembers(ctx, orgID, ids)
+	if orgID == nil {
+		usersMap, err := r.LoadUsers(ctx, ids)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		return rows, usersMap, map[uuid.UUID]*ent.OrgMember{}, nil
+	}
+	usersMap, membersMap, err := r.LoadUsersAndOrgMembers(ctx, *orgID, ids)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 	return rows, usersMap, membersMap, nil
+}
+
+// LoadUsers fetches User rows keyed by userID.
+func (r *Repository) LoadUsers(ctx context.Context, userIDs []uuid.UUID) (map[uuid.UUID]*ent.User, error) {
+	usersMap := make(map[uuid.UUID]*ent.User)
+	if len(userIDs) == 0 {
+		return usersMap, nil
+	}
+	users, err := r.client.User.Query().Where(user.IDIn(userIDs...)).All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, u := range users {
+		usersMap[u.ID] = u
+	}
+	return usersMap, nil
 }
 
 // LoadUsersAndOrgMembers fetches User and OrgMember rows keyed by userID for the given orgID.
@@ -237,18 +325,13 @@ func (r *Repository) LoadUsersAndOrgMembers(
 	orgID uuid.UUID,
 	userIDs []uuid.UUID,
 ) (map[uuid.UUID]*ent.User, map[uuid.UUID]*ent.OrgMember, error) {
-	usersMap := make(map[uuid.UUID]*ent.User)
-	membersMap := make(map[uuid.UUID]*ent.OrgMember)
-	if len(userIDs) == 0 {
-		return usersMap, membersMap, nil
-	}
-
-	users, err := r.client.User.Query().Where(user.IDIn(userIDs...)).All(ctx)
+	usersMap, err := r.LoadUsers(ctx, userIDs)
 	if err != nil {
 		return nil, nil, err
 	}
-	for _, u := range users {
-		usersMap[u.ID] = u
+	membersMap := make(map[uuid.UUID]*ent.OrgMember)
+	if len(userIDs) == 0 {
+		return usersMap, membersMap, nil
 	}
 
 	members, err := r.client.OrgMember.Query().

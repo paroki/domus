@@ -12,6 +12,7 @@ import (
 	"github.com/paroki/domus/internal/event/service"
 	"github.com/paroki/domus/internal/org"
 	"github.com/paroki/domus/internal/platform/authz"
+	"github.com/paroki/domus/internal/ref"
 	"github.com/paroki/domus/internal/user"
 )
 
@@ -70,6 +71,37 @@ func (a orgReaderAdapter) ListUserOrgs(ctx context.Context, parokiID, userID uui
 	return out, nil
 }
 
+type parokiReaderAdapter struct {
+	refs *ref.Feature
+}
+
+func (a parokiReaderAdapter) GetParoki(ctx context.Context, parokiID uuid.UUID) (*service.ParokiInfo, error) {
+	p, err := a.refs.GetParoki(ctx, parokiID)
+	if err != nil {
+		return nil, err
+	}
+	return &service.ParokiInfo{
+		ID:       p.ID,
+		Kode:     p.Kode,
+		Nama:     p.Nama,
+		Timezone: p.Timezone,
+	}, nil
+}
+
+// Option configures optional dependencies on the event Feature.
+type Option func(*options)
+
+type options struct {
+	refs *ref.Feature
+}
+
+// WithRef wires the ref.Feature for reading parish metadata such as timezone.
+func WithRef(refs *ref.Feature) Option {
+	return func(o *options) {
+		o.refs = refs
+	}
+}
+
 // Feature wires event management and visibility/RBAC enforcement.
 type Feature struct {
 	service *service.Service
@@ -79,13 +111,23 @@ type Feature struct {
 }
 
 // New constructs the event Feature.
-func New(db *ent.Client, enforcer *authz.Enforcer, users *user.Feature, orgs *org.Feature, cfg Config) *Feature {
+func New(db *ent.Client, enforcer *authz.Enforcer, users *user.Feature, orgs *org.Feature, cfg Config, opts ...Option) *Feature {
+	var o options
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&o)
+		}
+	}
 	r := repo.New(db)
 	var orgReader service.OrgReader
 	if orgs != nil {
 		orgReader = orgReaderAdapter{orgs: orgs}
 	}
-	svc := service.New(r, enforcer, orgReader, service.Config{
+	var parokiReader service.ParokiReader
+	if o.refs != nil {
+		parokiReader = parokiReaderAdapter(o)
+	}
+	svc := service.New(r, enforcer, orgReader, parokiReader, service.Config{
 		DefaultVisibility: cfg.DefaultVisibility,
 		RSVPGracePeriod:   cfg.RSVPGracePeriod,
 	})
@@ -120,6 +162,12 @@ func (f *Feature) RegisterPermissions(ctx context.Context, e *authz.Enforcer) er
 		act  authz.Action
 	}{
 		{user.RoleUser, PermEvents, authz.ActionRead},
+		{user.RoleUser, PermRSVPs, authz.ActionRead},
+		{user.RoleUser, PermRSVPs, authz.ActionWrite},
+		{ref.RoleParokiAdmin, PermEvents, authz.ActionRead},
+		{ref.RoleParokiAdmin, PermEvents, authz.ActionWrite},
+		{ref.RoleParokiAdmin, PermRSVPs, authz.ActionRead},
+		{ref.RoleParokiAdmin, PermRSVPs, authz.ActionWrite},
 		{org.RoleAdmin, PermEvents, authz.ActionRead},
 		{org.RoleAdmin, PermEvents, authz.ActionWrite},
 		{org.RoleAdmin, PermRSVPs, authz.ActionRead},

@@ -14,7 +14,7 @@ import (
 // CreateEventInput holds fields for creating an Event.
 type CreateEventInput struct {
 	ParokiID     uuid.UUID
-	OrgID        uuid.UUID
+	OrgID        *uuid.UUID
 	CreatedBy    uuid.UUID
 	Title        string
 	Description  *string
@@ -28,18 +28,19 @@ type CreateEventInput struct {
 
 // SearchEventsInput holds query filters and pagination for SearchEvents.
 type SearchEventsInput struct {
-	ParokiID     uuid.UUID
-	MemberOrgIDs []uuid.UUID
-	OrgID        *uuid.UUID
-	Visibility   string
-	Status       string
-	MyOrgsOnly   bool
-	From         *time.Time
-	To           *time.Time
-	Q            string
-	CursorAt     *time.Time
-	CursorID     *uuid.UUID
-	Limit        int
+	ParokiID       uuid.UUID
+	MemberOrgIDs   []uuid.UUID
+	OrgID          *uuid.UUID
+	ParokiWideOnly bool
+	Visibility     string
+	Status         string
+	MyOrgsOnly     bool
+	From           *time.Time
+	To             *time.Time
+	Q              string
+	CursorAt       *time.Time
+	CursorID       *uuid.UUID
+	Limit          int
 }
 
 // SearchEvents returns paginated non-deleted events visible to the caller in parokiID.
@@ -63,6 +64,9 @@ func (r *Repository) SearchEvents(ctx context.Context, in SearchEventsInput) ([]
 
 	if in.OrgID != nil {
 		query = query.Where(event.OrgIDEQ(*in.OrgID))
+	}
+	if in.ParokiWideOnly {
+		query = query.Where(event.OrgIDIsNil())
 	}
 	if in.Visibility != "" {
 		query = query.Where(event.VisibilityEQ(event.Visibility(in.Visibility)))
@@ -107,7 +111,6 @@ func (r *Repository) FindEventInParoki(ctx context.Context, parokiID, eventID uu
 func (r *Repository) CreateEvent(ctx context.Context, in CreateEventInput) (*ent.Event, error) {
 	q := r.client.Event.Create().
 		SetParokiID(in.ParokiID).
-		SetOrgID(in.OrgID).
 		SetCreatedBy(in.CreatedBy).
 		SetTitle(in.Title).
 		SetStartAt(in.StartAt.UTC()).
@@ -115,6 +118,10 @@ func (r *Repository) CreateEvent(ctx context.Context, in CreateEventInput) (*ent
 		SetVisibility(in.Visibility).
 		SetRsvpEnabled(in.RsvpEnabled).
 		SetStatus(event.StatusScheduled)
+
+	if in.OrgID != nil {
+		q.SetOrgID(*in.OrgID)
+	}
 
 	if in.Description != nil && *in.Description != "" {
 		q.SetDescription(*in.Description)

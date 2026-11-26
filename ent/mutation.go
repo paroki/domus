@@ -4442,7 +4442,7 @@ func (m *EventMutation) OrgID() (r uuid.UUID, exists bool) {
 // OldOrgID returns the old "org_id" field's value of the Event entity.
 // If the Event object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *EventMutation) OldOrgID(ctx context.Context) (v uuid.UUID, err error) {
+func (m *EventMutation) OldOrgID(ctx context.Context) (v *uuid.UUID, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldOrgID is only allowed on UpdateOne operations")
 	}
@@ -4456,9 +4456,22 @@ func (m *EventMutation) OldOrgID(ctx context.Context) (v uuid.UUID, err error) {
 	return oldValue.OrgID, nil
 }
 
+// ClearOrgID clears the value of the "org_id" field.
+func (m *EventMutation) ClearOrgID() {
+	m.org_id = nil
+	m.clearedFields[event.FieldOrgID] = struct{}{}
+}
+
+// OrgIDCleared returns if the "org_id" field was cleared in this mutation.
+func (m *EventMutation) OrgIDCleared() bool {
+	_, ok := m.clearedFields[event.FieldOrgID]
+	return ok
+}
+
 // ResetOrgID resets all changes to the "org_id" field.
 func (m *EventMutation) ResetOrgID() {
 	m.org_id = nil
+	delete(m.clearedFields, event.FieldOrgID)
 }
 
 // SetCreatedBy sets the "created_by" field.
@@ -5218,6 +5231,9 @@ func (m *EventMutation) ClearedFields() []string {
 	if m.FieldCleared(event.FieldDeletedAt) {
 		fields = append(fields, event.FieldDeletedAt)
 	}
+	if m.FieldCleared(event.FieldOrgID) {
+		fields = append(fields, event.FieldOrgID)
+	}
 	if m.FieldCleared(event.FieldDescription) {
 		fields = append(fields, event.FieldDescription)
 	}
@@ -5243,6 +5259,9 @@ func (m *EventMutation) ClearField(name string) error {
 	switch name {
 	case event.FieldDeletedAt:
 		m.ClearDeletedAt()
+		return nil
+	case event.FieldOrgID:
+		m.ClearOrgID()
 		return nil
 	case event.FieldDescription:
 		m.ClearDescription()

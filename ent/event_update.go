@@ -84,6 +84,12 @@ func (_u *EventUpdate) SetNillableOrgID(v *uuid.UUID) *EventUpdate {
 	return _u
 }
 
+// ClearOrgID clears the value of the "org_id" field.
+func (_u *EventUpdate) ClearOrgID() *EventUpdate {
+	_u.mutation.ClearOrgID()
+	return _u
+}
+
 // SetCreatedBy sets the "created_by" field.
 func (_u *EventUpdate) SetCreatedBy(v uuid.UUID) *EventUpdate {
 	_u.mutation.SetCreatedBy(v)
@@ -366,6 +372,9 @@ func (_u *EventUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.OrgID(); ok {
 		_spec.SetField(event.FieldOrgID, field.TypeUUID, value)
 	}
+	if _u.mutation.OrgIDCleared() {
+		_spec.ClearField(event.FieldOrgID, field.TypeUUID)
+	}
 	if value, ok := _u.mutation.CreatedBy(); ok {
 		_spec.SetField(event.FieldCreatedBy, field.TypeUUID, value)
 	}
@@ -521,6 +530,12 @@ func (_u *EventUpdateOne) SetNillableOrgID(v *uuid.UUID) *EventUpdateOne {
 	if v != nil {
 		_u.SetOrgID(*v)
 	}
+	return _u
+}
+
+// ClearOrgID clears the value of the "org_id" field.
+func (_u *EventUpdateOne) ClearOrgID() *EventUpdateOne {
+	_u.mutation.ClearOrgID()
 	return _u
 }
 
@@ -835,6 +850,9 @@ func (_u *EventUpdateOne) sqlSave(ctx context.Context) (_node *Event, err error)
 	}
 	if value, ok := _u.mutation.OrgID(); ok {
 		_spec.SetField(event.FieldOrgID, field.TypeUUID, value)
+	}
+	if _u.mutation.OrgIDCleared() {
+		_spec.ClearField(event.FieldOrgID, field.TypeUUID)
 	}
 	if value, ok := _u.mutation.CreatedBy(); ok {
 		_spec.SetField(event.FieldCreatedBy, field.TypeUUID, value)

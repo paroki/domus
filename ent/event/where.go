@@ -331,6 +331,16 @@ func OrgIDLTE(v uuid.UUID) predicate.Event {
 	return predicate.Event(sql.FieldLTE(FieldOrgID, v))
 }
 
+// OrgIDIsNil applies the IsNil predicate on the "org_id" field.
+func OrgIDIsNil() predicate.Event {
+	return predicate.Event(sql.FieldIsNull(FieldOrgID))
+}
+
+// OrgIDNotNil applies the NotNil predicate on the "org_id" field.
+func OrgIDNotNil() predicate.Event {
+	return predicate.Event(sql.FieldNotNull(FieldOrgID))
+}
+
 // CreatedByEQ applies the EQ predicate on the "created_by" field.
 func CreatedByEQ(v uuid.UUID) predicate.Event {
 	return predicate.Event(sql.FieldEQ(FieldCreatedBy, v))

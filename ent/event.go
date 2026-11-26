@@ -27,7 +27,7 @@ type Event struct {
 	// ParokiID holds the value of the "paroki_id" field.
 	ParokiID uuid.UUID `json:"paroki_id,omitempty"`
 	// OrgID holds the value of the "org_id" field.
-	OrgID uuid.UUID `json:"org_id,omitempty"`
+	OrgID *uuid.UUID `json:"org_id,omitempty"`
 	// CreatedBy holds the value of the "created_by" field.
 	CreatedBy uuid.UUID `json:"created_by,omitempty"`
 	// Title holds the value of the "title" field.
@@ -77,13 +77,15 @@ func (*Event) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case event.FieldOrgID:
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case event.FieldRsvpEnabled:
 			values[i] = new(sql.NullBool)
 		case event.FieldTitle, event.FieldDescription, event.FieldLocation, event.FieldVisibility, event.FieldStatus:
 			values[i] = new(sql.NullString)
 		case event.FieldCreatedAt, event.FieldUpdatedAt, event.FieldDeletedAt, event.FieldStartAt, event.FieldEndAt, event.FieldRsvpDeadline:
 			values[i] = new(sql.NullTime)
-		case event.FieldID, event.FieldParokiID, event.FieldOrgID, event.FieldCreatedBy:
+		case event.FieldID, event.FieldParokiID, event.FieldCreatedBy:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -132,10 +134,11 @@ func (_m *Event) assignValues(columns []string, values []any) error {
 				_m.ParokiID = *value
 			}
 		case event.FieldOrgID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
+			if value, ok := values[i].(*sql.NullScanner); !ok {
 				return fmt.Errorf("unexpected type %T for field org_id", values[i])
-			} else if value != nil {
-				_m.OrgID = *value
+			} else if value.Valid {
+				_m.OrgID = new(uuid.UUID)
+				*_m.OrgID = *value.S.(*uuid.UUID)
 			}
 		case event.FieldCreatedBy:
 			if value, ok := values[i].(*uuid.UUID); !ok {
@@ -255,8 +258,10 @@ func (_m *Event) String() string {
 	builder.WriteString("paroki_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.ParokiID))
 	builder.WriteString(", ")
-	builder.WriteString("org_id=")
-	builder.WriteString(fmt.Sprintf("%v", _m.OrgID))
+	if v := _m.OrgID; v != nil {
+		builder.WriteString("org_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteString(", ")
 	builder.WriteString("created_by=")
 	builder.WriteString(fmt.Sprintf("%v", _m.CreatedBy))

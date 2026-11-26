@@ -48,6 +48,9 @@ func (s *Service) SearchEvents(
 		in.Status = req.Filter.Status
 		in.From = req.Filter.From
 		in.To = req.Filter.To
+		if req.Filter.ParokiWideOnly != nil {
+			in.ParokiWideOnly = *req.Filter.ParokiWideOnly
+		}
 		if req.Filter.MyOrgsOnly != nil {
 			in.MyOrgsOnly = *req.Filter.MyOrgsOnly
 		}
@@ -64,71 +67,106 @@ func (s *Service) SearchEvents(
 		rows = rows[:limit]
 	}
 
+	isParokiAdm, err := s.isParokiAdmin(ctx, p)
+	if err != nil {
+		return nil, false, err
+	}
+	isParokiMem := isParokiAdm
+	if !isParokiMem {
+		isParokiMem, err = s.repo.IsParokiMember(ctx, p.ParokiID, p.UserID)
+		if err != nil {
+			return nil, false, err
+		}
+	}
+
 	now := time.Now().UTC()
 	out := make([]domain.EventResponse, 0, len(rows))
 	roleCache := make(map[uuid.UUID]*string)
-	memberEventOrgMap := make(map[uuid.UUID]uuid.UUID)
-	memberEventIDs := make([]uuid.UUID, 0, len(rows))
+	rsvpEventOrgMap := make(map[uuid.UUID]*uuid.UUID)
+	rsvpEventIDs := make([]uuid.UUID, 0, len(rows))
 
 	for _, row := range rows {
-		info, ok := orgMap[row.OrgID]
-		if !ok {
-			fetched, err := s.orgs.GetOrganization(ctx, p.ParokiID, row.OrgID)
-			if err != nil {
-				return nil, false, err
+		var info OrgInfo
+		var myRole *string
+		var canManage, canRsvp bool
+
+		if row.OrgID != nil {
+			orgID := *row.OrgID
+			cachedInfo, ok := orgMap[orgID]
+			if !ok {
+				fetched, err := s.orgs.GetOrganization(ctx, p.ParokiID, orgID)
+				if err != nil {
+					return nil, false, err
+				}
+				cachedInfo = *fetched
+				orgMap[orgID] = cachedInfo
 			}
-			info = *fetched
-			orgMap[row.OrgID] = info
-		}
+			info = cachedInfo
 
-		myRole, cached := roleCache[row.OrgID]
-		if !cached {
-			myRole, err = s.resolveMyOrgRole(ctx, p.UserID, row.OrgID, memberOrgIDs)
-			if err != nil {
-				return nil, false, err
+			var cached bool
+			myRole, cached = roleCache[orgID]
+			if !cached {
+				myRole, err = s.resolveMyOrgRole(ctx, p.UserID, orgID, memberOrgIDs)
+				if err != nil {
+					return nil, false, err
+				}
+				roleCache[orgID] = myRole
 			}
-			roleCache[row.OrgID] = myRole
+			canManage = myRole != nil && *myRole == "admin"
+			canRsvp = myRole != nil
+		} else {
+			canManage = isParokiAdm
+			canRsvp = isParokiMem || isParokiAdm
 		}
 
-		if myRole != nil {
-			memberEventOrgMap[row.ID] = row.OrgID
-			memberEventIDs = append(memberEventIDs, row.ID)
+		if canRsvp {
+			rsvpEventOrgMap[row.ID] = row.OrgID
+			rsvpEventIDs = append(rsvpEventIDs, row.ID)
 		}
 
-		out = append(out, s.toEventResponse(row, info, myRole, now))
+		out = append(out, s.toEventResponse(row, info, myRole, canManage, canRsvp, now))
 	}
 
-	if len(memberEventIDs) > 0 {
-		myRSVPs, err := s.repo.FindUserRSVPsForEvents(ctx, memberEventIDs, p.UserID)
+	if len(rsvpEventIDs) > 0 {
+		myRSVPs, err := s.repo.FindUserRSVPsForEvents(ctx, rsvpEventIDs, p.UserID)
 		if err != nil {
 			return nil, false, err
 		}
-		summaries, err := s.repo.GetRSVPSummariesForEvents(ctx, memberEventOrgMap)
+		summaries, err := s.repo.GetRSVPSummariesForEvents(ctx, p.ParokiID, rsvpEventOrgMap)
 		if err != nil {
 			return nil, false, err
 		}
-		// Load caller's User + OrgMember info per org for myRsvp enrichment.
+		usersMap, err := s.repo.LoadUsers(ctx, []uuid.UUID{p.UserID})
+		if err != nil {
+			return nil, false, err
+		}
+		callerUser := usersMap[p.UserID]
+
 		orgIDsForCaller := make(map[uuid.UUID]struct{})
-		for _, orgID := range memberEventOrgMap {
-			orgIDsForCaller[orgID] = struct{}{}
+		for _, orgID := range rsvpEventOrgMap {
+			if orgID != nil {
+				orgIDsForCaller[*orgID] = struct{}{}
+			}
 		}
-		callerUsers := make(map[uuid.UUID]*ent.User)
 		callerMembers := make(map[uuid.UUID]*ent.OrgMember)
 		for orgID := range orgIDsForCaller {
-			uMap, mMap, err := s.repo.LoadUsersAndOrgMembers(ctx, orgID, []uuid.UUID{p.UserID})
+			_, mMap, err := s.repo.LoadUsersAndOrgMembers(ctx, orgID, []uuid.UUID{p.UserID})
 			if err != nil {
 				return nil, false, err
 			}
-			callerUsers[orgID] = uMap[p.UserID]
 			callerMembers[orgID] = mMap[p.UserID]
 		}
 
 		for i := range out {
-			if out[i].MyOrgRole == nil {
+			if !out[i].CanRsvp {
 				continue
 			}
 			if rsvpRow, ok := myRSVPs[out[i].ID]; ok {
-				r := toRSVPResponse(rsvpRow, callerUsers[out[i].OrgID], callerMembers[out[i].OrgID])
+				var member *ent.OrgMember
+				if out[i].OrgID != nil {
+					member = callerMembers[*out[i].OrgID]
+				}
+				r := toRSVPResponse(rsvpRow, callerUser, member)
 				out[i].MyRsvp = &r
 			}
 			if counts, ok := summaries[out[i].ID]; ok {
@@ -150,22 +188,45 @@ func (s *Service) GetEvent(ctx context.Context, p authx.Principal, eventID uuid.
 		return domain.EventResponse{}, err
 	}
 
-	myRole, err := s.resolveMemberRole(ctx, p.UserID, row.OrgID)
-	if err != nil {
-		return domain.EventResponse{}, err
-	}
-	if row.Visibility == event.VisibilityPrivate && myRole == nil {
-		return domain.EventResponse{}, domain.ErrForbidden
+	var info OrgInfo
+	var myRole *string
+	var canManage, canRsvp bool
+
+	if row.OrgID != nil {
+		orgID := *row.OrgID
+		myRole, err = s.resolveMemberRole(ctx, p.UserID, orgID)
+		if err != nil {
+			return domain.EventResponse{}, err
+		}
+		if row.Visibility == event.VisibilityPrivate && myRole == nil {
+			return domain.EventResponse{}, domain.ErrForbidden
+		}
+		fetched, err := s.orgs.GetOrganization(ctx, p.ParokiID, orgID)
+		if err != nil {
+			return domain.EventResponse{}, err
+		}
+		info = *fetched
+		canManage = myRole != nil && *myRole == "admin"
+		canRsvp = myRole != nil
+	} else {
+		isParokiAdm, err := s.isParokiAdmin(ctx, p)
+		if err != nil {
+			return domain.EventResponse{}, err
+		}
+		isParokiMem := isParokiAdm
+		if !isParokiMem {
+			isParokiMem, err = s.repo.IsParokiMember(ctx, p.ParokiID, p.UserID)
+			if err != nil {
+				return domain.EventResponse{}, err
+			}
+		}
+		canManage = isParokiAdm
+		canRsvp = isParokiMem || isParokiAdm
 	}
 
-	info, err := s.orgs.GetOrganization(ctx, p.ParokiID, row.OrgID)
-	if err != nil {
-		return domain.EventResponse{}, err
-	}
-
-	res := s.toEventResponse(row, *info, myRole, time.Now().UTC())
-	if myRole != nil {
-		counts, err := s.repo.GetRSVPSummary(ctx, row.ID, row.OrgID)
+	res := s.toEventResponse(row, info, myRole, canManage, canRsvp, time.Now().UTC())
+	if canRsvp {
+		counts, err := s.repo.GetRSVPSummary(ctx, p.ParokiID, row.ID, row.OrgID)
 		if err != nil {
 			return domain.EventResponse{}, err
 		}
@@ -177,30 +238,66 @@ func (s *Service) GetEvent(ctx context.Context, p authx.Principal, eventID uuid.
 			return domain.EventResponse{}, err
 		}
 		if rsvpRow != nil {
-			uMap, mMap, err := s.repo.LoadUsersAndOrgMembers(ctx, row.OrgID, []uuid.UUID{p.UserID})
-			if err != nil {
-				return domain.EventResponse{}, err
+			var u *ent.User
+			var m *ent.OrgMember
+			if row.OrgID != nil {
+				uMap, mMap, err := s.repo.LoadUsersAndOrgMembers(ctx, *row.OrgID, []uuid.UUID{p.UserID})
+				if err != nil {
+					return domain.EventResponse{}, err
+				}
+				u = uMap[p.UserID]
+				m = mMap[p.UserID]
+			} else {
+				uMap, err := s.repo.LoadUsers(ctx, []uuid.UUID{p.UserID})
+				if err != nil {
+					return domain.EventResponse{}, err
+				}
+				u = uMap[p.UserID]
 			}
-			r := toRSVPResponse(rsvpRow, uMap[p.UserID], mMap[p.UserID])
+			r := toRSVPResponse(rsvpRow, u, m)
 			res.MyRsvp = &r
 		}
 	}
 	return res, nil
 }
 
-// CreateEvent creates a new Event owned by req.OrgID (requires org:admin of req.OrgID).
+// CreateEvent creates a new Event owned by req.OrgID (org:admin) or by the active paroki (ref:paroki-admin).
 func (s *Service) CreateEvent(ctx context.Context, p authx.Principal, req domain.CreateEventRequest) (domain.EventResponse, error) {
-	info, err := s.orgs.GetOrganization(ctx, p.ParokiID, req.OrgID)
-	if err != nil {
-		return domain.EventResponse{}, err
+	orgID := req.OrgID
+	if orgID != nil && *orgID == uuid.Nil {
+		orgID = nil
 	}
 
-	isAdm, err := s.isOrgAdmin(ctx, p, req.OrgID)
-	if err != nil {
-		return domain.EventResponse{}, err
-	}
-	if !isAdm {
-		return domain.EventResponse{}, domain.ErrForbidden
+	var info OrgInfo
+	var myRole *string
+	var canRsvp bool
+
+	if orgID != nil {
+		fetched, err := s.orgs.GetOrganization(ctx, p.ParokiID, *orgID)
+		if err != nil {
+			return domain.EventResponse{}, err
+		}
+		info = *fetched
+
+		isAdm, err := s.isOrgAdmin(ctx, p, *orgID)
+		if err != nil {
+			return domain.EventResponse{}, err
+		}
+		if !isAdm {
+			return domain.EventResponse{}, domain.ErrForbidden
+		}
+		adminRole := "admin"
+		myRole = &adminRole
+		canRsvp = true
+	} else {
+		isAdm, err := s.isParokiAdmin(ctx, p)
+		if err != nil {
+			return domain.EventResponse{}, err
+		}
+		if !isAdm {
+			return domain.EventResponse{}, domain.ErrForbidden
+		}
+		canRsvp = true
 	}
 
 	title := strings.TrimSpace(req.Title)
@@ -223,6 +320,12 @@ func (s *Service) CreateEvent(ctx context.Context, p authx.Principal, req domain
 	if req.Visibility != "" {
 		vis = event.Visibility(req.Visibility)
 	}
+	if orgID == nil {
+		if req.Visibility == string(event.VisibilityPrivate) || vis != event.VisibilityPublic {
+			return domain.EventResponse{}, domain.ValidationError("visibility", "PAROKI_EVENT_PUBLIC_ONLY", "Parish-level events must have public visibility.")
+		}
+	}
+
 	rsvpEnabled := true
 	if req.RsvpEnabled != nil {
 		rsvpEnabled = *req.RsvpEnabled
@@ -230,7 +333,7 @@ func (s *Service) CreateEvent(ctx context.Context, p authx.Principal, req domain
 
 	created, err := s.repo.CreateEvent(ctx, repo.CreateEventInput{
 		ParokiID:     p.ParokiID,
-		OrgID:        req.OrgID,
+		OrgID:        orgID,
 		CreatedBy:    p.UserID,
 		Title:        title,
 		Description:  trimOptString(req.Description),
@@ -245,11 +348,10 @@ func (s *Service) CreateEvent(ctx context.Context, p authx.Principal, req domain
 		return domain.EventResponse{}, err
 	}
 
-	adminRole := "admin"
-	return s.toEventResponse(created, *info, &adminRole, time.Now().UTC()), nil
+	return s.toEventResponse(created, info, myRole, true, canRsvp, time.Now().UTC()), nil
 }
 
-// UpdateEvent updates an existing Event in the active paroki (requires org:admin of owning org).
+// UpdateEvent updates an existing Event in the active paroki.
 func (s *Service) UpdateEvent(ctx context.Context, p authx.Principal, eventID uuid.UUID, req domain.UpdateEventRequest) (domain.EventResponse, error) {
 	existing, err := s.repo.FindEventInParoki(ctx, p.ParokiID, eventID)
 	if ent.IsNotFound(err) {
@@ -259,12 +361,28 @@ func (s *Service) UpdateEvent(ctx context.Context, p authx.Principal, eventID uu
 		return domain.EventResponse{}, err
 	}
 
-	isAdm, err := s.isOrgAdmin(ctx, p, existing.OrgID)
-	if err != nil {
-		return domain.EventResponse{}, err
-	}
-	if !isAdm {
-		return domain.EventResponse{}, domain.ErrForbidden
+	var myRole *string
+	if existing.OrgID != nil {
+		isAdm, err := s.isOrgAdmin(ctx, p, *existing.OrgID)
+		if err != nil {
+			return domain.EventResponse{}, err
+		}
+		if !isAdm {
+			return domain.EventResponse{}, domain.ErrForbidden
+		}
+		adminRole := "admin"
+		myRole = &adminRole
+	} else {
+		isAdm, err := s.isParokiAdmin(ctx, p)
+		if err != nil {
+			return domain.EventResponse{}, err
+		}
+		if !isAdm {
+			return domain.EventResponse{}, domain.ErrForbidden
+		}
+		if req.Visibility != nil && *req.Visibility != string(event.VisibilityPublic) {
+			return domain.EventResponse{}, domain.ValidationError("visibility", "PAROKI_EVENT_PUBLIC_ONLY", "Parish-level events must have public visibility.")
+		}
 	}
 
 	in := repo.UpdateEventInput{
@@ -319,16 +437,19 @@ func (s *Service) UpdateEvent(ctx context.Context, p authx.Principal, eventID uu
 		return domain.EventResponse{}, err
 	}
 
-	info, err := s.orgs.GetOrganization(ctx, p.ParokiID, updated.OrgID)
-	if err != nil {
-		return domain.EventResponse{}, err
+	var info OrgInfo
+	if updated.OrgID != nil {
+		fetched, err := s.orgs.GetOrganization(ctx, p.ParokiID, *updated.OrgID)
+		if err != nil {
+			return domain.EventResponse{}, err
+		}
+		info = *fetched
 	}
 
-	adminRole := "admin"
-	return s.toEventResponse(updated, *info, &adminRole, time.Now().UTC()), nil
+	return s.toEventResponse(updated, info, myRole, true, true, time.Now().UTC()), nil
 }
 
-// DeleteEvent soft-deletes an Event in the active paroki (requires org:admin of owning org).
+// DeleteEvent soft-deletes an Event in the active paroki.
 func (s *Service) DeleteEvent(ctx context.Context, p authx.Principal, eventID uuid.UUID) error {
 	existing, err := s.repo.FindEventInParoki(ctx, p.ParokiID, eventID)
 	if ent.IsNotFound(err) {
@@ -338,12 +459,22 @@ func (s *Service) DeleteEvent(ctx context.Context, p authx.Principal, eventID uu
 		return err
 	}
 
-	isAdm, err := s.isOrgAdmin(ctx, p, existing.OrgID)
-	if err != nil {
-		return err
-	}
-	if !isAdm {
-		return domain.ErrForbidden
+	if existing.OrgID != nil {
+		isAdm, err := s.isOrgAdmin(ctx, p, *existing.OrgID)
+		if err != nil {
+			return err
+		}
+		if !isAdm {
+			return domain.ErrForbidden
+		}
+	} else {
+		isAdm, err := s.isParokiAdmin(ctx, p)
+		if err != nil {
+			return err
+		}
+		if !isAdm {
+			return domain.ErrForbidden
+		}
 	}
 
 	return s.repo.SoftDeleteEvent(ctx, eventID, time.Now().UTC())
@@ -391,7 +522,7 @@ func (s *Service) resolveMemberRole(ctx context.Context, userID, orgID uuid.UUID
 	return nil, nil
 }
 
-func (s *Service) toEventResponse(row *ent.Event, info OrgInfo, myRole *string, now time.Time) domain.EventResponse {
+func (s *Service) toEventResponse(row *ent.Event, info OrgInfo, myRole *string, canManage, canRsvp bool, now time.Time) domain.EventResponse {
 	cutoff := row.StartAt.UTC().Add(s.cfg.RSVPGracePeriod)
 	if row.RsvpDeadline != nil {
 		cutoff = row.RsvpDeadline.UTC()
@@ -422,6 +553,8 @@ func (s *Service) toEventResponse(row *ent.Event, info OrgInfo, myRole *string, 
 		RsvpDeadline: deadline,
 		Status:       string(row.Status),
 		RsvpOpen:     rsvpOpen,
+		CanManage:    canManage,
+		CanRsvp:      canRsvp,
 		MyOrgRole:    myRole,
 		CreatedAt:    row.CreatedAt,
 		UpdatedAt:    row.UpdatedAt,

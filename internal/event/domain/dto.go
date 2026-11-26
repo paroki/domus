@@ -10,10 +10,10 @@ import (
 type EventResponse struct {
 	ID           uuid.UUID                 `json:"id"`
 	ParokiID     uuid.UUID                 `json:"parokiId"`
-	OrgID        uuid.UUID                 `json:"orgId"`
-	OrgCode      string                    `json:"orgCode"`
-	OrgName      string                    `json:"orgName"`
-	OrgKind      string                    `json:"orgKind"`
+	OrgID        *uuid.UUID                `json:"orgId,omitempty"`
+	OrgCode      string                    `json:"orgCode,omitempty"`
+	OrgName      string                    `json:"orgName,omitempty"`
+	OrgKind      string                    `json:"orgKind,omitempty"`
 	CreatedBy    uuid.UUID                 `json:"createdBy"`
 	Title        string                    `json:"title"`
 	Description  *string                   `json:"description,omitempty"`
@@ -25,6 +25,8 @@ type EventResponse struct {
 	RsvpDeadline *time.Time                `json:"rsvpDeadline,omitempty"`
 	Status       string                    `json:"status"`
 	RsvpOpen     bool                      `json:"rsvpOpen"`
+	CanManage    bool                      `json:"canManage"`
+	CanRsvp      bool                      `json:"canRsvp"`
 	MyOrgRole    *string                   `json:"myOrgRole,omitempty"`
 	MyRsvp       *EventRSVPResponse        `json:"myRsvp,omitempty"`
 	RsvpSummary  *EventRSVPSummaryResponse `json:"rsvpSummary,omitempty"`
@@ -34,12 +36,13 @@ type EventResponse struct {
 
 // EventSearchFilter filters event search results.
 type EventSearchFilter struct {
-	OrgID      *uuid.UUID `json:"orgId,omitempty"`
-	Visibility string     `json:"visibility,omitempty" validate:"omitempty,oneof=public private"`
-	Status     string     `json:"status,omitempty" validate:"omitempty,oneof=scheduled cancelled"`
-	MyOrgsOnly *bool      `json:"myOrgsOnly,omitempty"`
-	From       *time.Time `json:"from,omitempty"`
-	To         *time.Time `json:"to,omitempty"`
+	OrgID          *uuid.UUID `json:"orgId,omitempty"`
+	ParokiWideOnly *bool      `json:"parokiWideOnly,omitempty"`
+	Visibility     string     `json:"visibility,omitempty" validate:"omitempty,oneof=public private"`
+	Status         string     `json:"status,omitempty" validate:"omitempty,oneof=scheduled cancelled"`
+	MyOrgsOnly     *bool      `json:"myOrgsOnly,omitempty"`
+	From           *time.Time `json:"from,omitempty"`
+	To             *time.Time `json:"to,omitempty"`
 }
 
 // SearchEventsRequest searches visible events within the active paroki.
@@ -50,9 +53,9 @@ type SearchEventsRequest struct {
 	Limit  int                `json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
 }
 
-// CreateEventRequest creates a new Event owned by an organization in the active paroki.
+// CreateEventRequest creates a new Event owned by an organization or the active paroki.
 type CreateEventRequest struct {
-	OrgID        uuid.UUID  `json:"orgId" validate:"required"`
+	OrgID        *uuid.UUID `json:"orgId,omitempty"`
 	Title        string     `json:"title" validate:"required,min=1"`
 	Description  *string    `json:"description,omitempty"`
 	Location     *string    `json:"location,omitempty"`

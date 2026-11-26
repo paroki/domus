@@ -311,7 +311,6 @@
                 },
                 "required": [
                     "endAt",
-                    "orgId",
                     "startAt",
                     "title"
                 ],
@@ -865,6 +864,12 @@
             },
             "domain.EventResponse": {
                 "properties": {
+                    "canManage": {
+                        "type": "boolean"
+                    },
+                    "canRsvp": {
+                        "type": "boolean"
+                    },
                     "createdAt": {
                         "type": "string"
                     },
@@ -944,6 +949,9 @@
                     },
                     "orgId": {
                         "type": "string"
+                    },
+                    "parokiWideOnly": {
+                        "type": "boolean"
                     },
                     "status": {
                         "enum": [

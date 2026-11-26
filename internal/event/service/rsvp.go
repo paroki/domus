@@ -14,7 +14,25 @@ import (
 	"github.com/paroki/domus/internal/platform/authx"
 )
 
-// UpsertRSVP creates or updates the caller's RSVP for eventID (requires active org membership and open RSVP).
+func (s *Service) canCallerRSVP(ctx context.Context, p authx.Principal, ev *ent.Event) (bool, error) {
+	if ev.OrgID != nil {
+		myRole, err := s.resolveMemberRole(ctx, p.UserID, *ev.OrgID)
+		if err != nil {
+			return false, err
+		}
+		return myRole != nil, nil
+	}
+	isAdm, err := s.isParokiAdmin(ctx, p)
+	if err != nil {
+		return false, err
+	}
+	if isAdm {
+		return true, nil
+	}
+	return s.repo.IsParokiMember(ctx, p.ParokiID, p.UserID)
+}
+
+// UpsertRSVP creates or updates the caller's RSVP for eventID (requires org membership or paroki membership for parish-level events).
 func (s *Service) UpsertRSVP(
 	ctx context.Context,
 	p authx.Principal,
@@ -29,11 +47,11 @@ func (s *Service) UpsertRSVP(
 		return domain.EventRSVPResponse{}, err
 	}
 
-	myRole, err := s.resolveMemberRole(ctx, p.UserID, ev.OrgID)
+	canRSVP, err := s.canCallerRSVP(ctx, p, ev)
 	if err != nil {
 		return domain.EventRSVPResponse{}, err
 	}
-	if myRole == nil {
+	if !canRSVP {
 		return domain.EventRSVPResponse{}, domain.ErrForbidden
 	}
 
@@ -56,15 +74,27 @@ func (s *Service) UpsertRSVP(
 		return domain.EventRSVPResponse{}, err
 	}
 
-	usersMap, membersMap, err := s.repo.LoadUsersAndOrgMembers(ctx, ev.OrgID, []uuid.UUID{p.UserID})
-	if err != nil {
-		return domain.EventRSVPResponse{}, err
+	var u *ent.User
+	var m *ent.OrgMember
+	if ev.OrgID != nil {
+		usersMap, membersMap, err := s.repo.LoadUsersAndOrgMembers(ctx, *ev.OrgID, []uuid.UUID{p.UserID})
+		if err != nil {
+			return domain.EventRSVPResponse{}, err
+		}
+		u = usersMap[p.UserID]
+		m = membersMap[p.UserID]
+	} else {
+		usersMap, err := s.repo.LoadUsers(ctx, []uuid.UUID{p.UserID})
+		if err != nil {
+			return domain.EventRSVPResponse{}, err
+		}
+		u = usersMap[p.UserID]
 	}
 
-	return toRSVPResponse(saved, usersMap[p.UserID], membersMap[p.UserID]), nil
+	return toRSVPResponse(saved, u, m), nil
 }
 
-// DeleteRSVP hard-deletes the caller's RSVP for eventID (requires active org membership and open RSVP).
+// DeleteRSVP hard-deletes the caller's RSVP for eventID.
 func (s *Service) DeleteRSVP(ctx context.Context, p authx.Principal, eventID uuid.UUID) error {
 	ev, err := s.repo.FindEventInParoki(ctx, p.ParokiID, eventID)
 	if ent.IsNotFound(err) {
@@ -74,11 +104,11 @@ func (s *Service) DeleteRSVP(ctx context.Context, p authx.Principal, eventID uui
 		return err
 	}
 
-	myRole, err := s.resolveMemberRole(ctx, p.UserID, ev.OrgID)
+	canRSVP, err := s.canCallerRSVP(ctx, p, ev)
 	if err != nil {
 		return err
 	}
-	if myRole == nil {
+	if !canRSVP {
 		return domain.ErrForbidden
 	}
 
@@ -89,7 +119,7 @@ func (s *Service) DeleteRSVP(ctx context.Context, p authx.Principal, eventID uui
 	return s.repo.DeleteRSVP(ctx, eventID, p.UserID)
 }
 
-// GetRSVPSummary returns RSVP attendance summary counts for eventID (requires active org membership).
+// GetRSVPSummary returns RSVP attendance summary counts for eventID.
 func (s *Service) GetRSVPSummary(ctx context.Context, p authx.Principal, eventID uuid.UUID) (domain.EventRSVPSummaryResponse, error) {
 	ev, err := s.repo.FindEventInParoki(ctx, p.ParokiID, eventID)
 	if ent.IsNotFound(err) {
@@ -99,22 +129,22 @@ func (s *Service) GetRSVPSummary(ctx context.Context, p authx.Principal, eventID
 		return domain.EventRSVPSummaryResponse{}, err
 	}
 
-	myRole, err := s.resolveMemberRole(ctx, p.UserID, ev.OrgID)
+	canRSVP, err := s.canCallerRSVP(ctx, p, ev)
 	if err != nil {
 		return domain.EventRSVPSummaryResponse{}, err
 	}
-	if myRole == nil {
+	if !canRSVP {
 		return domain.EventRSVPSummaryResponse{}, domain.ErrForbidden
 	}
 
-	counts, err := s.repo.GetRSVPSummary(ctx, eventID, ev.OrgID)
+	counts, err := s.repo.GetRSVPSummary(ctx, p.ParokiID, eventID, ev.OrgID)
 	if err != nil {
 		return domain.EventRSVPSummaryResponse{}, err
 	}
 	return toRSVPSummaryResponse(eventID, counts), nil
 }
 
-// SearchRSVPs returns paginated attendee RSVPs for eventID (requires active org membership).
+// SearchRSVPs returns paginated attendee RSVPs for eventID.
 func (s *Service) SearchRSVPs(
 	ctx context.Context,
 	p authx.Principal,
@@ -132,11 +162,11 @@ func (s *Service) SearchRSVPs(
 		return nil, false, err
 	}
 
-	myRole, err := s.resolveMemberRole(ctx, p.UserID, ev.OrgID)
+	canRSVP, err := s.canCallerRSVP(ctx, p, ev)
 	if err != nil {
 		return nil, false, err
 	}
-	if myRole == nil {
+	if !canRSVP {
 		return nil, false, domain.ErrForbidden
 	}
 

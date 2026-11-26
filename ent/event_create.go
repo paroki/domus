@@ -76,6 +76,14 @@ func (_c *EventCreate) SetOrgID(v uuid.UUID) *EventCreate {
 	return _c
 }
 
+// SetNillableOrgID sets the "org_id" field if the given value is not nil.
+func (_c *EventCreate) SetNillableOrgID(v *uuid.UUID) *EventCreate {
+	if v != nil {
+		_c.SetOrgID(*v)
+	}
+	return _c
+}
+
 // SetCreatedBy sets the "created_by" field.
 func (_c *EventCreate) SetCreatedBy(v uuid.UUID) *EventCreate {
 	_c.mutation.SetCreatedBy(v)
@@ -285,9 +293,6 @@ func (_c *EventCreate) check() error {
 	if _, ok := _c.mutation.ParokiID(); !ok {
 		return &ValidationError{Name: "paroki_id", err: errors.New(`ent: missing required field "Event.paroki_id"`)}
 	}
-	if _, ok := _c.mutation.OrgID(); !ok {
-		return &ValidationError{Name: "org_id", err: errors.New(`ent: missing required field "Event.org_id"`)}
-	}
 	if _, ok := _c.mutation.CreatedBy(); !ok {
 		return &ValidationError{Name: "created_by", err: errors.New(`ent: missing required field "Event.created_by"`)}
 	}
@@ -377,7 +382,7 @@ func (_c *EventCreate) createSpec() (*Event, *sqlgraph.CreateSpec) {
 	}
 	if value, ok := _c.mutation.OrgID(); ok {
 		_spec.SetField(event.FieldOrgID, field.TypeUUID, value)
-		_node.OrgID = value
+		_node.OrgID = &value
 	}
 	if value, ok := _c.mutation.CreatedBy(); ok {
 		_spec.SetField(event.FieldCreatedBy, field.TypeUUID, value)

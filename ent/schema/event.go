@@ -26,7 +26,7 @@ func (Event) Mixin() []ent.Mixin {
 func (Event) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("paroki_id", uuid.UUID{}),
-		field.UUID("org_id", uuid.UUID{}),
+		field.UUID("org_id", uuid.UUID{}).Optional().Nillable(),
 		field.UUID("created_by", uuid.UUID{}),
 		field.String("title").NotEmpty(),
 		field.String("description").Optional().Nillable(),

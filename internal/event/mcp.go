@@ -43,21 +43,24 @@ type MCPEventRSVPSummary struct {
 type MCPEvent struct {
 	ID           string               `json:"id"`
 	ParokiID     string               `json:"parokiId"`
-	OrgID        string               `json:"orgId"`
-	OrgCode      string               `json:"orgCode"`
-	OrgName      string               `json:"orgName"`
-	OrgKind      string               `json:"orgKind"`
+	OrgID        *string              `json:"orgId,omitempty"`
+	OrgCode      string               `json:"orgCode,omitempty"`
+	OrgName      string               `json:"orgName,omitempty"`
+	OrgKind      string               `json:"orgKind,omitempty"`
 	CreatedBy    string               `json:"createdBy"`
 	Title        string               `json:"title"`
 	Description  *string              `json:"description,omitempty"`
 	Location     *string              `json:"location,omitempty"`
 	StartAt      string               `json:"startAt"`
 	EndAt        string               `json:"endAt"`
+	Timezone     string               `json:"timezone"`
 	Visibility   string               `json:"visibility"`
 	RsvpEnabled  bool                 `json:"rsvpEnabled"`
 	RsvpDeadline *string              `json:"rsvpDeadline,omitempty"`
 	Status       string               `json:"status"`
 	RsvpOpen     bool                 `json:"rsvpOpen"`
+	CanManage    bool                 `json:"canManage"`
+	CanRsvp      bool                 `json:"canRsvp"`
 	MyOrgRole    *string              `json:"myOrgRole,omitempty"`
 	MyRsvp       *MCPEventRSVP        `json:"myRsvp,omitempty"`
 	RsvpSummary  *MCPEventRSVPSummary `json:"rsvpSummary,omitempty"`
@@ -67,14 +70,15 @@ type MCPEvent struct {
 
 // EventListInput is the input schema for event_list.
 type EventListInput struct {
-	Query      string `json:"query,omitempty" jsonschema:"Optional text search query matching event title, description, or location"`
-	OrgID      string `json:"orgId,omitempty" jsonschema:"Optional organization UUID filter"`
-	From       string `json:"from,omitempty" jsonschema:"Optional inclusive start timestamp in RFC3339 (e.g. 2026-11-23T00:00:00Z) or YYYY-MM-DD"`
-	To         string `json:"to,omitempty" jsonschema:"Optional inclusive end timestamp in RFC3339 (e.g. 2026-11-29T23:59:59Z) or YYYY-MM-DD"`
-	Visibility string `json:"visibility,omitempty" jsonschema:"Optional visibility filter: public or private"`
-	Status     string `json:"status,omitempty" jsonschema:"Optional status filter: scheduled or cancelled"`
-	MyOrgsOnly bool   `json:"myOrgsOnly,omitempty" jsonschema:"If true, restrict results to events owned by caller's organizations"`
-	Limit      int    `json:"limit,omitempty" jsonschema:"Maximum number of events to return (default 20, max 100)"`
+	Query          string `json:"query,omitempty" jsonschema:"Optional text search query matching event title, description, or location"`
+	OrgID          string `json:"orgId,omitempty" jsonschema:"Optional organization UUID filter"`
+	ParokiWideOnly bool   `json:"parokiWideOnly,omitempty" jsonschema:"If true, restrict results to parish-level events (not owned by an organization)"`
+	From           string `json:"from,omitempty" jsonschema:"Optional inclusive start timestamp in local wall-clock YYYY-MM-DDTHH:MM:SS, YYYY-MM-DD, or RFC3339 with explicit offset (never append Z to a local wall-clock time)"`
+	To             string `json:"to,omitempty" jsonschema:"Optional inclusive end timestamp in local wall-clock YYYY-MM-DDTHH:MM:SS, YYYY-MM-DD, or RFC3339 with explicit offset (never append Z to a local wall-clock time)"`
+	Visibility     string `json:"visibility,omitempty" jsonschema:"Optional visibility filter: public or private"`
+	Status         string `json:"status,omitempty" jsonschema:"Optional status filter: scheduled or cancelled"`
+	MyOrgsOnly     bool   `json:"myOrgsOnly,omitempty" jsonschema:"If true, restrict results to events owned by caller's organizations"`
+	Limit          int    `json:"limit,omitempty" jsonschema:"Maximum number of events to return (default 20, max 100)"`
 }
 
 // EventListOutput is the output schema for event_list.
@@ -89,15 +93,15 @@ type EventGetInput struct {
 
 // EventCreateInput is the input schema for event_create.
 type EventCreateInput struct {
-	OrgID        string  `json:"orgId"`
+	OrgID        string  `json:"orgId,omitempty" jsonschema:"Optional organization UUID; omit to create a parish-level event (requires ref:paroki-admin)"`
 	Title        string  `json:"title"`
 	Description  *string `json:"description,omitempty"`
 	Location     *string `json:"location,omitempty"`
-	StartAt      string  `json:"startAt"`
-	EndAt        string  `json:"endAt"`
+	StartAt      string  `json:"startAt" jsonschema:"Start timestamp in parish local wall-clock YYYY-MM-DDTHH:MM:SS or RFC3339 with explicit offset (never append Z to a local wall-clock time)"`
+	EndAt        string  `json:"endAt" jsonschema:"End timestamp in parish local wall-clock YYYY-MM-DDTHH:MM:SS or RFC3339 with explicit offset (never append Z to a local wall-clock time)"`
 	Visibility   string  `json:"visibility,omitempty"`
 	RsvpEnabled  *bool   `json:"rsvpEnabled,omitempty"`
-	RsvpDeadline *string `json:"rsvpDeadline,omitempty"`
+	RsvpDeadline *string `json:"rsvpDeadline,omitempty" jsonschema:"Optional RSVP deadline in parish local wall-clock YYYY-MM-DDTHH:MM:SS or RFC3339 with explicit offset (never append Z to a local wall-clock time)"`
 }
 
 // EventUpdateInput is the input schema for event_update.
@@ -106,11 +110,11 @@ type EventUpdateInput struct {
 	Title             *string `json:"title,omitempty"`
 	Description       *string `json:"description,omitempty"`
 	Location          *string `json:"location,omitempty"`
-	StartAt           *string `json:"startAt,omitempty"`
-	EndAt             *string `json:"endAt,omitempty"`
+	StartAt           *string `json:"startAt,omitempty" jsonschema:"Start timestamp in parish local wall-clock YYYY-MM-DDTHH:MM:SS or RFC3339 with explicit offset (never append Z to a local wall-clock time)"`
+	EndAt             *string `json:"endAt,omitempty" jsonschema:"End timestamp in parish local wall-clock YYYY-MM-DDTHH:MM:SS or RFC3339 with explicit offset (never append Z to a local wall-clock time)"`
 	Visibility        *string `json:"visibility,omitempty"`
 	RsvpEnabled       *bool   `json:"rsvpEnabled,omitempty"`
-	RsvpDeadline      *string `json:"rsvpDeadline,omitempty"`
+	RsvpDeadline      *string `json:"rsvpDeadline,omitempty" jsonschema:"RSVP deadline in parish local wall-clock YYYY-MM-DDTHH:MM:SS or RFC3339 with explicit offset (never append Z to a local wall-clock time)"`
 	ClearRsvpDeadline *bool   `json:"clearRsvpDeadline,omitempty"`
 	Status            *string `json:"status,omitempty"`
 }
@@ -150,22 +154,22 @@ func (f *Feature) RegisterMCP(s *mcp.Server) {
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "event_create",
-		Description: "Create a new organization-owned event in the caller's active paroki (requires org:admin of the owning organization).",
+		Description: "Create a new organization-owned event (requires org:admin) or parish-level event (omit orgId, requires ref:paroki-admin) in the caller's active paroki.",
 	}, f.mcpEventCreate)
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "event_update",
-		Description: "Update or cancel an existing organization-owned event (requires org:admin of the owning organization).",
+		Description: "Update or cancel an existing event (requires org:admin for org events or ref:paroki-admin for parish-level events).",
 	}, f.mcpEventUpdate)
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "event_rsvp",
-		Description: "Submit or update the caller's RSVP for an organization event (requires active membership in the owning organization).",
+		Description: "Submit or update the caller's RSVP for an organization or parish-level event.",
 	}, f.mcpEventRSVP)
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "event_list_rsvps",
-		Description: "Get RSVP attendance summary and attendee roster for an event (requires active membership in the owning organization).",
+		Description: "Get RSVP attendance summary and attendee roster for an event.",
 	}, f.mcpEventListRSVPs)
 }
 
@@ -174,9 +178,10 @@ func (f *Feature) mcpEventList(ctx context.Context, _ *mcp.CallToolRequest, in E
 	if err != nil {
 		return nil, EventListOutput{}, err
 	}
+	loc := f.service.ResolveParokiLocation(ctx, p.ParokiID)
 
 	var filter *domain.EventSearchFilter
-	if in.OrgID != "" || in.From != "" || in.To != "" || in.Visibility != "" || in.Status != "" || in.MyOrgsOnly {
+	if in.OrgID != "" || in.ParokiWideOnly || in.From != "" || in.To != "" || in.Visibility != "" || in.Status != "" || in.MyOrgsOnly {
 		filter = &domain.EventSearchFilter{
 			Visibility: in.Visibility,
 			Status:     in.Status,
@@ -188,17 +193,21 @@ func (f *Feature) mcpEventList(ctx context.Context, _ *mcp.CallToolRequest, in E
 			}
 			filter.OrgID = &parsed
 		}
+		if in.ParokiWideOnly {
+			t := true
+			filter.ParokiWideOnly = &t
+		}
 		if in.From != "" {
-			t, err := parseMCPTimestamp(in.From, false)
+			t, err := parseMCPTimestampInLocation(in.From, loc, false)
 			if err != nil {
-				return nil, EventListOutput{}, httpx.BadRequest("Invalid 'from' timestamp; expected RFC3339 or YYYY-MM-DD.")
+				return nil, EventListOutput{}, httpx.BadRequest("Invalid 'from' timestamp; expected RFC3339, YYYY-MM-DDTHH:MM:SS, or YYYY-MM-DD.")
 			}
 			filter.From = &t
 		}
 		if in.To != "" {
-			t, err := parseMCPTimestamp(in.To, true)
+			t, err := parseMCPTimestampInLocation(in.To, loc, true)
 			if err != nil {
-				return nil, EventListOutput{}, httpx.BadRequest("Invalid 'to' timestamp; expected RFC3339 or YYYY-MM-DD.")
+				return nil, EventListOutput{}, httpx.BadRequest("Invalid 'to' timestamp; expected RFC3339, YYYY-MM-DDTHH:MM:SS, or YYYY-MM-DD.")
 			}
 			filter.To = &t
 		}
@@ -221,7 +230,7 @@ func (f *Feature) mcpEventList(ctx context.Context, _ *mcp.CallToolRequest, in E
 	}
 	out := make([]MCPEvent, 0, len(items))
 	for _, item := range items {
-		out = append(out, toMCPEvent(item))
+		out = append(out, toMCPEvent(item, loc))
 	}
 	return nil, EventListOutput{Events: out}, nil
 }
@@ -231,6 +240,7 @@ func (f *Feature) mcpEventGet(ctx context.Context, _ *mcp.CallToolRequest, in Ev
 	if err != nil {
 		return nil, MCPEvent{}, err
 	}
+	loc := f.service.ResolveParokiLocation(ctx, p.ParokiID)
 	eventID, err := uuid.Parse(in.EventID)
 	if err != nil {
 		return nil, MCPEvent{}, httpx.BadRequest("Invalid event ID.")
@@ -239,7 +249,7 @@ func (f *Feature) mcpEventGet(ctx context.Context, _ *mcp.CallToolRequest, in Ev
 	if err != nil {
 		return nil, MCPEvent{}, err
 	}
-	return nil, toMCPEvent(res), nil
+	return nil, toMCPEvent(res, loc), nil
 }
 
 func (f *Feature) mcpEventCreate(ctx context.Context, _ *mcp.CallToolRequest, in EventCreateInput) (*mcp.CallToolResult, MCPEvent, error) {
@@ -247,23 +257,29 @@ func (f *Feature) mcpEventCreate(ctx context.Context, _ *mcp.CallToolRequest, in
 	if err != nil {
 		return nil, MCPEvent{}, err
 	}
-	orgID, err := uuid.Parse(in.OrgID)
-	if err != nil {
-		return nil, MCPEvent{}, httpx.BadRequest("Invalid organization ID.")
+	loc := f.service.ResolveParokiLocation(ctx, p.ParokiID)
+
+	var orgID *uuid.UUID
+	if in.OrgID != "" {
+		parsed, err := uuid.Parse(in.OrgID)
+		if err != nil {
+			return nil, MCPEvent{}, httpx.BadRequest("Invalid organization ID.")
+		}
+		orgID = &parsed
 	}
-	startAt, err := time.Parse(time.RFC3339, in.StartAt)
+	startAt, err := parseMCPTimestampInLocation(in.StartAt, loc, false)
 	if err != nil {
-		return nil, MCPEvent{}, httpx.BadRequest("Invalid 'startAt' timestamp; expected RFC3339.")
+		return nil, MCPEvent{}, httpx.BadRequest("Invalid 'startAt' timestamp; expected RFC3339 or YYYY-MM-DDTHH:MM:SS.")
 	}
-	endAt, err := time.Parse(time.RFC3339, in.EndAt)
+	endAt, err := parseMCPTimestampInLocation(in.EndAt, loc, false)
 	if err != nil {
-		return nil, MCPEvent{}, httpx.BadRequest("Invalid 'endAt' timestamp; expected RFC3339.")
+		return nil, MCPEvent{}, httpx.BadRequest("Invalid 'endAt' timestamp; expected RFC3339 or YYYY-MM-DDTHH:MM:SS.")
 	}
 	var rsvpDeadline *time.Time
 	if in.RsvpDeadline != nil && *in.RsvpDeadline != "" {
-		t, err := time.Parse(time.RFC3339, *in.RsvpDeadline)
+		t, err := parseMCPTimestampInLocation(*in.RsvpDeadline, loc, false)
 		if err != nil {
-			return nil, MCPEvent{}, httpx.BadRequest("Invalid 'rsvpDeadline' timestamp; expected RFC3339.")
+			return nil, MCPEvent{}, httpx.BadRequest("Invalid 'rsvpDeadline' timestamp; expected RFC3339 or YYYY-MM-DDTHH:MM:SS.")
 		}
 		rsvpDeadline = &t
 	}
@@ -282,7 +298,7 @@ func (f *Feature) mcpEventCreate(ctx context.Context, _ *mcp.CallToolRequest, in
 	if err != nil {
 		return nil, MCPEvent{}, err
 	}
-	return nil, toMCPEvent(res), nil
+	return nil, toMCPEvent(res, loc), nil
 }
 
 func (f *Feature) mcpEventUpdate(ctx context.Context, _ *mcp.CallToolRequest, in EventUpdateInput) (*mcp.CallToolResult, MCPEvent, error) {
@@ -290,6 +306,7 @@ func (f *Feature) mcpEventUpdate(ctx context.Context, _ *mcp.CallToolRequest, in
 	if err != nil {
 		return nil, MCPEvent{}, err
 	}
+	loc := f.service.ResolveParokiLocation(ctx, p.ParokiID)
 	eventID, err := uuid.Parse(in.EventID)
 	if err != nil {
 		return nil, MCPEvent{}, httpx.BadRequest("Invalid event ID.")
@@ -305,23 +322,23 @@ func (f *Feature) mcpEventUpdate(ctx context.Context, _ *mcp.CallToolRequest, in
 		Status:            in.Status,
 	}
 	if in.StartAt != nil {
-		t, err := time.Parse(time.RFC3339, *in.StartAt)
+		t, err := parseMCPTimestampInLocation(*in.StartAt, loc, false)
 		if err != nil {
-			return nil, MCPEvent{}, httpx.BadRequest("Invalid 'startAt' timestamp; expected RFC3339.")
+			return nil, MCPEvent{}, httpx.BadRequest("Invalid 'startAt' timestamp; expected RFC3339 or YYYY-MM-DDTHH:MM:SS.")
 		}
 		req.StartAt = &t
 	}
 	if in.EndAt != nil {
-		t, err := time.Parse(time.RFC3339, *in.EndAt)
+		t, err := parseMCPTimestampInLocation(*in.EndAt, loc, false)
 		if err != nil {
-			return nil, MCPEvent{}, httpx.BadRequest("Invalid 'endAt' timestamp; expected RFC3339.")
+			return nil, MCPEvent{}, httpx.BadRequest("Invalid 'endAt' timestamp; expected RFC3339 or YYYY-MM-DDTHH:MM:SS.")
 		}
 		req.EndAt = &t
 	}
 	if in.RsvpDeadline != nil && *in.RsvpDeadline != "" {
-		t, err := time.Parse(time.RFC3339, *in.RsvpDeadline)
+		t, err := parseMCPTimestampInLocation(*in.RsvpDeadline, loc, false)
 		if err != nil {
-			return nil, MCPEvent{}, httpx.BadRequest("Invalid 'rsvpDeadline' timestamp; expected RFC3339.")
+			return nil, MCPEvent{}, httpx.BadRequest("Invalid 'rsvpDeadline' timestamp; expected RFC3339 or YYYY-MM-DDTHH:MM:SS.")
 		}
 		req.RsvpDeadline = &t
 	}
@@ -330,7 +347,7 @@ func (f *Feature) mcpEventUpdate(ctx context.Context, _ *mcp.CallToolRequest, in
 	if err != nil {
 		return nil, MCPEvent{}, err
 	}
-	return nil, toMCPEvent(res), nil
+	return nil, toMCPEvent(res, loc), nil
 }
 
 func (f *Feature) mcpEventRSVP(ctx context.Context, _ *mcp.CallToolRequest, in EventRSVPInput) (*mcp.CallToolResult, MCPEventRSVP, error) {
@@ -411,10 +428,18 @@ func clampMCPLimit(limit int) int {
 	return limit
 }
 
-func toMCPEvent(e domain.EventResponse) MCPEvent {
+func toMCPEvent(e domain.EventResponse, loc *time.Location) MCPEvent {
+	if loc == nil {
+		loc = time.UTC
+	}
+	var orgID *string
+	if e.OrgID != nil {
+		s := e.OrgID.String()
+		orgID = &s
+	}
 	var deadline *string
 	if e.RsvpDeadline != nil {
-		s := e.RsvpDeadline.UTC().Format(time.RFC3339)
+		s := e.RsvpDeadline.In(loc).Format(time.RFC3339)
 		deadline = &s
 	}
 	var myRsvp *MCPEventRSVP
@@ -430,7 +455,7 @@ func toMCPEvent(e domain.EventResponse) MCPEvent {
 	return MCPEvent{
 		ID:           e.ID.String(),
 		ParokiID:     e.ParokiID.String(),
-		OrgID:        e.OrgID.String(),
+		OrgID:        orgID,
 		OrgCode:      e.OrgCode,
 		OrgName:      e.OrgName,
 		OrgKind:      e.OrgKind,
@@ -438,13 +463,16 @@ func toMCPEvent(e domain.EventResponse) MCPEvent {
 		Title:        e.Title,
 		Description:  e.Description,
 		Location:     e.Location,
-		StartAt:      e.StartAt.UTC().Format(time.RFC3339),
-		EndAt:        e.EndAt.UTC().Format(time.RFC3339),
+		StartAt:      e.StartAt.In(loc).Format(time.RFC3339),
+		EndAt:        e.EndAt.In(loc).Format(time.RFC3339),
+		Timezone:     loc.String(),
 		Visibility:   e.Visibility,
 		RsvpEnabled:  e.RsvpEnabled,
 		RsvpDeadline: deadline,
 		Status:       e.Status,
 		RsvpOpen:     e.RsvpOpen,
+		CanManage:    e.CanManage,
+		CanRsvp:      e.CanRsvp,
 		MyOrgRole:    e.MyOrgRole,
 		MyRsvp:       myRsvp,
 		RsvpSummary:  summary,
@@ -471,18 +499,26 @@ func toMCPEventRSVP(r domain.EventRSVPResponse) MCPEventRSVP {
 	}
 }
 
-func parseMCPTimestamp(raw string, endOfDay bool) (time.Time, error) {
-	if t, err := time.Parse(time.RFC3339, raw); err == nil {
-		return t, nil
+func parseMCPTimestampInLocation(raw string, loc *time.Location, endOfDay bool) (time.Time, error) {
+	if loc == nil {
+		loc = time.UTC
 	}
-	d, err := time.Parse(time.DateOnly, raw)
+	if t, err := time.Parse(time.RFC3339, raw); err == nil {
+		return t.UTC(), nil
+	}
+	for _, layout := range []string{"2006-01-02T15:04:05", "2006-01-02T15:04"} {
+		if t, err := time.ParseInLocation(layout, raw, loc); err == nil {
+			return t.UTC(), nil
+		}
+	}
+	d, err := time.ParseInLocation(time.DateOnly, raw, loc)
 	if err != nil {
 		return time.Time{}, err
 	}
 	if endOfDay {
-		return d.Add(24*time.Hour - time.Nanosecond), nil
+		return d.Add(24*time.Hour - time.Nanosecond).UTC(), nil
 	}
-	return d, nil
+	return d.UTC(), nil
 }
 
 func toMCPEventRSVPSummary(s domain.EventRSVPSummaryResponse) MCPEventRSVPSummary {

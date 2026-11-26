@@ -561,4 +561,15 @@ func TestNewEntClient_EventAndRSVPSchemas(t *testing.T) {
 		Save(ctx)
 	require.Error(t, err)
 	assert.True(t, ent.IsConstraintError(err))
+
+	// Parish-level event with org_id = nil.
+	parishEv, err := client.Event.Create().
+		SetParokiID(parokiID).
+		SetCreatedBy(creatorID).
+		SetTitle("Misa Syukur Paroki").
+		SetStartAt(startAt).
+		SetEndAt(endAt).
+		Save(ctx)
+	require.NoError(t, err)
+	assert.Nil(t, parishEv.OrgID)
 }

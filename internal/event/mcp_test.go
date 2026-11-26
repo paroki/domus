@@ -71,7 +71,7 @@ func (s *EventMCPSuite) SetupTest() {
 	s.refFeature = ref.New(s.client, s.enforcer, s.userFeature)
 	s.orgFeature = org.New(s.client, s.enforcer, s.userFeature, s.refFeature, orgCfg)
 	s.userFeature.SetInviteJoiner(s.orgFeature)
-	s.eventFeature = event.New(s.client, s.enforcer, s.userFeature, s.orgFeature, eventCfg)
+	s.eventFeature = event.New(s.client, s.enforcer, s.userFeature, s.orgFeature, eventCfg, event.WithRef(s.refFeature))
 
 	ctx := context.Background()
 	s.Require().NoError(authz.RegisterFeatures(ctx, s.enforcer, s.userFeature, s.refFeature, s.orgFeature, s.eventFeature))
@@ -402,4 +402,76 @@ func (s *EventMCPSuite) TestEventMCP_DiscoveryToolsAndRBAC() {
 	})
 	s.Contains(closedBody, `"isError":true`)
 	s.Contains(closedBody, "RSVP is closed for this event.")
+}
+
+func (s *EventMCPSuite) TestEventMCPTools_ParishEventAndTimezone() {
+	s.loginCookies("super@paroki.org")
+	superCookies := s.loginCookies("super@paroki.org")
+
+	var keuEnv struct{ Data refdomain.KeuskupanResponse }
+	s.Equal(http.StatusCreated, s.apiJSON(http.MethodPost, "/api/ref/keuskupan", refdomain.CreateKeuskupanRequest{
+		Kode: "kam",
+		Nama: "Keuskupan Agung Makassar",
+	}, superCookies, "", &keuEnv))
+
+	var parEnv struct{ Data refdomain.ParokiResponse }
+	s.Equal(http.StatusCreated, s.apiJSON(http.MethodPost, "/api/ref/paroki", refdomain.CreateParokiRequest{
+		KeuskupanID: keuEnv.Data.ID,
+		Kode:        "p-kam-01",
+		Nama:        "Paroki Hati Kudus",
+		Timezone:    new("Asia/Makassar"),
+	}, superCookies, "", &parEnv))
+	parokiID := parEnv.Data.ID.String()
+
+	s.Equal(http.StatusCreated, s.apiJSON(http.MethodPost, "/api/ref/paroki/"+parokiID+"/members", refdomain.AddParokiMemberRequest{
+		Email: "padmin-tz@paroki.org", Name: "Paroki Admin", Role: "admin",
+	}, superCookies, "", nil))
+	s.Equal(http.StatusCreated, s.apiJSON(http.MethodPost, "/api/ref/paroki/"+parokiID+"/members", refdomain.AddParokiMemberRequest{
+		Email: "umat-tz@paroki.org", Name: "Umat Paroki", Role: "member",
+	}, superCookies, "", nil))
+
+	// Paroki admin creates a parish-level event with local wall-clock YYYY-MM-DDTHH:MM:SS (Asia/Makassar = +08:00).
+	padminCookies := s.loginCookies("padmin-tz@paroki.org")
+	padminSess := s.initMCPSession(padminCookies, parokiID)
+
+	_, createBody := s.mcpPost(padminSess, padminCookies, parokiID, map[string]any{
+		"jsonrpc": "2.0",
+		"id":      1,
+		"method":  "tools/call",
+		"params": map[string]any{
+			"name": "event_create",
+			"arguments": map[string]any{
+				"title":   "Misa Pagi Paroki",
+				"startAt": "2026-12-01T08:00:00",
+				"endAt":   "2026-12-01T09:30:00",
+			},
+		},
+	})
+	s.Contains(createBody, "Misa Pagi Paroki")
+	s.Contains(createBody, `"timezone":"Asia/Makassar"`)
+	s.Contains(createBody, "2026-12-01T08:00:00+08:00")
+	s.Contains(createBody, "2026-12-01T09:30:00+08:00")
+
+	// Verify HTTP API stores UTC (08:00 WITA == 00:00 UTC).
+	var evSearchEnv struct{ Data []event.Event }
+	s.Equal(http.StatusOK, s.apiJSON(http.MethodPost, "/api/events/search", map[string]any{
+		"filter": map[string]any{"parokiWideOnly": true},
+	}, padminCookies, parokiID, &evSearchEnv))
+	s.Require().Len(evSearchEnv.Data, 1)
+	s.Nil(evSearchEnv.Data[0].OrgID)
+	s.Equal("2026-12-01T00:00:00Z", evSearchEnv.Data[0].StartAt.UTC().Format(time.RFC3339))
+
+	// Parish member RSVPs via MCP.
+	umatCookies := s.loginCookies("umat-tz@paroki.org")
+	umatSess := s.initMCPSession(umatCookies, parokiID)
+	_, rsvpBody := s.mcpPost(umatSess, umatCookies, parokiID, map[string]any{
+		"jsonrpc": "2.0",
+		"id":      2,
+		"method":  "tools/call",
+		"params": map[string]any{
+			"name":      "event_rsvp",
+			"arguments": map[string]any{"eventId": evSearchEnv.Data[0].ID.String(), "status": "going"},
+		},
+	})
+	s.Contains(rsvpBody, `"status":"going"`)
 }

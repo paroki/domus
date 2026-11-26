@@ -91,7 +91,7 @@ func newServeCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			eventFeature := event.New(db, enforcer, userFeature, orgFeature, eventCfg)
+			eventFeature := event.New(db, enforcer, userFeature, orgFeature, eventCfg, event.WithRef(refFeature))
 			settingStore := setting.NewStore(db, setting.WithCipher(cipher))
 			agentFeature := agent.New(
 				nil,
