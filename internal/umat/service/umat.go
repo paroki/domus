@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"slices"
 	"strings"
 	"time"
 
@@ -645,23 +646,18 @@ func (s *Service) toUmatDetail(u *ent.Umat) domain.UmatDetailResponse {
 	}
 	sakramen := make([]domain.UmatSakramenResponse, 0, len(u.Edges.Sakramen))
 	for _, sk := range u.Edges.Sakramen {
-		sakramen = append(sakramen, domain.UmatSakramenResponse{
-			ID:               sk.ID,
-			ParokiID:         sk.ParokiID,
-			UmatID:           sk.UmatID,
-			Jenis:            string(sk.Jenis),
-			Tanggal:          sk.Tanggal,
-			KeuskupanID:      sk.KeuskupanID,
-			ParokiSakramenID: sk.ParokiSakramenID,
-			KeuskupanNama:    sk.KeuskupanNama,
-			ParokiNama:       sk.ParokiNama,
-			Buku:             sk.Buku,
-			Nomor:            sk.Nomor,
-			Catatan:          sk.Catatan,
-			CreatedAt:        sk.CreatedAt,
-			UpdatedAt:        sk.UpdatedAt,
-		})
+		sakramen = append(sakramen, toSakramenResponse(sk))
 	}
+	slices.SortFunc(sakramen, func(a, b domain.UmatSakramenResponse) int {
+		ra, rb := sakramenLifecycleRank(a.Jenis), sakramenLifecycleRank(b.Jenis)
+		if ra != rb {
+			if ra < rb {
+				return -1
+			}
+			return 1
+		}
+		return a.CreatedAt.Compare(b.CreatedAt)
+	})
 	return domain.UmatDetailResponse{
 		ID:               u.ID,
 		ParokiID:         u.ParokiID,

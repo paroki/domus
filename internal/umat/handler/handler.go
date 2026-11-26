@@ -49,6 +49,10 @@ func (h *Handler) Register(
 	u.Post("", requireUmatWrite, h.CreateUmat)
 	u.Patch("/:id", requireUmatWrite, h.UpdateUmat)
 	u.Delete("/:id", requireUmatWrite, h.DeleteUmat)
+
+	u.Post("/:id/sakramen", requireUmatWrite, h.UpsertSakramen)
+	u.Patch("/:id/sakramen/:sakramenId", requireUmatWrite, h.UpdateSakramen)
+	u.Delete("/:id/sakramen/:sakramenId", requireUmatWrite, h.DeleteSakramen)
 }
 
 // SearchKeluarga searches Keluarga records in the active paroki.

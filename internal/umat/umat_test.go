@@ -503,3 +503,129 @@ func (s *UmatSuite) TestKeluargaAndUmatCRUD_EncryptionMaskingAndValidations() {
 	s.Request("/api/umat/keluarga/"+kel1.ID.String(), http.MethodDelete, nil)
 	s.NoContent()
 }
+
+func (s *UmatSuite) TestUmatSakramen_UpsertUpdateDeleteAndCanonicalOrdering() {
+	s.loginViaOTP("admin@paroki.org")
+
+	s.Request("/api/ref/keuskupan", http.MethodPost, refdomain.CreateKeuskupanRequest{Kode: "kaj-sak", Nama: "KAJ Sakramen"})
+	s.Created()
+	k1 := testutil.DecodeAs[refdomain.KeuskupanResponse](s).Data
+
+	s.Request("/api/ref/keuskupan", http.MethodPost, refdomain.CreateKeuskupanRequest{Kode: "kbg-sak", Nama: "Keuskupan Bogor"})
+	s.Created()
+	k2 := testutil.DecodeAs[refdomain.KeuskupanResponse](s).Data
+
+	s.Request("/api/ref/paroki", http.MethodPost, refdomain.CreateParokiRequest{
+		KeuskupanID: k1.ID,
+		Kode:        "paroki-domicile",
+		Nama:        "Paroki Domicile",
+	})
+	s.Created()
+	pDomicile := testutil.DecodeAs[refdomain.ParokiResponse](s).Data
+
+	s.Request("/api/ref/paroki", http.MethodPost, refdomain.CreateParokiRequest{
+		KeuskupanID: k2.ID,
+		Kode:        "paroki-baptis",
+		Nama:        "Paroki Baptis Bogor",
+	})
+	s.Created()
+	pOther := testutil.DecodeAs[refdomain.ParokiResponse](s).Data
+
+	umatTrue := true
+	s.Request("/api/ref/paroki/"+pDomicile.ID.String()+"/members", http.MethodPost, refdomain.AddParokiMemberRequest{
+		Email:     "uadmin-sak@paroki.org",
+		Name:      "Umat Admin Sakramen",
+		Role:      "member",
+		UmatAdmin: &umatTrue,
+	})
+	s.Created()
+
+	s.loginViaOTP("uadmin-sak@paroki.org")
+	s.SetHeader("X-Paroki-Id", pDomicile.ID.String())
+	defer s.SetHeader("X-Paroki-Id", "")
+
+	s.Request("/api/umat", http.MethodPost, domain.CreateUmatRequest{
+		Nama:         "Maria Sakramen",
+		JenisKelamin: "wanita",
+	})
+	s.Created()
+	u := testutil.DecodeAs[domain.UmatDetailResponse](s).Data
+
+	// 1. Insert krisma first, then baptis with cross-paroki parokiSakramenId (auto-populates keuskupanId=k2.ID).
+	tglKrisma := "2015-06-20"
+	s.Request("/api/umat/"+u.ID.String()+"/sakramen", http.MethodPost, domain.UpsertUmatSakramenRequest{
+		Jenis:   "krisma",
+		Tanggal: &tglKrisma,
+	})
+	s.OK()
+	krisma := testutil.DecodeAs[domain.UmatSakramenResponse](s).Data
+
+	tglBaptis := "2000-01-15"
+	buku := "B-01"
+	s.Request("/api/umat/"+u.ID.String()+"/sakramen", http.MethodPost, domain.UpsertUmatSakramenRequest{
+		Jenis:            "baptis",
+		Tanggal:          &tglBaptis,
+		ParokiSakramenID: &pOther.ID,
+		Buku:             &buku,
+	})
+	s.OK()
+	baptis := testutil.DecodeAs[domain.UmatSakramenResponse](s).Data
+	s.Require().NotNil(baptis.KeuskupanID)
+	s.Equal(k2.ID, *baptis.KeuskupanID)
+
+	// 2. Idempotent upsert on baptis updates in place and keeps same ID.
+	nomor := "123/2000"
+	s.Request("/api/umat/"+u.ID.String()+"/sakramen", http.MethodPost, domain.UpsertUmatSakramenRequest{
+		Jenis:            "baptis",
+		ParokiSakramenID: &pOther.ID,
+		Nomor:            &nomor,
+	})
+	s.OK()
+	baptisUpdated := testutil.DecodeAs[domain.UmatSakramenResponse](s).Data
+	s.Equal(baptis.ID, baptisUpdated.ID)
+	s.Require().NotNil(baptisUpdated.Nomor)
+	s.Equal("123/2000", *baptisUpdated.Nomor)
+
+	// 3. Mismatched keuskupanId & parokiSakramenId -> 422 VALIDATION_ERROR.
+	s.Request("/api/umat/"+u.ID.String()+"/sakramen", http.MethodPost, domain.UpsertUmatSakramenRequest{
+		Jenis:            "komuni_pertama",
+		KeuskupanID:      &k1.ID,
+		ParokiSakramenID: &pOther.ID,
+	})
+	s.UnprocessableEntity()
+
+	// 4. GET /api/umat/:id returns canonical lifecycle order: baptis before krisma.
+	s.Request("/api/umat/"+u.ID.String(), http.MethodGet, nil)
+	s.OK()
+	detail := testutil.DecodeAs[domain.UmatDetailResponse](s).Data
+	s.Require().Len(detail.Sakramen, 2)
+	s.Equal("baptis", detail.Sakramen[0].Jenis)
+	s.Equal("krisma", detail.Sakramen[1].Jenis)
+
+	// 5. PATCH krisma to jenis=baptis -> 409 UMAT_SAKRAMEN_CONFLICT.
+	baptisJenis := "baptis"
+	s.Request("/api/umat/"+u.ID.String()+"/sakramen/"+krisma.ID.String(), http.MethodPatch, domain.UpdateUmatSakramenRequest{
+		Jenis: &baptisJenis,
+	})
+	s.Conflict()
+	s.Equal("UMAT_SAKRAMEN_CONFLICT", s.GetErrorResponse().Error.Code)
+
+	// 6. PATCH baptis clearing parokiSakramenId via uuid.Nil and buku via "".
+	nilID := uuid.Nil
+	emptyStr := ""
+	s.Request("/api/umat/"+u.ID.String()+"/sakramen/"+baptis.ID.String(), http.MethodPatch, domain.UpdateUmatSakramenRequest{
+		ParokiSakramenID: &nilID,
+		Buku:             &emptyStr,
+	})
+	s.OK()
+	baptisCleared := testutil.DecodeAs[domain.UmatSakramenResponse](s).Data
+	s.Nil(baptisCleared.ParokiSakramenID)
+	s.Nil(baptisCleared.Buku)
+
+	// 7. Physical hard-delete -> 204, then second delete -> 404 UMAT_SAKRAMEN_NOT_FOUND.
+	s.Request("/api/umat/"+u.ID.String()+"/sakramen/"+krisma.ID.String(), http.MethodDelete, nil)
+	s.NoContent()
+	s.Request("/api/umat/"+u.ID.String()+"/sakramen/"+krisma.ID.String(), http.MethodDelete, nil)
+	s.NotFound()
+	s.Equal("UMAT_SAKRAMEN_NOT_FOUND", s.GetErrorResponse().Error.Code)
+}

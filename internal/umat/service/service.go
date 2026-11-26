@@ -19,6 +19,8 @@ type RefReader interface {
 	ValidateKelurahan(ctx context.Context, kecamatanID, kelurahanID uuid.UUID) (*ref.Kelurahan, error)
 	HasActiveLookup(ctx context.Context, parokiID uuid.UUID, category, code string) (bool, error)
 	HasParokiMember(ctx context.Context, parokiID, userID uuid.UUID) (bool, error)
+	GetKeuskupan(ctx context.Context, id uuid.UUID) (*ref.Keuskupan, error)
+	GetParoki(ctx context.Context, parokiID uuid.UUID) (*ref.Paroki, error)
 }
 
 // Service implements business logic for the umat feature.

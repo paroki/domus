@@ -12,6 +12,7 @@ var (
 	ErrNIKConflict       = errx.Conflict("UMAT_NIK_CONFLICT", "NIK is already registered in this paroki.")
 	ErrUserAlreadyLinked = errx.Conflict("UMAT_USER_ALREADY_LINKED", "User is already linked to another umat in this paroki.")
 	ErrInUse             = errx.Conflict("UMAT_IN_USE", "Resource is still in use and cannot be deleted.")
+	ErrSakramenConflict  = errx.Conflict("UMAT_SAKRAMEN_CONFLICT", "Sakramen of this type already exists for this umat.")
 )
 
 // ValidationError constructs a 422 VALIDATION_ERROR domain error for a single field.

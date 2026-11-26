@@ -4042,6 +4042,47 @@
                 },
                 "type": "object"
             },
+            "domain.UpdateUmatSakramenRequest": {
+                "properties": {
+                    "buku": {
+                        "type": "string"
+                    },
+                    "catatan": {
+                        "type": "string"
+                    },
+                    "jenis": {
+                        "enum": [
+                            "baptis",
+                            "komuni_pertama",
+                            "krisma",
+                            "perkawinan",
+                            "imamat",
+                            "perminyakan",
+                            "kematian"
+                        ],
+                        "type": "string"
+                    },
+                    "keuskupanId": {
+                        "type": "string"
+                    },
+                    "keuskupanNama": {
+                        "type": "string"
+                    },
+                    "nomor": {
+                        "type": "string"
+                    },
+                    "parokiNama": {
+                        "type": "string"
+                    },
+                    "parokiSakramenId": {
+                        "type": "string"
+                    },
+                    "tanggal": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.UpdateWilayahRequest": {
                 "properties": {
                     "active": {
@@ -4086,6 +4127,50 @@
                 },
                 "required": [
                     "status"
+                ],
+                "type": "object"
+            },
+            "domain.UpsertUmatSakramenRequest": {
+                "properties": {
+                    "buku": {
+                        "type": "string"
+                    },
+                    "catatan": {
+                        "type": "string"
+                    },
+                    "jenis": {
+                        "enum": [
+                            "baptis",
+                            "komuni_pertama",
+                            "krisma",
+                            "perkawinan",
+                            "imamat",
+                            "perminyakan",
+                            "kematian"
+                        ],
+                        "type": "string"
+                    },
+                    "keuskupanId": {
+                        "type": "string"
+                    },
+                    "keuskupanNama": {
+                        "type": "string"
+                    },
+                    "nomor": {
+                        "type": "string"
+                    },
+                    "parokiNama": {
+                        "type": "string"
+                    },
+                    "parokiSakramenId": {
+                        "type": "string"
+                    },
+                    "tanggal": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "jenis"
                 ],
                 "type": "object"
             },
@@ -5333,6 +5418,20 @@
                 "properties": {
                     "data": {
                         "$ref": "#/components/schemas/domain.UmatDetailResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_UmatSakramenResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.UmatSakramenResponse"
                     },
                     "error": {
                         "$ref": "#/components/schemas/httpx.ErrorPayload"
@@ -15577,6 +15676,290 @@
                     }
                 },
                 "summary": "Update umat",
+                "tags": [
+                    "Umat"
+                ]
+            }
+        },
+        "/umat/{id}/sakramen": {
+            "post": {
+                "description": "Idempotently creates or updates a sacramental history record keyed by (parokiId, umatId, jenis).",
+                "operationId": "upsertUmatSakramen",
+                "parameters": [
+                    {
+                        "description": "Umat UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.UpsertUmatSakramenRequest",
+                                "summary": "body",
+                                "description": "Sakramen payload"
+                            }
+                        }
+                    },
+                    "description": "Sakramen payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_UmatSakramenResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Upsert umat sakramen",
+                "tags": [
+                    "Umat"
+                ]
+            }
+        },
+        "/umat/{id}/sakramen/{sakramenId}": {
+            "delete": {
+                "description": "Hard-deletes a sacramental history record belonging to the umat in the active paroki.",
+                "operationId": "deleteUmatSakramen",
+                "parameters": [
+                    {
+                        "description": "Umat UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Sakramen UUID",
+                        "in": "path",
+                        "name": "sakramenId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Delete umat sakramen",
+                "tags": [
+                    "Umat"
+                ]
+            },
+            "patch": {
+                "description": "Partially updates a sacramental history record belonging to the umat in the active paroki.",
+                "operationId": "updateUmatSakramen",
+                "parameters": [
+                    {
+                        "description": "Umat UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Sakramen UUID",
+                        "in": "path",
+                        "name": "sakramenId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.UpdateUmatSakramenRequest",
+                                "summary": "body",
+                                "description": "Sakramen update payload"
+                            }
+                        }
+                    },
+                    "description": "Sakramen update payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_UmatSakramenResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Update umat sakramen",
                 "tags": [
                     "Umat"
                 ]

@@ -2005,6 +2005,50 @@ export interface paths {
     patch: operations["updateUmat"];
     trace?: never;
   };
+  "/umat/{id}/sakramen": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upsert umat sakramen
+     * @description Idempotently creates or updates a sacramental history record keyed by (parokiId, umatId, jenis).
+     */
+    post: operations["upsertUmatSakramen"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/umat/{id}/sakramen/{sakramenId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Delete umat sakramen
+     * @description Hard-deletes a sacramental history record belonging to the umat in the active paroki.
+     */
+    delete: operations["deleteUmatSakramen"];
+    options?: never;
+    head?: never;
+    /**
+     * Update umat sakramen
+     * @description Partially updates a sacramental history record belonging to the umat in the active paroki.
+     */
+    patch: operations["updateUmatSakramen"];
+    trace?: never;
+  };
   "/users": {
     parameters: {
       query?: never;
@@ -3389,6 +3433,25 @@ export interface components {
       userId?: string;
       wilayahId?: string;
     };
+    "domain.UpdateUmatSakramenRequest": {
+      buku?: string;
+      catatan?: string;
+      /** @enum {string} */
+      jenis?:
+        | "baptis"
+        | "komuni_pertama"
+        | "krisma"
+        | "perkawinan"
+        | "imamat"
+        | "perminyakan"
+        | "kematian";
+      keuskupanId?: string;
+      keuskupanNama?: string;
+      nomor?: string;
+      parokiNama?: string;
+      parokiSakramenId?: string;
+      tanggal?: string;
+    };
     "domain.UpdateWilayahRequest": {
       active?: boolean;
       /** @enum {string} */
@@ -3402,6 +3465,25 @@ export interface components {
       note?: string;
       /** @enum {string} */
       status: "going" | "maybe" | "not_going";
+    };
+    "domain.UpsertUmatSakramenRequest": {
+      buku?: string;
+      catatan?: string;
+      /** @enum {string} */
+      jenis:
+        | "baptis"
+        | "komuni_pertama"
+        | "krisma"
+        | "perkawinan"
+        | "imamat"
+        | "perminyakan"
+        | "kematian";
+      keuskupanId?: string;
+      keuskupanNama?: string;
+      nomor?: string;
+      parokiNama?: string;
+      parokiSakramenId?: string;
+      tanggal?: string;
     };
     "domain.UserAccountResponse": {
       activeParokiId?: string;
@@ -3798,6 +3880,11 @@ export interface components {
     };
     "httpx.Envelope-domain_UmatDetailResponse": {
       data?: components["schemas"]["domain.UmatDetailResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_UmatSakramenResponse": {
+      data?: components["schemas"]["domain.UmatSakramenResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -11981,6 +12068,222 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["httpx.Envelope-domain_UmatDetailResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  upsertUmatSakramen: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Umat UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Sakramen payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UpsertUmatSakramenRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_UmatSakramenResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  deleteUmatSakramen: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Umat UUID */
+        id: string;
+        /** @description Sakramen UUID */
+        sakramenId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  updateUmatSakramen: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Umat UUID */
+        id: string;
+        /** @description Sakramen UUID */
+        sakramenId: string;
+      };
+      cookie?: never;
+    };
+    /** @description Sakramen update payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UpdateUmatSakramenRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_UmatSakramenResponse"];
         };
       };
       /** @description Bad Request */

@@ -341,3 +341,29 @@ type UpdateUmatRequest struct {
 	Disabilitas      *string    `json:"disabilitas,omitempty"`
 	AktivitasSosial  *string    `json:"aktivitasSosial,omitempty"`
 }
+
+// UpsertUmatSakramenRequest upserts a sacramental record keyed by (paroki_id, umat_id, jenis).
+type UpsertUmatSakramenRequest struct {
+	Jenis            string     `json:"jenis" validate:"required,oneof=baptis komuni_pertama krisma perkawinan imamat perminyakan kematian"`
+	Tanggal          *string    `json:"tanggal,omitempty"`
+	KeuskupanID      *uuid.UUID `json:"keuskupanId,omitempty"`
+	ParokiSakramenID *uuid.UUID `json:"parokiSakramenId,omitempty"`
+	KeuskupanNama    *string    `json:"keuskupanNama,omitempty"`
+	ParokiNama       *string    `json:"parokiNama,omitempty"`
+	Buku             *string    `json:"buku,omitempty"`
+	Nomor            *string    `json:"nomor,omitempty"`
+	Catatan          *string    `json:"catatan,omitempty"`
+}
+
+// UpdateUmatSakramenRequest partially updates an existing sacramental record.
+type UpdateUmatSakramenRequest struct {
+	Jenis            *string    `json:"jenis,omitempty" validate:"omitempty,oneof=baptis komuni_pertama krisma perkawinan imamat perminyakan kematian"`
+	Tanggal          *string    `json:"tanggal,omitempty"`
+	KeuskupanID      *uuid.UUID `json:"keuskupanId,omitempty"`
+	ParokiSakramenID *uuid.UUID `json:"parokiSakramenId,omitempty"`
+	KeuskupanNama    *string    `json:"keuskupanNama,omitempty"`
+	ParokiNama       *string    `json:"parokiNama,omitempty"`
+	Buku             *string    `json:"buku,omitempty"`
+	Nomor            *string    `json:"nomor,omitempty"`
+	Catatan          *string    `json:"catatan,omitempty"`
+}
