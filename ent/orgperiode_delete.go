@@ -8,30 +8,30 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/paroki/domus/ent/period"
+	"github.com/paroki/domus/ent/orgperiode"
 	"github.com/paroki/domus/ent/predicate"
 )
 
-// PeriodDelete is the builder for deleting a Period entity.
-type PeriodDelete struct {
+// OrgPeriodeDelete is the builder for deleting a OrgPeriode entity.
+type OrgPeriodeDelete struct {
 	config
 	hooks    []Hook
-	mutation *PeriodMutation
+	mutation *OrgPeriodeMutation
 }
 
-// Where appends a list predicates to the PeriodDelete builder.
-func (_d *PeriodDelete) Where(ps ...predicate.Period) *PeriodDelete {
+// Where appends a list predicates to the OrgPeriodeDelete builder.
+func (_d *OrgPeriodeDelete) Where(ps ...predicate.OrgPeriode) *OrgPeriodeDelete {
 	_d.mutation.Where(ps...)
 	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (_d *PeriodDelete) Exec(ctx context.Context) (int, error) {
+func (_d *OrgPeriodeDelete) Exec(ctx context.Context) (int, error) {
 	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_d *PeriodDelete) ExecX(ctx context.Context) int {
+func (_d *OrgPeriodeDelete) ExecX(ctx context.Context) int {
 	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
@@ -39,8 +39,8 @@ func (_d *PeriodDelete) ExecX(ctx context.Context) int {
 	return n
 }
 
-func (_d *PeriodDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := sqlgraph.NewDeleteSpec(period.Table, sqlgraph.NewFieldSpec(period.FieldID, field.TypeUUID))
+func (_d *OrgPeriodeDelete) sqlExec(ctx context.Context) (int, error) {
+	_spec := sqlgraph.NewDeleteSpec(orgperiode.Table, sqlgraph.NewFieldSpec(orgperiode.FieldID, field.TypeUUID))
 	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -56,32 +56,32 @@ func (_d *PeriodDelete) sqlExec(ctx context.Context) (int, error) {
 	return affected, err
 }
 
-// PeriodDeleteOne is the builder for deleting a single Period entity.
-type PeriodDeleteOne struct {
-	_d *PeriodDelete
+// OrgPeriodeDeleteOne is the builder for deleting a single OrgPeriode entity.
+type OrgPeriodeDeleteOne struct {
+	_d *OrgPeriodeDelete
 }
 
-// Where appends a list predicates to the PeriodDelete builder.
-func (_d *PeriodDeleteOne) Where(ps ...predicate.Period) *PeriodDeleteOne {
+// Where appends a list predicates to the OrgPeriodeDelete builder.
+func (_d *OrgPeriodeDeleteOne) Where(ps ...predicate.OrgPeriode) *OrgPeriodeDeleteOne {
 	_d._d.mutation.Where(ps...)
 	return _d
 }
 
 // Exec executes the deletion query.
-func (_d *PeriodDeleteOne) Exec(ctx context.Context) error {
+func (_d *OrgPeriodeDeleteOne) Exec(ctx context.Context) error {
 	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
 	case n == 0:
-		return &NotFoundError{period.Label}
+		return &NotFoundError{orgperiode.Label}
 	default:
 		return nil
 	}
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_d *PeriodDeleteOne) ExecX(ctx context.Context) {
+func (_d *OrgPeriodeDeleteOne) ExecX(ctx context.Context) {
 	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}

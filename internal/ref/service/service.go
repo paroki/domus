@@ -73,19 +73,6 @@ func (s *Service) ValidateLingkunganInParoki(ctx context.Context, parokiID, ling
 	return &res, nil
 }
 
-// ValidatePeriodInParoki returns a non-deleted Period if it belongs to parokiID.
-func (s *Service) ValidatePeriodInParoki(ctx context.Context, parokiID, periodID uuid.UUID) (*domain.PeriodResponse, error) {
-	p, err := s.repo.FindPeriodInParoki(ctx, parokiID, periodID)
-	if ent.IsNotFound(err) {
-		return nil, domain.ErrPeriodNotFound
-	}
-	if err != nil {
-		return nil, err
-	}
-	res := toPeriodResponse(p)
-	return &res, nil
-}
-
 // EnsureParokiMember idempotently ensures userID is a member of parokiID.
 func (s *Service) EnsureParokiMember(ctx context.Context, parokiID, userID uuid.UUID) (*domain.ParokiMemberResponse, error) {
 	if _, err := s.repo.FindParokiByID(ctx, parokiID); ent.IsNotFound(err) {
@@ -271,21 +258,5 @@ func toLingkunganResponse(l *ent.Lingkungan) domain.LingkunganResponse {
 		Active:       l.Active,
 		CreatedAt:    l.CreatedAt,
 		UpdatedAt:    l.UpdatedAt,
-	}
-}
-
-func toPeriodResponse(p *ent.Period) domain.PeriodResponse {
-	return domain.PeriodResponse{
-		ID:        p.ID,
-		ParokiID:  p.ParokiID,
-		Type:      string(p.Type),
-		Code:      p.Code,
-		Name:      p.Name,
-		StartDate: p.StartDate,
-		EndDate:   p.EndDate,
-		Status:    string(p.Status),
-		IsCurrent: p.IsCurrent,
-		CreatedAt: p.CreatedAt,
-		UpdatedAt: p.UpdatedAt,
 	}
 }

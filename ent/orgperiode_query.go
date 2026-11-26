@@ -12,58 +12,58 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/paroki/domus/ent/paroki"
-	"github.com/paroki/domus/ent/period"
+	"github.com/paroki/domus/ent/organization"
+	"github.com/paroki/domus/ent/orgperiode"
 	"github.com/paroki/domus/ent/predicate"
 )
 
-// PeriodQuery is the builder for querying Period entities.
-type PeriodQuery struct {
+// OrgPeriodeQuery is the builder for querying OrgPeriode entities.
+type OrgPeriodeQuery struct {
 	config
-	ctx        *QueryContext
-	order      []period.OrderOption
-	inters     []Interceptor
-	predicates []predicate.Period
-	withParoki *ParokiQuery
+	ctx              *QueryContext
+	order            []orgperiode.OrderOption
+	inters           []Interceptor
+	predicates       []predicate.OrgPeriode
+	withOrganization *OrganizationQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
 }
 
-// Where adds a new predicate for the PeriodQuery builder.
-func (_q *PeriodQuery) Where(ps ...predicate.Period) *PeriodQuery {
+// Where adds a new predicate for the OrgPeriodeQuery builder.
+func (_q *OrgPeriodeQuery) Where(ps ...predicate.OrgPeriode) *OrgPeriodeQuery {
 	_q.predicates = append(_q.predicates, ps...)
 	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (_q *PeriodQuery) Limit(limit int) *PeriodQuery {
+func (_q *OrgPeriodeQuery) Limit(limit int) *OrgPeriodeQuery {
 	_q.ctx.Limit = &limit
 	return _q
 }
 
 // Offset to start from.
-func (_q *PeriodQuery) Offset(offset int) *PeriodQuery {
+func (_q *OrgPeriodeQuery) Offset(offset int) *OrgPeriodeQuery {
 	_q.ctx.Offset = &offset
 	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (_q *PeriodQuery) Unique(unique bool) *PeriodQuery {
+func (_q *OrgPeriodeQuery) Unique(unique bool) *OrgPeriodeQuery {
 	_q.ctx.Unique = &unique
 	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (_q *PeriodQuery) Order(o ...period.OrderOption) *PeriodQuery {
+func (_q *OrgPeriodeQuery) Order(o ...orgperiode.OrderOption) *OrgPeriodeQuery {
 	_q.order = append(_q.order, o...)
 	return _q
 }
 
-// QueryParoki chains the current query on the "paroki" edge.
-func (_q *PeriodQuery) QueryParoki() *ParokiQuery {
-	query := (&ParokiClient{config: _q.config}).Query()
+// QueryOrganization chains the current query on the "organization" edge.
+func (_q *OrgPeriodeQuery) QueryOrganization() *OrganizationQuery {
+	query := (&OrganizationClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -73,9 +73,9 @@ func (_q *PeriodQuery) QueryParoki() *ParokiQuery {
 			return nil, err
 		}
 		step := sqlgraph.NewStep(
-			sqlgraph.From(period.Table, period.FieldID, selector),
-			sqlgraph.To(paroki.Table, paroki.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, period.ParokiTable, period.ParokiColumn),
+			sqlgraph.From(orgperiode.Table, orgperiode.FieldID, selector),
+			sqlgraph.To(organization.Table, organization.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, orgperiode.OrganizationTable, orgperiode.OrganizationColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -83,21 +83,21 @@ func (_q *PeriodQuery) QueryParoki() *ParokiQuery {
 	return query
 }
 
-// First returns the first Period entity from the query.
-// Returns a *NotFoundError when no Period was found.
-func (_q *PeriodQuery) First(ctx context.Context) (*Period, error) {
+// First returns the first OrgPeriode entity from the query.
+// Returns a *NotFoundError when no OrgPeriode was found.
+func (_q *OrgPeriodeQuery) First(ctx context.Context) (*OrgPeriode, error) {
 	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
-		return nil, &NotFoundError{period.Label}
+		return nil, &NotFoundError{orgperiode.Label}
 	}
 	return nodes[0], nil
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (_q *PeriodQuery) FirstX(ctx context.Context) *Period {
+func (_q *OrgPeriodeQuery) FirstX(ctx context.Context) *OrgPeriode {
 	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -105,22 +105,22 @@ func (_q *PeriodQuery) FirstX(ctx context.Context) *Period {
 	return node
 }
 
-// FirstID returns the first Period ID from the query.
-// Returns a *NotFoundError when no Period ID was found.
-func (_q *PeriodQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+// FirstID returns the first OrgPeriode ID from the query.
+// Returns a *NotFoundError when no OrgPeriode ID was found.
+func (_q *OrgPeriodeQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
 	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
-		err = &NotFoundError{period.Label}
+		err = &NotFoundError{orgperiode.Label}
 		return
 	}
 	return ids[0], nil
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (_q *PeriodQuery) FirstIDX(ctx context.Context) uuid.UUID {
+func (_q *OrgPeriodeQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -128,10 +128,10 @@ func (_q *PeriodQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	return id
 }
 
-// Only returns a single Period entity found by the query, ensuring it only returns one.
-// Returns a *NotSingularError when more than one Period entity is found.
-// Returns a *NotFoundError when no Period entities are found.
-func (_q *PeriodQuery) Only(ctx context.Context) (*Period, error) {
+// Only returns a single OrgPeriode entity found by the query, ensuring it only returns one.
+// Returns a *NotSingularError when more than one OrgPeriode entity is found.
+// Returns a *NotFoundError when no OrgPeriode entities are found.
+func (_q *OrgPeriodeQuery) Only(ctx context.Context) (*OrgPeriode, error) {
 	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
@@ -140,14 +140,14 @@ func (_q *PeriodQuery) Only(ctx context.Context) (*Period, error) {
 	case 1:
 		return nodes[0], nil
 	case 0:
-		return nil, &NotFoundError{period.Label}
+		return nil, &NotFoundError{orgperiode.Label}
 	default:
-		return nil, &NotSingularError{period.Label}
+		return nil, &NotSingularError{orgperiode.Label}
 	}
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (_q *PeriodQuery) OnlyX(ctx context.Context) *Period {
+func (_q *OrgPeriodeQuery) OnlyX(ctx context.Context) *OrgPeriode {
 	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
@@ -155,10 +155,10 @@ func (_q *PeriodQuery) OnlyX(ctx context.Context) *Period {
 	return node
 }
 
-// OnlyID is like Only, but returns the only Period ID in the query.
-// Returns a *NotSingularError when more than one Period ID is found.
+// OnlyID is like Only, but returns the only OrgPeriode ID in the query.
+// Returns a *NotSingularError when more than one OrgPeriode ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (_q *PeriodQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+func (_q *OrgPeriodeQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
 	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
@@ -167,15 +167,15 @@ func (_q *PeriodQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	case 1:
 		id = ids[0]
 	case 0:
-		err = &NotFoundError{period.Label}
+		err = &NotFoundError{orgperiode.Label}
 	default:
-		err = &NotSingularError{period.Label}
+		err = &NotSingularError{orgperiode.Label}
 	}
 	return
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (_q *PeriodQuery) OnlyIDX(ctx context.Context) uuid.UUID {
+func (_q *OrgPeriodeQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -183,18 +183,18 @@ func (_q *PeriodQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	return id
 }
 
-// All executes the query and returns a list of Periods.
-func (_q *PeriodQuery) All(ctx context.Context) ([]*Period, error) {
+// All executes the query and returns a list of OrgPeriodes.
+func (_q *OrgPeriodeQuery) All(ctx context.Context) ([]*OrgPeriode, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
-	qr := querierAll[[]*Period, *PeriodQuery]()
-	return withInterceptors[[]*Period](ctx, _q, qr, _q.inters)
+	qr := querierAll[[]*OrgPeriode, *OrgPeriodeQuery]()
+	return withInterceptors[[]*OrgPeriode](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (_q *PeriodQuery) AllX(ctx context.Context) []*Period {
+func (_q *OrgPeriodeQuery) AllX(ctx context.Context) []*OrgPeriode {
 	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
@@ -202,20 +202,20 @@ func (_q *PeriodQuery) AllX(ctx context.Context) []*Period {
 	return nodes
 }
 
-// IDs executes the query and returns a list of Period IDs.
-func (_q *PeriodQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
+// IDs executes the query and returns a list of OrgPeriode IDs.
+func (_q *OrgPeriodeQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 	if _q.ctx.Unique == nil && _q.path != nil {
 		_q.Unique(true)
 	}
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
-	if err = _q.Select(period.FieldID).Scan(ctx, &ids); err != nil {
+	if err = _q.Select(orgperiode.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (_q *PeriodQuery) IDsX(ctx context.Context) []uuid.UUID {
+func (_q *OrgPeriodeQuery) IDsX(ctx context.Context) []uuid.UUID {
 	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -224,16 +224,16 @@ func (_q *PeriodQuery) IDsX(ctx context.Context) []uuid.UUID {
 }
 
 // Count returns the count of the given query.
-func (_q *PeriodQuery) Count(ctx context.Context) (int, error) {
+func (_q *OrgPeriodeQuery) Count(ctx context.Context) (int, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, _q, querierCount[*PeriodQuery](), _q.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*OrgPeriodeQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (_q *PeriodQuery) CountX(ctx context.Context) int {
+func (_q *OrgPeriodeQuery) CountX(ctx context.Context) int {
 	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
@@ -242,7 +242,7 @@ func (_q *PeriodQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (_q *PeriodQuery) Exist(ctx context.Context) (bool, error) {
+func (_q *OrgPeriodeQuery) Exist(ctx context.Context) (bool, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
 	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
@@ -255,7 +255,7 @@ func (_q *PeriodQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (_q *PeriodQuery) ExistX(ctx context.Context) bool {
+func (_q *OrgPeriodeQuery) ExistX(ctx context.Context) bool {
 	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
@@ -263,33 +263,33 @@ func (_q *PeriodQuery) ExistX(ctx context.Context) bool {
 	return exist
 }
 
-// Clone returns a duplicate of the PeriodQuery builder, including all associated steps. It can be
+// Clone returns a duplicate of the OrgPeriodeQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (_q *PeriodQuery) Clone() *PeriodQuery {
+func (_q *OrgPeriodeQuery) Clone() *OrgPeriodeQuery {
 	if _q == nil {
 		return nil
 	}
-	return &PeriodQuery{
-		config:     _q.config,
-		ctx:        _q.ctx.Clone(),
-		order:      append([]period.OrderOption{}, _q.order...),
-		inters:     append([]Interceptor{}, _q.inters...),
-		predicates: append([]predicate.Period{}, _q.predicates...),
-		withParoki: _q.withParoki.Clone(),
+	return &OrgPeriodeQuery{
+		config:           _q.config,
+		ctx:              _q.ctx.Clone(),
+		order:            append([]orgperiode.OrderOption{}, _q.order...),
+		inters:           append([]Interceptor{}, _q.inters...),
+		predicates:       append([]predicate.OrgPeriode{}, _q.predicates...),
+		withOrganization: _q.withOrganization.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
 	}
 }
 
-// WithParoki tells the query-builder to eager-load the nodes that are connected to
-// the "paroki" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *PeriodQuery) WithParoki(opts ...func(*ParokiQuery)) *PeriodQuery {
-	query := (&ParokiClient{config: _q.config}).Query()
+// WithOrganization tells the query-builder to eager-load the nodes that are connected to
+// the "organization" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *OrgPeriodeQuery) WithOrganization(opts ...func(*OrganizationQuery)) *OrgPeriodeQuery {
+	query := (&OrganizationClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	_q.withParoki = query
+	_q.withOrganization = query
 	return _q
 }
 
@@ -303,15 +303,15 @@ func (_q *PeriodQuery) WithParoki(opts ...func(*ParokiQuery)) *PeriodQuery {
 //		Count int `json:"count,omitempty"`
 //	}
 //
-//	client.Period.Query().
-//		GroupBy(period.FieldCreatedAt).
+//	client.OrgPeriode.Query().
+//		GroupBy(orgperiode.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (_q *PeriodQuery) GroupBy(field string, fields ...string) *PeriodGroupBy {
+func (_q *OrgPeriodeQuery) GroupBy(field string, fields ...string) *OrgPeriodeGroupBy {
 	_q.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &PeriodGroupBy{build: _q}
+	grbuild := &OrgPeriodeGroupBy{build: _q}
 	grbuild.flds = &_q.ctx.Fields
-	grbuild.label = period.Label
+	grbuild.label = orgperiode.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
 }
@@ -325,23 +325,23 @@ func (_q *PeriodQuery) GroupBy(field string, fields ...string) *PeriodGroupBy {
 //		CreatedAt time.Time `json:"created_at,omitempty"`
 //	}
 //
-//	client.Period.Query().
-//		Select(period.FieldCreatedAt).
+//	client.OrgPeriode.Query().
+//		Select(orgperiode.FieldCreatedAt).
 //		Scan(ctx, &v)
-func (_q *PeriodQuery) Select(fields ...string) *PeriodSelect {
+func (_q *OrgPeriodeQuery) Select(fields ...string) *OrgPeriodeSelect {
 	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
-	sbuild := &PeriodSelect{PeriodQuery: _q}
-	sbuild.label = period.Label
+	sbuild := &OrgPeriodeSelect{OrgPeriodeQuery: _q}
+	sbuild.label = orgperiode.Label
 	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
-// Aggregate returns a PeriodSelect configured with the given aggregations.
-func (_q *PeriodQuery) Aggregate(fns ...AggregateFunc) *PeriodSelect {
+// Aggregate returns a OrgPeriodeSelect configured with the given aggregations.
+func (_q *OrgPeriodeQuery) Aggregate(fns ...AggregateFunc) *OrgPeriodeSelect {
 	return _q.Select().Aggregate(fns...)
 }
 
-func (_q *PeriodQuery) prepareQuery(ctx context.Context) error {
+func (_q *OrgPeriodeQuery) prepareQuery(ctx context.Context) error {
 	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
@@ -353,7 +353,7 @@ func (_q *PeriodQuery) prepareQuery(ctx context.Context) error {
 		}
 	}
 	for _, f := range _q.ctx.Fields {
-		if !period.ValidColumn(f) {
+		if !orgperiode.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
@@ -367,19 +367,19 @@ func (_q *PeriodQuery) prepareQuery(ctx context.Context) error {
 	return nil
 }
 
-func (_q *PeriodQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Period, error) {
+func (_q *OrgPeriodeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*OrgPeriode, error) {
 	var (
-		nodes       = []*Period{}
+		nodes       = []*OrgPeriode{}
 		_spec       = _q.querySpec()
 		loadedTypes = [1]bool{
-			_q.withParoki != nil,
+			_q.withOrganization != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
-		return (*Period).scanValues(nil, columns)
+		return (*OrgPeriode).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &Period{config: _q.config}
+		node := &OrgPeriode{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -393,20 +393,20 @@ func (_q *PeriodQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Perio
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := _q.withParoki; query != nil {
-		if err := _q.loadParoki(ctx, query, nodes, nil,
-			func(n *Period, e *Paroki) { n.Edges.Paroki = e }); err != nil {
+	if query := _q.withOrganization; query != nil {
+		if err := _q.loadOrganization(ctx, query, nodes, nil,
+			func(n *OrgPeriode, e *Organization) { n.Edges.Organization = e }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (_q *PeriodQuery) loadParoki(ctx context.Context, query *ParokiQuery, nodes []*Period, init func(*Period), assign func(*Period, *Paroki)) error {
+func (_q *OrgPeriodeQuery) loadOrganization(ctx context.Context, query *OrganizationQuery, nodes []*OrgPeriode, init func(*OrgPeriode), assign func(*OrgPeriode, *Organization)) error {
 	ids := make([]uuid.UUID, 0, len(nodes))
-	nodeids := make(map[uuid.UUID][]*Period)
+	nodeids := make(map[uuid.UUID][]*OrgPeriode)
 	for i := range nodes {
-		fk := nodes[i].ParokiID
+		fk := nodes[i].OrgID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -415,7 +415,7 @@ func (_q *PeriodQuery) loadParoki(ctx context.Context, query *ParokiQuery, nodes
 	if len(ids) == 0 {
 		return nil
 	}
-	query.Where(paroki.IDIn(ids...))
+	query.Where(organization.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
@@ -423,7 +423,7 @@ func (_q *PeriodQuery) loadParoki(ctx context.Context, query *ParokiQuery, nodes
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "paroki_id" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "org_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -432,7 +432,7 @@ func (_q *PeriodQuery) loadParoki(ctx context.Context, query *ParokiQuery, nodes
 	return nil
 }
 
-func (_q *PeriodQuery) sqlCount(ctx context.Context) (int, error) {
+func (_q *OrgPeriodeQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
 	_spec.Node.Columns = _q.ctx.Fields
 	if len(_q.ctx.Fields) > 0 {
@@ -441,8 +441,8 @@ func (_q *PeriodQuery) sqlCount(ctx context.Context) (int, error) {
 	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (_q *PeriodQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(period.Table, period.Columns, sqlgraph.NewFieldSpec(period.FieldID, field.TypeUUID))
+func (_q *OrgPeriodeQuery) querySpec() *sqlgraph.QuerySpec {
+	_spec := sqlgraph.NewQuerySpec(orgperiode.Table, orgperiode.Columns, sqlgraph.NewFieldSpec(orgperiode.FieldID, field.TypeUUID))
 	_spec.From = _q.sql
 	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
@@ -451,14 +451,14 @@ func (_q *PeriodQuery) querySpec() *sqlgraph.QuerySpec {
 	}
 	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
-		_spec.Node.Columns = append(_spec.Node.Columns, period.FieldID)
+		_spec.Node.Columns = append(_spec.Node.Columns, orgperiode.FieldID)
 		for i := range fields {
-			if fields[i] != period.FieldID {
+			if fields[i] != orgperiode.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if _q.withParoki != nil {
-			_spec.Node.AddColumnOnce(period.FieldParokiID)
+		if _q.withOrganization != nil {
+			_spec.Node.AddColumnOnce(orgperiode.FieldOrgID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {
@@ -484,12 +484,12 @@ func (_q *PeriodQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (_q *PeriodQuery) sqlQuery(ctx context.Context) *sql.Selector {
+func (_q *OrgPeriodeQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(_q.driver.Dialect())
-	t1 := builder.Table(period.Table)
+	t1 := builder.Table(orgperiode.Table)
 	columns := _q.ctx.Fields
 	if len(columns) == 0 {
-		columns = period.Columns
+		columns = orgperiode.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
 	if _q.sql != nil {
@@ -516,28 +516,28 @@ func (_q *PeriodQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	return selector
 }
 
-// PeriodGroupBy is the group-by builder for Period entities.
-type PeriodGroupBy struct {
+// OrgPeriodeGroupBy is the group-by builder for OrgPeriode entities.
+type OrgPeriodeGroupBy struct {
 	selector
-	build *PeriodQuery
+	build *OrgPeriodeQuery
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (_g *PeriodGroupBy) Aggregate(fns ...AggregateFunc) *PeriodGroupBy {
+func (_g *OrgPeriodeGroupBy) Aggregate(fns ...AggregateFunc) *OrgPeriodeGroupBy {
 	_g.fns = append(_g.fns, fns...)
 	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_g *PeriodGroupBy) Scan(ctx context.Context, v any) error {
+func (_g *OrgPeriodeGroupBy) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
 	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*PeriodQuery, *PeriodGroupBy](ctx, _g.build, _g, _g.build.inters, v)
+	return scanWithInterceptors[*OrgPeriodeQuery, *OrgPeriodeGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (_g *PeriodGroupBy) sqlScan(ctx context.Context, root *PeriodQuery, v any) error {
+func (_g *OrgPeriodeGroupBy) sqlScan(ctx context.Context, root *OrgPeriodeQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
 	aggregation := make([]string, 0, len(_g.fns))
 	for _, fn := range _g.fns {
@@ -564,28 +564,28 @@ func (_g *PeriodGroupBy) sqlScan(ctx context.Context, root *PeriodQuery, v any) 
 	return sql.ScanSlice(rows, v)
 }
 
-// PeriodSelect is the builder for selecting fields of Period entities.
-type PeriodSelect struct {
-	*PeriodQuery
+// OrgPeriodeSelect is the builder for selecting fields of OrgPeriode entities.
+type OrgPeriodeSelect struct {
+	*OrgPeriodeQuery
 	selector
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (_s *PeriodSelect) Aggregate(fns ...AggregateFunc) *PeriodSelect {
+func (_s *OrgPeriodeSelect) Aggregate(fns ...AggregateFunc) *OrgPeriodeSelect {
 	_s.fns = append(_s.fns, fns...)
 	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_s *PeriodSelect) Scan(ctx context.Context, v any) error {
+func (_s *OrgPeriodeSelect) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
 	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*PeriodQuery, *PeriodSelect](ctx, _s.PeriodQuery, _s, _s.inters, v)
+	return scanWithInterceptors[*OrgPeriodeQuery, *OrgPeriodeSelect](ctx, _s.OrgPeriodeQuery, _s, _s.inters, v)
 }
 
-func (_s *PeriodSelect) sqlScan(ctx context.Context, root *PeriodQuery, v any) error {
+func (_s *OrgPeriodeSelect) sqlScan(ctx context.Context, root *OrgPeriodeQuery, v any) error {
 	selector := root.sqlQuery(ctx)
 	aggregation := make([]string, 0, len(_s.fns))
 	for _, fn := range _s.fns {

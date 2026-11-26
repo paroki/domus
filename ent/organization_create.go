@@ -14,6 +14,7 @@ import (
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orginvite"
 	"github.com/paroki/domus/ent/orgmember"
+	"github.com/paroki/domus/ent/orgperiode"
 )
 
 // OrganizationCreate is the builder for creating a Organization entity.
@@ -229,6 +230,21 @@ func (_c *OrganizationCreate) AddInvites(v ...*OrgInvite) *OrganizationCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddInviteIDs(ids...)
+}
+
+// AddPeriodeIDs adds the "periode" edge to the OrgPeriode entity by IDs.
+func (_c *OrganizationCreate) AddPeriodeIDs(ids ...uuid.UUID) *OrganizationCreate {
+	_c.mutation.AddPeriodeIDs(ids...)
+	return _c
+}
+
+// AddPeriode adds the "periode" edges to the OrgPeriode entity.
+func (_c *OrganizationCreate) AddPeriode(v ...*OrgPeriode) *OrganizationCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddPeriodeIDs(ids...)
 }
 
 // Mutation returns the OrganizationMutation object of the builder.
@@ -463,6 +479,22 @@ func (_c *OrganizationCreate) createSpec() (*Organization, *sqlgraph.CreateSpec)
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(orginvite.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.PeriodeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.PeriodeTable,
+			Columns: []string{organization.PeriodeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgperiode.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

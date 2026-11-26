@@ -82,20 +82,6 @@ func (_c *OrgInviteCreate) SetNillableRole(v *orginvite.Role) *OrgInviteCreate {
 	return _c
 }
 
-// SetDefaultPosition sets the "default_position" field.
-func (_c *OrgInviteCreate) SetDefaultPosition(v string) *OrgInviteCreate {
-	_c.mutation.SetDefaultPosition(v)
-	return _c
-}
-
-// SetNillableDefaultPosition sets the "default_position" field if the given value is not nil.
-func (_c *OrgInviteCreate) SetNillableDefaultPosition(v *string) *OrgInviteCreate {
-	if v != nil {
-		_c.SetDefaultPosition(*v)
-	}
-	return _c
-}
-
 // SetMaxUses sets the "max_uses" field.
 func (_c *OrgInviteCreate) SetMaxUses(v int) *OrgInviteCreate {
 	_c.mutation.SetMaxUses(v)
@@ -328,10 +314,6 @@ func (_c *OrgInviteCreate) createSpec() (*OrgInvite, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Role(); ok {
 		_spec.SetField(orginvite.FieldRole, field.TypeEnum, value)
 		_node.Role = value
-	}
-	if value, ok := _c.mutation.DefaultPosition(); ok {
-		_spec.SetField(orginvite.FieldDefaultPosition, field.TypeString, value)
-		_node.DefaultPosition = &value
 	}
 	if value, ok := _c.mutation.MaxUses(); ok {
 		_spec.SetField(orginvite.FieldMaxUses, field.TypeInt, value)

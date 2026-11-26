@@ -48,6 +48,8 @@ const (
 	EdgeMembers = "members"
 	// EdgeInvites holds the string denoting the invites edge name in mutations.
 	EdgeInvites = "invites"
+	// EdgePeriode holds the string denoting the periode edge name in mutations.
+	EdgePeriode = "periode"
 	// Table holds the table name of the organization in the database.
 	Table = "organizations"
 	// ParentTable is the table that holds the parent relation/edge.
@@ -72,6 +74,13 @@ const (
 	InvitesInverseTable = "org_invites"
 	// InvitesColumn is the table column denoting the invites relation/edge.
 	InvitesColumn = "org_id"
+	// PeriodeTable is the table that holds the periode relation/edge.
+	PeriodeTable = "org_periode"
+	// PeriodeInverseTable is the table name for the OrgPeriode entity.
+	// It exists in this package in order to avoid circular dependency with the "orgperiode" package.
+	PeriodeInverseTable = "org_periode"
+	// PeriodeColumn is the table column denoting the periode relation/edge.
+	PeriodeColumn = "org_id"
 )
 
 // Columns holds all SQL columns for organization fields.
@@ -265,6 +274,20 @@ func ByInvites(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newInvitesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByPeriodeCount orders the results by periode count.
+func ByPeriodeCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newPeriodeStep(), opts...)
+	}
+}
+
+// ByPeriode orders the results by periode terms.
+func ByPeriode(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPeriodeStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newParentStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -291,5 +314,12 @@ func newInvitesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(InvitesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, InvitesTable, InvitesColumn),
+	)
+}
+func newPeriodeStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PeriodeInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, PeriodeTable, PeriodeColumn),
 	)
 }

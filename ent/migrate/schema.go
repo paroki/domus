@@ -644,7 +644,6 @@ var (
 		{Name: "paroki_id", Type: field.TypeUUID},
 		{Name: "code", Type: field.TypeString},
 		{Name: "role", Type: field.TypeEnum, Enums: []string{"admin", "member"}, Default: "member"},
-		{Name: "default_position", Type: field.TypeString, Nullable: true},
 		{Name: "max_uses", Type: field.TypeInt, Nullable: true},
 		{Name: "used_count", Type: field.TypeInt, Default: 0},
 		{Name: "expires_at", Type: field.TypeTime},
@@ -660,7 +659,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "org_invites_organizations_invites",
-				Columns:    []*schema.Column{OrgInvitesColumns[12]},
+				Columns:    []*schema.Column{OrgInvitesColumns[11]},
 				RefColumns: []*schema.Column{OrganizationsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -674,12 +673,12 @@ var (
 			{
 				Name:    "orginvite_org_id_created_at",
 				Unique:  false,
-				Columns: []*schema.Column{OrgInvitesColumns[12], OrgInvitesColumns[1]},
+				Columns: []*schema.Column{OrgInvitesColumns[11], OrgInvitesColumns[1]},
 			},
 			{
 				Name:    "orginvite_paroki_id_org_id",
 				Unique:  false,
-				Columns: []*schema.Column{OrgInvitesColumns[3], OrgInvitesColumns[12]},
+				Columns: []*schema.Column{OrgInvitesColumns[3], OrgInvitesColumns[11]},
 			},
 		},
 	}
@@ -691,10 +690,6 @@ var (
 		{Name: "paroki_id", Type: field.TypeUUID},
 		{Name: "user_id", Type: field.TypeUUID},
 		{Name: "role", Type: field.TypeEnum, Enums: []string{"admin", "member"}, Default: "member"},
-		{Name: "position", Type: field.TypeString, Nullable: true},
-		{Name: "period_id", Type: field.TypeUUID, Nullable: true},
-		{Name: "start_date", Type: field.TypeString, Nullable: true},
-		{Name: "end_date", Type: field.TypeString, Nullable: true},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "inactive"}, Default: "active"},
 		{Name: "org_id", Type: field.TypeUUID},
 	}
@@ -706,7 +701,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "org_members_organizations_members",
-				Columns:    []*schema.Column{OrgMembersColumns[11]},
+				Columns:    []*schema.Column{OrgMembersColumns[7]},
 				RefColumns: []*schema.Column{OrganizationsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -715,7 +710,7 @@ var (
 			{
 				Name:    "orgmember_org_id_user_id",
 				Unique:  true,
-				Columns: []*schema.Column{OrgMembersColumns[11], OrgMembersColumns[4]},
+				Columns: []*schema.Column{OrgMembersColumns[7], OrgMembersColumns[4]},
 			},
 			{
 				Name:    "orgmember_paroki_id_user_id",
@@ -725,7 +720,53 @@ var (
 			{
 				Name:    "orgmember_org_id_role_status",
 				Unique:  false,
-				Columns: []*schema.Column{OrgMembersColumns[11], OrgMembersColumns[5], OrgMembersColumns[10]},
+				Columns: []*schema.Column{OrgMembersColumns[7], OrgMembersColumns[5], OrgMembersColumns[6]},
+			},
+		},
+	}
+	// OrgPeriodeColumns holds the columns for the "org_periode" table.
+	OrgPeriodeColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "paroki_id", Type: field.TypeUUID},
+		{Name: "kode", Type: field.TypeString},
+		{Name: "nama", Type: field.TypeString},
+		{Name: "tanggal_mulai", Type: field.TypeString},
+		{Name: "tanggal_selesai", Type: field.TypeString},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"open", "closed"}, Default: "open"},
+		{Name: "is_current", Type: field.TypeBool, Default: false},
+		{Name: "org_id", Type: field.TypeUUID},
+	}
+	// OrgPeriodeTable holds the schema information for the "org_periode" table.
+	OrgPeriodeTable = &schema.Table{
+		Name:       "org_periode",
+		Columns:    OrgPeriodeColumns,
+		PrimaryKey: []*schema.Column{OrgPeriodeColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "org_periode_organizations_periode",
+				Columns:    []*schema.Column{OrgPeriodeColumns[11]},
+				RefColumns: []*schema.Column{OrganizationsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "orgperiode_org_id_kode",
+				Unique:  true,
+				Columns: []*schema.Column{OrgPeriodeColumns[11], OrgPeriodeColumns[5]},
+			},
+			{
+				Name:    "orgperiode_org_id_is_current",
+				Unique:  false,
+				Columns: []*schema.Column{OrgPeriodeColumns[11], OrgPeriodeColumns[10]},
+			},
+			{
+				Name:    "orgperiode_paroki_id_org_id",
+				Unique:  false,
+				Columns: []*schema.Column{OrgPeriodeColumns[4], OrgPeriodeColumns[11]},
 			},
 		},
 	}
@@ -910,47 +951,6 @@ var (
 				Name:    "parokimember_user_id",
 				Unique:  false,
 				Columns: []*schema.Column{ParokiMembersColumns[3]},
-			},
-		},
-	}
-	// PeriodsColumns holds the columns for the "periods" table.
-	PeriodsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeUUID},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
-		{Name: "type", Type: field.TypeEnum, Enums: []string{"fiscal", "liturgical"}, Default: "fiscal"},
-		{Name: "code", Type: field.TypeString},
-		{Name: "name", Type: field.TypeString},
-		{Name: "start_date", Type: field.TypeString},
-		{Name: "end_date", Type: field.TypeString},
-		{Name: "status", Type: field.TypeEnum, Enums: []string{"open", "closed"}, Default: "open"},
-		{Name: "is_current", Type: field.TypeBool, Default: false},
-		{Name: "paroki_id", Type: field.TypeUUID},
-	}
-	// PeriodsTable holds the schema information for the "periods" table.
-	PeriodsTable = &schema.Table{
-		Name:       "periods",
-		Columns:    PeriodsColumns,
-		PrimaryKey: []*schema.Column{PeriodsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "periods_paroki_periods",
-				Columns:    []*schema.Column{PeriodsColumns[11]},
-				RefColumns: []*schema.Column{ParokiColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-		},
-		Indexes: []*schema.Index{
-			{
-				Name:    "period_paroki_id_code",
-				Unique:  true,
-				Columns: []*schema.Column{PeriodsColumns[11], PeriodsColumns[5]},
-			},
-			{
-				Name:    "period_paroki_id_type_is_current",
-				Unique:  false,
-				Columns: []*schema.Column{PeriodsColumns[11], PeriodsColumns[4], PeriodsColumns[10]},
 			},
 		},
 	}
@@ -1347,10 +1347,10 @@ var (
 		LookupsTable,
 		OrgInvitesTable,
 		OrgMembersTable,
+		OrgPeriodeTable,
 		OrganizationsTable,
 		ParokiTable,
 		ParokiMembersTable,
-		PeriodsTable,
 		SettingsTable,
 		UmatTable,
 		UmatSakramenTable,
@@ -1418,6 +1418,10 @@ func init() {
 	LookupsTable.ForeignKeys[0].RefTable = ParokiTable
 	OrgInvitesTable.ForeignKeys[0].RefTable = OrganizationsTable
 	OrgMembersTable.ForeignKeys[0].RefTable = OrganizationsTable
+	OrgPeriodeTable.ForeignKeys[0].RefTable = OrganizationsTable
+	OrgPeriodeTable.Annotation = &entsql.Annotation{
+		Table: "org_periode",
+	}
 	OrganizationsTable.ForeignKeys[0].RefTable = OrganizationsTable
 	ParokiTable.ForeignKeys[0].RefTable = KecamatanTable
 	ParokiTable.ForeignKeys[1].RefTable = KelurahanTable
@@ -1432,7 +1436,6 @@ func init() {
 	ParokiMembersTable.Annotation = &entsql.Annotation{
 		Table: "paroki_members",
 	}
-	PeriodsTable.ForeignKeys[0].RefTable = ParokiTable
 	UmatTable.ForeignKeys[0].RefTable = KeluargaTable
 	UmatTable.Annotation = &entsql.Annotation{
 		Table: "umat",

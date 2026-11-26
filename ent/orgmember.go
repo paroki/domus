@@ -31,14 +31,6 @@ type OrgMember struct {
 	UserID uuid.UUID `json:"user_id,omitempty"`
 	// Role holds the value of the "role" field.
 	Role orgmember.Role `json:"role,omitempty"`
-	// Position holds the value of the "position" field.
-	Position *string `json:"position,omitempty"`
-	// PeriodID holds the value of the "period_id" field.
-	PeriodID *uuid.UUID `json:"period_id,omitempty"`
-	// StartDate holds the value of the "start_date" field.
-	StartDate *string `json:"start_date,omitempty"`
-	// EndDate holds the value of the "end_date" field.
-	EndDate *string `json:"end_date,omitempty"`
 	// Status holds the value of the "status" field.
 	Status orgmember.Status `json:"status,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -72,9 +64,7 @@ func (*OrgMember) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case orgmember.FieldPeriodID:
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
-		case orgmember.FieldRole, orgmember.FieldPosition, orgmember.FieldStartDate, orgmember.FieldEndDate, orgmember.FieldStatus:
+		case orgmember.FieldRole, orgmember.FieldStatus:
 			values[i] = new(sql.NullString)
 		case orgmember.FieldCreatedAt, orgmember.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -136,34 +126,6 @@ func (_m *OrgMember) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field role", values[i])
 			} else if value.Valid {
 				_m.Role = orgmember.Role(value.String)
-			}
-		case orgmember.FieldPosition:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field position", values[i])
-			} else if value.Valid {
-				_m.Position = new(string)
-				*_m.Position = value.String
-			}
-		case orgmember.FieldPeriodID:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field period_id", values[i])
-			} else if value.Valid {
-				_m.PeriodID = new(uuid.UUID)
-				*_m.PeriodID = *value.S.(*uuid.UUID)
-			}
-		case orgmember.FieldStartDate:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field start_date", values[i])
-			} else if value.Valid {
-				_m.StartDate = new(string)
-				*_m.StartDate = value.String
-			}
-		case orgmember.FieldEndDate:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field end_date", values[i])
-			} else if value.Valid {
-				_m.EndDate = new(string)
-				*_m.EndDate = value.String
 			}
 		case orgmember.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -229,26 +191,6 @@ func (_m *OrgMember) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("role=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Role))
-	builder.WriteString(", ")
-	if v := _m.Position; v != nil {
-		builder.WriteString("position=")
-		builder.WriteString(*v)
-	}
-	builder.WriteString(", ")
-	if v := _m.PeriodID; v != nil {
-		builder.WriteString("period_id=")
-		builder.WriteString(fmt.Sprintf("%v", *v))
-	}
-	builder.WriteString(", ")
-	if v := _m.StartDate; v != nil {
-		builder.WriteString("start_date=")
-		builder.WriteString(*v)
-	}
-	builder.WriteString(", ")
-	if v := _m.EndDate; v != nil {
-		builder.WriteString("end_date=")
-		builder.WriteString(*v)
-	}
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Status))

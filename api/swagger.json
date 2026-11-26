@@ -44,19 +44,10 @@
                     "email": {
                         "type": "string"
                     },
-                    "endDate": {
-                        "type": "string"
-                    },
                     "name": {
                         "type": "string"
                     },
-                    "periodId": {
-                        "type": "string"
-                    },
                     "phone": {
-                        "type": "string"
-                    },
-                    "position": {
                         "type": "string"
                     },
                     "role": {
@@ -64,9 +55,6 @@
                             "admin",
                             "member"
                         ],
-                        "type": "string"
-                    },
-                    "startDate": {
                         "type": "string"
                     },
                     "status": {
@@ -640,9 +628,6 @@
             },
             "domain.CreateOrgInviteRequest": {
                 "properties": {
-                    "defaultPosition": {
-                        "type": "string"
-                    },
                     "maxUses": {
                         "minimum": 1,
                         "type": "integer"
@@ -658,6 +643,40 @@
                         "type": "integer"
                     }
                 },
+                "type": "object"
+            },
+            "domain.CreateOrgPeriodeRequest": {
+                "properties": {
+                    "isCurrent": {
+                        "type": "boolean"
+                    },
+                    "kode": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "status": {
+                        "enum": [
+                            "open",
+                            "closed"
+                        ],
+                        "type": "string"
+                    },
+                    "tanggalMulai": {
+                        "type": "string"
+                    },
+                    "tanggalSelesai": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "kode",
+                    "nama",
+                    "tanggalMulai",
+                    "tanggalSelesai"
+                ],
                 "type": "object"
             },
             "domain.CreateOrganizationRequest": {
@@ -789,40 +808,6 @@
                     "keuskupanId",
                     "kode",
                     "nama"
-                ],
-                "type": "object"
-            },
-            "domain.CreatePeriodRequest": {
-                "properties": {
-                    "code": {
-                        "type": "string"
-                    },
-                    "endDate": {
-                        "type": "string"
-                    },
-                    "isCurrent": {
-                        "type": "boolean"
-                    },
-                    "name": {
-                        "minLength": 1,
-                        "type": "string"
-                    },
-                    "startDate": {
-                        "type": "string"
-                    },
-                    "type": {
-                        "enum": [
-                            "fiscal",
-                            "liturgical"
-                        ],
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "code",
-                    "endDate",
-                    "name",
-                    "startDate"
                 ],
                 "type": "object"
             },
@@ -1114,9 +1099,6 @@
                         "type": "string"
                     },
                     "note": {
-                        "type": "string"
-                    },
-                    "orgPosition": {
                         "type": "string"
                     },
                     "orgRole": {
@@ -1892,9 +1874,6 @@
                     "code": {
                         "type": "string"
                     },
-                    "defaultPosition": {
-                        "type": "string"
-                    },
                     "expiresAt": {
                         "type": "string"
                     },
@@ -1940,9 +1919,6 @@
                         "type": "string"
                     },
                     "createdBy": {
-                        "type": "string"
-                    },
-                    "defaultPosition": {
                         "type": "string"
                     },
                     "expiresAt": {
@@ -1997,9 +1973,6 @@
                     "email": {
                         "type": "string"
                     },
-                    "endDate": {
-                        "type": "string"
-                    },
                     "id": {
                         "type": "string"
                     },
@@ -2012,19 +1985,10 @@
                     "parokiId": {
                         "type": "string"
                     },
-                    "periodId": {
-                        "type": "string"
-                    },
                     "phone": {
                         "type": "string"
                     },
-                    "position": {
-                        "type": "string"
-                    },
                     "role": {
-                        "type": "string"
-                    },
-                    "startDate": {
                         "type": "string"
                     },
                     "status": {
@@ -2041,9 +2005,6 @@
             },
             "domain.OrgMemberSearchFilter": {
                 "properties": {
-                    "periodId": {
-                        "type": "string"
-                    },
                     "role": {
                         "enum": [
                             "admin",
@@ -2055,6 +2016,59 @@
                         "enum": [
                             "active",
                             "inactive"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.OrgPeriodeResponse": {
+                "properties": {
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "isCurrent": {
+                        "type": "boolean"
+                    },
+                    "kode": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "type": "string"
+                    },
+                    "orgId": {
+                        "type": "string"
+                    },
+                    "parokiId": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "tanggalMulai": {
+                        "type": "string"
+                    },
+                    "tanggalSelesai": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.OrgPeriodeSearchFilter": {
+                "properties": {
+                    "isCurrent": {
+                        "type": "boolean"
+                    },
+                    "status": {
+                        "enum": [
+                            "open",
+                            "closed"
                         ],
                         "type": "string"
                     }
@@ -2277,66 +2291,6 @@
                     },
                     "memberOnly": {
                         "type": "boolean"
-                    }
-                },
-                "type": "object"
-            },
-            "domain.PeriodResponse": {
-                "properties": {
-                    "code": {
-                        "type": "string"
-                    },
-                    "createdAt": {
-                        "type": "string"
-                    },
-                    "endDate": {
-                        "type": "string"
-                    },
-                    "id": {
-                        "type": "string"
-                    },
-                    "isCurrent": {
-                        "type": "boolean"
-                    },
-                    "name": {
-                        "type": "string"
-                    },
-                    "parokiId": {
-                        "type": "string"
-                    },
-                    "startDate": {
-                        "type": "string"
-                    },
-                    "status": {
-                        "type": "string"
-                    },
-                    "type": {
-                        "type": "string"
-                    },
-                    "updatedAt": {
-                        "type": "string"
-                    }
-                },
-                "type": "object"
-            },
-            "domain.PeriodSearchFilter": {
-                "properties": {
-                    "isCurrent": {
-                        "type": "boolean"
-                    },
-                    "status": {
-                        "enum": [
-                            "open",
-                            "closed"
-                        ],
-                        "type": "string"
-                    },
-                    "type": {
-                        "enum": [
-                            "fiscal",
-                            "liturgical"
-                        ],
-                        "type": "string"
                     }
                 },
                 "type": "object"
@@ -2666,6 +2620,25 @@
                 },
                 "type": "object"
             },
+            "domain.SearchOrgPeriodeRequest": {
+                "properties": {
+                    "cursor": {
+                        "type": "string"
+                    },
+                    "filter": {
+                        "$ref": "#/components/schemas/domain.OrgPeriodeSearchFilter"
+                    },
+                    "limit": {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "q": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.SearchOrganizationsRequest": {
                 "properties": {
                     "cursor": {
@@ -2711,25 +2684,6 @@
                     },
                     "filter": {
                         "$ref": "#/components/schemas/domain.ParokiSearchFilter"
-                    },
-                    "limit": {
-                        "maximum": 100,
-                        "minimum": 1,
-                        "type": "integer"
-                    },
-                    "q": {
-                        "type": "string"
-                    }
-                },
-                "type": "object"
-            },
-            "domain.SearchPeriodsRequest": {
-                "properties": {
-                    "cursor": {
-                        "type": "string"
-                    },
-                    "filter": {
-                        "$ref": "#/components/schemas/domain.PeriodSearchFilter"
                     },
                     "limit": {
                         "maximum": 100,
@@ -3674,15 +3628,6 @@
             },
             "domain.UpdateOrgMemberRequest": {
                 "properties": {
-                    "endDate": {
-                        "type": "string"
-                    },
-                    "periodId": {
-                        "type": "string"
-                    },
-                    "position": {
-                        "type": "string"
-                    },
                     "role": {
                         "enum": [
                             "admin",
@@ -3690,14 +3635,39 @@
                         ],
                         "type": "string"
                     },
-                    "startDate": {
-                        "type": "string"
-                    },
                     "status": {
                         "enum": [
                             "active",
                             "inactive"
                         ],
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.UpdateOrgPeriodeRequest": {
+                "properties": {
+                    "isCurrent": {
+                        "type": "boolean"
+                    },
+                    "kode": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "status": {
+                        "enum": [
+                            "open",
+                            "closed"
+                        ],
+                        "type": "string"
+                    },
+                    "tanggalMulai": {
+                        "type": "string"
+                    },
+                    "tanggalSelesai": {
                         "type": "string"
                     }
                 },
@@ -3887,34 +3857,6 @@
                         "type": "string"
                     },
                     "website": {
-                        "type": "string"
-                    }
-                },
-                "type": "object"
-            },
-            "domain.UpdatePeriodRequest": {
-                "properties": {
-                    "code": {
-                        "type": "string"
-                    },
-                    "endDate": {
-                        "type": "string"
-                    },
-                    "isCurrent": {
-                        "type": "boolean"
-                    },
-                    "name": {
-                        "minLength": 1,
-                        "type": "string"
-                    },
-                    "startDate": {
-                        "type": "string"
-                    },
-                    "status": {
-                        "enum": [
-                            "open",
-                            "closed"
-                        ],
                         "type": "string"
                     }
                 },
@@ -4764,6 +4706,24 @@
                 },
                 "type": "object"
             },
+            "httpx.Envelope-array_domain_OrgPeriodeResponse": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.OrgPeriodeResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
             "httpx.Envelope-array_domain_OrganizationResponse": {
                 "properties": {
                     "data": {
@@ -4805,24 +4765,6 @@
                     "data": {
                         "items": {
                             "$ref": "#/components/schemas/domain.ParokiResponse"
-                        },
-                        "type": "array",
-                        "uniqueItems": false
-                    },
-                    "error": {
-                        "$ref": "#/components/schemas/httpx.ErrorPayload"
-                    },
-                    "meta": {
-                        "$ref": "#/components/schemas/httpx.Meta"
-                    }
-                },
-                "type": "object"
-            },
-            "httpx.Envelope-array_domain_PeriodResponse": {
-                "properties": {
-                    "data": {
-                        "items": {
-                            "$ref": "#/components/schemas/domain.PeriodResponse"
                         },
                         "type": "array",
                         "uniqueItems": false
@@ -5274,6 +5216,20 @@
                 },
                 "type": "object"
             },
+            "httpx.Envelope-domain_OrgPeriodeResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.OrgPeriodeResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
             "httpx.Envelope-domain_OrganizationResponse": {
                 "properties": {
                     "data": {
@@ -5306,20 +5262,6 @@
                 "properties": {
                     "data": {
                         "$ref": "#/components/schemas/domain.ParokiResponse"
-                    },
-                    "error": {
-                        "$ref": "#/components/schemas/httpx.ErrorPayload"
-                    },
-                    "meta": {
-                        "$ref": "#/components/schemas/httpx.Meta"
-                    }
-                },
-                "type": "object"
-            },
-            "httpx.Envelope-domain_PeriodResponse": {
-                "properties": {
-                    "data": {
-                        "$ref": "#/components/schemas/domain.PeriodResponse"
                     },
                     "error": {
                         "$ref": "#/components/schemas/httpx.ErrorPayload"
@@ -10243,6 +10185,465 @@
                 ]
             }
         },
+        "/orgs/{id}/periode": {
+            "post": {
+                "description": "Creates an organization period with date overlap validation, soft-deleted kode reactivation, and atomic isCurrent rotation.",
+                "operationId": "createOrgPeriode",
+                "parameters": [
+                    {
+                        "description": "Organization UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.CreateOrgPeriodeRequest",
+                                "summary": "body",
+                                "description": "Period creation payload"
+                            }
+                        }
+                    },
+                    "description": "Period creation payload",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_OrgPeriodeResponse"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Create organization period",
+                "tags": [
+                    "Org"
+                ]
+            }
+        },
+        "/orgs/{id}/periode/search": {
+            "post": {
+                "description": "Searches non-deleted periods for an organization with optional filters and cursor pagination, ordered by tanggalMulai DESC, id DESC.",
+                "operationId": "searchOrgPeriode",
+                "parameters": [
+                    {
+                        "description": "Organization UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.SearchOrgPeriodeRequest",
+                                "summary": "body",
+                                "description": "Search parameters"
+                            }
+                        }
+                    },
+                    "description": "Search parameters"
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_OrgPeriodeResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Search organization periods",
+                "tags": [
+                    "Org"
+                ]
+            }
+        },
+        "/orgs/{id}/periode/{periodeId}": {
+            "delete": {
+                "description": "Soft-deletes an organization period and clears isCurrent.",
+                "operationId": "deleteOrgPeriode",
+                "parameters": [
+                    {
+                        "description": "Organization UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Period UUID",
+                        "in": "path",
+                        "name": "periodeId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Delete organization period",
+                "tags": [
+                    "Org"
+                ]
+            },
+            "get": {
+                "description": "Returns a single non-deleted period for an organization.",
+                "operationId": "getOrgPeriode",
+                "parameters": [
+                    {
+                        "description": "Organization UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Period UUID",
+                        "in": "path",
+                        "name": "periodeId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_OrgPeriodeResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Get organization period",
+                "tags": [
+                    "Org"
+                ]
+            },
+            "patch": {
+                "description": "Updates mutable fields of an organization period with overlap validation and atomic isCurrent rotation.",
+                "operationId": "updateOrgPeriode",
+                "parameters": [
+                    {
+                        "description": "Organization UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Period UUID",
+                        "in": "path",
+                        "name": "periodeId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.UpdateOrgPeriodeRequest",
+                                "summary": "body",
+                                "description": "Period update payload"
+                            }
+                        }
+                    },
+                    "description": "Period update payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_OrgPeriodeResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Update organization period",
+                "tags": [
+                    "Org"
+                ]
+            }
+        },
         "/ref/kecamatan": {
             "post": {
                 "description": "Creates a kecamatan or reactivates a soft-deleted kecamatan with the same kotaId and kode.",
@@ -13932,386 +14333,6 @@
                     }
                 },
                 "summary": "Update paroki member",
-                "tags": [
-                    "Ref"
-                ]
-            }
-        },
-        "/ref/periods": {
-            "post": {
-                "description": "Creates a period with date overlap validation and atomic isCurrent rotation.",
-                "operationId": "createPeriod",
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/domain.CreatePeriodRequest",
-                                "summary": "body",
-                                "description": "Period creation payload"
-                            }
-                        }
-                    },
-                    "description": "Period creation payload",
-                    "required": true
-                },
-                "responses": {
-                    "201": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-domain_PeriodResponse"
-                                }
-                            }
-                        },
-                        "description": "Created"
-                    },
-                    "400": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Bad Request"
-                    },
-                    "401": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Unauthorized"
-                    },
-                    "403": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Forbidden"
-                    },
-                    "409": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Conflict"
-                    },
-                    "422": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Unprocessable Entity"
-                    }
-                },
-                "summary": "Create period",
-                "tags": [
-                    "Ref"
-                ]
-            }
-        },
-        "/ref/periods/search": {
-            "post": {
-                "description": "Searches fiscal and liturgical periods in the active parish with optional filters and cursor pagination.",
-                "operationId": "searchPeriods",
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/domain.SearchPeriodsRequest",
-                                "summary": "body",
-                                "description": "Search parameters"
-                            }
-                        }
-                    },
-                    "description": "Search parameters"
-                },
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_PeriodResponse"
-                                }
-                            }
-                        },
-                        "description": "OK"
-                    },
-                    "400": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Bad Request"
-                    },
-                    "401": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Unauthorized"
-                    },
-                    "403": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Forbidden"
-                    }
-                },
-                "summary": "Search periods",
-                "tags": [
-                    "Ref"
-                ]
-            }
-        },
-        "/ref/periods/{id}": {
-            "delete": {
-                "description": "Soft-deletes a period in the active parish.",
-                "operationId": "deletePeriod",
-                "parameters": [
-                    {
-                        "description": "Period UUID",
-                        "in": "path",
-                        "name": "id",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No Content"
-                    },
-                    "400": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Bad Request"
-                    },
-                    "401": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Unauthorized"
-                    },
-                    "403": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Forbidden"
-                    },
-                    "404": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Not Found"
-                    }
-                },
-                "summary": "Delete period",
-                "tags": [
-                    "Ref"
-                ]
-            },
-            "get": {
-                "description": "Returns a single non-deleted period in the active parish.",
-                "operationId": "getPeriod",
-                "parameters": [
-                    {
-                        "description": "Period UUID",
-                        "in": "path",
-                        "name": "id",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-domain_PeriodResponse"
-                                }
-                            }
-                        },
-                        "description": "OK"
-                    },
-                    "400": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Bad Request"
-                    },
-                    "401": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Unauthorized"
-                    },
-                    "404": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Not Found"
-                    }
-                },
-                "summary": "Get period",
-                "tags": [
-                    "Ref"
-                ]
-            },
-            "patch": {
-                "description": "Updates mutable fields of a period with overlap validation and atomic isCurrent rotation.",
-                "operationId": "updatePeriod",
-                "parameters": [
-                    {
-                        "description": "Period UUID",
-                        "in": "path",
-                        "name": "id",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/domain.UpdatePeriodRequest",
-                                "summary": "body",
-                                "description": "Period update payload"
-                            }
-                        }
-                    },
-                    "description": "Period update payload",
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-domain_PeriodResponse"
-                                }
-                            }
-                        },
-                        "description": "OK"
-                    },
-                    "400": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Bad Request"
-                    },
-                    "401": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Unauthorized"
-                    },
-                    "403": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Forbidden"
-                    },
-                    "404": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Not Found"
-                    },
-                    "409": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Conflict"
-                    },
-                    "422": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/httpx.Envelope-any"
-                                }
-                            }
-                        },
-                        "description": "Unprocessable Entity"
-                    }
-                },
-                "summary": "Update period",
                 "tags": [
                     "Ref"
                 ]

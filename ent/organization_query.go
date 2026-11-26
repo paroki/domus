@@ -16,6 +16,7 @@ import (
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orginvite"
 	"github.com/paroki/domus/ent/orgmember"
+	"github.com/paroki/domus/ent/orgperiode"
 	"github.com/paroki/domus/ent/predicate"
 )
 
@@ -30,6 +31,7 @@ type OrganizationQuery struct {
 	withChildren *OrganizationQuery
 	withMembers  *OrgMemberQuery
 	withInvites  *OrgInviteQuery
+	withPeriode  *OrgPeriodeQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -147,6 +149,28 @@ func (_q *OrganizationQuery) QueryInvites() *OrgInviteQuery {
 			sqlgraph.From(organization.Table, organization.FieldID, selector),
 			sqlgraph.To(orginvite.Table, orginvite.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, organization.InvitesTable, organization.InvitesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPeriode chains the current query on the "periode" edge.
+func (_q *OrganizationQuery) QueryPeriode() *OrgPeriodeQuery {
+	query := (&OrgPeriodeClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(organization.Table, organization.FieldID, selector),
+			sqlgraph.To(orgperiode.Table, orgperiode.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, organization.PeriodeTable, organization.PeriodeColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -350,6 +374,7 @@ func (_q *OrganizationQuery) Clone() *OrganizationQuery {
 		withChildren: _q.withChildren.Clone(),
 		withMembers:  _q.withMembers.Clone(),
 		withInvites:  _q.withInvites.Clone(),
+		withPeriode:  _q.withPeriode.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -397,6 +422,17 @@ func (_q *OrganizationQuery) WithInvites(opts ...func(*OrgInviteQuery)) *Organiz
 		opt(query)
 	}
 	_q.withInvites = query
+	return _q
+}
+
+// WithPeriode tells the query-builder to eager-load the nodes that are connected to
+// the "periode" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *OrganizationQuery) WithPeriode(opts ...func(*OrgPeriodeQuery)) *OrganizationQuery {
+	query := (&OrgPeriodeClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withPeriode = query
 	return _q
 }
 
@@ -478,11 +514,12 @@ func (_q *OrganizationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	var (
 		nodes       = []*Organization{}
 		_spec       = _q.querySpec()
-		loadedTypes = [4]bool{
+		loadedTypes = [5]bool{
 			_q.withParent != nil,
 			_q.withChildren != nil,
 			_q.withMembers != nil,
 			_q.withInvites != nil,
+			_q.withPeriode != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -527,6 +564,13 @@ func (_q *OrganizationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 		if err := _q.loadInvites(ctx, query, nodes,
 			func(n *Organization) { n.Edges.Invites = []*OrgInvite{} },
 			func(n *Organization, e *OrgInvite) { n.Edges.Invites = append(n.Edges.Invites, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withPeriode; query != nil {
+		if err := _q.loadPeriode(ctx, query, nodes,
+			func(n *Organization) { n.Edges.Periode = []*OrgPeriode{} },
+			func(n *Organization, e *OrgPeriode) { n.Edges.Periode = append(n.Edges.Periode, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -643,6 +687,36 @@ func (_q *OrganizationQuery) loadInvites(ctx context.Context, query *OrgInviteQu
 	}
 	query.Where(predicate.OrgInvite(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(organization.InvitesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.OrgID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "org_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *OrganizationQuery) loadPeriode(ctx context.Context, query *OrgPeriodeQuery, nodes []*Organization, init func(*Organization), assign func(*Organization, *OrgPeriode)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Organization)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(orgperiode.FieldOrgID)
+	}
+	query.Where(predicate.OrgPeriode(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(organization.PeriodeColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

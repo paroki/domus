@@ -28,14 +28,6 @@ const (
 	FieldUserID = "user_id"
 	// FieldRole holds the string denoting the role field in the database.
 	FieldRole = "role"
-	// FieldPosition holds the string denoting the position field in the database.
-	FieldPosition = "position"
-	// FieldPeriodID holds the string denoting the period_id field in the database.
-	FieldPeriodID = "period_id"
-	// FieldStartDate holds the string denoting the start_date field in the database.
-	FieldStartDate = "start_date"
-	// FieldEndDate holds the string denoting the end_date field in the database.
-	FieldEndDate = "end_date"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
 	// EdgeOrganization holds the string denoting the organization edge name in mutations.
@@ -60,10 +52,6 @@ var Columns = []string{
 	FieldOrgID,
 	FieldUserID,
 	FieldRole,
-	FieldPosition,
-	FieldPeriodID,
-	FieldStartDate,
-	FieldEndDate,
 	FieldStatus,
 }
 
@@ -176,26 +164,6 @@ func ByUserID(opts ...sql.OrderTermOption) OrderOption {
 // ByRole orders the results by the role field.
 func ByRole(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRole, opts...).ToFunc()
-}
-
-// ByPosition orders the results by the position field.
-func ByPosition(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldPosition, opts...).ToFunc()
-}
-
-// ByPeriodID orders the results by the period_id field.
-func ByPeriodID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldPeriodID, opts...).ToFunc()
-}
-
-// ByStartDate orders the results by the start_date field.
-func ByStartDate(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldStartDate, opts...).ToFunc()
-}
-
-// ByEndDate orders the results by the end_date field.
-func ByEndDate(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldEndDate, opts...).ToFunc()
 }
 
 // ByStatus orders the results by the status field.

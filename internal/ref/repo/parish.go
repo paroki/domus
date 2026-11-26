@@ -16,7 +16,6 @@ import (
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/paroki"
 	"github.com/paroki/domus/ent/parokimember"
-	"github.com/paroki/domus/ent/period"
 	"github.com/paroki/domus/ent/umat"
 	"github.com/paroki/domus/ent/umatsakramen"
 	"github.com/paroki/domus/ent/user"
@@ -305,7 +304,7 @@ func (r *Repository) HasChildParoki(ctx context.Context, parokiID uuid.UUID) (bo
 		Exist(ctx)
 }
 
-// HasParokiChildren reports whether any non-deleted child Paroki, Wilayah, Lingkungan, Lookup, Organization, Event, Period, AgentSession, or AgentMemory belongs to parokiID.
+// HasParokiChildren reports whether any non-deleted child Paroki, Wilayah, Lingkungan, Lookup, Organization, Event, AgentSession, or AgentMemory belongs to parokiID.
 func (r *Repository) HasParokiChildren(ctx context.Context, parokiID uuid.UUID) (bool, error) {
 	if has, err := r.HasChildParoki(ctx, parokiID); err != nil || has {
 		return has, err
@@ -323,9 +322,6 @@ func (r *Repository) HasParokiChildren(ctx context.Context, parokiID uuid.UUID) 
 		return has, err
 	}
 	if has, err := r.client.Event.Query().Where(event.ParokiIDEQ(parokiID), event.DeletedAtIsNil()).Exist(ctx); err != nil || has {
-		return has, err
-	}
-	if has, err := r.client.Period.Query().Where(period.ParokiIDEQ(parokiID), period.DeletedAtIsNil()).Exist(ctx); err != nil || has {
 		return has, err
 	}
 	if has, err := r.client.AgentSession.Query().Where(agentsession.ParokiIDEQ(parokiID), agentsession.DeletedAtIsNil()).Exist(ctx); err != nil || has {

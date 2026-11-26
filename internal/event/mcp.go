@@ -13,19 +13,18 @@ import (
 
 // MCPEventRSVP is the MCP-safe representation of an EventRSVP (UUIDs and timestamps as strings).
 type MCPEventRSVP struct {
-	ID          string  `json:"id"`
-	ParokiID    string  `json:"parokiId"`
-	EventID     string  `json:"eventId"`
-	UserID      string  `json:"userId"`
-	Name        string  `json:"name"`
-	Email       string  `json:"email"`
-	Phone       *string `json:"phone,omitempty"`
-	OrgRole     string  `json:"orgRole,omitempty"`
-	OrgPosition *string `json:"orgPosition,omitempty"`
-	Status      string  `json:"status"`
-	Note        *string `json:"note,omitempty"`
-	CreatedAt   string  `json:"createdAt"`
-	UpdatedAt   string  `json:"updatedAt"`
+	ID        string  `json:"id"`
+	ParokiID  string  `json:"parokiId"`
+	EventID   string  `json:"eventId"`
+	UserID    string  `json:"userId"`
+	Name      string  `json:"name"`
+	Email     string  `json:"email"`
+	Phone     *string `json:"phone,omitempty"`
+	OrgRole   string  `json:"orgRole,omitempty"`
+	Status    string  `json:"status"`
+	Note      *string `json:"note,omitempty"`
+	CreatedAt string  `json:"createdAt"`
+	UpdatedAt string  `json:"updatedAt"`
 }
 
 // MCPEventRSVPSummary is the MCP-safe representation of EventRSVPSummaryResponse (UUIDs as strings).
@@ -832,19 +831,18 @@ func toMCPEventLagu(l domain.EventLaguResponse) MCPEventLagu {
 
 func toMCPEventRSVP(r domain.EventRSVPResponse) MCPEventRSVP {
 	return MCPEventRSVP{
-		ID:          r.ID.String(),
-		ParokiID:    r.ParokiID.String(),
-		EventID:     r.EventID.String(),
-		UserID:      r.UserID.String(),
-		Name:        r.Name,
-		Email:       r.Email,
-		Phone:       r.Phone,
-		OrgRole:     r.OrgRole,
-		OrgPosition: r.OrgPosition,
-		Status:      r.Status,
-		Note:        r.Note,
-		CreatedAt:   r.CreatedAt.UTC().Format(time.RFC3339),
-		UpdatedAt:   r.UpdatedAt.UTC().Format(time.RFC3339),
+		ID:        r.ID.String(),
+		ParokiID:  r.ParokiID.String(),
+		EventID:   r.EventID.String(),
+		UserID:    r.UserID.String(),
+		Name:      r.Name,
+		Email:     r.Email,
+		Phone:     r.Phone,
+		OrgRole:   r.OrgRole,
+		Status:    r.Status,
+		Note:      r.Note,
+		CreatedAt: r.CreatedAt.UTC().Format(time.RFC3339),
+		UpdatedAt: r.UpdatedAt.UTC().Format(time.RFC3339),
 	}
 }
 

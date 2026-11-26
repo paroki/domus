@@ -42,11 +42,9 @@ func (s *Service) SearchOrgMembers(
 	}
 
 	var role, status string
-	var periodID *uuid.UUID
 	if req.Filter != nil {
 		role = req.Filter.Role
 		status = req.Filter.Status
-		periodID = req.Filter.PeriodID
 	}
 
 	rows, usersMap, err := s.repo.SearchOrgMembers(
@@ -55,7 +53,6 @@ func (s *Service) SearchOrgMembers(
 		strings.TrimSpace(req.Q),
 		role,
 		status,
-		periodID,
 		cursorCreatedAt,
 		cursorID,
 		limit+1,
@@ -116,12 +113,6 @@ func (s *Service) AddOrgMember(
 		status = orgmember.Status(req.Status)
 	}
 
-	if req.PeriodID != nil && *req.PeriodID != uuid.Nil && s.refs != nil {
-		if err := s.refs.ValidatePeriodInParoki(ctx, orgRow.ParokiID, *req.PeriodID); err != nil {
-			return domain.OrgMemberResponse{}, err
-		}
-	}
-
 	targetUserID, err := s.resolveOrEnsureMemberUser(ctx, orgRow.ParokiID, req)
 	if err != nil {
 		return domain.OrgMemberResponse{}, err
@@ -138,10 +129,6 @@ func (s *Service) AddOrgMember(
 					ctx,
 					existing.ID,
 					&role,
-					trimOptString(req.Position),
-					req.PeriodID,
-					trimOptString(req.StartDate),
-					trimOptString(req.EndDate),
 					&activeStatus,
 				)
 				if updErr != nil {
@@ -158,10 +145,6 @@ func (s *Service) AddOrgMember(
 					ctx,
 					existing.ID,
 					&adminRole,
-					trimOptString(req.Position),
-					req.PeriodID,
-					trimOptString(req.StartDate),
-					trimOptString(req.EndDate),
 					&activeStatus,
 				)
 				if updErr != nil {
@@ -176,15 +159,11 @@ func (s *Service) AddOrgMember(
 		}
 
 		created, createErr := txRepo.CreateOrgMember(ctx, repo.OrgMemberInput{
-			ParokiID:  orgRow.ParokiID,
-			OrgID:     orgID,
-			UserID:    targetUserID,
-			Role:      role,
-			Position:  trimOptString(req.Position),
-			PeriodID:  req.PeriodID,
-			StartDate: trimOptString(req.StartDate),
-			EndDate:   trimOptString(req.EndDate),
-			Status:    status,
+			ParokiID: orgRow.ParokiID,
+			OrgID:    orgID,
+			UserID:   targetUserID,
+			Role:     role,
+			Status:   status,
 		})
 		if createErr != nil {
 			if ent.IsConstraintError(createErr) {
@@ -210,7 +189,7 @@ func (s *Service) AddOrgMember(
 	return toOrgMemberResponse(saved, u), nil
 }
 
-// UpdateOrgMember updates a member's role, position, term, or status and syncs Casbin.
+// UpdateOrgMember updates a member's role or status and syncs Casbin.
 func (s *Service) UpdateOrgMember(
 	ctx context.Context,
 	p authx.Principal,
@@ -237,12 +216,6 @@ func (s *Service) UpdateOrgMember(
 		promotingToAdmin := req.Role != nil && *req.Role == string(orgmember.RoleAdmin)
 		if !isParokiAdm || !promotingToAdmin {
 			return domain.OrgMemberResponse{}, domain.ErrForbidden
-		}
-	}
-
-	if req.PeriodID != nil && *req.PeriodID != uuid.Nil && s.refs != nil {
-		if err := s.refs.ValidatePeriodInParoki(ctx, orgRow.ParokiID, *req.PeriodID); err != nil {
-			return domain.OrgMemberResponse{}, err
 		}
 	}
 
@@ -288,10 +261,6 @@ func (s *Service) UpdateOrgMember(
 			ctx,
 			existing.ID,
 			rolePtr,
-			trimOptString(req.Position),
-			req.PeriodID,
-			trimOptString(req.StartDate),
-			trimOptString(req.EndDate),
 			statusPtr,
 		)
 		if err != nil {

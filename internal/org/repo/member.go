@@ -13,15 +13,11 @@ import (
 
 // OrgMemberInput holds fields for creating an OrgMember.
 type OrgMemberInput struct {
-	ParokiID  uuid.UUID
-	OrgID     uuid.UUID
-	UserID    uuid.UUID
-	Role      orgmember.Role
-	Position  *string
-	PeriodID  *uuid.UUID
-	StartDate *string
-	EndDate   *string
-	Status    orgmember.Status
+	ParokiID uuid.UUID
+	OrgID    uuid.UUID
+	UserID   uuid.UUID
+	Role     orgmember.Role
+	Status   orgmember.Status
 }
 
 // SearchOrgMembers returns paginated OrgMember rows along with a User lookup map.
@@ -29,7 +25,6 @@ func (r *Repository) SearchOrgMembers(
 	ctx context.Context,
 	orgID uuid.UUID,
 	q, role, status string,
-	periodID *uuid.UUID,
 	cursorCreatedAt *time.Time,
 	cursorID *uuid.UUID,
 	limit int,
@@ -45,23 +40,16 @@ func (r *Repository) SearchOrgMembers(
 		if err != nil {
 			return nil, nil, err
 		}
-		if len(userIDs) > 0 {
-			query = query.Where(orgmember.Or(
-				orgmember.UserIDIn(userIDs...),
-				orgmember.PositionContainsFold(q),
-			))
-		} else {
-			query = query.Where(orgmember.PositionContainsFold(q))
+		if len(userIDs) == 0 {
+			return []*ent.OrgMember{}, map[uuid.UUID]*ent.User{}, nil
 		}
+		query = query.Where(orgmember.UserIDIn(userIDs...))
 	}
 	if role != "" {
 		query = query.Where(orgmember.RoleEQ(orgmember.Role(role)))
 	}
 	if status != "" {
 		query = query.Where(orgmember.StatusEQ(orgmember.Status(status)))
-	}
-	if periodID != nil {
-		query = query.Where(orgmember.PeriodIDEQ(*periodID))
 	}
 	if cursorCreatedAt != nil && cursorID != nil {
 		query = query.Where(orgmember.Or(
@@ -137,25 +125,13 @@ func (r *Repository) ListActiveOrgRolesForUser(ctx context.Context, userID uuid.
 
 // CreateOrgMember inserts a new OrgMember row.
 func (r *Repository) CreateOrgMember(ctx context.Context, in OrgMemberInput) (*ent.OrgMember, error) {
-	q := r.client.OrgMember.Create().
+	return r.client.OrgMember.Create().
 		SetParokiID(in.ParokiID).
 		SetOrgID(in.OrgID).
 		SetUserID(in.UserID).
 		SetRole(in.Role).
-		SetStatus(in.Status)
-	if in.Position != nil && *in.Position != "" {
-		q.SetPosition(*in.Position)
-	}
-	if in.PeriodID != nil && *in.PeriodID != uuid.Nil {
-		q.SetPeriodID(*in.PeriodID)
-	}
-	if in.StartDate != nil && *in.StartDate != "" {
-		q.SetStartDate(*in.StartDate)
-	}
-	if in.EndDate != nil && *in.EndDate != "" {
-		q.SetEndDate(*in.EndDate)
-	}
-	return q.Save(ctx)
+		SetStatus(in.Status).
+		Save(ctx)
 }
 
 // UpdateOrgMember updates mutable fields of an OrgMember row.
@@ -163,30 +139,11 @@ func (r *Repository) UpdateOrgMember(
 	ctx context.Context,
 	id uuid.UUID,
 	role *orgmember.Role,
-	position *string,
-	periodID *uuid.UUID,
-	startDate, endDate *string,
 	status *orgmember.Status,
 ) (*ent.OrgMember, error) {
 	upd := r.client.OrgMember.UpdateOneID(id)
 	if role != nil {
 		upd.SetRole(*role)
-	}
-	if position != nil {
-		setOrClearMemberString(position, upd.SetPosition, upd.ClearPosition)
-	}
-	if periodID != nil {
-		if *periodID == uuid.Nil {
-			upd.ClearPeriodID()
-		} else {
-			upd.SetPeriodID(*periodID)
-		}
-	}
-	if startDate != nil {
-		setOrClearMemberString(startDate, upd.SetStartDate, upd.ClearStartDate)
-	}
-	if endDate != nil {
-		setOrClearMemberString(endDate, upd.SetEndDate, upd.ClearEndDate)
 	}
 	if status != nil {
 		upd.SetStatus(*status)
@@ -208,12 +165,4 @@ func (r *Repository) CountActiveOrgAdmins(ctx context.Context, orgID uuid.UUID) 
 			orgmember.StatusEQ(orgmember.StatusActive),
 		).
 		Count(ctx)
-}
-
-func setOrClearMemberString(val *string, setFn func(string) *ent.OrgMemberUpdateOne, clearFn func() *ent.OrgMemberUpdateOne) {
-	if val == nil || *val == "" {
-		clearFn()
-		return
-	}
-	setFn(*val)
 }

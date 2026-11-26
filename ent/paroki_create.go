@@ -20,7 +20,6 @@ import (
 	"github.com/paroki/domus/ent/lookup"
 	"github.com/paroki/domus/ent/paroki"
 	"github.com/paroki/domus/ent/parokimember"
-	"github.com/paroki/domus/ent/period"
 	"github.com/paroki/domus/ent/wilayah"
 )
 
@@ -490,21 +489,6 @@ func (_c *ParokiCreate) AddLookups(v ...*Lookup) *ParokiCreate {
 	return _c.AddLookupIDs(ids...)
 }
 
-// AddPeriodIDs adds the "periods" edge to the Period entity by IDs.
-func (_c *ParokiCreate) AddPeriodIDs(ids ...uuid.UUID) *ParokiCreate {
-	_c.mutation.AddPeriodIDs(ids...)
-	return _c
-}
-
-// AddPeriods adds the "periods" edges to the Period entity.
-func (_c *ParokiCreate) AddPeriods(v ...*Period) *ParokiCreate {
-	ids := make([]uuid.UUID, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _c.AddPeriodIDs(ids...)
-}
-
 // Mutation returns the ParokiMutation object of the builder.
 func (_c *ParokiCreate) Mutation() *ParokiMutation {
 	return _c.mutation
@@ -893,22 +877,6 @@ func (_c *ParokiCreate) createSpec() (*Paroki, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(lookup.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := _c.mutation.PeriodsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   paroki.PeriodsTable,
-			Columns: []string{paroki.PeriodsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(period.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

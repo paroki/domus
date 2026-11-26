@@ -15,14 +15,13 @@ import (
 
 // OrgInviteInput holds fields for creating an OrgInvite.
 type OrgInviteInput struct {
-	ParokiID        uuid.UUID
-	OrgID           uuid.UUID
-	Code            string
-	Role            orginvite.Role
-	DefaultPosition *string
-	MaxUses         *int
-	ExpiresAt       time.Time
-	CreatedBy       uuid.UUID
+	ParokiID  uuid.UUID
+	OrgID     uuid.UUID
+	Code      string
+	Role      orginvite.Role
+	MaxUses   *int
+	ExpiresAt time.Time
+	CreatedBy uuid.UUID
 }
 
 // CreateOrgInvite inserts a new OrgInvite row.
@@ -34,9 +33,6 @@ func (r *Repository) CreateOrgInvite(ctx context.Context, in OrgInviteInput) (*e
 		SetRole(in.Role).
 		SetExpiresAt(in.ExpiresAt).
 		SetCreatedBy(in.CreatedBy)
-	if in.DefaultPosition != nil && *in.DefaultPosition != "" {
-		q.SetDefaultPosition(*in.DefaultPosition)
-	}
 	if in.MaxUses != nil {
 		q.SetMaxUses(*in.MaxUses)
 	}

@@ -46,6 +46,7 @@ func (Organization) Edges() []ent.Edge {
 			Unique(),
 		edge.To("members", OrgMember.Type),
 		edge.To("invites", OrgInvite.Type),
+		edge.To("periode", OrgPeriode.Type),
 	}
 }
 

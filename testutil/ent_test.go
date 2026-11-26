@@ -13,7 +13,6 @@ import (
 	"github.com/paroki/domus/ent/orginvite"
 	"github.com/paroki/domus/ent/orgmember"
 	"github.com/paroki/domus/ent/parokimember"
-	"github.com/paroki/domus/ent/period"
 	"github.com/paroki/domus/ent/schema"
 	"github.com/paroki/domus/ent/setting"
 	"github.com/paroki/domus/ent/user"
@@ -392,21 +391,6 @@ func TestLookupAndPeriodSchemas_GlobalVsTenantAndPersistence(t *testing.T) {
 		Save(ctx)
 	require.Error(t, err)
 	assert.True(t, ent.IsConstraintError(err))
-
-	// Period persistence
-	p, err := client.Period.Create().
-		SetParoki(paroki).
-		SetType(period.TypeLiturgical).
-		SetCode("LIT-2026").
-		SetName("Tahun Liturgi 2026").
-		SetStartDate("2025-11-30").
-		SetEndDate("2026-11-28").
-		SetIsCurrent(true).
-		Save(ctx)
-	require.NoError(t, err)
-	assert.Equal(t, period.TypeLiturgical, p.Type)
-	assert.Equal(t, period.StatusOpen, p.Status)
-	assert.True(t, p.IsCurrent)
 }
 
 func TestOrgSchemas_HierarchyUniquenessAndMixins(t *testing.T) {

@@ -354,8 +354,6 @@ func (s *RefFeatureSuite) TestFacadeHelpers() {
 	s.Require().NoError(err)
 	w1, err := s.client.Lingkungan.Create().SetParokiID(p1.ID).SetWilayahID(z1.ID).SetKode("w1").SetNama("W1").Save(ctx)
 	s.Require().NoError(err)
-	per1, err := s.client.Period.Create().SetParokiID(p1.ID).SetCode("fy26").SetName("FY26").SetStartDate("2026-01-01").SetEndDate("2026-12-31").Save(ctx)
-	s.Require().NoError(err)
 
 	gotP, err := s.refFeature.GetParoki(ctx, p1.ID)
 	s.Require().NoError(err)
@@ -371,10 +369,6 @@ func (s *RefFeatureSuite) TestFacadeHelpers() {
 	gotW, err := s.refFeature.ValidateLingkunganInParoki(ctx, p1.ID, w1.ID)
 	s.Require().NoError(err)
 	s.Equal(w1.ID, gotW.ID)
-
-	gotPer, err := s.refFeature.ValidatePeriodInParoki(ctx, p1.ID, per1.ID)
-	s.Require().NoError(err)
-	s.Equal(per1.ID, gotPer.ID)
 
 	u, err := s.userFeature.EnsureUser(ctx, "member@paroki.org", "Member", "", "email", "member@paroki.org")
 	s.Require().NoError(err)
@@ -587,82 +581,6 @@ func (s *RefFeatureSuite) TestLookup_SearchSortOrder() {
 	s.Equal("first", rows[0].Code)
 	s.Equal("second", rows[1].Code)
 	s.Equal("third", rows[2].Code)
-}
-
-func (s *RefFeatureSuite) TestPeriod_OverlapValidationAndIsCurrentRotation() {
-	s.setupTwoParokiWithAliceAdmin()
-	s.loginViaOTP("alice@paroki.org")
-
-	// Invalid date range returns 422.
-	s.Request("/api/ref/periods", http.MethodPost, domain.CreatePeriodRequest{
-		Code:      "bad",
-		Name:      "Bad",
-		StartDate: "2026-12-31",
-		EndDate:   "2026-01-01",
-	})
-	s.UnprocessableEntity()
-
-	// Create FY2026 as current.
-	s.Request("/api/ref/periods", http.MethodPost, domain.CreatePeriodRequest{
-		Type:      "fiscal",
-		Code:      "FY2026",
-		Name:      "Fiscal 2026",
-		StartDate: "2026-01-01",
-		EndDate:   "2026-12-31",
-		IsCurrent: true,
-	})
-	s.Created()
-	fy26 := testutil.DecodeAs[domain.PeriodResponse](s).Data
-	s.True(fy26.IsCurrent)
-
-	// Overlapping fiscal period returns 409 REF_PERIOD_OVERLAP.
-	s.Request("/api/ref/periods", http.MethodPost, domain.CreatePeriodRequest{
-		Type:      "fiscal",
-		Code:      "FY2026-H2",
-		Name:      "Overlap",
-		StartDate: "2026-06-01",
-		EndDate:   "2027-05-31",
-	})
-	s.Conflict()
-	s.Equal("REF_PERIOD_OVERLAP", s.GetErrorResponse().Error.Code)
-
-	// Same dates with type=liturgical succeeds.
-	s.Request("/api/ref/periods", http.MethodPost, domain.CreatePeriodRequest{
-		Type:      "liturgical",
-		Code:      "LIT-2026",
-		Name:      "Liturgical 2026",
-		StartDate: "2026-01-01",
-		EndDate:   "2026-12-31",
-		IsCurrent: true,
-	})
-	s.Created()
-
-	// Create FY2027 with isCurrent=true -> clears FY2026.isCurrent.
-	s.Request("/api/ref/periods", http.MethodPost, domain.CreatePeriodRequest{
-		Type:      "fiscal",
-		Code:      "FY2027",
-		Name:      "Fiscal 2027",
-		StartDate: "2027-01-01",
-		EndDate:   "2027-12-31",
-		IsCurrent: true,
-	})
-	s.Created()
-	fy27 := testutil.DecodeAs[domain.PeriodResponse](s).Data
-	s.True(fy27.IsCurrent)
-
-	s.Request("/api/ref/periods/"+fy26.ID.String(), http.MethodGet, nil)
-	s.OK()
-	got26 := testutil.DecodeAs[domain.PeriodResponse](s).Data
-	s.False(got26.IsCurrent)
-
-	// PATCH FY2026 isCurrent=true -> clears FY2027.isCurrent.
-	tVal := true
-	s.Request("/api/ref/periods/"+fy26.ID.String(), http.MethodPatch, domain.UpdatePeriodRequest{IsCurrent: &tVal})
-	s.OK()
-	s.Request("/api/ref/periods/"+fy27.ID.String(), http.MethodGet, nil)
-	s.OK()
-	got27 := testutil.DecodeAs[domain.PeriodResponse](s).Data
-	s.False(got27.IsCurrent)
 }
 
 func (s *RefFeatureSuite) TestKevikepanCRUD_SearchPaginationReactivationAndRBAC() {

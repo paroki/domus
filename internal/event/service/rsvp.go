@@ -231,7 +231,6 @@ func toRSVPResponse(row *ent.EventRSVP, u *ent.User, m *ent.OrgMember) domain.Ev
 	}
 	if m != nil {
 		res.OrgRole = string(m.Role)
-		res.OrgPosition = m.Position
 	}
 	return res
 }

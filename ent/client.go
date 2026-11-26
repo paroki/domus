@@ -36,9 +36,9 @@ import (
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orginvite"
 	"github.com/paroki/domus/ent/orgmember"
+	"github.com/paroki/domus/ent/orgperiode"
 	"github.com/paroki/domus/ent/paroki"
 	"github.com/paroki/domus/ent/parokimember"
-	"github.com/paroki/domus/ent/period"
 	"github.com/paroki/domus/ent/setting"
 	"github.com/paroki/domus/ent/umat"
 	"github.com/paroki/domus/ent/umatsakramen"
@@ -93,14 +93,14 @@ type Client struct {
 	OrgInvite *OrgInviteClient
 	// OrgMember is the client for interacting with the OrgMember builders.
 	OrgMember *OrgMemberClient
+	// OrgPeriode is the client for interacting with the OrgPeriode builders.
+	OrgPeriode *OrgPeriodeClient
 	// Organization is the client for interacting with the Organization builders.
 	Organization *OrganizationClient
 	// Paroki is the client for interacting with the Paroki builders.
 	Paroki *ParokiClient
 	// ParokiMember is the client for interacting with the ParokiMember builders.
 	ParokiMember *ParokiMemberClient
-	// Period is the client for interacting with the Period builders.
-	Period *PeriodClient
 	// Setting is the client for interacting with the Setting builders.
 	Setting *SettingClient
 	// Umat is the client for interacting with the Umat builders.
@@ -149,10 +149,10 @@ func (c *Client) init() {
 	c.Lookup = NewLookupClient(c.config)
 	c.OrgInvite = NewOrgInviteClient(c.config)
 	c.OrgMember = NewOrgMemberClient(c.config)
+	c.OrgPeriode = NewOrgPeriodeClient(c.config)
 	c.Organization = NewOrganizationClient(c.config)
 	c.Paroki = NewParokiClient(c.config)
 	c.ParokiMember = NewParokiMemberClient(c.config)
-	c.Period = NewPeriodClient(c.config)
 	c.Setting = NewSettingClient(c.config)
 	c.Umat = NewUmatClient(c.config)
 	c.UmatSakramen = NewUmatSakramenClient(c.config)
@@ -273,10 +273,10 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Lookup:        NewLookupClient(cfg),
 		OrgInvite:     NewOrgInviteClient(cfg),
 		OrgMember:     NewOrgMemberClient(cfg),
+		OrgPeriode:    NewOrgPeriodeClient(cfg),
 		Organization:  NewOrganizationClient(cfg),
 		Paroki:        NewParokiClient(cfg),
 		ParokiMember:  NewParokiMemberClient(cfg),
-		Period:        NewPeriodClient(cfg),
 		Setting:       NewSettingClient(cfg),
 		Umat:          NewUmatClient(cfg),
 		UmatSakramen:  NewUmatSakramenClient(cfg),
@@ -324,10 +324,10 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Lookup:        NewLookupClient(cfg),
 		OrgInvite:     NewOrgInviteClient(cfg),
 		OrgMember:     NewOrgMemberClient(cfg),
+		OrgPeriode:    NewOrgPeriodeClient(cfg),
 		Organization:  NewOrganizationClient(cfg),
 		Paroki:        NewParokiClient(cfg),
 		ParokiMember:  NewParokiMemberClient(cfg),
-		Period:        NewPeriodClient(cfg),
 		Setting:       NewSettingClient(cfg),
 		Umat:          NewUmatClient(cfg),
 		UmatSakramen:  NewUmatSakramenClient(cfg),
@@ -369,9 +369,9 @@ func (c *Client) Use(hooks ...Hook) {
 		c.AgentMemory, c.AgentMessage, c.AgentProvider, c.AgentSession, c.CasbinRule,
 		c.Event, c.EventLagu, c.EventPetugas, c.EventRSVP, c.Kecamatan, c.Keluarga,
 		c.Kelurahan, c.Keuskupan, c.Kevikepan, c.Kota, c.Lingkungan, c.Lookup,
-		c.OrgInvite, c.OrgMember, c.Organization, c.Paroki, c.ParokiMember, c.Period,
-		c.Setting, c.Umat, c.UmatSakramen, c.User, c.UserAccount, c.UserOTP,
-		c.UserSession, c.UserToken, c.Wilayah,
+		c.OrgInvite, c.OrgMember, c.OrgPeriode, c.Organization, c.Paroki,
+		c.ParokiMember, c.Setting, c.Umat, c.UmatSakramen, c.User, c.UserAccount,
+		c.UserOTP, c.UserSession, c.UserToken, c.Wilayah,
 	} {
 		n.Use(hooks...)
 	}
@@ -384,9 +384,9 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.AgentMemory, c.AgentMessage, c.AgentProvider, c.AgentSession, c.CasbinRule,
 		c.Event, c.EventLagu, c.EventPetugas, c.EventRSVP, c.Kecamatan, c.Keluarga,
 		c.Kelurahan, c.Keuskupan, c.Kevikepan, c.Kota, c.Lingkungan, c.Lookup,
-		c.OrgInvite, c.OrgMember, c.Organization, c.Paroki, c.ParokiMember, c.Period,
-		c.Setting, c.Umat, c.UmatSakramen, c.User, c.UserAccount, c.UserOTP,
-		c.UserSession, c.UserToken, c.Wilayah,
+		c.OrgInvite, c.OrgMember, c.OrgPeriode, c.Organization, c.Paroki,
+		c.ParokiMember, c.Setting, c.Umat, c.UmatSakramen, c.User, c.UserAccount,
+		c.UserOTP, c.UserSession, c.UserToken, c.Wilayah,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -433,14 +433,14 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.OrgInvite.mutate(ctx, m)
 	case *OrgMemberMutation:
 		return c.OrgMember.mutate(ctx, m)
+	case *OrgPeriodeMutation:
+		return c.OrgPeriode.mutate(ctx, m)
 	case *OrganizationMutation:
 		return c.Organization.mutate(ctx, m)
 	case *ParokiMutation:
 		return c.Paroki.mutate(ctx, m)
 	case *ParokiMemberMutation:
 		return c.ParokiMember.mutate(ctx, m)
-	case *PeriodMutation:
-		return c.Period.mutate(ctx, m)
 	case *SettingMutation:
 		return c.Setting.mutate(ctx, m)
 	case *UmatMutation:
@@ -3391,6 +3391,155 @@ func (c *OrgMemberClient) mutate(ctx context.Context, m *OrgMemberMutation) (Val
 	}
 }
 
+// OrgPeriodeClient is a client for the OrgPeriode schema.
+type OrgPeriodeClient struct {
+	config
+}
+
+// NewOrgPeriodeClient returns a client for the OrgPeriode from the given config.
+func NewOrgPeriodeClient(c config) *OrgPeriodeClient {
+	return &OrgPeriodeClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `orgperiode.Hooks(f(g(h())))`.
+func (c *OrgPeriodeClient) Use(hooks ...Hook) {
+	c.hooks.OrgPeriode = append(c.hooks.OrgPeriode, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `orgperiode.Intercept(f(g(h())))`.
+func (c *OrgPeriodeClient) Intercept(interceptors ...Interceptor) {
+	c.inters.OrgPeriode = append(c.inters.OrgPeriode, interceptors...)
+}
+
+// Create returns a builder for creating a OrgPeriode entity.
+func (c *OrgPeriodeClient) Create() *OrgPeriodeCreate {
+	mutation := newOrgPeriodeMutation(c.config, OpCreate)
+	return &OrgPeriodeCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of OrgPeriode entities.
+func (c *OrgPeriodeClient) CreateBulk(builders ...*OrgPeriodeCreate) *OrgPeriodeCreateBulk {
+	return &OrgPeriodeCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *OrgPeriodeClient) MapCreateBulk(slice any, setFunc func(*OrgPeriodeCreate, int)) *OrgPeriodeCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &OrgPeriodeCreateBulk{err: fmt.Errorf("calling to OrgPeriodeClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*OrgPeriodeCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &OrgPeriodeCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for OrgPeriode.
+func (c *OrgPeriodeClient) Update() *OrgPeriodeUpdate {
+	mutation := newOrgPeriodeMutation(c.config, OpUpdate)
+	return &OrgPeriodeUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *OrgPeriodeClient) UpdateOne(_m *OrgPeriode) *OrgPeriodeUpdateOne {
+	mutation := newOrgPeriodeMutation(c.config, OpUpdateOne, withOrgPeriode(_m))
+	return &OrgPeriodeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *OrgPeriodeClient) UpdateOneID(id uuid.UUID) *OrgPeriodeUpdateOne {
+	mutation := newOrgPeriodeMutation(c.config, OpUpdateOne, withOrgPeriodeID(id))
+	return &OrgPeriodeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for OrgPeriode.
+func (c *OrgPeriodeClient) Delete() *OrgPeriodeDelete {
+	mutation := newOrgPeriodeMutation(c.config, OpDelete)
+	return &OrgPeriodeDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *OrgPeriodeClient) DeleteOne(_m *OrgPeriode) *OrgPeriodeDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *OrgPeriodeClient) DeleteOneID(id uuid.UUID) *OrgPeriodeDeleteOne {
+	builder := c.Delete().Where(orgperiode.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &OrgPeriodeDeleteOne{builder}
+}
+
+// Query returns a query builder for OrgPeriode.
+func (c *OrgPeriodeClient) Query() *OrgPeriodeQuery {
+	return &OrgPeriodeQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeOrgPeriode},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a OrgPeriode entity by its id.
+func (c *OrgPeriodeClient) Get(ctx context.Context, id uuid.UUID) (*OrgPeriode, error) {
+	return c.Query().Where(orgperiode.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *OrgPeriodeClient) GetX(ctx context.Context, id uuid.UUID) *OrgPeriode {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryOrganization queries the organization edge of a OrgPeriode.
+func (c *OrgPeriodeClient) QueryOrganization(_m *OrgPeriode) *OrganizationQuery {
+	query := (&OrganizationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(orgperiode.Table, orgperiode.FieldID, id),
+			sqlgraph.To(organization.Table, organization.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, orgperiode.OrganizationTable, orgperiode.OrganizationColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *OrgPeriodeClient) Hooks() []Hook {
+	return c.hooks.OrgPeriode
+}
+
+// Interceptors returns the client interceptors.
+func (c *OrgPeriodeClient) Interceptors() []Interceptor {
+	return c.inters.OrgPeriode
+}
+
+func (c *OrgPeriodeClient) mutate(ctx context.Context, m *OrgPeriodeMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&OrgPeriodeCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&OrgPeriodeUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&OrgPeriodeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&OrgPeriodeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown OrgPeriode mutation op: %q", m.Op())
+	}
+}
+
 // OrganizationClient is a client for the Organization schema.
 type OrganizationClient struct {
 	config
@@ -3556,6 +3705,22 @@ func (c *OrganizationClient) QueryInvites(_m *Organization) *OrgInviteQuery {
 			sqlgraph.From(organization.Table, organization.FieldID, id),
 			sqlgraph.To(orginvite.Table, orginvite.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, organization.InvitesTable, organization.InvitesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryPeriode queries the periode edge of a Organization.
+func (c *OrganizationClient) QueryPeriode(_m *Organization) *OrgPeriodeQuery {
+	query := (&OrgPeriodeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(organization.Table, organization.FieldID, id),
+			sqlgraph.To(orgperiode.Table, orgperiode.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, organization.PeriodeTable, organization.PeriodeColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -3872,22 +4037,6 @@ func (c *ParokiClient) QueryLookups(_m *Paroki) *LookupQuery {
 	return query
 }
 
-// QueryPeriods queries the periods edge of a Paroki.
-func (c *ParokiClient) QueryPeriods(_m *Paroki) *PeriodQuery {
-	query := (&PeriodClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(paroki.Table, paroki.FieldID, id),
-			sqlgraph.To(period.Table, period.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, paroki.PeriodsTable, paroki.PeriodsColumn),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // Hooks returns the client hooks.
 func (c *ParokiClient) Hooks() []Hook {
 	return c.hooks.Paroki
@@ -4059,155 +4208,6 @@ func (c *ParokiMemberClient) mutate(ctx context.Context, m *ParokiMemberMutation
 		return (&ParokiMemberDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown ParokiMember mutation op: %q", m.Op())
-	}
-}
-
-// PeriodClient is a client for the Period schema.
-type PeriodClient struct {
-	config
-}
-
-// NewPeriodClient returns a client for the Period from the given config.
-func NewPeriodClient(c config) *PeriodClient {
-	return &PeriodClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `period.Hooks(f(g(h())))`.
-func (c *PeriodClient) Use(hooks ...Hook) {
-	c.hooks.Period = append(c.hooks.Period, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `period.Intercept(f(g(h())))`.
-func (c *PeriodClient) Intercept(interceptors ...Interceptor) {
-	c.inters.Period = append(c.inters.Period, interceptors...)
-}
-
-// Create returns a builder for creating a Period entity.
-func (c *PeriodClient) Create() *PeriodCreate {
-	mutation := newPeriodMutation(c.config, OpCreate)
-	return &PeriodCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of Period entities.
-func (c *PeriodClient) CreateBulk(builders ...*PeriodCreate) *PeriodCreateBulk {
-	return &PeriodCreateBulk{config: c.config, builders: builders}
-}
-
-// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
-// a builder and applies setFunc on it.
-func (c *PeriodClient) MapCreateBulk(slice any, setFunc func(*PeriodCreate, int)) *PeriodCreateBulk {
-	rv := reflect.ValueOf(slice)
-	if rv.Kind() != reflect.Slice {
-		return &PeriodCreateBulk{err: fmt.Errorf("calling to PeriodClient.MapCreateBulk with wrong type %T, need slice", slice)}
-	}
-	builders := make([]*PeriodCreate, rv.Len())
-	for i := 0; i < rv.Len(); i++ {
-		builders[i] = c.Create()
-		setFunc(builders[i], i)
-	}
-	return &PeriodCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for Period.
-func (c *PeriodClient) Update() *PeriodUpdate {
-	mutation := newPeriodMutation(c.config, OpUpdate)
-	return &PeriodUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *PeriodClient) UpdateOne(_m *Period) *PeriodUpdateOne {
-	mutation := newPeriodMutation(c.config, OpUpdateOne, withPeriod(_m))
-	return &PeriodUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *PeriodClient) UpdateOneID(id uuid.UUID) *PeriodUpdateOne {
-	mutation := newPeriodMutation(c.config, OpUpdateOne, withPeriodID(id))
-	return &PeriodUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for Period.
-func (c *PeriodClient) Delete() *PeriodDelete {
-	mutation := newPeriodMutation(c.config, OpDelete)
-	return &PeriodDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *PeriodClient) DeleteOne(_m *Period) *PeriodDeleteOne {
-	return c.DeleteOneID(_m.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *PeriodClient) DeleteOneID(id uuid.UUID) *PeriodDeleteOne {
-	builder := c.Delete().Where(period.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &PeriodDeleteOne{builder}
-}
-
-// Query returns a query builder for Period.
-func (c *PeriodClient) Query() *PeriodQuery {
-	return &PeriodQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypePeriod},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a Period entity by its id.
-func (c *PeriodClient) Get(ctx context.Context, id uuid.UUID) (*Period, error) {
-	return c.Query().Where(period.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *PeriodClient) GetX(ctx context.Context, id uuid.UUID) *Period {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// QueryParoki queries the paroki edge of a Period.
-func (c *PeriodClient) QueryParoki(_m *Period) *ParokiQuery {
-	query := (&ParokiClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := _m.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(period.Table, period.FieldID, id),
-			sqlgraph.To(paroki.Table, paroki.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, period.ParokiTable, period.ParokiColumn),
-		)
-		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// Hooks returns the client hooks.
-func (c *PeriodClient) Hooks() []Hook {
-	return c.hooks.Period
-}
-
-// Interceptors returns the client interceptors.
-func (c *PeriodClient) Interceptors() []Interceptor {
-	return c.inters.Period
-}
-
-func (c *PeriodClient) mutate(ctx context.Context, m *PeriodMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&PeriodCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&PeriodUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&PeriodUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&PeriodDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown Period mutation op: %q", m.Op())
 	}
 }
 
@@ -5589,15 +5589,15 @@ type (
 	hooks struct {
 		AgentMemory, AgentMessage, AgentProvider, AgentSession, CasbinRule, Event,
 		EventLagu, EventPetugas, EventRSVP, Kecamatan, Keluarga, Kelurahan, Keuskupan,
-		Kevikepan, Kota, Lingkungan, Lookup, OrgInvite, OrgMember, Organization,
-		Paroki, ParokiMember, Period, Setting, Umat, UmatSakramen, User, UserAccount,
-		UserOTP, UserSession, UserToken, Wilayah []ent.Hook
+		Kevikepan, Kota, Lingkungan, Lookup, OrgInvite, OrgMember, OrgPeriode,
+		Organization, Paroki, ParokiMember, Setting, Umat, UmatSakramen, User,
+		UserAccount, UserOTP, UserSession, UserToken, Wilayah []ent.Hook
 	}
 	inters struct {
 		AgentMemory, AgentMessage, AgentProvider, AgentSession, CasbinRule, Event,
 		EventLagu, EventPetugas, EventRSVP, Kecamatan, Keluarga, Kelurahan, Keuskupan,
-		Kevikepan, Kota, Lingkungan, Lookup, OrgInvite, OrgMember, Organization,
-		Paroki, ParokiMember, Period, Setting, Umat, UmatSakramen, User, UserAccount,
-		UserOTP, UserSession, UserToken, Wilayah []ent.Interceptor
+		Kevikepan, Kota, Lingkungan, Lookup, OrgInvite, OrgMember, OrgPeriode,
+		Organization, Paroki, ParokiMember, Setting, Umat, UmatSakramen, User,
+		UserAccount, UserOTP, UserSession, UserToken, Wilayah []ent.Interceptor
 	}
 )

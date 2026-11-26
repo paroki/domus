@@ -15,6 +15,7 @@ import (
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orginvite"
 	"github.com/paroki/domus/ent/orgmember"
+	"github.com/paroki/domus/ent/orgperiode"
 	"github.com/paroki/domus/ent/predicate"
 )
 
@@ -257,6 +258,21 @@ func (_u *OrganizationUpdate) AddInvites(v ...*OrgInvite) *OrganizationUpdate {
 	return _u.AddInviteIDs(ids...)
 }
 
+// AddPeriodeIDs adds the "periode" edge to the OrgPeriode entity by IDs.
+func (_u *OrganizationUpdate) AddPeriodeIDs(ids ...uuid.UUID) *OrganizationUpdate {
+	_u.mutation.AddPeriodeIDs(ids...)
+	return _u
+}
+
+// AddPeriode adds the "periode" edges to the OrgPeriode entity.
+func (_u *OrganizationUpdate) AddPeriode(v ...*OrgPeriode) *OrganizationUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddPeriodeIDs(ids...)
+}
+
 // Mutation returns the OrganizationMutation object of the builder.
 func (_u *OrganizationUpdate) Mutation() *OrganizationMutation {
 	return _u.mutation
@@ -329,6 +345,27 @@ func (_u *OrganizationUpdate) RemoveInvites(v ...*OrgInvite) *OrganizationUpdate
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveInviteIDs(ids...)
+}
+
+// ClearPeriode clears all "periode" edges to the OrgPeriode entity.
+func (_u *OrganizationUpdate) ClearPeriode() *OrganizationUpdate {
+	_u.mutation.ClearPeriode()
+	return _u
+}
+
+// RemovePeriodeIDs removes the "periode" edge to OrgPeriode entities by IDs.
+func (_u *OrganizationUpdate) RemovePeriodeIDs(ids ...uuid.UUID) *OrganizationUpdate {
+	_u.mutation.RemovePeriodeIDs(ids...)
+	return _u
+}
+
+// RemovePeriode removes "periode" edges to OrgPeriode entities.
+func (_u *OrganizationUpdate) RemovePeriode(v ...*OrgPeriode) *OrganizationUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemovePeriodeIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -605,6 +642,51 @@ func (_u *OrganizationUpdate) sqlSave(ctx context.Context) (_node int, err error
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.PeriodeCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.PeriodeTable,
+			Columns: []string{organization.PeriodeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgperiode.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedPeriodeIDs(); len(nodes) > 0 && !_u.mutation.PeriodeCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.PeriodeTable,
+			Columns: []string{organization.PeriodeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgperiode.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PeriodeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.PeriodeTable,
+			Columns: []string{organization.PeriodeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgperiode.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{organization.Label}
@@ -851,6 +933,21 @@ func (_u *OrganizationUpdateOne) AddInvites(v ...*OrgInvite) *OrganizationUpdate
 	return _u.AddInviteIDs(ids...)
 }
 
+// AddPeriodeIDs adds the "periode" edge to the OrgPeriode entity by IDs.
+func (_u *OrganizationUpdateOne) AddPeriodeIDs(ids ...uuid.UUID) *OrganizationUpdateOne {
+	_u.mutation.AddPeriodeIDs(ids...)
+	return _u
+}
+
+// AddPeriode adds the "periode" edges to the OrgPeriode entity.
+func (_u *OrganizationUpdateOne) AddPeriode(v ...*OrgPeriode) *OrganizationUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddPeriodeIDs(ids...)
+}
+
 // Mutation returns the OrganizationMutation object of the builder.
 func (_u *OrganizationUpdateOne) Mutation() *OrganizationMutation {
 	return _u.mutation
@@ -923,6 +1020,27 @@ func (_u *OrganizationUpdateOne) RemoveInvites(v ...*OrgInvite) *OrganizationUpd
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveInviteIDs(ids...)
+}
+
+// ClearPeriode clears all "periode" edges to the OrgPeriode entity.
+func (_u *OrganizationUpdateOne) ClearPeriode() *OrganizationUpdateOne {
+	_u.mutation.ClearPeriode()
+	return _u
+}
+
+// RemovePeriodeIDs removes the "periode" edge to OrgPeriode entities by IDs.
+func (_u *OrganizationUpdateOne) RemovePeriodeIDs(ids ...uuid.UUID) *OrganizationUpdateOne {
+	_u.mutation.RemovePeriodeIDs(ids...)
+	return _u
+}
+
+// RemovePeriode removes "periode" edges to OrgPeriode entities.
+func (_u *OrganizationUpdateOne) RemovePeriode(v ...*OrgPeriode) *OrganizationUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemovePeriodeIDs(ids...)
 }
 
 // Where appends a list predicates to the OrganizationUpdate builder.
@@ -1222,6 +1340,51 @@ func (_u *OrganizationUpdateOne) sqlSave(ctx context.Context) (_node *Organizati
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(orginvite.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.PeriodeCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.PeriodeTable,
+			Columns: []string{organization.PeriodeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgperiode.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedPeriodeIDs(); len(nodes) > 0 && !_u.mutation.PeriodeCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.PeriodeTable,
+			Columns: []string{organization.PeriodeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgperiode.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PeriodeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.PeriodeTable,
+			Columns: []string{organization.PeriodeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgperiode.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

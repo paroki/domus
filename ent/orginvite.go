@@ -31,8 +31,6 @@ type OrgInvite struct {
 	Code string `json:"code,omitempty"`
 	// Role holds the value of the "role" field.
 	Role orginvite.Role `json:"role,omitempty"`
-	// DefaultPosition holds the value of the "default_position" field.
-	DefaultPosition *string `json:"default_position,omitempty"`
 	// MaxUses holds the value of the "max_uses" field.
 	MaxUses *int `json:"max_uses,omitempty"`
 	// UsedCount holds the value of the "used_count" field.
@@ -76,7 +74,7 @@ func (*OrgInvite) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case orginvite.FieldMaxUses, orginvite.FieldUsedCount:
 			values[i] = new(sql.NullInt64)
-		case orginvite.FieldCode, orginvite.FieldRole, orginvite.FieldDefaultPosition:
+		case orginvite.FieldCode, orginvite.FieldRole:
 			values[i] = new(sql.NullString)
 		case orginvite.FieldCreatedAt, orginvite.FieldUpdatedAt, orginvite.FieldExpiresAt, orginvite.FieldRevokedAt:
 			values[i] = new(sql.NullTime)
@@ -138,13 +136,6 @@ func (_m *OrgInvite) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field role", values[i])
 			} else if value.Valid {
 				_m.Role = orginvite.Role(value.String)
-			}
-		case orginvite.FieldDefaultPosition:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field default_position", values[i])
-			} else if value.Valid {
-				_m.DefaultPosition = new(string)
-				*_m.DefaultPosition = value.String
 			}
 		case orginvite.FieldMaxUses:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -236,11 +227,6 @@ func (_m *OrgInvite) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("role=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Role))
-	builder.WriteString(", ")
-	if v := _m.DefaultPosition; v != nil {
-		builder.WriteString("default_position=")
-		builder.WriteString(*v)
-	}
 	builder.WriteString(", ")
 	if v := _m.MaxUses; v != nil {
 		builder.WriteString("max_uses=")

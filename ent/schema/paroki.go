@@ -92,7 +92,6 @@ func (Paroki) Edges() []ent.Edge {
 		edge.To("wilayah", Wilayah.Type),
 		edge.To("lingkungan", Lingkungan.Type),
 		edge.To("lookups", Lookup.Type),
-		edge.To("periods", Period.Type),
 	}
 }
 

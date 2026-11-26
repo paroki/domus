@@ -89,8 +89,6 @@ const (
 	EdgeLingkungan = "lingkungan"
 	// EdgeLookups holds the string denoting the lookups edge name in mutations.
 	EdgeLookups = "lookups"
-	// EdgePeriods holds the string denoting the periods edge name in mutations.
-	EdgePeriods = "periods"
 	// Table holds the table name of the paroki in the database.
 	Table = "paroki"
 	// KeuskupanTable is the table that holds the keuskupan relation/edge.
@@ -164,13 +162,6 @@ const (
 	LookupsInverseTable = "lookups"
 	// LookupsColumn is the table column denoting the lookups relation/edge.
 	LookupsColumn = "paroki_id"
-	// PeriodsTable is the table that holds the periods relation/edge.
-	PeriodsTable = "periods"
-	// PeriodsInverseTable is the table name for the Period entity.
-	// It exists in this package in order to avoid circular dependency with the "period" package.
-	PeriodsInverseTable = "periods"
-	// PeriodsColumn is the table column denoting the periods relation/edge.
-	PeriodsColumn = "paroki_id"
 )
 
 // Columns holds all SQL columns for paroki fields.
@@ -484,20 +475,6 @@ func ByLookups(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newLookupsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-
-// ByPeriodsCount orders the results by periods count.
-func ByPeriodsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newPeriodsStep(), opts...)
-	}
-}
-
-// ByPeriods orders the results by periods terms.
-func ByPeriods(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newPeriodsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
 func newKeuskupanStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -573,12 +550,5 @@ func newLookupsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(LookupsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, LookupsTable, LookupsColumn),
-	)
-}
-func newPeriodsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(PeriodsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, PeriodsTable, PeriodsColumn),
 	)
 }

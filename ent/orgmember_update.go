@@ -92,86 +92,6 @@ func (_u *OrgMemberUpdate) SetNillableRole(v *orgmember.Role) *OrgMemberUpdate {
 	return _u
 }
 
-// SetPosition sets the "position" field.
-func (_u *OrgMemberUpdate) SetPosition(v string) *OrgMemberUpdate {
-	_u.mutation.SetPosition(v)
-	return _u
-}
-
-// SetNillablePosition sets the "position" field if the given value is not nil.
-func (_u *OrgMemberUpdate) SetNillablePosition(v *string) *OrgMemberUpdate {
-	if v != nil {
-		_u.SetPosition(*v)
-	}
-	return _u
-}
-
-// ClearPosition clears the value of the "position" field.
-func (_u *OrgMemberUpdate) ClearPosition() *OrgMemberUpdate {
-	_u.mutation.ClearPosition()
-	return _u
-}
-
-// SetPeriodID sets the "period_id" field.
-func (_u *OrgMemberUpdate) SetPeriodID(v uuid.UUID) *OrgMemberUpdate {
-	_u.mutation.SetPeriodID(v)
-	return _u
-}
-
-// SetNillablePeriodID sets the "period_id" field if the given value is not nil.
-func (_u *OrgMemberUpdate) SetNillablePeriodID(v *uuid.UUID) *OrgMemberUpdate {
-	if v != nil {
-		_u.SetPeriodID(*v)
-	}
-	return _u
-}
-
-// ClearPeriodID clears the value of the "period_id" field.
-func (_u *OrgMemberUpdate) ClearPeriodID() *OrgMemberUpdate {
-	_u.mutation.ClearPeriodID()
-	return _u
-}
-
-// SetStartDate sets the "start_date" field.
-func (_u *OrgMemberUpdate) SetStartDate(v string) *OrgMemberUpdate {
-	_u.mutation.SetStartDate(v)
-	return _u
-}
-
-// SetNillableStartDate sets the "start_date" field if the given value is not nil.
-func (_u *OrgMemberUpdate) SetNillableStartDate(v *string) *OrgMemberUpdate {
-	if v != nil {
-		_u.SetStartDate(*v)
-	}
-	return _u
-}
-
-// ClearStartDate clears the value of the "start_date" field.
-func (_u *OrgMemberUpdate) ClearStartDate() *OrgMemberUpdate {
-	_u.mutation.ClearStartDate()
-	return _u
-}
-
-// SetEndDate sets the "end_date" field.
-func (_u *OrgMemberUpdate) SetEndDate(v string) *OrgMemberUpdate {
-	_u.mutation.SetEndDate(v)
-	return _u
-}
-
-// SetNillableEndDate sets the "end_date" field if the given value is not nil.
-func (_u *OrgMemberUpdate) SetNillableEndDate(v *string) *OrgMemberUpdate {
-	if v != nil {
-		_u.SetEndDate(*v)
-	}
-	return _u
-}
-
-// ClearEndDate clears the value of the "end_date" field.
-func (_u *OrgMemberUpdate) ClearEndDate() *OrgMemberUpdate {
-	_u.mutation.ClearEndDate()
-	return _u
-}
-
 // SetStatus sets the "status" field.
 func (_u *OrgMemberUpdate) SetStatus(v orgmember.Status) *OrgMemberUpdate {
 	_u.mutation.SetStatus(v)
@@ -286,30 +206,6 @@ func (_u *OrgMemberUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.Role(); ok {
 		_spec.SetField(orgmember.FieldRole, field.TypeEnum, value)
 	}
-	if value, ok := _u.mutation.Position(); ok {
-		_spec.SetField(orgmember.FieldPosition, field.TypeString, value)
-	}
-	if _u.mutation.PositionCleared() {
-		_spec.ClearField(orgmember.FieldPosition, field.TypeString)
-	}
-	if value, ok := _u.mutation.PeriodID(); ok {
-		_spec.SetField(orgmember.FieldPeriodID, field.TypeUUID, value)
-	}
-	if _u.mutation.PeriodIDCleared() {
-		_spec.ClearField(orgmember.FieldPeriodID, field.TypeUUID)
-	}
-	if value, ok := _u.mutation.StartDate(); ok {
-		_spec.SetField(orgmember.FieldStartDate, field.TypeString, value)
-	}
-	if _u.mutation.StartDateCleared() {
-		_spec.ClearField(orgmember.FieldStartDate, field.TypeString)
-	}
-	if value, ok := _u.mutation.EndDate(); ok {
-		_spec.SetField(orgmember.FieldEndDate, field.TypeString, value)
-	}
-	if _u.mutation.EndDateCleared() {
-		_spec.ClearField(orgmember.FieldEndDate, field.TypeString)
-	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(orgmember.FieldStatus, field.TypeEnum, value)
 	}
@@ -421,86 +317,6 @@ func (_u *OrgMemberUpdateOne) SetNillableRole(v *orgmember.Role) *OrgMemberUpdat
 	if v != nil {
 		_u.SetRole(*v)
 	}
-	return _u
-}
-
-// SetPosition sets the "position" field.
-func (_u *OrgMemberUpdateOne) SetPosition(v string) *OrgMemberUpdateOne {
-	_u.mutation.SetPosition(v)
-	return _u
-}
-
-// SetNillablePosition sets the "position" field if the given value is not nil.
-func (_u *OrgMemberUpdateOne) SetNillablePosition(v *string) *OrgMemberUpdateOne {
-	if v != nil {
-		_u.SetPosition(*v)
-	}
-	return _u
-}
-
-// ClearPosition clears the value of the "position" field.
-func (_u *OrgMemberUpdateOne) ClearPosition() *OrgMemberUpdateOne {
-	_u.mutation.ClearPosition()
-	return _u
-}
-
-// SetPeriodID sets the "period_id" field.
-func (_u *OrgMemberUpdateOne) SetPeriodID(v uuid.UUID) *OrgMemberUpdateOne {
-	_u.mutation.SetPeriodID(v)
-	return _u
-}
-
-// SetNillablePeriodID sets the "period_id" field if the given value is not nil.
-func (_u *OrgMemberUpdateOne) SetNillablePeriodID(v *uuid.UUID) *OrgMemberUpdateOne {
-	if v != nil {
-		_u.SetPeriodID(*v)
-	}
-	return _u
-}
-
-// ClearPeriodID clears the value of the "period_id" field.
-func (_u *OrgMemberUpdateOne) ClearPeriodID() *OrgMemberUpdateOne {
-	_u.mutation.ClearPeriodID()
-	return _u
-}
-
-// SetStartDate sets the "start_date" field.
-func (_u *OrgMemberUpdateOne) SetStartDate(v string) *OrgMemberUpdateOne {
-	_u.mutation.SetStartDate(v)
-	return _u
-}
-
-// SetNillableStartDate sets the "start_date" field if the given value is not nil.
-func (_u *OrgMemberUpdateOne) SetNillableStartDate(v *string) *OrgMemberUpdateOne {
-	if v != nil {
-		_u.SetStartDate(*v)
-	}
-	return _u
-}
-
-// ClearStartDate clears the value of the "start_date" field.
-func (_u *OrgMemberUpdateOne) ClearStartDate() *OrgMemberUpdateOne {
-	_u.mutation.ClearStartDate()
-	return _u
-}
-
-// SetEndDate sets the "end_date" field.
-func (_u *OrgMemberUpdateOne) SetEndDate(v string) *OrgMemberUpdateOne {
-	_u.mutation.SetEndDate(v)
-	return _u
-}
-
-// SetNillableEndDate sets the "end_date" field if the given value is not nil.
-func (_u *OrgMemberUpdateOne) SetNillableEndDate(v *string) *OrgMemberUpdateOne {
-	if v != nil {
-		_u.SetEndDate(*v)
-	}
-	return _u
-}
-
-// ClearEndDate clears the value of the "end_date" field.
-func (_u *OrgMemberUpdateOne) ClearEndDate() *OrgMemberUpdateOne {
-	_u.mutation.ClearEndDate()
 	return _u
 }
 
@@ -647,30 +463,6 @@ func (_u *OrgMemberUpdateOne) sqlSave(ctx context.Context) (_node *OrgMember, er
 	}
 	if value, ok := _u.mutation.Role(); ok {
 		_spec.SetField(orgmember.FieldRole, field.TypeEnum, value)
-	}
-	if value, ok := _u.mutation.Position(); ok {
-		_spec.SetField(orgmember.FieldPosition, field.TypeString, value)
-	}
-	if _u.mutation.PositionCleared() {
-		_spec.ClearField(orgmember.FieldPosition, field.TypeString)
-	}
-	if value, ok := _u.mutation.PeriodID(); ok {
-		_spec.SetField(orgmember.FieldPeriodID, field.TypeUUID, value)
-	}
-	if _u.mutation.PeriodIDCleared() {
-		_spec.ClearField(orgmember.FieldPeriodID, field.TypeUUID)
-	}
-	if value, ok := _u.mutation.StartDate(); ok {
-		_spec.SetField(orgmember.FieldStartDate, field.TypeString, value)
-	}
-	if _u.mutation.StartDateCleared() {
-		_spec.ClearField(orgmember.FieldStartDate, field.TypeString)
-	}
-	if value, ok := _u.mutation.EndDate(); ok {
-		_spec.SetField(orgmember.FieldEndDate, field.TypeString, value)
-	}
-	if _u.mutation.EndDateCleared() {
-		_spec.ClearField(orgmember.FieldEndDate, field.TypeString)
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(orgmember.FieldStatus, field.TypeEnum, value)

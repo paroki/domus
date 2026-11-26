@@ -32,9 +32,9 @@ import (
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orginvite"
 	"github.com/paroki/domus/ent/orgmember"
+	"github.com/paroki/domus/ent/orgperiode"
 	"github.com/paroki/domus/ent/paroki"
 	"github.com/paroki/domus/ent/parokimember"
-	"github.com/paroki/domus/ent/period"
 	"github.com/paroki/domus/ent/setting"
 	"github.com/paroki/domus/ent/umat"
 	"github.com/paroki/domus/ent/umatsakramen"
@@ -123,10 +123,10 @@ func checkColumn(t, c string) error {
 			lookup.Table:        lookup.ValidColumn,
 			orginvite.Table:     orginvite.ValidColumn,
 			orgmember.Table:     orgmember.ValidColumn,
+			orgperiode.Table:    orgperiode.ValidColumn,
 			organization.Table:  organization.ValidColumn,
 			paroki.Table:        paroki.ValidColumn,
 			parokimember.Table:  parokimember.ValidColumn,
-			period.Table:        period.ValidColumn,
 			setting.Table:       setting.ValidColumn,
 			umat.Table:          umat.ValidColumn,
 			umatsakramen.Table:  umatsakramen.ValidColumn,

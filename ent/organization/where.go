@@ -738,6 +738,29 @@ func HasInvitesWith(preds ...predicate.OrgInvite) predicate.Organization {
 	})
 }
 
+// HasPeriode applies the HasEdge predicate on the "periode" edge.
+func HasPeriode() predicate.Organization {
+	return predicate.Organization(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, PeriodeTable, PeriodeColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPeriodeWith applies the HasEdge predicate on the "periode" edge with a given conditions (other predicates).
+func HasPeriodeWith(preds ...predicate.OrgPeriode) predicate.Organization {
+	return predicate.Organization(func(s *sql.Selector) {
+		step := newPeriodeStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Organization) predicate.Organization {
 	return predicate.Organization(sql.AndPredicates(predicates...))

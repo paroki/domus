@@ -266,21 +266,6 @@ type LookupResponse struct {
 	UpdatedAt time.Time  `json:"updatedAt"`
 }
 
-// PeriodResponse is the public API representation of a Period.
-type PeriodResponse struct {
-	ID        uuid.UUID `json:"id"`
-	ParokiID  uuid.UUID `json:"parokiId"`
-	Type      string    `json:"type"`
-	Code      string    `json:"code"`
-	Name      string    `json:"name"`
-	StartDate string    `json:"startDate"`
-	EndDate   string    `json:"endDate"`
-	Status    string    `json:"status"`
-	IsCurrent bool      `json:"isCurrent"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
-}
-
 // WilayahSearchFilter filters wilayah search results.
 type WilayahSearchFilter struct {
 	Jenis  string `json:"jenis,omitempty" validate:"omitempty,oneof=wilayah stasi"`
@@ -380,41 +365,6 @@ type UpdateLookupRequest struct {
 	Label     *string `json:"label,omitempty" validate:"omitempty,min=1"`
 	SortOrder *int    `json:"sortOrder,omitempty"`
 	Active    *bool   `json:"active,omitempty"`
-}
-
-// PeriodSearchFilter filters period search results.
-type PeriodSearchFilter struct {
-	Type      string `json:"type,omitempty" validate:"omitempty,oneof=fiscal liturgical"`
-	Status    string `json:"status,omitempty" validate:"omitempty,oneof=open closed"`
-	IsCurrent *bool  `json:"isCurrent,omitempty"`
-}
-
-// SearchPeriodsRequest searches fiscal and liturgical periods in the active paroki.
-type SearchPeriodsRequest struct {
-	Q      string              `json:"q,omitempty"`
-	Filter *PeriodSearchFilter `json:"filter,omitempty"`
-	Cursor string              `json:"cursor,omitempty"`
-	Limit  int                 `json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
-}
-
-// CreatePeriodRequest creates a fiscal or liturgical Period.
-type CreatePeriodRequest struct {
-	Type      string `json:"type,omitempty" validate:"omitempty,oneof=fiscal liturgical"`
-	Code      string `json:"code" validate:"required"`
-	Name      string `json:"name" validate:"required,min=1"`
-	StartDate string `json:"startDate" validate:"required"`
-	EndDate   string `json:"endDate" validate:"required"`
-	IsCurrent bool   `json:"isCurrent,omitempty"`
-}
-
-// UpdatePeriodRequest updates an existing Period.
-type UpdatePeriodRequest struct {
-	Code      *string `json:"code,omitempty"`
-	Name      *string `json:"name,omitempty" validate:"omitempty,min=1"`
-	StartDate *string `json:"startDate,omitempty"`
-	EndDate   *string `json:"endDate,omitempty"`
-	Status    *string `json:"status,omitempty" validate:"omitempty,oneof=open closed"`
-	IsCurrent *bool   `json:"isCurrent,omitempty"`
 }
 
 // KevikepanResponse is the public API representation of a Kevikepan.

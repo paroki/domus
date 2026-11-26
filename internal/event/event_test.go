@@ -306,10 +306,9 @@ func (s *EventFeatureSuite) TestEventRSVP_UpsertDeleteCutoffSummaryAndRoster() {
 	s.loginViaOTP("orgadmin@paroki.org")
 	s.SetHeader("X-Paroki-Id", parokiID.String())
 	s.Request(fmt.Sprintf("/api/orgs/%s/members", orgID), http.MethodPost, orgdomain.AddOrgMemberRequest{
-		Email:    "member2@paroki.org",
-		Name:     "OMK Member 2",
-		Role:     "member",
-		Position: new("Sekretaris"),
+		Email: "member2@paroki.org",
+		Name:  "OMK Member 2",
+		Role:  "member",
 	})
 	s.Created()
 
@@ -378,8 +377,7 @@ func (s *EventFeatureSuite) TestEventRSVP_UpsertDeleteCutoffSummaryAndRoster() {
 	})
 	s.OK()
 	rsvp2 := testutil.DecodeAs[domain.EventRSVPResponse](s).Data
-	s.Require().NotNil(rsvp2.OrgPosition)
-	s.Equal("Sekretaris", *rsvp2.OrgPosition)
+	s.Equal("going", rsvp2.Status)
 
 	// Verify GET /api/events/{id} and POST /api/events/search populate myRsvp & rsvpSummary for org member.
 	s.Request(fmt.Sprintf("/api/events/%s", ev.ID), http.MethodGet, nil)
@@ -625,7 +623,6 @@ func (s *EventFeatureSuite) TestParishLevelEventsAndOpenRSVP() {
 	rsvp := testutil.DecodeAs[domain.EventRSVPResponse](s).Data
 	s.Equal("going", rsvp.Status)
 	s.Empty(rsvp.OrgRole)
-	s.Nil(rsvp.OrgPosition)
 
 	s.Request(fmt.Sprintf("/api/events/%s/rsvps/summary", parishEv.ID), http.MethodGet, nil)
 	s.OK()

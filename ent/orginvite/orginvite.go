@@ -28,8 +28,6 @@ const (
 	FieldCode = "code"
 	// FieldRole holds the string denoting the role field in the database.
 	FieldRole = "role"
-	// FieldDefaultPosition holds the string denoting the default_position field in the database.
-	FieldDefaultPosition = "default_position"
 	// FieldMaxUses holds the string denoting the max_uses field in the database.
 	FieldMaxUses = "max_uses"
 	// FieldUsedCount holds the string denoting the used_count field in the database.
@@ -62,7 +60,6 @@ var Columns = []string{
 	FieldOrgID,
 	FieldCode,
 	FieldRole,
-	FieldDefaultPosition,
 	FieldMaxUses,
 	FieldUsedCount,
 	FieldExpiresAt,
@@ -157,11 +154,6 @@ func ByCode(opts ...sql.OrderTermOption) OrderOption {
 // ByRole orders the results by the role field.
 func ByRole(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRole, opts...).ToFunc()
-}
-
-// ByDefaultPosition orders the results by the default_position field.
-func ByDefaultPosition(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldDefaultPosition, opts...).ToFunc()
 }
 
 // ByMaxUses orders the results by the max_uses field.

@@ -35,7 +35,6 @@ type UserEnsurer interface {
 type RefValidator interface {
 	ValidateWilayahInParoki(ctx context.Context, parokiID, wilayahID uuid.UUID) error
 	ValidateLingkunganInParoki(ctx context.Context, parokiID, lingkunganID uuid.UUID) error
-	ValidatePeriodInParoki(ctx context.Context, parokiID, periodID uuid.UUID) error
 	EnsureParokiMember(ctx context.Context, parokiID, userID uuid.UUID) error
 }
 
@@ -258,10 +257,6 @@ func toOrgMemberResponse(m *ent.OrgMember, u *ent.User) domain.OrgMemberResponse
 		OrgID:     m.OrgID,
 		UserID:    m.UserID,
 		Role:      string(m.Role),
-		Position:  m.Position,
-		PeriodID:  m.PeriodID,
-		StartDate: m.StartDate,
-		EndDate:   m.EndDate,
 		Status:    string(m.Status),
 		CreatedAt: m.CreatedAt,
 		UpdatedAt: m.UpdatedAt,

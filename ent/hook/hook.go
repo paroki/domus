@@ -237,6 +237,18 @@ func (f OrgMemberFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, e
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.OrgMemberMutation", m)
 }
 
+// The OrgPeriodeFunc type is an adapter to allow the use of ordinary
+// function as OrgPeriode mutator.
+type OrgPeriodeFunc func(context.Context, *ent.OrgPeriodeMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f OrgPeriodeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.OrgPeriodeMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.OrgPeriodeMutation", m)
+}
+
 // The OrganizationFunc type is an adapter to allow the use of ordinary
 // function as Organization mutator.
 type OrganizationFunc func(context.Context, *ent.OrganizationMutation) (ent.Value, error)
@@ -271,18 +283,6 @@ func (f ParokiMemberFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ParokiMemberMutation", m)
-}
-
-// The PeriodFunc type is an adapter to allow the use of ordinary
-// function as Period mutator.
-type PeriodFunc func(context.Context, *ent.PeriodMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f PeriodFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.PeriodMutation); ok {
-		return f(ctx, mv)
-	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PeriodMutation", m)
 }
 
 // The SettingFunc type is an adapter to allow the use of ordinary

@@ -21,7 +21,6 @@ import (
 	"github.com/paroki/domus/ent/lookup"
 	"github.com/paroki/domus/ent/paroki"
 	"github.com/paroki/domus/ent/parokimember"
-	"github.com/paroki/domus/ent/period"
 	"github.com/paroki/domus/ent/predicate"
 	"github.com/paroki/domus/ent/wilayah"
 )
@@ -614,21 +613,6 @@ func (_u *ParokiUpdate) AddLookups(v ...*Lookup) *ParokiUpdate {
 	return _u.AddLookupIDs(ids...)
 }
 
-// AddPeriodIDs adds the "periods" edge to the Period entity by IDs.
-func (_u *ParokiUpdate) AddPeriodIDs(ids ...uuid.UUID) *ParokiUpdate {
-	_u.mutation.AddPeriodIDs(ids...)
-	return _u
-}
-
-// AddPeriods adds the "periods" edges to the Period entity.
-func (_u *ParokiUpdate) AddPeriods(v ...*Period) *ParokiUpdate {
-	ids := make([]uuid.UUID, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _u.AddPeriodIDs(ids...)
-}
-
 // Mutation returns the ParokiMutation object of the builder.
 func (_u *ParokiUpdate) Mutation() *ParokiMutation {
 	return _u.mutation
@@ -773,27 +757,6 @@ func (_u *ParokiUpdate) RemoveLookups(v ...*Lookup) *ParokiUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveLookupIDs(ids...)
-}
-
-// ClearPeriods clears all "periods" edges to the Period entity.
-func (_u *ParokiUpdate) ClearPeriods() *ParokiUpdate {
-	_u.mutation.ClearPeriods()
-	return _u
-}
-
-// RemovePeriodIDs removes the "periods" edge to Period entities by IDs.
-func (_u *ParokiUpdate) RemovePeriodIDs(ids ...uuid.UUID) *ParokiUpdate {
-	_u.mutation.RemovePeriodIDs(ids...)
-	return _u
-}
-
-// RemovePeriods removes "periods" edges to Period entities.
-func (_u *ParokiUpdate) RemovePeriods(v ...*Period) *ParokiUpdate {
-	ids := make([]uuid.UUID, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _u.RemovePeriodIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -1364,51 +1327,6 @@ func (_u *ParokiUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(lookup.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if _u.mutation.PeriodsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   paroki.PeriodsTable,
-			Columns: []string{paroki.PeriodsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(period.FieldID, field.TypeUUID),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.RemovedPeriodsIDs(); len(nodes) > 0 && !_u.mutation.PeriodsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   paroki.PeriodsTable,
-			Columns: []string{paroki.PeriodsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(period.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.PeriodsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   paroki.PeriodsTable,
-			Columns: []string{paroki.PeriodsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(period.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -2011,21 +1929,6 @@ func (_u *ParokiUpdateOne) AddLookups(v ...*Lookup) *ParokiUpdateOne {
 	return _u.AddLookupIDs(ids...)
 }
 
-// AddPeriodIDs adds the "periods" edge to the Period entity by IDs.
-func (_u *ParokiUpdateOne) AddPeriodIDs(ids ...uuid.UUID) *ParokiUpdateOne {
-	_u.mutation.AddPeriodIDs(ids...)
-	return _u
-}
-
-// AddPeriods adds the "periods" edges to the Period entity.
-func (_u *ParokiUpdateOne) AddPeriods(v ...*Period) *ParokiUpdateOne {
-	ids := make([]uuid.UUID, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _u.AddPeriodIDs(ids...)
-}
-
 // Mutation returns the ParokiMutation object of the builder.
 func (_u *ParokiUpdateOne) Mutation() *ParokiMutation {
 	return _u.mutation
@@ -2170,27 +2073,6 @@ func (_u *ParokiUpdateOne) RemoveLookups(v ...*Lookup) *ParokiUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveLookupIDs(ids...)
-}
-
-// ClearPeriods clears all "periods" edges to the Period entity.
-func (_u *ParokiUpdateOne) ClearPeriods() *ParokiUpdateOne {
-	_u.mutation.ClearPeriods()
-	return _u
-}
-
-// RemovePeriodIDs removes the "periods" edge to Period entities by IDs.
-func (_u *ParokiUpdateOne) RemovePeriodIDs(ids ...uuid.UUID) *ParokiUpdateOne {
-	_u.mutation.RemovePeriodIDs(ids...)
-	return _u
-}
-
-// RemovePeriods removes "periods" edges to Period entities.
-func (_u *ParokiUpdateOne) RemovePeriods(v ...*Period) *ParokiUpdateOne {
-	ids := make([]uuid.UUID, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _u.RemovePeriodIDs(ids...)
 }
 
 // Where appends a list predicates to the ParokiUpdate builder.
@@ -2791,51 +2673,6 @@ func (_u *ParokiUpdateOne) sqlSave(ctx context.Context) (_node *Paroki, err erro
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(lookup.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if _u.mutation.PeriodsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   paroki.PeriodsTable,
-			Columns: []string{paroki.PeriodsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(period.FieldID, field.TypeUUID),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.RemovedPeriodsIDs(); len(nodes) > 0 && !_u.mutation.PeriodsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   paroki.PeriodsTable,
-			Columns: []string{paroki.PeriodsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(period.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.PeriodsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   paroki.PeriodsTable,
-			Columns: []string{paroki.PeriodsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(period.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

@@ -81,10 +81,6 @@ type MCPOrgMember struct {
 	Name      string    `json:"name"`
 	Phone     *string   `json:"phone,omitempty"`
 	Role      string    `json:"role"`
-	Position  *string   `json:"position,omitempty"`
-	PeriodID  *string   `json:"periodId,omitempty"`
-	StartDate *string   `json:"startDate,omitempty"`
-	EndDate   *string   `json:"endDate,omitempty"`
 	Status    string    `json:"status"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
@@ -97,41 +93,66 @@ type OrgListMembersOutput struct {
 
 // OrgUpdateMemberInput is the input schema for org_update_member.
 type OrgUpdateMemberInput struct {
-	OrgID    string  `json:"orgId"`
-	UserID   string  `json:"userId,omitempty"`
-	Email    string  `json:"email,omitempty"`
-	Name     string  `json:"name,omitempty"`
-	Phone    *string `json:"phone,omitempty"`
-	Role     string  `json:"role,omitempty"`
-	Position *string `json:"position,omitempty"`
-	PeriodID *string `json:"periodId,omitempty"`
-	Status   *string `json:"status,omitempty"`
+	OrgID  string  `json:"orgId"`
+	UserID string  `json:"userId,omitempty"`
+	Email  string  `json:"email,omitempty"`
+	Name   string  `json:"name,omitempty"`
+	Phone  *string `json:"phone,omitempty"`
+	Role   string  `json:"role,omitempty"`
+	Status *string `json:"status,omitempty"`
 }
 
 // OrgCreateInviteInput is the input schema for org_create_invite.
 type OrgCreateInviteInput struct {
-	OrgID           string  `json:"orgId"`
-	Role            string  `json:"role,omitempty"`
-	DefaultPosition *string `json:"defaultPosition,omitempty"`
-	MaxUses         *int    `json:"maxUses,omitempty"`
-	TTLSeconds      *int    `json:"ttlSeconds,omitempty"`
+	OrgID      string `json:"orgId"`
+	Role       string `json:"role,omitempty"`
+	MaxUses    *int   `json:"maxUses,omitempty"`
+	TTLSeconds *int   `json:"ttlSeconds,omitempty"`
 }
 
 // MCPOrgInvite is the MCP-safe representation of an OrgInvite (UUIDs as strings).
 type MCPOrgInvite struct {
-	ID              string     `json:"id"`
-	ParokiID        string     `json:"parokiId"`
-	OrgID           string     `json:"orgId"`
-	Code            string     `json:"code"`
-	Role            string     `json:"role"`
-	DefaultPosition *string    `json:"defaultPosition,omitempty"`
-	MaxUses         *int       `json:"maxUses,omitempty"`
-	UsedCount       int        `json:"usedCount"`
-	ExpiresAt       time.Time  `json:"expiresAt"`
-	RevokedAt       *time.Time `json:"revokedAt,omitempty"`
-	CreatedBy       string     `json:"createdBy"`
-	CreatedAt       time.Time  `json:"createdAt"`
-	UpdatedAt       time.Time  `json:"updatedAt"`
+	ID        string     `json:"id"`
+	ParokiID  string     `json:"parokiId"`
+	OrgID     string     `json:"orgId"`
+	Code      string     `json:"code"`
+	Role      string     `json:"role"`
+	MaxUses   *int       `json:"maxUses,omitempty"`
+	UsedCount int        `json:"usedCount"`
+	ExpiresAt time.Time  `json:"expiresAt"`
+	RevokedAt *time.Time `json:"revokedAt,omitempty"`
+	CreatedBy string     `json:"createdBy"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt time.Time  `json:"updatedAt"`
+}
+
+// OrgListPeriodeInput is the input schema for org_list_periode.
+type OrgListPeriodeInput struct {
+	OrgID     string `json:"orgId"`
+	Query     string `json:"query,omitempty"`
+	Status    string `json:"status,omitempty"`
+	IsCurrent *bool  `json:"isCurrent,omitempty"`
+	Limit     int    `json:"limit,omitempty"`
+}
+
+// MCPOrgPeriode is the MCP-safe representation of an OrgPeriode (UUIDs as strings).
+type MCPOrgPeriode struct {
+	ID             string    `json:"id"`
+	ParokiID       string    `json:"parokiId"`
+	OrgID          string    `json:"orgId"`
+	Kode           string    `json:"kode"`
+	Nama           string    `json:"nama"`
+	TanggalMulai   string    `json:"tanggalMulai"`
+	TanggalSelesai string    `json:"tanggalSelesai"`
+	Status         string    `json:"status"`
+	IsCurrent      bool      `json:"isCurrent"`
+	CreatedAt      time.Time `json:"createdAt"`
+	UpdatedAt      time.Time `json:"updatedAt"`
+}
+
+// OrgListPeriodeOutput is the output schema for org_list_periode.
+type OrgListPeriodeOutput struct {
+	Periode []MCPOrgPeriode `json:"periode"`
 }
 
 // OrgRevokeInviteInput is the input schema for org_revoke_invite.
@@ -198,6 +219,11 @@ func (f *Feature) RegisterMCP(s *mcp.Server) {
 		Name:        "org_redeem_invite",
 		Description: "Redeem an organization invite code to join the organization and its paroki.",
 	}, f.mcpOrgRedeemInvite)
+
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "org_list_periode",
+		Description: "List periods of an organization (requires org:admin, org:member, or ref:paroki-admin).",
+	}, f.mcpOrgListPeriode)
 }
 
 func (f *Feature) mcpOrgList(ctx context.Context, _ *mcp.CallToolRequest, in OrgListInput) (*mcp.CallToolResult, OrgListOutput, error) {
@@ -340,20 +366,6 @@ func (f *Feature) mcpOrgUpdateMember(ctx context.Context, _ *mcp.CallToolRequest
 		return nil, MCPOrgMember{}, httpx.BadRequest("Invalid organization ID.")
 	}
 
-	var periodID *uuid.UUID
-	if in.PeriodID != nil {
-		if *in.PeriodID == "" {
-			nilID := uuid.Nil
-			periodID = &nilID
-		} else {
-			parsed, err := uuid.Parse(*in.PeriodID)
-			if err != nil {
-				return nil, MCPOrgMember{}, httpx.BadRequest("Invalid period ID.")
-			}
-			periodID = &parsed
-		}
-	}
-
 	var userID *uuid.UUID
 	if in.UserID != "" {
 		parsed, err := uuid.Parse(in.UserID)
@@ -368,10 +380,8 @@ func (f *Feature) mcpOrgUpdateMember(ctx context.Context, _ *mcp.CallToolRequest
 			rolePtr = &r
 		}
 		res, err := f.service.UpdateOrgMember(ctx, p, orgID, parsed, domain.UpdateOrgMemberRequest{
-			Role:     rolePtr,
-			Position: in.Position,
-			PeriodID: periodID,
-			Status:   in.Status,
+			Role:   rolePtr,
+			Status: in.Status,
 		})
 		if err == nil {
 			return nil, toMCPOrgMember(res), nil
@@ -386,14 +396,12 @@ func (f *Feature) mcpOrgUpdateMember(ctx context.Context, _ *mcp.CallToolRequest
 		status = *in.Status
 	}
 	res, err := f.service.AddOrgMember(ctx, p, orgID, domain.AddOrgMemberRequest{
-		UserID:   userID,
-		Email:    in.Email,
-		Name:     in.Name,
-		Phone:    in.Phone,
-		Role:     in.Role,
-		Position: in.Position,
-		PeriodID: periodID,
-		Status:   status,
+		UserID: userID,
+		Email:  in.Email,
+		Name:   in.Name,
+		Phone:  in.Phone,
+		Role:   in.Role,
+		Status: status,
 	})
 	if err != nil {
 		return nil, MCPOrgMember{}, err
@@ -411,10 +419,9 @@ func (f *Feature) mcpOrgCreateInvite(ctx context.Context, _ *mcp.CallToolRequest
 		return nil, MCPOrgInvite{}, httpx.BadRequest("Invalid organization ID.")
 	}
 	res, err := f.service.CreateOrgInvite(ctx, p, orgID, domain.CreateOrgInviteRequest{
-		Role:            in.Role,
-		DefaultPosition: in.DefaultPosition,
-		MaxUses:         in.MaxUses,
-		TTLSeconds:      in.TTLSeconds,
+		Role:       in.Role,
+		MaxUses:    in.MaxUses,
+		TTLSeconds: in.TTLSeconds,
 	})
 	if err != nil {
 		return nil, MCPOrgInvite{}, err
@@ -511,10 +518,6 @@ func toMCPOrgMember(m domain.OrgMemberResponse) MCPOrgMember {
 		Name:      m.Name,
 		Phone:     m.Phone,
 		Role:      m.Role,
-		Position:  m.Position,
-		PeriodID:  uuidPtrStr(m.PeriodID),
-		StartDate: m.StartDate,
-		EndDate:   m.EndDate,
 		Status:    m.Status,
 		CreatedAt: m.CreatedAt,
 		UpdatedAt: m.UpdatedAt,
@@ -523,18 +526,64 @@ func toMCPOrgMember(m domain.OrgMemberResponse) MCPOrgMember {
 
 func toMCPOrgInvite(inv domain.OrgInviteResponse) MCPOrgInvite {
 	return MCPOrgInvite{
-		ID:              inv.ID.String(),
-		ParokiID:        inv.ParokiID.String(),
-		OrgID:           inv.OrgID.String(),
-		Code:            inv.Code,
-		Role:            inv.Role,
-		DefaultPosition: inv.DefaultPosition,
-		MaxUses:         inv.MaxUses,
-		UsedCount:       inv.UsedCount,
-		ExpiresAt:       inv.ExpiresAt,
-		RevokedAt:       inv.RevokedAt,
-		CreatedBy:       inv.CreatedBy.String(),
-		CreatedAt:       inv.CreatedAt,
-		UpdatedAt:       inv.UpdatedAt,
+		ID:        inv.ID.String(),
+		ParokiID:  inv.ParokiID.String(),
+		OrgID:     inv.OrgID.String(),
+		Code:      inv.Code,
+		Role:      inv.Role,
+		MaxUses:   inv.MaxUses,
+		UsedCount: inv.UsedCount,
+		ExpiresAt: inv.ExpiresAt,
+		RevokedAt: inv.RevokedAt,
+		CreatedBy: inv.CreatedBy.String(),
+		CreatedAt: inv.CreatedAt,
+		UpdatedAt: inv.UpdatedAt,
 	}
+}
+
+func (f *Feature) mcpOrgListPeriode(ctx context.Context, _ *mcp.CallToolRequest, in OrgListPeriodeInput) (*mcp.CallToolResult, OrgListPeriodeOutput, error) {
+	p, err := requireMCPTenant(ctx)
+	if err != nil {
+		return nil, OrgListPeriodeOutput{}, err
+	}
+	orgID, err := uuid.Parse(in.OrgID)
+	if err != nil {
+		return nil, OrgListPeriodeOutput{}, httpx.BadRequest("Invalid organization ID.")
+	}
+	var filter *domain.OrgPeriodeSearchFilter
+	if in.Status != "" || in.IsCurrent != nil {
+		filter = &domain.OrgPeriodeSearchFilter{
+			Status:    in.Status,
+			IsCurrent: in.IsCurrent,
+		}
+	}
+	items, _, err := f.service.SearchOrgPeriode(
+		ctx,
+		p,
+		orgID,
+		domain.SearchOrgPeriodeRequest{Q: in.Query, Filter: filter},
+		nil,
+		nil,
+		clampMCPLimit(in.Limit),
+	)
+	if err != nil {
+		return nil, OrgListPeriodeOutput{}, err
+	}
+	out := make([]MCPOrgPeriode, 0, len(items))
+	for _, item := range items {
+		out = append(out, MCPOrgPeriode{
+			ID:             item.ID.String(),
+			ParokiID:       item.ParokiID.String(),
+			OrgID:          item.OrgID.String(),
+			Kode:           item.Kode,
+			Nama:           item.Nama,
+			TanggalMulai:   item.TanggalMulai,
+			TanggalSelesai: item.TanggalSelesai,
+			Status:         item.Status,
+			IsCurrent:      item.IsCurrent,
+			CreatedAt:      item.CreatedAt,
+			UpdatedAt:      item.UpdatedAt,
+		})
+	}
+	return nil, OrgListPeriodeOutput{Periode: out}, nil
 }

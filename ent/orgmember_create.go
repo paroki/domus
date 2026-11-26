@@ -82,62 +82,6 @@ func (_c *OrgMemberCreate) SetNillableRole(v *orgmember.Role) *OrgMemberCreate {
 	return _c
 }
 
-// SetPosition sets the "position" field.
-func (_c *OrgMemberCreate) SetPosition(v string) *OrgMemberCreate {
-	_c.mutation.SetPosition(v)
-	return _c
-}
-
-// SetNillablePosition sets the "position" field if the given value is not nil.
-func (_c *OrgMemberCreate) SetNillablePosition(v *string) *OrgMemberCreate {
-	if v != nil {
-		_c.SetPosition(*v)
-	}
-	return _c
-}
-
-// SetPeriodID sets the "period_id" field.
-func (_c *OrgMemberCreate) SetPeriodID(v uuid.UUID) *OrgMemberCreate {
-	_c.mutation.SetPeriodID(v)
-	return _c
-}
-
-// SetNillablePeriodID sets the "period_id" field if the given value is not nil.
-func (_c *OrgMemberCreate) SetNillablePeriodID(v *uuid.UUID) *OrgMemberCreate {
-	if v != nil {
-		_c.SetPeriodID(*v)
-	}
-	return _c
-}
-
-// SetStartDate sets the "start_date" field.
-func (_c *OrgMemberCreate) SetStartDate(v string) *OrgMemberCreate {
-	_c.mutation.SetStartDate(v)
-	return _c
-}
-
-// SetNillableStartDate sets the "start_date" field if the given value is not nil.
-func (_c *OrgMemberCreate) SetNillableStartDate(v *string) *OrgMemberCreate {
-	if v != nil {
-		_c.SetStartDate(*v)
-	}
-	return _c
-}
-
-// SetEndDate sets the "end_date" field.
-func (_c *OrgMemberCreate) SetEndDate(v string) *OrgMemberCreate {
-	_c.mutation.SetEndDate(v)
-	return _c
-}
-
-// SetNillableEndDate sets the "end_date" field if the given value is not nil.
-func (_c *OrgMemberCreate) SetNillableEndDate(v *string) *OrgMemberCreate {
-	if v != nil {
-		_c.SetEndDate(*v)
-	}
-	return _c
-}
-
 // SetStatus sets the "status" field.
 func (_c *OrgMemberCreate) SetStatus(v orgmember.Status) *OrgMemberCreate {
 	_c.mutation.SetStatus(v)
@@ -324,22 +268,6 @@ func (_c *OrgMemberCreate) createSpec() (*OrgMember, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Role(); ok {
 		_spec.SetField(orgmember.FieldRole, field.TypeEnum, value)
 		_node.Role = value
-	}
-	if value, ok := _c.mutation.Position(); ok {
-		_spec.SetField(orgmember.FieldPosition, field.TypeString, value)
-		_node.Position = &value
-	}
-	if value, ok := _c.mutation.PeriodID(); ok {
-		_spec.SetField(orgmember.FieldPeriodID, field.TypeUUID, value)
-		_node.PeriodID = &value
-	}
-	if value, ok := _c.mutation.StartDate(); ok {
-		_spec.SetField(orgmember.FieldStartDate, field.TypeString, value)
-		_node.StartDate = &value
-	}
-	if value, ok := _c.mutation.EndDate(); ok {
-		_spec.SetField(orgmember.FieldEndDate, field.TypeString, value)
-		_node.EndDate = &value
 	}
 	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(orgmember.FieldStatus, field.TypeEnum, value)

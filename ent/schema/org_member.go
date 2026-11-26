@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// OrgMember links a User ID to an Organization with a role, position, and term.
+// OrgMember links a User ID to an Organization with a role and status.
 type OrgMember struct {
 	ent.Schema
 }
@@ -28,10 +28,6 @@ func (OrgMember) Fields() []ent.Field {
 		field.UUID("org_id", uuid.UUID{}),
 		field.UUID("user_id", uuid.UUID{}),
 		field.Enum("role").Values("admin", "member").Default("member"),
-		field.String("position").Optional().Nillable(),
-		field.UUID("period_id", uuid.UUID{}).Optional().Nillable(),
-		field.String("start_date").Optional().Nillable(),
-		field.String("end_date").Optional().Nillable(),
 		field.Enum("status").Values("active", "inactive").Default("active"),
 	}
 }

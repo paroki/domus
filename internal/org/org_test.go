@@ -94,7 +94,7 @@ func (s *OrgFeatureSuite) loginViaOTP(email string) {
 	s.Cookies = s.HttpResponse.Cookies()
 }
 
-func (s *OrgFeatureSuite) seedParokiWithAdmin(parokiAdminEmail string) (parokiID, wilayahID, lingkunganID, periodID, parokiAdminUserID uuid.UUID) {
+func (s *OrgFeatureSuite) seedParokiWithAdmin(parokiAdminEmail string) (parokiID, wilayahID, lingkunganID, parokiAdminUserID uuid.UUID) {
 	s.loginViaOTP("super@paroki.org")
 
 	s.Request("/api/ref/keuskupan", http.MethodPost, refdomain.CreateKeuskupanRequest{
@@ -139,21 +139,11 @@ func (s *OrgFeatureSuite) seedParokiWithAdmin(parokiAdminEmail string) (parokiID
 	s.Created()
 	lingkunganID = testutil.DecodeAs[refdomain.LingkunganResponse](s).Data.ID
 
-	s.Request("/api/ref/periods", http.MethodPost, refdomain.CreatePeriodRequest{
-		Type:      "fiscal",
-		Code:      "2026",
-		Name:      "Tahun 2026",
-		StartDate: "2026-01-01",
-		EndDate:   "2026-12-31",
-	})
-	s.Created()
-	periodID = testutil.DecodeAs[refdomain.PeriodResponse](s).Data.ID
-
-	return parokiID, wilayahID, lingkunganID, periodID, parokiAdminUserID
+	return parokiID, wilayahID, lingkunganID, parokiAdminUserID
 }
 
 func (s *OrgFeatureSuite) TestOrgCRUD_SearchGetUpdateDeleteAndReactivation() {
-	parokiID, wilayahID, lingkunganID, _, _ := s.seedParokiWithAdmin("padmin@paroki.org")
+	parokiID, wilayahID, lingkunganID, _ := s.seedParokiWithAdmin("padmin@paroki.org")
 
 	// Regular paroki member (not ref:paroki-admin) cannot create org.
 	plainUser, err := s.userFeature.EnsureUser(context.Background(), "plain@paroki.org", "Plain User", "", "email", "plain@paroki.org")
@@ -257,7 +247,7 @@ func (s *OrgFeatureSuite) TestOrgCRUD_SearchGetUpdateDeleteAndReactivation() {
 }
 
 func (s *OrgFeatureSuite) TestOrgMemberCRUD_LeastPrivilegeCasbinAndLastAdminGuard() {
-	parokiID, _, _, periodID, parokiAdminID := s.seedParokiWithAdmin("padmin@paroki.org")
+	parokiID, _, _, parokiAdminID := s.seedParokiWithAdmin("padmin@paroki.org")
 	s.SetHeader("X-Paroki-Id", parokiID.String())
 
 	// Create org without initial admin.
@@ -302,13 +292,10 @@ func (s *OrgFeatureSuite) TestOrgMemberCRUD_LeastPrivilegeCasbinAndLastAdminGuar
 	_, err := s.userFeature.EnsureUser(context.Background(), "member1@paroki.org", "Original Name", "", "email", "member1@paroki.org")
 	s.Require().NoError(err)
 
-	pos := "Sekretaris"
 	s.Request(fmt.Sprintf("/api/orgs/%s/members", orgRow.ID), http.MethodPost, domain.AddOrgMemberRequest{
-		Email:    "member1@paroki.org",
-		Name:     "Ignored Override Name",
-		Role:     "member",
-		Position: &pos,
-		PeriodID: &periodID,
+		Email: "member1@paroki.org",
+		Name:  "Ignored Override Name",
+		Role:  "member",
 	})
 	s.Created()
 	mem1 := testutil.DecodeAs[domain.OrgMemberResponse](s).Data
@@ -316,7 +303,7 @@ func (s *OrgFeatureSuite) TestOrgMemberCRUD_LeastPrivilegeCasbinAndLastAdminGuar
 	s.Equal("member", mem1.Role)
 
 	s.Request(fmt.Sprintf("/api/orgs/%s/members/search", orgRow.ID), http.MethodPost, domain.SearchOrgMembersRequest{
-		Q: "Sekretaris",
+		Q: "Original",
 	})
 	s.OK()
 	s.Len(testutil.DecodeAs[[]domain.OrgMemberResponse](s).Data, 1)
@@ -340,18 +327,12 @@ func (s *OrgFeatureSuite) TestOrgMemberCRUD_LeastPrivilegeCasbinAndLastAdminGuar
 	s.Conflict()
 	s.Equal("ORG_LAST_ADMIN_REQUIRED", s.GetErrorResponse().Error.Code)
 
-	// Clear position & periodId, and set member1 inactive -> Casbin roles revoked.
-	emptyPos := ""
-	nilPeriod := uuid.Nil
+	// Set member1 inactive -> Casbin roles revoked.
 	s.Request(fmt.Sprintf("/api/orgs/%s/members/%s", orgRow.ID, mem1.UserID), http.MethodPatch, domain.UpdateOrgMemberRequest{
-		Position: &emptyPos,
-		PeriodID: &nilPeriod,
-		Status:   &inactiveStatus,
+		Status: &inactiveStatus,
 	})
 	s.OK()
 	updatedMem1 := testutil.DecodeAs[domain.OrgMemberResponse](s).Data
-	s.Nil(updatedMem1.Position)
-	s.Nil(updatedMem1.PeriodID)
 	s.Equal("inactive", updatedMem1.Status)
 
 	hasMemRole, err := s.enforcer.HasRoleInDomain(authz.UserSubject(mem1.UserID), org.RoleMember, authz.OrgDomain(orgRow.ID))
@@ -372,7 +353,7 @@ func (s *OrgFeatureSuite) TestOrgMemberCRUD_LeastPrivilegeCasbinAndLastAdminGuar
 }
 
 func (s *OrgFeatureSuite) TestOrgFacadeHelpersAndRefDeleteGuards() {
-	parokiID, wilayahID, lingkunganID, periodID, parokiAdminID := s.seedParokiWithAdmin("padmin@paroki.org")
+	parokiID, wilayahID, lingkunganID, parokiAdminID := s.seedParokiWithAdmin("padmin@paroki.org")
 	s.SetHeader("X-Paroki-Id", parokiID.String())
 
 	s.Request("/api/orgs", http.MethodPost, domain.CreateOrganizationRequest{
@@ -412,19 +393,6 @@ func (s *OrgFeatureSuite) TestOrgFacadeHelpersAndRefDeleteGuards() {
 	s.Request(fmt.Sprintf("/api/ref/wilayah/%s", wilayahID), http.MethodDelete, nil)
 	s.Conflict()
 	s.Equal("REF_IN_USE", s.GetErrorResponse().Error.Code)
-
-	// Period cannot be deleted while referenced by an OrgMember.
-	s.Request(fmt.Sprintf("/api/orgs/%s/members", orgRow.ID), http.MethodPost, domain.AddOrgMemberRequest{
-		Email:    "period-mem@paroki.org",
-		Name:     "Period Member",
-		Role:     "member",
-		PeriodID: &periodID,
-	})
-	s.Created()
-
-	s.Request(fmt.Sprintf("/api/ref/periods/%s", periodID), http.MethodDelete, nil)
-	s.Conflict()
-	s.Equal("REF_IN_USE", s.GetErrorResponse().Error.Code)
 }
 
 type stubOAuthProvider struct {
@@ -442,7 +410,7 @@ func (p *stubOAuthProvider) Exchange(_ context.Context, _, _ string) (userdomain
 }
 
 func (s *OrgFeatureSuite) TestOrgInvites_LifecycleRedeemAndGuestOnboarding() {
-	parokiID, _, _, _, parokiAdminID := s.seedParokiWithAdmin("padmin@paroki.org")
+	parokiID, _, _, parokiAdminID := s.seedParokiWithAdmin("padmin@paroki.org")
 	s.SetHeader("X-Paroki-Id", parokiID.String())
 
 	// Create org with separate initial org:admin.
@@ -479,11 +447,9 @@ func (s *OrgFeatureSuite) TestOrgInvites_LifecycleRedeemAndGuestOnboarding() {
 
 	// Create single-use member invite.
 	maxOne := 1
-	pos := "Anggota"
 	s.Request(fmt.Sprintf("/api/orgs/%s/invites", orgRow.ID), http.MethodPost, domain.CreateOrgInviteRequest{
-		Role:            "member",
-		DefaultPosition: &pos,
-		MaxUses:         &maxOne,
+		Role:    "member",
+		MaxUses: &maxOne,
 	})
 	s.Created()
 	inv1 := testutil.DecodeAs[domain.OrgInviteResponse](s).Data
@@ -646,7 +612,7 @@ func (s *OrgFeatureSuite) TestOrgInvites_LifecycleRedeemAndGuestOnboarding() {
 }
 
 func (s *OrgFeatureSuite) TestIssue94_ReactivationInactiveMemberCycleMaxUsesAndOTPPhone() {
-	parokiID, _, _, _, parokiAdminID := s.seedParokiWithAdmin("padmin@paroki.org")
+	parokiID, _, _, parokiAdminID := s.seedParokiWithAdmin("padmin@paroki.org")
 	s.SetHeader("X-Paroki-Id", parokiID.String())
 	ctx := context.Background()
 
@@ -715,17 +681,13 @@ func (s *OrgFeatureSuite) TestIssue94_ReactivationInactiveMemberCycleMaxUsesAndO
 	})
 	s.OK()
 
-	posBendahara := "Bendahara"
 	s.Request(fmt.Sprintf("/api/orgs/%s/members", orgA.ID), http.MethodPost, domain.AddOrgMemberRequest{
-		Email:    "siti@paroki.org",
-		Role:     "member",
-		Position: &posBendahara,
+		Email: "siti@paroki.org",
+		Role:  "member",
 	})
 	s.Created()
 	readded := testutil.DecodeAs[domain.OrgMemberResponse](s).Data
 	s.Equal("active", readded.Status)
-	s.Require().NotNil(readded.Position)
-	s.Equal("Bendahara", *readded.Position)
 	sitiAfter, err := s.client.User.Get(ctx, memUser.ID)
 	s.Require().NoError(err)
 	s.Equal("Siti Rahayu", sitiAfter.Name)
@@ -810,7 +772,7 @@ func (s *OrgFeatureSuite) TestIssue94_ReactivationInactiveMemberCycleMaxUsesAndO
 }
 
 func (s *OrgFeatureSuite) TestDeleteOrganization_InUseWithEvent() {
-	parokiID, _, _, _, parokiAdminID := s.seedParokiWithAdmin("padmin@paroki.org")
+	parokiID, _, _, parokiAdminID := s.seedParokiWithAdmin("padmin@paroki.org")
 	s.SetHeader("X-Paroki-Id", parokiID.String())
 
 	s.Request("/api/orgs", http.MethodPost, domain.CreateOrganizationRequest{
@@ -869,6 +831,183 @@ func (s *OrgFeatureSuite) TestDeleteOrganization_InUseWithEvent() {
 	err = s.client.EventPetugas.DeleteOneID(petugasRow.ID).Exec(ctx)
 	s.Require().NoError(err)
 
+	s.Request(fmt.Sprintf("/api/orgs/%s", orgRow.ID), http.MethodDelete, nil)
+	s.NoContent()
+}
+
+func (s *OrgFeatureSuite) TestOrgPeriode_CRUD_Overlap_IsCurrent_Reactivation_RBAC_AndInUse() {
+	parokiID, _, _, _ := s.seedParokiWithAdmin("padmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+
+	// Create org with separate initial org:admin.
+	s.Request("/api/orgs", http.MethodPost, domain.CreateOrganizationRequest{
+		Kind:              "section",
+		Code:              "sek-liturgi",
+		Name:              "Seksi Liturgi",
+		InitialAdminEmail: "liturgiadmin@paroki.org",
+		InitialAdminName:  "Liturgi Admin",
+	})
+	s.Created()
+	orgRow := testutil.DecodeAs[domain.OrganizationResponse](s).Data
+
+	// Create a non-member paroki user and an org:member.
+	outsider, err := s.userFeature.EnsureUser(context.Background(), "outsider@paroki.org", "Outsider", "", "email", "outsider@paroki.org")
+	s.Require().NoError(err)
+	_, err = s.refFeature.EnsureParokiMember(context.Background(), parokiID, outsider.ID)
+	s.Require().NoError(err)
+
+	s.loginViaOTP("liturgiadmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+	s.Request(fmt.Sprintf("/api/orgs/%s/members", orgRow.ID), http.MethodPost, domain.AddOrgMemberRequest{
+		Email: "member@paroki.org",
+		Name:  "Liturgi Member",
+		Role:  "member",
+	})
+	s.Created()
+
+	// Invalid date range returns 422 VALIDATION_ERROR.
+	s.Request(fmt.Sprintf("/api/orgs/%s/periode", orgRow.ID), http.MethodPost, domain.CreateOrgPeriodeRequest{
+		Kode:           "bad-range",
+		Nama:           "Bad Range",
+		TanggalMulai:   "2026-12-31",
+		TanggalSelesai: "2026-01-01",
+	})
+	s.UnprocessableEntity()
+	s.Equal("VALIDATION_ERROR", s.GetErrorResponse().Error.Code)
+
+	// Create first period (2025-2026) as isCurrent=true.
+	s.Request(fmt.Sprintf("/api/orgs/%s/periode", orgRow.ID), http.MethodPost, domain.CreateOrgPeriodeRequest{
+		Kode:           "2025-2026",
+		Nama:           "Periode 2025-2026",
+		TanggalMulai:   "2025-01-01",
+		TanggalSelesai: "2026-12-31",
+		IsCurrent:      true,
+	})
+	s.Created()
+	p1 := testutil.DecodeAs[domain.OrgPeriodeResponse](s).Data
+	s.True(p1.IsCurrent)
+	s.Equal("open", p1.Status)
+
+	// Duplicate kode returns 409 ORG_CODE_CONFLICT.
+	s.Request(fmt.Sprintf("/api/orgs/%s/periode", orgRow.ID), http.MethodPost, domain.CreateOrgPeriodeRequest{
+		Kode:           "2025-2026",
+		Nama:           "Duplicate",
+		TanggalMulai:   "2027-01-01",
+		TanggalSelesai: "2027-12-31",
+	})
+	s.Conflict()
+	s.Equal("ORG_CODE_CONFLICT", s.GetErrorResponse().Error.Code)
+
+	// Overlapping date range returns 409 ORG_PERIODE_OVERLAP.
+	s.Request(fmt.Sprintf("/api/orgs/%s/periode", orgRow.ID), http.MethodPost, domain.CreateOrgPeriodeRequest{
+		Kode:           "overlap-2026",
+		Nama:           "Overlap",
+		TanggalMulai:   "2026-06-01",
+		TanggalSelesai: "2027-05-31",
+	})
+	s.Conflict()
+	s.Equal("ORG_PERIODE_OVERLAP", s.GetErrorResponse().Error.Code)
+
+	// Create second period (2027-2028) with isCurrent=true -> atomically clears p1.isCurrent.
+	s.Request(fmt.Sprintf("/api/orgs/%s/periode", orgRow.ID), http.MethodPost, domain.CreateOrgPeriodeRequest{
+		Kode:           "2027-2028",
+		Nama:           "Periode 2027-2028",
+		TanggalMulai:   "2027-01-01",
+		TanggalSelesai: "2028-12-31",
+		IsCurrent:      true,
+	})
+	s.Created()
+	p2 := testutil.DecodeAs[domain.OrgPeriodeResponse](s).Data
+	s.True(p2.IsCurrent)
+
+	s.Request(fmt.Sprintf("/api/orgs/%s/periode/%s", orgRow.ID, p1.ID), http.MethodGet, nil)
+	s.OK()
+	s.False(testutil.DecodeAs[domain.OrgPeriodeResponse](s).Data.IsCurrent)
+
+	// PATCH p1 isCurrent=true -> atomically clears p2.isCurrent; PATCH overlapping dates -> 409 ORG_PERIODE_OVERLAP.
+	tVal := true
+	s.Request(fmt.Sprintf("/api/orgs/%s/periode/%s", orgRow.ID, p1.ID), http.MethodPatch, domain.UpdateOrgPeriodeRequest{
+		IsCurrent: &tVal,
+	})
+	s.OK()
+	s.True(testutil.DecodeAs[domain.OrgPeriodeResponse](s).Data.IsCurrent)
+
+	s.Request(fmt.Sprintf("/api/orgs/%s/periode/%s", orgRow.ID, p2.ID), http.MethodGet, nil)
+	s.OK()
+	s.False(testutil.DecodeAs[domain.OrgPeriodeResponse](s).Data.IsCurrent)
+
+	overlapEnd := "2027-06-01"
+	s.Request(fmt.Sprintf("/api/orgs/%s/periode/%s", orgRow.ID, p1.ID), http.MethodPatch, domain.UpdateOrgPeriodeRequest{
+		TanggalSelesai: &overlapEnd,
+	})
+	s.Conflict()
+	s.Equal("ORG_PERIODE_OVERLAP", s.GetErrorResponse().Error.Code)
+
+	// Search ordered by tanggal_mulai DESC, id DESC.
+	s.Request(fmt.Sprintf("/api/orgs/%s/periode/search", orgRow.ID), http.MethodPost, domain.SearchOrgPeriodeRequest{})
+	s.OK()
+	listed := testutil.DecodeAs[[]domain.OrgPeriodeResponse](s).Data
+	s.Require().Len(listed, 2)
+	s.Equal(p2.ID, listed[0].ID)
+	s.Equal(p1.ID, listed[1].ID)
+
+	// RBAC: org:member can read (search/get) but cannot write (403 ORG_FORBIDDEN).
+	s.loginViaOTP("member@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+	s.Request(fmt.Sprintf("/api/orgs/%s/periode/search", orgRow.ID), http.MethodPost, domain.SearchOrgPeriodeRequest{})
+	s.OK()
+	s.Request(fmt.Sprintf("/api/orgs/%s/periode/%s", orgRow.ID, p1.ID), http.MethodGet, nil)
+	s.OK()
+	s.Request(fmt.Sprintf("/api/orgs/%s/periode", orgRow.ID), http.MethodPost, domain.CreateOrgPeriodeRequest{
+		Kode:           "2029-2030",
+		Nama:           "Denied",
+		TanggalMulai:   "2029-01-01",
+		TanggalSelesai: "2030-12-31",
+	})
+	s.Forbidden()
+	s.Equal("ORG_FORBIDDEN", s.GetErrorResponse().Error.Code)
+
+	// RBAC: non-member paroki user gets 403 ORG_FORBIDDEN on read & write.
+	s.loginViaOTP("outsider@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+	s.Request(fmt.Sprintf("/api/orgs/%s/periode/search", orgRow.ID), http.MethodPost, domain.SearchOrgPeriodeRequest{})
+	s.Forbidden()
+	s.Equal("ORG_FORBIDDEN", s.GetErrorResponse().Error.Code)
+	s.Request(fmt.Sprintf("/api/orgs/%s/periode/%s", orgRow.ID, p1.ID), http.MethodGet, nil)
+	s.Forbidden()
+	s.Equal("ORG_FORBIDDEN", s.GetErrorResponse().Error.Code)
+
+	// Soft-delete p1 and reactivate with the same kode; ref:paroki-admin can also manage & delete org.
+	s.loginViaOTP("padmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+
+	// Organization with active OrgPeriode cannot be deleted (409 ORG_IN_USE).
+	s.Request(fmt.Sprintf("/api/orgs/%s", orgRow.ID), http.MethodDelete, nil)
+	s.Conflict()
+	s.Equal("ORG_IN_USE", s.GetErrorResponse().Error.Code)
+
+	// Soft-delete p1, then reactivate with same kode.
+	s.Request(fmt.Sprintf("/api/orgs/%s/periode/%s", orgRow.ID, p1.ID), http.MethodDelete, nil)
+	s.NoContent()
+
+	s.Request(fmt.Sprintf("/api/orgs/%s/periode", orgRow.ID), http.MethodPost, domain.CreateOrgPeriodeRequest{
+		Kode:           "2025-2026",
+		Nama:           "Periode 2025-2026 Reactivated",
+		TanggalMulai:   "2025-01-01",
+		TanggalSelesai: "2026-12-31",
+		Status:         "closed",
+	})
+	s.Created()
+	reactivated := testutil.DecodeAs[domain.OrgPeriodeResponse](s).Data
+	s.Equal(p1.ID, reactivated.ID)
+	s.Equal("closed", reactivated.Status)
+	s.False(reactivated.IsCurrent)
+
+	// Delete both periods -> organization delete succeeds (204).
+	s.Request(fmt.Sprintf("/api/orgs/%s/periode/%s", orgRow.ID, reactivated.ID), http.MethodDelete, nil)
+	s.NoContent()
+	s.Request(fmt.Sprintf("/api/orgs/%s/periode/%s", orgRow.ID, p2.ID), http.MethodDelete, nil)
+	s.NoContent()
 	s.Request(fmt.Sprintf("/api/orgs/%s", orgRow.ID), http.MethodDelete, nil)
 	s.NoContent()
 }

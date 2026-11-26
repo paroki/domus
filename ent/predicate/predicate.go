@@ -63,6 +63,9 @@ type OrgInvite func(*sql.Selector)
 // OrgMember is the predicate function for orgmember builders.
 type OrgMember func(*sql.Selector)
 
+// OrgPeriode is the predicate function for orgperiode builders.
+type OrgPeriode func(*sql.Selector)
+
 // Organization is the predicate function for organization builders.
 type Organization func(*sql.Selector)
 
@@ -71,9 +74,6 @@ type Paroki func(*sql.Selector)
 
 // ParokiMember is the predicate function for parokimember builders.
 type ParokiMember func(*sql.Selector)
-
-// Period is the predicate function for period builders.
-type Period func(*sql.Selector)
 
 // Setting is the predicate function for setting builders.
 type Setting func(*sql.Selector)

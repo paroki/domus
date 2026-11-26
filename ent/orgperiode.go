@@ -10,12 +10,12 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
-	"github.com/paroki/domus/ent/paroki"
-	"github.com/paroki/domus/ent/period"
+	"github.com/paroki/domus/ent/organization"
+	"github.com/paroki/domus/ent/orgperiode"
 )
 
-// Period is the model entity for the Period schema.
-type Period struct {
+// OrgPeriode is the model entity for the OrgPeriode schema.
+type OrgPeriode struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
@@ -27,58 +27,58 @@ type Period struct {
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 	// ParokiID holds the value of the "paroki_id" field.
 	ParokiID uuid.UUID `json:"paroki_id,omitempty"`
-	// Type holds the value of the "type" field.
-	Type period.Type `json:"type,omitempty"`
-	// Code holds the value of the "code" field.
-	Code string `json:"code,omitempty"`
-	// Name holds the value of the "name" field.
-	Name string `json:"name,omitempty"`
-	// StartDate holds the value of the "start_date" field.
-	StartDate string `json:"start_date,omitempty"`
-	// EndDate holds the value of the "end_date" field.
-	EndDate string `json:"end_date,omitempty"`
+	// OrgID holds the value of the "org_id" field.
+	OrgID uuid.UUID `json:"org_id,omitempty"`
+	// Kode holds the value of the "kode" field.
+	Kode string `json:"kode,omitempty"`
+	// Nama holds the value of the "nama" field.
+	Nama string `json:"nama,omitempty"`
+	// TanggalMulai holds the value of the "tanggal_mulai" field.
+	TanggalMulai string `json:"tanggal_mulai,omitempty"`
+	// TanggalSelesai holds the value of the "tanggal_selesai" field.
+	TanggalSelesai string `json:"tanggal_selesai,omitempty"`
 	// Status holds the value of the "status" field.
-	Status period.Status `json:"status,omitempty"`
+	Status orgperiode.Status `json:"status,omitempty"`
 	// IsCurrent holds the value of the "is_current" field.
 	IsCurrent bool `json:"is_current,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
-	// The values are being populated by the PeriodQuery when eager-loading is set.
-	Edges        PeriodEdges `json:"edges"`
+	// The values are being populated by the OrgPeriodeQuery when eager-loading is set.
+	Edges        OrgPeriodeEdges `json:"edges"`
 	selectValues sql.SelectValues
 }
 
-// PeriodEdges holds the relations/edges for other nodes in the graph.
-type PeriodEdges struct {
-	// Paroki holds the value of the paroki edge.
-	Paroki *Paroki `json:"paroki,omitempty"`
+// OrgPeriodeEdges holds the relations/edges for other nodes in the graph.
+type OrgPeriodeEdges struct {
+	// Organization holds the value of the organization edge.
+	Organization *Organization `json:"organization,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [1]bool
 }
 
-// ParokiOrErr returns the Paroki value or an error if the edge
+// OrganizationOrErr returns the Organization value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e PeriodEdges) ParokiOrErr() (*Paroki, error) {
-	if e.Paroki != nil {
-		return e.Paroki, nil
+func (e OrgPeriodeEdges) OrganizationOrErr() (*Organization, error) {
+	if e.Organization != nil {
+		return e.Organization, nil
 	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: paroki.Label}
+		return nil, &NotFoundError{label: organization.Label}
 	}
-	return nil, &NotLoadedError{edge: "paroki"}
+	return nil, &NotLoadedError{edge: "organization"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
-func (*Period) scanValues(columns []string) ([]any, error) {
+func (*OrgPeriode) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case period.FieldIsCurrent:
+		case orgperiode.FieldIsCurrent:
 			values[i] = new(sql.NullBool)
-		case period.FieldType, period.FieldCode, period.FieldName, period.FieldStartDate, period.FieldEndDate, period.FieldStatus:
+		case orgperiode.FieldKode, orgperiode.FieldNama, orgperiode.FieldTanggalMulai, orgperiode.FieldTanggalSelesai, orgperiode.FieldStatus:
 			values[i] = new(sql.NullString)
-		case period.FieldCreatedAt, period.FieldUpdatedAt, period.FieldDeletedAt:
+		case orgperiode.FieldCreatedAt, orgperiode.FieldUpdatedAt, orgperiode.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
-		case period.FieldID, period.FieldParokiID:
+		case orgperiode.FieldID, orgperiode.FieldParokiID, orgperiode.FieldOrgID:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -88,81 +88,81 @@ func (*Period) scanValues(columns []string) ([]any, error) {
 }
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
-// to the Period fields.
-func (_m *Period) assignValues(columns []string, values []any) error {
+// to the OrgPeriode fields.
+func (_m *OrgPeriode) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
 	for i := range columns {
 		switch columns[i] {
-		case period.FieldID:
+		case orgperiode.FieldID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value != nil {
 				_m.ID = *value
 			}
-		case period.FieldCreatedAt:
+		case orgperiode.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
 				_m.CreatedAt = value.Time
 			}
-		case period.FieldUpdatedAt:
+		case orgperiode.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				_m.UpdatedAt = value.Time
 			}
-		case period.FieldDeletedAt:
+		case orgperiode.FieldDeletedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
 			} else if value.Valid {
 				_m.DeletedAt = new(time.Time)
 				*_m.DeletedAt = value.Time
 			}
-		case period.FieldParokiID:
+		case orgperiode.FieldParokiID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field paroki_id", values[i])
 			} else if value != nil {
 				_m.ParokiID = *value
 			}
-		case period.FieldType:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field type", values[i])
-			} else if value.Valid {
-				_m.Type = period.Type(value.String)
+		case orgperiode.FieldOrgID:
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field org_id", values[i])
+			} else if value != nil {
+				_m.OrgID = *value
 			}
-		case period.FieldCode:
+		case orgperiode.FieldKode:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field code", values[i])
+				return fmt.Errorf("unexpected type %T for field kode", values[i])
 			} else if value.Valid {
-				_m.Code = value.String
+				_m.Kode = value.String
 			}
-		case period.FieldName:
+		case orgperiode.FieldNama:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field name", values[i])
+				return fmt.Errorf("unexpected type %T for field nama", values[i])
 			} else if value.Valid {
-				_m.Name = value.String
+				_m.Nama = value.String
 			}
-		case period.FieldStartDate:
+		case orgperiode.FieldTanggalMulai:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field start_date", values[i])
+				return fmt.Errorf("unexpected type %T for field tanggal_mulai", values[i])
 			} else if value.Valid {
-				_m.StartDate = value.String
+				_m.TanggalMulai = value.String
 			}
-		case period.FieldEndDate:
+		case orgperiode.FieldTanggalSelesai:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field end_date", values[i])
+				return fmt.Errorf("unexpected type %T for field tanggal_selesai", values[i])
 			} else if value.Valid {
-				_m.EndDate = value.String
+				_m.TanggalSelesai = value.String
 			}
-		case period.FieldStatus:
+		case orgperiode.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				_m.Status = period.Status(value.String)
+				_m.Status = orgperiode.Status(value.String)
 			}
-		case period.FieldIsCurrent:
+		case orgperiode.FieldIsCurrent:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_current", values[i])
 			} else if value.Valid {
@@ -175,39 +175,39 @@ func (_m *Period) assignValues(columns []string, values []any) error {
 	return nil
 }
 
-// Value returns the ent.Value that was dynamically selected and assigned to the Period.
+// Value returns the ent.Value that was dynamically selected and assigned to the OrgPeriode.
 // This includes values selected through modifiers, order, etc.
-func (_m *Period) Value(name string) (ent.Value, error) {
+func (_m *OrgPeriode) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
 }
 
-// QueryParoki queries the "paroki" edge of the Period entity.
-func (_m *Period) QueryParoki() *ParokiQuery {
-	return NewPeriodClient(_m.config).QueryParoki(_m)
+// QueryOrganization queries the "organization" edge of the OrgPeriode entity.
+func (_m *OrgPeriode) QueryOrganization() *OrganizationQuery {
+	return NewOrgPeriodeClient(_m.config).QueryOrganization(_m)
 }
 
-// Update returns a builder for updating this Period.
-// Note that you need to call Period.Unwrap() before calling this method if this Period
+// Update returns a builder for updating this OrgPeriode.
+// Note that you need to call OrgPeriode.Unwrap() before calling this method if this OrgPeriode
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (_m *Period) Update() *PeriodUpdateOne {
-	return NewPeriodClient(_m.config).UpdateOne(_m)
+func (_m *OrgPeriode) Update() *OrgPeriodeUpdateOne {
+	return NewOrgPeriodeClient(_m.config).UpdateOne(_m)
 }
 
-// Unwrap unwraps the Period entity that was returned from a transaction after it was closed,
+// Unwrap unwraps the OrgPeriode entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (_m *Period) Unwrap() *Period {
+func (_m *OrgPeriode) Unwrap() *OrgPeriode {
 	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
-		panic("ent: Period is not a transactional entity")
+		panic("ent: OrgPeriode is not a transactional entity")
 	}
 	_m.config.driver = _tx.drv
 	return _m
 }
 
 // String implements the fmt.Stringer.
-func (_m *Period) String() string {
+func (_m *OrgPeriode) String() string {
 	var builder strings.Builder
-	builder.WriteString("Period(")
+	builder.WriteString("OrgPeriode(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
@@ -223,20 +223,20 @@ func (_m *Period) String() string {
 	builder.WriteString("paroki_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.ParokiID))
 	builder.WriteString(", ")
-	builder.WriteString("type=")
-	builder.WriteString(fmt.Sprintf("%v", _m.Type))
+	builder.WriteString("org_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.OrgID))
 	builder.WriteString(", ")
-	builder.WriteString("code=")
-	builder.WriteString(_m.Code)
+	builder.WriteString("kode=")
+	builder.WriteString(_m.Kode)
 	builder.WriteString(", ")
-	builder.WriteString("name=")
-	builder.WriteString(_m.Name)
+	builder.WriteString("nama=")
+	builder.WriteString(_m.Nama)
 	builder.WriteString(", ")
-	builder.WriteString("start_date=")
-	builder.WriteString(_m.StartDate)
+	builder.WriteString("tanggal_mulai=")
+	builder.WriteString(_m.TanggalMulai)
 	builder.WriteString(", ")
-	builder.WriteString("end_date=")
-	builder.WriteString(_m.EndDate)
+	builder.WriteString("tanggal_selesai=")
+	builder.WriteString(_m.TanggalSelesai)
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Status))
@@ -247,5 +247,5 @@ func (_m *Period) String() string {
 	return builder.String()
 }
 
-// Periods is a parsable slice of Period.
-type Periods []*Period
+// OrgPeriodes is a parsable slice of OrgPeriode.
+type OrgPeriodes []*OrgPeriode

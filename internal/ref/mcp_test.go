@@ -70,16 +70,6 @@ func TestRefMCPTools(t *testing.T) {
 	_, err = db.Lingkungan.Create().SetParokiID(paroki1.ID).SetWilayahID(wilayah1.ID).SetKode("w1").SetNama("Lingkungan Satu").Save(ctx)
 	require.NoError(t, err)
 
-	_, err = db.Period.Create().
-		SetParokiID(paroki1.ID).
-		SetCode("2026").
-		SetName("Tahun 2026").
-		SetStartDate("2026-01-01").
-		SetEndDate("2026-12-31").
-		SetIsCurrent(true).
-		Save(ctx)
-	require.NoError(t, err)
-
 	_, err = db.Lookup.Create().SetCategory("skill").SetCode("musik").SetLabel("Musik Liturgi").Save(ctx)
 	require.NoError(t, err)
 	_, err = db.Lookup.Create().SetParokiID(paroki1.ID).SetCategory("skill").SetCode("lektor").SetLabel("Lektor").Save(ctx)
@@ -137,13 +127,6 @@ func TestRefMCPTools(t *testing.T) {
 	var gotLingkungan ref.RefListLingkunganOutput
 	require.NoError(t, json.Unmarshal([]byte(lingkunganRes.Content[0].(*mcp.TextContent).Text), &gotLingkungan))
 	require.Len(t, gotLingkungan.Lingkungan, 1)
-
-	periodsRes, err := sess.CallTool(tenantCtx, &mcp.CallToolParams{Name: "ref_list_periods"})
-	require.NoError(t, err)
-	require.False(t, periodsRes.IsError)
-	var gotPeriods ref.RefListPeriodsOutput
-	require.NoError(t, json.Unmarshal([]byte(periodsRes.Content[0].(*mcp.TextContent).Text), &gotPeriods))
-	require.Len(t, gotPeriods.Periods, 1)
 
 	lookupsRes, err := sess.CallTool(tenantCtx, &mcp.CallToolParams{
 		Name:      "ref_list_lookups",

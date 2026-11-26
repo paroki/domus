@@ -26,9 +26,9 @@ import (
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orginvite"
 	"github.com/paroki/domus/ent/orgmember"
+	"github.com/paroki/domus/ent/orgperiode"
 	"github.com/paroki/domus/ent/paroki"
 	"github.com/paroki/domus/ent/parokimember"
-	"github.com/paroki/domus/ent/period"
 	"github.com/paroki/domus/ent/schema"
 	"github.com/paroki/domus/ent/setting"
 	"github.com/paroki/domus/ent/umat"
@@ -612,7 +612,7 @@ func init() {
 	// orginvite.CodeValidator is a validator for the "code" field. It is called by the builders before save.
 	orginvite.CodeValidator = orginviteDescCode.Validators[0].(func(string) error)
 	// orginviteDescUsedCount is the schema descriptor for used_count field.
-	orginviteDescUsedCount := orginviteFields[6].Descriptor()
+	orginviteDescUsedCount := orginviteFields[5].Descriptor()
 	// orginvite.DefaultUsedCount holds the default value on creation for the used_count field.
 	orginvite.DefaultUsedCount = orginviteDescUsedCount.Default.(int)
 	// orginviteDescID is the schema descriptor for id field.
@@ -640,6 +640,47 @@ func init() {
 	orgmemberDescID := orgmemberMixinFields0[0].Descriptor()
 	// orgmember.DefaultID holds the default value on creation for the id field.
 	orgmember.DefaultID = orgmemberDescID.Default.(func() uuid.UUID)
+	orgperiodeMixin := schema.OrgPeriode{}.Mixin()
+	orgperiodeMixinFields0 := orgperiodeMixin[0].Fields()
+	_ = orgperiodeMixinFields0
+	orgperiodeMixinFields1 := orgperiodeMixin[1].Fields()
+	_ = orgperiodeMixinFields1
+	orgperiodeFields := schema.OrgPeriode{}.Fields()
+	_ = orgperiodeFields
+	// orgperiodeDescCreatedAt is the schema descriptor for created_at field.
+	orgperiodeDescCreatedAt := orgperiodeMixinFields1[0].Descriptor()
+	// orgperiode.DefaultCreatedAt holds the default value on creation for the created_at field.
+	orgperiode.DefaultCreatedAt = orgperiodeDescCreatedAt.Default.(func() time.Time)
+	// orgperiodeDescUpdatedAt is the schema descriptor for updated_at field.
+	orgperiodeDescUpdatedAt := orgperiodeMixinFields1[1].Descriptor()
+	// orgperiode.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	orgperiode.DefaultUpdatedAt = orgperiodeDescUpdatedAt.Default.(func() time.Time)
+	// orgperiode.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	orgperiode.UpdateDefaultUpdatedAt = orgperiodeDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// orgperiodeDescKode is the schema descriptor for kode field.
+	orgperiodeDescKode := orgperiodeFields[2].Descriptor()
+	// orgperiode.KodeValidator is a validator for the "kode" field. It is called by the builders before save.
+	orgperiode.KodeValidator = orgperiodeDescKode.Validators[0].(func(string) error)
+	// orgperiodeDescNama is the schema descriptor for nama field.
+	orgperiodeDescNama := orgperiodeFields[3].Descriptor()
+	// orgperiode.NamaValidator is a validator for the "nama" field. It is called by the builders before save.
+	orgperiode.NamaValidator = orgperiodeDescNama.Validators[0].(func(string) error)
+	// orgperiodeDescTanggalMulai is the schema descriptor for tanggal_mulai field.
+	orgperiodeDescTanggalMulai := orgperiodeFields[4].Descriptor()
+	// orgperiode.TanggalMulaiValidator is a validator for the "tanggal_mulai" field. It is called by the builders before save.
+	orgperiode.TanggalMulaiValidator = orgperiodeDescTanggalMulai.Validators[0].(func(string) error)
+	// orgperiodeDescTanggalSelesai is the schema descriptor for tanggal_selesai field.
+	orgperiodeDescTanggalSelesai := orgperiodeFields[5].Descriptor()
+	// orgperiode.TanggalSelesaiValidator is a validator for the "tanggal_selesai" field. It is called by the builders before save.
+	orgperiode.TanggalSelesaiValidator = orgperiodeDescTanggalSelesai.Validators[0].(func(string) error)
+	// orgperiodeDescIsCurrent is the schema descriptor for is_current field.
+	orgperiodeDescIsCurrent := orgperiodeFields[7].Descriptor()
+	// orgperiode.DefaultIsCurrent holds the default value on creation for the is_current field.
+	orgperiode.DefaultIsCurrent = orgperiodeDescIsCurrent.Default.(bool)
+	// orgperiodeDescID is the schema descriptor for id field.
+	orgperiodeDescID := orgperiodeMixinFields0[0].Descriptor()
+	// orgperiode.DefaultID holds the default value on creation for the id field.
+	orgperiode.DefaultID = orgperiodeDescID.Default.(func() uuid.UUID)
 	organizationMixin := schema.Organization{}.Mixin()
 	organizationMixinFields0 := organizationMixin[0].Fields()
 	_ = organizationMixinFields0
@@ -737,47 +778,6 @@ func init() {
 	parokimemberDescID := parokimemberMixinFields0[0].Descriptor()
 	// parokimember.DefaultID holds the default value on creation for the id field.
 	parokimember.DefaultID = parokimemberDescID.Default.(func() uuid.UUID)
-	periodMixin := schema.Period{}.Mixin()
-	periodMixinFields0 := periodMixin[0].Fields()
-	_ = periodMixinFields0
-	periodMixinFields1 := periodMixin[1].Fields()
-	_ = periodMixinFields1
-	periodFields := schema.Period{}.Fields()
-	_ = periodFields
-	// periodDescCreatedAt is the schema descriptor for created_at field.
-	periodDescCreatedAt := periodMixinFields1[0].Descriptor()
-	// period.DefaultCreatedAt holds the default value on creation for the created_at field.
-	period.DefaultCreatedAt = periodDescCreatedAt.Default.(func() time.Time)
-	// periodDescUpdatedAt is the schema descriptor for updated_at field.
-	periodDescUpdatedAt := periodMixinFields1[1].Descriptor()
-	// period.DefaultUpdatedAt holds the default value on creation for the updated_at field.
-	period.DefaultUpdatedAt = periodDescUpdatedAt.Default.(func() time.Time)
-	// period.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
-	period.UpdateDefaultUpdatedAt = periodDescUpdatedAt.UpdateDefault.(func() time.Time)
-	// periodDescCode is the schema descriptor for code field.
-	periodDescCode := periodFields[2].Descriptor()
-	// period.CodeValidator is a validator for the "code" field. It is called by the builders before save.
-	period.CodeValidator = periodDescCode.Validators[0].(func(string) error)
-	// periodDescName is the schema descriptor for name field.
-	periodDescName := periodFields[3].Descriptor()
-	// period.NameValidator is a validator for the "name" field. It is called by the builders before save.
-	period.NameValidator = periodDescName.Validators[0].(func(string) error)
-	// periodDescStartDate is the schema descriptor for start_date field.
-	periodDescStartDate := periodFields[4].Descriptor()
-	// period.StartDateValidator is a validator for the "start_date" field. It is called by the builders before save.
-	period.StartDateValidator = periodDescStartDate.Validators[0].(func(string) error)
-	// periodDescEndDate is the schema descriptor for end_date field.
-	periodDescEndDate := periodFields[5].Descriptor()
-	// period.EndDateValidator is a validator for the "end_date" field. It is called by the builders before save.
-	period.EndDateValidator = periodDescEndDate.Validators[0].(func(string) error)
-	// periodDescIsCurrent is the schema descriptor for is_current field.
-	periodDescIsCurrent := periodFields[7].Descriptor()
-	// period.DefaultIsCurrent holds the default value on creation for the is_current field.
-	period.DefaultIsCurrent = periodDescIsCurrent.Default.(bool)
-	// periodDescID is the schema descriptor for id field.
-	periodDescID := periodMixinFields0[0].Descriptor()
-	// period.DefaultID holds the default value on creation for the id field.
-	period.DefaultID = periodDescID.Default.(func() uuid.UUID)
 	settingMixin := schema.Setting{}.Mixin()
 	settingMixinFields0 := settingMixin[0].Fields()
 	_ = settingMixinFields0

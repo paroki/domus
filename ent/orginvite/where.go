@@ -81,11 +81,6 @@ func Code(v string) predicate.OrgInvite {
 	return predicate.OrgInvite(sql.FieldEQ(FieldCode, v))
 }
 
-// DefaultPosition applies equality check predicate on the "default_position" field. It's identical to DefaultPositionEQ.
-func DefaultPosition(v string) predicate.OrgInvite {
-	return predicate.OrgInvite(sql.FieldEQ(FieldDefaultPosition, v))
-}
-
 // MaxUses applies equality check predicate on the "max_uses" field. It's identical to MaxUsesEQ.
 func MaxUses(v int) predicate.OrgInvite {
 	return predicate.OrgInvite(sql.FieldEQ(FieldMaxUses, v))
@@ -334,81 +329,6 @@ func RoleIn(vs ...Role) predicate.OrgInvite {
 // RoleNotIn applies the NotIn predicate on the "role" field.
 func RoleNotIn(vs ...Role) predicate.OrgInvite {
 	return predicate.OrgInvite(sql.FieldNotIn(FieldRole, vs...))
-}
-
-// DefaultPositionEQ applies the EQ predicate on the "default_position" field.
-func DefaultPositionEQ(v string) predicate.OrgInvite {
-	return predicate.OrgInvite(sql.FieldEQ(FieldDefaultPosition, v))
-}
-
-// DefaultPositionNEQ applies the NEQ predicate on the "default_position" field.
-func DefaultPositionNEQ(v string) predicate.OrgInvite {
-	return predicate.OrgInvite(sql.FieldNEQ(FieldDefaultPosition, v))
-}
-
-// DefaultPositionIn applies the In predicate on the "default_position" field.
-func DefaultPositionIn(vs ...string) predicate.OrgInvite {
-	return predicate.OrgInvite(sql.FieldIn(FieldDefaultPosition, vs...))
-}
-
-// DefaultPositionNotIn applies the NotIn predicate on the "default_position" field.
-func DefaultPositionNotIn(vs ...string) predicate.OrgInvite {
-	return predicate.OrgInvite(sql.FieldNotIn(FieldDefaultPosition, vs...))
-}
-
-// DefaultPositionGT applies the GT predicate on the "default_position" field.
-func DefaultPositionGT(v string) predicate.OrgInvite {
-	return predicate.OrgInvite(sql.FieldGT(FieldDefaultPosition, v))
-}
-
-// DefaultPositionGTE applies the GTE predicate on the "default_position" field.
-func DefaultPositionGTE(v string) predicate.OrgInvite {
-	return predicate.OrgInvite(sql.FieldGTE(FieldDefaultPosition, v))
-}
-
-// DefaultPositionLT applies the LT predicate on the "default_position" field.
-func DefaultPositionLT(v string) predicate.OrgInvite {
-	return predicate.OrgInvite(sql.FieldLT(FieldDefaultPosition, v))
-}
-
-// DefaultPositionLTE applies the LTE predicate on the "default_position" field.
-func DefaultPositionLTE(v string) predicate.OrgInvite {
-	return predicate.OrgInvite(sql.FieldLTE(FieldDefaultPosition, v))
-}
-
-// DefaultPositionContains applies the Contains predicate on the "default_position" field.
-func DefaultPositionContains(v string) predicate.OrgInvite {
-	return predicate.OrgInvite(sql.FieldContains(FieldDefaultPosition, v))
-}
-
-// DefaultPositionHasPrefix applies the HasPrefix predicate on the "default_position" field.
-func DefaultPositionHasPrefix(v string) predicate.OrgInvite {
-	return predicate.OrgInvite(sql.FieldHasPrefix(FieldDefaultPosition, v))
-}
-
-// DefaultPositionHasSuffix applies the HasSuffix predicate on the "default_position" field.
-func DefaultPositionHasSuffix(v string) predicate.OrgInvite {
-	return predicate.OrgInvite(sql.FieldHasSuffix(FieldDefaultPosition, v))
-}
-
-// DefaultPositionIsNil applies the IsNil predicate on the "default_position" field.
-func DefaultPositionIsNil() predicate.OrgInvite {
-	return predicate.OrgInvite(sql.FieldIsNull(FieldDefaultPosition))
-}
-
-// DefaultPositionNotNil applies the NotNil predicate on the "default_position" field.
-func DefaultPositionNotNil() predicate.OrgInvite {
-	return predicate.OrgInvite(sql.FieldNotNull(FieldDefaultPosition))
-}
-
-// DefaultPositionEqualFold applies the EqualFold predicate on the "default_position" field.
-func DefaultPositionEqualFold(v string) predicate.OrgInvite {
-	return predicate.OrgInvite(sql.FieldEqualFold(FieldDefaultPosition, v))
-}
-
-// DefaultPositionContainsFold applies the ContainsFold predicate on the "default_position" field.
-func DefaultPositionContainsFold(v string) predicate.OrgInvite {
-	return predicate.OrgInvite(sql.FieldContainsFold(FieldDefaultPosition, v))
 }
 
 // MaxUsesEQ applies the EQ predicate on the "max_uses" field.

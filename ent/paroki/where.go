@@ -1869,29 +1869,6 @@ func HasLookupsWith(preds ...predicate.Lookup) predicate.Paroki {
 	})
 }
 
-// HasPeriods applies the HasEdge predicate on the "periods" edge.
-func HasPeriods() predicate.Paroki {
-	return predicate.Paroki(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, PeriodsTable, PeriodsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasPeriodsWith applies the HasEdge predicate on the "periods" edge with a given conditions (other predicates).
-func HasPeriodsWith(preds ...predicate.Period) predicate.Paroki {
-	return predicate.Paroki(func(s *sql.Selector) {
-		step := newPeriodsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Paroki) predicate.Paroki {
 	return predicate.Paroki(sql.AndPredicates(predicates...))

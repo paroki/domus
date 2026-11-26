@@ -21,6 +21,7 @@ type (
 	Member        = domain.OrgMemberResponse
 	Invite        = domain.OrgInviteResponse
 	InvitePreview = domain.OrgInvitePreviewResponse
+	OrgPeriode    = domain.OrgPeriodeResponse
 )
 
 // Feature-owned Casbin roles and resource permissions.
@@ -63,11 +64,6 @@ func (a refValidatorAdapter) ValidateWilayahInParoki(ctx context.Context, paroki
 
 func (a refValidatorAdapter) ValidateLingkunganInParoki(ctx context.Context, parokiID, lingkunganID uuid.UUID) error {
 	_, err := a.refs.ValidateLingkunganInParoki(ctx, parokiID, lingkunganID)
-	return err
-}
-
-func (a refValidatorAdapter) ValidatePeriodInParoki(ctx context.Context, parokiID, periodID uuid.UUID) error {
-	_, err := a.refs.ValidatePeriodInParoki(ctx, parokiID, periodID)
 	return err
 }
 

@@ -11,6 +11,7 @@ import (
 	"github.com/paroki/domus/ent/eventpetugas"
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orgmember"
+	"github.com/paroki/domus/ent/orgperiode"
 )
 
 // OrgInput holds fields for creating or reactivating an Organization.
@@ -188,6 +189,13 @@ func (r *Repository) HasOrgEvents(ctx context.Context, orgID uuid.UUID) (bool, e
 			eventpetugas.OrgIDEQ(orgID),
 			eventpetugas.HasEventWith(event.DeletedAtIsNil()),
 		).
+		Exist(ctx)
+}
+
+// HasOrgPeriode reports whether any non-deleted OrgPeriode belongs to orgID.
+func (r *Repository) HasOrgPeriode(ctx context.Context, orgID uuid.UUID) (bool, error) {
+	return r.client.OrgPeriode.Query().
+		Where(orgperiode.OrgIDEQ(orgID), orgperiode.DeletedAtIsNil()).
 		Exist(ctx)
 }
 

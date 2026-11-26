@@ -105,11 +105,9 @@ type ParokiEdges struct {
 	Lingkungan []*Lingkungan `json:"lingkungan,omitempty"`
 	// Lookups holds the value of the lookups edge.
 	Lookups []*Lookup `json:"lookups,omitempty"`
-	// Periods holds the value of the periods edge.
-	Periods []*Period `json:"periods,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [12]bool
+	loadedTypes [11]bool
 }
 
 // KeuskupanOrErr returns the Keuskupan value or an error if the edge
@@ -221,15 +219,6 @@ func (e ParokiEdges) LookupsOrErr() ([]*Lookup, error) {
 		return e.Lookups, nil
 	}
 	return nil, &NotLoadedError{edge: "lookups"}
-}
-
-// PeriodsOrErr returns the Periods value or an error if the edge
-// was not loaded in eager-loading.
-func (e ParokiEdges) PeriodsOrErr() ([]*Period, error) {
-	if e.loadedTypes[11] {
-		return e.Periods, nil
-	}
-	return nil, &NotLoadedError{edge: "periods"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -511,11 +500,6 @@ func (_m *Paroki) QueryLingkungan() *LingkunganQuery {
 // QueryLookups queries the "lookups" edge of the Paroki entity.
 func (_m *Paroki) QueryLookups() *LookupQuery {
 	return NewParokiClient(_m.config).QueryLookups(_m)
-}
-
-// QueryPeriods queries the "periods" edge of the Paroki entity.
-func (_m *Paroki) QueryPeriods() *PeriodQuery {
-	return NewParokiClient(_m.config).QueryPeriods(_m)
 }
 
 // Update returns a builder for updating this Paroki.

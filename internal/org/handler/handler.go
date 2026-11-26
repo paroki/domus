@@ -50,6 +50,12 @@ func (h *Handler) Register(
 	orgs.Post("/:id/invites/search", h.SearchOrgInvites)
 	orgs.Post("/:id/invites", h.CreateOrgInvite)
 	orgs.Delete("/:id/invites/:inviteId", h.RevokeOrgInvite)
+
+	orgs.Post("/:id/periode/search", h.SearchOrgPeriode)
+	orgs.Get("/:id/periode/:periodeId", h.GetOrgPeriode)
+	orgs.Post("/:id/periode", h.CreateOrgPeriode)
+	orgs.Patch("/:id/periode/:periodeId", h.UpdateOrgPeriode)
+	orgs.Delete("/:id/periode/:periodeId", h.DeleteOrgPeriode)
 }
 
 func decodeStrictJSON(c fiber.Ctx, dst any) error {

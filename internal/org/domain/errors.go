@@ -15,6 +15,8 @@ var (
 	ErrInviteExpired        = errx.Gone("ORG_INVITE_EXPIRED", "Organization invite link has expired.")
 	ErrInviteRevoked        = errx.Gone("ORG_INVITE_REVOKED", "Organization invite link has been revoked.")
 	ErrInviteMaxUsesReached = errx.Conflict("ORG_INVITE_MAX_USES_REACHED", "Organization invite link has reached its maximum uses.")
+	ErrPeriodeNotFound      = errx.NotFound("ORG_PERIODE_NOT_FOUND", "Organization period not found.")
+	ErrPeriodeOverlap       = errx.Conflict("ORG_PERIODE_OVERLAP", "Organization period dates overlap an existing period.")
 )
 
 // ValidationError constructs a 422 VALIDATION_ERROR domain error for a single field.

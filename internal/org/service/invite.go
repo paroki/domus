@@ -60,14 +60,13 @@ func (s *Service) CreateOrgInvite(
 	}
 
 	inv, err := s.repo.CreateOrgInvite(ctx, repo.OrgInviteInput{
-		ParokiID:        orgRow.ParokiID,
-		OrgID:           orgID,
-		Code:            code,
-		Role:            role,
-		DefaultPosition: trimOptString(req.DefaultPosition),
-		MaxUses:         req.MaxUses,
-		ExpiresAt:       time.Now().UTC().Add(ttl),
-		CreatedBy:       p.UserID,
+		ParokiID:  orgRow.ParokiID,
+		OrgID:     orgID,
+		Code:      code,
+		Role:      role,
+		MaxUses:   req.MaxUses,
+		ExpiresAt: time.Now().UTC().Add(ttl),
+		CreatedBy: p.UserID,
 	})
 	if err != nil {
 		return domain.OrgInviteResponse{}, err
@@ -172,19 +171,18 @@ func (s *Service) PreviewOrgInvite(ctx context.Context, code string) (domain.Org
 
 	status := computeInviteStatus(inv, time.Now().UTC())
 	return domain.OrgInvitePreviewResponse{
-		Code:            inv.Code,
-		OrgID:           orgRow.ID,
-		OrgCode:         orgRow.Code,
-		OrgName:         orgRow.Name,
-		OrgKind:         string(orgRow.Kind),
-		ParokiID:        parokiRow.ID,
-		ParokiCode:      parokiRow.Kode,
-		ParokiName:      parokiRow.Nama,
-		Role:            string(inv.Role),
-		DefaultPosition: inv.DefaultPosition,
-		ExpiresAt:       inv.ExpiresAt,
-		Status:          status,
-		Valid:           status == "active",
+		Code:       inv.Code,
+		OrgID:      orgRow.ID,
+		OrgCode:    orgRow.Code,
+		OrgName:    orgRow.Name,
+		OrgKind:    string(orgRow.Kind),
+		ParokiID:   parokiRow.ID,
+		ParokiCode: parokiRow.Kode,
+		ParokiName: parokiRow.Nama,
+		Role:       string(inv.Role),
+		ExpiresAt:  inv.ExpiresAt,
+		Status:     status,
+		Valid:      status == "active",
 	}, nil
 }
 
@@ -235,12 +233,8 @@ func (s *Service) redeemInviteInternal(ctx context.Context, code string, userID,
 				r := orgmember.RoleAdmin
 				rolePtr = &r
 			}
-			var posPtr *string
-			if existing.Position == nil && txInv.DefaultPosition != nil {
-				posPtr = txInv.DefaultPosition
-			}
-			if rolePtr != nil || posPtr != nil {
-				upd, updErr := txRepo.UpdateOrgMember(ctx, existing.ID, rolePtr, posPtr, nil, nil, nil, nil)
+			if rolePtr != nil {
+				upd, updErr := txRepo.UpdateOrgMember(ctx, existing.ID, rolePtr, nil)
 				if updErr != nil {
 					return updErr
 				}
@@ -256,11 +250,7 @@ func (s *Service) redeemInviteInternal(ctx context.Context, code string, userID,
 			if txInv.Role == orginvite.RoleAdmin || existing.Role != orgmember.RoleAdmin {
 				newRole = orgmember.Role(txInv.Role)
 			}
-			var posPtr *string
-			if existing.Position == nil && txInv.DefaultPosition != nil {
-				posPtr = txInv.DefaultPosition
-			}
-			upd, updErr := txRepo.UpdateOrgMember(ctx, existing.ID, &newRole, posPtr, nil, nil, nil, &activeStatus)
+			upd, updErr := txRepo.UpdateOrgMember(ctx, existing.ID, &newRole, &activeStatus)
 			if updErr != nil {
 				return updErr
 			}
@@ -273,7 +263,6 @@ func (s *Service) redeemInviteInternal(ctx context.Context, code string, userID,
 				OrgID:    txInv.OrgID,
 				UserID:   userID,
 				Role:     orgmember.Role(txInv.Role),
-				Position: txInv.DefaultPosition,
 				Status:   orgmember.StatusActive,
 			})
 			if createErr != nil {
@@ -372,18 +361,17 @@ func generateInviteCode() (string, error) {
 
 func toOrgInviteResponse(inv *ent.OrgInvite) domain.OrgInviteResponse {
 	return domain.OrgInviteResponse{
-		ID:              inv.ID,
-		ParokiID:        inv.ParokiID,
-		OrgID:           inv.OrgID,
-		Code:            inv.Code,
-		Role:            string(inv.Role),
-		DefaultPosition: inv.DefaultPosition,
-		MaxUses:         inv.MaxUses,
-		UsedCount:       inv.UsedCount,
-		ExpiresAt:       inv.ExpiresAt,
-		RevokedAt:       inv.RevokedAt,
-		CreatedBy:       inv.CreatedBy,
-		CreatedAt:       inv.CreatedAt,
-		UpdatedAt:       inv.UpdatedAt,
+		ID:        inv.ID,
+		ParokiID:  inv.ParokiID,
+		OrgID:     inv.OrgID,
+		Code:      inv.Code,
+		Role:      string(inv.Role),
+		MaxUses:   inv.MaxUses,
+		UsedCount: inv.UsedCount,
+		ExpiresAt: inv.ExpiresAt,
+		RevokedAt: inv.RevokedAt,
+		CreatedBy: inv.CreatedBy,
+		CreatedAt: inv.CreatedAt,
+		UpdatedAt: inv.UpdatedAt,
 	}
 }

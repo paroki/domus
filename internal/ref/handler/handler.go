@@ -22,7 +22,7 @@ func New(svc *service.Service) *Handler {
 	return &Handler{service: svc}
 }
 
-// Register mounts /ref/keuskupan, /ref/kevikepan, /ref/kota, /ref/kecamatan, /ref/kelurahan, /ref/paroki, /ref/wilayah, /ref/lingkungan, /ref/lookups, and /ref/periods routes onto api (/api).
+// Register mounts /ref/keuskupan, /ref/kevikepan, /ref/kota, /ref/kecamatan, /ref/kelurahan, /ref/paroki, /ref/wilayah, /ref/lingkungan, and /ref/lookups routes onto api (/api).
 func (h *Handler) Register(
 	api fiber.Router,
 	authMW fiber.Handler,
@@ -109,13 +109,6 @@ func (h *Handler) Register(
 	lookups.Post("", h.CreateLookup)
 	lookups.Patch("/:id", h.UpdateLookup)
 	lookups.Delete("/:id", h.DeleteLookup)
-
-	periods := api.Group("/ref/periods", authMW, requireAuth, requireTenant)
-	periods.Post("/search", requireMasterDataRead, h.SearchPeriods)
-	periods.Get("/:id", requireMasterDataRead, h.GetPeriod)
-	periods.Post("", requireMasterDataWrite, h.CreatePeriod)
-	periods.Patch("/:id", requireMasterDataWrite, h.UpdatePeriod)
-	periods.Delete("/:id", requireMasterDataWrite, h.DeletePeriod)
 }
 
 func decodeStrictJSON(c fiber.Ctx, dst any) error {

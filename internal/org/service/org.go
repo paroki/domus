@@ -214,7 +214,7 @@ func (s *Service) CreateOrganization(ctx context.Context, p authx.Principal, req
 			case err == nil:
 				adminRole := orgmember.RoleAdmin
 				activeStatus := orgmember.StatusActive
-				if _, err := txRepo.UpdateOrgMember(ctx, existingMember.ID, &adminRole, nil, nil, nil, nil, &activeStatus); err != nil {
+				if _, err := txRepo.UpdateOrgMember(ctx, existingMember.ID, &adminRole, &activeStatus); err != nil {
 					return err
 				}
 			default:
@@ -346,6 +346,12 @@ func (s *Service) DeleteOrganization(ctx context.Context, p authx.Principal, id 
 	}
 	if !inUse {
 		inUse, err = s.repo.HasOrgEvents(ctx, id)
+		if err != nil {
+			return err
+		}
+	}
+	if !inUse {
+		inUse, err = s.repo.HasOrgPeriode(ctx, id)
 		if err != nil {
 			return err
 		}

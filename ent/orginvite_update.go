@@ -92,26 +92,6 @@ func (_u *OrgInviteUpdate) SetNillableRole(v *orginvite.Role) *OrgInviteUpdate {
 	return _u
 }
 
-// SetDefaultPosition sets the "default_position" field.
-func (_u *OrgInviteUpdate) SetDefaultPosition(v string) *OrgInviteUpdate {
-	_u.mutation.SetDefaultPosition(v)
-	return _u
-}
-
-// SetNillableDefaultPosition sets the "default_position" field if the given value is not nil.
-func (_u *OrgInviteUpdate) SetNillableDefaultPosition(v *string) *OrgInviteUpdate {
-	if v != nil {
-		_u.SetDefaultPosition(*v)
-	}
-	return _u
-}
-
-// ClearDefaultPosition clears the value of the "default_position" field.
-func (_u *OrgInviteUpdate) ClearDefaultPosition() *OrgInviteUpdate {
-	_u.mutation.ClearDefaultPosition()
-	return _u
-}
-
 // SetMaxUses sets the "max_uses" field.
 func (_u *OrgInviteUpdate) SetMaxUses(v int) *OrgInviteUpdate {
 	_u.mutation.ResetMaxUses()
@@ -308,12 +288,6 @@ func (_u *OrgInviteUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.Role(); ok {
 		_spec.SetField(orginvite.FieldRole, field.TypeEnum, value)
 	}
-	if value, ok := _u.mutation.DefaultPosition(); ok {
-		_spec.SetField(orginvite.FieldDefaultPosition, field.TypeString, value)
-	}
-	if _u.mutation.DefaultPositionCleared() {
-		_spec.ClearField(orginvite.FieldDefaultPosition, field.TypeString)
-	}
 	if value, ok := _u.mutation.MaxUses(); ok {
 		_spec.SetField(orginvite.FieldMaxUses, field.TypeInt, value)
 	}
@@ -449,26 +423,6 @@ func (_u *OrgInviteUpdateOne) SetNillableRole(v *orginvite.Role) *OrgInviteUpdat
 	if v != nil {
 		_u.SetRole(*v)
 	}
-	return _u
-}
-
-// SetDefaultPosition sets the "default_position" field.
-func (_u *OrgInviteUpdateOne) SetDefaultPosition(v string) *OrgInviteUpdateOne {
-	_u.mutation.SetDefaultPosition(v)
-	return _u
-}
-
-// SetNillableDefaultPosition sets the "default_position" field if the given value is not nil.
-func (_u *OrgInviteUpdateOne) SetNillableDefaultPosition(v *string) *OrgInviteUpdateOne {
-	if v != nil {
-		_u.SetDefaultPosition(*v)
-	}
-	return _u
-}
-
-// ClearDefaultPosition clears the value of the "default_position" field.
-func (_u *OrgInviteUpdateOne) ClearDefaultPosition() *OrgInviteUpdateOne {
-	_u.mutation.ClearDefaultPosition()
 	return _u
 }
 
@@ -697,12 +651,6 @@ func (_u *OrgInviteUpdateOne) sqlSave(ctx context.Context) (_node *OrgInvite, er
 	}
 	if value, ok := _u.mutation.Role(); ok {
 		_spec.SetField(orginvite.FieldRole, field.TypeEnum, value)
-	}
-	if value, ok := _u.mutation.DefaultPosition(); ok {
-		_spec.SetField(orginvite.FieldDefaultPosition, field.TypeString, value)
-	}
-	if _u.mutation.DefaultPositionCleared() {
-		_spec.ClearField(orginvite.FieldDefaultPosition, field.TypeString)
 	}
 	if value, ok := _u.mutation.MaxUses(); ok {
 		_spec.SetField(orginvite.FieldMaxUses, field.TypeInt, value)

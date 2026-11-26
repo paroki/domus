@@ -255,11 +255,10 @@ func (s *OrgMCPSuite) TestOrgMCP_DiscoveryToolsAndRBAC() {
 		"params": map[string]any{
 			"name": "org_update_member",
 			"arguments": map[string]any{
-				"orgId":    orgID,
-				"email":    "katekis@paroki.org",
-				"name":     "Katekis 1",
-				"role":     "member",
-				"position": "Pengajar",
+				"orgId": orgID,
+				"email": "katekis@paroki.org",
+				"name":  "Katekis 1",
+				"role":  "member",
 			},
 		},
 	})
@@ -364,5 +363,36 @@ func (s *OrgMCPSuite) TestOrgMCP_DiscoveryToolsAndRBAC() {
 	s.NotContains(createOKBody, `"isError":true`)
 	s.Contains(createOKBody, `"code":"ling-st-yusuf"`)
 
-	_ = uuid.Nil
+	// 9. org_list_periode: org:admin can list, non-member gets ORG_FORBIDDEN.
+	var perEnv struct{ Data domain.OrgPeriodeResponse }
+	s.Equal(http.StatusCreated, s.apiJSON(http.MethodPost, "/api/orgs/"+orgID+"/periode", domain.CreateOrgPeriodeRequest{
+		Kode:           "2026-2028",
+		Nama:           "Periode 2026-2028",
+		TanggalMulai:   "2026-01-01",
+		TanggalSelesai: "2028-12-31",
+		IsCurrent:      true,
+	}, orgAdminCookies, parokiID, &perEnv))
+
+	_, listPeriodeOK := s.mcpPost(sessionID, orgAdminCookies, parokiID, map[string]any{
+		"jsonrpc": "2.0",
+		"id":      13,
+		"method":  "tools/call",
+		"params": map[string]any{
+			"name":      "org_list_periode",
+			"arguments": map[string]any{"orgId": orgID},
+		},
+	})
+	s.NotContains(listPeriodeOK, `"isError":true`)
+	s.Contains(listPeriodeOK, `"kode":"2026-2028"`)
+
+	_, listPeriodeDenied := s.mcpPost(sessionID, orgAdminCookies, parokiID, map[string]any{
+		"jsonrpc": "2.0",
+		"id":      14,
+		"method":  "tools/call",
+		"params": map[string]any{
+			"name":      "org_list_periode",
+			"arguments": map[string]any{"orgId": uuid.NewString()},
+		},
+	})
+	s.Contains(listPeriodeDenied, `"isError":true`)
 }

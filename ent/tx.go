@@ -50,14 +50,14 @@ type Tx struct {
 	OrgInvite *OrgInviteClient
 	// OrgMember is the client for interacting with the OrgMember builders.
 	OrgMember *OrgMemberClient
+	// OrgPeriode is the client for interacting with the OrgPeriode builders.
+	OrgPeriode *OrgPeriodeClient
 	// Organization is the client for interacting with the Organization builders.
 	Organization *OrganizationClient
 	// Paroki is the client for interacting with the Paroki builders.
 	Paroki *ParokiClient
 	// ParokiMember is the client for interacting with the ParokiMember builders.
 	ParokiMember *ParokiMemberClient
-	// Period is the client for interacting with the Period builders.
-	Period *PeriodClient
 	// Setting is the client for interacting with the Setting builders.
 	Setting *SettingClient
 	// Umat is the client for interacting with the Umat builders.
@@ -226,10 +226,10 @@ func (tx *Tx) init() {
 	tx.Lookup = NewLookupClient(tx.config)
 	tx.OrgInvite = NewOrgInviteClient(tx.config)
 	tx.OrgMember = NewOrgMemberClient(tx.config)
+	tx.OrgPeriode = NewOrgPeriodeClient(tx.config)
 	tx.Organization = NewOrganizationClient(tx.config)
 	tx.Paroki = NewParokiClient(tx.config)
 	tx.ParokiMember = NewParokiMemberClient(tx.config)
-	tx.Period = NewPeriodClient(tx.config)
 	tx.Setting = NewSettingClient(tx.config)
 	tx.Umat = NewUmatClient(tx.config)
 	tx.UmatSakramen = NewUmatSakramenClient(tx.config)

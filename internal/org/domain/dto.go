@@ -68,28 +68,23 @@ type UpdateOrganizationRequest struct {
 
 // OrgMemberResponse is the public API representation of an OrgMember joined with user info.
 type OrgMemberResponse struct {
-	ID        uuid.UUID  `json:"id"`
-	ParokiID  uuid.UUID  `json:"parokiId"`
-	OrgID     uuid.UUID  `json:"orgId"`
-	UserID    uuid.UUID  `json:"userId"`
-	Email     string     `json:"email"`
-	Name      string     `json:"name"`
-	Phone     *string    `json:"phone,omitempty"`
-	Role      string     `json:"role"`
-	Position  *string    `json:"position,omitempty"`
-	PeriodID  *uuid.UUID `json:"periodId,omitempty"`
-	StartDate *string    `json:"startDate,omitempty"`
-	EndDate   *string    `json:"endDate,omitempty"`
-	Status    string     `json:"status"`
-	CreatedAt time.Time  `json:"createdAt"`
-	UpdatedAt time.Time  `json:"updatedAt"`
+	ID        uuid.UUID `json:"id"`
+	ParokiID  uuid.UUID `json:"parokiId"`
+	OrgID     uuid.UUID `json:"orgId"`
+	UserID    uuid.UUID `json:"userId"`
+	Email     string    `json:"email"`
+	Name      string    `json:"name"`
+	Phone     *string   `json:"phone,omitempty"`
+	Role      string    `json:"role"`
+	Status    string    `json:"status"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 // OrgMemberSearchFilter filters organization member search results.
 type OrgMemberSearchFilter struct {
-	Role     string     `json:"role,omitempty" validate:"omitempty,oneof=admin member"`
-	Status   string     `json:"status,omitempty" validate:"omitempty,oneof=active inactive"`
-	PeriodID *uuid.UUID `json:"periodId,omitempty"`
+	Role   string `json:"role,omitempty" validate:"omitempty,oneof=admin member"`
+	Status string `json:"status,omitempty" validate:"omitempty,oneof=active inactive"`
 }
 
 // SearchOrgMembersRequest searches members of an Organization.
@@ -102,68 +97,106 @@ type SearchOrgMembersRequest struct {
 
 // AddOrgMemberRequest adds an existing or onboarded user as a member of an Organization.
 type AddOrgMemberRequest struct {
-	UserID    *uuid.UUID `json:"userId,omitempty"`
-	Email     string     `json:"email,omitempty" validate:"omitempty,email"`
-	Name      string     `json:"name,omitempty"`
-	Phone     *string    `json:"phone,omitempty"`
-	Role      string     `json:"role,omitempty" validate:"omitempty,oneof=admin member"`
-	Position  *string    `json:"position,omitempty"`
-	PeriodID  *uuid.UUID `json:"periodId,omitempty"`
-	StartDate *string    `json:"startDate,omitempty"`
-	EndDate   *string    `json:"endDate,omitempty"`
-	Status    string     `json:"status,omitempty" validate:"omitempty,oneof=active inactive"`
+	UserID *uuid.UUID `json:"userId,omitempty"`
+	Email  string     `json:"email,omitempty" validate:"omitempty,email"`
+	Name   string     `json:"name,omitempty"`
+	Phone  *string    `json:"phone,omitempty"`
+	Role   string     `json:"role,omitempty" validate:"omitempty,oneof=admin member"`
+	Status string     `json:"status,omitempty" validate:"omitempty,oneof=active inactive"`
 }
 
-// UpdateOrgMemberRequest updates an organization member's role, position, term, or status.
+// UpdateOrgMemberRequest updates an organization member's role or status.
 type UpdateOrgMemberRequest struct {
-	Role      *string    `json:"role,omitempty" validate:"omitempty,oneof=admin member"`
-	Position  *string    `json:"position,omitempty"`
-	PeriodID  *uuid.UUID `json:"periodId,omitempty"`
-	StartDate *string    `json:"startDate,omitempty"`
-	EndDate   *string    `json:"endDate,omitempty"`
-	Status    *string    `json:"status,omitempty" validate:"omitempty,oneof=active inactive"`
+	Role   *string `json:"role,omitempty" validate:"omitempty,oneof=admin member"`
+	Status *string `json:"status,omitempty" validate:"omitempty,oneof=active inactive"`
 }
 
 // OrgInviteResponse is the public API representation of an OrgInvite.
 type OrgInviteResponse struct {
-	ID              uuid.UUID  `json:"id"`
-	ParokiID        uuid.UUID  `json:"parokiId"`
-	OrgID           uuid.UUID  `json:"orgId"`
-	Code            string     `json:"code"`
-	Role            string     `json:"role"`
-	DefaultPosition *string    `json:"defaultPosition,omitempty"`
-	MaxUses         *int       `json:"maxUses,omitempty"`
-	UsedCount       int        `json:"usedCount"`
-	ExpiresAt       time.Time  `json:"expiresAt"`
-	RevokedAt       *time.Time `json:"revokedAt,omitempty"`
-	CreatedBy       uuid.UUID  `json:"createdBy"`
-	CreatedAt       time.Time  `json:"createdAt"`
-	UpdatedAt       time.Time  `json:"updatedAt"`
+	ID        uuid.UUID  `json:"id"`
+	ParokiID  uuid.UUID  `json:"parokiId"`
+	OrgID     uuid.UUID  `json:"orgId"`
+	Code      string     `json:"code"`
+	Role      string     `json:"role"`
+	MaxUses   *int       `json:"maxUses,omitempty"`
+	UsedCount int        `json:"usedCount"`
+	ExpiresAt time.Time  `json:"expiresAt"`
+	RevokedAt *time.Time `json:"revokedAt,omitempty"`
+	CreatedBy uuid.UUID  `json:"createdBy"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt time.Time  `json:"updatedAt"`
 }
 
 // OrgInvitePreviewResponse is the public preview representation of an OrgInvite.
 type OrgInvitePreviewResponse struct {
-	Code            string    `json:"code"`
-	OrgID           uuid.UUID `json:"orgId"`
-	OrgCode         string    `json:"orgCode"`
-	OrgName         string    `json:"orgName"`
-	OrgKind         string    `json:"orgKind"`
-	ParokiID        uuid.UUID `json:"parokiId"`
-	ParokiCode      string    `json:"parokiCode"`
-	ParokiName      string    `json:"parokiName"`
-	Role            string    `json:"role"`
-	DefaultPosition *string   `json:"defaultPosition,omitempty"`
-	ExpiresAt       time.Time `json:"expiresAt"`
-	Status          string    `json:"status"`
-	Valid           bool      `json:"valid"`
+	Code       string    `json:"code"`
+	OrgID      uuid.UUID `json:"orgId"`
+	OrgCode    string    `json:"orgCode"`
+	OrgName    string    `json:"orgName"`
+	OrgKind    string    `json:"orgKind"`
+	ParokiID   uuid.UUID `json:"parokiId"`
+	ParokiCode string    `json:"parokiCode"`
+	ParokiName string    `json:"parokiName"`
+	Role       string    `json:"role"`
+	ExpiresAt  time.Time `json:"expiresAt"`
+	Status     string    `json:"status"`
+	Valid      bool      `json:"valid"`
 }
 
 // CreateOrgInviteRequest creates a new time-limited multi-use invite link for an Organization.
 type CreateOrgInviteRequest struct {
-	Role            string  `json:"role,omitempty" validate:"omitempty,oneof=admin member"`
-	DefaultPosition *string `json:"defaultPosition,omitempty"`
-	MaxUses         *int    `json:"maxUses,omitempty" validate:"omitempty,min=1"`
-	TTLSeconds      *int    `json:"ttlSeconds,omitempty"`
+	Role       string `json:"role,omitempty" validate:"omitempty,oneof=admin member"`
+	MaxUses    *int   `json:"maxUses,omitempty" validate:"omitempty,min=1"`
+	TTLSeconds *int   `json:"ttlSeconds,omitempty"`
+}
+
+// OrgPeriodeResponse is the public API representation of an OrgPeriode.
+type OrgPeriodeResponse struct {
+	ID             uuid.UUID `json:"id"`
+	ParokiID       uuid.UUID `json:"parokiId"`
+	OrgID          uuid.UUID `json:"orgId"`
+	Kode           string    `json:"kode"`
+	Nama           string    `json:"nama"`
+	TanggalMulai   string    `json:"tanggalMulai"`
+	TanggalSelesai string    `json:"tanggalSelesai"`
+	Status         string    `json:"status"`
+	IsCurrent      bool      `json:"isCurrent"`
+	CreatedAt      time.Time `json:"createdAt"`
+	UpdatedAt      time.Time `json:"updatedAt"`
+}
+
+// OrgPeriodeSearchFilter filters organization period search results.
+type OrgPeriodeSearchFilter struct {
+	Status    string `json:"status,omitempty" validate:"omitempty,oneof=open closed"`
+	IsCurrent *bool  `json:"isCurrent,omitempty"`
+}
+
+// SearchOrgPeriodeRequest searches periods of an Organization.
+type SearchOrgPeriodeRequest struct {
+	Q      string                  `json:"q,omitempty"`
+	Filter *OrgPeriodeSearchFilter `json:"filter,omitempty"`
+	Cursor string                  `json:"cursor,omitempty"`
+	Limit  int                     `json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
+}
+
+// CreateOrgPeriodeRequest creates a new OrgPeriode for an Organization.
+type CreateOrgPeriodeRequest struct {
+	Kode           string `json:"kode" validate:"required"`
+	Nama           string `json:"nama" validate:"required,min=1"`
+	TanggalMulai   string `json:"tanggalMulai" validate:"required"`
+	TanggalSelesai string `json:"tanggalSelesai" validate:"required"`
+	Status         string `json:"status,omitempty" validate:"omitempty,oneof=open closed"`
+	IsCurrent      bool   `json:"isCurrent,omitempty"`
+}
+
+// UpdateOrgPeriodeRequest updates mutable fields of an OrgPeriode.
+type UpdateOrgPeriodeRequest struct {
+	Kode           *string `json:"kode,omitempty"`
+	Nama           *string `json:"nama,omitempty" validate:"omitempty,min=1"`
+	TanggalMulai   *string `json:"tanggalMulai,omitempty"`
+	TanggalSelesai *string `json:"tanggalSelesai,omitempty"`
+	Status         *string `json:"status,omitempty" validate:"omitempty,oneof=open closed"`
+	IsCurrent      *bool   `json:"isCurrent,omitempty"`
 }
 
 // OrgInviteSearchFilter filters organization invite search results.

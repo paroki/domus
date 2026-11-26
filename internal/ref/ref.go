@@ -26,7 +26,6 @@ type (
 	Wilayah      = domain.WilayahResponse
 	Lingkungan   = domain.LingkunganResponse
 	Lookup       = domain.LookupResponse
-	Period       = domain.PeriodResponse
 )
 
 // Feature-owned Casbin roles and resource permissions.
@@ -183,11 +182,6 @@ func (f *Feature) ValidateWilayahInParoki(ctx context.Context, parokiID, wilayah
 // ValidateLingkunganInParoki returns a non-deleted Lingkungan if it belongs to parokiID.
 func (f *Feature) ValidateLingkunganInParoki(ctx context.Context, parokiID, lingkunganID uuid.UUID) (*Lingkungan, error) {
 	return f.service.ValidateLingkunganInParoki(ctx, parokiID, lingkunganID)
-}
-
-// ValidatePeriodInParoki returns a non-deleted Period if it belongs to parokiID.
-func (f *Feature) ValidatePeriodInParoki(ctx context.Context, parokiID, periodID uuid.UUID) (*Period, error) {
-	return f.service.ValidatePeriodInParoki(ctx, parokiID, periodID)
 }
 
 // EnsureParokiMember idempotently ensures userID is a member of parokiID.

@@ -7,7 +7,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/ent/lingkungan"
-	"github.com/paroki/domus/ent/period"
 	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/wilayah"
 )
@@ -72,12 +71,5 @@ func (r *Repository) FindWilayahInParoki(ctx context.Context, parokiID, wilayahI
 func (r *Repository) FindLingkunganInParoki(ctx context.Context, parokiID, lingkunganID uuid.UUID) (*ent.Lingkungan, error) {
 	return r.client.Lingkungan.Query().
 		Where(lingkungan.IDEQ(lingkunganID), lingkungan.ParokiIDEQ(parokiID), lingkungan.DeletedAtIsNil()).
-		Only(ctx)
-}
-
-// FindPeriodInParoki returns a non-deleted Period belonging to parokiID.
-func (r *Repository) FindPeriodInParoki(ctx context.Context, parokiID, periodID uuid.UUID) (*ent.Period, error) {
-	return r.client.Period.Query().
-		Where(period.IDEQ(periodID), period.ParokiIDEQ(parokiID), period.DeletedAtIsNil()).
 		Only(ctx)
 }

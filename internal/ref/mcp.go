@@ -99,34 +99,6 @@ type RefListLingkunganOutput struct {
 	Lingkungan []MCPRefLingkungan `json:"lingkungan"`
 }
 
-// RefListPeriodsInput is the input schema for ref_list_periods.
-type RefListPeriodsInput struct {
-	Query     string `json:"query,omitempty"`
-	Status    string `json:"status,omitempty"`
-	IsCurrent *bool  `json:"isCurrent,omitempty"`
-	Limit     int    `json:"limit,omitempty"`
-}
-
-// MCPRefPeriod is the MCP-safe representation of a Period.
-type MCPRefPeriod struct {
-	ID        string    `json:"id"`
-	ParokiID  string    `json:"parokiId"`
-	Type      string    `json:"type"`
-	Code      string    `json:"code"`
-	Name      string    `json:"name"`
-	StartDate string    `json:"startDate"`
-	EndDate   string    `json:"endDate"`
-	Status    string    `json:"status"`
-	IsCurrent bool      `json:"isCurrent"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
-}
-
-// RefListPeriodsOutput is the output schema for ref_list_periods.
-type RefListPeriodsOutput struct {
-	Periods []MCPRefPeriod `json:"periods"`
-}
-
 // RefListLookupsInput is the input schema for ref_list_lookups.
 type RefListLookupsInput struct {
 	Category string `json:"category,omitempty"`
@@ -199,11 +171,6 @@ func (f *Feature) RegisterMCP(s *mcp.Server) {
 		Name:        "ref_list_lingkungan",
 		Description: "List lingkungan in the caller's active paroki.",
 	}, f.mcpRefListLingkungan)
-
-	mcp.AddTool(s, &mcp.Tool{
-		Name:        "ref_list_periods",
-		Description: "List fiscal and liturgical periods in the caller's active paroki.",
-	}, f.mcpRefListPeriods)
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "ref_list_lookups",
@@ -340,45 +307,6 @@ func (f *Feature) mcpRefListLingkungan(ctx context.Context, _ *mcp.CallToolReque
 		})
 	}
 	return nil, RefListLingkunganOutput{Lingkungan: out}, nil
-}
-
-func (f *Feature) mcpRefListPeriods(ctx context.Context, _ *mcp.CallToolRequest, in RefListPeriodsInput) (*mcp.CallToolResult, RefListPeriodsOutput, error) {
-	p, err := f.requireMCPAccess(ctx, PermMasterData, authz.ActionRead)
-	if err != nil {
-		return nil, RefListPeriodsOutput{}, err
-	}
-	var filter *domain.PeriodSearchFilter
-	if in.Status != "" || in.IsCurrent != nil {
-		filter = &domain.PeriodSearchFilter{Status: in.Status, IsCurrent: in.IsCurrent}
-	}
-	items, _, err := f.service.SearchPeriods(
-		ctx,
-		p.ParokiID,
-		domain.SearchPeriodsRequest{Q: in.Query, Filter: filter},
-		nil,
-		nil,
-		clampMCPLimit(in.Limit, 50, 100),
-	)
-	if err != nil {
-		return nil, RefListPeriodsOutput{}, err
-	}
-	out := make([]MCPRefPeriod, 0, len(items))
-	for _, pr := range items {
-		out = append(out, MCPRefPeriod{
-			ID:        pr.ID.String(),
-			ParokiID:  pr.ParokiID.String(),
-			Type:      pr.Type,
-			Code:      pr.Code,
-			Name:      pr.Name,
-			StartDate: pr.StartDate,
-			EndDate:   pr.EndDate,
-			Status:    pr.Status,
-			IsCurrent: pr.IsCurrent,
-			CreatedAt: pr.CreatedAt,
-			UpdatedAt: pr.UpdatedAt,
-		})
-	}
-	return nil, RefListPeriodsOutput{Periods: out}, nil
 }
 
 func (f *Feature) mcpRefListLookups(ctx context.Context, _ *mcp.CallToolRequest, in RefListLookupsInput) (*mcp.CallToolResult, RefListLookupsOutput, error) {

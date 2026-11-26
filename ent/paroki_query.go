@@ -22,7 +22,6 @@ import (
 	"github.com/paroki/domus/ent/lookup"
 	"github.com/paroki/domus/ent/paroki"
 	"github.com/paroki/domus/ent/parokimember"
-	"github.com/paroki/domus/ent/period"
 	"github.com/paroki/domus/ent/predicate"
 	"github.com/paroki/domus/ent/wilayah"
 )
@@ -45,7 +44,6 @@ type ParokiQuery struct {
 	withWilayah    *WilayahQuery
 	withLingkungan *LingkunganQuery
 	withLookups    *LookupQuery
-	withPeriods    *PeriodQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -324,28 +322,6 @@ func (_q *ParokiQuery) QueryLookups() *LookupQuery {
 	return query
 }
 
-// QueryPeriods chains the current query on the "periods" edge.
-func (_q *ParokiQuery) QueryPeriods() *PeriodQuery {
-	query := (&PeriodClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(paroki.Table, paroki.FieldID, selector),
-			sqlgraph.To(period.Table, period.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, paroki.PeriodsTable, paroki.PeriodsColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
 // First returns the first Paroki entity from the query.
 // Returns a *NotFoundError when no Paroki was found.
 func (_q *ParokiQuery) First(ctx context.Context) (*Paroki, error) {
@@ -549,7 +525,6 @@ func (_q *ParokiQuery) Clone() *ParokiQuery {
 		withWilayah:    _q.withWilayah.Clone(),
 		withLingkungan: _q.withLingkungan.Clone(),
 		withLookups:    _q.withLookups.Clone(),
-		withPeriods:    _q.withPeriods.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -677,17 +652,6 @@ func (_q *ParokiQuery) WithLookups(opts ...func(*LookupQuery)) *ParokiQuery {
 	return _q
 }
 
-// WithPeriods tells the query-builder to eager-load the nodes that are connected to
-// the "periods" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *ParokiQuery) WithPeriods(opts ...func(*PeriodQuery)) *ParokiQuery {
-	query := (&PeriodClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withPeriods = query
-	return _q
-}
-
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
 //
@@ -766,7 +730,7 @@ func (_q *ParokiQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Parok
 	var (
 		nodes       = []*Paroki{}
 		_spec       = _q.querySpec()
-		loadedTypes = [12]bool{
+		loadedTypes = [11]bool{
 			_q.withKeuskupan != nil,
 			_q.withKevikepan != nil,
 			_q.withInduk != nil,
@@ -778,7 +742,6 @@ func (_q *ParokiQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Parok
 			_q.withWilayah != nil,
 			_q.withLingkungan != nil,
 			_q.withLookups != nil,
-			_q.withPeriods != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -867,13 +830,6 @@ func (_q *ParokiQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Parok
 		if err := _q.loadLookups(ctx, query, nodes,
 			func(n *Paroki) { n.Edges.Lookups = []*Lookup{} },
 			func(n *Paroki, e *Lookup) { n.Edges.Lookups = append(n.Edges.Lookups, e) }); err != nil {
-			return nil, err
-		}
-	}
-	if query := _q.withPeriods; query != nil {
-		if err := _q.loadPeriods(ctx, query, nodes,
-			func(n *Paroki) { n.Edges.Periods = []*Period{} },
-			func(n *Paroki, e *Period) { n.Edges.Periods = append(n.Edges.Periods, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -1220,36 +1176,6 @@ func (_q *ParokiQuery) loadLookups(ctx context.Context, query *LookupQuery, node
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "paroki_id" returned %v for node %v`, *fk, n.ID)
-		}
-		assign(node, n)
-	}
-	return nil
-}
-func (_q *ParokiQuery) loadPeriods(ctx context.Context, query *PeriodQuery, nodes []*Paroki, init func(*Paroki), assign func(*Paroki, *Period)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[uuid.UUID]*Paroki)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(period.FieldParokiID)
-	}
-	query.Where(predicate.Period(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(paroki.PeriodsColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.ParokiID
-		node, ok := nodeids[fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "paroki_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}
