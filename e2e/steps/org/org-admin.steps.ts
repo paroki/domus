@@ -35,27 +35,13 @@ Then(
 );
 
 Given(
-  "an org member with email {string} name {string} position {string} exists in the active org and period",
-  async function (
-    this: DomusWorld,
-    email: string,
-    name: string,
-    position: string,
-  ) {
+  "an org member with email {string} name {string} exists in the active org",
+  async function (this: DomusWorld, email: string, name: string) {
     assert.ok(this.activeOrgId, "Expected activeOrgId");
-    const periodsRes = await this.client.post<{
-      data?: Array<{ id?: string; name?: string }>;
-    }>("/ref/periods/search", {});
-    assert.equal(periodsRes.status, 200);
-    const periodId = periodsRes.data?.data?.find(
-      (p) => p.name === this.activePeriodName,
-    )?.id;
     const res = await this.client.post(`/orgs/${this.activeOrgId}/members`, {
       email,
       name,
       role: "member",
-      position,
-      periodId,
     });
     assert.ok(
       res.status === 201 || res.status === 409,
@@ -104,17 +90,6 @@ Then(
     await this.pages.user.users.expectOrgMembershipMetadata(
       this.activeOrgName,
       text,
-    );
-  },
-);
-
-When(
-  "I edit active org membership position to {string}",
-  async function (this: DomusWorld, position: string) {
-    assert.ok(this.activeOrgName, "Expected activeOrgName");
-    await this.pages.user.users.editOrgMembershipPosition(
-      this.activeOrgName,
-      position,
     );
   },
 );
@@ -181,32 +156,20 @@ Then(
 );
 
 When(
-  "I create org invite with role {string} position {string} max uses {int}",
-  async function (
-    this: DomusWorld,
-    roleLabel: string,
-    defaultPosition: string,
-    maxUses: number,
-  ) {
+  "I create org invite with role {string} max uses {int}",
+  async function (this: DomusWorld, roleLabel: string, maxUses: number) {
     await this.pages.org.detail.createInvite({
       roleLabel: roleLabel as "Anggota (member)" | "Admin Organisasi (admin)",
-      defaultPosition,
       maxUses,
     });
   },
 );
 
 Then(
-  "I see org invite with status {string} position {string} usage {string}",
-  async function (
-    this: DomusWorld,
-    statusLabel: string,
-    defaultPosition: string,
-    maxUsesText: string,
-  ) {
+  "I see org invite with status {string} usage {string}",
+  async function (this: DomusWorld, statusLabel: string, maxUsesText: string) {
     await this.pages.org.detail.expectInviteVisible({
       statusLabel,
-      defaultPosition,
       maxUsesText,
     });
   },

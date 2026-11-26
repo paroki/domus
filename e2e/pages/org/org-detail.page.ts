@@ -102,7 +102,6 @@ export class OrgDetailPage extends BasePage {
 
   async createInvite(input: {
     roleLabel?: "Anggota (member)" | "Admin Organisasi (admin)";
-    defaultPosition?: string;
     ttlLabel?: string;
     maxUses?: number;
   }): Promise<void> {
@@ -112,11 +111,6 @@ export class OrgDetailPage extends BasePage {
         .locator("select")
         .first()
         .selectOption({ label: input.roleLabel });
-    }
-    if (input.defaultPosition !== undefined) {
-      await form
-        .getByPlaceholder("Jabatan default (opsional)")
-        .fill(input.defaultPosition);
     }
     if (input.ttlLabel) {
       await form
@@ -134,15 +128,11 @@ export class OrgDetailPage extends BasePage {
 
   async expectInviteVisible(options: {
     statusLabel: string;
-    defaultPosition?: string;
     maxUsesText?: string;
   }): Promise<string> {
     let row = this.inviteRows().filter({
       has: this.page.getByText(options.statusLabel, { exact: true }),
     });
-    if (options.defaultPosition) {
-      row = row.filter({ hasText: options.defaultPosition });
-    }
     if (options.maxUsesText) {
       row = row.filter({ hasText: options.maxUsesText });
     }

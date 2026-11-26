@@ -209,23 +209,6 @@ export async function bootstrapOrgAdminSession(
   client.setParokiId(paroki.id);
   const suffix = `${Date.now().toString(36)}-${parokiBootstrapCounter}`;
 
-  const periodName = options?.periodName ?? "Periode 2025-2028";
-  const periodRes = await client.post<{
-    data?: { id?: string; name?: string };
-  }>("/ref/periods", {
-    type: "fiscal",
-    code: `fy-2025-2028-${suffix}`,
-    name: periodName,
-    startDate: "2025-01-01",
-    endDate: "2028-12-31",
-    isCurrent: true,
-  });
-  if (periodRes.status !== 201 || !periodRes.data?.data?.id) {
-    throw new Error(
-      `Failed to bootstrap period: ${periodRes.status} ${JSON.stringify(periodRes.data)}`,
-    );
-  }
-
   const lookupRes = await client.post("/ref/lookups", {
     category: "org_position",
     code: `sekretaris-e2e-${suffix}`,
@@ -254,6 +237,22 @@ export async function bootstrapOrgAdminSession(
     );
   }
   const orgId = orgRes.data.data.id;
+
+  const periodName = options?.periodName ?? "Periode 2025-2028";
+  const periodRes = await client.post<{
+    data?: { id?: string; nama?: string };
+  }>(`/orgs/${orgId}/periode`, {
+    kode: "periode-2025-2028",
+    nama: periodName,
+    tanggalMulai: "2025-01-01",
+    tanggalSelesai: "2028-12-31",
+    isCurrent: true,
+  });
+  if (periodRes.status !== 201 || !periodRes.data?.data?.id) {
+    throw new Error(
+      `Failed to bootstrap org periode: ${periodRes.status} ${JSON.stringify(periodRes.data)}`,
+    );
+  }
 
   const email = options?.email ?? "orgadmin.e2e@domus.test";
   const name = options?.name ?? "Admin Organisasi E2E";
@@ -316,7 +315,6 @@ export async function bootstrapOrgMemberSession(
     email,
     name,
     role: "member",
-    position: "Anggota Koor",
   });
   if (memberRes.status !== 201 && memberRes.status !== 409) {
     throw new Error(

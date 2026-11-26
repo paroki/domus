@@ -297,8 +297,6 @@ export class UsersPage extends BasePage {
   async addToOrg(input: {
     orgName: string;
     roleLabel: "Admin Organisasi" | "Anggota";
-    position?: string;
-    periodName?: string;
   }): Promise<void> {
     const panel = this.page.locator("#user-tabpanel-org");
     const select = panel.getByLabel("Pilih organisasi");
@@ -309,14 +307,6 @@ export class UsersPage extends BasePage {
     const roleSelect = panel.getByLabel("Peran");
     if (await roleSelect.isEnabled()) {
       await roleSelect.selectOption({ label: input.roleLabel });
-    }
-    if (input.position) {
-      await panel.getByLabel("Jabatan").fill(input.position);
-    }
-    if (input.periodName) {
-      await panel
-        .getByLabel("Periode")
-        .selectOption({ label: input.periodName });
     }
     await panel
       .getByRole("button", { name: "Tambahkan ke Organisasi" })
@@ -361,16 +351,6 @@ export class UsersPage extends BasePage {
       state: "detached",
       timeout: 10_000,
     });
-  }
-
-  async editOrgMembershipPosition(
-    orgName: string,
-    position: string,
-  ): Promise<void> {
-    const row = this.orgMembershipRow(orgName);
-    await row.getByRole("button", { name: "Ubah Jabatan" }).click();
-    await row.getByLabel("Jabatan").fill(position);
-    await row.getByRole("button", { name: "Simpan" }).click();
   }
 
   async toggleOrgMembershipRole(

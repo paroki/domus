@@ -6,7 +6,6 @@ export class OrgJoinPage extends BasePage {
     orgName: string,
     options?: {
       roleBadge?: string;
-      defaultPosition?: string;
       statusBadge?: string;
     },
   ): Promise<void> {
@@ -16,11 +15,6 @@ export class OrgJoinPage extends BasePage {
     if (options?.roleBadge) {
       await this.page
         .getByText(options.roleBadge, { exact: true })
-        .waitFor({ state: "visible", timeout: 10_000 });
-    }
-    if (options?.defaultPosition) {
-      await this.page
-        .getByText(options.defaultPosition, { exact: true })
         .waitFor({ state: "visible", timeout: 10_000 });
     }
     if (options?.statusBadge) {

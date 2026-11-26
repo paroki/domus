@@ -10,7 +10,6 @@ import { KevikepanSipilPage } from "./ref/kevikepan-sipil.page";
 import { LookupsPage } from "./ref/lookups.page";
 import { ParokiPage } from "./ref/paroki.page";
 import { ParokiProfilePage } from "./ref/paroki-profile.page";
-import { PeriodsPage } from "./ref/periods.page";
 import { SettingsPage } from "./ref/settings.page";
 import { WilayahPage } from "./ref/wilayah.page";
 import { AIAgentSettingsPage } from "./settings/ai-agent.page";
@@ -42,7 +41,6 @@ export function createPages(page: Page) {
       lookups: new LookupsPage(page),
       profile: new ParokiProfilePage(page),
       wilayah: new WilayahPage(page),
-      periods: new PeriodsPage(page),
     },
     shell: {
       home: new HomePage(page),

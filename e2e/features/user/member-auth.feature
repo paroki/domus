@@ -7,9 +7,9 @@ Feature: Invite-only login guard, guest invite sign-up, onboarding, and profile 
     Then I see login error containing "Akun tidak ditemukan"
 
   Scenario: New guest signs up via /org/join/:code, completes onboarding, and lands on /org/:orgId
-    Given an organization "Paduan Suara E2E" has an active member invite with position "Anggota Paduan Suara"
+    Given an organization "Paduan Suara E2E" has an active member invite
     When I open the organization invite link
-    Then I see invite preview for "Paduan Suara E2E" with role "Anggota" and position "Anggota Paduan Suara"
+    Then I see invite preview for "Paduan Suara E2E" with role "Anggota"
     When I request guest OTP with name "Tamu Undangan E2E" and email "tamu.undangan.e2e@domus.test"
     And a deterministic OTP "123456" is seeded for "tamu.undangan.e2e@domus.test"
     And I verify guest OTP "123456" for "Paduan Suara E2E"

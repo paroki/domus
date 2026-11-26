@@ -65,21 +65,3 @@ Feature: Paroki Admin settings, profile, wilayah, lookups, and periods
     When I toggle active state for lookup "Sekretaris E2E Updated"
     And I delete lookup "Sekretaris E2E Updated"
     Then I do not see lookup "Sekretaris E2E Updated"
-
-  @paroki-admin
-  Scenario: Paroki Admin manages fiscal periods with overlap guard and active rotation
-    When I open "/settings/paroki/periods"
-    Then I see the periods page
-    When I create a fiscal period with code "fy-2025-e2e" name "Tahun Buku 2025 E2E" from "2025-01-01" to "2025-12-31" as current
-    Then I see period "Tahun Buku 2025 E2E" with status "Terbuka" and current badge
-    When I create a fiscal period with code "fy-overlap-e2e" name "Tahun Buku Overlap" from "2025-06-01" to "2026-06-01"
-    Then I see period error "Rentang tanggal periode bertumpuk dengan periode lain yang sudah ada."
-    When I create a fiscal period with code "fy-2026-e2e" name "Tahun Buku 2026 E2E" from "2026-01-01" to "2026-12-31"
-    Then I see period "Tahun Buku 2026 E2E" with status "Terbuka"
-    When I make period "Tahun Buku 2026 E2E" current
-    Then I see period "Tahun Buku 2026 E2E" with status "Terbuka" and current badge
-    And I see period "Tahun Buku 2025 E2E" without current badge
-    When I close period "Tahun Buku 2025 E2E"
-    Then I see period "Tahun Buku 2025 E2E" with status "Ditutup"
-    When I delete period "Tahun Buku 2026 E2E"
-    Then I do not see period "Tahun Buku 2026 E2E"

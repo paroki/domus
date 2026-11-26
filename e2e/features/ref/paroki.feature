@@ -13,8 +13,6 @@ Feature: Super Admin paroki settings, keuskupan, paroki, and global lookups
     Then I see the paroki admin restriction banner
     When I open "/settings/paroki/wilayah"
     Then I see the paroki admin restriction banner
-    When I open "/settings/paroki/periods"
-    Then I see the paroki admin restriction banner
 
   @authenticated
   Scenario: Regular user is denied access to keuskupan and paroki management

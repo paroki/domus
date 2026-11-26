@@ -26,8 +26,8 @@ Then(
 );
 
 Given(
-  "an organization {string} has an active member invite with position {string}",
-  async function (this: DomusWorld, orgName: string, defaultPosition: string) {
+  "an organization {string} has an active member invite",
+  async function (this: DomusWorld, orgName: string) {
     const setupClient = new TestClient();
     const { paroki, org } = await bootstrapOrgAdminSession(setupClient, {
       orgName,
@@ -37,7 +37,6 @@ Given(
       data?: { id?: string; code?: string };
     }>(`/orgs/${org.id}/invites`, {
       role: "member",
-      defaultPosition,
       ttlSeconds: 86400,
     });
     assert.equal(invRes.status, 201);
@@ -83,16 +82,10 @@ When("I open the organization invite link", async function (this: DomusWorld) {
 });
 
 Then(
-  "I see invite preview for {string} with role {string} and position {string}",
-  async function (
-    this: DomusWorld,
-    orgName: string,
-    roleBadge: string,
-    defaultPosition: string,
-  ) {
+  "I see invite preview for {string} with role {string}",
+  async function (this: DomusWorld, orgName: string, roleBadge: string) {
     await this.pages.org.join.expectPreviewLoaded(orgName, {
       roleBadge,
-      defaultPosition,
     });
   },
 );
