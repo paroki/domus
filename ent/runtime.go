@@ -12,6 +12,7 @@ import (
 	"github.com/paroki/domus/ent/agentsession"
 	"github.com/paroki/domus/ent/casbinrule"
 	"github.com/paroki/domus/ent/event"
+	"github.com/paroki/domus/ent/eventpetugas"
 	"github.com/paroki/domus/ent/eventrsvp"
 	"github.com/paroki/domus/ent/kecamatan"
 	"github.com/paroki/domus/ent/kelurahan"
@@ -230,6 +231,39 @@ func init() {
 	eventDescID := eventMixinFields0[0].Descriptor()
 	// event.DefaultID holds the default value on creation for the id field.
 	event.DefaultID = eventDescID.Default.(func() uuid.UUID)
+	eventpetugasMixin := schema.EventPetugas{}.Mixin()
+	eventpetugasMixinFields0 := eventpetugasMixin[0].Fields()
+	_ = eventpetugasMixinFields0
+	eventpetugasMixinFields1 := eventpetugasMixin[1].Fields()
+	_ = eventpetugasMixinFields1
+	eventpetugasFields := schema.EventPetugas{}.Fields()
+	_ = eventpetugasFields
+	// eventpetugasDescCreatedAt is the schema descriptor for created_at field.
+	eventpetugasDescCreatedAt := eventpetugasMixinFields1[0].Descriptor()
+	// eventpetugas.DefaultCreatedAt holds the default value on creation for the created_at field.
+	eventpetugas.DefaultCreatedAt = eventpetugasDescCreatedAt.Default.(func() time.Time)
+	// eventpetugasDescUpdatedAt is the schema descriptor for updated_at field.
+	eventpetugasDescUpdatedAt := eventpetugasMixinFields1[1].Descriptor()
+	// eventpetugas.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	eventpetugas.DefaultUpdatedAt = eventpetugasDescUpdatedAt.Default.(func() time.Time)
+	// eventpetugas.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	eventpetugas.UpdateDefaultUpdatedAt = eventpetugasDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// eventpetugasDescRole is the schema descriptor for role field.
+	eventpetugasDescRole := eventpetugasFields[2].Descriptor()
+	// eventpetugas.RoleValidator is a validator for the "role" field. It is called by the builders before save.
+	eventpetugas.RoleValidator = eventpetugasDescRole.Validators[0].(func(string) error)
+	// eventpetugasDescName is the schema descriptor for name field.
+	eventpetugasDescName := eventpetugasFields[5].Descriptor()
+	// eventpetugas.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	eventpetugas.NameValidator = eventpetugasDescName.Validators[0].(func(string) error)
+	// eventpetugasDescUrutan is the schema descriptor for urutan field.
+	eventpetugasDescUrutan := eventpetugasFields[6].Descriptor()
+	// eventpetugas.DefaultUrutan holds the default value on creation for the urutan field.
+	eventpetugas.DefaultUrutan = eventpetugasDescUrutan.Default.(int)
+	// eventpetugasDescID is the schema descriptor for id field.
+	eventpetugasDescID := eventpetugasMixinFields0[0].Descriptor()
+	// eventpetugas.DefaultID holds the default value on creation for the id field.
+	eventpetugas.DefaultID = eventpetugasDescID.Default.(func() uuid.UUID)
 	eventrsvpMixin := schema.EventRSVP{}.Mixin()
 	eventrsvpMixinFields0 := eventrsvpMixin[0].Fields()
 	_ = eventrsvpMixinFields0

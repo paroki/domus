@@ -81,6 +81,18 @@ func (f EventFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EventMutation", m)
 }
 
+// The EventPetugasFunc type is an adapter to allow the use of ordinary
+// function as EventPetugas mutator.
+type EventPetugasFunc func(context.Context, *ent.EventPetugasMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f EventPetugasFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.EventPetugasMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EventPetugasMutation", m)
+}
+
 // The EventRSVPFunc type is an adapter to allow the use of ordinary
 // function as EventRSVP mutator.
 type EventRSVPFunc func(context.Context, *ent.EventRSVPMutation) (ent.Value, error)

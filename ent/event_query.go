@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent/event"
+	"github.com/paroki/domus/ent/eventpetugas"
 	"github.com/paroki/domus/ent/eventrsvp"
 	"github.com/paroki/domus/ent/predicate"
 )
@@ -21,11 +22,12 @@ import (
 // EventQuery is the builder for querying Event entities.
 type EventQuery struct {
 	config
-	ctx        *QueryContext
-	order      []event.OrderOption
-	inters     []Interceptor
-	predicates []predicate.Event
-	withRsvps  *EventRSVPQuery
+	ctx         *QueryContext
+	order       []event.OrderOption
+	inters      []Interceptor
+	predicates  []predicate.Event
+	withRsvps   *EventRSVPQuery
+	withPetugas *EventPetugasQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -77,6 +79,28 @@ func (_q *EventQuery) QueryRsvps() *EventRSVPQuery {
 			sqlgraph.From(event.Table, event.FieldID, selector),
 			sqlgraph.To(eventrsvp.Table, eventrsvp.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, event.RsvpsTable, event.RsvpsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPetugas chains the current query on the "petugas" edge.
+func (_q *EventQuery) QueryPetugas() *EventPetugasQuery {
+	query := (&EventPetugasClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(event.Table, event.FieldID, selector),
+			sqlgraph.To(eventpetugas.Table, eventpetugas.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, event.PetugasTable, event.PetugasColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -271,12 +295,13 @@ func (_q *EventQuery) Clone() *EventQuery {
 		return nil
 	}
 	return &EventQuery{
-		config:     _q.config,
-		ctx:        _q.ctx.Clone(),
-		order:      append([]event.OrderOption{}, _q.order...),
-		inters:     append([]Interceptor{}, _q.inters...),
-		predicates: append([]predicate.Event{}, _q.predicates...),
-		withRsvps:  _q.withRsvps.Clone(),
+		config:      _q.config,
+		ctx:         _q.ctx.Clone(),
+		order:       append([]event.OrderOption{}, _q.order...),
+		inters:      append([]Interceptor{}, _q.inters...),
+		predicates:  append([]predicate.Event{}, _q.predicates...),
+		withRsvps:   _q.withRsvps.Clone(),
+		withPetugas: _q.withPetugas.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -291,6 +316,17 @@ func (_q *EventQuery) WithRsvps(opts ...func(*EventRSVPQuery)) *EventQuery {
 		opt(query)
 	}
 	_q.withRsvps = query
+	return _q
+}
+
+// WithPetugas tells the query-builder to eager-load the nodes that are connected to
+// the "petugas" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *EventQuery) WithPetugas(opts ...func(*EventPetugasQuery)) *EventQuery {
+	query := (&EventPetugasClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withPetugas = query
 	return _q
 }
 
@@ -372,8 +408,9 @@ func (_q *EventQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Event,
 	var (
 		nodes       = []*Event{}
 		_spec       = _q.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			_q.withRsvps != nil,
+			_q.withPetugas != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -401,6 +438,13 @@ func (_q *EventQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Event,
 			return nil, err
 		}
 	}
+	if query := _q.withPetugas; query != nil {
+		if err := _q.loadPetugas(ctx, query, nodes,
+			func(n *Event) { n.Edges.Petugas = []*EventPetugas{} },
+			func(n *Event, e *EventPetugas) { n.Edges.Petugas = append(n.Edges.Petugas, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
 }
 
@@ -419,6 +463,36 @@ func (_q *EventQuery) loadRsvps(ctx context.Context, query *EventRSVPQuery, node
 	}
 	query.Where(predicate.EventRSVP(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(event.RsvpsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.EventID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "event_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *EventQuery) loadPetugas(ctx context.Context, query *EventPetugasQuery, nodes []*Event, init func(*Event), assign func(*Event, *EventPetugas)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Event)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(eventpetugas.FieldEventID)
+	}
+	query.Where(predicate.EventPetugas(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(event.PetugasColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

@@ -18,6 +18,7 @@ import (
 	"github.com/paroki/domus/ent/agentsession"
 	"github.com/paroki/domus/ent/casbinrule"
 	"github.com/paroki/domus/ent/event"
+	"github.com/paroki/domus/ent/eventpetugas"
 	"github.com/paroki/domus/ent/eventrsvp"
 	"github.com/paroki/domus/ent/kecamatan"
 	"github.com/paroki/domus/ent/kelurahan"
@@ -58,6 +59,7 @@ const (
 	TypeAgentSession  = "AgentSession"
 	TypeCasbinRule    = "CasbinRule"
 	TypeEvent         = "Event"
+	TypeEventPetugas  = "EventPetugas"
 	TypeEventRSVP     = "EventRSVP"
 	TypeKecamatan     = "Kecamatan"
 	TypeKelurahan     = "Kelurahan"
@@ -4137,32 +4139,35 @@ func (m *CasbinRuleMutation) ResetEdge(name string) error {
 // EventMutation represents an operation that mutates the Event nodes in the graph.
 type EventMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *uuid.UUID
-	created_at    *time.Time
-	updated_at    *time.Time
-	deleted_at    *time.Time
-	paroki_id     *uuid.UUID
-	org_id        *uuid.UUID
-	created_by    *uuid.UUID
-	title         *string
-	jenis         *string
-	description   *string
-	location      *string
-	start_at      *time.Time
-	end_at        *time.Time
-	visibility    *event.Visibility
-	rsvp_enabled  *bool
-	rsvp_deadline *time.Time
-	status        *event.Status
-	clearedFields map[string]struct{}
-	rsvps         map[uuid.UUID]struct{}
-	removedrsvps  map[uuid.UUID]struct{}
-	clearedrsvps  bool
-	done          bool
-	oldValue      func(context.Context) (*Event, error)
-	predicates    []predicate.Event
+	op             Op
+	typ            string
+	id             *uuid.UUID
+	created_at     *time.Time
+	updated_at     *time.Time
+	deleted_at     *time.Time
+	paroki_id      *uuid.UUID
+	org_id         *uuid.UUID
+	created_by     *uuid.UUID
+	title          *string
+	jenis          *string
+	description    *string
+	location       *string
+	start_at       *time.Time
+	end_at         *time.Time
+	visibility     *event.Visibility
+	rsvp_enabled   *bool
+	rsvp_deadline  *time.Time
+	status         *event.Status
+	clearedFields  map[string]struct{}
+	rsvps          map[uuid.UUID]struct{}
+	removedrsvps   map[uuid.UUID]struct{}
+	clearedrsvps   bool
+	petugas        map[uuid.UUID]struct{}
+	removedpetugas map[uuid.UUID]struct{}
+	clearedpetugas bool
+	done           bool
+	oldValue       func(context.Context) (*Event, error)
+	predicates     []predicate.Event
 }
 
 var _ ent.Mutation = (*EventMutation)(nil)
@@ -4977,6 +4982,60 @@ func (m *EventMutation) ResetRsvps() {
 	m.removedrsvps = nil
 }
 
+// AddPetugaIDs adds the "petugas" edge to the EventPetugas entity by ids.
+func (m *EventMutation) AddPetugaIDs(ids ...uuid.UUID) {
+	if m.petugas == nil {
+		m.petugas = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.petugas[ids[i]] = struct{}{}
+	}
+}
+
+// ClearPetugas clears the "petugas" edge to the EventPetugas entity.
+func (m *EventMutation) ClearPetugas() {
+	m.clearedpetugas = true
+}
+
+// PetugasCleared reports if the "petugas" edge to the EventPetugas entity was cleared.
+func (m *EventMutation) PetugasCleared() bool {
+	return m.clearedpetugas
+}
+
+// RemovePetugaIDs removes the "petugas" edge to the EventPetugas entity by IDs.
+func (m *EventMutation) RemovePetugaIDs(ids ...uuid.UUID) {
+	if m.removedpetugas == nil {
+		m.removedpetugas = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.petugas, ids[i])
+		m.removedpetugas[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedPetugas returns the removed IDs of the "petugas" edge to the EventPetugas entity.
+func (m *EventMutation) RemovedPetugasIDs() (ids []uuid.UUID) {
+	for id := range m.removedpetugas {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// PetugasIDs returns the "petugas" edge IDs in the mutation.
+func (m *EventMutation) PetugasIDs() (ids []uuid.UUID) {
+	for id := range m.petugas {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetPetugas resets all changes to the "petugas" edge.
+func (m *EventMutation) ResetPetugas() {
+	m.petugas = nil
+	m.clearedpetugas = false
+	m.removedpetugas = nil
+}
+
 // Where appends a list predicates to the EventMutation builder.
 func (m *EventMutation) Where(ps ...predicate.Event) {
 	m.predicates = append(m.predicates, ps...)
@@ -5404,9 +5463,12 @@ func (m *EventMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *EventMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.rsvps != nil {
 		edges = append(edges, event.EdgeRsvps)
+	}
+	if m.petugas != nil {
+		edges = append(edges, event.EdgePetugas)
 	}
 	return edges
 }
@@ -5421,15 +5483,24 @@ func (m *EventMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case event.EdgePetugas:
+		ids := make([]ent.Value, 0, len(m.petugas))
+		for id := range m.petugas {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *EventMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.removedrsvps != nil {
 		edges = append(edges, event.EdgeRsvps)
+	}
+	if m.removedpetugas != nil {
+		edges = append(edges, event.EdgePetugas)
 	}
 	return edges
 }
@@ -5444,15 +5515,24 @@ func (m *EventMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case event.EdgePetugas:
+		ids := make([]ent.Value, 0, len(m.removedpetugas))
+		for id := range m.removedpetugas {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *EventMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedrsvps {
 		edges = append(edges, event.EdgeRsvps)
+	}
+	if m.clearedpetugas {
+		edges = append(edges, event.EdgePetugas)
 	}
 	return edges
 }
@@ -5463,6 +5543,8 @@ func (m *EventMutation) EdgeCleared(name string) bool {
 	switch name {
 	case event.EdgeRsvps:
 		return m.clearedrsvps
+	case event.EdgePetugas:
+		return m.clearedpetugas
 	}
 	return false
 }
@@ -5482,8 +5564,1033 @@ func (m *EventMutation) ResetEdge(name string) error {
 	case event.EdgeRsvps:
 		m.ResetRsvps()
 		return nil
+	case event.EdgePetugas:
+		m.ResetPetugas()
+		return nil
 	}
 	return fmt.Errorf("unknown Event edge %s", name)
+}
+
+// EventPetugasMutation represents an operation that mutates the EventPetugas nodes in the graph.
+type EventPetugasMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *uuid.UUID
+	created_at    *time.Time
+	updated_at    *time.Time
+	paroki_id     *uuid.UUID
+	role          *string
+	user_id       *uuid.UUID
+	org_id        *uuid.UUID
+	name          *string
+	urutan        *int
+	addurutan     *int
+	status        *eventpetugas.Status
+	note          *string
+	clearedFields map[string]struct{}
+	event         *uuid.UUID
+	clearedevent  bool
+	done          bool
+	oldValue      func(context.Context) (*EventPetugas, error)
+	predicates    []predicate.EventPetugas
+}
+
+var _ ent.Mutation = (*EventPetugasMutation)(nil)
+
+// eventpetugasOption allows management of the mutation configuration using functional options.
+type eventpetugasOption func(*EventPetugasMutation)
+
+// newEventPetugasMutation creates new mutation for the EventPetugas entity.
+func newEventPetugasMutation(c config, op Op, opts ...eventpetugasOption) *EventPetugasMutation {
+	m := &EventPetugasMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeEventPetugas,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withEventPetugasID sets the ID field of the mutation.
+func withEventPetugasID(id uuid.UUID) eventpetugasOption {
+	return func(m *EventPetugasMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *EventPetugas
+		)
+		m.oldValue = func(ctx context.Context) (*EventPetugas, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().EventPetugas.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withEventPetugas sets the old EventPetugas of the mutation.
+func withEventPetugas(node *EventPetugas) eventpetugasOption {
+	return func(m *EventPetugasMutation) {
+		m.oldValue = func(context.Context) (*EventPetugas, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m EventPetugasMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m EventPetugasMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of EventPetugas entities.
+func (m *EventPetugasMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *EventPetugasMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *EventPetugasMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().EventPetugas.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *EventPetugasMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *EventPetugasMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the EventPetugas entity.
+// If the EventPetugas object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EventPetugasMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *EventPetugasMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *EventPetugasMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *EventPetugasMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the EventPetugas entity.
+// If the EventPetugas object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EventPetugasMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *EventPetugasMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetParokiID sets the "paroki_id" field.
+func (m *EventPetugasMutation) SetParokiID(u uuid.UUID) {
+	m.paroki_id = &u
+}
+
+// ParokiID returns the value of the "paroki_id" field in the mutation.
+func (m *EventPetugasMutation) ParokiID() (r uuid.UUID, exists bool) {
+	v := m.paroki_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldParokiID returns the old "paroki_id" field's value of the EventPetugas entity.
+// If the EventPetugas object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EventPetugasMutation) OldParokiID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldParokiID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldParokiID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldParokiID: %w", err)
+	}
+	return oldValue.ParokiID, nil
+}
+
+// ResetParokiID resets all changes to the "paroki_id" field.
+func (m *EventPetugasMutation) ResetParokiID() {
+	m.paroki_id = nil
+}
+
+// SetEventID sets the "event_id" field.
+func (m *EventPetugasMutation) SetEventID(u uuid.UUID) {
+	m.event = &u
+}
+
+// EventID returns the value of the "event_id" field in the mutation.
+func (m *EventPetugasMutation) EventID() (r uuid.UUID, exists bool) {
+	v := m.event
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEventID returns the old "event_id" field's value of the EventPetugas entity.
+// If the EventPetugas object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EventPetugasMutation) OldEventID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEventID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEventID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEventID: %w", err)
+	}
+	return oldValue.EventID, nil
+}
+
+// ResetEventID resets all changes to the "event_id" field.
+func (m *EventPetugasMutation) ResetEventID() {
+	m.event = nil
+}
+
+// SetRole sets the "role" field.
+func (m *EventPetugasMutation) SetRole(s string) {
+	m.role = &s
+}
+
+// Role returns the value of the "role" field in the mutation.
+func (m *EventPetugasMutation) Role() (r string, exists bool) {
+	v := m.role
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRole returns the old "role" field's value of the EventPetugas entity.
+// If the EventPetugas object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EventPetugasMutation) OldRole(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRole is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRole requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRole: %w", err)
+	}
+	return oldValue.Role, nil
+}
+
+// ResetRole resets all changes to the "role" field.
+func (m *EventPetugasMutation) ResetRole() {
+	m.role = nil
+}
+
+// SetUserID sets the "user_id" field.
+func (m *EventPetugasMutation) SetUserID(u uuid.UUID) {
+	m.user_id = &u
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *EventPetugasMutation) UserID() (r uuid.UUID, exists bool) {
+	v := m.user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the EventPetugas entity.
+// If the EventPetugas object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EventPetugasMutation) OldUserID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// ClearUserID clears the value of the "user_id" field.
+func (m *EventPetugasMutation) ClearUserID() {
+	m.user_id = nil
+	m.clearedFields[eventpetugas.FieldUserID] = struct{}{}
+}
+
+// UserIDCleared returns if the "user_id" field was cleared in this mutation.
+func (m *EventPetugasMutation) UserIDCleared() bool {
+	_, ok := m.clearedFields[eventpetugas.FieldUserID]
+	return ok
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *EventPetugasMutation) ResetUserID() {
+	m.user_id = nil
+	delete(m.clearedFields, eventpetugas.FieldUserID)
+}
+
+// SetOrgID sets the "org_id" field.
+func (m *EventPetugasMutation) SetOrgID(u uuid.UUID) {
+	m.org_id = &u
+}
+
+// OrgID returns the value of the "org_id" field in the mutation.
+func (m *EventPetugasMutation) OrgID() (r uuid.UUID, exists bool) {
+	v := m.org_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOrgID returns the old "org_id" field's value of the EventPetugas entity.
+// If the EventPetugas object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EventPetugasMutation) OldOrgID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOrgID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOrgID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOrgID: %w", err)
+	}
+	return oldValue.OrgID, nil
+}
+
+// ClearOrgID clears the value of the "org_id" field.
+func (m *EventPetugasMutation) ClearOrgID() {
+	m.org_id = nil
+	m.clearedFields[eventpetugas.FieldOrgID] = struct{}{}
+}
+
+// OrgIDCleared returns if the "org_id" field was cleared in this mutation.
+func (m *EventPetugasMutation) OrgIDCleared() bool {
+	_, ok := m.clearedFields[eventpetugas.FieldOrgID]
+	return ok
+}
+
+// ResetOrgID resets all changes to the "org_id" field.
+func (m *EventPetugasMutation) ResetOrgID() {
+	m.org_id = nil
+	delete(m.clearedFields, eventpetugas.FieldOrgID)
+}
+
+// SetName sets the "name" field.
+func (m *EventPetugasMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *EventPetugasMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the EventPetugas entity.
+// If the EventPetugas object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EventPetugasMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *EventPetugasMutation) ResetName() {
+	m.name = nil
+}
+
+// SetUrutan sets the "urutan" field.
+func (m *EventPetugasMutation) SetUrutan(i int) {
+	m.urutan = &i
+	m.addurutan = nil
+}
+
+// Urutan returns the value of the "urutan" field in the mutation.
+func (m *EventPetugasMutation) Urutan() (r int, exists bool) {
+	v := m.urutan
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUrutan returns the old "urutan" field's value of the EventPetugas entity.
+// If the EventPetugas object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EventPetugasMutation) OldUrutan(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUrutan is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUrutan requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUrutan: %w", err)
+	}
+	return oldValue.Urutan, nil
+}
+
+// AddUrutan adds i to the "urutan" field.
+func (m *EventPetugasMutation) AddUrutan(i int) {
+	if m.addurutan != nil {
+		*m.addurutan += i
+	} else {
+		m.addurutan = &i
+	}
+}
+
+// AddedUrutan returns the value that was added to the "urutan" field in this mutation.
+func (m *EventPetugasMutation) AddedUrutan() (r int, exists bool) {
+	v := m.addurutan
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetUrutan resets all changes to the "urutan" field.
+func (m *EventPetugasMutation) ResetUrutan() {
+	m.urutan = nil
+	m.addurutan = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *EventPetugasMutation) SetStatus(e eventpetugas.Status) {
+	m.status = &e
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *EventPetugasMutation) Status() (r eventpetugas.Status, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the EventPetugas entity.
+// If the EventPetugas object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EventPetugasMutation) OldStatus(ctx context.Context) (v eventpetugas.Status, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *EventPetugasMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetNote sets the "note" field.
+func (m *EventPetugasMutation) SetNote(s string) {
+	m.note = &s
+}
+
+// Note returns the value of the "note" field in the mutation.
+func (m *EventPetugasMutation) Note() (r string, exists bool) {
+	v := m.note
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNote returns the old "note" field's value of the EventPetugas entity.
+// If the EventPetugas object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EventPetugasMutation) OldNote(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNote is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNote requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNote: %w", err)
+	}
+	return oldValue.Note, nil
+}
+
+// ClearNote clears the value of the "note" field.
+func (m *EventPetugasMutation) ClearNote() {
+	m.note = nil
+	m.clearedFields[eventpetugas.FieldNote] = struct{}{}
+}
+
+// NoteCleared returns if the "note" field was cleared in this mutation.
+func (m *EventPetugasMutation) NoteCleared() bool {
+	_, ok := m.clearedFields[eventpetugas.FieldNote]
+	return ok
+}
+
+// ResetNote resets all changes to the "note" field.
+func (m *EventPetugasMutation) ResetNote() {
+	m.note = nil
+	delete(m.clearedFields, eventpetugas.FieldNote)
+}
+
+// ClearEvent clears the "event" edge to the Event entity.
+func (m *EventPetugasMutation) ClearEvent() {
+	m.clearedevent = true
+	m.clearedFields[eventpetugas.FieldEventID] = struct{}{}
+}
+
+// EventCleared reports if the "event" edge to the Event entity was cleared.
+func (m *EventPetugasMutation) EventCleared() bool {
+	return m.clearedevent
+}
+
+// EventIDs returns the "event" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// EventID instead. It exists only for internal usage by the builders.
+func (m *EventPetugasMutation) EventIDs() (ids []uuid.UUID) {
+	if id := m.event; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetEvent resets all changes to the "event" edge.
+func (m *EventPetugasMutation) ResetEvent() {
+	m.event = nil
+	m.clearedevent = false
+}
+
+// Where appends a list predicates to the EventPetugasMutation builder.
+func (m *EventPetugasMutation) Where(ps ...predicate.EventPetugas) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the EventPetugasMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *EventPetugasMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.EventPetugas, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *EventPetugasMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *EventPetugasMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (EventPetugas).
+func (m *EventPetugasMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *EventPetugasMutation) Fields() []string {
+	fields := make([]string, 0, 11)
+	if m.created_at != nil {
+		fields = append(fields, eventpetugas.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, eventpetugas.FieldUpdatedAt)
+	}
+	if m.paroki_id != nil {
+		fields = append(fields, eventpetugas.FieldParokiID)
+	}
+	if m.event != nil {
+		fields = append(fields, eventpetugas.FieldEventID)
+	}
+	if m.role != nil {
+		fields = append(fields, eventpetugas.FieldRole)
+	}
+	if m.user_id != nil {
+		fields = append(fields, eventpetugas.FieldUserID)
+	}
+	if m.org_id != nil {
+		fields = append(fields, eventpetugas.FieldOrgID)
+	}
+	if m.name != nil {
+		fields = append(fields, eventpetugas.FieldName)
+	}
+	if m.urutan != nil {
+		fields = append(fields, eventpetugas.FieldUrutan)
+	}
+	if m.status != nil {
+		fields = append(fields, eventpetugas.FieldStatus)
+	}
+	if m.note != nil {
+		fields = append(fields, eventpetugas.FieldNote)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *EventPetugasMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case eventpetugas.FieldCreatedAt:
+		return m.CreatedAt()
+	case eventpetugas.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case eventpetugas.FieldParokiID:
+		return m.ParokiID()
+	case eventpetugas.FieldEventID:
+		return m.EventID()
+	case eventpetugas.FieldRole:
+		return m.Role()
+	case eventpetugas.FieldUserID:
+		return m.UserID()
+	case eventpetugas.FieldOrgID:
+		return m.OrgID()
+	case eventpetugas.FieldName:
+		return m.Name()
+	case eventpetugas.FieldUrutan:
+		return m.Urutan()
+	case eventpetugas.FieldStatus:
+		return m.Status()
+	case eventpetugas.FieldNote:
+		return m.Note()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *EventPetugasMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case eventpetugas.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case eventpetugas.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case eventpetugas.FieldParokiID:
+		return m.OldParokiID(ctx)
+	case eventpetugas.FieldEventID:
+		return m.OldEventID(ctx)
+	case eventpetugas.FieldRole:
+		return m.OldRole(ctx)
+	case eventpetugas.FieldUserID:
+		return m.OldUserID(ctx)
+	case eventpetugas.FieldOrgID:
+		return m.OldOrgID(ctx)
+	case eventpetugas.FieldName:
+		return m.OldName(ctx)
+	case eventpetugas.FieldUrutan:
+		return m.OldUrutan(ctx)
+	case eventpetugas.FieldStatus:
+		return m.OldStatus(ctx)
+	case eventpetugas.FieldNote:
+		return m.OldNote(ctx)
+	}
+	return nil, fmt.Errorf("unknown EventPetugas field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *EventPetugasMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case eventpetugas.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case eventpetugas.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case eventpetugas.FieldParokiID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetParokiID(v)
+		return nil
+	case eventpetugas.FieldEventID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEventID(v)
+		return nil
+	case eventpetugas.FieldRole:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRole(v)
+		return nil
+	case eventpetugas.FieldUserID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case eventpetugas.FieldOrgID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOrgID(v)
+		return nil
+	case eventpetugas.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case eventpetugas.FieldUrutan:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUrutan(v)
+		return nil
+	case eventpetugas.FieldStatus:
+		v, ok := value.(eventpetugas.Status)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case eventpetugas.FieldNote:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNote(v)
+		return nil
+	}
+	return fmt.Errorf("unknown EventPetugas field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *EventPetugasMutation) AddedFields() []string {
+	var fields []string
+	if m.addurutan != nil {
+		fields = append(fields, eventpetugas.FieldUrutan)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *EventPetugasMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case eventpetugas.FieldUrutan:
+		return m.AddedUrutan()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *EventPetugasMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case eventpetugas.FieldUrutan:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUrutan(v)
+		return nil
+	}
+	return fmt.Errorf("unknown EventPetugas numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *EventPetugasMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(eventpetugas.FieldUserID) {
+		fields = append(fields, eventpetugas.FieldUserID)
+	}
+	if m.FieldCleared(eventpetugas.FieldOrgID) {
+		fields = append(fields, eventpetugas.FieldOrgID)
+	}
+	if m.FieldCleared(eventpetugas.FieldNote) {
+		fields = append(fields, eventpetugas.FieldNote)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *EventPetugasMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *EventPetugasMutation) ClearField(name string) error {
+	switch name {
+	case eventpetugas.FieldUserID:
+		m.ClearUserID()
+		return nil
+	case eventpetugas.FieldOrgID:
+		m.ClearOrgID()
+		return nil
+	case eventpetugas.FieldNote:
+		m.ClearNote()
+		return nil
+	}
+	return fmt.Errorf("unknown EventPetugas nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *EventPetugasMutation) ResetField(name string) error {
+	switch name {
+	case eventpetugas.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case eventpetugas.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case eventpetugas.FieldParokiID:
+		m.ResetParokiID()
+		return nil
+	case eventpetugas.FieldEventID:
+		m.ResetEventID()
+		return nil
+	case eventpetugas.FieldRole:
+		m.ResetRole()
+		return nil
+	case eventpetugas.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case eventpetugas.FieldOrgID:
+		m.ResetOrgID()
+		return nil
+	case eventpetugas.FieldName:
+		m.ResetName()
+		return nil
+	case eventpetugas.FieldUrutan:
+		m.ResetUrutan()
+		return nil
+	case eventpetugas.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case eventpetugas.FieldNote:
+		m.ResetNote()
+		return nil
+	}
+	return fmt.Errorf("unknown EventPetugas field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *EventPetugasMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.event != nil {
+		edges = append(edges, eventpetugas.EdgeEvent)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *EventPetugasMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case eventpetugas.EdgeEvent:
+		if id := m.event; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *EventPetugasMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *EventPetugasMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *EventPetugasMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedevent {
+		edges = append(edges, eventpetugas.EdgeEvent)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *EventPetugasMutation) EdgeCleared(name string) bool {
+	switch name {
+	case eventpetugas.EdgeEvent:
+		return m.clearedevent
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *EventPetugasMutation) ClearEdge(name string) error {
+	switch name {
+	case eventpetugas.EdgeEvent:
+		m.ClearEvent()
+		return nil
+	}
+	return fmt.Errorf("unknown EventPetugas unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *EventPetugasMutation) ResetEdge(name string) error {
+	switch name {
+	case eventpetugas.EdgeEvent:
+		m.ResetEvent()
+		return nil
+	}
+	return fmt.Errorf("unknown EventPetugas edge %s", name)
 }
 
 // EventRSVPMutation represents an operation that mutates the EventRSVP nodes in the graph.

@@ -274,6 +274,41 @@
                 ],
                 "type": "object"
             },
+            "domain.CreateEventPetugasRequest": {
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "note": {
+                        "type": "string"
+                    },
+                    "orgId": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "status": {
+                        "enum": [
+                            "assigned",
+                            "confirmed",
+                            "declined"
+                        ],
+                        "type": "string"
+                    },
+                    "urutan": {
+                        "type": "integer"
+                    },
+                    "userId": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "role"
+                ],
+                "type": "object"
+            },
             "domain.CreateEventRequest": {
                 "properties": {
                     "description": {
@@ -782,6 +817,50 @@
                 ],
                 "type": "object"
             },
+            "domain.EventPetugasResponse": {
+                "properties": {
+                    "canConfirm": {
+                        "type": "boolean"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "eventId": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "note": {
+                        "type": "string"
+                    },
+                    "orgId": {
+                        "type": "string"
+                    },
+                    "parokiId": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    },
+                    "urutan": {
+                        "type": "integer"
+                    },
+                    "userId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.EventRSVPResponse": {
                 "properties": {
                     "createdAt": {
@@ -915,6 +994,13 @@
                     "parokiId": {
                         "type": "string"
                     },
+                    "petugas": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.EventPetugasResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
                     "rsvpDeadline": {
                         "type": "string"
                     },
@@ -947,6 +1033,12 @@
             },
             "domain.EventSearchFilter": {
                 "properties": {
+                    "assignedOrgId": {
+                        "type": "string"
+                    },
+                    "assignedToMe": {
+                        "type": "boolean"
+                    },
                     "from": {
                         "type": "string"
                     },
@@ -2424,6 +2516,38 @@
                 },
                 "type": "object"
             },
+            "domain.UpdateEventPetugasRequest": {
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "note": {
+                        "type": "string"
+                    },
+                    "orgId": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "status": {
+                        "enum": [
+                            "assigned",
+                            "confirmed",
+                            "declined"
+                        ],
+                        "type": "string"
+                    },
+                    "urutan": {
+                        "type": "integer"
+                    },
+                    "userId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.UpdateEventRequest": {
                 "properties": {
                     "clearRsvpDeadline": {
@@ -3792,6 +3916,20 @@
                 "properties": {
                     "data": {
                         "$ref": "#/components/schemas/domain.CreateUserTokenResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_EventPetugasResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.EventPetugasResponse"
                     },
                     "error": {
                         "$ref": "#/components/schemas/httpx.ErrorPayload"
@@ -6096,6 +6234,280 @@
                     }
                 },
                 "summary": "Update event",
+                "tags": [
+                    "Event"
+                ]
+            }
+        },
+        "/events/{id}/petugas": {
+            "post": {
+                "description": "Assigns an officer/minister to an event (requires event manager: org:admin or ref:paroki-admin).",
+                "operationId": "createEventPetugas",
+                "parameters": [
+                    {
+                        "description": "Event UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.CreateEventPetugasRequest",
+                                "summary": "body",
+                                "description": "Officer assignment payload"
+                            }
+                        }
+                    },
+                    "description": "Officer assignment payload",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_EventPetugasResponse"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Create event petugas",
+                "tags": [
+                    "Event"
+                ]
+            }
+        },
+        "/events/{id}/petugas/{petugasId}": {
+            "delete": {
+                "description": "Removes an officer assignment from an event (requires event manager).",
+                "operationId": "deleteEventPetugas",
+                "parameters": [
+                    {
+                        "description": "Event UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Petugas UUID",
+                        "in": "path",
+                        "name": "petugasId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Delete event petugas",
+                "tags": [
+                    "Event"
+                ]
+            },
+            "patch": {
+                "description": "Updates an officer assignment (event manager) or confirms/declines duty (assigned user or org:admin).",
+                "operationId": "updateEventPetugas",
+                "parameters": [
+                    {
+                        "description": "Event UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Petugas UUID",
+                        "in": "path",
+                        "name": "petugasId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.UpdateEventPetugasRequest",
+                                "summary": "body",
+                                "description": "Officer update payload"
+                            }
+                        }
+                    },
+                    "description": "Officer update payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_EventPetugasResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Update event petugas",
                 "tags": [
                     "Event"
                 ]

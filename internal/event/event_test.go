@@ -743,3 +743,166 @@ func (s *EventFeatureSuite) TestEventJenisLookupValidationAndFilter() {
 	cleared := testutil.DecodeAs[domain.EventResponse](s).Data
 	s.Nil(cleared.Jenis)
 }
+
+func (s *EventFeatureSuite) TestEventPetugasWorkflowAndRBAC() {
+	parokiID, orgID := s.seedParokiAndOrg()
+	startAt := time.Now().UTC().Add(24 * time.Hour)
+	endAt := startAt.Add(2 * time.Hour)
+
+	// Create a parish-level event by ref:paroki-admin.
+	s.loginViaOTP("padmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
+		Title:   "Misa Minggu Biasa",
+		StartAt: startAt,
+		EndAt:   endAt,
+	})
+	s.Created()
+	ev := testutil.DecodeAs[domain.EventResponse](s).Data
+
+	// Look up userIDs for outsider@paroki.org and orgmember@paroki.org via /api/users/search or ent client.
+	outsiderUser, err := s.client.User.Query().All(context.Background())
+	s.Require().NoError(err)
+	var outsiderID, memberID uuid.UUID
+	for _, u := range outsiderUser {
+		switch u.Email {
+		case "outsider@paroki.org":
+			outsiderID = u.ID
+		case "orgmember@paroki.org":
+			memberID = u.ID
+		}
+	}
+	s.Require().NotEqual(uuid.Nil, outsiderID)
+	s.Require().NotEqual(uuid.Nil, memberID)
+
+	// 1. Validation: mutually exclusive userId & orgId -> 422 MUTUALLY_EXCLUSIVE.
+	s.Request(fmt.Sprintf("/api/events/%s/petugas", ev.ID), http.MethodPost, domain.CreateEventPetugasRequest{
+		Role:   "Organis",
+		UserID: &outsiderID,
+		OrgID:  &orgID,
+	})
+	s.UnprocessableEntity()
+	s.Equal("VALIDATION_ERROR", s.GetErrorResponse().Error.Code)
+
+	// 2. Validation: manual without name -> 422 REQUIRED.
+	s.Request(fmt.Sprintf("/api/events/%s/petugas", ev.ID), http.MethodPost, domain.CreateEventPetugasRequest{
+		Role: "Selebran",
+	})
+	s.UnprocessableEntity()
+	s.Equal("VALIDATION_ERROR", s.GetErrorResponse().Error.Code)
+
+	// 3. Add all 3 Pattern A modes: manual, userId (auto-fill name), orgId (auto-fill name).
+	urutan1, urutan2, urutan3 := 1, 2, 3
+	s.Request(fmt.Sprintf("/api/events/%s/petugas", ev.ID), http.MethodPost, domain.CreateEventPetugasRequest{
+		Role:   "Selebran",
+		Name:   "RD. Yohanes",
+		Urutan: &urutan1,
+	})
+	s.Created()
+	manualP := testutil.DecodeAs[domain.EventPetugasResponse](s).Data
+	s.Equal("RD. Yohanes", manualP.Name)
+	s.Equal("assigned", manualP.Status)
+
+	s.Request(fmt.Sprintf("/api/events/%s/petugas", ev.ID), http.MethodPost, domain.CreateEventPetugasRequest{
+		Role:   "Lektor 1",
+		UserID: &outsiderID,
+		Urutan: &urutan2,
+	})
+	s.Created()
+	userP := testutil.DecodeAs[domain.EventPetugasResponse](s).Data
+	s.Equal("Paroki User", userP.Name)
+	s.Require().NotNil(userP.UserID)
+	s.Equal(outsiderID, *userP.UserID)
+
+	s.Request(fmt.Sprintf("/api/events/%s/petugas", ev.ID), http.MethodPost, domain.CreateEventPetugasRequest{
+		Role:   "Kor",
+		OrgID:  &orgID,
+		Urutan: &urutan3,
+	})
+	s.Created()
+	orgP := testutil.DecodeAs[domain.EventPetugasResponse](s).Data
+	s.Equal("Orang Muda Katolik", orgP.Name)
+	s.Require().NotNil(orgP.OrgID)
+	s.Equal(orgID, *orgP.OrgID)
+
+	// 4. Non-manager orgadmin CANNOT add or delete petugas on parish-level event -> 403.
+	s.loginViaOTP("orgadmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+	s.Request(fmt.Sprintf("/api/events/%s/petugas", ev.ID), http.MethodPost, domain.CreateEventPetugasRequest{
+		Role: "MC",
+		Name: "Unauthorized",
+	})
+	s.Forbidden()
+	s.Request(fmt.Sprintf("/api/events/%s/petugas/%s", ev.ID, manualP.ID), http.MethodDelete, nil)
+	s.Forbidden()
+
+	// 5. org:admin of assigned org CAN confirm orgP status & note, CANNOT change role/name.
+	confirmed := "confirmed"
+	s.Request(fmt.Sprintf("/api/events/%s/petugas/%s", ev.ID, orgP.ID), http.MethodPatch, domain.UpdateEventPetugasRequest{
+		Status: &confirmed,
+		Note:   new("Siap 25 anggota"),
+	})
+	s.OK()
+	updatedOrgP := testutil.DecodeAs[domain.EventPetugasResponse](s).Data
+	s.Equal("confirmed", updatedOrgP.Status)
+	s.Require().NotNil(updatedOrgP.Note)
+	s.Equal("Siap 25 anggota", *updatedOrgP.Note)
+
+	newRole := "Hijacked"
+	s.Request(fmt.Sprintf("/api/events/%s/petugas/%s", ev.ID, orgP.ID), http.MethodPatch, domain.UpdateEventPetugasRequest{
+		Role: &newRole,
+	})
+	s.Forbidden()
+
+	// 6. org:member (not org:admin) CANNOT confirm orgP -> 403, CANNOT confirm userP -> 403.
+	s.loginViaOTP("orgmember@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+	s.Request(fmt.Sprintf("/api/events/%s/petugas/%s", ev.ID, orgP.ID), http.MethodPatch, domain.UpdateEventPetugasRequest{
+		Status: &confirmed,
+	})
+	s.Forbidden()
+	s.Request(fmt.Sprintf("/api/events/%s/petugas/%s", ev.ID, userP.ID), http.MethodPatch, domain.UpdateEventPetugasRequest{
+		Status: &confirmed,
+	})
+	s.Forbidden()
+
+	// 7. AssignedToMe filter returns the event for both outsider (userId) and orgmember (orgId).
+	assignedToMe := true
+	s.Request("/api/events/search", http.MethodPost, domain.SearchEventsRequest{
+		Filter: &domain.EventSearchFilter{AssignedToMe: &assignedToMe},
+	})
+	s.OK()
+	s.Len(testutil.DecodeAs[[]domain.EventResponse](s).Data, 1)
+
+	// 8. Assigned user (outsider@paroki.org) confirms/declines own assignment & sees canConfirm flags.
+	s.loginViaOTP("outsider@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+	s.Request(fmt.Sprintf("/api/events/%s", ev.ID), http.MethodGet, nil)
+	s.OK()
+	detail := testutil.DecodeAs[domain.EventResponse](s).Data
+	s.Require().Len(detail.Petugas, 3)
+	s.False(detail.Petugas[0].CanConfirm) // manualP
+	s.True(detail.Petugas[1].CanConfirm)  // userP
+	s.False(detail.Petugas[2].CanConfirm) // orgP
+
+	declined := "declined"
+	s.Request(fmt.Sprintf("/api/events/%s/petugas/%s", ev.ID, userP.ID), http.MethodPatch, domain.UpdateEventPetugasRequest{
+		Status: &declined,
+		Note:   new("Sedang sakit"),
+	})
+	s.OK()
+	s.Equal("declined", testutil.DecodeAs[domain.EventPetugasResponse](s).Data.Status)
+
+	// 9. AssignedOrgID filter works.
+	s.Request("/api/events/search", http.MethodPost, domain.SearchEventsRequest{
+		Filter: &domain.EventSearchFilter{AssignedOrgID: &orgID},
+	})
+	s.OK()
+	s.Len(testutil.DecodeAs[[]domain.EventResponse](s).Data, 1)
+
+	// 10. Manager deletes petugas.
+	s.loginViaOTP("padmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+	s.Request(fmt.Sprintf("/api/events/%s/petugas/%s", ev.ID, manualP.ID), http.MethodDelete, nil)
+	s.NoContent()
+}

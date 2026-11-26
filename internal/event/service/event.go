@@ -70,6 +70,11 @@ func (s *Service) SearchEvents(
 		if req.Filter.MyOrgsOnly != nil {
 			in.MyOrgsOnly = *req.Filter.MyOrgsOnly
 		}
+		if req.Filter.AssignedToMe != nil && *req.Filter.AssignedToMe {
+			in.AssignedToMe = true
+			in.AssignedUserID = p.UserID
+		}
+		in.AssignedOrgID = req.Filter.AssignedOrgID
 	}
 
 	rows, err := s.repo.SearchEvents(ctx, in)
@@ -273,6 +278,23 @@ func (s *Service) GetEvent(ctx context.Context, p authx.Principal, eventID uuid.
 			r := toRSVPResponse(rsvpRow, u, m)
 			res.MyRsvp = &r
 		}
+	}
+
+	petugasRows, err := s.repo.ListPetugasForEvent(ctx, row.ID)
+	if err != nil {
+		return domain.EventResponse{}, err
+	}
+	if len(petugasRows) > 0 {
+		orgAdminCache := make(map[uuid.UUID]bool)
+		petugas := make([]domain.EventPetugasResponse, 0, len(petugasRows))
+		for _, pr := range petugasRows {
+			canConfirm, err := s.canConfirmPetugas(ctx, p, canManage, pr, orgAdminCache)
+			if err != nil {
+				return domain.EventResponse{}, err
+			}
+			petugas = append(petugas, toPetugasResponse(pr, canConfirm))
+		}
+		res.Petugas = petugas
 	}
 	return res, nil
 }

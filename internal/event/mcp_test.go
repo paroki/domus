@@ -523,4 +523,80 @@ func (s *EventMCPSuite) TestEventMCPTools_ParishEventAndTimezone() {
 		},
 	})
 	s.NotContains(clearJenisBody, `"jenis":"ibadat"`)
+
+	// MCP event_set_petugas (add) & event_confirm_petugas & event_list(assignedToMe) & remove.
+	users, err := s.client.User.Query().All(context.Background())
+	s.Require().NoError(err)
+	var umatID string
+	for _, u := range users {
+		if u.Email == "umat-tz@paroki.org" {
+			umatID = u.ID.String()
+		}
+	}
+	s.Require().NotEmpty(umatID)
+
+	eventID := ibadatSearch.Data[0].ID.String()
+	_, setPetugasBody := s.mcpPost(padminSess, padminCookies, parokiID, map[string]any{
+		"jsonrpc": "2.0",
+		"id":      6,
+		"method":  "tools/call",
+		"params": map[string]any{
+			"name": "event_set_petugas",
+			"arguments": map[string]any{
+				"eventId": eventID,
+				"role":    "Pemazmur",
+				"userId":  umatID,
+			},
+		},
+	})
+	s.Contains(setPetugasBody, "Pemazmur")
+	s.Contains(setPetugasBody, "Umat Paroki")
+
+	var evDetailEnv struct{ Data event.Event }
+	s.Equal(http.StatusOK, s.apiJSON(http.MethodGet, "/api/events/"+eventID, nil, padminCookies, parokiID, &evDetailEnv))
+	s.Require().Len(evDetailEnv.Data.Petugas, 1)
+	petugasID := evDetailEnv.Data.Petugas[0].ID.String()
+
+	_, confirmBody := s.mcpPost(umatSess, umatCookies, parokiID, map[string]any{
+		"jsonrpc": "2.0",
+		"id":      7,
+		"method":  "tools/call",
+		"params": map[string]any{
+			"name": "event_confirm_petugas",
+			"arguments": map[string]any{
+				"eventId":   eventID,
+				"petugasId": petugasID,
+				"status":    "confirmed",
+				"note":      "Siap bertugas",
+			},
+		},
+	})
+	s.Contains(confirmBody, `"status":"confirmed"`)
+
+	_, assignedListBody := s.mcpPost(umatSess, umatCookies, parokiID, map[string]any{
+		"jsonrpc": "2.0",
+		"id":      8,
+		"method":  "tools/call",
+		"params": map[string]any{
+			"name":      "event_list",
+			"arguments": map[string]any{"assignedToMe": true},
+		},
+	})
+	s.Contains(assignedListBody, "Ibadat Sabda Paroki")
+	s.NotContains(assignedListBody, "Misa Pagi Paroki")
+
+	_, removePetugasBody := s.mcpPost(padminSess, padminCookies, parokiID, map[string]any{
+		"jsonrpc": "2.0",
+		"id":      9,
+		"method":  "tools/call",
+		"params": map[string]any{
+			"name": "event_set_petugas",
+			"arguments": map[string]any{
+				"eventId":   eventID,
+				"petugasId": petugasID,
+				"remove":    true,
+			},
+		},
+	})
+	s.NotContains(removePetugasBody, "Pemazmur")
 }

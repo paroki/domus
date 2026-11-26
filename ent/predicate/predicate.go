@@ -24,6 +24,9 @@ type CasbinRule func(*sql.Selector)
 // Event is the predicate function for event builders.
 type Event func(*sql.Selector)
 
+// EventPetugas is the predicate function for eventpetugas builders.
+type EventPetugas func(*sql.Selector)
+
 // EventRSVP is the predicate function for eventrsvp builders.
 type EventRSVP func(*sql.Selector)
 

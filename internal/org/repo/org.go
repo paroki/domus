@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/ent/event"
+	"github.com/paroki/domus/ent/eventpetugas"
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orgmember"
 )
@@ -174,10 +175,19 @@ func (r *Repository) HasChildOrgs(ctx context.Context, orgID uuid.UUID) (bool, e
 		Exist(ctx)
 }
 
-// HasOrgEvents reports whether any non-deleted Event belongs to orgID.
+// HasOrgEvents reports whether any non-deleted Event belongs to or assigns orgID as petugas.
 func (r *Repository) HasOrgEvents(ctx context.Context, orgID uuid.UUID) (bool, error) {
-	return r.client.Event.Query().
+	hasOwned, err := r.client.Event.Query().
 		Where(event.OrgIDEQ(orgID), event.DeletedAtIsNil()).
+		Exist(ctx)
+	if err != nil || hasOwned {
+		return hasOwned, err
+	}
+	return r.client.EventPetugas.Query().
+		Where(
+			eventpetugas.OrgIDEQ(orgID),
+			eventpetugas.HasEventWith(event.DeletedAtIsNil()),
+		).
 		Exist(ctx)
 }
 

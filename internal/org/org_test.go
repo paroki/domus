@@ -844,6 +844,31 @@ func (s *OrgFeatureSuite) TestDeleteOrganization_InUseWithEvent() {
 		Exec(ctx)
 	s.Require().NoError(err)
 
+	// Active EventPetugas referencing orgRow.ID on a non-deleted Event blocks deletion with 409 ORG_IN_USE.
+	parishEv, err := s.client.Event.Create().
+		SetParokiID(parokiID).
+		SetCreatedBy(parokiAdminID).
+		SetTitle("Misa Paroki").
+		SetStartAt(startAt).
+		SetEndAt(startAt.Add(time.Hour)).
+		Save(ctx)
+	s.Require().NoError(err)
+	petugasRow, err := s.client.EventPetugas.Create().
+		SetParokiID(parokiID).
+		SetEvent(parishEv).
+		SetRole("Kor").
+		SetOrgID(orgRow.ID).
+		SetName(orgRow.Name).
+		Save(ctx)
+	s.Require().NoError(err)
+
+	s.Request(fmt.Sprintf("/api/orgs/%s", orgRow.ID), http.MethodDelete, nil)
+	s.Conflict()
+	s.Equal("ORG_IN_USE", s.GetErrorResponse().Error.Code)
+
+	err = s.client.EventPetugas.DeleteOneID(petugasRow.ID).Exec(ctx)
+	s.Require().NoError(err)
+
 	s.Request(fmt.Sprintf("/api/orgs/%s", orgRow.ID), http.MethodDelete, nil)
 	s.NoContent()
 }

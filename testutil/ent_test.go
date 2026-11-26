@@ -575,4 +575,21 @@ func TestNewEntClient_EventAndRSVPSchemas(t *testing.T) {
 	assert.Nil(t, parishEv.OrgID)
 	require.NotNil(t, parishEv.Jenis)
 	assert.Equal(t, "misa", *parishEv.Jenis)
+
+	petugas, err := client.EventPetugas.Create().
+		SetParokiID(parokiID).
+		SetEvent(parishEv).
+		SetRole("Organis").
+		SetUserID(userID).
+		SetName("Budi Organis").
+		SetUrutan(1).
+		Save(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, 7, int(petugas.ID.Version()))
+	assert.Equal(t, parishEv.ID, petugas.EventID)
+
+	petugasList, err := parishEv.QueryPetugas().All(ctx)
+	require.NoError(t, err)
+	require.Len(t, petugasList, 1)
+	assert.Equal(t, "Organis", petugasList[0].Role)
 }

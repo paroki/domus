@@ -196,6 +196,52 @@ var (
 			},
 		},
 	}
+	// EventPetugasColumns holds the columns for the "event_petugas" table.
+	EventPetugasColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "paroki_id", Type: field.TypeUUID},
+		{Name: "role", Type: field.TypeString},
+		{Name: "user_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "org_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "urutan", Type: field.TypeInt, Default: 0},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"assigned", "confirmed", "declined"}, Default: "assigned"},
+		{Name: "note", Type: field.TypeString, Nullable: true},
+		{Name: "event_id", Type: field.TypeUUID},
+	}
+	// EventPetugasTable holds the schema information for the "event_petugas" table.
+	EventPetugasTable = &schema.Table{
+		Name:       "event_petugas",
+		Columns:    EventPetugasColumns,
+		PrimaryKey: []*schema.Column{EventPetugasColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "event_petugas_events_petugas",
+				Columns:    []*schema.Column{EventPetugasColumns[11]},
+				RefColumns: []*schema.Column{EventsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "eventpetugas_event_id_urutan",
+				Unique:  false,
+				Columns: []*schema.Column{EventPetugasColumns[11], EventPetugasColumns[8]},
+			},
+			{
+				Name:    "eventpetugas_paroki_id_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{EventPetugasColumns[3], EventPetugasColumns[5]},
+			},
+			{
+				Name:    "eventpetugas_paroki_id_org_id",
+				Unique:  false,
+				Columns: []*schema.Column{EventPetugasColumns[3], EventPetugasColumns[6]},
+			},
+		},
+	}
 	// EventRsvpsColumns holds the columns for the "event_rsvps" table.
 	EventRsvpsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -1071,6 +1117,7 @@ var (
 		AgentSessionsTable,
 		CasbinRulesTable,
 		EventsTable,
+		EventPetugasTable,
 		EventRsvpsTable,
 		KecamatanTable,
 		KelurahanTable,
@@ -1108,6 +1155,10 @@ func init() {
 	}
 	AgentSessionsTable.Annotation = &entsql.Annotation{
 		Table: "agent_sessions",
+	}
+	EventPetugasTable.ForeignKeys[0].RefTable = EventsTable
+	EventPetugasTable.Annotation = &entsql.Annotation{
+		Table: "event_petugas",
 	}
 	EventRsvpsTable.ForeignKeys[0].RefTable = EventsTable
 	EventRsvpsTable.Annotation = &entsql.Annotation{

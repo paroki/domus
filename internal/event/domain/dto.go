@@ -31,6 +31,7 @@ type EventResponse struct {
 	MyOrgRole    *string                   `json:"myOrgRole,omitempty"`
 	MyRsvp       *EventRSVPResponse        `json:"myRsvp,omitempty"`
 	RsvpSummary  *EventRSVPSummaryResponse `json:"rsvpSummary,omitempty"`
+	Petugas      []EventPetugasResponse    `json:"petugas,omitempty"`
 	CreatedAt    time.Time                 `json:"createdAt"`
 	UpdatedAt    time.Time                 `json:"updatedAt"`
 }
@@ -43,6 +44,8 @@ type EventSearchFilter struct {
 	Visibility     string     `json:"visibility,omitempty" validate:"omitempty,oneof=public private"`
 	Status         string     `json:"status,omitempty" validate:"omitempty,oneof=scheduled cancelled"`
 	MyOrgsOnly     *bool      `json:"myOrgsOnly,omitempty"`
+	AssignedToMe   *bool      `json:"assignedToMe,omitempty"`
+	AssignedOrgID  *uuid.UUID `json:"assignedOrgId,omitempty"`
 	From           *time.Time `json:"from,omitempty"`
 	To             *time.Time `json:"to,omitempty"`
 }
@@ -129,4 +132,43 @@ type SearchEventRSVPsRequest struct {
 	Filter *EventRSVPSearchFilter `json:"filter,omitempty"`
 	Cursor string                 `json:"cursor,omitempty"`
 	Limit  int                    `json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
+}
+
+// EventPetugasResponse is the public API representation of an EventPetugas assignment.
+type EventPetugasResponse struct {
+	ID         uuid.UUID  `json:"id"`
+	ParokiID   uuid.UUID  `json:"parokiId"`
+	EventID    uuid.UUID  `json:"eventId"`
+	Role       string     `json:"role"`
+	UserID     *uuid.UUID `json:"userId,omitempty"`
+	OrgID      *uuid.UUID `json:"orgId,omitempty"`
+	Name       string     `json:"name"`
+	Urutan     int        `json:"urutan"`
+	Status     string     `json:"status"`
+	Note       *string    `json:"note,omitempty"`
+	CanConfirm bool       `json:"canConfirm"`
+	CreatedAt  time.Time  `json:"createdAt"`
+	UpdatedAt  time.Time  `json:"updatedAt"`
+}
+
+// CreateEventPetugasRequest assigns an officer/minister to an Event (Pattern A: userId, orgId, or manual name).
+type CreateEventPetugasRequest struct {
+	Role   string     `json:"role" validate:"required,min=1"`
+	UserID *uuid.UUID `json:"userId,omitempty"`
+	OrgID  *uuid.UUID `json:"orgId,omitempty"`
+	Name   string     `json:"name,omitempty"`
+	Urutan *int       `json:"urutan,omitempty"`
+	Status string     `json:"status,omitempty" validate:"omitempty,oneof=assigned confirmed declined"`
+	Note   *string    `json:"note,omitempty"`
+}
+
+// UpdateEventPetugasRequest updates or confirms an EventPetugas assignment.
+type UpdateEventPetugasRequest struct {
+	Role   *string    `json:"role,omitempty" validate:"omitempty,min=1"`
+	UserID *uuid.UUID `json:"userId,omitempty"`
+	OrgID  *uuid.UUID `json:"orgId,omitempty"`
+	Name   *string    `json:"name,omitempty"`
+	Urutan *int       `json:"urutan,omitempty"`
+	Status *string    `json:"status,omitempty" validate:"omitempty,oneof=assigned confirmed declined"`
+	Note   *string    `json:"note,omitempty"`
 }

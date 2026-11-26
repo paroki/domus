@@ -18,9 +18,10 @@ import (
 
 // Re-export read-only DTO types for downstream features.
 type (
-	Event       = domain.EventResponse
-	RSVP        = domain.EventRSVPResponse
-	RSVPSummary = domain.EventRSVPSummaryResponse
+	Event        = domain.EventResponse
+	RSVP         = domain.EventRSVPResponse
+	RSVPSummary  = domain.EventRSVPSummaryResponse
+	EventPetugas = domain.EventPetugasResponse
 )
 
 // Feature-owned Casbin resource permissions.
