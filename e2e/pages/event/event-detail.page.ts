@@ -24,6 +24,19 @@ export class EventDetailPage extends BasePage {
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
+  async expectTimezoneVisible(tzLabel: string): Promise<void> {
+    await this.page
+      .getByText(tzLabel, { exact: false })
+      .first()
+      .waitFor({ state: "visible", timeout: 10_000 });
+  }
+
+  async expectSummaryDenominatorText(text: string): Promise<void> {
+    await this.page
+      .getByText(text, { exact: false })
+      .waitFor({ state: "visible", timeout: 10_000 });
+  }
+
   async expectAdminActionsVisible(visible: boolean): Promise<void> {
     const editBtn = this.page.getByRole("button", { name: "Ubah Kegiatan" });
     const deleteBtn = this.page.getByRole("button", { name: "Hapus Kegiatan" });
@@ -56,9 +69,10 @@ export class EventDetailPage extends BasePage {
       await form.getByLabel("Lokasi").fill(input.location);
     }
     if (input.visibilityLabel) {
-      await form
-        .getByLabel("Visibilitas")
-        .selectOption({ label: input.visibilityLabel });
+      const visSelect = form.getByLabel("Visibilitas");
+      if (await visSelect.isEnabled()) {
+        await visSelect.selectOption({ label: input.visibilityLabel });
+      }
     }
     if (input.description !== undefined) {
       await form.getByLabel("Deskripsi").fill(input.description);

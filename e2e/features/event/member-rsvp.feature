@@ -46,3 +46,13 @@ Feature: Organization Member Menu Visibility, Read-Only Directory, Event Visibil
     Then I see my RSVP removed for "Anggota Organisasi E2E"
     When the organization admin cancels the seeded event via API
     Then I see event RSVP closed message
+
+  Scenario: Parish member submits open RSVP on a parish-level event
+    Given the parish has a parish-level event "Kerja Bakti Paroki E2E" with RSVP enabled
+    When I open "/event"
+    And I open event detail "Kerja Bakti Paroki E2E"
+    Then I see event detail "Kerja Bakti Paroki E2E"
+    When I submit RSVP "Hadir" with note "Siap membantu bersih-bersih gereja"
+    Then I see my RSVP status "Hadir" with note "Siap membantu bersih-bersih gereja"
+    And I see RSVP summary denominator "umat paroki aktif"
+    And I see RSVP attendee "Anggota Organisasi E2E" with status "Hadir"

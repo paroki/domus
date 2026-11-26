@@ -156,6 +156,47 @@ Then("I see event RSVP open buttons", async function (this: DomusWorld) {
   await this.pages.event.detail.expectRsvpOpen();
 });
 
+When(
+  "I create a parish-level event with title {string} start {string} end {string} location {string}",
+  async function (
+    this: DomusWorld,
+    title: string,
+    startAt: string,
+    endAt: string,
+    location: string,
+  ) {
+    await this.pages.event.events.createEvent({
+      orgLabel: "Paroki (Tingkat Paroki)",
+      title,
+      startAt,
+      endAt,
+      location,
+    });
+    await this.pages.event.events.expectFormClosed();
+  },
+);
+
+Then(
+  "I see event card {string} with timezone {string}",
+  async function (this: DomusWorld, title: string, tzLabel: string) {
+    await this.pages.event.events.expectTimeRangeTimezone(title, tzLabel);
+  },
+);
+
+When(
+  "I filter events by organizer {string}",
+  async function (this: DomusWorld, label: string) {
+    await this.pages.event.events.filterByOrganizer(label);
+  },
+);
+
+Then(
+  "I see event detail timezone {string}",
+  async function (this: DomusWorld, tzLabel: string) {
+    await this.pages.event.detail.expectTimezoneVisible(tzLabel);
+  },
+);
+
 When("I delete the event", async function (this: DomusWorld) {
   await this.pages.event.detail.deleteEvent();
 });

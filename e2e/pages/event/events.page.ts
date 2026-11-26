@@ -48,7 +48,7 @@ export class EventsPage extends BasePage {
 
     if (input.orgLabel) {
       await form
-        .getByLabel("Organisasi Penyelenggara")
+        .getByLabel("Penyelenggara")
         .selectOption({ label: input.orgLabel });
     }
     if (input.visibilityLabel) {
@@ -92,6 +92,10 @@ export class EventsPage extends BasePage {
     await this.page
       .getByText(message, { exact: false })
       .waitFor({ state: "visible", timeout: 10_000 });
+  }
+
+  async filterByOrganizer(label: string): Promise<void> {
+    await this.filterBar().locator("select").nth(0).selectOption({ label });
   }
 
   async filterByVisibility(label: string): Promise<void> {
@@ -141,6 +145,15 @@ export class EventsPage extends BasePage {
         .getByText(options.location, { exact: false })
         .waitFor({ state: "visible", timeout: 10_000 });
     }
+  }
+
+  async expectTimeRangeTimezone(title: string, tzLabel: string): Promise<void> {
+    const card = this.cardFor(title);
+    await card.waitFor({ state: "visible", timeout: 10_000 });
+    await card
+      .getByText(tzLabel, { exact: false })
+      .first()
+      .waitFor({ state: "visible", timeout: 10_000 });
   }
 
   async expectEventCardNotVisible(title: string): Promise<void> {

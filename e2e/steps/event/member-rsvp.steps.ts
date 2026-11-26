@@ -198,3 +198,39 @@ When(
     await this.pages.event.detail.goto(`/event/${eventId}`);
   },
 );
+
+Given(
+  "the parish has a parish-level event {string} with RSVP enabled",
+  async function (this: DomusWorld, title: string) {
+    assert.ok(this.parokiAdminToken, "parokiAdminToken must be set");
+    assert.ok(this.activeParokiId, "activeParokiId must be set");
+    const adminClient = new TestClient();
+    adminClient.setToken(this.parokiAdminToken);
+    adminClient.setParokiId(this.activeParokiId);
+    const start = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
+    const res = await adminClient.post<{ data?: { id?: string } }>("/events", {
+      title,
+      visibility: "public",
+      startAt: start.toISOString(),
+      endAt: end.toISOString(),
+      location: "Halaman Gereja",
+      rsvpEnabled: true,
+    });
+    assert.equal(
+      res.status,
+      201,
+      `Expected 201 seeding parish event "${title}", got ${res.status}: ${JSON.stringify(res.data)}`,
+    );
+    const eventId = res.data?.data?.id;
+    assert.ok(eventId, `Missing event id for "${title}"`);
+    lastSeededEventIds.set(this, eventId);
+  },
+);
+
+Then(
+  "I see RSVP summary denominator {string}",
+  async function (this: DomusWorld, text: string) {
+    await this.pages.event.detail.expectSummaryDenominatorText(text);
+  },
+);
