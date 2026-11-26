@@ -9,9 +9,10 @@ import { Button } from "~/shared/ui/Button";
 import { Card } from "~/shared/ui/Card";
 import { useCreateEvent, useUpsertEventRSVP } from "../api/actions";
 import { resolveEventError } from "../api/errors";
-import { useEventOrgs, useEvents } from "../api/queries";
+import { useActiveParoki, useEventOrgs, useEvents } from "../api/queries";
 import {
   computeEventLifecycle,
+  DEFAULT_PAROKI_TIMEZONE,
   type EventStatus,
   type EventVisibility,
   formatEventRange,
@@ -22,6 +23,8 @@ import {
   visibilityMeta,
 } from "../model";
 import type { Route } from "./+types/EventsPage";
+
+const PAROKI_OPTION = "__PAROKI__";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: `${i18n.t("event.title")} · Domus` }];
@@ -51,15 +54,22 @@ export default function EventsPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
+  const activeParokiQuery = useActiveParoki(hasParish);
+  const activeParoki = activeParokiQuery.data;
+  const parokiTimezone = activeParoki?.timezone || DEFAULT_PAROKI_TIMEZONE;
+  const isParokiAdmin = Boolean(me?.roles?.includes("ref:paroki-admin"));
+
   const orgsQuery = useEventOrgs(hasParish);
   const orgs = orgsQuery.data ?? [];
   const adminOrgs = orgs.filter((o) => o.myRole === "admin");
+  const canCreateEvent = isParokiAdmin || adminOrgs.length > 0;
 
   const eventsQuery = useEvents(
     {
       q: q.trim() || undefined,
       filter: {
-        orgId: orgFilter || undefined,
+        orgId: orgFilter && orgFilter !== PAROKI_OPTION ? orgFilter : undefined,
+        parokiWideOnly: orgFilter === PAROKI_OPTION ? true : undefined,
         visibility: (visibilityFilter as EventVisibility) || undefined,
         status: (statusFilter as EventStatus) || undefined,
         myOrgsOnly: myOrgsOnly || undefined,
@@ -72,27 +82,29 @@ export default function EventsPage() {
   const upsertRSVP = useUpsertEventRSVP();
 
   const items = eventsQuery.data?.pages.flatMap((p) => p.data ?? []) ?? [];
-  const selectedOrgId = orgId || adminOrgs[0]?.id || "";
+  const selectedOrgId =
+    orgId || (isParokiAdmin ? PAROKI_OPTION : adminOrgs[0]?.id || "");
+  const isCreatingParokiEvent = selectedOrgId === PAROKI_OPTION;
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault();
     setFormError(null);
     if (!selectedOrgId) {
-      setFormError("Pilih organisasi penyelenggara.");
+      setFormError("Pilih penyelenggara kegiatan.");
       return;
     }
     try {
       await createEvent.mutateAsync({
-        orgId: selectedOrgId,
+        orgId: isCreatingParokiEvent ? undefined : selectedOrgId,
         title: title.trim(),
-        startAt: fromLocalDatetimeInputValue(startAt),
-        endAt: fromLocalDatetimeInputValue(endAt),
+        startAt: fromLocalDatetimeInputValue(startAt, parokiTimezone),
+        endAt: fromLocalDatetimeInputValue(endAt, parokiTimezone),
         location: location.trim() || undefined,
         description: description.trim() || undefined,
-        visibility,
+        visibility: isCreatingParokiEvent ? "public" : visibility,
         rsvpEnabled,
         rsvpDeadline: rsvpDeadline
-          ? fromLocalDatetimeInputValue(rsvpDeadline)
+          ? fromLocalDatetimeInputValue(rsvpDeadline, parokiTimezone)
           : undefined,
       });
       setTitle("");
@@ -143,7 +155,7 @@ export default function EventsPage() {
           </h1>
           <p className="mt-1 text-sm text-ink-muted">{t("event.subtitle")}</p>
         </div>
-        {adminOrgs.length > 0 && (
+        {canCreateEvent && (
           <Button
             type="button"
             onClick={() => {
@@ -157,7 +169,7 @@ export default function EventsPage() {
         )}
       </div>
 
-      {showCreate && adminOrgs.length > 0 && (
+      {showCreate && canCreateEvent && (
         <Card>
           <h2 className="text-lg font-semibold text-ink">
             {t("event.createEvent")}
@@ -170,13 +182,24 @@ export default function EventsPage() {
             )}
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block text-sm font-medium text-ink">
-                Organisasi Penyelenggara
+                Penyelenggara
                 <select
                   value={selectedOrgId}
-                  onChange={(e) => setOrgId(e.target.value)}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setOrgId(next);
+                    if (next === PAROKI_OPTION) {
+                      setVisibility("public");
+                    }
+                  }}
                   className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
                   required
                 >
+                  {isParokiAdmin && (
+                    <option value={PAROKI_OPTION}>
+                      Paroki (Tingkat Paroki)
+                    </option>
+                  )}
                   {adminOrgs.map((o) => (
                     <option key={o.id} value={o.id}>
                       {o.name} ({o.code})
@@ -188,14 +211,17 @@ export default function EventsPage() {
               <label className="block text-sm font-medium text-ink">
                 Visibilitas
                 <select
-                  value={visibility}
+                  value={isCreatingParokiEvent ? "public" : visibility}
                   onChange={(e) =>
                     setVisibility(e.target.value as EventVisibility)
                   }
-                  className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
+                  disabled={isCreatingParokiEvent}
+                  className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink disabled:opacity-60"
                 >
                   <option value="public">Publik Paroki</option>
-                  <option value="private">Internal Organisasi</option>
+                  <option value="private" disabled={isCreatingParokiEvent}>
+                    Internal Organisasi
+                  </option>
                 </select>
               </label>
             </div>
@@ -326,6 +352,7 @@ export default function EventsPage() {
             className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
           >
             <option value="">{t("event.allOrgs")}</option>
+            <option value={PAROKI_OPTION}>Paroki (Tingkat Paroki)</option>
             {orgs.map((o) => (
               <option key={o.id} value={o.id}>
                 {o.name}
@@ -397,7 +424,11 @@ export default function EventsPage() {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="space-y-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <Badge tone="neutral">{ev.orgName}</Badge>
+                      <Badge tone="neutral">
+                        {ev.orgId
+                          ? ev.orgName
+                          : (activeParoki?.nama ?? "Paroki")}
+                      </Badge>
                       <Badge tone={visMeta.tone}>{visMeta.label}</Badge>
                       <Badge tone={lcMeta.tone}>{lcMeta.label}</Badge>
                       {myRsvpMeta && (
@@ -415,7 +446,7 @@ export default function EventsPage() {
                       </Link>
                     </h2>
                     <p className="text-sm text-ink-muted">
-                      {formatEventRange(ev.startAt, ev.endAt)}
+                      {formatEventRange(ev.startAt, ev.endAt, parokiTimezone)}
                     </p>
                     {ev.location && (
                       <p className="flex items-center gap-1.5 text-sm text-ink-muted">
@@ -442,7 +473,7 @@ export default function EventsPage() {
                   </div>
                 )}
 
-                {Boolean(ev.myOrgRole) && ev.rsvpOpen && (
+                {Boolean(ev.canRsvp) && ev.rsvpOpen && (
                   <div className="flex flex-wrap items-center gap-2 border-t border-line pt-3">
                     <span className="text-xs font-medium text-ink-muted">
                       Konfirmasi Cepat:

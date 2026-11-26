@@ -100,3 +100,11 @@ export function useEventOrgs(enabled = true) {
     queryFn: () => unwrap(api.POST("/orgs/search", { body: { limit: 100 } })),
   });
 }
+
+export function useActiveParoki(enabled = true) {
+  return useQuery({
+    queryKey: eventKeys.paroki(),
+    enabled,
+    queryFn: () => unwrap(api.GET("/ref/paroki/current")),
+  });
+}

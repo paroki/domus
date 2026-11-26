@@ -1937,7 +1937,7 @@ export interface components {
       description?: string;
       endAt: string;
       location?: string;
-      orgId: string;
+      orgId?: string;
       rsvpDeadline?: string;
       rsvpEnabled?: boolean;
       startAt: string;
@@ -2112,6 +2112,8 @@ export interface components {
       unresponded?: number;
     };
     "domain.EventResponse": {
+      canManage?: boolean;
+      canRsvp?: boolean;
       createdAt?: string;
       createdBy?: string;
       description?: string;
@@ -2139,6 +2141,7 @@ export interface components {
       from?: string;
       myOrgsOnly?: boolean;
       orgId?: string;
+      parokiWideOnly?: boolean;
       /** @enum {string} */
       status?: "scheduled" | "cancelled";
       to?: string;

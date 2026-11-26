@@ -14,9 +14,15 @@ import {
   useUpsertEventRSVP,
 } from "../api/actions";
 import { resolveEventError } from "../api/errors";
-import { useEvent, useEventRSVPSummary, useEventRSVPs } from "../api/queries";
+import {
+  useActiveParoki,
+  useEvent,
+  useEventRSVPSummary,
+  useEventRSVPs,
+} from "../api/queries";
 import {
   computeEventLifecycle,
+  DEFAULT_PAROKI_TIMEZONE,
   type EventVisibility,
   formatEventRange,
   fromLocalDatetimeInputValue,
@@ -39,12 +45,16 @@ export default function EventDetailPage() {
   const { data: me } = useMe();
   const hasParish = Boolean(me?.activeParokiId);
 
+  const activeParokiQuery = useActiveParoki(hasParish);
+  const activeParoki = activeParokiQuery.data;
+  const parokiTimezone = activeParoki?.timezone || DEFAULT_PAROKI_TIMEZONE;
+
   const eventQuery = useEvent(eventId, hasParish);
   const ev = eventQuery.data;
-  const isOrgMember = ev?.myOrgRole === "admin" || ev?.myOrgRole === "member";
-  const isOrgAdmin = ev?.myOrgRole === "admin";
+  const canRsvp = Boolean(ev?.canRsvp);
+  const canManage = Boolean(ev?.canManage);
 
-  const summaryQuery = useEventRSVPSummary(eventId, hasParish && isOrgMember);
+  const summaryQuery = useEventRSVPSummary(eventId, hasParish && canRsvp);
   const [rosterQ, setRosterQ] = useState("");
   const [rosterStatus, setRosterStatus] = useState("");
   const rsvpsQuery = useEventRSVPs(
@@ -53,7 +63,7 @@ export default function EventDetailPage() {
       q: rosterQ.trim() || undefined,
       filter: rosterStatus ? { status: rosterStatus as RSVPStatus } : undefined,
     },
-    hasParish && isOrgMember,
+    hasParish && canRsvp,
   );
 
   const updateEvent = useUpdateEvent(eventId);
@@ -78,16 +88,16 @@ export default function EventDetailPage() {
   useEffect(() => {
     if (!ev) return;
     setTitle(ev.title ?? "");
-    setStartAt(toLocalDatetimeInputValue(ev.startAt));
-    setEndAt(toLocalDatetimeInputValue(ev.endAt));
+    setStartAt(toLocalDatetimeInputValue(ev.startAt, parokiTimezone));
+    setEndAt(toLocalDatetimeInputValue(ev.endAt, parokiTimezone));
     setLocation(ev.location ?? "");
     setDescription(ev.description ?? "");
     setVisibility((ev.visibility ?? "public") as EventVisibility);
     setRsvpEnabled(ev.rsvpEnabled ?? true);
-    setRsvpDeadline(toLocalDatetimeInputValue(ev.rsvpDeadline));
+    setRsvpDeadline(toLocalDatetimeInputValue(ev.rsvpDeadline, parokiTimezone));
     setClearRsvpDeadline(false);
     setRsvpNote(ev.myRsvp?.note ?? "");
-  }, [ev]);
+  }, [ev, parokiTimezone]);
 
   if (!hasParish) {
     return (
@@ -146,16 +156,16 @@ export default function EventDetailPage() {
     try {
       await updateEvent.mutateAsync({
         title: title.trim(),
-        startAt: fromLocalDatetimeInputValue(startAt),
-        endAt: fromLocalDatetimeInputValue(endAt),
+        startAt: fromLocalDatetimeInputValue(startAt, parokiTimezone),
+        endAt: fromLocalDatetimeInputValue(endAt, parokiTimezone),
         location,
         description,
-        visibility,
+        visibility: ev?.orgId ? visibility : "public",
         rsvpEnabled,
         clearRsvpDeadline: clearRsvpDeadline || undefined,
         rsvpDeadline:
           !clearRsvpDeadline && rsvpDeadline
-            ? fromLocalDatetimeInputValue(rsvpDeadline)
+            ? fromLocalDatetimeInputValue(rsvpDeadline, parokiTimezone)
             : undefined,
       });
       setEditing(false);
@@ -234,19 +244,23 @@ export default function EventDetailPage() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              <Link
-                to={`/org/${ev.orgId}`}
-                className="inline-flex items-center rounded-full bg-neutral-bg px-3 py-1 text-[13px] font-semibold text-neutral-fg hover:underline"
-              >
-                {ev.orgName}
-              </Link>
+              {ev.orgId ? (
+                <Link
+                  to={`/org/${ev.orgId}`}
+                  className="inline-flex items-center rounded-full bg-neutral-bg px-3 py-1 text-[13px] font-semibold text-neutral-fg hover:underline"
+                >
+                  {ev.orgName}
+                </Link>
+              ) : (
+                <Badge tone="neutral">{activeParoki?.nama ?? "Paroki"}</Badge>
+              )}
               <Badge tone={visMeta.tone}>{visMeta.label}</Badge>
               <Badge tone={lcMeta.tone}>{lcMeta.label}</Badge>
             </div>
             <h1 className="text-2xl font-bold text-ink">{ev.title}</h1>
             <p className="flex items-center gap-2 text-sm text-ink-muted">
               <CalendarDays className="h-4 w-4" />
-              {formatEventRange(ev.startAt, ev.endAt)}
+              {formatEventRange(ev.startAt, ev.endAt, parokiTimezone)}
             </p>
             {ev.location && (
               <p className="flex items-center gap-2 text-sm text-ink-muted">
@@ -257,13 +271,13 @@ export default function EventDetailPage() {
             <p className="text-xs text-ink-muted">
               {ev.rsvpEnabled
                 ? ev.rsvpDeadline
-                  ? `Batas RSVP: ${formatEventRange(ev.rsvpDeadline)}`
+                  ? `Batas RSVP: ${formatEventRange(ev.rsvpDeadline, undefined, parokiTimezone)}`
                   : "RSVP dibuka hingga 30 menit setelah acara dimulai"
                 : "RSVP dinonaktifkan untuk kegiatan ini"}
             </p>
           </div>
 
-          {isOrgAdmin && (
+          {canManage && (
             <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
@@ -303,7 +317,7 @@ export default function EventDetailPage() {
         )}
       </Card>
 
-      {editing && isOrgAdmin && (
+      {editing && canManage && (
         <Card>
           <h2 className="text-lg font-semibold text-ink">
             {t("event.editEvent")}
@@ -356,14 +370,17 @@ export default function EventDetailPage() {
               <label className="block text-sm font-medium text-ink">
                 Visibilitas
                 <select
-                  value={visibility}
+                  value={ev.orgId ? visibility : "public"}
                   onChange={(e) =>
                     setVisibility(e.target.value as EventVisibility)
                   }
-                  className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
+                  disabled={!ev.orgId}
+                  className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink disabled:opacity-60"
                 >
                   <option value="public">Publik Paroki</option>
-                  <option value="private">Internal Organisasi</option>
+                  <option value="private" disabled={!ev.orgId}>
+                    Internal Organisasi
+                  </option>
                 </select>
               </label>
             </div>
@@ -428,22 +445,29 @@ export default function EventDetailPage() {
         </Card>
       )}
 
-      {!isOrgMember ? (
+      {!canRsvp ? (
         <Card>
           <h2 className="text-base font-semibold text-ink">
             {t("event.rsvpRestrictedTitle")}
           </h2>
-          <p className="mt-1 text-sm text-ink-muted">
-            Konfirmasi kehadiran (RSVP) dan daftar peserta hanya tersedia bagi
-            anggota aktif{" "}
-            <Link
-              to={`/org/${ev.orgId}`}
-              className="font-medium text-accent hover:underline"
-            >
-              {ev.orgName}
-            </Link>
-            .
-          </p>
+          {ev.orgId ? (
+            <p className="mt-1 text-sm text-ink-muted">
+              Konfirmasi kehadiran (RSVP) dan daftar peserta hanya tersedia bagi
+              anggota aktif{" "}
+              <Link
+                to={`/org/${ev.orgId}`}
+                className="font-medium text-accent hover:underline"
+              >
+                {ev.orgName}
+              </Link>
+              .
+            </p>
+          ) : (
+            <p className="mt-1 text-sm text-ink-muted">
+              Konfirmasi kehadiran (RSVP) dan daftar peserta hanya tersedia bagi
+              umat terdaftar di paroki ini.
+            </p>
+          )}
         </Card>
       ) : (
         <>
@@ -539,7 +563,9 @@ export default function EventDetailPage() {
                   {summary.unresponded}
                 </p>
                 <p className="text-xs text-ink-muted">
-                  dari {summary.totalActiveMembers} anggota aktif
+                  {ev.orgId
+                    ? `dari ${summary.totalActiveMembers} anggota aktif`
+                    : `dari ${summary.totalActiveMembers} umat paroki aktif`}
                 </p>
               </Card>
             </div>
@@ -605,7 +631,11 @@ export default function EventDetailPage() {
                       <div className="text-right">
                         <Badge tone={st.tone}>{st.label}</Badge>
                         <p className="mt-1 text-xs text-ink-muted">
-                          {formatEventRange(row.updatedAt)}
+                          {formatEventRange(
+                            row.updatedAt,
+                            undefined,
+                            parokiTimezone,
+                          )}
                         </p>
                       </div>
                     </div>

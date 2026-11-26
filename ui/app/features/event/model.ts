@@ -74,48 +74,124 @@ export function rsvpStatusMeta(status: string): {
   }
 }
 
-export function toLocalDatetimeInputValue(iso?: string): string {
+export const DEFAULT_PAROKI_TIMEZONE = "Asia/Makassar";
+
+export function formatParokiTimezoneShort(tz?: string): string {
+  switch (tz) {
+    case "Asia/Jakarta":
+      return "WIB";
+    case "Asia/Makassar":
+      return "WITA";
+    case "Asia/Jayapura":
+      return "WIT";
+    default:
+      return tz || "WITA";
+  }
+}
+
+function getTimeZoneParts(date: Date, timeZone: string) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(date);
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((p) => p.type === type)?.value ?? "00";
+  const hour = get("hour") === "24" ? "00" : get("hour");
+  return {
+    year: get("year"),
+    month: get("month"),
+    day: get("day"),
+    hour,
+    minute: get("minute"),
+    second: get("second"),
+  };
+}
+
+export function toLocalDatetimeInputValue(
+  iso?: string,
+  timeZone = DEFAULT_PAROKI_TIMEZONE,
+): string {
   if (!iso) return "";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const p = getTimeZoneParts(d, timeZone);
+  return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`;
 }
 
-export function fromLocalDatetimeInputValue(localVal: string): string {
+export function fromLocalDatetimeInputValue(
+  localVal: string,
+  timeZone = DEFAULT_PAROKI_TIMEZONE,
+): string {
   if (!localVal) return "";
-  const d = new Date(localVal);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toISOString();
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(
+    localVal,
+  );
+  if (!match) {
+    const d = new Date(localVal);
+    return Number.isNaN(d.getTime()) ? "" : d.toISOString();
+  }
+  const [, y, m, day, h, min, sec = "00"] = match;
+  const utcGuess = Date.UTC(
+    Number(y),
+    Number(m) - 1,
+    Number(day),
+    Number(h),
+    Number(min),
+    Number(sec),
+  );
+  const p = getTimeZoneParts(new Date(utcGuess), timeZone);
+  const tzAsUtc = Date.UTC(
+    Number(p.year),
+    Number(p.month) - 1,
+    Number(p.day),
+    Number(p.hour),
+    Number(p.minute),
+    Number(p.second),
+  );
+  const actualUtc = utcGuess - (tzAsUtc - utcGuess);
+  return new Date(actualUtc).toISOString();
 }
 
-export function formatEventRange(startAt?: string, endAt?: string): string {
+export function formatEventRange(
+  startAt?: string,
+  endAt?: string,
+  timeZone = DEFAULT_PAROKI_TIMEZONE,
+): string {
   if (!startAt) return "";
   const start = new Date(startAt);
   if (Number.isNaN(start.getTime())) return "";
+  const tzShort = formatParokiTimezoneShort(timeZone);
   const dateFmt = new Intl.DateTimeFormat("id-ID", {
     weekday: "short",
     day: "numeric",
     month: "short",
     year: "numeric",
+    timeZone,
   });
   const timeFmt = new Intl.DateTimeFormat("id-ID", {
     hour: "2-digit",
     minute: "2-digit",
+    timeZone,
   });
   if (!endAt) {
-    return `${dateFmt.format(start)}, ${timeFmt.format(start)}`;
+    return `${dateFmt.format(start)}, ${timeFmt.format(start)} ${tzShort}`;
   }
   const end = new Date(endAt);
   if (Number.isNaN(end.getTime())) {
-    return `${dateFmt.format(start)}, ${timeFmt.format(start)}`;
+    return `${dateFmt.format(start)}, ${timeFmt.format(start)} ${tzShort}`;
   }
+  const sp = getTimeZoneParts(start, timeZone);
+  const ep = getTimeZoneParts(end, timeZone);
   const sameDay =
-    start.getFullYear() === end.getFullYear() &&
-    start.getMonth() === end.getMonth() &&
-    start.getDate() === end.getDate();
+    sp.year === ep.year && sp.month === ep.month && sp.day === ep.day;
   if (sameDay) {
-    return `${dateFmt.format(start)} · ${timeFmt.format(start)} – ${timeFmt.format(end)}`;
+    return `${dateFmt.format(start)} · ${timeFmt.format(start)} – ${timeFmt.format(end)} ${tzShort}`;
   }
-  return `${dateFmt.format(start)}, ${timeFmt.format(start)} – ${dateFmt.format(end)}, ${timeFmt.format(end)}`;
+  return `${dateFmt.format(start)}, ${timeFmt.format(start)} – ${dateFmt.format(end)}, ${timeFmt.format(end)} ${tzShort}`;
 }
