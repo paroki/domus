@@ -993,6 +993,74 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/orgs/{id}/jabatan": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create organization position
+     * @description Creates an organization position node with hierarchy validation and automatic userId/umatId/nama synchronization.
+     */
+    post: operations["createOrgJabatan"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/orgs/{id}/jabatan/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Search organization positions
+     * @description Searches non-deleted position nodes (org_jabatan) for an organization with optional filters and cursor pagination, ordered by urutan ASC, createdAt ASC, id ASC.
+     */
+    post: operations["searchOrgJabatan"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/orgs/{id}/jabatan/{jabatanId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get organization position
+     * @description Returns a single non-deleted position node for an organization.
+     */
+    get: operations["getOrgJabatan"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete organization position
+     * @description Soft-deletes an organization position node if it has no active child positions.
+     */
+    delete: operations["deleteOrgJabatan"];
+    options?: never;
+    head?: never;
+    /**
+     * Update organization position
+     * @description Updates mutable fields of an organization position node with cycle detection and automatic userId/umatId/nama synchronization.
+     */
+    patch: operations["updateOrgJabatan"];
+    trace?: never;
+  };
   "/orgs/{id}/members": {
     parameters: {
       query?: never;
@@ -1957,6 +2025,26 @@ export interface paths {
     patch: operations["updateKeluarga"];
     trace?: never;
   };
+  "/umat/lookup": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Lookup umat (PII-free)
+     * @description Searches active, non-deceased parishioners in the active paroki without PII fields. Allowed for umat:admin, ref:paroki-admin, or active org:admin.
+     */
+    post: operations["lookupUmat"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/umat/search": {
     parameters: {
       query?: never;
@@ -2305,6 +2393,18 @@ export interface components {
       /** @enum {string} */
       role?: "admin" | "member";
       ttlSeconds?: number;
+    };
+    "domain.CreateOrgJabatanRequest": {
+      active?: boolean;
+      endDate?: string;
+      jabatan: string;
+      nama?: string;
+      parentId?: string;
+      periodeId: string;
+      startDate?: string;
+      umatId?: string;
+      urutan?: number;
+      userId?: string;
     };
     "domain.CreateOrgPeriodeRequest": {
       isCurrent?: boolean;
@@ -2679,6 +2779,12 @@ export interface components {
       /** @enum {string} */
       scope?: "all" | "global" | "paroki";
     };
+    "domain.LookupUmatRequest": {
+      limit?: number;
+      lingkunganId?: string;
+      q?: string;
+      wilayahId?: string;
+    };
     "domain.MemoryResponse": {
       category?: string;
       content?: string;
@@ -2742,6 +2848,31 @@ export interface components {
     "domain.OrgInviteSearchFilter": {
       /** @enum {string} */
       status?: "active" | "expired" | "revoked" | "exhausted";
+    };
+    "domain.OrgJabatanResponse": {
+      active?: boolean;
+      createdAt?: string;
+      endDate?: string;
+      id?: string;
+      jabatan?: string;
+      nama?: string;
+      orgId?: string;
+      parentId?: string;
+      parokiId?: string;
+      periodeId?: string;
+      startDate?: string;
+      umatId?: string;
+      updatedAt?: string;
+      urutan?: number;
+      userId?: string;
+    };
+    "domain.OrgJabatanSearchFilter": {
+      active?: boolean;
+      jabatan?: string;
+      parentId?: string;
+      periodeId?: string;
+      umatId?: string;
+      userId?: string;
     };
     "domain.OrgMemberResponse": {
       createdAt?: string;
@@ -2957,6 +3088,12 @@ export interface components {
       filter?: components["schemas"]["domain.OrgInviteSearchFilter"];
       limit?: number;
     };
+    "domain.SearchOrgJabatanRequest": {
+      cursor?: string;
+      filter?: components["schemas"]["domain.OrgJabatanSearchFilter"];
+      limit?: number;
+      q?: string;
+    };
     "domain.SearchOrgMembersRequest": {
       cursor?: string;
       filter?: components["schemas"]["domain.OrgMemberSearchFilter"];
@@ -3140,6 +3277,15 @@ export interface components {
       userId?: string;
       wilayahId?: string;
     };
+    "domain.UmatLookupItemResponse": {
+      id?: string;
+      lingkunganId?: string;
+      nama?: string;
+      namaBaptis?: string;
+      parokiId?: string;
+      userId?: string;
+      wilayahId?: string;
+    };
     "domain.UmatSakramenResponse": {
       buku?: string;
       catatan?: string;
@@ -3289,6 +3435,23 @@ export interface components {
       /** @enum {string} */
       category?: "preference" | "fact" | "context";
       content?: string;
+    };
+    "domain.UpdateOrgJabatanRequest": {
+      active?: boolean;
+      clearEndDate?: boolean;
+      clearNama?: boolean;
+      clearParentId?: boolean;
+      clearStartDate?: boolean;
+      clearUmatId?: boolean;
+      clearUserId?: boolean;
+      endDate?: string;
+      jabatan?: string;
+      nama?: string;
+      parentId?: string;
+      startDate?: string;
+      umatId?: string;
+      urutan?: number;
+      userId?: string;
     };
     "domain.UpdateOrgMemberRequest": {
       /** @enum {string} */
@@ -3639,6 +3802,11 @@ export interface components {
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
+    "httpx.Envelope-array_domain_OrgJabatanResponse": {
+      data?: components["schemas"]["domain.OrgJabatanResponse"][];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
     "httpx.Envelope-array_domain_OrgMemberResponse": {
       data?: components["schemas"]["domain.OrgMemberResponse"][];
       error?: components["schemas"]["httpx.ErrorPayload"];
@@ -3671,6 +3839,11 @@ export interface components {
     };
     "httpx.Envelope-array_domain_UmatListItemResponse": {
       data?: components["schemas"]["domain.UmatListItemResponse"][];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-array_domain_UmatLookupItemResponse": {
+      data?: components["schemas"]["domain.UmatLookupItemResponse"][];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -3801,6 +3974,11 @@ export interface components {
     };
     "httpx.Envelope-domain_OrgInviteResponse": {
       data?: components["schemas"]["domain.OrgInviteResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_OrgJabatanResponse": {
+      data?: components["schemas"]["domain.OrgJabatanResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -7354,6 +7532,347 @@ export interface operations {
       };
       /** @description Not Found */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  createOrgJabatan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Organization UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Position creation payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.CreateOrgJabatanRequest"];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_OrgJabatanResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  searchOrgJabatan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Organization UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Search parameters */
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["domain.SearchOrgJabatanRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_OrgJabatanResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  getOrgJabatan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Organization UUID */
+        id: string;
+        /** @description Position UUID */
+        jabatanId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_OrgJabatanResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  deleteOrgJabatan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Organization UUID */
+        id: string;
+        /** @description Position UUID */
+        jabatanId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  updateOrgJabatan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Organization UUID */
+        id: string;
+        /** @description Position UUID */
+        jabatanId: string;
+      };
+      cookie?: never;
+    };
+    /** @description Position update payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UpdateOrgJabatanRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_OrgJabatanResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
         headers: {
           [name: string]: unknown;
         };
@@ -11887,6 +12406,58 @@ export interface operations {
       };
       /** @description Unprocessable Entity */
       422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  lookupUmat: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Lookup parameters */
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["domain.LookupUmatRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_UmatLookupItemResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
         headers: {
           [name: string]: unknown;
         };
