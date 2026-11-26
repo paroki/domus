@@ -5,6 +5,8 @@ const UMAT_ERROR_MESSAGES: Record<string, string> = {
   UMAT_KELUARGA_NOT_FOUND: "Kartu Keluarga tidak ditemukan.",
   UMAT_NOT_FOUND: "Data umat tidak ditemukan.",
   UMAT_SAKRAMEN_NOT_FOUND: "Catatan sakramen tidak ditemukan.",
+  UMAT_SAKRAMEN_CONFLICT:
+    "Jenis sakramen tersebut sudah tercatat untuk umat ini.",
   UMAT_KK_CONFLICT: "Nomor KK sudah terdaftar di paroki ini.",
   UMAT_NIK_CONFLICT: "NIK sudah terdaftar di paroki ini.",
   UMAT_USER_ALREADY_LINKED:

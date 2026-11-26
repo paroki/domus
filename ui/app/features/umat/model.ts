@@ -22,6 +22,36 @@ export function genderLabel(jenisKelamin?: string | null): string {
   return jenisKelamin ?? "-";
 }
 
+export const SAKRAMEN_JENIS_OPTIONS = [
+  { value: "baptis", label: "Baptis" },
+  { value: "komuni_pertama", label: "Komuni Pertama" },
+  { value: "krisma", label: "Krisma" },
+  { value: "perkawinan", label: "Perkawinan" },
+  { value: "imamat", label: "Imamat" },
+  { value: "perminyakan", label: "Perminyakan Orang Sakit" },
+  { value: "kematian", label: "Kematian" },
+] as const;
+
+export type SakramenJenis = (typeof SAKRAMEN_JENIS_OPTIONS)[number]["value"];
+
+export function sakramenJenisLabel(jenis?: string | null): string {
+  const found = SAKRAMEN_JENIS_OPTIONS.find((o) => o.value === jenis);
+  return found?.label ?? jenis ?? "-";
+}
+
+export function validateYYYYMMDD(raw: string, label: string): string | null {
+  const trimmed = raw.trim();
+  if (trimmed === "") return null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return `${label} harus berformat YYYY-MM-DD.`;
+  }
+  const d = new Date(`${trimmed}T00:00:00Z`);
+  if (Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== trimmed) {
+    return `${label} bukan tanggal yang valid.`;
+  }
+  return null;
+}
+
 export function validatePIIInput(raw: string, label: string): string | null {
   const trimmed = raw.trim();
   if (trimmed === "") return null;

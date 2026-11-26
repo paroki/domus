@@ -135,6 +135,65 @@ export function useUmatKelurahanList(kecamatanId?: string, enabled = true) {
   });
 }
 
+export function useUmatDetail(parokiId: string, id?: string, enabled = true) {
+  return useQuery({
+    queryKey: umatKeys.umatDetail(parokiId, id ?? ""),
+    enabled: Boolean(parokiId) && Boolean(id) && enabled,
+    queryFn: () =>
+      unwrap(
+        api.GET("/umat/{id}", {
+          params: { path: { id: id ?? "" } },
+        }),
+      ),
+  });
+}
+
+export function useUmatKeuskupanList(enabled = true) {
+  return useQuery({
+    queryKey: umatKeys.keuskupan(),
+    enabled,
+    queryFn: () =>
+      unwrap(
+        api.POST("/ref/keuskupan/search", {
+          body: { filter: { active: true }, limit: 100 },
+        }),
+      ),
+  });
+}
+
+export function useUmatParokiList(keuskupanId?: string, enabled = true) {
+  return useQuery({
+    queryKey: umatKeys.paroki(keuskupanId),
+    enabled,
+    queryFn: () =>
+      unwrap(
+        api.POST("/ref/paroki/search", {
+          body: {
+            filter: {
+              active: true,
+              ...(keuskupanId ? { keuskupanId } : {}),
+            },
+            limit: 100,
+          },
+        }),
+      ),
+  });
+}
+
+export function useUmatParokiMembersList(parokiId: string, enabled = true) {
+  return useQuery({
+    queryKey: umatKeys.parokiMembers(parokiId),
+    enabled: Boolean(parokiId) && enabled,
+    queryFn: () =>
+      unwrap(
+        api.POST("/ref/paroki/{id}/members/search", {
+          params: { path: { id: parokiId } },
+          body: { limit: 100 },
+        }),
+      ),
+  });
+}
+
 export function useUmatLookups(
   parokiId: string,
   category: string,

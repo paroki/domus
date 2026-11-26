@@ -17,9 +17,21 @@ export type UpdateKeluargaRequest =
 
 export type UmatListItem = components["schemas"]["domain.UmatListItemResponse"];
 export type UmatDetail = components["schemas"]["domain.UmatDetailResponse"];
+export type UmatSakramen = components["schemas"]["domain.UmatSakramenResponse"];
 export type SearchUmatRequest =
   components["schemas"]["domain.SearchUmatRequest"];
+export type CreateUmatRequest =
+  components["schemas"]["domain.CreateUmatRequest"];
+export type UpdateUmatRequest =
+  components["schemas"]["domain.UpdateUmatRequest"];
+export type UpsertUmatSakramenRequest =
+  components["schemas"]["domain.UpsertUmatSakramenRequest"];
+export type UpdateUmatSakramenRequest =
+  components["schemas"]["domain.UpdateUmatSakramenRequest"];
 
+export type Keuskupan = components["schemas"]["domain.KeuskupanResponse"];
+export type Paroki = components["schemas"]["domain.ParokiResponse"];
+export type ParokiMember = components["schemas"]["domain.ParokiMemberResponse"];
 export type Wilayah = components["schemas"]["domain.WilayahResponse"];
 export type Lingkungan = components["schemas"]["domain.LingkunganResponse"];
 export type Kota = components["schemas"]["domain.KotaResponse"];
