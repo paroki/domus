@@ -17,6 +17,7 @@ import { AIAgentSettingsPage } from "./settings/ai-agent.page";
 import { AIProviderSettingsPage } from "./settings/ai-provider.page";
 import { SystemSettingsPage } from "./settings/system-settings.page";
 import { HomePage } from "./shell/home.page";
+import { UmatPage } from "./umat/umat.page";
 import { LoginPage } from "./user/login.page";
 import { MePage } from "./user/me.page";
 import { OnboardingPage } from "./user/onboarding.page";
@@ -46,6 +47,7 @@ export function createPages(page: Page) {
     shell: {
       home: new HomePage(page),
     },
+    umat: new UmatPage(page),
     settings: new SystemSettingsPage(page),
     aiProvider: new AIProviderSettingsPage(page),
     aiAgent: new AIAgentSettingsPage(page),

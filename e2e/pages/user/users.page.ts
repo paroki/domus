@@ -264,6 +264,36 @@ export class UsersPage extends BasePage {
     });
   }
 
+  async grantUmatAdmin(parokiName: string): Promise<void> {
+    const row = this.parokiMembershipRow(parokiName);
+    await row.getByRole("button", { name: "Jadikan Admin Data Umat" }).click();
+    await this.expectUmatAdminBadge(parokiName, true);
+  }
+
+  async revokeUmatAdmin(parokiName: string): Promise<void> {
+    const row = this.parokiMembershipRow(parokiName);
+    await row.getByRole("button", { name: "Cabut Admin Data Umat" }).click();
+    await this.page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Cabut Admin Data Umat" })
+      .click();
+    await this.expectUmatAdminBadge(parokiName, false);
+  }
+
+  async expectUmatAdminBadge(
+    parokiName: string,
+    visible: boolean,
+  ): Promise<void> {
+    const badge = this.parokiMembershipRow(parokiName).locator("span", {
+      hasText: /^Admin Data Umat$/,
+    });
+    if (visible) {
+      await badge.waitFor({ state: "visible", timeout: 10_000 });
+    } else {
+      await badge.waitFor({ state: "detached", timeout: 10_000 });
+    }
+  }
+
   async addToOrg(input: {
     orgName: string;
     roleLabel: "Admin Organisasi" | "Anggota";
