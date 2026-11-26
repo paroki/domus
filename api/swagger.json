@@ -412,6 +412,53 @@
                 ],
                 "type": "object"
             },
+            "domain.CreateKeluargaRequest": {
+                "properties": {
+                    "aktif": {
+                        "type": "boolean"
+                    },
+                    "alamat": {
+                        "type": "string"
+                    },
+                    "catatan": {
+                        "type": "string"
+                    },
+                    "kecamatanId": {
+                        "type": "string"
+                    },
+                    "kelurahanId": {
+                        "type": "string"
+                    },
+                    "kodePos": {
+                        "type": "string"
+                    },
+                    "kotaId": {
+                        "type": "string"
+                    },
+                    "lingkunganId": {
+                        "type": "string"
+                    },
+                    "namaKeluarga": {
+                        "type": "string"
+                    },
+                    "nomorKk": {
+                        "type": "string"
+                    },
+                    "statusEkonomi": {
+                        "type": "string"
+                    },
+                    "statusRumah": {
+                        "type": "string"
+                    },
+                    "wilayahId": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "namaKeluarga"
+                ],
+                "type": "object"
+            },
             "domain.CreateKelurahanRequest": {
                 "properties": {
                     "active": {
@@ -776,6 +823,118 @@
                     "endDate",
                     "name",
                     "startDate"
+                ],
+                "type": "object"
+            },
+            "domain.CreateUmatRequest": {
+                "properties": {
+                    "agama": {
+                        "type": "string"
+                    },
+                    "aktivitasSosial": {
+                        "type": "string"
+                    },
+                    "alamat": {
+                        "type": "string"
+                    },
+                    "almarhum": {
+                        "type": "boolean"
+                    },
+                    "disabilitas": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "fotoUrl": {
+                        "type": "string"
+                    },
+                    "golonganDarah": {
+                        "type": "string"
+                    },
+                    "hubunganKeluarga": {
+                        "type": "string"
+                    },
+                    "jenisKelamin": {
+                        "enum": [
+                            "pria",
+                            "wanita"
+                        ],
+                        "type": "string"
+                    },
+                    "jurusan": {
+                        "type": "string"
+                    },
+                    "kecamatanId": {
+                        "type": "string"
+                    },
+                    "keluargaId": {
+                        "type": "string"
+                    },
+                    "kelurahanId": {
+                        "type": "string"
+                    },
+                    "keterampilan": {
+                        "type": "string"
+                    },
+                    "kewarganegaraan": {
+                        "type": "string"
+                    },
+                    "kotaId": {
+                        "type": "string"
+                    },
+                    "lingkunganId": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "type": "string"
+                    },
+                    "namaBaptis": {
+                        "type": "string"
+                    },
+                    "negara": {
+                        "type": "string"
+                    },
+                    "nik": {
+                        "type": "string"
+                    },
+                    "pekerjaan": {
+                        "type": "string"
+                    },
+                    "pendidikan": {
+                        "type": "string"
+                    },
+                    "profesi": {
+                        "type": "string"
+                    },
+                    "statusPernikahan": {
+                        "type": "string"
+                    },
+                    "suku": {
+                        "type": "string"
+                    },
+                    "tanggalLahir": {
+                        "type": "string"
+                    },
+                    "tanggalMeninggal": {
+                        "type": "string"
+                    },
+                    "telepon": {
+                        "type": "string"
+                    },
+                    "tempatLahir": {
+                        "type": "string"
+                    },
+                    "userId": {
+                        "type": "string"
+                    },
+                    "wilayahId": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "jenisKelamin",
+                    "nama"
                 ],
                 "type": "object"
             },
@@ -1189,6 +1348,171 @@
                         "type": "boolean"
                     },
                     "kotaId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.KeluargaAnggotaSummary": {
+                "properties": {
+                    "almarhum": {
+                        "type": "boolean"
+                    },
+                    "hubunganKeluarga": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "jenisKelamin": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "type": "string"
+                    },
+                    "namaBaptis": {
+                        "type": "string"
+                    },
+                    "nikMasked": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.KeluargaDetailResponse": {
+                "properties": {
+                    "aktif": {
+                        "type": "boolean"
+                    },
+                    "alamat": {
+                        "type": "string"
+                    },
+                    "anggota": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.KeluargaAnggotaSummary"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "catatan": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "kecamatanId": {
+                        "type": "string"
+                    },
+                    "kelurahanId": {
+                        "type": "string"
+                    },
+                    "kodePos": {
+                        "type": "string"
+                    },
+                    "kotaId": {
+                        "type": "string"
+                    },
+                    "lingkunganId": {
+                        "type": "string"
+                    },
+                    "namaKeluarga": {
+                        "type": "string"
+                    },
+                    "nomorKk": {
+                        "type": "string"
+                    },
+                    "nomorKkMasked": {
+                        "type": "string"
+                    },
+                    "parokiId": {
+                        "type": "string"
+                    },
+                    "statusEkonomi": {
+                        "type": "string"
+                    },
+                    "statusRumah": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    },
+                    "wilayahId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.KeluargaListItemResponse": {
+                "properties": {
+                    "aktif": {
+                        "type": "boolean"
+                    },
+                    "alamat": {
+                        "type": "string"
+                    },
+                    "catatan": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "kecamatanId": {
+                        "type": "string"
+                    },
+                    "kelurahanId": {
+                        "type": "string"
+                    },
+                    "kodePos": {
+                        "type": "string"
+                    },
+                    "kotaId": {
+                        "type": "string"
+                    },
+                    "lingkunganId": {
+                        "type": "string"
+                    },
+                    "namaKeluarga": {
+                        "type": "string"
+                    },
+                    "nomorKkMasked": {
+                        "type": "string"
+                    },
+                    "parokiId": {
+                        "type": "string"
+                    },
+                    "statusEkonomi": {
+                        "type": "string"
+                    },
+                    "statusRumah": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    },
+                    "wilayahId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.KeluargaSearchFilter": {
+                "properties": {
+                    "aktif": {
+                        "type": "boolean"
+                    },
+                    "lingkunganId": {
+                        "type": "string"
+                    },
+                    "nomorKk": {
+                        "type": "string"
+                    },
+                    "wilayahId": {
                         "type": "string"
                     }
                 },
@@ -2147,6 +2471,33 @@
                 },
                 "type": "object"
             },
+            "domain.SearchKeluargaRequest": {
+                "properties": {
+                    "cursor": {
+                        "type": "string"
+                    },
+                    "filter": {
+                        "$ref": "#/components/schemas/domain.KeluargaSearchFilter"
+                    },
+                    "limit": {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "q": {
+                        "type": "string"
+                    },
+                    "sort": {
+                        "enum": [
+                            "-createdAt",
+                            "namaKeluarga",
+                            "-namaKeluarga"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.SearchKelurahanRequest": {
                 "properties": {
                     "cursor": {
@@ -2404,6 +2755,33 @@
                 },
                 "type": "object"
             },
+            "domain.SearchUmatRequest": {
+                "properties": {
+                    "cursor": {
+                        "type": "string"
+                    },
+                    "filter": {
+                        "$ref": "#/components/schemas/domain.UmatSearchFilter"
+                    },
+                    "limit": {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "q": {
+                        "type": "string"
+                    },
+                    "sort": {
+                        "enum": [
+                            "-createdAt",
+                            "nama",
+                            "-nama"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.SearchUsersRequest": {
                 "properties": {
                     "cursor": {
@@ -2576,6 +2954,348 @@
                 },
                 "type": "object"
             },
+            "domain.UmatDetailResponse": {
+                "properties": {
+                    "agama": {
+                        "type": "string"
+                    },
+                    "aktivitasSosial": {
+                        "type": "string"
+                    },
+                    "alamat": {
+                        "type": "string"
+                    },
+                    "almarhum": {
+                        "type": "boolean"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "disabilitas": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "fotoUrl": {
+                        "type": "string"
+                    },
+                    "golonganDarah": {
+                        "type": "string"
+                    },
+                    "hubunganKeluarga": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "jenisKelamin": {
+                        "type": "string"
+                    },
+                    "jurusan": {
+                        "type": "string"
+                    },
+                    "kecamatanId": {
+                        "type": "string"
+                    },
+                    "keluarga": {
+                        "$ref": "#/components/schemas/domain.UmatKeluargaSummary"
+                    },
+                    "keluargaId": {
+                        "type": "string"
+                    },
+                    "kelurahanId": {
+                        "type": "string"
+                    },
+                    "keterampilan": {
+                        "type": "string"
+                    },
+                    "kewarganegaraan": {
+                        "type": "string"
+                    },
+                    "kotaId": {
+                        "type": "string"
+                    },
+                    "lingkunganId": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "type": "string"
+                    },
+                    "namaBaptis": {
+                        "type": "string"
+                    },
+                    "negara": {
+                        "type": "string"
+                    },
+                    "nik": {
+                        "type": "string"
+                    },
+                    "nikMasked": {
+                        "type": "string"
+                    },
+                    "parokiId": {
+                        "type": "string"
+                    },
+                    "pekerjaan": {
+                        "type": "string"
+                    },
+                    "pendidikan": {
+                        "type": "string"
+                    },
+                    "profesi": {
+                        "type": "string"
+                    },
+                    "sakramen": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.UmatSakramenResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "statusPernikahan": {
+                        "type": "string"
+                    },
+                    "suku": {
+                        "type": "string"
+                    },
+                    "tanggalLahir": {
+                        "type": "string"
+                    },
+                    "tanggalMeninggal": {
+                        "type": "string"
+                    },
+                    "telepon": {
+                        "type": "string"
+                    },
+                    "tempatLahir": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    },
+                    "userId": {
+                        "type": "string"
+                    },
+                    "wilayahId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.UmatKeluargaSummary": {
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "namaKeluarga": {
+                        "type": "string"
+                    },
+                    "nomorKkMasked": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.UmatListItemResponse": {
+                "properties": {
+                    "agama": {
+                        "type": "string"
+                    },
+                    "aktivitasSosial": {
+                        "type": "string"
+                    },
+                    "alamat": {
+                        "type": "string"
+                    },
+                    "almarhum": {
+                        "type": "boolean"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "disabilitas": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "fotoUrl": {
+                        "type": "string"
+                    },
+                    "golonganDarah": {
+                        "type": "string"
+                    },
+                    "hubunganKeluarga": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "jenisKelamin": {
+                        "type": "string"
+                    },
+                    "jurusan": {
+                        "type": "string"
+                    },
+                    "kecamatanId": {
+                        "type": "string"
+                    },
+                    "keluargaId": {
+                        "type": "string"
+                    },
+                    "kelurahanId": {
+                        "type": "string"
+                    },
+                    "keterampilan": {
+                        "type": "string"
+                    },
+                    "kewarganegaraan": {
+                        "type": "string"
+                    },
+                    "kotaId": {
+                        "type": "string"
+                    },
+                    "lingkunganId": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "type": "string"
+                    },
+                    "namaBaptis": {
+                        "type": "string"
+                    },
+                    "negara": {
+                        "type": "string"
+                    },
+                    "nikMasked": {
+                        "type": "string"
+                    },
+                    "parokiId": {
+                        "type": "string"
+                    },
+                    "pekerjaan": {
+                        "type": "string"
+                    },
+                    "pendidikan": {
+                        "type": "string"
+                    },
+                    "profesi": {
+                        "type": "string"
+                    },
+                    "statusPernikahan": {
+                        "type": "string"
+                    },
+                    "suku": {
+                        "type": "string"
+                    },
+                    "tanggalLahir": {
+                        "type": "string"
+                    },
+                    "tanggalMeninggal": {
+                        "type": "string"
+                    },
+                    "telepon": {
+                        "type": "string"
+                    },
+                    "tempatLahir": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    },
+                    "userId": {
+                        "type": "string"
+                    },
+                    "wilayahId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.UmatSakramenResponse": {
+                "properties": {
+                    "buku": {
+                        "type": "string"
+                    },
+                    "catatan": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "jenis": {
+                        "type": "string"
+                    },
+                    "keuskupanId": {
+                        "type": "string"
+                    },
+                    "keuskupanNama": {
+                        "type": "string"
+                    },
+                    "nomor": {
+                        "type": "string"
+                    },
+                    "parokiId": {
+                        "type": "string"
+                    },
+                    "parokiNama": {
+                        "type": "string"
+                    },
+                    "parokiSakramenId": {
+                        "type": "string"
+                    },
+                    "tanggal": {
+                        "type": "string"
+                    },
+                    "umatId": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.UmatSearchFilter": {
+                "properties": {
+                    "agama": {
+                        "type": "string"
+                    },
+                    "almarhum": {
+                        "type": "boolean"
+                    },
+                    "jenisKelamin": {
+                        "enum": [
+                            "pria",
+                            "wanita"
+                        ],
+                        "type": "string"
+                    },
+                    "keluargaId": {
+                        "type": "string"
+                    },
+                    "lingkunganId": {
+                        "type": "string"
+                    },
+                    "nik": {
+                        "type": "string"
+                    },
+                    "statusPernikahan": {
+                        "type": "string"
+                    },
+                    "tanggalLahir": {
+                        "type": "string"
+                    },
+                    "wilayahId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.UpdateAgentProviderRequest": {
                 "properties": {
                     "apiKey": {
@@ -2725,6 +3445,50 @@
                     },
                     "nama": {
                         "minLength": 1,
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.UpdateKeluargaRequest": {
+                "properties": {
+                    "aktif": {
+                        "type": "boolean"
+                    },
+                    "alamat": {
+                        "type": "string"
+                    },
+                    "catatan": {
+                        "type": "string"
+                    },
+                    "kecamatanId": {
+                        "type": "string"
+                    },
+                    "kelurahanId": {
+                        "type": "string"
+                    },
+                    "kodePos": {
+                        "type": "string"
+                    },
+                    "kotaId": {
+                        "type": "string"
+                    },
+                    "lingkunganId": {
+                        "type": "string"
+                    },
+                    "namaKeluarga": {
+                        "type": "string"
+                    },
+                    "nomorKk": {
+                        "type": "string"
+                    },
+                    "statusEkonomi": {
+                        "type": "string"
+                    },
+                    "statusRumah": {
+                        "type": "string"
+                    },
+                    "wilayahId": {
                         "type": "string"
                     }
                 },
@@ -3165,6 +3929,114 @@
                         "type": "string"
                     },
                     "title": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.UpdateUmatRequest": {
+                "properties": {
+                    "agama": {
+                        "type": "string"
+                    },
+                    "aktivitasSosial": {
+                        "type": "string"
+                    },
+                    "alamat": {
+                        "type": "string"
+                    },
+                    "almarhum": {
+                        "type": "boolean"
+                    },
+                    "disabilitas": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "fotoUrl": {
+                        "type": "string"
+                    },
+                    "golonganDarah": {
+                        "type": "string"
+                    },
+                    "hubunganKeluarga": {
+                        "type": "string"
+                    },
+                    "jenisKelamin": {
+                        "enum": [
+                            "pria",
+                            "wanita"
+                        ],
+                        "type": "string"
+                    },
+                    "jurusan": {
+                        "type": "string"
+                    },
+                    "kecamatanId": {
+                        "type": "string"
+                    },
+                    "keluargaId": {
+                        "type": "string"
+                    },
+                    "kelurahanId": {
+                        "type": "string"
+                    },
+                    "keterampilan": {
+                        "type": "string"
+                    },
+                    "kewarganegaraan": {
+                        "type": "string"
+                    },
+                    "kotaId": {
+                        "type": "string"
+                    },
+                    "lingkunganId": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "type": "string"
+                    },
+                    "namaBaptis": {
+                        "type": "string"
+                    },
+                    "negara": {
+                        "type": "string"
+                    },
+                    "nik": {
+                        "type": "string"
+                    },
+                    "pekerjaan": {
+                        "type": "string"
+                    },
+                    "pendidikan": {
+                        "type": "string"
+                    },
+                    "profesi": {
+                        "type": "string"
+                    },
+                    "statusPernikahan": {
+                        "type": "string"
+                    },
+                    "suku": {
+                        "type": "string"
+                    },
+                    "tanggalLahir": {
+                        "type": "string"
+                    },
+                    "tanggalMeninggal": {
+                        "type": "string"
+                    },
+                    "telepon": {
+                        "type": "string"
+                    },
+                    "tempatLahir": {
+                        "type": "string"
+                    },
+                    "userId": {
+                        "type": "string"
+                    },
+                    "wilayahId": {
                         "type": "string"
                     }
                 },
@@ -3627,6 +4499,24 @@
                 },
                 "type": "object"
             },
+            "httpx.Envelope-array_domain_KeluargaListItemResponse": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.KeluargaListItemResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
             "httpx.Envelope-array_domain_KelurahanResponse": {
                 "properties": {
                     "data": {
@@ -3879,6 +4769,24 @@
                 },
                 "type": "object"
             },
+            "httpx.Envelope-array_domain_UmatListItemResponse": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.UmatListItemResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
             "httpx.Envelope-array_domain_UserAccountResponse": {
                 "properties": {
                     "data": {
@@ -4117,6 +5025,20 @@
                 "properties": {
                     "data": {
                         "$ref": "#/components/schemas/domain.KecamatanResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_KeluargaDetailResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.KeluargaDetailResponse"
                     },
                     "error": {
                         "$ref": "#/components/schemas/httpx.ErrorPayload"
@@ -4397,6 +5319,20 @@
                 "properties": {
                     "data": {
                         "$ref": "#/components/schemas/domain.TelegramLinkTokenResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_UmatDetailResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.UmatDetailResponse"
                     },
                     "error": {
                         "$ref": "#/components/schemas/httpx.ErrorPayload"
@@ -13853,6 +14789,796 @@
                 "summary": "Telegram bot webhook",
                 "tags": [
                     "Telegram"
+                ]
+            }
+        },
+        "/umat": {
+            "post": {
+                "description": "Creates an individual parishioner profile in the active paroki.",
+                "operationId": "createUmat",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.CreateUmatRequest",
+                                "summary": "body",
+                                "description": "Umat payload"
+                            }
+                        }
+                    },
+                    "description": "Umat payload",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_UmatDetailResponse"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Create umat",
+                "tags": [
+                    "Umat"
+                ]
+            }
+        },
+        "/umat/keluarga": {
+            "post": {
+                "description": "Creates a household (Kartu Keluarga) record in the active paroki.",
+                "operationId": "createKeluarga",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.CreateKeluargaRequest",
+                                "summary": "body",
+                                "description": "Keluarga payload"
+                            }
+                        }
+                    },
+                    "description": "Keluarga payload",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_KeluargaDetailResponse"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Create keluarga",
+                "tags": [
+                    "Umat"
+                ]
+            }
+        },
+        "/umat/keluarga/search": {
+            "post": {
+                "description": "Searches household (Kartu Keluarga) records in the active paroki with masked nomorKk and cursor pagination.",
+                "operationId": "searchKeluarga",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.SearchKeluargaRequest",
+                                "summary": "body",
+                                "description": "Search parameters"
+                            }
+                        }
+                    },
+                    "description": "Search parameters"
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_KeluargaListItemResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    }
+                },
+                "summary": "Search keluarga",
+                "tags": [
+                    "Umat"
+                ]
+            }
+        },
+        "/umat/keluarga/{id}": {
+            "delete": {
+                "description": "Soft-deletes a household (Kartu Keluarga) if no active umat references it.",
+                "operationId": "deleteKeluarga",
+                "parameters": [
+                    {
+                        "description": "Keluarga UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    }
+                },
+                "summary": "Delete keluarga",
+                "tags": [
+                    "Umat"
+                ]
+            },
+            "get": {
+                "description": "Returns a single non-deleted keluarga with decrypted nomorKk and masked anggota list.",
+                "operationId": "getKeluarga",
+                "parameters": [
+                    {
+                        "description": "Keluarga UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_KeluargaDetailResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Get keluarga",
+                "tags": [
+                    "Umat"
+                ]
+            },
+            "patch": {
+                "description": "Partially updates a household (Kartu Keluarga) record in the active paroki.",
+                "operationId": "updateKeluarga",
+                "parameters": [
+                    {
+                        "description": "Keluarga UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.UpdateKeluargaRequest",
+                                "summary": "body",
+                                "description": "Keluarga update payload"
+                            }
+                        }
+                    },
+                    "description": "Keluarga update payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_KeluargaDetailResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Update keluarga",
+                "tags": [
+                    "Umat"
+                ]
+            }
+        },
+        "/umat/search": {
+            "post": {
+                "description": "Searches individual parishioner profiles in the active paroki with masked nik and cursor pagination.",
+                "operationId": "searchUmat",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.SearchUmatRequest",
+                                "summary": "body",
+                                "description": "Search parameters"
+                            }
+                        }
+                    },
+                    "description": "Search parameters"
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_UmatListItemResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    }
+                },
+                "summary": "Search umat",
+                "tags": [
+                    "Umat"
+                ]
+            }
+        },
+        "/umat/{id}": {
+            "delete": {
+                "description": "Soft-deletes an individual parishioner profile in the active paroki.",
+                "operationId": "deleteUmat",
+                "parameters": [
+                    {
+                        "description": "Umat UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Delete umat",
+                "tags": [
+                    "Umat"
+                ]
+            },
+            "get": {
+                "description": "Returns a single non-deleted umat with decrypted nik, keluarga summary, and sakramen list.",
+                "operationId": "getUmat",
+                "parameters": [
+                    {
+                        "description": "Umat UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_UmatDetailResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Get umat",
+                "tags": [
+                    "Umat"
+                ]
+            },
+            "patch": {
+                "description": "Partially updates an individual parishioner profile in the active paroki.",
+                "operationId": "updateUmat",
+                "parameters": [
+                    {
+                        "description": "Umat UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.UpdateUmatRequest",
+                                "summary": "body",
+                                "description": "Umat update payload"
+                            }
+                        }
+                    },
+                    "description": "Umat update payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_UmatDetailResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Update umat",
+                "tags": [
+                    "Umat"
                 ]
             }
         },

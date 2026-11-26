@@ -1869,6 +1869,142 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/umat": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create umat
+     * @description Creates an individual parishioner profile in the active paroki.
+     */
+    post: operations["createUmat"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/umat/keluarga": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create keluarga
+     * @description Creates a household (Kartu Keluarga) record in the active paroki.
+     */
+    post: operations["createKeluarga"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/umat/keluarga/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Search keluarga
+     * @description Searches household (Kartu Keluarga) records in the active paroki with masked nomorKk and cursor pagination.
+     */
+    post: operations["searchKeluarga"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/umat/keluarga/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get keluarga
+     * @description Returns a single non-deleted keluarga with decrypted nomorKk and masked anggota list.
+     */
+    get: operations["getKeluarga"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete keluarga
+     * @description Soft-deletes a household (Kartu Keluarga) if no active umat references it.
+     */
+    delete: operations["deleteKeluarga"];
+    options?: never;
+    head?: never;
+    /**
+     * Update keluarga
+     * @description Partially updates a household (Kartu Keluarga) record in the active paroki.
+     */
+    patch: operations["updateKeluarga"];
+    trace?: never;
+  };
+  "/umat/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Search umat
+     * @description Searches individual parishioner profiles in the active paroki with masked nik and cursor pagination.
+     */
+    post: operations["searchUmat"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/umat/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get umat
+     * @description Returns a single non-deleted umat with decrypted nik, keluarga summary, and sakramen list.
+     */
+    get: operations["getUmat"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete umat
+     * @description Soft-deletes an individual parishioner profile in the active paroki.
+     */
+    delete: operations["deleteUmat"];
+    options?: never;
+    head?: never;
+    /**
+     * Update umat
+     * @description Partially updates an individual parishioner profile in the active paroki.
+     */
+    patch: operations["updateUmat"];
+    trace?: never;
+  };
   "/users": {
     parameters: {
       query?: never;
@@ -2060,6 +2196,21 @@ export interface components {
       kotaId: string;
       nama: string;
     };
+    "domain.CreateKeluargaRequest": {
+      aktif?: boolean;
+      alamat?: string;
+      catatan?: string;
+      kecamatanId?: string;
+      kelurahanId?: string;
+      kodePos?: string;
+      kotaId?: string;
+      lingkunganId?: string;
+      namaKeluarga: string;
+      nomorKk?: string;
+      statusEkonomi?: string;
+      statusRumah?: string;
+      wilayahId?: string;
+    };
     "domain.CreateKelurahanRequest": {
       active?: boolean;
       kecamatanId: string;
@@ -2170,6 +2321,42 @@ export interface components {
       startDate: string;
       /** @enum {string} */
       type?: "fiscal" | "liturgical";
+    };
+    "domain.CreateUmatRequest": {
+      agama?: string;
+      aktivitasSosial?: string;
+      alamat?: string;
+      almarhum?: boolean;
+      disabilitas?: string;
+      email?: string;
+      fotoUrl?: string;
+      golonganDarah?: string;
+      hubunganKeluarga?: string;
+      /** @enum {string} */
+      jenisKelamin: "pria" | "wanita";
+      jurusan?: string;
+      kecamatanId?: string;
+      keluargaId?: string;
+      kelurahanId?: string;
+      keterampilan?: string;
+      kewarganegaraan?: string;
+      kotaId?: string;
+      lingkunganId?: string;
+      nama: string;
+      namaBaptis?: string;
+      negara?: string;
+      nik?: string;
+      pekerjaan?: string;
+      pendidikan?: string;
+      profesi?: string;
+      statusPernikahan?: string;
+      suku?: string;
+      tanggalLahir?: string;
+      tanggalMeninggal?: string;
+      telepon?: string;
+      tempatLahir?: string;
+      userId?: string;
+      wilayahId?: string;
     };
     "domain.CreateUserTokenRequest": {
       expiresInDays?: number;
@@ -2304,6 +2491,61 @@ export interface components {
     "domain.KecamatanSearchFilter": {
       active?: boolean;
       kotaId?: string;
+    };
+    "domain.KeluargaAnggotaSummary": {
+      almarhum?: boolean;
+      hubunganKeluarga?: string;
+      id?: string;
+      jenisKelamin?: string;
+      nama?: string;
+      namaBaptis?: string;
+      nikMasked?: string;
+    };
+    "domain.KeluargaDetailResponse": {
+      aktif?: boolean;
+      alamat?: string;
+      anggota?: components["schemas"]["domain.KeluargaAnggotaSummary"][];
+      catatan?: string;
+      createdAt?: string;
+      id?: string;
+      kecamatanId?: string;
+      kelurahanId?: string;
+      kodePos?: string;
+      kotaId?: string;
+      lingkunganId?: string;
+      namaKeluarga?: string;
+      nomorKk?: string;
+      nomorKkMasked?: string;
+      parokiId?: string;
+      statusEkonomi?: string;
+      statusRumah?: string;
+      updatedAt?: string;
+      wilayahId?: string;
+    };
+    "domain.KeluargaListItemResponse": {
+      aktif?: boolean;
+      alamat?: string;
+      catatan?: string;
+      createdAt?: string;
+      id?: string;
+      kecamatanId?: string;
+      kelurahanId?: string;
+      kodePos?: string;
+      kotaId?: string;
+      lingkunganId?: string;
+      namaKeluarga?: string;
+      nomorKkMasked?: string;
+      parokiId?: string;
+      statusEkonomi?: string;
+      statusRumah?: string;
+      updatedAt?: string;
+      wilayahId?: string;
+    };
+    "domain.KeluargaSearchFilter": {
+      aktif?: boolean;
+      lingkunganId?: string;
+      nomorKk?: string;
+      wilayahId?: string;
     };
     "domain.KelurahanResponse": {
       active?: boolean;
@@ -2631,6 +2873,14 @@ export interface components {
       limit?: number;
       q?: string;
     };
+    "domain.SearchKeluargaRequest": {
+      cursor?: string;
+      filter?: components["schemas"]["domain.KeluargaSearchFilter"];
+      limit?: number;
+      q?: string;
+      /** @enum {string} */
+      sort?: "-createdAt" | "namaKeluarga" | "-namaKeluarga";
+    };
     "domain.SearchKelurahanRequest": {
       cursor?: string;
       filter?: components["schemas"]["domain.KelurahanSearchFilter"];
@@ -2712,6 +2962,14 @@ export interface components {
       cursor?: string;
       limit?: number;
     };
+    "domain.SearchUmatRequest": {
+      cursor?: string;
+      filter?: components["schemas"]["domain.UmatSearchFilter"];
+      limit?: number;
+      q?: string;
+      /** @enum {string} */
+      sort?: "-createdAt" | "nama" | "-nama";
+    };
     "domain.SearchUsersRequest": {
       cursor?: string;
       filter?: components["schemas"]["domain.UserSearchFilter"];
@@ -2767,6 +3025,120 @@ export interface components {
       id?: string;
       name?: string;
     };
+    "domain.UmatDetailResponse": {
+      agama?: string;
+      aktivitasSosial?: string;
+      alamat?: string;
+      almarhum?: boolean;
+      createdAt?: string;
+      disabilitas?: string;
+      email?: string;
+      fotoUrl?: string;
+      golonganDarah?: string;
+      hubunganKeluarga?: string;
+      id?: string;
+      jenisKelamin?: string;
+      jurusan?: string;
+      kecamatanId?: string;
+      keluarga?: components["schemas"]["domain.UmatKeluargaSummary"];
+      keluargaId?: string;
+      kelurahanId?: string;
+      keterampilan?: string;
+      kewarganegaraan?: string;
+      kotaId?: string;
+      lingkunganId?: string;
+      nama?: string;
+      namaBaptis?: string;
+      negara?: string;
+      nik?: string;
+      nikMasked?: string;
+      parokiId?: string;
+      pekerjaan?: string;
+      pendidikan?: string;
+      profesi?: string;
+      sakramen?: components["schemas"]["domain.UmatSakramenResponse"][];
+      statusPernikahan?: string;
+      suku?: string;
+      tanggalLahir?: string;
+      tanggalMeninggal?: string;
+      telepon?: string;
+      tempatLahir?: string;
+      updatedAt?: string;
+      userId?: string;
+      wilayahId?: string;
+    };
+    "domain.UmatKeluargaSummary": {
+      id?: string;
+      namaKeluarga?: string;
+      nomorKkMasked?: string;
+    };
+    "domain.UmatListItemResponse": {
+      agama?: string;
+      aktivitasSosial?: string;
+      alamat?: string;
+      almarhum?: boolean;
+      createdAt?: string;
+      disabilitas?: string;
+      email?: string;
+      fotoUrl?: string;
+      golonganDarah?: string;
+      hubunganKeluarga?: string;
+      id?: string;
+      jenisKelamin?: string;
+      jurusan?: string;
+      kecamatanId?: string;
+      keluargaId?: string;
+      kelurahanId?: string;
+      keterampilan?: string;
+      kewarganegaraan?: string;
+      kotaId?: string;
+      lingkunganId?: string;
+      nama?: string;
+      namaBaptis?: string;
+      negara?: string;
+      nikMasked?: string;
+      parokiId?: string;
+      pekerjaan?: string;
+      pendidikan?: string;
+      profesi?: string;
+      statusPernikahan?: string;
+      suku?: string;
+      tanggalLahir?: string;
+      tanggalMeninggal?: string;
+      telepon?: string;
+      tempatLahir?: string;
+      updatedAt?: string;
+      userId?: string;
+      wilayahId?: string;
+    };
+    "domain.UmatSakramenResponse": {
+      buku?: string;
+      catatan?: string;
+      createdAt?: string;
+      id?: string;
+      jenis?: string;
+      keuskupanId?: string;
+      keuskupanNama?: string;
+      nomor?: string;
+      parokiId?: string;
+      parokiNama?: string;
+      parokiSakramenId?: string;
+      tanggal?: string;
+      umatId?: string;
+      updatedAt?: string;
+    };
+    "domain.UmatSearchFilter": {
+      agama?: string;
+      almarhum?: boolean;
+      /** @enum {string} */
+      jenisKelamin?: "pria" | "wanita";
+      keluargaId?: string;
+      lingkunganId?: string;
+      nik?: string;
+      statusPernikahan?: string;
+      tanggalLahir?: string;
+      wilayahId?: string;
+    };
     "domain.UpdateAgentProviderRequest": {
       apiKey?: string;
       baseUrl?: string;
@@ -2814,6 +3186,21 @@ export interface components {
       kode?: string;
       kotaId?: string;
       nama?: string;
+    };
+    "domain.UpdateKeluargaRequest": {
+      aktif?: boolean;
+      alamat?: string;
+      catatan?: string;
+      kecamatanId?: string;
+      kelurahanId?: string;
+      kodePos?: string;
+      kotaId?: string;
+      lingkunganId?: string;
+      namaKeluarga?: string;
+      nomorKk?: string;
+      statusEkonomi?: string;
+      statusRumah?: string;
+      wilayahId?: string;
     };
     "domain.UpdateKelurahanRequest": {
       active?: boolean;
@@ -2966,6 +3353,42 @@ export interface components {
       providerId?: string;
       title?: string;
     };
+    "domain.UpdateUmatRequest": {
+      agama?: string;
+      aktivitasSosial?: string;
+      alamat?: string;
+      almarhum?: boolean;
+      disabilitas?: string;
+      email?: string;
+      fotoUrl?: string;
+      golonganDarah?: string;
+      hubunganKeluarga?: string;
+      /** @enum {string} */
+      jenisKelamin?: "pria" | "wanita";
+      jurusan?: string;
+      kecamatanId?: string;
+      keluargaId?: string;
+      kelurahanId?: string;
+      keterampilan?: string;
+      kewarganegaraan?: string;
+      kotaId?: string;
+      lingkunganId?: string;
+      nama?: string;
+      namaBaptis?: string;
+      negara?: string;
+      nik?: string;
+      pekerjaan?: string;
+      pendidikan?: string;
+      profesi?: string;
+      statusPernikahan?: string;
+      suku?: string;
+      tanggalLahir?: string;
+      tanggalMeninggal?: string;
+      telepon?: string;
+      tempatLahir?: string;
+      userId?: string;
+      wilayahId?: string;
+    };
     "domain.UpdateWilayahRequest": {
       active?: boolean;
       /** @enum {string} */
@@ -3108,6 +3531,11 @@ export interface components {
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
+    "httpx.Envelope-array_domain_KeluargaListItemResponse": {
+      data?: components["schemas"]["domain.KeluargaListItemResponse"][];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
     "httpx.Envelope-array_domain_KelurahanResponse": {
       data?: components["schemas"]["domain.KelurahanResponse"][];
       error?: components["schemas"]["httpx.ErrorPayload"];
@@ -3175,6 +3603,11 @@ export interface components {
     };
     "httpx.Envelope-array_domain_SessionResponse": {
       data?: components["schemas"]["domain.SessionResponse"][];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-array_domain_UmatListItemResponse": {
+      data?: components["schemas"]["domain.UmatListItemResponse"][];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -3255,6 +3688,11 @@ export interface components {
     };
     "httpx.Envelope-domain_KecamatanResponse": {
       data?: components["schemas"]["domain.KecamatanResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_KeluargaDetailResponse": {
+      data?: components["schemas"]["domain.KeluargaDetailResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -3355,6 +3793,11 @@ export interface components {
     };
     "httpx.Envelope-domain_TelegramLinkTokenResponse": {
       data?: components["schemas"]["domain.TelegramLinkTokenResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_UmatDetailResponse": {
+      data?: components["schemas"]["domain.UmatDetailResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -10938,6 +11381,655 @@ export interface operations {
       };
       /** @description Unauthorized */
       401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  createUmat: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Umat payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.CreateUmatRequest"];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_UmatDetailResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  createKeluarga: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Keluarga payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.CreateKeluargaRequest"];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_KeluargaDetailResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  searchKeluarga: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Search parameters */
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["domain.SearchKeluargaRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_KeluargaListItemResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  getKeluarga: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Keluarga UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_KeluargaDetailResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  deleteKeluarga: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Keluarga UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  updateKeluarga: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Keluarga UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Keluarga update payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UpdateKeluargaRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_KeluargaDetailResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  searchUmat: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Search parameters */
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["domain.SearchUmatRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_UmatListItemResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  getUmat: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Umat UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_UmatDetailResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  deleteUmat: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Umat UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  updateUmat: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Umat UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Umat update payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UpdateUmatRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_UmatDetailResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
         headers: {
           [name: string]: unknown;
         };

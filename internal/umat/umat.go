@@ -34,7 +34,11 @@ type Feature struct {
 // New constructs the umat Feature.
 func New(db *ent.Client, enforcer *authz.Enforcer, users *user.Feature, refs *ref.Feature, cipher *crypt.Cipher) *Feature {
 	r := repo.New(db)
-	svc := service.New(r, enforcer, cipher)
+	var refReader service.RefReader
+	if refs != nil {
+		refReader = refs
+	}
+	svc := service.New(r, enforcer, refReader, cipher)
 	h := handler.New(svc)
 	return &Feature{
 		service:  svc,
@@ -47,7 +51,16 @@ func New(db *ent.Client, enforcer *authz.Enforcer, users *user.Feature, refs *re
 
 // Register mounts /umat routes under /api.
 func (f *Feature) Register(api fiber.Router) {
-	f.handler.Register(api)
+	f.handler.Register(
+		api,
+		f.users.AuthenticateMiddleware(),
+		f.users.RequireAuth(),
+		requireTenantMiddleware(),
+		f.users.Require(PermKeluarga, authz.ActionRead, parokiDomainFromContext),
+		f.users.Require(PermKeluarga, authz.ActionWrite, parokiDomainFromContext),
+		f.users.Require(PermUmat, authz.ActionRead, parokiDomainFromContext),
+		f.users.Require(PermUmat, authz.ActionWrite, parokiDomainFromContext),
+	)
 }
 
 // RegisterPermissions registers umat feature roles and policies with the Casbin enforcer.
@@ -77,4 +90,21 @@ func (f *Feature) RegisterPermissions(ctx context.Context, e *authz.Enforcer) er
 		}
 	}
 	return nil
+}
+
+func requireTenantMiddleware() fiber.Handler {
+	return func(c fiber.Ctx) error {
+		if _, err := user.RequireTenant(c.Context()); err != nil {
+			return err
+		}
+		return c.Next()
+	}
+}
+
+func parokiDomainFromContext(c fiber.Ctx) (string, error) {
+	p, err := user.RequireTenant(c.Context())
+	if err != nil {
+		return "", err
+	}
+	return authz.ParokiDomain(p.ParokiID), nil
 }
