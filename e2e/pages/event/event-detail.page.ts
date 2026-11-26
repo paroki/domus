@@ -223,11 +223,13 @@ export class EventDetailPage extends BasePage {
     name?: string;
     orgLabel?: string;
   }): Promise<void> {
-    await this.page.getByRole("button", { name: "Tambah Petugas" }).click();
     const form = this.page.locator("form").filter({
       has: this.page.getByRole("button", { name: "Simpan Petugas" }),
     });
-    await form.waitFor({ state: "visible", timeout: 10_000 });
+    if ((await form.count()) === 0) {
+      await this.page.getByRole("button", { name: "Tambah Petugas" }).click();
+      await form.waitFor({ state: "visible", timeout: 10_000 });
+    }
     await form.getByLabel("Peran Petugas").fill(input.role);
     const modeLabel =
       input.mode === "org"
