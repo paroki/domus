@@ -56,3 +56,43 @@ Feature: Organization Admin menu visibility, /users roster CRUD, profile, and in
     Then I see org invite with status "Aktif" usage "Terpakai: 0 / 5"
     When I revoke the org invite
     Then I see org invite with status "Dicabut"
+
+  @org-admin
+  Scenario: Org Admin manages org_periode lifecycle with overlap guard, active rotation, and open/closed toggle
+    When I open "/org"
+    And I open organization detail "Seksi Liturgi E2E"
+    Then I see org period "Periode 2025-2028" with status "Terbuka" and current badge
+    When I open the new org period form and submit "Periode Overlap" from "2026-01-01" to "2027-12-31"
+    Then I see org error "Rentang tanggal periode bertumpuk dengan periode lain yang sudah ada."
+    When I resubmit the org period form with name "Periode 2029-2031" from "2029-01-01" to "2031-12-31"
+    Then I see org period "Periode 2029-2031" with status "Terbuka"
+    When I make org period "Periode 2029-2031" active
+    Then I see org period "Periode 2029-2031" with status "Terbuka" and current badge
+    And I see org period "Periode 2025-2028" without current badge
+    When I toggle org period "Periode 2025-2028" via "Tutup"
+    Then I see org period "Periode 2025-2028" with status "Ditutup"
+    When I delete org period "Periode 2029-2031"
+    Then I do not see org period "Periode 2029-2031"
+
+  @org-admin
+  Scenario: Org Admin manages hierarchical org_jabatan tree with umat lookup, rangkap jabatan, and ORG_IN_USE guards
+    Given a parishioner named "Yohanes Budi" exists in the active parish
+    When I open "/org"
+    And I open organization detail "Seksi Liturgi E2E"
+    And I create root org jabatan "Ketua" assigned to org member "Admin Organisasi E2E"
+    Then I see org jabatan "Ketua" held by "Admin Organisasi E2E"
+    When I create child org jabatan "Bendahara" under "Ketua" assigned to umat "Yohanes Budi"
+    Then I see child org jabatan "Bendahara" held by "Yohanes Budi"
+    When I create child org jabatan "Dirigen" under "Ketua" with manual name "Ibu Maria"
+    Then I see child org jabatan "Dirigen" held by "Ibu Maria"
+    When I create root org jabatan "Koordinator Lektor" assigned to umat "Yohanes Budi"
+    Then I see org jabatan "Koordinator Lektor" held by "Yohanes Budi"
+    When I delete org jabatan "Ketua"
+    Then I see org error "Data organisasi masih digunakan oleh periode, sub-organisasi, atau struktur jabatan aktif sehingga tidak dapat dihapus."
+    When I delete org period "Periode 2025-2028"
+    Then I see org error "Data organisasi masih digunakan oleh periode, sub-organisasi, atau struktur jabatan aktif sehingga tidak dapat dihapus."
+    When I delete org jabatan "Bendahara"
+    And I delete org jabatan "Dirigen"
+    And I delete org jabatan "Koordinator Lektor"
+    And I delete org jabatan "Ketua"
+    Then I do not see org jabatan "Ketua"

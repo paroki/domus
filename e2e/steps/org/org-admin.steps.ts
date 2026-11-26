@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import { Given, Then, When } from "@cucumber/cucumber";
+import { loginAsSuperAdmin, loginAsUser } from "../../support/auth";
+import { TestClient } from "../../support/test-client";
 import type { DomusWorld } from "../../support/world";
 
 function splitCsv(raw: string): string[] {
@@ -183,5 +185,236 @@ Then(
   "I see org invite with status {string}",
   async function (this: DomusWorld, statusLabel: string) {
     await this.pages.org.detail.expectInviteVisible({ statusLabel });
+  },
+);
+
+Then(
+  "I see org error {string}",
+  async function (this: DomusWorld, message: string) {
+    await this.pages.org.detail.expectErrorAlert(message);
+  },
+);
+
+Then(
+  "I see org period {string} with status {string} and current badge",
+  async function (this: DomusWorld, name: string, status: string) {
+    await this.pages.org.detail.expectPeriodeVisible(name, {
+      status: status as "Terbuka" | "Ditutup",
+      isCurrent: true,
+    });
+  },
+);
+
+Then(
+  "I see org period {string} with status {string}",
+  async function (this: DomusWorld, name: string, status: string) {
+    await this.pages.org.detail.expectPeriodeVisible(name, {
+      status: status as "Terbuka" | "Ditutup",
+    });
+  },
+);
+
+Then(
+  "I see org period {string} without current badge",
+  async function (this: DomusWorld, name: string) {
+    await this.pages.org.detail.expectPeriodeVisible(name, {
+      isCurrent: false,
+    });
+  },
+);
+
+Then(
+  "I do not see org period {string}",
+  async function (this: DomusWorld, name: string) {
+    await this.pages.org.detail.expectPeriodeNotVisible(name);
+  },
+);
+
+When(
+  "I open the new org period form and submit {string} from {string} to {string}",
+  async function (
+    this: DomusWorld,
+    nama: string,
+    tanggalMulai: string,
+    tanggalSelesai: string,
+  ) {
+    await this.pages.org.detail.openNewPeriodeForm();
+    await this.pages.org.detail.fillAndSubmitPeriodeForm({
+      nama,
+      tanggalMulai,
+      tanggalSelesai,
+    });
+  },
+);
+
+When(
+  "I resubmit the org period form with name {string} from {string} to {string}",
+  async function (
+    this: DomusWorld,
+    nama: string,
+    tanggalMulai: string,
+    tanggalSelesai: string,
+  ) {
+    await this.pages.org.detail.fillAndSubmitPeriodeForm({
+      nama,
+      kode: nama.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+      tanggalMulai,
+      tanggalSelesai,
+    });
+  },
+);
+
+When(
+  "I make org period {string} active",
+  async function (this: DomusWorld, name: string) {
+    await this.pages.org.detail.makePeriodeCurrent(name);
+  },
+);
+
+When(
+  "I toggle org period {string} via {string}",
+  async function (this: DomusWorld, name: string, buttonLabel: string) {
+    await this.pages.org.detail.togglePeriodeStatus(
+      name,
+      buttonLabel as "Tutup" | "Buka",
+    );
+  },
+);
+
+When(
+  "I delete org period {string}",
+  async function (this: DomusWorld, name: string) {
+    await this.pages.org.detail.deletePeriode(name);
+  },
+);
+
+Given(
+  "a parishioner named {string} exists in the active parish",
+  async function (this: DomusWorld, nama: string) {
+    assert.ok(this.activeParokiId, "Expected activeParokiId");
+    const sa = await loginAsSuperAdmin();
+    const saClient = new TestClient();
+    saClient.setToken(sa.rawToken);
+    const umatAdminEmail = "umatadmin.e2e@domus.test";
+    const addRes = await saClient.post(
+      `/ref/paroki/${this.activeParokiId}/members`,
+      {
+        email: umatAdminEmail,
+        name: "Umat Admin E2E",
+        role: "member",
+        umatAdmin: true,
+      },
+    );
+    assert.ok(
+      addRes.status === 201 || addRes.status === 409,
+      `Expected 201 or 409 adding umat admin, got ${addRes.status}`,
+    );
+
+    const uaSession = await loginAsUser({
+      email: umatAdminEmail,
+      name: "Umat Admin E2E",
+      onboarded: true,
+      activeParokiId: this.activeParokiId,
+    });
+    const uaClient = new TestClient();
+    uaClient.setToken(uaSession.rawToken);
+    uaClient.setParokiId(this.activeParokiId);
+    const res = await uaClient.post("/umat", {
+      nama,
+      jenisKelamin: "pria",
+    });
+    assert.equal(
+      res.status,
+      201,
+      `Expected 201 creating umat, got ${res.status}: ${JSON.stringify(res.data)}`,
+    );
+  },
+);
+
+When(
+  "I create root org jabatan {string} assigned to org member {string}",
+  async function (this: DomusWorld, jabatan: string, memberName: string) {
+    await this.pages.org.detail.createJabatan({
+      jabatan,
+      source: "member",
+      memberName,
+    });
+  },
+);
+
+When(
+  "I create root org jabatan {string} assigned to umat {string}",
+  async function (this: DomusWorld, jabatan: string, umatName: string) {
+    await this.pages.org.detail.createJabatan({
+      jabatan,
+      source: "umat",
+      umatName,
+    });
+  },
+);
+
+When(
+  "I create child org jabatan {string} under {string} assigned to umat {string}",
+  async function (
+    this: DomusWorld,
+    jabatan: string,
+    parentJabatan: string,
+    umatName: string,
+  ) {
+    await this.pages.org.detail.createJabatan({
+      parentJabatan,
+      jabatan,
+      source: "umat",
+      umatName,
+    });
+  },
+);
+
+When(
+  "I create child org jabatan {string} under {string} with manual name {string}",
+  async function (
+    this: DomusWorld,
+    jabatan: string,
+    parentJabatan: string,
+    manualNama: string,
+  ) {
+    await this.pages.org.detail.createJabatan({
+      parentJabatan,
+      jabatan,
+      source: "manual",
+      manualNama,
+    });
+  },
+);
+
+Then(
+  "I see org jabatan {string} held by {string}",
+  async function (this: DomusWorld, jabatan: string, holderName: string) {
+    await this.pages.org.detail.expectJabatanVisible(
+      jabatan,
+      holderName,
+      false,
+    );
+  },
+);
+
+Then(
+  "I see child org jabatan {string} held by {string}",
+  async function (this: DomusWorld, jabatan: string, holderName: string) {
+    await this.pages.org.detail.expectJabatanVisible(jabatan, holderName, true);
+  },
+);
+
+When(
+  "I delete org jabatan {string}",
+  async function (this: DomusWorld, jabatan: string) {
+    await this.pages.org.detail.deleteJabatan(jabatan);
+  },
+);
+
+Then(
+  "I do not see org jabatan {string}",
+  async function (this: DomusWorld, jabatan: string) {
+    await this.pages.org.detail.expectJabatanNotVisible(jabatan);
   },
 );

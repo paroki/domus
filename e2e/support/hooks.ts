@@ -81,6 +81,7 @@ Before({ tags: "@org-admin" }, async function (this: DomusWorld) {
   this.activeOrgName = result.org.name;
   this.activeOrgCode = result.org.code;
   this.activePeriodName = result.period.name;
+  this.parokiAdminToken = result.parokiAdminToken;
 });
 
 Before({ tags: "@org-member" }, async function (this: DomusWorld) {

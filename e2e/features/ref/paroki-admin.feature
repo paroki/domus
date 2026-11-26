@@ -1,4 +1,4 @@
-Feature: Paroki Admin settings, profile, wilayah, lookups, and periods
+Feature: Paroki Admin settings, profile, wilayah, and lookups
 
   @paroki-admin
   Scenario: Paroki Admin sees paroki settings tiles and is denied super-admin paroki route
