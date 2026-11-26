@@ -11,6 +11,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/paroki/domus/internal/app"
@@ -112,7 +113,7 @@ func (s *ApiTestSuite[T]) Request(path, method string, requestBody any) {
 	req := httptest.NewRequestWithContext(s.requestContext(), method, path, bodyReader)
 	s.applyRequestMeta(req, contentType)
 
-	resp, err := s.App.Test(req)
+	resp, err := s.App.Test(req, fiber.TestConfig{Timeout: 10 * time.Second})
 	s.Require().NoError(err, "execute fiber test request")
 	s.HttpResponse = resp
 }
@@ -145,7 +146,7 @@ func (s *ApiTestSuite[T]) RequestMultipart(path, method, fieldName, filename str
 	s.applyRequestMeta(req, "")
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 
-	resp, err := s.App.Test(req)
+	resp, err := s.App.Test(req, fiber.TestConfig{Timeout: 10 * time.Second})
 	s.Require().NoError(err, "execute fiber multipart request")
 	s.HttpResponse = resp
 }
