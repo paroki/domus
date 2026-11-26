@@ -1057,6 +1057,74 @@ export interface paths {
     patch: operations["updateOrgMember"];
     trace?: never;
   };
+  "/orgs/{id}/periode": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create organization period
+     * @description Creates an organization period with date overlap validation, soft-deleted kode reactivation, and atomic isCurrent rotation.
+     */
+    post: operations["createOrgPeriode"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/orgs/{id}/periode/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Search organization periods
+     * @description Searches non-deleted periods for an organization with optional filters and cursor pagination, ordered by tanggalMulai DESC, id DESC.
+     */
+    post: operations["searchOrgPeriode"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/orgs/{id}/periode/{periodeId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get organization period
+     * @description Returns a single non-deleted period for an organization.
+     */
+    get: operations["getOrgPeriode"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete organization period
+     * @description Soft-deletes an organization period and clears isCurrent.
+     */
+    delete: operations["deleteOrgPeriode"];
+    options?: never;
+    head?: never;
+    /**
+     * Update organization period
+     * @description Updates mutable fields of an organization period with overlap validation and atomic isCurrent rotation.
+     */
+    patch: operations["updateOrgPeriode"];
+    trace?: never;
+  };
   "/ref/kecamatan": {
     parameters: {
       query?: never;
@@ -1689,74 +1757,6 @@ export interface paths {
     patch: operations["updateParokiMember"];
     trace?: never;
   };
-  "/ref/periods": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Create period
-     * @description Creates a period with date overlap validation and atomic isCurrent rotation.
-     */
-    post: operations["createPeriod"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/ref/periods/search": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Search periods
-     * @description Searches fiscal and liturgical periods in the active parish with optional filters and cursor pagination.
-     */
-    post: operations["searchPeriods"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/ref/periods/{id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get period
-     * @description Returns a single non-deleted period in the active parish.
-     */
-    get: operations["getPeriod"];
-    put?: never;
-    post?: never;
-    /**
-     * Delete period
-     * @description Soft-deletes a period in the active parish.
-     */
-    delete: operations["deletePeriod"];
-    options?: never;
-    head?: never;
-    /**
-     * Update period
-     * @description Updates mutable fields of a period with overlap validation and atomic isCurrent rotation.
-     */
-    patch: operations["updatePeriod"];
-    trace?: never;
-  };
   "/ref/wilayah": {
     parameters: {
       query?: never;
@@ -2134,14 +2134,10 @@ export interface components {
     "authz.RoleScope": "global" | "paroki" | "org";
     "domain.AddOrgMemberRequest": {
       email?: string;
-      endDate?: string;
       name?: string;
-      periodId?: string;
       phone?: string;
-      position?: string;
       /** @enum {string} */
       role?: "admin" | "member";
-      startDate?: string;
       /** @enum {string} */
       status?: "active" | "inactive";
       userId?: string;
@@ -2305,11 +2301,19 @@ export interface components {
       content: string;
     };
     "domain.CreateOrgInviteRequest": {
-      defaultPosition?: string;
       maxUses?: number;
       /** @enum {string} */
       role?: "admin" | "member";
       ttlSeconds?: number;
+    };
+    "domain.CreateOrgPeriodeRequest": {
+      isCurrent?: boolean;
+      kode: string;
+      nama: string;
+      /** @enum {string} */
+      status?: "open" | "closed";
+      tanggalMulai: string;
+      tanggalSelesai: string;
     };
     "domain.CreateOrganizationRequest": {
       active?: boolean;
@@ -2356,15 +2360,6 @@ export interface components {
       telepon?: string;
       timezone?: string;
       website?: string;
-    };
-    "domain.CreatePeriodRequest": {
-      code: string;
-      endDate: string;
-      isCurrent?: boolean;
-      name: string;
-      startDate: string;
-      /** @enum {string} */
-      type?: "fiscal" | "liturgical";
     };
     "domain.CreateUmatRequest": {
       agama?: string;
@@ -2459,7 +2454,6 @@ export interface components {
       id?: string;
       name?: string;
       note?: string;
-      orgPosition?: string;
       orgRole?: string;
       parokiId?: string;
       phone?: string;
@@ -2719,7 +2713,6 @@ export interface components {
     };
     "domain.OrgInvitePreviewResponse": {
       code?: string;
-      defaultPosition?: string;
       expiresAt?: string;
       orgCode?: string;
       orgId?: string;
@@ -2736,7 +2729,6 @@ export interface components {
       code?: string;
       createdAt?: string;
       createdBy?: string;
-      defaultPosition?: string;
       expiresAt?: string;
       id?: string;
       maxUses?: number;
@@ -2754,26 +2746,39 @@ export interface components {
     "domain.OrgMemberResponse": {
       createdAt?: string;
       email?: string;
-      endDate?: string;
       id?: string;
       name?: string;
       orgId?: string;
       parokiId?: string;
-      periodId?: string;
       phone?: string;
-      position?: string;
       role?: string;
-      startDate?: string;
       status?: string;
       updatedAt?: string;
       userId?: string;
     };
     "domain.OrgMemberSearchFilter": {
-      periodId?: string;
       /** @enum {string} */
       role?: "admin" | "member";
       /** @enum {string} */
       status?: "active" | "inactive";
+    };
+    "domain.OrgPeriodeResponse": {
+      createdAt?: string;
+      id?: string;
+      isCurrent?: boolean;
+      kode?: string;
+      nama?: string;
+      orgId?: string;
+      parokiId?: string;
+      status?: string;
+      tanggalMulai?: string;
+      tanggalSelesai?: string;
+      updatedAt?: string;
+    };
+    "domain.OrgPeriodeSearchFilter": {
+      isCurrent?: boolean;
+      /** @enum {string} */
+      status?: "open" | "closed";
     };
     "domain.OrganizationResponse": {
       active?: boolean;
@@ -2854,26 +2859,6 @@ export interface components {
       keuskupanId?: string;
       kevikepanId?: string;
       memberOnly?: boolean;
-    };
-    "domain.PeriodResponse": {
-      code?: string;
-      createdAt?: string;
-      endDate?: string;
-      id?: string;
-      isCurrent?: boolean;
-      name?: string;
-      parokiId?: string;
-      startDate?: string;
-      status?: string;
-      type?: string;
-      updatedAt?: string;
-    };
-    "domain.PeriodSearchFilter": {
-      isCurrent?: boolean;
-      /** @enum {string} */
-      status?: "open" | "closed";
-      /** @enum {string} */
-      type?: "fiscal" | "liturgical";
     };
     "domain.ProviderModelDTO": {
       capabilities?: string[];
@@ -2978,6 +2963,12 @@ export interface components {
       limit?: number;
       q?: string;
     };
+    "domain.SearchOrgPeriodeRequest": {
+      cursor?: string;
+      filter?: components["schemas"]["domain.OrgPeriodeSearchFilter"];
+      limit?: number;
+      q?: string;
+    };
     "domain.SearchOrganizationsRequest": {
       cursor?: string;
       filter?: components["schemas"]["domain.OrganizationSearchFilter"];
@@ -2993,12 +2984,6 @@ export interface components {
     "domain.SearchParokiRequest": {
       cursor?: string;
       filter?: components["schemas"]["domain.ParokiSearchFilter"];
-      limit?: number;
-      q?: string;
-    };
-    "domain.SearchPeriodsRequest": {
-      cursor?: string;
-      filter?: components["schemas"]["domain.PeriodSearchFilter"];
       limit?: number;
       q?: string;
     };
@@ -3306,14 +3291,19 @@ export interface components {
       content?: string;
     };
     "domain.UpdateOrgMemberRequest": {
-      endDate?: string;
-      periodId?: string;
-      position?: string;
       /** @enum {string} */
       role?: "admin" | "member";
-      startDate?: string;
       /** @enum {string} */
       status?: "active" | "inactive";
+    };
+    "domain.UpdateOrgPeriodeRequest": {
+      isCurrent?: boolean;
+      kode?: string;
+      nama?: string;
+      /** @enum {string} */
+      status?: "open" | "closed";
+      tanggalMulai?: string;
+      tanggalSelesai?: string;
     };
     "domain.UpdateOrganizationRequest": {
       active?: boolean;
@@ -3382,15 +3372,6 @@ export interface components {
       telepon?: string;
       timezone?: string;
       website?: string;
-    };
-    "domain.UpdatePeriodRequest": {
-      code?: string;
-      endDate?: string;
-      isCurrent?: boolean;
-      name?: string;
-      startDate?: string;
-      /** @enum {string} */
-      status?: "open" | "closed";
     };
     "domain.UpdateSessionRequest": {
       modelId?: string;
@@ -3663,6 +3644,11 @@ export interface components {
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
+    "httpx.Envelope-array_domain_OrgPeriodeResponse": {
+      data?: components["schemas"]["domain.OrgPeriodeResponse"][];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
     "httpx.Envelope-array_domain_OrganizationResponse": {
       data?: components["schemas"]["domain.OrganizationResponse"][];
       error?: components["schemas"]["httpx.ErrorPayload"];
@@ -3675,11 +3661,6 @@ export interface components {
     };
     "httpx.Envelope-array_domain_ParokiResponse": {
       data?: components["schemas"]["domain.ParokiResponse"][];
-      error?: components["schemas"]["httpx.ErrorPayload"];
-      meta?: components["schemas"]["httpx.Meta"];
-    };
-    "httpx.Envelope-array_domain_PeriodResponse": {
-      data?: components["schemas"]["domain.PeriodResponse"][];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -3828,6 +3809,11 @@ export interface components {
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
+    "httpx.Envelope-domain_OrgPeriodeResponse": {
+      data?: components["schemas"]["domain.OrgPeriodeResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
     "httpx.Envelope-domain_OrganizationResponse": {
       data?: components["schemas"]["domain.OrganizationResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
@@ -3840,11 +3826,6 @@ export interface components {
     };
     "httpx.Envelope-domain_ParokiResponse": {
       data?: components["schemas"]["domain.ParokiResponse"];
-      error?: components["schemas"]["httpx.ErrorPayload"];
-      meta?: components["schemas"]["httpx.Meta"];
-    };
-    "httpx.Envelope-domain_PeriodResponse": {
-      data?: components["schemas"]["domain.PeriodResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -7680,6 +7661,356 @@ export interface operations {
       };
     };
   };
+  createOrgPeriode: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Organization UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Period creation payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.CreateOrgPeriodeRequest"];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_OrgPeriodeResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  searchOrgPeriode: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Organization UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Search parameters */
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["domain.SearchOrgPeriodeRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_OrgPeriodeResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  getOrgPeriode: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Organization UUID */
+        id: string;
+        /** @description Period UUID */
+        periodeId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_OrgPeriodeResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  deleteOrgPeriode: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Organization UUID */
+        id: string;
+        /** @description Period UUID */
+        periodeId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  updateOrgPeriode: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Organization UUID */
+        id: string;
+        /** @description Period UUID */
+        periodeId: string;
+      };
+      cookie?: never;
+    };
+    /** @description Period update payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UpdateOrgPeriodeRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_OrgPeriodeResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
   createKecamatan: {
     parameters: {
       query?: never;
@@ -10642,317 +10973,6 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["httpx.Envelope-domain_ParokiMemberResponse"];
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Forbidden */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Conflict */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-    };
-  };
-  createPeriod: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** @description Period creation payload */
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["domain.CreatePeriodRequest"];
-      };
-    };
-    responses: {
-      /** @description Created */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-domain_PeriodResponse"];
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Forbidden */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Conflict */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Unprocessable Entity */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-    };
-  };
-  searchPeriods: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** @description Search parameters */
-    requestBody?: {
-      content: {
-        "application/json": components["schemas"]["domain.SearchPeriodsRequest"];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-array_domain_PeriodResponse"];
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Forbidden */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-    };
-  };
-  getPeriod: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description Period UUID */
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-domain_PeriodResponse"];
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-    };
-  };
-  deletePeriod: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description Period UUID */
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description No Content */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Forbidden */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-any"];
-        };
-      };
-    };
-  };
-  updatePeriod: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description Period UUID */
-        id: string;
-      };
-      cookie?: never;
-    };
-    /** @description Period update payload */
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["domain.UpdatePeriodRequest"];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["httpx.Envelope-domain_PeriodResponse"];
         };
       };
       /** @description Bad Request */
