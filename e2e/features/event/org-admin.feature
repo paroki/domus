@@ -63,3 +63,9 @@ Feature: Organization Admin public and private events lifecycle
     When I open "/event"
     And I toggle Jadwal Tugas Saya
     Then I see event card "Misa Paskah Seksi Liturgi E2E" with visibility "Publik Paroki"
+    When I open event detail "Misa Paskah Seksi Liturgi E2E"
+    And I add lagu bagian "Pembuka" judul "Mari Kita Bersukacita" sumber "Puji Syukur" nomor "319" nada "G"
+    Then I see lagu bagian "Pembuka" judul "Mari Kita Bersukacita"
+    When I edit lagu "Mari Kita Bersukacita" to judul "Mari Bersukacita Agung"
+    Then I see lagu bagian "Pembuka" judul "Mari Bersukacita Agung"
+    When I delete lagu "Mari Bersukacita Agung"

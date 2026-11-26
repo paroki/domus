@@ -294,6 +294,47 @@ Then(
   },
 );
 
+When(
+  "I add lagu bagian {string} judul {string} sumber {string} nomor {string} nada {string}",
+  async function (
+    this: DomusWorld,
+    bagian: string,
+    judul: string,
+    sumber: string,
+    nomor: string,
+    nadaDasar: string,
+  ) {
+    await this.pages.event.detail.addLagu({
+      bagian,
+      judul,
+      sumber,
+      nomor,
+      nadaDasar,
+    });
+  },
+);
+
+Then(
+  "I see lagu bagian {string} judul {string}",
+  async function (this: DomusWorld, bagian: string, judul: string) {
+    await this.pages.event.detail.expectLaguVisible(bagian, judul);
+  },
+);
+
+When(
+  "I edit lagu {string} to judul {string}",
+  async function (this: DomusWorld, currentJudul: string, nextJudul: string) {
+    await this.pages.event.detail.editLagu(currentJudul, nextJudul);
+  },
+);
+
+When(
+  "I delete lagu {string}",
+  async function (this: DomusWorld, judul: string) {
+    await this.pages.event.detail.deleteLagu(judul);
+  },
+);
+
 When("I delete the event", async function (this: DomusWorld) {
   await this.pages.event.detail.deleteEvent();
 });

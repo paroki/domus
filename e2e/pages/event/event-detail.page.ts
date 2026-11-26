@@ -277,4 +277,68 @@ export class EventDetailPage extends BasePage {
       .getByText(statusLabel, { exact: true })
       .waitFor({ state: "visible", timeout: 10_000 });
   }
+
+  async addLagu(input: {
+    bagian: string;
+    judul: string;
+    sumber?: string;
+    nomor?: string;
+    nadaDasar?: string;
+  }): Promise<void> {
+    const form = this.page.locator("form").filter({
+      has: this.page.getByRole("button", { name: "Simpan Lagu" }),
+    });
+    if ((await form.count()) === 0) {
+      await this.page.getByRole("button", { name: "Tambah Lagu" }).click();
+      await form.waitFor({ state: "visible", timeout: 10_000 });
+    }
+    await form.getByLabel("Bagian Lagu").fill(input.bagian);
+    await form.getByLabel("Judul Lagu").fill(input.judul);
+    if (input.sumber !== undefined) {
+      await form.getByLabel("Sumber (opsional)").fill(input.sumber);
+    }
+    if (input.nomor !== undefined) {
+      await form.getByLabel("Nomor (opsional)").fill(input.nomor);
+    }
+    if (input.nadaDasar !== undefined) {
+      await form.getByLabel("Nada Dasar (opsional)").fill(input.nadaDasar);
+    }
+    await form.getByRole("button", { name: "Simpan Lagu" }).click();
+    await form.waitFor({ state: "detached", timeout: 10_000 });
+  }
+
+  async editLagu(currentJudul: string, nextJudul: string): Promise<void> {
+    const row = this.page
+      .locator("div.divide-y > div")
+      .filter({ hasText: currentJudul });
+    await row.waitFor({ state: "visible", timeout: 10_000 });
+    await row.getByRole("button", { name: "Ubah", exact: true }).click();
+    const form = this.page.locator("form").filter({
+      has: this.page.getByRole("button", { name: "Simpan Lagu" }),
+    });
+    await form.waitFor({ state: "visible", timeout: 10_000 });
+    await form.getByLabel("Judul Lagu").fill(nextJudul);
+    await form.getByRole("button", { name: "Simpan Lagu" }).click();
+    await form.waitFor({ state: "detached", timeout: 10_000 });
+  }
+
+  async deleteLagu(judul: string): Promise<void> {
+    const row = this.page
+      .locator("div.divide-y > div")
+      .filter({ hasText: judul });
+    await row.waitFor({ state: "visible", timeout: 10_000 });
+    this.page.once("dialog", (dialog) => dialog.accept());
+    await row.getByRole("button", { name: "Hapus", exact: true }).click();
+    await row.waitFor({ state: "detached", timeout: 10_000 });
+  }
+
+  async expectLaguVisible(bagian: string, judul: string): Promise<void> {
+    const row = this.page
+      .locator("div.divide-y > div")
+      .filter({ hasText: judul });
+    await row.waitFor({ state: "visible", timeout: 10_000 });
+    await row
+      .getByText(bagian, { exact: true })
+      .waitFor({ state: "visible", timeout: 10_000 });
+  }
 }
