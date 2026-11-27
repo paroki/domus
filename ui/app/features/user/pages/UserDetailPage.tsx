@@ -3,6 +3,7 @@ import {
   Building2,
   CheckCircle2,
   Church,
+  Pencil,
   Plus,
   ShieldAlert,
   ShieldCheck,
@@ -24,8 +25,9 @@ import i18n from "~/shared/i18n";
 import { Badge } from "~/shared/ui/Badge";
 import { Button, buttonClass } from "~/shared/ui/Button";
 import { Card } from "~/shared/ui/Card";
+import { ConfirmDialog } from "~/shared/ui/ConfirmDialog";
+import { InductiveDangerZone, InductivePageHeader } from "~/shared/ui/iui";
 import {
-  useAddParokiMember,
   useAdminDeleteUser,
   useAdminUpdateUser,
   useRemoveParokiMember,
@@ -39,7 +41,7 @@ import {
   useUserOrgMemberships,
   useUserParokiMemberships,
 } from "../api/queries";
-import { ConfirmDialog, UserAvatar } from "../components/DirectoryShared";
+import { UserAvatar } from "../components/DirectoryShared";
 import { UserOrgTab } from "../components/UserOrgTab";
 import {
   canManageUsers,
@@ -51,6 +53,7 @@ import {
   isUmatAdmin,
   parseUserDetailTab,
   providerLabel,
+  USER_ROUTES,
   type UserDetailTab,
 } from "../model";
 import type { Route } from "./+types/UserDetailPage";
@@ -198,18 +201,12 @@ export default function UserDetailPage() {
 
   const updateUser = useAdminUpdateUser();
   const deleteUser = useAdminDeleteUser();
-  const addParokiMember = useAddParokiMember();
   const updateParokiMember = useUpdateParokiMember();
   const removeParokiMember = useRemoveParokiMember();
 
+  const [editingProfile, setEditingProfile] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [selectedParokiId, setSelectedParokiId] = useState("");
-  const [newParokiRole, setNewParokiRole] = useState<"admin" | "member">(
-    "member",
-  );
-  const [newParokiUmatAdmin, setNewParokiUmatAdmin] = useState(false);
-  const [newParokiLiturgiAdmin, setNewParokiLiturgiAdmin] = useState(false);
   const [feedback, setFeedback] = useState<DirectoryFeedback | null>(null);
   const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm | null>(
     null,
@@ -243,16 +240,6 @@ export default function UserDetailPage() {
   const availableParoki = parokiList.filter((p) => !joinedParokiIds.has(p.id));
 
   useEffect(() => {
-    if (!availableParoki.length) {
-      setSelectedParokiId("");
-      return;
-    }
-    if (!availableParoki.some((p) => p.id === selectedParokiId)) {
-      setSelectedParokiId(availableParoki[0]?.id ?? "");
-    }
-  }, [availableParoki, selectedParokiId]);
-
-  useEffect(() => {
     if (feedback?.tone !== "success") return;
     const timer = window.setTimeout(() => setFeedback(null), 4000);
     return () => window.clearTimeout(timer);
@@ -268,7 +255,7 @@ export default function UserDetailPage() {
           {t("users.forbiddenTitle")}
         </h1>
         <p className="text-sm text-muted">{t("users.forbiddenDescription")}</p>
-        <Link to="/users" className={buttonClass("outline")}>
+        <Link to={USER_ROUTES.index} className={buttonClass("outline")}>
           <ArrowLeft aria-hidden className="size-4" />
           {t("users.backToUsers")}
         </Link>
@@ -290,7 +277,7 @@ export default function UserDetailPage() {
         <p className="text-base font-semibold text-fg">
           {t("users.userNotFound")}
         </p>
-        <Link to="/users" className={buttonClass("outline")}>
+        <Link to={USER_ROUTES.index} className={buttonClass("outline")}>
           <ArrowLeft aria-hidden className="size-4" />
           {t("users.backToUsers")}
         </Link>
@@ -323,41 +310,10 @@ export default function UserDetailPage() {
           phone: phone.trim(),
         },
       });
+      setEditingProfile(false);
       setFeedback({
         tone: "success",
         message: t("users.userUpdated", { name: trimmedName }),
-      });
-    } catch (err) {
-      if (err instanceof ApiError) {
-        setFeedback({
-          tone: "error",
-          message: err.details[0]?.message ?? err.message,
-        });
-      }
-    }
-  }
-
-  async function handleAddToParoki(e: FormEvent) {
-    e.preventDefault();
-    if (!selectedParokiId) return;
-    setFeedback(null);
-    try {
-      await addParokiMember.mutateAsync({
-        parokiId: selectedParokiId,
-        body: {
-          userId,
-          role: canDelegateParokiRole ? newParokiRole : "member",
-          ...(newParokiUmatAdmin ? { umatAdmin: true } : {}),
-          ...(canDelegateParokiRole && newParokiLiturgiAdmin
-            ? { liturgiAdmin: true }
-            : {}),
-        },
-      });
-      setNewParokiUmatAdmin(false);
-      setNewParokiLiturgiAdmin(false);
-      setFeedback({
-        tone: "success",
-        message: t("users.parishMemberAdded"),
       });
     } catch (err) {
       if (err instanceof ApiError) {
@@ -403,7 +359,7 @@ export default function UserDetailPage() {
     try {
       if (action.kind === "deleteUser") {
         await deleteUser.mutateAsync(userId);
-        navigate("/users", { replace: true });
+        navigate(USER_ROUTES.index, { replace: true });
         return;
       }
       if (action.kind === "demoteSuperAdmin") {
@@ -584,17 +540,25 @@ export default function UserDetailPage() {
   ];
   const tabs = allTabs.filter((tab) => allowedTabs.includes(tab.id));
 
+  const headerSubtitle = [
+    user.email,
+    user.phone,
+    providers.length > 0 ? providers.join(", ") : undefined,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8 sm:px-6">
-      <div>
-        <Link
-          to="/users"
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted transition-colors hover:text-primary"
-        >
-          <ArrowLeft aria-hidden className="size-4" />
-          {t("users.backToUsers")}
-        </Link>
-      </div>
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
+      <InductivePageHeader
+        breadcrumbs={[
+          { label: t("me.homeBreadcrumb"), to: "/" },
+          { label: t("users.title"), to: USER_ROUTES.index },
+          { label: userDisplayName },
+        ]}
+        title={userDisplayName}
+        subtitle={headerSubtitle}
+      />
 
       {feedback && (
         <div
@@ -634,9 +598,9 @@ export default function UserDetailPage() {
             />
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="truncate text-xl font-bold text-fg">
+                <span className="truncate text-lg font-bold text-fg">
                   {user.name}
-                </h1>
+                </span>
                 {isSelf && <Badge tone="neutral">{t("users.youBadge")}</Badge>}
                 {fullUser?.status && (
                   <Badge
@@ -657,11 +621,6 @@ export default function UserDetailPage() {
                   <Badge tone="neutral">{t("users.notOnboarded")}</Badge>
                 )}
               </div>
-              <p className="mt-1 text-sm text-muted">
-                {user.email}
-                {user.phone ? ` · ${user.phone}` : ""}
-                {providers.length > 0 ? ` · ${providers.join(", ")}` : ""}
-              </p>
               {(lastLoginText || createdAtText) && (
                 <p className="mt-1 text-xs text-muted">
                   {createdAtText
@@ -727,41 +686,108 @@ export default function UserDetailPage() {
           className="flex flex-col gap-6"
         >
           <Card className="p-6">
-            <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-fg">
-              <UserCog aria-hidden className="size-5 text-primary" />
-              {t("users.profileSection")}
-            </h2>
-
-            <form
-              onSubmit={handleSaveProfile}
-              className="grid gap-4 sm:grid-cols-2"
-            >
-              <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
-                {t("users.nameLabel")}
-                <input
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
-                />
-              </label>
-              <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
-                {t("users.phoneLabel")}
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+628123456789"
-                  className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
-                />
-              </label>
-              <div className="sm:col-span-2">
-                <Button type="submit" disabled={updateUser.isPending}>
-                  {t("users.saveChanges")}
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="flex items-center gap-2 text-lg font-bold text-fg">
+                <UserCog aria-hidden className="size-5 text-primary" />
+                {t("users.profileSection")}
+              </h2>
+              {!editingProfile && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEditingProfile(true)}
+                  className="h-9 px-3 text-xs"
+                >
+                  <Pencil aria-hidden className="size-3.5" />
+                  {t("users.editUser")}
                 </Button>
-              </div>
-            </form>
+              )}
+            </div>
+
+            {editingProfile ? (
+              <form
+                onSubmit={handleSaveProfile}
+                className="grid gap-4 sm:grid-cols-2"
+              >
+                <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
+                  {t("users.nameLabel")}
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
+                  />
+                </label>
+                <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
+                  {t("users.phoneLabel")}
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+628123456789"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
+                  />
+                </label>
+                <div className="flex flex-col-reverse gap-2 sm:col-span-2 sm:flex-row sm:justify-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={updateUser.isPending}
+                    onClick={() => {
+                      setName(user.name ?? "");
+                      setPhone(user.phone ?? "");
+                      setEditingProfile(false);
+                    }}
+                    className="w-full sm:w-auto"
+                  >
+                    {t("users.cancel")}
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={updateUser.isPending}
+                    className="w-full sm:w-auto"
+                  >
+                    {t("users.saveChanges")}
+                  </Button>
+                </div>
+              </form>
+            ) : (
+              <dl className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <dt className="text-xs font-medium text-muted">
+                    {t("users.nameLabel")}
+                  </dt>
+                  <dd className="mt-1 text-sm font-medium text-fg">
+                    {user.name || "—"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-medium text-muted">
+                    {t("users.emailLabel")}
+                  </dt>
+                  <dd className="mt-1 text-sm font-medium text-fg">
+                    {user.email || "—"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-medium text-muted">
+                    {t("users.phoneLabel")}
+                  </dt>
+                  <dd className="mt-1 text-sm font-medium text-fg">
+                    {user.phone || "—"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-medium text-muted">
+                    {t("users.lastLogin")}
+                  </dt>
+                  <dd className="mt-1 text-sm font-medium text-fg">
+                    {lastLoginText || "—"}
+                  </dd>
+                </div>
+              </dl>
+            )}
           </Card>
 
           <Card className="p-6">
@@ -843,58 +869,66 @@ export default function UserDetailPage() {
                   ? t("users.revokeCantusAdmin")
                   : t("users.grantCantusAdmin")}
               </Button>
-
-              <Button
-                variant="outline"
-                disabled={
-                  updateUser.isPending ||
-                  (isSelf && fullUser?.status === "active")
-                }
-                title={
-                  isSelf && fullUser?.status === "active"
-                    ? t("users.selfProtectedHint")
-                    : undefined
-                }
-                onClick={async () => {
-                  if (fullUser?.status === "active") {
-                    setPendingConfirm({ kind: "disableUser" });
-                    return;
-                  }
-                  setFeedback(null);
-                  try {
-                    await updateUser.mutateAsync({
-                      id: userId,
-                      body: { status: "active" },
-                    });
-                    setFeedback({
-                      tone: "success",
-                      message: t("users.userUpdated", {
-                        name: userDisplayName,
-                      }),
-                    });
-                  } catch (err) {
-                    if (err instanceof ApiError) {
-                      setFeedback({ tone: "error", message: err.message });
-                    }
-                  }
-                }}
-              >
-                {fullUser?.status === "active"
-                  ? t("users.disableUser")
-                  : t("users.enableUser")}
-              </Button>
-
-              <Button
-                variant="danger"
-                disabled={deleteUser.isPending || isSelf}
-                title={isSelf ? t("users.selfProtectedHint") : undefined}
-                onClick={() => setPendingConfirm({ kind: "deleteUser" })}
-              >
-                <Trash2 aria-hidden className="size-4" />
-                {t("users.deleteUser")}
-              </Button>
             </div>
           </Card>
+
+          <InductiveDangerZone
+            title={t("users.dangerZoneTitle")}
+            description={t("users.dangerZoneDescription")}
+            action={
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  variant="outline"
+                  disabled={
+                    updateUser.isPending ||
+                    (isSelf && fullUser?.status === "active")
+                  }
+                  title={
+                    isSelf && fullUser?.status === "active"
+                      ? t("users.selfProtectedHint")
+                      : undefined
+                  }
+                  onClick={async () => {
+                    if (fullUser?.status === "active") {
+                      setPendingConfirm({ kind: "disableUser" });
+                      return;
+                    }
+                    setFeedback(null);
+                    try {
+                      await updateUser.mutateAsync({
+                        id: userId,
+                        body: { status: "active" },
+                      });
+                      setFeedback({
+                        tone: "success",
+                        message: t("users.userUpdated", {
+                          name: userDisplayName,
+                        }),
+                      });
+                    } catch (err) {
+                      if (err instanceof ApiError) {
+                        setFeedback({ tone: "error", message: err.message });
+                      }
+                    }
+                  }}
+                >
+                  {fullUser?.status === "active"
+                    ? t("users.disableUser")
+                    : t("users.enableUser")}
+                </Button>
+
+                <Button
+                  variant="danger"
+                  disabled={deleteUser.isPending || isSelf}
+                  title={isSelf ? t("users.selfProtectedHint") : undefined}
+                  onClick={() => setPendingConfirm({ kind: "deleteUser" })}
+                >
+                  <Trash2 aria-hidden className="size-4" />
+                  {t("users.deleteUser")}
+                </Button>
+              </div>
+            }
+          />
         </div>
       )}
 
@@ -905,14 +939,25 @@ export default function UserDetailPage() {
           aria-labelledby="user-tab-paroki"
         >
           <Card className="p-6">
-            <div className="mb-4">
-              <h2 className="flex items-center gap-2 text-lg font-bold text-fg">
-                <Church aria-hidden className="size-5 text-primary" />
-                {t("users.parishSection")}
-              </h2>
-              <p className="mt-0.5 text-sm text-muted">
-                {t("users.parishSectionHint")}
-              </p>
+            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="flex items-center gap-2 text-lg font-bold text-fg">
+                  <Church aria-hidden className="size-5 text-primary" />
+                  {t("users.parishSection")}
+                </h2>
+                <p className="mt-0.5 text-sm text-muted">
+                  {t("users.parishSectionHint")}
+                </p>
+              </div>
+              {availableParoki.length > 0 && (
+                <Link
+                  to={USER_ROUTES.parokiNew(userId)}
+                  className={buttonClass("primary")}
+                >
+                  <Plus aria-hidden className="size-4" />
+                  {t("users.addToParish")}
+                </Link>
+              )}
             </div>
 
             <div className="divide-y divide-line rounded-lg border border-line">
@@ -1078,83 +1123,11 @@ export default function UserDetailPage() {
               )}
             </div>
 
-            <form
-              onSubmit={handleAddToParoki}
-              className="mt-5 flex flex-wrap items-end gap-3 border-t border-line pt-5"
-            >
-              {availableParoki.length === 0 && !parokiLoading ? (
-                <p className="text-sm text-muted">
-                  {t("users.allParishesJoined")}
-                </p>
-              ) : (
-                <>
-                  <label className="flex min-w-52 flex-1 flex-col gap-1.5 text-sm font-medium text-fg">
-                    {t("users.selectParish")}
-                    <select
-                      value={selectedParokiId}
-                      onChange={(e) => setSelectedParokiId(e.target.value)}
-                      className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
-                    >
-                      {availableParoki.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.nama}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  {canDelegateParokiRole && (
-                    <label className="flex min-w-44 flex-col gap-1.5 text-sm font-medium text-fg">
-                      {t("users.roleLabel")}
-                      <select
-                        value={newParokiRole}
-                        onChange={(e) =>
-                          setNewParokiRole(e.target.value as "admin" | "member")
-                        }
-                        className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
-                      >
-                        <option value="admin">
-                          {t("users.roleParishAdmin")}
-                        </option>
-                        <option value="member">{t("users.roleMember")}</option>
-                      </select>
-                    </label>
-                  )}
-
-                  <label className="flex h-11 items-center gap-2 text-sm font-medium text-fg">
-                    <input
-                      type="checkbox"
-                      checked={newParokiUmatAdmin}
-                      onChange={(e) => setNewParokiUmatAdmin(e.target.checked)}
-                      className="size-4 rounded border-line"
-                    />
-                    {t("users.roleUmatAdmin")}
-                  </label>
-
-                  {canDelegateParokiRole && (
-                    <label className="flex h-11 items-center gap-2 text-sm font-medium text-fg">
-                      <input
-                        type="checkbox"
-                        checked={newParokiLiturgiAdmin}
-                        onChange={(e) =>
-                          setNewParokiLiturgiAdmin(e.target.checked)
-                        }
-                        className="size-4 rounded border-line"
-                      />
-                      {t("users.roleLiturgiAdmin")}
-                    </label>
-                  )}
-
-                  <Button
-                    type="submit"
-                    disabled={!selectedParokiId || addParokiMember.isPending}
-                  >
-                    <Plus aria-hidden className="size-4" />
-                    {t("users.addToParish")}
-                  </Button>
-                </>
-              )}
-            </form>
+            {availableParoki.length === 0 && !parokiLoading && (
+              <p className="mt-4 text-sm text-muted">
+                {t("users.allParishesJoined")}
+              </p>
+            )}
           </Card>
         </div>
       )}
@@ -1185,7 +1158,7 @@ export default function UserDetailPage() {
         description={confirmProps?.description ?? ""}
         confirmLabel={confirmProps?.confirmLabel ?? ""}
         cancelLabel={t("users.cancel")}
-        tone="danger"
+        confirmVariant="danger"
         pending={
           updateUser.isPending ||
           deleteUser.isPending ||

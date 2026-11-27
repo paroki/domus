@@ -73,8 +73,16 @@ export const ROLE_DESCRIPTORS: RoleDescriptor[] = [
   },
 ];
 
-export type UserDirectoryScope = "global" | "org";
+export type UserDirectoryScope = "global" | "paroki" | "org";
 export type UserDetailTab = "profile" | "paroki" | "org";
+
+export const USER_ROUTES = {
+  index: "/users",
+  new: "/users/new",
+  detail: (id: string) => `/users/${id}`,
+  parokiNew: (id: string) => `/users/${id}/paroki/new`,
+  orgNew: (id: string) => `/users/${id}/org/new`,
+} as const;
 
 export function getAvailableUserDetailTabs(
   roles?: string[] | null,
@@ -183,18 +191,18 @@ export function isOrgAdmin(user?: User | null): boolean {
 }
 
 export function getAvailableUserScopes(
-  roles?: string[] | null,
+  input?: User | string[] | null,
 ): UserDirectoryScope[] {
+  const roles = Array.isArray(input) ? input : input?.roles;
   if (!roles?.length) return [];
   const scopes: UserDirectoryScope[] = [];
   if (roles.includes(ROLE_SUPER_ADMIN)) {
     scopes.push("global");
   }
-  if (
-    roles.includes(ROLE_PAROKI_ADMIN) ||
-    roles.includes(ROLE_UMAT_ADMIN) ||
-    roles.includes(ROLE_ORG_ADMIN)
-  ) {
+  if (roles.includes(ROLE_PAROKI_ADMIN) || roles.includes(ROLE_UMAT_ADMIN)) {
+    scopes.push("paroki");
+  }
+  if (roles.includes(ROLE_PAROKI_ADMIN) || roles.includes(ROLE_ORG_ADMIN)) {
     scopes.push("org");
   }
   return scopes;

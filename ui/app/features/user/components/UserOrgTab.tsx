@@ -1,18 +1,16 @@
 import { Building2, Plus, ShieldCheck, Trash2 } from "lucide-react";
-import { type FormEvent, useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router";
 import { ApiError } from "~/shared/api/client";
 import { Badge } from "~/shared/ui/Badge";
-import { Button } from "~/shared/ui/Button";
+import { Button, buttonClass } from "~/shared/ui/Button";
 import { Card } from "~/shared/ui/Card";
-import {
-  useAddUserOrgMember,
-  useRemoveUserOrgMember,
-  useUpdateUserOrgMember,
-} from "../api/actions";
+import { ConfirmDialog } from "~/shared/ui/ConfirmDialog";
+import { useRemoveUserOrgMember, useUpdateUserOrgMember } from "../api/actions";
 import type { Organization, OrgMember } from "../api/types";
+import { USER_ROUTES } from "../model";
 import type { DirectoryFeedback } from "../pages/UserPage";
-import { ConfirmDialog } from "./DirectoryShared";
 
 export function UserOrgTab({
   userId,
@@ -37,7 +35,6 @@ export function UserOrgTab({
 }) {
   const { t } = useTranslation();
 
-  const addOrgMember = useAddUserOrgMember(activeParokiId);
   const updateOrgMember = useUpdateUserOrgMember(activeParokiId);
   const removeOrgMember = useRemoveUserOrgMember(activeParokiId);
 
@@ -51,35 +48,10 @@ export function UserOrgTab({
   const hasAnyManageableOrg =
     parokiAdminCaller || orgs.some((o) => o.myRole === "admin");
 
-  const [selectedOrgId, setSelectedOrgId] = useState("");
-  const [newRole, setNewRole] = useState<"admin" | "member">("member");
-
   const [pendingRemove, setPendingRemove] = useState<{
     orgId: string;
     orgName: string;
   } | null>(null);
-
-  useEffect(() => {
-    if (!availableOrgs.length) {
-      setSelectedOrgId("");
-      return;
-    }
-    if (!availableOrgs.some((o) => o.id === selectedOrgId)) {
-      setSelectedOrgId(availableOrgs[0]?.id ?? "");
-    }
-  }, [availableOrgs, selectedOrgId]);
-
-  const selectedOrg = availableOrgs.find((o) => o.id === selectedOrgId);
-  const canOnlyAppointAdmin =
-    Boolean(selectedOrg) &&
-    selectedOrg?.myRole !== "admin" &&
-    parokiAdminCaller;
-
-  useEffect(() => {
-    if (canOnlyAppointAdmin) {
-      setNewRole("admin");
-    }
-  }, [canOnlyAppointAdmin]);
 
   if (!activeParokiId) {
     return (
@@ -87,32 +59,6 @@ export function UserOrgTab({
         {t("users.noActiveParish")}
       </Card>
     );
-  }
-
-  async function handleAddToOrg(e: FormEvent) {
-    e.preventDefault();
-    if (!selectedOrgId) return;
-    onFeedback(null);
-    try {
-      await addOrgMember.mutateAsync({
-        orgId: selectedOrgId,
-        body: {
-          userId,
-          role: canOnlyAppointAdmin ? "admin" : newRole,
-        },
-      });
-      onFeedback({
-        tone: "success",
-        message: t("users.orgMemberAdded"),
-      });
-    } catch (err) {
-      if (err instanceof ApiError) {
-        onFeedback({
-          tone: "error",
-          message: err.details[0]?.message ?? err.message,
-        });
-      }
-    }
   }
 
   async function handleUpdateRole(orgId: string, nextRole: "admin" | "member") {
@@ -178,7 +124,7 @@ export function UserOrgTab({
   return (
     <>
       <Card className="p-6">
-        <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="flex items-center gap-2 text-lg font-bold text-fg">
               <Building2 aria-hidden className="size-5 text-primary" />
@@ -188,11 +134,22 @@ export function UserOrgTab({
               {t("users.orgSectionHint")}
             </p>
           </div>
-          {activeParokiName && (
-            <Badge tone="neutral">
-              {t("users.activeParishContext", { name: activeParokiName })}
-            </Badge>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            {activeParokiName && (
+              <Badge tone="neutral">
+                {t("users.activeParishContext", { name: activeParokiName })}
+              </Badge>
+            )}
+            {availableOrgs.length > 0 && (
+              <Link
+                to={USER_ROUTES.orgNew(userId)}
+                className={buttonClass("primary")}
+              >
+                <Plus aria-hidden className="size-4" />
+                {t("users.addToOrg")}
+              </Link>
+            )}
+          </div>
         </div>
 
         <div className="divide-y divide-line rounded-lg border border-line">
@@ -301,68 +258,13 @@ export function UserOrgTab({
           )}
         </div>
 
-        <form
-          onSubmit={handleAddToOrg}
-          className="mt-5 border-t border-line pt-5"
-        >
-          {availableOrgs.length === 0 && !isLoading ? (
-            <p className="text-sm text-muted">
-              {hasAnyManageableOrg
-                ? t("users.allOrgsJoined")
-                : t("users.orgManagePermissionHint")}
-            </p>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
-                {t("users.selectOrg")}
-                <select
-                  value={selectedOrgId}
-                  onChange={(e) => setSelectedOrgId(e.target.value)}
-                  className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
-                >
-                  {availableOrgs.map((o) => (
-                    <option key={o.id} value={o.id}>
-                      {o.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
-                {t("users.roleLabel")}
-                <select
-                  value={canOnlyAppointAdmin ? "admin" : newRole}
-                  disabled={canOnlyAppointAdmin}
-                  onChange={(e) =>
-                    setNewRole(e.target.value as "admin" | "member")
-                  }
-                  className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg disabled:opacity-60"
-                >
-                  {!canOnlyAppointAdmin && (
-                    <option value="member">{t("users.roleMember")}</option>
-                  )}
-                  <option value="admin">{t("users.roleOrgAdmin")}</option>
-                </select>
-              </label>
-
-              {canOnlyAppointAdmin && (
-                <p className="text-xs text-muted sm:col-span-2">
-                  {t("users.parishAdminAppointHint")}
-                </p>
-              )}
-
-              <div className="sm:col-span-2">
-                <Button
-                  type="submit"
-                  disabled={!selectedOrgId || addOrgMember.isPending}
-                >
-                  <Plus aria-hidden className="size-4" />
-                  {t("users.addToOrg")}
-                </Button>
-              </div>
-            </div>
-          )}
-        </form>
+        {availableOrgs.length === 0 && !isLoading && (
+          <p className="mt-4 text-sm text-muted">
+            {hasAnyManageableOrg
+              ? t("users.allOrgsJoined")
+              : t("users.orgManagePermissionHint")}
+          </p>
+        )}
       </Card>
 
       <ConfirmDialog
@@ -373,7 +275,7 @@ export function UserOrgTab({
         })} (${pendingRemove?.orgName ?? ""})`}
         confirmLabel={t("users.deleteUser")}
         cancelLabel={t("users.cancel")}
-        tone="danger"
+        confirmVariant="danger"
         pending={removeOrgMember.isPending}
         onConfirm={executeRemove}
         onCancel={() => setPendingRemove(null)}

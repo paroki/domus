@@ -239,6 +239,8 @@ const id = {
     addParishMember: "Tambah / Tunjuk Anggota",
     addOrgMember: "Tambah Anggota",
     createTitle: "Tambah Pengguna Baru",
+    createSubtitle:
+      "Buat akun pengguna global atau tambahkan anggota ke paroki dan organisasi.",
     editTitle: "Ubah Data Pengguna",
     emailLabel: "Alamat email",
     nameLabel: "Nama lengkap",
@@ -302,6 +304,8 @@ const id = {
     statusDisabled: "Nonaktif",
     statusInactive: "Nonaktif",
     empty: "Belum ada pengguna yang cocok.",
+    emptyDescription:
+      "Ubah kata kunci pencarian atau tambahkan pengguna baru ke direktori.",
     loadMore: "Muat lebih banyak",
     promoteSuperAdmin: "Jadikan Super Admin",
     demoteSuperAdmin: "Cabut Super Admin",
@@ -351,7 +355,15 @@ const id = {
     tabOrg: "Organisasi",
     activeParishContext: "Paroki aktif: {{name}}",
     addToParish: "Tambahkan ke Paroki",
+    addToParishSubtitle:
+      "Pilih paroki dan tentukan peran keanggotaan untuk pengguna ini.",
     addToOrg: "Tambahkan ke Organisasi",
+    addToOrgSubtitle:
+      "Pilih organisasi pada paroki aktif dan tentukan peran anggota.",
+    dangerZoneTitle: "Zona Berbahaya",
+    dangerZoneDescription:
+      "Nonaktifkan akses masuk atau hapus permanen akun pengguna ini.",
+    detailFallbackTitle: "Detail Pengguna",
     noParishesJoined: "Pengguna belum terdaftar di paroki mana pun.",
     allParishesJoined:
       "Pengguna sudah terdaftar di semua paroki yang tersedia.",
