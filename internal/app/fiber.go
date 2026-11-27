@@ -91,6 +91,13 @@ func mountSPA(app *fiber.App, distFS fs.FS) {
 		}
 		if strings.HasPrefix(p, "/assets/") {
 			c.Set(fiber.HeaderCacheControl, "public, max-age=31536000, immutable")
+		} else if p == "/sw.js" || p == "/manifest.webmanifest" {
+			c.Set(fiber.HeaderCacheControl, "no-cache, no-store, must-revalidate")
+			err := c.Next()
+			if p == "/manifest.webmanifest" {
+				c.Set(fiber.HeaderContentType, "application/manifest+json")
+			}
+			return err
 		} else if p == "/" || p == "/index.html" || path.Ext(p) == "" {
 			c.Set(fiber.HeaderCacheControl, "no-cache, no-store, must-revalidate")
 		}

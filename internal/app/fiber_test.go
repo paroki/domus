@@ -16,8 +16,10 @@ import (
 
 func TestSPACachingAndFallback(t *testing.T) {
 	distFS := fstest.MapFS{
-		"index.html":        {Data: []byte("<!doctype html><html><body>domus</body></html>")},
-		"assets/app-123.js": {Data: []byte("console.log('ok');")},
+		"index.html":           {Data: []byte("<!doctype html><html><body>domus</body></html>")},
+		"assets/app-123.js":    {Data: []byte("console.log('ok');")},
+		"sw.js":                {Data: []byte("self.addEventListener('install', () => {});")},
+		"manifest.webmanifest": {Data: []byte(`{"name":"Domus","display":"standalone"}`)},
 	}
 
 	app := fiber.New(fiber.Config{
@@ -62,5 +64,24 @@ func TestSPACachingAndFallback(t *testing.T) {
 
 		assert.Equal(t, fiber.StatusOK, resp.StatusCode)
 		assert.Equal(t, "public, max-age=31536000, immutable", resp.Header.Get(fiber.HeaderCacheControl))
+	})
+
+	t.Run("service worker is served with no-cache headers", func(t *testing.T) {
+		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/sw.js", nil))
+		require.NoError(t, err)
+		defer func() { _ = resp.Body.Close() }()
+
+		assert.Equal(t, fiber.StatusOK, resp.StatusCode)
+		assert.Equal(t, "no-cache, no-store, must-revalidate", resp.Header.Get(fiber.HeaderCacheControl))
+	})
+
+	t.Run("manifest.webmanifest is served with no-cache and manifest content-type", func(t *testing.T) {
+		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/manifest.webmanifest", nil))
+		require.NoError(t, err)
+		defer func() { _ = resp.Body.Close() }()
+
+		assert.Equal(t, fiber.StatusOK, resp.StatusCode)
+		assert.Equal(t, "no-cache, no-store, must-revalidate", resp.Header.Get(fiber.HeaderCacheControl))
+		assert.Contains(t, resp.Header.Get(fiber.HeaderContentType), "application/manifest+json")
 	})
 }
