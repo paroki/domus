@@ -91,7 +91,11 @@ export function WhatsAppLinkForm({
             />
           </label>
           <div>
-            <Button type="submit" disabled={requestOTP.isPending}>
+            <Button
+              type="submit"
+              disabled={requestOTP.isPending}
+              className="w-full sm:w-auto"
+            >
               <MessageCircle aria-hidden className="size-4" />
               {requestOTP.isPending
                 ? t("auth.sendingOtp")
@@ -120,7 +124,11 @@ export function WhatsAppLinkForm({
             />
           </label>
           <div>
-            <Button type="submit" disabled={verifyLink.isPending}>
+            <Button
+              type="submit"
+              disabled={verifyLink.isPending}
+              className="w-full sm:w-auto"
+            >
               {verifyLink.isPending
                 ? t("auth.verifyingOtp")
                 : (submitLabel ?? t("me.whatsappVerifyLink"))}
@@ -134,7 +142,7 @@ export function WhatsAppLinkForm({
                 setCode("");
                 setErrorMsg(null);
               }}
-              className="font-medium text-primary hover:underline"
+              className="min-h-11 px-1 font-medium text-primary hover:underline"
             >
               {t("me.whatsappChangeNumber")}
             </button>
@@ -142,7 +150,7 @@ export function WhatsAppLinkForm({
               type="button"
               disabled={cooldown > 0 || requestOTP.isPending}
               onClick={handleRequestOTP}
-              className="font-medium text-primary hover:underline disabled:text-muted disabled:no-underline"
+              className="min-h-11 px-1 font-medium text-primary hover:underline disabled:text-muted disabled:no-underline"
             >
               {cooldown > 0
                 ? t("auth.resendIn", { seconds: cooldown })

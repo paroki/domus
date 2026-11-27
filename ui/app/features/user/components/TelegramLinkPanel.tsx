@@ -152,8 +152,24 @@ export function TelegramLinkPanel({
           </Button>
         </div>
       ) : (
-        <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-          <div className="shrink-0 overflow-hidden rounded-xl border border-line bg-white p-2">
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-muted">
+            {token.botUsername
+              ? t("me.telegramHint", { bot: `@${token.botUsername}` })
+              : t("me.telegramHintNoBot")}
+          </p>
+
+          <a
+            href={token.deepLinkUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`${buttonClass("primary")} w-full`}
+          >
+            <ExternalLink aria-hidden className="size-4" />
+            {t("me.telegramOpenBot")}
+          </a>
+
+          <div className="self-center overflow-hidden rounded-xl border border-line bg-white p-2">
             <QrCodeSvg
               value={token.deepLinkUrl}
               size={176}
@@ -161,50 +177,38 @@ export function TelegramLinkPanel({
             />
           </div>
 
-          <div className="flex flex-1 flex-col gap-3">
-            <p className="text-sm text-muted">
-              {token.botUsername
-                ? t("me.telegramHint", { bot: `@${token.botUsername}` })
-                : t("me.telegramHintNoBot")}
-            </p>
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCopy}
+              className="w-full sm:w-auto"
+            >
+              {copied ? (
+                <Check aria-hidden className="size-4" />
+              ) : (
+                <Copy aria-hidden className="size-4" />
+              )}
+              {copied ? t("me.telegramCopied") : t("me.telegramCopyLink")}
+            </Button>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <a
-                href={token.deepLinkUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={buttonClass("primary")}
-              >
-                <ExternalLink aria-hidden className="size-4" />
-                {t("me.telegramOpenBot")}
-              </a>
-
-              <Button type="button" variant="outline" onClick={handleCopy}>
-                {copied ? (
-                  <Check aria-hidden className="size-4" />
-                ) : (
-                  <Copy aria-hidden className="size-4" />
-                )}
-                {copied ? t("me.telegramCopied") : t("me.telegramCopyLink")}
-              </Button>
-
-              <Button
-                type="button"
-                variant="ghost"
-                disabled={createToken.isPending}
-                onClick={() => void generateToken()}
-              >
-                <RefreshCw aria-hidden className="size-4" />
-                {t("me.telegramRegenerate")}
-              </Button>
-            </div>
-
-            {awaitingLink && (
-              <p className="text-xs font-medium text-muted">
-                {t("me.telegramWaiting")}
-              </p>
-            )}
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={createToken.isPending}
+              onClick={() => void generateToken()}
+              className="w-full sm:w-auto"
+            >
+              <RefreshCw aria-hidden className="size-4" />
+              {t("me.telegramRegenerate")}
+            </Button>
           </div>
+
+          {awaitingLink && (
+            <p className="text-center text-xs font-medium text-muted">
+              {t("me.telegramWaiting")}
+            </p>
+          )}
         </div>
       )}
     </div>

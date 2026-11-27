@@ -131,13 +131,13 @@ export function PwaDeviceCard() {
     pushLoading || subscribePush.isPending || unsubscribePush.isPending;
 
   return (
-    <Card className="p-6">
+    <Card className="p-4 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
+        <div className="flex min-w-0 flex-1 items-start gap-3">
           <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <Smartphone aria-hidden className="size-4" />
           </span>
-          <div>
+          <div className="min-w-0 flex-1">
             <h2 className="text-lg font-bold text-fg">
               {t("pwa.deviceCardTitle")}
             </h2>
@@ -160,7 +160,11 @@ export function PwaDeviceCard() {
       {!isStandalone && (
         <div className="mt-4">
           {canInstallNative || isIosInstallable ? (
-            <Button type="button" onClick={handleInstall}>
+            <Button
+              type="button"
+              onClick={handleInstall}
+              className="w-full sm:w-auto"
+            >
               <Download aria-hidden className="size-4" />
               {t("pwa.installDeviceButton")}
             </Button>
@@ -202,6 +206,7 @@ export function PwaDeviceCard() {
                 variant={isSubscribed ? "outline" : "primary"}
                 disabled={pushBusy}
                 onClick={handleTogglePushSubscription}
+                className="w-full sm:w-auto"
               >
                 {isSubscribed ? (
                   <BellOff aria-hidden className="size-4" />
@@ -222,14 +227,15 @@ export function PwaDeviceCard() {
             variant="outline"
             disabled={testPush.isPending}
             onClick={handleTestPush}
+            className="w-full sm:w-auto"
           >
             <Send aria-hidden className="size-4" />
             {t("pwa.testPushButton")}
           </Button>
         </div>
 
-        <div className="mt-4 flex flex-col gap-2.5">
-          <label className="flex items-center gap-2.5 text-sm text-fg">
+        <div className="mt-4 flex flex-col gap-1">
+          <label className="flex min-h-11 cursor-pointer items-center gap-2.5 text-sm text-fg">
             <input
               type="checkbox"
               checked={notifyPush}
@@ -237,11 +243,11 @@ export function PwaDeviceCard() {
               onChange={(e) =>
                 void handlePrefToggle("notifyPush", e.target.checked)
               }
-              className="size-4 rounded border-line"
+              className="size-4 shrink-0 rounded border-line"
             />
             {t("pwa.channelPushLabel")}
           </label>
-          <label className="flex items-center gap-2.5 text-sm text-fg">
+          <label className="flex min-h-11 cursor-pointer items-center gap-2.5 text-sm text-fg">
             <input
               type="checkbox"
               checked={notifyWhatsapp}
@@ -249,11 +255,11 @@ export function PwaDeviceCard() {
               onChange={(e) =>
                 void handlePrefToggle("notifyWhatsapp", e.target.checked)
               }
-              className="size-4 rounded border-line"
+              className="size-4 shrink-0 rounded border-line"
             />
             {t("pwa.channelWhatsappLabel")}
           </label>
-          <label className="flex items-center gap-2.5 text-sm text-fg">
+          <label className="flex min-h-11 cursor-pointer items-center gap-2.5 text-sm text-fg">
             <input
               type="checkbox"
               checked={notifyTelegram}
@@ -261,7 +267,7 @@ export function PwaDeviceCard() {
               onChange={(e) =>
                 void handlePrefToggle("notifyTelegram", e.target.checked)
               }
-              className="size-4 rounded border-line"
+              className="size-4 shrink-0 rounded border-line"
             />
             {t("pwa.channelTelegramLabel")}
           </label>

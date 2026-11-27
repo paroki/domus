@@ -284,6 +284,14 @@ export function shouldRedirectToOnboarding(
 export const USER_GENDERS = ["pria", "wanita"] as const;
 export type UserGender = (typeof USER_GENDERS)[number];
 
+export const ME_ROUTES = {
+  index: "/me",
+  verify: "/me/verify",
+  tokenNew: "/me/tokens/new",
+  linkWhatsapp: "/me/accounts/whatsapp",
+  linkTelegram: "/me/accounts/telegram",
+} as const;
+
 export function getBirthDateBounds(now: Date = new Date()): {
   min: string;
   max: string;

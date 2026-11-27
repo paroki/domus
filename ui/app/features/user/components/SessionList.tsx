@@ -27,7 +27,7 @@ export function SessionList() {
   }
 
   return (
-    <Card className="p-6">
+    <Card className="p-4 sm:p-6">
       <h2 className="mb-4 text-lg font-bold text-fg">
         {t("me.sessionsTitle")}
       </h2>
@@ -52,20 +52,20 @@ export function SessionList() {
               key={sess.id}
               className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
             >
-              <div className="flex items-start gap-3">
-                <span className="mt-0.5 flex size-9 items-center justify-center rounded-lg bg-neutral-bg text-neutral-fg">
+              <div className="flex min-w-0 flex-1 items-start gap-3">
+                <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-neutral-bg text-neutral-fg">
                   <Laptop aria-hidden className="size-4" />
                 </span>
-                <div>
+                <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm font-semibold text-fg">
+                    <span className="truncate text-sm font-semibold text-fg">
                       {formatUserAgent(sess.userAgent ?? "")}
                     </span>
                     {sess.isCurrent && (
                       <Badge tone="success">{t("me.currentDevice")}</Badge>
                     )}
                   </div>
-                  <p className="text-xs text-muted">
+                  <p className="truncate text-xs text-muted">
                     {sess.ipAddress || "—"} · {t("me.lastActive")}:{" "}
                     {sess.lastActiveAt
                       ? new Date(sess.lastActiveAt).toLocaleString("id-ID")
@@ -78,6 +78,7 @@ export function SessionList() {
                 variant="ghost"
                 disabled={revokeSession.isPending}
                 onClick={() => sess.id && handleRevoke(sess.id)}
+                className="w-full sm:w-auto"
               >
                 <Trash2 aria-hidden className="size-4" />
                 {t("me.revokeSession")}

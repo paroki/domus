@@ -137,7 +137,7 @@ export default function LoginPage() {
   const ChannelIcon = activeMeta.Icon;
 
   return (
-    <main className="flex min-h-dvh items-center justify-center bg-canvas px-4 py-10">
+    <main className="flex min-h-dvh items-center justify-center bg-canvas px-4 pt-[calc(2.5rem+env(safe-area-inset-top))] pb-[calc(2.5rem+env(safe-area-inset-bottom))]">
       <Card className="w-full max-w-md p-6 sm:p-8">
         <div className="mb-6 flex flex-col items-center gap-2 text-center">
           <img
@@ -191,7 +191,7 @@ export default function LoginPage() {
                   role="tab"
                   aria-selected={isSelected}
                   onClick={() => handleSelectChannel(ch)}
-                  className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  className={`min-h-11 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
                     isSelected
                       ? "bg-primary text-on-primary"
                       : "text-muted hover:text-fg"
@@ -227,7 +227,11 @@ export default function LoginPage() {
                 className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg placeholder:text-muted"
               />
             </label>
-            <Button type="submit" disabled={requestOTP.isPending}>
+            <Button
+              type="submit"
+              disabled={requestOTP.isPending}
+              className="w-full sm:w-auto"
+            >
               <ChannelIcon aria-hidden className="size-4" />
               {requestOTP.isPending ? t("auth.sendingOtp") : t("auth.sendOtp")}
             </Button>
@@ -252,7 +256,11 @@ export default function LoginPage() {
                 className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-center font-mono text-lg tracking-widest text-fg placeholder:text-muted"
               />
             </label>
-            <Button type="submit" disabled={verifyOTP.isPending}>
+            <Button
+              type="submit"
+              disabled={verifyOTP.isPending}
+              className="w-full sm:w-auto"
+            >
               {verifyOTP.isPending
                 ? t("auth.verifyingOtp")
                 : t("auth.verifyOtp")}
@@ -266,7 +274,7 @@ export default function LoginPage() {
                   setCode("");
                   setErrorMsg(null);
                 }}
-                className="font-medium text-primary hover:underline"
+                className="min-h-11 px-1 font-medium text-primary hover:underline"
               >
                 {t("auth.changeEmail")}
               </button>
@@ -274,7 +282,7 @@ export default function LoginPage() {
                 type="button"
                 disabled={cooldown > 0 || requestOTP.isPending}
                 onClick={handleRequestOTP}
-                className="font-medium text-primary hover:underline disabled:text-muted disabled:no-underline"
+                className="min-h-11 px-1 font-medium text-primary hover:underline disabled:text-muted disabled:no-underline"
               >
                 {cooldown > 0
                   ? t("auth.resendIn", { seconds: cooldown })

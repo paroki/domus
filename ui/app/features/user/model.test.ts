@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { MemoryRouter } from "react-router";
 import type { User } from "./api/types";
+import { AccountList } from "./components/AccountList";
+import { TokenList } from "./components/TokenList";
 import {
   buildOnboardingSteps,
   canManageUsers,
@@ -16,6 +22,7 @@ import {
   isParokiAdmin,
   isSuperAdmin,
   isUmatAdmin,
+  ME_ROUTES,
   parseUserDetailTab,
   providerLabel,
   ROLE_CANTUS_ADMIN,
@@ -29,6 +36,10 @@ import {
   shouldRedirectToOnboarding,
   USER_GENDERS,
 } from "./model";
+import MePage from "./pages/MePage";
+import TelegramLinkPage from "./pages/TelegramLinkPage";
+import TokenCreatePage from "./pages/TokenCreatePage";
+import WhatsAppLinkPage from "./pages/WhatsAppLinkPage";
 
 test("formatUserAgent detects common browsers and OS", () => {
   assert.equal(
@@ -206,4 +217,89 @@ test("deduplicateOrgMembers merges multi-org memberships per user", () => {
   assert.equal(result[0]?.id, "u1");
   assert.equal(result[0]?.orgs.length, 2);
   assert.equal(result[1]?.id, "u2");
+});
+
+function renderWithProviders(
+  element: React.ReactElement,
+  initialEntry = "/me",
+) {
+  const qc = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return renderToStaticMarkup(
+    createElement(
+      QueryClientProvider,
+      { client: qc },
+      createElement(MemoryRouter, { initialEntries: [initialEntry] }, element),
+    ),
+  );
+}
+
+test("ME_ROUTES defines /me sub-routes for token creation and account linking", () => {
+  assert.equal(ME_ROUTES.index, "/me");
+  assert.equal(ME_ROUTES.verify, "/me/verify");
+  assert.equal(ME_ROUTES.tokenNew, "/me/tokens/new");
+  assert.equal(ME_ROUTES.linkWhatsapp, "/me/accounts/whatsapp");
+  assert.equal(ME_ROUTES.linkTelegram, "/me/accounts/telegram");
+});
+
+test("MePage SSR renders read-first profile <dl> without inline creation forms", () => {
+  const html = renderWithProviders(
+    createElement(MePage, {
+      loaderData: undefined,
+      params: {},
+      matches: [] as never,
+    }),
+  );
+  assert.ok(html.includes("Profil &amp; Keamanan"));
+  assert.ok(html.includes("Profil Saya"));
+  assert.ok(html.includes("<dl"));
+  assert.ok(html.includes("Ubah"));
+  assert.equal(html.includes("Simpan Profil"), false);
+  assert.equal(html.includes("Nama token"), false);
+});
+
+test("TokenList and AccountList SSR link to dedicated sub-pages without inline forms", () => {
+  const tokenHtml = renderWithProviders(createElement(TokenList));
+  assert.ok(tokenHtml.includes('href="/me/tokens/new"'));
+  assert.equal(tokenHtml.includes("Nama token"), false);
+
+  const accountHtml = renderWithProviders(createElement(AccountList));
+  assert.ok(accountHtml.includes("Akun Tertaut"));
+  assert.equal(accountHtml.includes("Kirim Kode OTP WhatsApp"), false);
+});
+
+test("Me sub-pages SSR render InductivePageHeader and dedicated forms", () => {
+  const tokenPageHtml = renderWithProviders(
+    createElement(TokenCreatePage, {
+      loaderData: undefined,
+      params: {},
+      matches: [] as never,
+    }),
+    "/me/tokens/new",
+  );
+  assert.ok(tokenPageHtml.includes("Buat Token API"));
+  assert.ok(tokenPageHtml.includes("Nama token"));
+  assert.ok(tokenPageHtml.includes("Masa berlaku"));
+
+  const waPageHtml = renderWithProviders(
+    createElement(WhatsAppLinkPage, {
+      loaderData: undefined,
+      params: {},
+      matches: [] as never,
+    }),
+    "/me/accounts/whatsapp",
+  );
+  assert.ok(waPageHtml.includes("Hubungkan WhatsApp"));
+  assert.ok(waPageHtml.includes("Nomor WhatsApp"));
+
+  const tgPageHtml = renderWithProviders(
+    createElement(TelegramLinkPage, {
+      loaderData: undefined,
+      params: {},
+      matches: [] as never,
+    }),
+    "/me/accounts/telegram",
+  );
+  assert.ok(tgPageHtml.includes("Hubungkan Telegram"));
 });

@@ -159,7 +159,7 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-canvas">
+    <div className="flex min-h-dvh flex-col bg-canvas pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
       <header className="border-b border-line bg-surface">
         <div className="mx-auto flex h-16 max-w-2xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-2.5">
@@ -320,7 +320,11 @@ export default function OnboardingPage() {
                   </label>
 
                   <div className="flex justify-end pt-2">
-                    <Button type="submit" disabled={updateMe.isPending}>
+                    <Button
+                      type="submit"
+                      disabled={updateMe.isPending}
+                      className="w-full sm:w-auto"
+                    >
                       {updateMe.isPending
                         ? t("onboarding.saving")
                         : steps.length === 1
@@ -371,11 +375,12 @@ export default function OnboardingPage() {
                     />
                   )}
 
-                  <div className="flex items-center justify-between gap-3 pt-2">
+                  <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
                     <Button
                       type="button"
                       variant="outline"
                       onClick={handlePrevious}
+                      className="w-full sm:w-auto"
                     >
                       <ArrowLeft aria-hidden className="size-4" />
                       {t("onboarding.previous")}
@@ -386,6 +391,7 @@ export default function OnboardingPage() {
                         type="button"
                         disabled={updateMe.isPending}
                         onClick={advanceOrFinish}
+                        className="w-full sm:w-auto"
                       >
                         {isFinalStep
                           ? t("onboarding.finish")
@@ -397,6 +403,7 @@ export default function OnboardingPage() {
                         variant="ghost"
                         disabled={updateMe.isPending}
                         onClick={advanceOrFinish}
+                        className="w-full sm:w-auto"
                       >
                         {t("onboarding.skip")}
                       </Button>
@@ -435,11 +442,12 @@ export default function OnboardingPage() {
                     />
                   )}
 
-                  <div className="flex items-center justify-between gap-3 pt-2">
+                  <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
                     <Button
                       type="button"
                       variant="outline"
                       onClick={handlePrevious}
+                      className="w-full sm:w-auto"
                     >
                       <ArrowLeft aria-hidden className="size-4" />
                       {t("onboarding.previous")}
@@ -452,6 +460,7 @@ export default function OnboardingPage() {
                       onClick={() => {
                         void completeOnboarding();
                       }}
+                      className="w-full sm:w-auto"
                     >
                       {telegramLinked
                         ? t("onboarding.finish")

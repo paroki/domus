@@ -97,9 +97,13 @@ const id = {
     changeEmail: "Ganti tujuan",
   },
   me: {
+    homeBreadcrumb: "Beranda",
     title: "Profil & Keamanan",
     subtitle: "Kelola informasi akun, sesi perangkat, dan metode login.",
     profileTitle: "Profil Saya",
+    editProfile: "Ubah",
+    cancelEdit: "Batal",
+    notSet: "—",
     nameLabel: "Nama lengkap",
     emailLabel: "Email",
     phoneLabel: "Nomor telepon (WhatsApp)",
@@ -133,7 +137,13 @@ const id = {
     whatsappOtpSentTo: "Kode 6 digit dikirim ke WhatsApp {{target}}",
     whatsappVerifyLink: "Verifikasi & Hubungkan",
     whatsappChangeNumber: "Ganti nomor",
+    whatsappPageTitle: "Hubungkan WhatsApp",
+    whatsappPageSubtitle:
+      "Tautkan nomor WhatsApp Anda untuk verifikasi dan login OTP.",
     telegramTitle: "Hubungkan Akun Telegram",
+    telegramPageTitle: "Hubungkan Telegram",
+    telegramPageSubtitle:
+      "Tautkan akun Telegram Anda untuk menerima kode OTP dan notifikasi.",
     telegramHint:
       "Pindai kode QR atau buka tautan di bawah untuk menghubungkan bot {{bot}}.",
     telegramHintNoBot:
@@ -158,6 +168,11 @@ const id = {
     tokenExpiry365: "1 tahun",
     tokenExpiryNever: "Tanpa kedaluwarsa",
     createToken: "Buat Token",
+    createTokenPageTitle: "Buat Token API",
+    createTokenPageSubtitle:
+      "Buat token akses pribadi baru untuk CLI, klien MCP, atau otomasi API.",
+    createTokenSectionTitle: "Detail Token Baru",
+    backToProfile: "Kembali ke Profil & Keamanan",
     creatingToken: "Membuat token…",
     tokenCreatedHint:
       "Salin token ini sekarang. Demi keamanan, token tidak akan ditampilkan lagi.",
