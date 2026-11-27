@@ -68,6 +68,8 @@ type Tx struct {
 	Setting *SettingClient
 	// Umat is the client for interacting with the Umat builders.
 	Umat *UmatClient
+	// UmatReferensi is the client for interacting with the UmatReferensi builders.
+	UmatReferensi *UmatReferensiClient
 	// UmatSakramen is the client for interacting with the UmatSakramen builders.
 	UmatSakramen *UmatSakramenClient
 	// User is the client for interacting with the User builders.
@@ -245,6 +247,7 @@ func (tx *Tx) init() {
 	tx.ParokiMember = NewParokiMemberClient(tx.config)
 	tx.Setting = NewSettingClient(tx.config)
 	tx.Umat = NewUmatClient(tx.config)
+	tx.UmatReferensi = NewUmatReferensiClient(tx.config)
 	tx.UmatSakramen = NewUmatSakramenClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.UserAccount = NewUserAccountClient(tx.config)

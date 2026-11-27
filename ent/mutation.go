@@ -42,6 +42,7 @@ import (
 	"github.com/paroki/domus/ent/schema"
 	"github.com/paroki/domus/ent/setting"
 	"github.com/paroki/domus/ent/umat"
+	"github.com/paroki/domus/ent/umatreferensi"
 	"github.com/paroki/domus/ent/umatsakramen"
 	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/useraccount"
@@ -90,6 +91,7 @@ const (
 	TypeParokiMember         = "ParokiMember"
 	TypeSetting              = "Setting"
 	TypeUmat                 = "Umat"
+	TypeUmatReferensi        = "UmatReferensi"
 	TypeUmatSakramen         = "UmatSakramen"
 	TypeUser                 = "User"
 	TypeUserAccount          = "UserAccount"
@@ -31871,6 +31873,847 @@ func (m *UmatMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown Umat edge %s", name)
+}
+
+// UmatReferensiMutation represents an operation that mutates the UmatReferensi nodes in the graph.
+type UmatReferensiMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *uuid.UUID
+	created_at    *time.Time
+	updated_at    *time.Time
+	deleted_at    *time.Time
+	paroki_id     *uuid.UUID
+	category      *string
+	code          *string
+	label         *string
+	sort_order    *int
+	addsort_order *int
+	active        *bool
+	clearedFields map[string]struct{}
+	done          bool
+	oldValue      func(context.Context) (*UmatReferensi, error)
+	predicates    []predicate.UmatReferensi
+}
+
+var _ ent.Mutation = (*UmatReferensiMutation)(nil)
+
+// umatreferensiOption allows management of the mutation configuration using functional options.
+type umatreferensiOption func(*UmatReferensiMutation)
+
+// newUmatReferensiMutation creates new mutation for the UmatReferensi entity.
+func newUmatReferensiMutation(c config, op Op, opts ...umatreferensiOption) *UmatReferensiMutation {
+	m := &UmatReferensiMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeUmatReferensi,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withUmatReferensiID sets the ID field of the mutation.
+func withUmatReferensiID(id uuid.UUID) umatreferensiOption {
+	return func(m *UmatReferensiMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *UmatReferensi
+		)
+		m.oldValue = func(ctx context.Context) (*UmatReferensi, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().UmatReferensi.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withUmatReferensi sets the old UmatReferensi of the mutation.
+func withUmatReferensi(node *UmatReferensi) umatreferensiOption {
+	return func(m *UmatReferensiMutation) {
+		m.oldValue = func(context.Context) (*UmatReferensi, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m UmatReferensiMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m UmatReferensiMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of UmatReferensi entities.
+func (m *UmatReferensiMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *UmatReferensiMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *UmatReferensiMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().UmatReferensi.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *UmatReferensiMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *UmatReferensiMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the UmatReferensi entity.
+// If the UmatReferensi object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatReferensiMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *UmatReferensiMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *UmatReferensiMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *UmatReferensiMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the UmatReferensi entity.
+// If the UmatReferensi object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatReferensiMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *UmatReferensiMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *UmatReferensiMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *UmatReferensiMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the UmatReferensi entity.
+// If the UmatReferensi object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatReferensiMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *UmatReferensiMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[umatreferensi.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *UmatReferensiMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[umatreferensi.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *UmatReferensiMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, umatreferensi.FieldDeletedAt)
+}
+
+// SetParokiID sets the "paroki_id" field.
+func (m *UmatReferensiMutation) SetParokiID(u uuid.UUID) {
+	m.paroki_id = &u
+}
+
+// ParokiID returns the value of the "paroki_id" field in the mutation.
+func (m *UmatReferensiMutation) ParokiID() (r uuid.UUID, exists bool) {
+	v := m.paroki_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldParokiID returns the old "paroki_id" field's value of the UmatReferensi entity.
+// If the UmatReferensi object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatReferensiMutation) OldParokiID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldParokiID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldParokiID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldParokiID: %w", err)
+	}
+	return oldValue.ParokiID, nil
+}
+
+// ClearParokiID clears the value of the "paroki_id" field.
+func (m *UmatReferensiMutation) ClearParokiID() {
+	m.paroki_id = nil
+	m.clearedFields[umatreferensi.FieldParokiID] = struct{}{}
+}
+
+// ParokiIDCleared returns if the "paroki_id" field was cleared in this mutation.
+func (m *UmatReferensiMutation) ParokiIDCleared() bool {
+	_, ok := m.clearedFields[umatreferensi.FieldParokiID]
+	return ok
+}
+
+// ResetParokiID resets all changes to the "paroki_id" field.
+func (m *UmatReferensiMutation) ResetParokiID() {
+	m.paroki_id = nil
+	delete(m.clearedFields, umatreferensi.FieldParokiID)
+}
+
+// SetCategory sets the "category" field.
+func (m *UmatReferensiMutation) SetCategory(s string) {
+	m.category = &s
+}
+
+// Category returns the value of the "category" field in the mutation.
+func (m *UmatReferensiMutation) Category() (r string, exists bool) {
+	v := m.category
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCategory returns the old "category" field's value of the UmatReferensi entity.
+// If the UmatReferensi object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatReferensiMutation) OldCategory(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCategory is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCategory requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCategory: %w", err)
+	}
+	return oldValue.Category, nil
+}
+
+// ResetCategory resets all changes to the "category" field.
+func (m *UmatReferensiMutation) ResetCategory() {
+	m.category = nil
+}
+
+// SetCode sets the "code" field.
+func (m *UmatReferensiMutation) SetCode(s string) {
+	m.code = &s
+}
+
+// Code returns the value of the "code" field in the mutation.
+func (m *UmatReferensiMutation) Code() (r string, exists bool) {
+	v := m.code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCode returns the old "code" field's value of the UmatReferensi entity.
+// If the UmatReferensi object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatReferensiMutation) OldCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCode: %w", err)
+	}
+	return oldValue.Code, nil
+}
+
+// ResetCode resets all changes to the "code" field.
+func (m *UmatReferensiMutation) ResetCode() {
+	m.code = nil
+}
+
+// SetLabel sets the "label" field.
+func (m *UmatReferensiMutation) SetLabel(s string) {
+	m.label = &s
+}
+
+// Label returns the value of the "label" field in the mutation.
+func (m *UmatReferensiMutation) Label() (r string, exists bool) {
+	v := m.label
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLabel returns the old "label" field's value of the UmatReferensi entity.
+// If the UmatReferensi object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatReferensiMutation) OldLabel(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLabel is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLabel requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLabel: %w", err)
+	}
+	return oldValue.Label, nil
+}
+
+// ResetLabel resets all changes to the "label" field.
+func (m *UmatReferensiMutation) ResetLabel() {
+	m.label = nil
+}
+
+// SetSortOrder sets the "sort_order" field.
+func (m *UmatReferensiMutation) SetSortOrder(i int) {
+	m.sort_order = &i
+	m.addsort_order = nil
+}
+
+// SortOrder returns the value of the "sort_order" field in the mutation.
+func (m *UmatReferensiMutation) SortOrder() (r int, exists bool) {
+	v := m.sort_order
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSortOrder returns the old "sort_order" field's value of the UmatReferensi entity.
+// If the UmatReferensi object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatReferensiMutation) OldSortOrder(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSortOrder is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSortOrder requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSortOrder: %w", err)
+	}
+	return oldValue.SortOrder, nil
+}
+
+// AddSortOrder adds i to the "sort_order" field.
+func (m *UmatReferensiMutation) AddSortOrder(i int) {
+	if m.addsort_order != nil {
+		*m.addsort_order += i
+	} else {
+		m.addsort_order = &i
+	}
+}
+
+// AddedSortOrder returns the value that was added to the "sort_order" field in this mutation.
+func (m *UmatReferensiMutation) AddedSortOrder() (r int, exists bool) {
+	v := m.addsort_order
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSortOrder resets all changes to the "sort_order" field.
+func (m *UmatReferensiMutation) ResetSortOrder() {
+	m.sort_order = nil
+	m.addsort_order = nil
+}
+
+// SetActive sets the "active" field.
+func (m *UmatReferensiMutation) SetActive(b bool) {
+	m.active = &b
+}
+
+// Active returns the value of the "active" field in the mutation.
+func (m *UmatReferensiMutation) Active() (r bool, exists bool) {
+	v := m.active
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldActive returns the old "active" field's value of the UmatReferensi entity.
+// If the UmatReferensi object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatReferensiMutation) OldActive(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldActive is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldActive requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldActive: %w", err)
+	}
+	return oldValue.Active, nil
+}
+
+// ResetActive resets all changes to the "active" field.
+func (m *UmatReferensiMutation) ResetActive() {
+	m.active = nil
+}
+
+// Where appends a list predicates to the UmatReferensiMutation builder.
+func (m *UmatReferensiMutation) Where(ps ...predicate.UmatReferensi) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the UmatReferensiMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *UmatReferensiMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.UmatReferensi, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *UmatReferensiMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *UmatReferensiMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (UmatReferensi).
+func (m *UmatReferensiMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *UmatReferensiMutation) Fields() []string {
+	fields := make([]string, 0, 9)
+	if m.created_at != nil {
+		fields = append(fields, umatreferensi.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, umatreferensi.FieldUpdatedAt)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, umatreferensi.FieldDeletedAt)
+	}
+	if m.paroki_id != nil {
+		fields = append(fields, umatreferensi.FieldParokiID)
+	}
+	if m.category != nil {
+		fields = append(fields, umatreferensi.FieldCategory)
+	}
+	if m.code != nil {
+		fields = append(fields, umatreferensi.FieldCode)
+	}
+	if m.label != nil {
+		fields = append(fields, umatreferensi.FieldLabel)
+	}
+	if m.sort_order != nil {
+		fields = append(fields, umatreferensi.FieldSortOrder)
+	}
+	if m.active != nil {
+		fields = append(fields, umatreferensi.FieldActive)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *UmatReferensiMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case umatreferensi.FieldCreatedAt:
+		return m.CreatedAt()
+	case umatreferensi.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case umatreferensi.FieldDeletedAt:
+		return m.DeletedAt()
+	case umatreferensi.FieldParokiID:
+		return m.ParokiID()
+	case umatreferensi.FieldCategory:
+		return m.Category()
+	case umatreferensi.FieldCode:
+		return m.Code()
+	case umatreferensi.FieldLabel:
+		return m.Label()
+	case umatreferensi.FieldSortOrder:
+		return m.SortOrder()
+	case umatreferensi.FieldActive:
+		return m.Active()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *UmatReferensiMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case umatreferensi.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case umatreferensi.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case umatreferensi.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case umatreferensi.FieldParokiID:
+		return m.OldParokiID(ctx)
+	case umatreferensi.FieldCategory:
+		return m.OldCategory(ctx)
+	case umatreferensi.FieldCode:
+		return m.OldCode(ctx)
+	case umatreferensi.FieldLabel:
+		return m.OldLabel(ctx)
+	case umatreferensi.FieldSortOrder:
+		return m.OldSortOrder(ctx)
+	case umatreferensi.FieldActive:
+		return m.OldActive(ctx)
+	}
+	return nil, fmt.Errorf("unknown UmatReferensi field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UmatReferensiMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case umatreferensi.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case umatreferensi.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case umatreferensi.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case umatreferensi.FieldParokiID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetParokiID(v)
+		return nil
+	case umatreferensi.FieldCategory:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCategory(v)
+		return nil
+	case umatreferensi.FieldCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCode(v)
+		return nil
+	case umatreferensi.FieldLabel:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLabel(v)
+		return nil
+	case umatreferensi.FieldSortOrder:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSortOrder(v)
+		return nil
+	case umatreferensi.FieldActive:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetActive(v)
+		return nil
+	}
+	return fmt.Errorf("unknown UmatReferensi field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *UmatReferensiMutation) AddedFields() []string {
+	var fields []string
+	if m.addsort_order != nil {
+		fields = append(fields, umatreferensi.FieldSortOrder)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *UmatReferensiMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case umatreferensi.FieldSortOrder:
+		return m.AddedSortOrder()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UmatReferensiMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case umatreferensi.FieldSortOrder:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSortOrder(v)
+		return nil
+	}
+	return fmt.Errorf("unknown UmatReferensi numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *UmatReferensiMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(umatreferensi.FieldDeletedAt) {
+		fields = append(fields, umatreferensi.FieldDeletedAt)
+	}
+	if m.FieldCleared(umatreferensi.FieldParokiID) {
+		fields = append(fields, umatreferensi.FieldParokiID)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *UmatReferensiMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *UmatReferensiMutation) ClearField(name string) error {
+	switch name {
+	case umatreferensi.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case umatreferensi.FieldParokiID:
+		m.ClearParokiID()
+		return nil
+	}
+	return fmt.Errorf("unknown UmatReferensi nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *UmatReferensiMutation) ResetField(name string) error {
+	switch name {
+	case umatreferensi.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case umatreferensi.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case umatreferensi.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case umatreferensi.FieldParokiID:
+		m.ResetParokiID()
+		return nil
+	case umatreferensi.FieldCategory:
+		m.ResetCategory()
+		return nil
+	case umatreferensi.FieldCode:
+		m.ResetCode()
+		return nil
+	case umatreferensi.FieldLabel:
+		m.ResetLabel()
+		return nil
+	case umatreferensi.FieldSortOrder:
+		m.ResetSortOrder()
+		return nil
+	case umatreferensi.FieldActive:
+		m.ResetActive()
+		return nil
+	}
+	return fmt.Errorf("unknown UmatReferensi field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *UmatReferensiMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *UmatReferensiMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *UmatReferensiMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *UmatReferensiMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *UmatReferensiMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *UmatReferensiMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *UmatReferensiMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown UmatReferensi unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *UmatReferensiMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown UmatReferensi edge %s", name)
 }
 
 // UmatSakramenMutation represents an operation that mutates the UmatSakramen nodes in the graph.

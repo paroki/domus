@@ -33,10 +33,18 @@ func (h *Handler) Register(
 	requireKeluargaWrite fiber.Handler,
 	requireUmatRead fiber.Handler,
 	requireUmatWrite fiber.Handler,
+	requireReferensiRead fiber.Handler,
 ) {
 	u := api.Group("/umat", authMW, requireAuth, requireTenant)
 
-	// Static /keluarga routes MUST be registered before parameterized /:id routes.
+	// Static /referensi and /keluarga routes MUST be registered before parameterized /:id routes.
+	referensi := u.Group("/referensi")
+	referensi.Post("/search", requireReferensiRead, h.SearchReferensi)
+	referensi.Get("/:id", requireReferensiRead, h.GetReferensi)
+	referensi.Post("", h.CreateReferensi)
+	referensi.Patch("/:id", h.UpdateReferensi)
+	referensi.Delete("/:id", h.DeleteReferensi)
+
 	keluarga := u.Group("/keluarga")
 	keluarga.Post("/search", requireKeluargaRead, h.SearchKeluarga)
 	keluarga.Get("/:id", requireKeluargaRead, h.GetKeluarga)

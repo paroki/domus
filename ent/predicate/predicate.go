@@ -90,6 +90,9 @@ type Setting func(*sql.Selector)
 // Umat is the predicate function for umat builders.
 type Umat func(*sql.Selector)
 
+// UmatReferensi is the predicate function for umatreferensi builders.
+type UmatReferensi func(*sql.Selector)
+
 // UmatSakramen is the predicate function for umatsakramen builders.
 type UmatSakramen func(*sql.Selector)
 

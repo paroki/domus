@@ -21,9 +21,10 @@ type UmatBasic = domain.UmatLookupItemResponse
 
 // Feature-owned Casbin roles and resource permissions.
 var (
-	RoleAdmin    = domain.RoleAdmin
-	PermKeluarga = domain.PermKeluarga
-	PermUmat     = domain.PermUmat
+	RoleAdmin     = domain.RoleAdmin
+	PermKeluarga  = domain.PermKeluarga
+	PermUmat      = domain.PermUmat
+	PermReferensi = domain.PermReferensi
 )
 
 // Feature wires parishioner (umat) and household (keluarga) administration.
@@ -64,6 +65,7 @@ func (f *Feature) Register(api fiber.Router) {
 		f.users.Require(PermKeluarga, authz.ActionWrite, parokiDomainFromContext),
 		f.users.Require(PermUmat, authz.ActionRead, parokiDomainFromContext),
 		f.users.Require(PermUmat, authz.ActionWrite, parokiDomainFromContext),
+		f.users.Require(PermReferensi, authz.ActionRead),
 	)
 }
 
@@ -87,6 +89,9 @@ func (f *Feature) RegisterPermissions(ctx context.Context, e *authz.Enforcer) er
 		{RoleAdmin, PermKeluarga, authz.ActionWrite},
 		{RoleAdmin, PermUmat, authz.ActionRead},
 		{RoleAdmin, PermUmat, authz.ActionWrite},
+		{RoleAdmin, PermReferensi, authz.ActionRead},
+		{RoleAdmin, PermReferensi, authz.ActionWrite},
+		{user.RoleUser, PermReferensi, authz.ActionRead},
 	}
 	for _, p := range policies {
 		if err := e.AddPermissionForRole(ctx, p.role, authz.DomainGlobal, p.perm, p.act); err != nil {

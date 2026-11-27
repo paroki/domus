@@ -128,4 +128,50 @@ func TestUmatMCPTools_RBACAndPIIMasking(t *testing.T) {
 		require.False(t, hasNik)
 		require.False(t, hasKK)
 	}
+
+	// 4. umat_list_referensi: global + parish merge, regular user allowed, invalid category rejected
+	_, err = db.UmatReferensi.Create().
+		SetCategory("agama").
+		SetCode("katolik").
+		SetLabel("Katolik Global").
+		SetSortOrder(1).
+		SetActive(true).
+		Save(ctx)
+	require.NoError(t, err)
+	_, err = db.UmatReferensi.Create().
+		SetParokiID(paroki1.ID).
+		SetCategory("agama").
+		SetCode("katolik").
+		SetLabel("Katolik Paroki").
+		SetSortOrder(1).
+		SetActive(true).
+		Save(ctx)
+	require.NoError(t, err)
+	_, err = db.UmatReferensi.Create().
+		SetParokiID(paroki1.ID).
+		SetCategory("agama").
+		SetCode("nonaktif").
+		SetLabel("Nonaktif").
+		SetSortOrder(2).
+		SetActive(false).
+		Save(ctx)
+	require.NoError(t, err)
+
+	refRes, err := nonAdminSess.CallTool(nonAdminCtx, &mcp.CallToolParams{
+		Name:      "umat_list_referensi",
+		Arguments: map[string]any{"category": "agama"},
+	})
+	require.NoError(t, err)
+	require.False(t, refRes.IsError)
+	refText := refRes.Content[0].(*mcp.TextContent).Text
+	require.Contains(t, refText, "Katolik Paroki")
+	require.NotContains(t, refText, "Katolik Global")
+	require.NotContains(t, refText, "Nonaktif")
+
+	badRefRes, err := nonAdminSess.CallTool(nonAdminCtx, &mcp.CallToolParams{
+		Name:      "umat_list_referensi",
+		Arguments: map[string]any{"category": "invalid_cat"},
+	})
+	require.NoError(t, err)
+	require.True(t, badRefRes.IsError)
 }

@@ -2,6 +2,7 @@ package umat
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -238,6 +239,11 @@ func (f *Feature) RegisterMCP(s *mcp.Server) {
 		Name:        "umat_get_keluarga",
 		Description: "Get a household (Kartu Keluarga) record and its members (PII-masked; requires umat:admin).",
 	}, f.mcpUmatGetKeluarga)
+
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "umat_list_referensi",
+		Description: "List active Data Umat reference dictionary entries (global merged with parish overrides).",
+	}, f.mcpUmatListReferensi)
 }
 
 func (f *Feature) authorizeMCP(ctx context.Context, perm string) (user.Principal, error) {
@@ -252,7 +258,11 @@ func (f *Feature) authorizeMCP(ctx context.Context, perm string) (user.Principal
 	if f.enforcer == nil {
 		return user.Principal{}, httpx.Forbidden("Forbidden.")
 	}
-	allowed, err := f.enforcer.Enforce(authz.UserSubject(tp.UserID), authz.ParokiDomain(tp.ParokiID), perm, authz.ActionRead)
+	dom := authz.ParokiDomain(tp.ParokiID)
+	if perm == PermReferensi {
+		dom = authz.DomainGlobal
+	}
+	allowed, err := f.enforcer.Enforce(authz.UserSubject(tp.UserID), dom, perm, authz.ActionRead)
 	if err != nil {
 		return user.Principal{}, err
 	}
@@ -545,4 +555,59 @@ func (f *Feature) mcpUmatGetKeluarga(ctx context.Context, _ *mcp.CallToolRequest
 		CreatedAt:     d.CreatedAt,
 		UpdatedAt:     d.UpdatedAt,
 	}, nil
+}
+
+// UmatListReferensiInput is the input schema for umat_list_referensi.
+type UmatListReferensiInput struct {
+	Category string `json:"category" jsonschema:"required,Referensi category (agama, golongan_darah, suku, hubungan_keluarga, status_pernikahan, status_rumah, status_ekonomi, pendidikan, pekerjaan, profesi, disabilitas, aktivitas_sosial)"`
+	Query    string `json:"q,omitempty"`
+	Limit    int    `json:"limit,omitempty"`
+}
+
+// MCPReferensiItem is a single active Data Umat referensi dictionary entry.
+type MCPReferensiItem struct {
+	ID        string  `json:"id"`
+	ParokiID  *string `json:"parokiId,omitempty"`
+	Category  string  `json:"category"`
+	Code      string  `json:"code"`
+	Label     string  `json:"label"`
+	SortOrder int     `json:"sortOrder"`
+}
+
+// UmatListReferensiOutput is the output of umat_list_referensi.
+type UmatListReferensiOutput struct {
+	Items []MCPReferensiItem `json:"items"`
+}
+
+func (f *Feature) mcpUmatListReferensi(ctx context.Context, _ *mcp.CallToolRequest, in UmatListReferensiInput) (*mcp.CallToolResult, UmatListReferensiOutput, error) {
+	tp, err := f.authorizeMCP(ctx, PermReferensi)
+	if err != nil {
+		return nil, UmatListReferensiOutput{}, err
+	}
+	if strings.TrimSpace(in.Category) == "" {
+		return nil, UmatListReferensiOutput{}, domain.ValidationError("category", "REQUIRED", "Category is required.")
+	}
+	activeTrue := true
+	items, _, err := f.service.SearchReferensi(ctx, tp, domain.SearchUmatReferensiRequest{
+		Q: in.Query,
+		Filter: &domain.UmatReferensiSearchFilter{
+			Category: in.Category,
+			Active:   &activeTrue,
+		},
+	}, nil, nil, normalizeMCPLimit(in.Limit))
+	if err != nil {
+		return nil, UmatListReferensiOutput{}, err
+	}
+	out := make([]MCPReferensiItem, 0, len(items))
+	for _, it := range items {
+		out = append(out, MCPReferensiItem{
+			ID:        it.ID.String(),
+			ParokiID:  uuidPtrStr(it.ParokiID),
+			Category:  it.Category,
+			Code:      it.Code,
+			Label:     it.Label,
+			SortOrder: it.SortOrder,
+		})
+	}
+	return nil, UmatListReferensiOutput{Items: out}, nil
 }

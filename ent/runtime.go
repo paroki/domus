@@ -35,6 +35,7 @@ import (
 	"github.com/paroki/domus/ent/schema"
 	"github.com/paroki/domus/ent/setting"
 	"github.com/paroki/domus/ent/umat"
+	"github.com/paroki/domus/ent/umatreferensi"
 	"github.com/paroki/domus/ent/umatsakramen"
 	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/useraccount"
@@ -932,6 +933,47 @@ func init() {
 	umatDescID := umatMixinFields0[0].Descriptor()
 	// umat.DefaultID holds the default value on creation for the id field.
 	umat.DefaultID = umatDescID.Default.(func() uuid.UUID)
+	umatreferensiMixin := schema.UmatReferensi{}.Mixin()
+	umatreferensiMixinFields0 := umatreferensiMixin[0].Fields()
+	_ = umatreferensiMixinFields0
+	umatreferensiMixinFields1 := umatreferensiMixin[1].Fields()
+	_ = umatreferensiMixinFields1
+	umatreferensiFields := schema.UmatReferensi{}.Fields()
+	_ = umatreferensiFields
+	// umatreferensiDescCreatedAt is the schema descriptor for created_at field.
+	umatreferensiDescCreatedAt := umatreferensiMixinFields1[0].Descriptor()
+	// umatreferensi.DefaultCreatedAt holds the default value on creation for the created_at field.
+	umatreferensi.DefaultCreatedAt = umatreferensiDescCreatedAt.Default.(func() time.Time)
+	// umatreferensiDescUpdatedAt is the schema descriptor for updated_at field.
+	umatreferensiDescUpdatedAt := umatreferensiMixinFields1[1].Descriptor()
+	// umatreferensi.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	umatreferensi.DefaultUpdatedAt = umatreferensiDescUpdatedAt.Default.(func() time.Time)
+	// umatreferensi.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	umatreferensi.UpdateDefaultUpdatedAt = umatreferensiDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// umatreferensiDescCategory is the schema descriptor for category field.
+	umatreferensiDescCategory := umatreferensiFields[1].Descriptor()
+	// umatreferensi.CategoryValidator is a validator for the "category" field. It is called by the builders before save.
+	umatreferensi.CategoryValidator = umatreferensiDescCategory.Validators[0].(func(string) error)
+	// umatreferensiDescCode is the schema descriptor for code field.
+	umatreferensiDescCode := umatreferensiFields[2].Descriptor()
+	// umatreferensi.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	umatreferensi.CodeValidator = umatreferensiDescCode.Validators[0].(func(string) error)
+	// umatreferensiDescLabel is the schema descriptor for label field.
+	umatreferensiDescLabel := umatreferensiFields[3].Descriptor()
+	// umatreferensi.LabelValidator is a validator for the "label" field. It is called by the builders before save.
+	umatreferensi.LabelValidator = umatreferensiDescLabel.Validators[0].(func(string) error)
+	// umatreferensiDescSortOrder is the schema descriptor for sort_order field.
+	umatreferensiDescSortOrder := umatreferensiFields[4].Descriptor()
+	// umatreferensi.DefaultSortOrder holds the default value on creation for the sort_order field.
+	umatreferensi.DefaultSortOrder = umatreferensiDescSortOrder.Default.(int)
+	// umatreferensiDescActive is the schema descriptor for active field.
+	umatreferensiDescActive := umatreferensiFields[5].Descriptor()
+	// umatreferensi.DefaultActive holds the default value on creation for the active field.
+	umatreferensi.DefaultActive = umatreferensiDescActive.Default.(bool)
+	// umatreferensiDescID is the schema descriptor for id field.
+	umatreferensiDescID := umatreferensiMixinFields0[0].Descriptor()
+	// umatreferensi.DefaultID holds the default value on creation for the id field.
+	umatreferensi.DefaultID = umatreferensiDescID.Default.(func() uuid.UUID)
 	umatsakramenMixin := schema.UmatSakramen{}.Mixin()
 	umatsakramenMixinFields0 := umatsakramenMixin[0].Fields()
 	_ = umatsakramenMixinFields0

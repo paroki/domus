@@ -44,6 +44,7 @@ import (
 	"github.com/paroki/domus/ent/parokimember"
 	"github.com/paroki/domus/ent/setting"
 	"github.com/paroki/domus/ent/umat"
+	"github.com/paroki/domus/ent/umatreferensi"
 	"github.com/paroki/domus/ent/umatsakramen"
 	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/useraccount"
@@ -116,6 +117,8 @@ type Client struct {
 	Setting *SettingClient
 	// Umat is the client for interacting with the Umat builders.
 	Umat *UmatClient
+	// UmatReferensi is the client for interacting with the UmatReferensi builders.
+	UmatReferensi *UmatReferensiClient
 	// UmatSakramen is the client for interacting with the UmatSakramen builders.
 	UmatSakramen *UmatSakramenClient
 	// User is the client for interacting with the User builders.
@@ -173,6 +176,7 @@ func (c *Client) init() {
 	c.ParokiMember = NewParokiMemberClient(c.config)
 	c.Setting = NewSettingClient(c.config)
 	c.Umat = NewUmatClient(c.config)
+	c.UmatReferensi = NewUmatReferensiClient(c.config)
 	c.UmatSakramen = NewUmatSakramenClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.UserAccount = NewUserAccountClient(c.config)
@@ -302,6 +306,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ParokiMember:         NewParokiMemberClient(cfg),
 		Setting:              NewSettingClient(cfg),
 		Umat:                 NewUmatClient(cfg),
+		UmatReferensi:        NewUmatReferensiClient(cfg),
 		UmatSakramen:         NewUmatSakramenClient(cfg),
 		User:                 NewUserClient(cfg),
 		UserAccount:          NewUserAccountClient(cfg),
@@ -358,6 +363,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ParokiMember:         NewParokiMemberClient(cfg),
 		Setting:              NewSettingClient(cfg),
 		Umat:                 NewUmatClient(cfg),
+		UmatReferensi:        NewUmatReferensiClient(cfg),
 		UmatSakramen:         NewUmatSakramenClient(cfg),
 		User:                 NewUserClient(cfg),
 		UserAccount:          NewUserAccountClient(cfg),
@@ -401,8 +407,9 @@ func (c *Client) Use(hooks ...Hook) {
 		c.Keuskupan, c.Kevikepan, c.Kota, c.Lingkungan, c.LiturgiLagu,
 		c.LiturgiMinistry, c.LiturgiPetugas, c.Lookup, c.OrgInvite, c.OrgJabatan,
 		c.OrgMember, c.OrgPeriode, c.Organization, c.Paroki, c.ParokiMember, c.Setting,
-		c.Umat, c.UmatSakramen, c.User, c.UserAccount, c.UserNotificationLog,
-		c.UserOTP, c.UserPushSubscription, c.UserSession, c.UserToken, c.Wilayah,
+		c.Umat, c.UmatReferensi, c.UmatSakramen, c.User, c.UserAccount,
+		c.UserNotificationLog, c.UserOTP, c.UserPushSubscription, c.UserSession,
+		c.UserToken, c.Wilayah,
 	} {
 		n.Use(hooks...)
 	}
@@ -417,8 +424,9 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.Keuskupan, c.Kevikepan, c.Kota, c.Lingkungan, c.LiturgiLagu,
 		c.LiturgiMinistry, c.LiturgiPetugas, c.Lookup, c.OrgInvite, c.OrgJabatan,
 		c.OrgMember, c.OrgPeriode, c.Organization, c.Paroki, c.ParokiMember, c.Setting,
-		c.Umat, c.UmatSakramen, c.User, c.UserAccount, c.UserNotificationLog,
-		c.UserOTP, c.UserPushSubscription, c.UserSession, c.UserToken, c.Wilayah,
+		c.Umat, c.UmatReferensi, c.UmatSakramen, c.User, c.UserAccount,
+		c.UserNotificationLog, c.UserOTP, c.UserPushSubscription, c.UserSession,
+		c.UserToken, c.Wilayah,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -483,6 +491,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Setting.mutate(ctx, m)
 	case *UmatMutation:
 		return c.Umat.mutate(ctx, m)
+	case *UmatReferensiMutation:
+		return c.UmatReferensi.mutate(ctx, m)
 	case *UmatSakramenMutation:
 		return c.UmatSakramen.mutate(ctx, m)
 	case *UserMutation:
@@ -4982,6 +4992,139 @@ func (c *UmatClient) mutate(ctx context.Context, m *UmatMutation) (Value, error)
 	}
 }
 
+// UmatReferensiClient is a client for the UmatReferensi schema.
+type UmatReferensiClient struct {
+	config
+}
+
+// NewUmatReferensiClient returns a client for the UmatReferensi from the given config.
+func NewUmatReferensiClient(c config) *UmatReferensiClient {
+	return &UmatReferensiClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `umatreferensi.Hooks(f(g(h())))`.
+func (c *UmatReferensiClient) Use(hooks ...Hook) {
+	c.hooks.UmatReferensi = append(c.hooks.UmatReferensi, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `umatreferensi.Intercept(f(g(h())))`.
+func (c *UmatReferensiClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UmatReferensi = append(c.inters.UmatReferensi, interceptors...)
+}
+
+// Create returns a builder for creating a UmatReferensi entity.
+func (c *UmatReferensiClient) Create() *UmatReferensiCreate {
+	mutation := newUmatReferensiMutation(c.config, OpCreate)
+	return &UmatReferensiCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UmatReferensi entities.
+func (c *UmatReferensiClient) CreateBulk(builders ...*UmatReferensiCreate) *UmatReferensiCreateBulk {
+	return &UmatReferensiCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UmatReferensiClient) MapCreateBulk(slice any, setFunc func(*UmatReferensiCreate, int)) *UmatReferensiCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UmatReferensiCreateBulk{err: fmt.Errorf("calling to UmatReferensiClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UmatReferensiCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UmatReferensiCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UmatReferensi.
+func (c *UmatReferensiClient) Update() *UmatReferensiUpdate {
+	mutation := newUmatReferensiMutation(c.config, OpUpdate)
+	return &UmatReferensiUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UmatReferensiClient) UpdateOne(_m *UmatReferensi) *UmatReferensiUpdateOne {
+	mutation := newUmatReferensiMutation(c.config, OpUpdateOne, withUmatReferensi(_m))
+	return &UmatReferensiUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UmatReferensiClient) UpdateOneID(id uuid.UUID) *UmatReferensiUpdateOne {
+	mutation := newUmatReferensiMutation(c.config, OpUpdateOne, withUmatReferensiID(id))
+	return &UmatReferensiUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UmatReferensi.
+func (c *UmatReferensiClient) Delete() *UmatReferensiDelete {
+	mutation := newUmatReferensiMutation(c.config, OpDelete)
+	return &UmatReferensiDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UmatReferensiClient) DeleteOne(_m *UmatReferensi) *UmatReferensiDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UmatReferensiClient) DeleteOneID(id uuid.UUID) *UmatReferensiDeleteOne {
+	builder := c.Delete().Where(umatreferensi.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UmatReferensiDeleteOne{builder}
+}
+
+// Query returns a query builder for UmatReferensi.
+func (c *UmatReferensiClient) Query() *UmatReferensiQuery {
+	return &UmatReferensiQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUmatReferensi},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UmatReferensi entity by its id.
+func (c *UmatReferensiClient) Get(ctx context.Context, id uuid.UUID) (*UmatReferensi, error) {
+	return c.Query().Where(umatreferensi.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UmatReferensiClient) GetX(ctx context.Context, id uuid.UUID) *UmatReferensi {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *UmatReferensiClient) Hooks() []Hook {
+	return c.hooks.UmatReferensi
+}
+
+// Interceptors returns the client interceptors.
+func (c *UmatReferensiClient) Interceptors() []Interceptor {
+	return c.inters.UmatReferensi
+}
+
+func (c *UmatReferensiClient) mutate(ctx context.Context, m *UmatReferensiMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UmatReferensiCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UmatReferensiUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UmatReferensiUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UmatReferensiDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UmatReferensi mutation op: %q", m.Op())
+	}
+}
+
 // UmatSakramenClient is a client for the UmatSakramen schema.
 type UmatSakramenClient struct {
 	config
@@ -6362,15 +6505,16 @@ type (
 		Event, EventRSVP, Kecamatan, Keluarga, Kelurahan, Keuskupan, Kevikepan, Kota,
 		Lingkungan, LiturgiLagu, LiturgiMinistry, LiturgiPetugas, Lookup, OrgInvite,
 		OrgJabatan, OrgMember, OrgPeriode, Organization, Paroki, ParokiMember, Setting,
-		Umat, UmatSakramen, User, UserAccount, UserNotificationLog, UserOTP,
-		UserPushSubscription, UserSession, UserToken, Wilayah []ent.Hook
+		Umat, UmatReferensi, UmatSakramen, User, UserAccount, UserNotificationLog,
+		UserOTP, UserPushSubscription, UserSession, UserToken, Wilayah []ent.Hook
 	}
 	inters struct {
 		AgentMemory, AgentMessage, AgentProvider, AgentSession, Cantus, CasbinRule,
 		Event, EventRSVP, Kecamatan, Keluarga, Kelurahan, Keuskupan, Kevikepan, Kota,
 		Lingkungan, LiturgiLagu, LiturgiMinistry, LiturgiPetugas, Lookup, OrgInvite,
 		OrgJabatan, OrgMember, OrgPeriode, Organization, Paroki, ParokiMember, Setting,
-		Umat, UmatSakramen, User, UserAccount, UserNotificationLog, UserOTP,
-		UserPushSubscription, UserSession, UserToken, Wilayah []ent.Interceptor
+		Umat, UmatReferensi, UmatSakramen, User, UserAccount, UserNotificationLog,
+		UserOTP, UserPushSubscription, UserSession, UserToken,
+		Wilayah []ent.Interceptor
 	}
 )

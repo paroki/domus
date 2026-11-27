@@ -104,14 +104,12 @@ func (s *Service) validateLookupField(ctx context.Context, parokiID uuid.UUID, f
 		empty := ""
 		return &empty, nil
 	}
-	if s.refs != nil {
-		ok, err := s.refs.HasActiveLookup(ctx, parokiID, category, norm)
-		if err != nil {
-			return nil, err
-		}
-		if !ok {
-			return nil, domain.ValidationError(field, "INVALID_LOOKUP", field+" must reference an active "+category+" lookup.")
-		}
+	ok, err := s.hasActiveReferensi(ctx, parokiID, category, norm)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		return nil, domain.ValidationError(field, "INVALID_LOOKUP", field+" must reference an active "+category+" lookup.")
 	}
 	return &norm, nil
 }

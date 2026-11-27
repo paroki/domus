@@ -17,7 +17,6 @@ type RefReader interface {
 	ValidateKota(ctx context.Context, kotaID uuid.UUID) (*ref.Kota, error)
 	ValidateKecamatan(ctx context.Context, kotaID, kecamatanID uuid.UUID) (*ref.Kecamatan, error)
 	ValidateKelurahan(ctx context.Context, kecamatanID, kelurahanID uuid.UUID) (*ref.Kelurahan, error)
-	HasActiveLookup(ctx context.Context, parokiID uuid.UUID, category, code string) (bool, error)
 	HasParokiMember(ctx context.Context, parokiID, userID uuid.UUID) (bool, error)
 	GetKeuskupan(ctx context.Context, id uuid.UUID) (*ref.Keuskupan, error)
 	GetParoki(ctx context.Context, parokiID uuid.UUID) (*ref.Paroki, error)

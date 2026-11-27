@@ -1231,6 +1231,45 @@ var (
 			},
 		},
 	}
+	// UmatReferensiColumns holds the columns for the "umat_referensi" table.
+	UmatReferensiColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "paroki_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "category", Type: field.TypeString},
+		{Name: "code", Type: field.TypeString},
+		{Name: "label", Type: field.TypeString},
+		{Name: "sort_order", Type: field.TypeInt, Default: 0},
+		{Name: "active", Type: field.TypeBool, Default: true},
+	}
+	// UmatReferensiTable holds the schema information for the "umat_referensi" table.
+	UmatReferensiTable = &schema.Table{
+		Name:       "umat_referensi",
+		Columns:    UmatReferensiColumns,
+		PrimaryKey: []*schema.Column{UmatReferensiColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "umatreferensi_paroki_id_category_code",
+				Unique:  true,
+				Columns: []*schema.Column{UmatReferensiColumns[4], UmatReferensiColumns[5], UmatReferensiColumns[6]},
+			},
+			{
+				Name:    "umat_referensi_global_category_code",
+				Unique:  true,
+				Columns: []*schema.Column{UmatReferensiColumns[5], UmatReferensiColumns[6]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "paroki_id IS NULL",
+				},
+			},
+			{
+				Name:    "umatreferensi_paroki_id_category_sort_order",
+				Unique:  false,
+				Columns: []*schema.Column{UmatReferensiColumns[4], UmatReferensiColumns[5], UmatReferensiColumns[8]},
+			},
+		},
+	}
 	// UmatSakramenColumns holds the columns for the "umat_sakramen" table.
 	UmatSakramenColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -1609,6 +1648,7 @@ var (
 		ParokiMembersTable,
 		SettingsTable,
 		UmatTable,
+		UmatReferensiTable,
 		UmatSakramenTable,
 		UsersTable,
 		UserAccountsTable,
@@ -1707,6 +1747,9 @@ func init() {
 	UmatTable.ForeignKeys[0].RefTable = KeluargaTable
 	UmatTable.Annotation = &entsql.Annotation{
 		Table: "umat",
+	}
+	UmatReferensiTable.Annotation = &entsql.Annotation{
+		Table: "umat_referensi",
 	}
 	UmatSakramenTable.ForeignKeys[0].RefTable = UmatTable
 	UmatSakramenTable.Annotation = &entsql.Annotation{

@@ -327,11 +327,6 @@ func (s *UmatSuite) TestKeluargaAndUmatCRUD_EncryptionMaskingAndValidations() {
 	s.Created()
 	ling := testutil.DecodeAs[refdomain.LingkunganResponse](s).Data
 
-	s.Request("/api/ref/lookups", http.MethodPost, refdomain.CreateLookupRequest{Category: "status_rumah", Code: "milik_sendiri", Label: "Milik Sendiri"})
-	s.Created()
-	s.Request("/api/ref/lookups", http.MethodPost, refdomain.CreateLookupRequest{Category: "agama", Code: "katolik", Label: "Katolik"})
-	s.Created()
-
 	// Paroki-admin WITHOUT umat:admin -> 403 on /api/umat/keluarga/search.
 	s.Request("/api/umat/keluarga/search", http.MethodPost, domain.SearchKeluargaRequest{})
 	s.Forbidden()
@@ -347,8 +342,12 @@ func (s *UmatSuite) TestKeluargaAndUmatCRUD_EncryptionMaskingAndValidations() {
 	s.Request("/api/umat/search", http.MethodPost, domain.SearchUmatRequest{})
 	s.Forbidden()
 
-	// Login as umat:admin.
+	// Login as umat:admin and create active umat referensi entries.
 	s.loginViaOTP("uadmin@paroki.org")
+	s.Request("/api/umat/referensi", http.MethodPost, domain.CreateUmatReferensiRequest{Category: "status_rumah", Code: "milik_sendiri", Label: "Milik Sendiri"})
+	s.Created()
+	s.Request("/api/umat/referensi", http.MethodPost, domain.CreateUmatReferensiRequest{Category: "agama", Code: "katolik", Label: "Katolik"})
+	s.Created()
 
 	// Create Keluarga with auto-resolved wilayahId from lingkunganId, encrypted nomorKk, civil territory, and lookup.
 	kk1 := "  3174010101900001  "
@@ -782,3 +781,203 @@ func (s *UmatSuite) TestUmatLookup_RBAC_PIIFree_AndDeleteInUseGuard() {
 	s.Request("/api/umat/"+budi.ID.String(), http.MethodDelete, nil)
 	s.NoContent()
 }
+
+func (s *UmatSuite) TestUmatReferensi_CRUD_Merge_RBAC_AndInUseGuard() {
+	ctx := context.Background()
+
+	// Setup keuskupan + paroki + users.
+	s.loginViaOTP("admin@paroki.org")
+	s.Request("/api/ref/keuskupan", http.MethodPost, refdomain.CreateKeuskupanRequest{Kode: "kaj-ref", Nama: "KAJ Ref"})
+	s.Created()
+	keuskupan := testutil.DecodeAs[refdomain.KeuskupanResponse](s).Data
+
+	s.Request("/api/ref/paroki", http.MethodPost, refdomain.CreateParokiRequest{
+		KeuskupanID: keuskupan.ID,
+		Kode:        "p-ref",
+		Nama:        "Paroki Ref",
+	})
+	s.Created()
+	paroki := testutil.DecodeAs[refdomain.ParokiResponse](s).Data
+
+	uAdminUser, err := s.userFeature.EnsureUser(ctx, "umatadmin-ref@paroki.org", "Umat Admin Ref", "", "email", "umatadmin-ref@paroki.org")
+	s.Require().NoError(err)
+	pAdminUser, err := s.userFeature.EnsureUser(ctx, "parokiadmin-ref@paroki.org", "Paroki Admin Ref", "", "email", "parokiadmin-ref@paroki.org")
+	s.Require().NoError(err)
+	regularUser, err := s.userFeature.EnsureUser(ctx, "user-ref@paroki.org", "Regular User Ref", "", "email", "user-ref@paroki.org")
+	s.Require().NoError(err)
+
+	for _, uid := range []uuid.UUID{uAdminUser.ID, pAdminUser.ID, regularUser.ID} {
+		id := uid
+		s.Request("/api/ref/paroki/"+paroki.ID.String()+"/members", http.MethodPost, refdomain.AddParokiMemberRequest{UserID: &id})
+		s.Created()
+	}
+
+	s.Require().NoError(s.enforcer.AssignRole(ctx, authz.UserSubject(uAdminUser.ID), umat.RoleAdmin, authz.ParokiDomain(paroki.ID)))
+	s.Require().NoError(s.enforcer.AssignRole(ctx, authz.UserSubject(pAdminUser.ID), ref.RoleParokiAdmin, authz.ParokiDomain(paroki.ID)))
+
+	// 1. Super-admin creates global referensi; super-admin cannot write parish-scoped referensi (G8).
+	s.SetHeader("X-Paroki-Id", paroki.ID.String())
+	defer s.SetHeader("X-Paroki-Id", "")
+
+	s.Request("/api/umat/referensi", http.MethodPost, domain.CreateUmatReferensiRequest{
+		Category:  "agama",
+		Code:      "katolik",
+		Label:     "Katolik Global",
+		SortOrder: 1,
+		Global:    true,
+	})
+	s.Created()
+	globalAgama := testutil.DecodeAs[domain.UmatReferensiResponse](s).Data
+	s.Nil(globalAgama.ParokiID)
+
+	s.Request("/api/umat/referensi", http.MethodPost, domain.CreateUmatReferensiRequest{
+		Category: "agama",
+		Code:     "kristen",
+		Label:    "Kristen Parish",
+		Global:   false,
+	})
+	s.Forbidden()
+
+	// Invalid category -> 422 VALIDATION_ERROR.
+	s.Request("/api/umat/referensi", http.MethodPost, domain.CreateUmatReferensiRequest{
+		Category: "status_paroki",
+		Code:     "aktif",
+		Label:    "Aktif",
+		Global:   true,
+	})
+	s.UnprocessableEntity()
+
+	// 2. Paroki-admin without umat:admin -> 403 on write.
+	s.loginViaOTP("parokiadmin-ref@paroki.org")
+	s.Request("/api/umat/referensi", http.MethodPost, domain.CreateUmatReferensiRequest{
+		Category: "agama",
+		Code:     "hindu",
+		Label:    "Hindu",
+	})
+	s.Forbidden()
+
+	// 3. Regular user (user:user) -> 200 on search & get, 403 on write.
+	s.loginViaOTP("user-ref@paroki.org")
+	s.Request("/api/umat/referensi/search", http.MethodPost, domain.SearchUmatReferensiRequest{
+		Filter: &domain.UmatReferensiSearchFilter{Category: "agama"},
+	})
+	s.OK()
+	searchRes := testutil.DecodeAs[[]domain.UmatReferensiResponse](s).Data
+	s.Len(searchRes, 1)
+	s.Equal("Katolik Global", searchRes[0].Label)
+
+	s.Request("/api/umat/referensi/"+globalAgama.ID.String(), http.MethodGet, nil)
+	s.OK()
+
+	s.Request("/api/umat/referensi", http.MethodPost, domain.CreateUmatReferensiRequest{
+		Category: "agama",
+		Code:     "buddha",
+		Label:    "Buddha",
+	})
+	s.Forbidden()
+	s.Request("/api/umat/referensi/"+globalAgama.ID.String(), http.MethodPatch, domain.UpdateUmatReferensiRequest{Label: ptrStr("X")})
+	s.Forbidden()
+	s.Request("/api/umat/referensi/"+globalAgama.ID.String(), http.MethodDelete, nil)
+	s.Forbidden()
+
+	// 4. umat:admin cannot write global, CAN write parish-scoped & override global.
+	s.loginViaOTP("umatadmin-ref@paroki.org")
+	s.Request("/api/umat/referensi", http.MethodPost, domain.CreateUmatReferensiRequest{
+		Category: "agama",
+		Code:     "buddha",
+		Label:    "Buddha",
+		Global:   true,
+	})
+	s.Forbidden()
+
+	// Parish override for katolik + new parish-only status_rumah.
+	s.Request("/api/umat/referensi", http.MethodPost, domain.CreateUmatReferensiRequest{
+		Category:  "agama",
+		Code:      "katolik",
+		Label:     "Katolik Paroki",
+		SortOrder: 1,
+	})
+	s.Created()
+	parishAgama := testutil.DecodeAs[domain.UmatReferensiResponse](s).Data
+	s.Require().NotNil(parishAgama.ParokiID)
+	s.Equal(paroki.ID, *parishAgama.ParokiID)
+
+	// Duplicate in same scope -> 409 UMAT_REFERENSI_CONFLICT.
+	s.Request("/api/umat/referensi", http.MethodPost, domain.CreateUmatReferensiRequest{
+		Category: "agama",
+		Code:     "katolik",
+		Label:    "Duplicate",
+	})
+	s.Conflict()
+	s.Equal("UMAT_REFERENSI_CONFLICT", s.GetErrorResponse().Error.Code)
+
+	// Search merge (scope=all) returns parish override; scope=global returns global; scope=paroki returns parish.
+	s.Request("/api/umat/referensi/search", http.MethodPost, domain.SearchUmatReferensiRequest{
+		Filter: &domain.UmatReferensiSearchFilter{Category: "agama", Scope: "all"},
+	})
+	s.OK()
+	merged := testutil.DecodeAs[[]domain.UmatReferensiResponse](s).Data
+	s.Len(merged, 1)
+	s.Equal("Katolik Paroki", merged[0].Label)
+
+	s.Request("/api/umat/referensi/search", http.MethodPost, domain.SearchUmatReferensiRequest{
+		Filter: &domain.UmatReferensiSearchFilter{Category: "agama", Scope: "global"},
+	})
+	s.OK()
+	globList := testutil.DecodeAs[[]domain.UmatReferensiResponse](s).Data
+	s.Len(globList, 1)
+	s.Equal("Katolik Global", globList[0].Label)
+
+	// Invalid category in search -> 422 VALIDATION_ERROR.
+	s.Request("/api/umat/referensi/search", http.MethodPost, domain.SearchUmatReferensiRequest{
+		Filter: &domain.UmatReferensiSearchFilter{Category: "bad_cat"},
+	})
+	s.UnprocessableEntity()
+
+	// Create status_rumah, use it in Keluarga, verify UMAT_IN_USE on delete, then delete Keluarga and verify soft-delete + reactivation.
+	s.Request("/api/umat/referensi", http.MethodPost, domain.CreateUmatReferensiRequest{
+		Category: "status_rumah",
+		Code:     "kontrak",
+		Label:    "Kontrak",
+	})
+	s.Created()
+	rumahRef := testutil.DecodeAs[domain.UmatReferensiResponse](s).Data
+
+	// Create Keluarga with unknown status_rumah -> 422 VALIDATION_ERROR.
+	s.Request("/api/umat/keluarga", http.MethodPost, domain.CreateKeluargaRequest{
+		NamaKeluarga: "Kel Unknown",
+		StatusRumah:  ptrStr("unknown_code"),
+	})
+	s.UnprocessableEntity()
+
+	s.Request("/api/umat/keluarga", http.MethodPost, domain.CreateKeluargaRequest{
+		NamaKeluarga: "Kel Kontrak",
+		StatusRumah:  ptrStr("kontrak"),
+	})
+	s.Created()
+	kelKontrak := testutil.DecodeAs[domain.KeluargaDetailResponse](s).Data
+
+	// Delete status_rumah while in use -> 409 UMAT_IN_USE.
+	s.Request("/api/umat/referensi/"+rumahRef.ID.String(), http.MethodDelete, nil)
+	s.Conflict()
+	s.Equal("UMAT_IN_USE", s.GetErrorResponse().Error.Code)
+
+	// Delete Keluarga -> Delete status_rumah succeeds -> Re-create reactivates same ID.
+	s.Request("/api/umat/keluarga/"+kelKontrak.ID.String(), http.MethodDelete, nil)
+	s.NoContent()
+
+	s.Request("/api/umat/referensi/"+rumahRef.ID.String(), http.MethodDelete, nil)
+	s.NoContent()
+
+	s.Request("/api/umat/referensi", http.MethodPost, domain.CreateUmatReferensiRequest{
+		Category: "status_rumah",
+		Code:     "kontrak",
+		Label:    "Kontrak Reactivated",
+	})
+	s.Created()
+	reactivated := testutil.DecodeAs[domain.UmatReferensiResponse](s).Data
+	s.Equal(rumahRef.ID, reactivated.ID)
+	s.Equal("Kontrak Reactivated", reactivated.Label)
+}
+
+func ptrStr(v string) *string { return &v }

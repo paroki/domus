@@ -1293,6 +1293,21 @@ func (s *RefFeatureSuite) TestParokiMember_LiturgiAdminDelegationAndRefInUse() {
 	s.Equal("REF_IN_USE", s.GetErrorResponse().Error.Code)
 
 	s.Require().NoError(s.client.LiturgiMinistry.DeleteOneID(ministry.ID).Exec(ctx))
+
+	// HasParokiChildren also blocks deleting paroki when umat_referensi row exists -> 409 REF_IN_USE.
+	umatRef, err := s.client.UmatReferensi.Create().
+		SetParokiID(paroki.ID).
+		SetCategory("agama").
+		SetCode("katolik").
+		SetLabel("Katolik").
+		Save(ctx)
+	s.Require().NoError(err)
+
+	s.Request("/api/ref/paroki/"+paroki.ID.String(), http.MethodDelete, nil)
+	s.Conflict()
+	s.Equal("REF_IN_USE", s.GetErrorResponse().Error.Code)
+
+	s.Require().NoError(s.client.UmatReferensi.DeleteOneID(umatRef.ID).Exec(ctx))
 	s.Request("/api/ref/paroki/"+paroki.ID.String(), http.MethodDelete, nil)
 	s.NoContent()
 }

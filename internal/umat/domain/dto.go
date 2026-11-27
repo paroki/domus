@@ -10,10 +10,33 @@ import (
 
 // Feature-owned Casbin roles and resource permissions.
 var (
-	RoleAdmin    = authz.Role("umat", "admin")
-	PermKeluarga = authz.Permission("umat", "keluarga")
-	PermUmat     = authz.Permission("umat", "umat")
+	RoleAdmin     = authz.Role("umat", "admin")
+	PermKeluarga  = authz.Permission("umat", "keluarga")
+	PermUmat      = authz.Permission("umat", "umat")
+	PermReferensi = authz.Permission("umat", "referensi")
 )
+
+// AllowedReferensiCategories is the fixed set of 12 Data Umat lookup categories.
+var AllowedReferensiCategories = map[string]struct{}{
+	"agama":             {},
+	"golongan_darah":    {},
+	"suku":              {},
+	"hubungan_keluarga": {},
+	"status_pernikahan": {},
+	"status_rumah":      {},
+	"status_ekonomi":    {},
+	"pendidikan":        {},
+	"pekerjaan":         {},
+	"profesi":           {},
+	"disabilitas":       {},
+	"aktivitas_sosial":  {},
+}
+
+// IsAllowedReferensiCategory reports whether category is one of the 12 allowed Data Umat categories.
+func IsAllowedReferensiCategory(category string) bool {
+	_, ok := AllowedReferensiCategories[category]
+	return ok
+}
 
 // MaskPII deterministically masks a sensitive identifier (e.g. NIK or Nomor KK) for list/summary responses.
 func MaskPII(plain string) string {
@@ -385,4 +408,50 @@ type LookupUmatRequest struct {
 	WilayahID    *uuid.UUID `json:"wilayahId,omitempty"`
 	LingkunganID *uuid.UUID `json:"lingkunganId,omitempty"`
 	Limit        int        `json:"limit,omitempty" validate:"omitempty,min=1,max=50"`
+}
+
+// UmatReferensiResponse is the public API representation of a UmatReferensi.
+type UmatReferensiResponse struct {
+	ID        uuid.UUID  `json:"id"`
+	ParokiID  *uuid.UUID `json:"parokiId,omitempty"`
+	Category  string     `json:"category"`
+	Code      string     `json:"code"`
+	Label     string     `json:"label"`
+	SortOrder int        `json:"sortOrder"`
+	Active    bool       `json:"active"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt time.Time  `json:"updatedAt"`
+}
+
+// UmatReferensiSearchFilter filters umat referensi search results.
+type UmatReferensiSearchFilter struct {
+	Category string `json:"category,omitempty"`
+	Active   *bool  `json:"active,omitempty"`
+	Scope    string `json:"scope,omitempty" validate:"omitempty,oneof=all global paroki"`
+}
+
+// SearchUmatReferensiRequest searches global and/or paroki umat referensi entries.
+type SearchUmatReferensiRequest struct {
+	Q      string                     `json:"q,omitempty"`
+	Filter *UmatReferensiSearchFilter `json:"filter,omitempty"`
+	Cursor string                     `json:"cursor,omitempty"`
+	Limit  int                        `json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
+}
+
+// CreateUmatReferensiRequest creates a global or paroki-scoped UmatReferensi.
+type CreateUmatReferensiRequest struct {
+	Category  string `json:"category" validate:"required"`
+	Code      string `json:"code" validate:"required"`
+	Label     string `json:"label" validate:"required,min=1"`
+	SortOrder int    `json:"sortOrder,omitempty"`
+	Global    bool   `json:"global,omitempty"`
+}
+
+// UpdateUmatReferensiRequest updates an existing UmatReferensi.
+type UpdateUmatReferensiRequest struct {
+	Category  *string `json:"category,omitempty"`
+	Code      *string `json:"code,omitempty"`
+	Label     *string `json:"label,omitempty" validate:"omitempty,min=1"`
+	SortOrder *int    `json:"sortOrder,omitempty"`
+	Active    *bool   `json:"active,omitempty"`
 }

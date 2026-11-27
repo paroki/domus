@@ -20,6 +20,7 @@ import (
 	"github.com/paroki/domus/ent/paroki"
 	"github.com/paroki/domus/ent/parokimember"
 	"github.com/paroki/domus/ent/umat"
+	"github.com/paroki/domus/ent/umatreferensi"
 	"github.com/paroki/domus/ent/umatsakramen"
 	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/wilayah"
@@ -337,6 +338,9 @@ func (r *Repository) HasParokiChildren(ctx context.Context, parokiID uuid.UUID) 
 		return has, err
 	}
 	if has, err := r.client.Umat.Query().Where(umat.ParokiIDEQ(parokiID), umat.DeletedAtIsNil()).Exist(ctx); err != nil || has {
+		return has, err
+	}
+	if has, err := r.client.UmatReferensi.Query().Where(umatreferensi.ParokiIDEQ(parokiID), umatreferensi.DeletedAtIsNil()).Exist(ctx); err != nil || has {
 		return has, err
 	}
 	if has, err := r.client.LiturgiMinistry.Query().Where(liturgiministry.ParokiIDEQ(parokiID)).Exist(ctx); err != nil || has {

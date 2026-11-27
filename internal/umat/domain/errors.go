@@ -13,6 +13,8 @@ var (
 	ErrUserAlreadyLinked = errx.Conflict("UMAT_USER_ALREADY_LINKED", "User is already linked to another umat in this paroki.")
 	ErrInUse             = errx.Conflict("UMAT_IN_USE", "Resource is still in use and cannot be deleted.")
 	ErrSakramenConflict  = errx.Conflict("UMAT_SAKRAMEN_CONFLICT", "Sakramen of this type already exists for this umat.")
+	ErrReferensiNotFound = errx.NotFound("UMAT_REFERENSI_NOT_FOUND", "Umat referensi not found.")
+	ErrReferensiConflict = errx.Conflict("UMAT_REFERENSI_CONFLICT", "Code is already in use for this category and scope.")
 )
 
 // ValidationError constructs a 422 VALIDATION_ERROR domain error for a single field.
