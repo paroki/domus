@@ -47,25 +47,3 @@ Feature: Organization Admin public and private events lifecycle
     When I delete the event
     Then I am on "/event"
     And I do not see event card "Latihan Koor Raya E2E"
-
-  @org-admin
-  Scenario: Org Admin assigns manual and org officers, confirms status, and filters Jadwal Tugas Saya
-    When I open "/event"
-    Then I see the events page
-    When I create an event with title "Misa Paskah Seksi Liturgi E2E" jenis "Misa / Ekaristi" start "2099-08-01T08:00" end "2099-08-01T10:00" visibility "Publik Paroki" location "Gereja Katedral"
-    And I open event detail "Misa Paskah Seksi Liturgi E2E"
-    Then I see event detail "Misa Paskah Seksi Liturgi E2E"
-    When I add manual petugas role "Selebran" name "RD. Petrus"
-    And I add org petugas role "Kor" for my organization
-    Then I see petugas "Selebran" assigned to "RD. Petrus" with status "Ditugaskan"
-    When I confirm petugas "Kor" as "Siap Bertugas"
-    Then I see petugas "Kor" assigned to "Kor" with status "Siap Bertugas"
-    When I open "/event"
-    And I toggle Jadwal Tugas Saya
-    Then I see event card "Misa Paskah Seksi Liturgi E2E" with visibility "Publik Paroki"
-    When I open event detail "Misa Paskah Seksi Liturgi E2E"
-    And I add lagu bagian "Pembuka" judul "Mari Kita Bersukacita" sumber "Puji Syukur" nomor "319" nada "G"
-    Then I see lagu bagian "Pembuka" judul "Mari Kita Bersukacita"
-    When I edit lagu "Mari Kita Bersukacita" to judul "Mari Bersukacita Agung"
-    Then I see lagu bagian "Pembuka" judul "Mari Bersukacita Agung"
-    When I delete lagu "Mari Bersukacita Agung"

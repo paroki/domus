@@ -21,8 +21,6 @@ import {
   useEventRSVPs,
   useEventTypeLookups,
 } from "../api/queries";
-import { LaguSection } from "../components/LaguSection";
-import { PetugasSection } from "../components/PetugasSection";
 import {
   computeEventLifecycle,
   DEFAULT_PAROKI_TIMEZONE,
@@ -478,20 +476,6 @@ export default function EventDetailPage() {
           </form>
         </Card>
       )}
-
-      <PetugasSection
-        eventId={eventId}
-        parokiId={me?.activeParokiId ?? ""}
-        orgId={ev.orgId}
-        canManage={canManage}
-        petugas={ev.petugas ?? []}
-      />
-
-      <LaguSection
-        eventId={eventId}
-        canManage={canManage}
-        lagu={ev.lagu ?? []}
-      />
 
       {!canRsvp ? (
         <Card>
