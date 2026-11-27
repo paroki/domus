@@ -11,8 +11,8 @@ export default function AppShell() {
     <div
       className={
         isAgentWorkspace
-          ? "flex h-dvh flex-col overflow-hidden"
-          : "flex min-h-screen flex-col"
+          ? "flex h-dvh flex-col overflow-hidden pb-[env(safe-area-inset-bottom)]"
+          : "flex min-h-screen flex-col pb-[env(safe-area-inset-bottom)]"
       }
     >
       <Header />

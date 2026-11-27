@@ -15,7 +15,7 @@ const nextTheme: Record<Theme, Theme> = {
 };
 
 const btn =
-  "flex size-10 items-center justify-center rounded-full text-fg hover:bg-fg/10";
+  "flex size-11 items-center justify-center rounded-full text-fg hover:bg-fg/10";
 
 export function ThemeToggle() {
   const { t } = useTranslation();

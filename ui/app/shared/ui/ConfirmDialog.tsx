@@ -48,7 +48,7 @@ export function ConfirmDialog({
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={descId}
-        className="w-full max-w-md p-6 shadow-xl"
+        className="w-full max-w-md p-4 shadow-xl sm:p-6"
       >
         <h2 id={titleId} className="text-lg font-bold text-fg">
           {title}
@@ -56,14 +56,20 @@ export function ConfirmDialog({
         <p id={descId} className="mt-2 text-sm text-muted">
           {description}
         </p>
-        <div className="mt-6 flex justify-end gap-2">
-          <Button variant="outline" disabled={pending} onClick={onCancel}>
+        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button
+            variant="outline"
+            disabled={pending}
+            onClick={onCancel}
+            className="w-full sm:w-auto"
+          >
             {cancelLabel}
           </Button>
           <Button
             variant={confirmVariant}
             disabled={pending}
             onClick={onConfirm}
+            className="w-full sm:w-auto"
           >
             {confirmLabel}
           </Button>

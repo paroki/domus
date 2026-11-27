@@ -75,7 +75,7 @@ export function Header() {
   const initials = getInitials(me?.name);
 
   return (
-    <header className="flex min-h-15 flex-wrap items-center gap-x-4 gap-y-2 border-b border-line bg-surface px-4 py-2 sm:px-6">
+    <header className="flex min-h-15 flex-wrap items-center gap-x-4 gap-y-2 border-b border-line bg-surface px-4 py-2 pt-[env(safe-area-inset-top)] sm:px-6">
       <Link
         to="/"
         aria-label={t("header.homeLabel")}
@@ -94,7 +94,7 @@ export function Header() {
               aria-expanded={parokiOpen}
               aria-haspopup="menu"
               onClick={() => setParokiOpen((v) => !v)}
-              className="inline-flex h-9 max-w-44 items-center gap-1.5 rounded-full border border-line bg-canvas px-3 text-xs font-semibold text-fg hover:bg-fg/8"
+              className="inline-flex min-h-11 max-w-44 items-center gap-1.5 rounded-full border border-line bg-canvas px-3 text-xs font-semibold text-fg hover:bg-fg/8"
             >
               <Church aria-hidden className="size-3.5 shrink-0 text-muted" />
               <span className="truncate">
@@ -129,7 +129,7 @@ export function Header() {
                           activeParokiId: p.id,
                         });
                       }}
-                      className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm hover:bg-fg/8 ${
+                      className={`flex min-h-11 w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm hover:bg-fg/8 ${
                         p.id === me.activeParokiId
                           ? "font-semibold text-primary"
                           : "text-fg"
@@ -152,7 +152,7 @@ export function Header() {
             aria-expanded={open}
             aria-haspopup="menu"
             onClick={() => setOpen((v) => !v)}
-            className="flex size-10 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-bold text-on-primary transition-opacity hover:opacity-90"
+            className="flex size-11 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-bold text-on-primary transition-opacity hover:opacity-90"
           >
             {me?.avatarUrl ? (
               <img
@@ -185,7 +185,7 @@ export function Header() {
                 to="/me"
                 role="menuitem"
                 onClick={() => setOpen(false)}
-                className="mt-1 flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-fg no-underline hover:bg-fg/8"
+                className="mt-1 flex min-h-11 items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-fg no-underline hover:bg-fg/8"
               >
                 <Shield aria-hidden className="size-4 text-muted" />
                 {t("header.profileSecurity")}
@@ -195,7 +195,7 @@ export function Header() {
                 role="menuitem"
                 disabled={logout.isPending}
                 onClick={handleLogout}
-                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
+                className="flex min-h-11 w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
               >
                 <LogOut aria-hidden className="size-4" />
                 {t("header.logout")}

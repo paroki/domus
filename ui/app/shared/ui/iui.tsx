@@ -51,7 +51,11 @@ export function InductivePageHeader({
         <h1 className="text-2xl font-bold text-fg">{title}</h1>
         <p className="text-sm text-muted">{subtitle}</p>
       </div>
-      {action ? <div className="shrink-0">{action}</div> : null}
+      {action ? (
+        <div className="w-full shrink-0 sm:w-auto [&>*]:w-full sm:[&>*]:w-auto">
+          {action}
+        </div>
+      ) : null}
     </header>
   );
 }
@@ -76,7 +80,7 @@ export function InductiveStepCard({
   return (
     <Link
       to={to}
-      className="group flex items-start gap-4 rounded-xl border border-line bg-surface p-5 text-left text-fg no-underline transition-colors hover:border-primary/50 hover:bg-surface-2/40"
+      className="group flex items-start gap-4 rounded-xl border border-line bg-surface p-4 text-left text-fg no-underline transition-colors hover:border-primary/50 hover:bg-surface-2/40 sm:p-5"
     >
       <span
         className={`flex size-12 shrink-0 items-center justify-center rounded-xl text-white ${plateBg[plate]}`}
@@ -129,7 +133,7 @@ export function InductiveFormSection({
   children: ReactNode;
 }) {
   return (
-    <Card className="flex flex-col gap-4 p-6">
+    <Card className="flex flex-col gap-4 p-4 sm:p-6">
       <div>
         <h2 className="text-base font-semibold text-fg">{title}</h2>
         {description ? (
@@ -151,7 +155,7 @@ export function InductiveDangerZone({
   action: ReactNode;
 }) {
   return (
-    <Card className="flex flex-col justify-between gap-4 border-danger/30 bg-danger-bg/40 p-6 sm:flex-row sm:items-center">
+    <Card className="flex flex-col justify-between gap-4 border-danger/30 bg-danger-bg/40 p-4 sm:flex-row sm:items-center sm:p-6">
       <div className="flex items-start gap-3">
         <AlertTriangle
           aria-hidden
@@ -162,7 +166,9 @@ export function InductiveDangerZone({
           <p className="mt-0.5 text-sm text-muted">{description}</p>
         </div>
       </div>
-      <div className="shrink-0">{action}</div>
+      <div className="w-full shrink-0 sm:w-auto [&>*]:w-full sm:[&>*]:w-auto">
+        {action}
+      </div>
     </Card>
   );
 }
@@ -179,7 +185,7 @@ export function InductiveEmptyState({
   action?: ReactNode;
 }) {
   return (
-    <Card className="flex flex-col items-center gap-3 p-10 text-center">
+    <Card className="flex flex-col items-center gap-3 p-6 text-center sm:p-10">
       {Icon ? (
         <span className="flex size-12 items-center justify-center rounded-full bg-surface-2 text-muted">
           <Icon aria-hidden className="size-6" />
@@ -189,7 +195,11 @@ export function InductiveEmptyState({
         <h2 className="text-base font-semibold text-fg">{title}</h2>
         <p className="max-w-md text-sm text-muted">{description}</p>
       </div>
-      {action ? <div className="mt-1">{action}</div> : null}
+      {action ? (
+        <div className="mt-1 w-full sm:w-auto [&>*]:w-full sm:[&>*]:w-auto">
+          {action}
+        </div>
+      ) : null}
     </Card>
   );
 }

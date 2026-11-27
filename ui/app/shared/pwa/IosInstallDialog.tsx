@@ -34,7 +34,7 @@ export function IosInstallDialog({ open, onClose }: IosInstallDialogProps) {
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={descId}
-        className="w-full max-w-md p-6 shadow-xl"
+        className="w-full max-w-md p-4 shadow-xl sm:p-6"
       >
         <div className="flex items-start justify-between gap-3">
           <h2 id={titleId} className="text-lg font-bold text-fg">
@@ -45,7 +45,7 @@ export function IosInstallDialog({ open, onClose }: IosInstallDialogProps) {
             variant="ghost"
             aria-label={t("pwa.closeLabel")}
             onClick={onClose}
-            className="size-8 p-0"
+            className="size-11 p-0"
           >
             <X aria-hidden className="size-4" />
           </Button>
@@ -80,7 +80,7 @@ export function IosInstallDialog({ open, onClose }: IosInstallDialogProps) {
         </ol>
 
         <div className="mt-6 flex justify-end">
-          <Button type="button" onClick={onClose}>
+          <Button type="button" onClick={onClose} className="w-full sm:w-auto">
             {t("pwa.iosGotIt")}
           </Button>
         </div>

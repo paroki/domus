@@ -36,9 +36,9 @@ export function PwaInstallBanner() {
   return (
     <>
       {visible && (
-        <div className="fixed inset-x-0 bottom-4 z-40 mx-auto max-w-lg px-4">
+        <div className="fixed inset-x-0 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 mx-auto max-w-lg px-4">
           <Card className="flex items-center justify-between gap-3 border-primary/20 p-3.5 shadow-lg">
-            <div className="flex items-center gap-3">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
               <img
                 src="/logo-192.png"
                 alt=""
@@ -63,7 +63,7 @@ export function PwaInstallBanner() {
                 variant="ghost"
                 aria-label={t("pwa.dismissLabel")}
                 onClick={dismissBanner}
-                className="size-9 p-0"
+                className="size-11 p-0"
               >
                 <X aria-hidden className="size-4" />
               </Button>
