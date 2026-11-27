@@ -336,6 +336,36 @@ export class UsersPage extends BasePage {
     }
   }
 
+  async grantLiturgiAdmin(parokiName: string): Promise<void> {
+    const row = this.parokiMembershipRow(parokiName);
+    await row.getByRole("button", { name: "Jadikan Admin Liturgi" }).click();
+    await this.expectLiturgiAdminBadge(parokiName, true);
+  }
+
+  async revokeLiturgiAdmin(parokiName: string): Promise<void> {
+    const row = this.parokiMembershipRow(parokiName);
+    await row.getByRole("button", { name: "Cabut Admin Liturgi" }).click();
+    await this.page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Cabut Admin Liturgi" })
+      .click();
+    await this.expectLiturgiAdminBadge(parokiName, false);
+  }
+
+  async expectLiturgiAdminBadge(
+    parokiName: string,
+    visible: boolean,
+  ): Promise<void> {
+    const badge = this.parokiMembershipRow(parokiName).locator("span", {
+      hasText: /^Admin Liturgi$/,
+    });
+    if (visible) {
+      await badge.waitFor({ state: "visible", timeout: 10_000 });
+    } else {
+      await badge.waitFor({ state: "detached", timeout: 10_000 });
+    }
+  }
+
   async addToOrg(input: {
     orgName: string;
     roleLabel: "Admin Organisasi" | "Anggota";

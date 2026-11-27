@@ -12,6 +12,12 @@ Feature: Paroki Admin parish-level events lifecycle
     When I open event detail "Misa Natal Paroki E2E"
     Then I see event detail "Misa Natal Paroki E2E"
     And I see event detail timezone "WITA"
+    When I edit the event jenis to "Misa / Ekaristi"
+    Then I see event liturgi shortcut button
+    When I click event liturgi shortcut button
+    Then I see liturgi detail "Misa Natal Paroki E2E"
+    When I open "/event"
+    And I open event detail "Misa Natal Paroki E2E"
     When I edit the event to title "Misa Natal Agung Paroki E2E" location "Gereja Utama" visibility "Publik Paroki"
     Then I see event detail "Misa Natal Agung Paroki E2E"
     When I delete the event

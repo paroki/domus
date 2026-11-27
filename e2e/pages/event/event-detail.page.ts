@@ -216,4 +216,17 @@ export class EventDetailPage extends BasePage {
       notGoing: 0,
     });
   }
+
+  async expectLiturgiShortcutVisible(): Promise<void> {
+    await this.page
+      .getByRole("link", { name: "Lihat Petugas & Lagu Liturgi" })
+      .waitFor({ state: "visible", timeout: 10_000 });
+  }
+
+  async clickLiturgiShortcut(): Promise<void> {
+    await this.page
+      .getByRole("link", { name: "Lihat Petugas & Lagu Liturgi" })
+      .click();
+    await this.page.waitForURL(/\/liturgi\/[^/]+$/, { timeout: 10_000 });
+  }
 }

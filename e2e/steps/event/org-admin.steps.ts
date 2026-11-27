@@ -248,3 +248,14 @@ When(
 When("I delete the event", async function (this: DomusWorld) {
   await this.pages.event.detail.deleteEvent();
 });
+
+Then("I see event liturgi shortcut button", async function (this: DomusWorld) {
+  await this.pages.event.detail.expectLiturgiShortcutVisible();
+});
+
+When(
+  "I click event liturgi shortcut button",
+  async function (this: DomusWorld) {
+    await this.pages.event.detail.clickLiturgiShortcut();
+  },
+);
