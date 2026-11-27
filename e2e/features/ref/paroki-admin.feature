@@ -53,6 +53,9 @@ Feature: Paroki Admin settings, profile, wilayah, and lookups
 
   @paroki-admin
   Scenario: Paroki Admin views read-only global lookups and manages paroki-scoped lookups
+    When I open "/settings/lookups"
+    Then I do not see lookup category "Agama" on settings lookups
+    And I do not see lookup category "Golongan Darah" on settings lookups
     Given a global lookup exists in category "status_paroki" with code "global-ro-e2e" and label "Status Global E2E"
     When I open "/settings/lookups?category=status_paroki"
     Then I see the lookups page

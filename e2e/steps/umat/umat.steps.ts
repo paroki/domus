@@ -263,3 +263,97 @@ When(
 When("I delete the umat", async function (this: DomusWorld) {
   await this.pages.umat.deleteUmat();
 });
+
+// --- Kamus Referensi Umat ---
+
+When(
+  "I create a paroki umat referensi in category {string} with code {string} and label {string}",
+  async function (
+    this: DomusWorld,
+    category: string,
+    code: string,
+    label: string,
+  ) {
+    await this.pages.umat.createReferensi({ category, code, label });
+  },
+);
+
+Then(
+  "I see umat referensi {string} with scope {string}",
+  async function (this: DomusWorld, label: string, scopeLabel: string) {
+    await this.pages.umat.expectReferensiVisible(label, scopeLabel);
+  },
+);
+
+Then(
+  "the {string} picker on {string} includes {string}",
+  async function (
+    this: DomusWorld,
+    fieldLabel: string,
+    path: string,
+    optionLabel: string,
+  ) {
+    await this.pages.umat.expectPickerHasOption(path, fieldLabel, optionLabel);
+  },
+);
+
+When(
+  "I create an umat via wizard named {string} with nik {string} and agama {string}",
+  async function (
+    this: DomusWorld,
+    nama: string,
+    nik: string,
+    agamaLabel: string,
+  ) {
+    await this.pages.umat.createUmatViaWizard({ nama, nik, agamaLabel });
+  },
+);
+
+When(
+  "I try to delete umat referensi {string}",
+  async function (this: DomusWorld, label: string) {
+    await this.pages.umat.tryDeleteReferensi(label);
+  },
+);
+
+When(
+  "I edit umat referensi {string} to label {string}",
+  async function (this: DomusWorld, currentLabel: string, newLabel: string) {
+    await this.pages.umat.editReferensi(currentLabel, { label: newLabel });
+  },
+);
+
+When(
+  "I toggle active state for umat referensi {string}",
+  async function (this: DomusWorld, label: string) {
+    await this.pages.umat.toggleReferensiActive(label);
+  },
+);
+
+When(
+  "I delete umat referensi {string}",
+  async function (this: DomusWorld, label: string) {
+    await this.pages.umat.deleteReferensi(label);
+  },
+);
+
+Then(
+  "I do not see umat referensi {string}",
+  async function (this: DomusWorld, label: string) {
+    await this.pages.umat.expectReferensiNotVisible(label);
+  },
+);
+
+Then(
+  "umat referensi list is read-only without write controls",
+  async function (this: DomusWorld) {
+    await this.pages.umat.expectReferensiListReadOnly();
+  },
+);
+
+Then(
+  "I do not see lookup category {string} on settings lookups",
+  async function (this: DomusWorld, categoryLabel: string) {
+    await this.pages.ref.lookups.expectCategoryNotVisible(categoryLabel);
+  },
+);

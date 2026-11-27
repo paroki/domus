@@ -111,6 +111,7 @@ export class UmatPage extends BasePage {
     nik?: string;
     jenisKelamin?: "Pria" | "Wanita";
     keluargaName?: string;
+    agamaLabel?: string;
     telepon?: string;
     email?: string;
     jurusan?: string;
@@ -128,6 +129,13 @@ export class UmatPage extends BasePage {
       await this.page
         .getByLabel("Jenis Kelamin *")
         .selectOption({ label: input.jenisKelamin });
+    }
+    if (input.agamaLabel) {
+      const agamaSelect = this.page.getByLabel("Agama");
+      await agamaSelect
+        .locator("option", { hasText: input.agamaLabel })
+        .waitFor({ state: "attached", timeout: 10_000 });
+      await agamaSelect.selectOption({ label: input.agamaLabel });
     }
     if (input.keluargaName) {
       const select = this.page.getByLabel("Kartu Keluarga");
@@ -300,5 +308,127 @@ export class UmatPage extends BasePage {
       .getByRole("button", { name: "Hapus Umat" })
       .click();
     await this.expectDirectoryLoaded();
+  }
+
+  // --- Kamus Referensi Umat ---
+
+  async createReferensi(input: {
+    category: string;
+    code: string;
+    label: string;
+    sortOrder?: number;
+  }): Promise<void> {
+    await this.goto(
+      `/umat/referensi/new?category=${encodeURIComponent(input.category)}`,
+    );
+    await this.page.locator("#referensi-category").selectOption(input.category);
+    await this.page.locator("#referensi-label").fill(input.label);
+    await this.page.locator("#referensi-code").fill(input.code);
+    if (input.sortOrder !== undefined) {
+      await this.page.locator("#referensi-sort").fill(String(input.sortOrder));
+    }
+    await this.page.getByRole("button", { name: "Simpan Item" }).click();
+    await this.page.waitForURL(/\/umat\/referensi\?category=/, {
+      timeout: 10_000,
+    });
+  }
+
+  async expectReferensiVisible(
+    label: string,
+    scopeLabel: string,
+  ): Promise<void> {
+    const card = this.page
+      .locator("div.rounded-xl")
+      .filter({ has: this.page.getByText(label, { exact: true }) })
+      .first();
+    await card.waitFor({ state: "visible", timeout: 10_000 });
+    const scopeText = await card.getByText(scopeLabel, { exact: true }).count();
+    assert.ok(scopeText > 0, `Expected scope badge "${scopeLabel}"`);
+  }
+
+  async expectReferensiNotVisible(label: string): Promise<void> {
+    await this.page
+      .getByText(label, { exact: true })
+      .waitFor({ state: "detached", timeout: 10_000 });
+  }
+
+  async expectPickerHasOption(
+    path: string,
+    fieldLabel: string,
+    optionLabel: string,
+  ): Promise<void> {
+    await this.goto(path);
+    const select = this.page.getByLabel(fieldLabel);
+    await select
+      .locator("option", { hasText: optionLabel })
+      .waitFor({ state: "attached", timeout: 10_000 });
+  }
+
+  async editReferensi(
+    currentLabel: string,
+    input: { label: string; sortOrder?: number },
+  ): Promise<void> {
+    const card = this.page
+      .locator("div.rounded-xl")
+      .filter({ has: this.page.getByText(currentLabel, { exact: true }) })
+      .first();
+    await card.getByRole("link", { name: "Ubah" }).click();
+    await this.page.locator("#referensi-label").fill(input.label);
+    if (input.sortOrder !== undefined) {
+      await this.page.locator("#referensi-sort").fill(String(input.sortOrder));
+    }
+    await this.page.getByRole("button", { name: "Simpan Item" }).click();
+    await this.page.waitForURL(/\/umat\/referensi\?category=/, {
+      timeout: 10_000,
+    });
+  }
+
+  async toggleReferensiActive(label: string): Promise<void> {
+    const card = this.page
+      .locator("div.rounded-xl")
+      .filter({ has: this.page.getByText(label, { exact: true }) })
+      .first();
+    await card.getByRole("link", { name: "Ubah" }).click();
+    await this.page.getByLabel("Item Aktif").click();
+    await this.page.getByRole("button", { name: "Simpan Item" }).click();
+    await this.page.waitForURL(/\/umat\/referensi\?category=/, {
+      timeout: 10_000,
+    });
+  }
+
+  async tryDeleteReferensi(label: string): Promise<void> {
+    const card = this.page
+      .locator("div.rounded-xl")
+      .filter({ has: this.page.getByText(label, { exact: true }) })
+      .first();
+    await card.getByRole("link", { name: "Ubah" }).click();
+    await this.page.getByRole("button", { name: "Hapus Item" }).click();
+    await this.page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Ya, Hapus" })
+      .click();
+  }
+
+  async deleteReferensi(label: string): Promise<void> {
+    await this.tryDeleteReferensi(label);
+    await this.page.waitForURL(/\/umat\/referensi\?category=/, {
+      timeout: 10_000,
+    });
+  }
+
+  async expectReferensiListReadOnly(): Promise<void> {
+    await this.page
+      .getByRole("heading", { name: /Kamus:/ })
+      .waitFor({ state: "visible", timeout: 10_000 });
+    assert.equal(
+      await this.page.getByRole("link", { name: "Tambah Item" }).count(),
+      0,
+      "Expected plain user not to see Tambah Item link",
+    );
+    assert.equal(
+      await this.page.getByRole("link", { name: "Ubah" }).count(),
+      0,
+      "Expected plain user not to see Ubah links",
+    );
   }
 }

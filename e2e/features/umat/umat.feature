@@ -42,3 +42,27 @@ Feature: Umat administration, Kartu Keluarga, 3-step Umat wizard, and Sakramen
     And I open keluarga detail for "Keluarga E2E"
     And I delete the Kartu Keluarga
     Then I am on "/umat/keluarga"
+
+  @paroki-admin
+  Scenario: Admin Data Umat manages Kamus Referensi Umat, /umat/new picker, UMAT_IN_USE, and plain user read-only
+    Given I am signed in as umat admin on the active paroki
+    When I create a paroki umat referensi in category "agama" with code "katolik-e2e" and label "Katolik E2E"
+    Then I see umat referensi "Katolik E2E" with scope "Paroki"
+    And the "Agama" picker on "/umat/new" includes "Katolik E2E"
+    When I create an umat via wizard named "Budi Ref E2E" with nik "3174010101906666" and agama "Katolik E2E"
+    And I open "/umat/referensi?category=agama"
+    And I try to delete umat referensi "Katolik E2E"
+    Then I see umat error "Item referensi masih digunakan oleh data umat atau keluarga dan tidak dapat dihapus."
+    When I open "/umat"
+    And I open umat detail for "Budi Ref E2E"
+    And I delete the umat
+    And I open "/umat/referensi?category=agama"
+    And I edit umat referensi "Katolik E2E" to label "Katolik E2E Updated"
+    Then I see umat referensi "Katolik E2E Updated" with scope "Paroki"
+    When I toggle active state for umat referensi "Katolik E2E Updated"
+    And I delete umat referensi "Katolik E2E Updated"
+    Then I do not see umat referensi "Katolik E2E Updated"
+    Given a paroki member "umat-ro-e2e@domus.test" named "Member RO E2E" exists in the active paroki
+    When I sign in as "umat-ro-e2e@domus.test" on the active paroki
+    And I open "/umat/referensi?category=agama"
+    Then umat referensi list is read-only without write controls

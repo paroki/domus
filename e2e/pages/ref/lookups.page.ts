@@ -113,4 +113,13 @@ export class LookupsPage extends BasePage {
       `Expected read-only lookup "${label}" to have no edit link`,
     );
   }
+
+  async expectCategoryNotVisible(label: string): Promise<void> {
+    await this.expectLoaded();
+    assert.equal(
+      await this.page.getByText(label, { exact: true }).count(),
+      0,
+      `Expected category "${label}" not to be listed on /settings/lookups`,
+    );
+  }
 }
