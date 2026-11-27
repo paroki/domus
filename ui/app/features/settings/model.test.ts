@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  AGENT_MODEL_KEYS,
+  AGENT_PROMPT_KEYS,
   buildClearValues,
   buildProviderModelOptions,
   buildSettingsDraft,
@@ -169,4 +171,26 @@ test("buildProviderModelOptions and parseModelSelection work", () => {
     modelId: "gemini-2.5-flash",
   });
   assert.deepEqual(parseModelSelection(""), { providerId: "", modelId: "" });
+});
+
+test("AGENT_MODEL_KEYS and AGENT_PROMPT_KEYS include yosef, gregorius, and sesilia", () => {
+  assert.deepEqual(AGENT_MODEL_KEYS, [
+    "agent.model.gabriel",
+    "agent.model.mikael",
+    "agent.model.rafael",
+    "agent.model.yosef",
+    "agent.model.gregorius",
+    "agent.model.sesilia",
+    "agent.model.memory_extractor",
+    "agent.model.embedding",
+  ]);
+  assert.deepEqual(AGENT_PROMPT_KEYS, [
+    "agent.prompt.gabriel",
+    "agent.prompt.mikael",
+    "agent.prompt.rafael",
+    "agent.prompt.yosef",
+    "agent.prompt.gregorius",
+    "agent.prompt.sesilia",
+    "agent.prompt.memory_extractor",
+  ]);
 });

@@ -113,6 +113,9 @@ export const AGENT_MODEL_KEYS = [
   "agent.model.gabriel",
   "agent.model.mikael",
   "agent.model.rafael",
+  "agent.model.yosef",
+  "agent.model.gregorius",
+  "agent.model.sesilia",
   "agent.model.memory_extractor",
   "agent.model.embedding",
 ] as const;
@@ -121,6 +124,9 @@ export const AGENT_PROMPT_KEYS = [
   "agent.prompt.gabriel",
   "agent.prompt.mikael",
   "agent.prompt.rafael",
+  "agent.prompt.yosef",
+  "agent.prompt.gregorius",
+  "agent.prompt.sesilia",
   "agent.prompt.memory_extractor",
 ] as const;
 

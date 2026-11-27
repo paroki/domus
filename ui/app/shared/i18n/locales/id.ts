@@ -857,6 +857,10 @@ const id = {
     starterPrompt1: "Jadwal kegiatan paroki minggu ini",
     starterPrompt2: "Daftar organisasi & pengurus aktif",
     starterPrompt3: "Catat preferensi saya",
+    questionSubmitSelected: "Kirim Pilihan",
+    dockOpenFull: "Buka Penuh",
+    dockMinimize: "Ciutkan",
+    dockQuickPlaceholder: "Tanya Gabriel tentang halaman ini…",
   },
   pwa: {
     bannerTitle: "Pasang Aplikasi Domus",
