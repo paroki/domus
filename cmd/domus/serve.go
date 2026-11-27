@@ -6,6 +6,7 @@ import (
 
 	"github.com/paroki/domus/internal/agent"
 	"github.com/paroki/domus/internal/app"
+	"github.com/paroki/domus/internal/cantus"
 	"github.com/paroki/domus/internal/event"
 	"github.com/paroki/domus/internal/org"
 	"github.com/paroki/domus/internal/platform/authz"
@@ -84,6 +85,7 @@ func newServeCmd() *cobra.Command {
 			refFeature := ref.New(db, enforcer, userFeature)
 			userFeature.SetParokiMemberDirectory(refFeature)
 			umatFeature := umat.New(db, enforcer, userFeature, refFeature, cipher)
+			cantusFeature := cantus.New(db, enforcer, userFeature)
 			orgCfg, err := org.GetConfig(ctx)
 			if err != nil {
 				return err
@@ -105,7 +107,7 @@ func newServeCmd() *cobra.Command {
 				agent.WithCipher(cipher),
 				agent.WithSettings(settingStore),
 			)
-			if err := authz.RegisterFeatures(ctx, enforcer, userFeature, refFeature, orgFeature, eventFeature, umatFeature, agentFeature); err != nil {
+			if err := authz.RegisterFeatures(ctx, enforcer, userFeature, refFeature, orgFeature, eventFeature, umatFeature, cantusFeature, agentFeature); err != nil {
 				return err
 			}
 			setting.RegisterFeatures(settingStore, userFeature, refFeature, orgFeature, eventFeature, agentFeature)
@@ -124,7 +126,7 @@ func newServeCmd() *cobra.Command {
 			}
 			eventFeature.StartReminderScheduler(ctx, time.Minute, logger)
 
-			fiberApp := app.GetFiber(cfg, logger, userFeature, refFeature, orgFeature, eventFeature, umatFeature, settingFeature, agentFeature)
+			fiberApp := app.GetFiber(cfg, logger, userFeature, refFeature, orgFeature, eventFeature, umatFeature, cantusFeature, settingFeature, agentFeature)
 			return app.New(cfg, fiberApp, logger).Serve(ctx)
 		},
 	}

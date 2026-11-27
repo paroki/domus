@@ -102,6 +102,9 @@
                     "email": {
                         "type": "string"
                     },
+                    "isCantusAdmin": {
+                        "type": "boolean"
+                    },
                     "isSuperAdmin": {
                         "type": "boolean"
                     },
@@ -121,6 +124,9 @@
             },
             "domain.AdminUpdateUserRequest": {
                 "properties": {
+                    "isCantusAdmin": {
+                        "type": "boolean"
+                    },
                     "isSuperAdmin": {
                         "type": "boolean"
                     },
@@ -213,6 +219,128 @@
                 },
                 "type": "object"
             },
+            "domain.CantusMedia": {
+                "properties": {
+                    "downloadUrl": {
+                        "type": "string"
+                    },
+                    "s3Key": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    },
+                    "viewUrl": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.CantusResponse": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "canManage": {
+                        "type": "boolean"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "createdBy": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "jenis": {
+                        "type": "string"
+                    },
+                    "judul": {
+                        "type": "string"
+                    },
+                    "kategori": {
+                        "type": "string"
+                    },
+                    "kredit": {
+                        "additionalProperties": {
+                            "type": "string"
+                        },
+                        "type": "object"
+                    },
+                    "lirik": {
+                        "type": "string"
+                    },
+                    "media": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.CantusMedia"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "meta": {
+                        "additionalProperties": {},
+                        "type": "object"
+                    },
+                    "nadaDasar": {
+                        "type": "string"
+                    },
+                    "nomor": {
+                        "type": "string"
+                    },
+                    "slug": {
+                        "type": "string"
+                    },
+                    "sumber": {
+                        "type": "string"
+                    },
+                    "tag": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.CantusSearchFilter": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "jenis": {
+                        "enum": [
+                            "lagu",
+                            "mazmur",
+                            "profan"
+                        ],
+                        "type": "string"
+                    },
+                    "kategori": {
+                        "type": "string"
+                    },
+                    "nadaDasar": {
+                        "type": "string"
+                    },
+                    "slug": {
+                        "type": "string"
+                    },
+                    "sumber": {
+                        "type": "string"
+                    },
+                    "tag": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.ChatRequest": {
                 "properties": {
                     "message": {
@@ -262,6 +390,73 @@
                     "apiKey",
                     "name",
                     "provider"
+                ],
+                "type": "object"
+            },
+            "domain.CreateCantusRequest": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "jenis": {
+                        "enum": [
+                            "lagu",
+                            "mazmur",
+                            "profan"
+                        ],
+                        "type": "string"
+                    },
+                    "judul": {
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "kategori": {
+                        "type": "string"
+                    },
+                    "kredit": {
+                        "additionalProperties": {
+                            "type": "string"
+                        },
+                        "type": "object"
+                    },
+                    "lirik": {
+                        "type": "string"
+                    },
+                    "media": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.CantusMedia"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "meta": {
+                        "additionalProperties": {},
+                        "type": "object"
+                    },
+                    "nadaDasar": {
+                        "type": "string"
+                    },
+                    "nomor": {
+                        "type": "string"
+                    },
+                    "slug": {
+                        "type": "string"
+                    },
+                    "sumber": {
+                        "type": "string"
+                    },
+                    "tag": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    }
+                },
+                "required": [
+                    "jenis",
+                    "judul",
+                    "slug"
                 ],
                 "type": "object"
             },
@@ -2515,6 +2710,25 @@
                 },
                 "type": "object"
             },
+            "domain.SearchCantusRequest": {
+                "properties": {
+                    "cursor": {
+                        "type": "string"
+                    },
+                    "filter": {
+                        "$ref": "#/components/schemas/domain.CantusSearchFilter"
+                    },
+                    "limit": {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "q": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "domain.SearchEventRSVPsRequest": {
                 "properties": {
                     "cursor": {
@@ -3497,6 +3711,67 @@
                 },
                 "type": "object"
             },
+            "domain.UpdateCantusRequest": {
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "jenis": {
+                        "enum": [
+                            "lagu",
+                            "mazmur",
+                            "profan"
+                        ],
+                        "type": "string"
+                    },
+                    "judul": {
+                        "type": "string"
+                    },
+                    "kategori": {
+                        "type": "string"
+                    },
+                    "kredit": {
+                        "additionalProperties": {
+                            "type": "string"
+                        },
+                        "type": "object"
+                    },
+                    "lirik": {
+                        "type": "string"
+                    },
+                    "media": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.CantusMedia"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "meta": {
+                        "additionalProperties": {},
+                        "type": "object"
+                    },
+                    "nadaDasar": {
+                        "type": "string"
+                    },
+                    "nomor": {
+                        "type": "string"
+                    },
+                    "slug": {
+                        "type": "string"
+                    },
+                    "sumber": {
+                        "type": "string"
+                    },
+                    "tag": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    }
+                },
+                "type": "object"
+            },
             "domain.UpdateEventLaguRequest": {
                 "properties": {
                     "bagian": {
@@ -4455,6 +4730,9 @@
                     "id": {
                         "type": "string"
                     },
+                    "isCantusAdmin": {
+                        "type": "boolean"
+                    },
                     "lastLoginAt": {
                         "type": "string"
                     },
@@ -4514,6 +4792,9 @@
             },
             "domain.UserSearchFilter": {
                 "properties": {
+                    "cantusAdmin": {
+                        "type": "boolean"
+                    },
                     "status": {
                         "enum": [
                             "active",
@@ -4763,6 +5044,24 @@
                     "data": {
                         "items": {
                             "$ref": "#/components/schemas/domain.AgentProviderResponse"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-array_domain_CantusResponse": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.CantusResponse"
                         },
                         "type": "array",
                         "uniqueItems": false
@@ -5294,6 +5593,20 @@
                 "properties": {
                     "data": {
                         "$ref": "#/components/schemas/domain.AuthSessionResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_CantusResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.CantusResponse"
                     },
                     "error": {
                         "$ref": "#/components/schemas/httpx.ErrorPayload"
@@ -7364,6 +7677,406 @@
                 "summary": "Complete OAuth2 login",
                 "tags": [
                     "Auth"
+                ]
+            }
+        },
+        "/cantus": {
+            "post": {
+                "description": "Creates a global cantus entry or reactivates a soft-deleted entry sharing the same slug.",
+                "operationId": "createCantus",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.CreateCantusRequest",
+                                "summary": "body",
+                                "description": "Cantus creation payload"
+                            }
+                        }
+                    },
+                    "description": "Cantus creation payload",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_CantusResponse"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Create cantus",
+                "tags": [
+                    "Cantus"
+                ]
+            }
+        },
+        "/cantus/search": {
+            "post": {
+                "description": "Searches global cantus entries with query, filters, and keyset cursor pagination.",
+                "operationId": "searchCantus",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.SearchCantusRequest",
+                                "summary": "body",
+                                "description": "Search parameters"
+                            }
+                        }
+                    },
+                    "description": "Search parameters"
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-array_domain_CantusResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    }
+                },
+                "summary": "Search cantus",
+                "tags": [
+                    "Cantus"
+                ]
+            }
+        },
+        "/cantus/{id}": {
+            "delete": {
+                "description": "Soft-deletes a cantus entry after checking in-use references.",
+                "operationId": "deleteCantus",
+                "parameters": [
+                    {
+                        "description": "Cantus UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    }
+                },
+                "summary": "Delete cantus",
+                "tags": [
+                    "Cantus"
+                ]
+            },
+            "get": {
+                "description": "Returns a single non-deleted cantus entry by ID.",
+                "operationId": "getCantus",
+                "parameters": [
+                    {
+                        "description": "Cantus UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_CantusResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Get cantus",
+                "tags": [
+                    "Cantus"
+                ]
+            },
+            "patch": {
+                "description": "Partially updates a non-deleted cantus entry by ID.",
+                "operationId": "updateCantus",
+                "parameters": [
+                    {
+                        "description": "Cantus UUID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.UpdateCantusRequest",
+                                "summary": "body",
+                                "description": "Cantus update payload"
+                            }
+                        }
+                    },
+                    "description": "Cantus update payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_CantusResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Update cantus",
+                "tags": [
+                    "Cantus"
                 ]
             }
         },
