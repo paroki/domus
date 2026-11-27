@@ -34,13 +34,6 @@ export type UpdateParokiRequest = Schemas["domain.UpdateParokiRequest"];
 export type UpdateParokiProfileRequest =
   Schemas["domain.UpdateParokiProfileRequest"];
 
-export type ParokiMember = Schemas["domain.ParokiMemberResponse"];
-export type SearchParokiMembersRequest =
-  Schemas["domain.SearchParokiMembersRequest"];
-export type AddParokiMemberRequest = Schemas["domain.AddParokiMemberRequest"];
-export type UpdateParokiMemberRequest =
-  Schemas["domain.UpdateParokiMemberRequest"];
-
 export type Wilayah = Schemas["domain.WilayahResponse"];
 export type SearchWilayahRequest = Schemas["domain.SearchWilayahRequest"];
 export type CreateWilayahRequest = Schemas["domain.CreateWilayahRequest"];

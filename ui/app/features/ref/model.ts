@@ -105,7 +105,7 @@ export const GEREJAWI_STEPS: HubStepDef[] = [
     id: "paroki",
     path: "/settings/gerejawi/paroki",
     title: "Paroki",
-    description: "Kelola tenant paroki dan tunjuk Admin Paroki.",
+    description: "Kelola tenant paroki di bawah keuskupan dan kevikepan.",
     icon: Church,
     plate: 3,
   },
@@ -116,7 +116,8 @@ export const PAROKI_STEPS: HubStepDef[] = [
     id: "profile",
     path: "/settings/paroki/profile",
     title: "Profil Paroki",
-    description: "Identitas paroki aktif dan daftar admin atau anggota paroki.",
+    description:
+      "Identitas, domisili, dan kontak paroki aktif (admin & anggota dikelola di /users).",
     icon: Church,
     plate: 1,
   },

@@ -30,7 +30,7 @@ function ReadField({ label, value }: { label: string; value?: string | null }) {
   return (
     <div className="flex flex-col gap-0.5">
       <span className="text-xs font-medium text-muted">{label}</span>
-      <span className="text-sm text-fg">{value || "—"}</span>
+      <span className="break-words text-sm text-fg">{value || "—"}</span>
     </div>
   );
 }
@@ -63,7 +63,7 @@ export function ParokiStrukturReadOnlyCard({ paroki }: { paroki: Paroki }) {
     .find((s) => s.code === paroki.statusParoki)?.label;
 
   return (
-    <Card className="flex flex-col gap-4 p-6">
+    <Card className="flex flex-col gap-4 p-4 sm:p-6">
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-base font-semibold text-fg">Struktur Gerejawi</h2>
         <Badge tone={paroki.active ? "success" : "neutral"}>
@@ -156,7 +156,7 @@ export function ParokiStrukturCard({
     )?.label;
 
     return (
-      <Card className="flex flex-col gap-4 p-6">
+      <Card className="flex flex-col gap-4 p-4 sm:p-6">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <h2 className="text-base font-semibold text-fg">
@@ -186,7 +186,7 @@ export function ParokiStrukturCard({
   }
 
   return (
-    <Card className="flex flex-col gap-4 p-6">
+    <Card className="flex flex-col gap-4 p-4 sm:p-6">
       <h2 className="text-base font-semibold text-fg">
         Ubah Struktur &amp; Status Gerejawi
       </h2>
@@ -222,7 +222,7 @@ export function ParokiStrukturCard({
                 setKevikepanId("");
                 setIndukId("");
               }}
-              className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+              className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg sm:text-sm"
             >
               {keuskupanList.map((k) => (
                 <option key={k.id} value={k.id}>
@@ -242,7 +242,7 @@ export function ParokiStrukturCard({
               id="sec-kevikepan"
               value={kevikepanId}
               onChange={(e) => setKevikepanId(e.target.value)}
-              className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+              className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg sm:text-sm"
             >
               <option value="">Tanpa kevikepan</option>
               {kevikepanList.map((k) => (
@@ -263,7 +263,7 @@ export function ParokiStrukturCard({
               id="sec-induk"
               value={indukId}
               onChange={(e) => setIndukId(e.target.value)}
-              className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+              className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg sm:text-sm"
             >
               <option value="">Paroki Mandiri</option>
               {rootParokiList.map((p) => (
@@ -285,7 +285,7 @@ export function ParokiStrukturCard({
               required
               value={kode}
               onChange={(e) => setKode(e.target.value)}
-              className="h-10 rounded-lg border border-line bg-canvas px-3 font-mono text-sm text-fg"
+              className="h-11 rounded-lg border border-line bg-canvas px-3 font-mono text-base text-fg sm:text-sm"
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -299,7 +299,7 @@ export function ParokiStrukturCard({
               id="sec-koderesmi"
               value={kodeResmi}
               onChange={(e) => setKodeResmi(e.target.value)}
-              className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+              className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg sm:text-sm"
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -313,7 +313,7 @@ export function ParokiStrukturCard({
               id="sec-status"
               value={statusParoki}
               onChange={(e) => setStatusParoki(e.target.value)}
-              className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+              className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg sm:text-sm"
             >
               <option value="">Kosongkan</option>
               {statusOptions.map((s) => (
@@ -324,7 +324,7 @@ export function ParokiStrukturCard({
             </select>
           </div>
         </div>
-        <label className="inline-flex items-center gap-2 text-sm text-fg">
+        <label className="inline-flex min-h-11 items-center gap-2 text-sm text-fg">
           <input
             type="checkbox"
             checked={active}
@@ -333,11 +333,15 @@ export function ParokiStrukturCard({
           />
           Paroki Aktif
         </label>
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onCancel}>
+        <div className="flex flex-col-reverse justify-end gap-2 sm:flex-row">
+          <Button
+            variant="outline"
+            className="w-full sm:w-auto"
+            onClick={onCancel}
+          >
             Batal
           </Button>
-          <Button type="submit" disabled={pending}>
+          <Button type="submit" disabled={pending} className="w-full sm:w-auto">
             {pending ? "Menyimpan…" : "Simpan Perubahan"}
           </Button>
         </div>
@@ -377,7 +381,7 @@ export function ParokiIdentitasCard({
 
   if (!editing) {
     return (
-      <Card className="flex flex-col gap-4 p-6">
+      <Card className="flex flex-col gap-4 p-4 sm:p-6">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-base font-semibold text-fg">
             Identitas Gereja &amp; Kop Surat
@@ -398,7 +402,7 @@ export function ParokiIdentitasCard({
   }
 
   return (
-    <Card className="flex flex-col gap-4 p-6">
+    <Card className="flex flex-col gap-4 p-4 sm:p-6">
       <h2 className="text-base font-semibold text-fg">
         Ubah Identitas Gereja &amp; Kop Surat
       </h2>
@@ -428,7 +432,7 @@ export function ParokiIdentitasCard({
               required
               value={nama}
               onChange={(e) => setNama(e.target.value)}
-              className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+              className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg sm:text-sm"
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -442,7 +446,7 @@ export function ParokiIdentitasCard({
               id="sec-pelindung"
               value={pelindung}
               onChange={(e) => setPelindung(e.target.value)}
-              className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+              className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg sm:text-sm"
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -456,7 +460,7 @@ export function ParokiIdentitasCard({
               id="sec-pastor"
               value={pastor}
               onChange={(e) => setPastor(e.target.value)}
-              className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+              className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg sm:text-sm"
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -470,7 +474,7 @@ export function ParokiIdentitasCard({
               id="sec-logo"
               value={logoUrl}
               onChange={(e) => setLogoUrl(e.target.value)}
-              className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+              className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg sm:text-sm"
             />
           </div>
         </div>
@@ -488,11 +492,15 @@ export function ParokiIdentitasCard({
             className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
           />
         </div>
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onCancel}>
+        <div className="flex flex-col-reverse justify-end gap-2 sm:flex-row">
+          <Button
+            variant="outline"
+            className="w-full sm:w-auto"
+            onClick={onCancel}
+          >
             Batal
           </Button>
-          <Button type="submit" disabled={pending}>
+          <Button type="submit" disabled={pending} className="w-full sm:w-auto">
             {pending ? "Menyimpan…" : "Simpan Perubahan"}
           </Button>
         </div>
@@ -565,7 +573,7 @@ export function ParokiDomisiliCard({
         : undefined;
 
     return (
-      <Card className="flex flex-col gap-4 p-6">
+      <Card className="flex flex-col gap-4 p-4 sm:p-6">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-base font-semibold text-fg">
             Domisili Wilayah Sipil, Zona Waktu &amp; Koordinat
@@ -590,7 +598,7 @@ export function ParokiDomisiliCard({
   }
 
   return (
-    <Card className="flex flex-col gap-4 p-6">
+    <Card className="flex flex-col gap-4 p-4 sm:p-6">
       <h2 className="text-base font-semibold text-fg">
         Ubah Domisili Wilayah Sipil, Zona Waktu &amp; Koordinat
       </h2>
@@ -638,7 +646,7 @@ export function ParokiDomisiliCard({
               id="sec-timezone"
               value={timezone}
               onChange={(e) => setTimezone(e.target.value)}
-              className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+              className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg sm:text-sm"
             >
               {PAROKI_TIMEZONES.map((tz) => (
                 <option key={tz.value} value={tz.value}>
@@ -662,7 +670,7 @@ export function ParokiDomisiliCard({
                 setKecamatanId("");
                 setKelurahanId("");
               }}
-              className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+              className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg sm:text-sm"
             >
               <option value="">Kosongkan</option>
               {kotaList.map((k) => (
@@ -687,7 +695,7 @@ export function ParokiDomisiliCard({
                 setKecamatanId(e.target.value);
                 setKelurahanId("");
               }}
-              className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg disabled:opacity-50"
+              className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg disabled:opacity-50 sm:text-sm"
             >
               <option value="">Kosongkan</option>
               {kecList.map((k) => (
@@ -709,7 +717,7 @@ export function ParokiDomisiliCard({
               disabled={!kecamatanId}
               value={kelurahanId}
               onChange={(e) => setKelurahanId(e.target.value)}
-              className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg disabled:opacity-50"
+              className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg disabled:opacity-50 sm:text-sm"
             >
               <option value="">Kosongkan</option>
               {kelList.map((k) => (
@@ -732,7 +740,7 @@ export function ParokiDomisiliCard({
             rows={2}
             value={alamat}
             onChange={(e) => setAlamat(e.target.value)}
-            className="rounded-lg border border-line bg-canvas p-3 text-sm text-fg"
+            className="rounded-lg border border-line bg-canvas p-3 text-base text-fg sm:text-sm"
           />
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -749,7 +757,7 @@ export function ParokiDomisiliCard({
               step="any"
               value={latStr}
               onChange={(e) => setLatStr(e.target.value)}
-              className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+              className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg sm:text-sm"
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -765,14 +773,15 @@ export function ParokiDomisiliCard({
               step="any"
               value={lngStr}
               onChange={(e) => setLngStr(e.target.value)}
-              className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+              className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg sm:text-sm"
             />
           </div>
         </div>
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-col-reverse items-stretch justify-between gap-2 sm:flex-row sm:items-center">
           {paroki.latitude != null || paroki.longitude != null ? (
             <Button
               variant="ghost"
+              className="w-full sm:w-auto"
               disabled={pending}
               onClick={async () => {
                 setLatStr("");
@@ -783,13 +792,21 @@ export function ParokiDomisiliCard({
               Kosongkan Koordinat
             </Button>
           ) : (
-            <span />
+            <span className="hidden sm:inline" />
           )}
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={onCancel}>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row">
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={onCancel}
+            >
               Batal
             </Button>
-            <Button type="submit" disabled={pending}>
+            <Button
+              type="submit"
+              disabled={pending}
+              className="w-full sm:w-auto"
+            >
               {pending ? "Menyimpan…" : "Simpan Perubahan"}
             </Button>
           </div>
@@ -828,7 +845,7 @@ export function ParokiKontakCard({
 
   if (!editing) {
     return (
-      <Card className="flex flex-col gap-4 p-6">
+      <Card className="flex flex-col gap-4 p-4 sm:p-6">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-base font-semibold text-fg">Kontak Resmi</h2>
           <Button variant="outline" onClick={onEdit}>
@@ -846,7 +863,7 @@ export function ParokiKontakCard({
   }
 
   return (
-    <Card className="flex flex-col gap-4 p-6">
+    <Card className="flex flex-col gap-4 p-4 sm:p-6">
       <h2 className="text-base font-semibold text-fg">Ubah Kontak Resmi</h2>
       <form
         onSubmit={async (e) => {
@@ -873,7 +890,7 @@ export function ParokiKontakCard({
               value={telepon}
               onChange={(e) => setTelepon(e.target.value)}
               placeholder="+62812..."
-              className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+              className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg sm:text-sm"
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -887,7 +904,7 @@ export function ParokiKontakCard({
               id="sec-fax"
               value={fax}
               onChange={(e) => setFax(e.target.value)}
-              className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+              className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg sm:text-sm"
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -902,7 +919,7 @@ export function ParokiKontakCard({
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+              className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg sm:text-sm"
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -916,15 +933,19 @@ export function ParokiKontakCard({
               id="sec-website"
               value={website}
               onChange={(e) => setWebsite(e.target.value)}
-              className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+              className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg sm:text-sm"
             />
           </div>
         </div>
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onCancel}>
+        <div className="flex flex-col-reverse justify-end gap-2 sm:flex-row">
+          <Button
+            variant="outline"
+            className="w-full sm:w-auto"
+            onClick={onCancel}
+          >
             Batal
           </Button>
-          <Button type="submit" disabled={pending}>
+          <Button type="submit" disabled={pending} className="w-full sm:w-auto">
             {pending ? "Menyimpan…" : "Simpan Perubahan"}
           </Button>
         </div>

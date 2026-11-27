@@ -14,7 +14,7 @@ import {
   useUpdateKeuskupan,
 } from "../api/actions";
 import { useKeuskupanDetail } from "../api/queries";
-import { isSuperAdmin } from "../model";
+import { isSuperAdmin, slugifyCode } from "../model";
 
 export function meta() {
   return [{ title: "Formulir Keuskupan — Domus" }];
@@ -33,8 +33,13 @@ export default function KeuskupanFormPage() {
   const deleteMut = useDeleteKeuskupan();
 
   const [kode, setKode] = useState("");
+  const [kodeTouched, setKodeTouched] = useState(false);
   const [nama, setNama] = useState("");
   const [uskup, setUskup] = useState("");
+  const [telepon, setTelepon] = useState("");
+  const [email, setEmail] = useState("");
+  const [website, setWebsite] = useState("");
+  const [alamat, setAlamat] = useState("");
   const [active, setActive] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -44,6 +49,10 @@ export default function KeuskupanFormPage() {
     setKode(detail.data.kode ?? "");
     setNama(detail.data.nama ?? "");
     setUskup(detail.data.uskup ?? "");
+    setTelepon(detail.data.telepon ?? "");
+    setEmail(detail.data.email ?? "");
+    setWebsite(detail.data.website ?? "");
+    setAlamat(detail.data.alamat ?? "");
     setActive(detail.data.active ?? true);
   }, [detail.data]);
 
@@ -58,14 +67,22 @@ export default function KeuskupanFormPage() {
             kode: kode.trim(),
             nama: nama.trim(),
             uskup: uskup.trim(),
+            telepon: telepon.trim(),
+            email: email.trim(),
+            website: website.trim(),
+            alamat: alamat.trim(),
             active,
           },
         });
       } else {
         await createMut.mutateAsync({
-          kode: kode.trim(),
+          kode: (kode || slugifyCode(nama)).trim(),
           nama: nama.trim(),
           uskup: uskup.trim() || undefined,
+          telepon: telepon.trim() || undefined,
+          email: email.trim() || undefined,
+          website: website.trim() || undefined,
+          alamat: alamat.trim() || undefined,
         });
       }
       navigate("/settings/gerejawi/keuskupan");
@@ -89,7 +106,7 @@ export default function KeuskupanFormPage() {
   const pending = createMut.isPending || updateMut.isPending;
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-8">
+    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
       <InductivePageHeader
         breadcrumbs={[
           { label: "Beranda", to: "/" },
@@ -131,22 +148,6 @@ export default function KeuskupanFormPage() {
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="flex flex-col gap-1.5">
                   <label
-                    htmlFor="keuskupan-kode"
-                    className="text-xs font-semibold text-muted"
-                  >
-                    Kode Keuskupan
-                  </label>
-                  <input
-                    id="keuskupan-kode"
-                    required
-                    value={kode}
-                    onChange={(e) => setKode(e.target.value)}
-                    placeholder="mis. kaj"
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 font-mono text-sm text-fg focus:border-primary focus:outline-none"
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label
                     htmlFor="keuskupan-nama"
                     className="text-xs font-semibold text-muted"
                   >
@@ -156,9 +157,34 @@ export default function KeuskupanFormPage() {
                     id="keuskupan-nama"
                     required
                     value={nama}
-                    onChange={(e) => setNama(e.target.value)}
+                    onChange={(e) => {
+                      const next = e.target.value;
+                      setNama(next);
+                      if (!isEdit && !kodeTouched) {
+                        setKode(slugifyCode(next));
+                      }
+                    }}
                     placeholder="mis. Keuskupan Agung Jakarta"
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label
+                    htmlFor="keuskupan-kode"
+                    className="text-xs font-semibold text-muted"
+                  >
+                    Kode Keuskupan
+                  </label>
+                  <input
+                    id="keuskupan-kode"
+                    required
+                    value={kode}
+                    onChange={(e) => {
+                      setKodeTouched(true);
+                      setKode(e.target.value);
+                    }}
+                    placeholder="mis. kaj"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 font-mono text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                   />
                 </div>
               </div>
@@ -175,12 +201,12 @@ export default function KeuskupanFormPage() {
                   value={uskup}
                   onChange={(e) => setUskup(e.target.value)}
                   placeholder="mis. Mgr. Ignatius Suharyo"
-                  className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                  className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                 />
               </div>
 
               {isEdit ? (
-                <label className="inline-flex items-center gap-2 text-sm text-fg">
+                <label className="inline-flex min-h-11 items-center gap-2 text-sm text-fg">
                   <input
                     type="checkbox"
                     checked={active}
@@ -190,15 +216,91 @@ export default function KeuskupanFormPage() {
                   Keuskupan Aktif
                 </label>
               ) : null}
+            </InductiveFormSection>
 
-              <div className="flex items-center justify-end gap-2 pt-2">
+            <InductiveFormSection
+              title="Kontak &amp; Alamat"
+              description="Informasi kontak resmi dan alamat kantor keuskupan (opsional)."
+            >
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="flex flex-col gap-1.5">
+                  <label
+                    htmlFor="keuskupan-telepon"
+                    className="text-xs font-semibold text-muted"
+                  >
+                    Telepon
+                  </label>
+                  <input
+                    id="keuskupan-telepon"
+                    value={telepon}
+                    onChange={(e) => setTelepon(e.target.value)}
+                    placeholder="+6221..."
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label
+                    htmlFor="keuskupan-email"
+                    className="text-xs font-semibold text-muted"
+                  >
+                    Email
+                  </label>
+                  <input
+                    id="keuskupan-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="sekretariat@keuskupan.or.id"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label
+                  htmlFor="keuskupan-website"
+                  className="text-xs font-semibold text-muted"
+                >
+                  Website
+                </label>
+                <input
+                  id="keuskupan-website"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                  placeholder="https://keuskupan.or.id"
+                  className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label
+                  htmlFor="keuskupan-alamat"
+                  className="text-xs font-semibold text-muted"
+                >
+                  Alamat
+                </label>
+                <textarea
+                  id="keuskupan-alamat"
+                  rows={2}
+                  value={alamat}
+                  onChange={(e) => setAlamat(e.target.value)}
+                  placeholder="Alamat lengkap kantor keuskupan"
+                  className="rounded-lg border border-line bg-canvas p-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
+                />
+              </div>
+
+              <div className="flex flex-col-reverse items-stretch justify-end gap-2 pt-2 sm:flex-row sm:items-center">
                 <Link
                   to="/settings/gerejawi/keuskupan"
-                  className={buttonClass("outline")}
+                  className={`${buttonClass("outline")} w-full sm:w-auto`}
                 >
                   Batal
                 </Link>
-                <Button type="submit" disabled={pending}>
+                <Button
+                  type="submit"
+                  disabled={pending}
+                  className="w-full sm:w-auto"
+                >
                   {pending ? "Menyimpan…" : "Simpan Keuskupan"}
                 </Button>
               </div>

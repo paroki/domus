@@ -16,7 +16,6 @@ import type {
   SearchKotaRequest,
   SearchLingkunganRequest,
   SearchLookupsRequest,
-  SearchParokiMembersRequest,
   SearchParokiRequest,
   SearchWilayahRequest,
 } from "./types";
@@ -76,30 +75,6 @@ export function useCurrentParoki(enabled = true) {
       enabled,
       queryFn: () => unwrap(api.GET("/ref/paroki/current"), REF_ERRORS),
       retry: false,
-    }),
-  );
-}
-
-export function useParokiMembersSearch(
-  parokiId: string,
-  filter: Omit<SearchParokiMembersRequest, "cursor"> = {},
-  enabled = true,
-) {
-  return useInfiniteQuery(
-    infiniteQueryOptions({
-      queryKey: refKeys.parokiMembers(parokiId, filter),
-      initialPageParam: undefined as string | undefined,
-      enabled: enabled && Boolean(parokiId),
-      queryFn: ({ pageParam }) =>
-        unwrapMeta(
-          api.POST("/ref/paroki/{id}/members/search", {
-            params: { path: { id: parokiId } },
-            body: { ...filter, cursor: pageParam, limit: filter.limit ?? 50 },
-          }),
-          REF_ERRORS,
-        ),
-      getNextPageParam: (lastPage) =>
-        lastPage.meta?.hasMore ? lastPage.meta.nextCursor : undefined,
     }),
   );
 }

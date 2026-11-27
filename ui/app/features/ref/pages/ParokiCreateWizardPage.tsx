@@ -159,7 +159,7 @@ export default function ParokiCreateWizardPage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-8">
+    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
       <InductivePageHeader
         breadcrumbs={[
           { label: "Beranda", to: "/" },
@@ -214,7 +214,7 @@ export default function ParokiCreateWizardPage() {
                       setKevikepanId("");
                       setIndukId("");
                     }}
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                   >
                     <option value="">Pilih keuskupan…</option>
                     {keuskupanList.map((k) => (
@@ -236,7 +236,7 @@ export default function ParokiCreateWizardPage() {
                     id="wiz-kevikepan"
                     value={kevikepanId}
                     onChange={(e) => setKevikepanId(e.target.value)}
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                   >
                     <option value="">Tanpa kevikepan</option>
                     {kevikepanList.map((k) => (
@@ -268,7 +268,7 @@ export default function ParokiCreateWizardPage() {
                       }
                     }}
                     placeholder="mis. Paroki Katedral Jakarta"
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                   />
                 </div>
 
@@ -288,7 +288,7 @@ export default function ParokiCreateWizardPage() {
                       setKode(e.target.value);
                     }}
                     placeholder="mis. katedral-jkt"
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 font-mono text-sm text-fg focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 font-mono text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                   />
                 </div>
               </div>
@@ -305,7 +305,7 @@ export default function ParokiCreateWizardPage() {
                     id="wiz-induk"
                     value={indukId}
                     onChange={(e) => setIndukId(e.target.value)}
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                   >
                     <option value="">Paroki Mandiri</option>
                     {rootParokiList.map((p) => (
@@ -328,7 +328,7 @@ export default function ParokiCreateWizardPage() {
                     value={kodeResmi}
                     onChange={(e) => setKodeResmi(e.target.value)}
                     placeholder="mis. KAJ-001"
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                   />
                 </div>
 
@@ -343,7 +343,7 @@ export default function ParokiCreateWizardPage() {
                     id="wiz-status"
                     value={statusParoki}
                     onChange={(e) => setStatusParoki(e.target.value)}
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                   >
                     <option value="">Pilih status…</option>
                     {statusOptions.map((s) => (
@@ -355,14 +355,15 @@ export default function ParokiCreateWizardPage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2">
+              <div className="flex flex-col-reverse items-stretch justify-end gap-2 pt-2 sm:flex-row sm:items-center">
                 <Link
                   to="/settings/gerejawi/paroki"
-                  className={buttonClass("outline")}
+                  className={`${buttonClass("outline")} w-full sm:w-auto`}
                 >
                   Batal
                 </Link>
                 <Button
+                  className="w-full sm:w-auto"
                   onClick={() => {
                     if (
                       !keuskupanId ||
@@ -401,7 +402,7 @@ export default function ParokiCreateWizardPage() {
                     id="wiz-pelindung"
                     value={pelindung}
                     onChange={(e) => setPelindung(e.target.value)}
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -415,7 +416,7 @@ export default function ParokiCreateWizardPage() {
                     id="wiz-pastor"
                     value={pastor}
                     onChange={(e) => setPastor(e.target.value)}
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -430,7 +431,7 @@ export default function ParokiCreateWizardPage() {
                     value={telepon}
                     onChange={(e) => setTelepon(e.target.value)}
                     placeholder="+62812..."
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -444,7 +445,7 @@ export default function ParokiCreateWizardPage() {
                     id="wiz-fax"
                     value={fax}
                     onChange={(e) => setFax(e.target.value)}
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -459,7 +460,7 @@ export default function ParokiCreateWizardPage() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -473,7 +474,7 @@ export default function ParokiCreateWizardPage() {
                     id="wiz-website"
                     value={website}
                     onChange={(e) => setWebsite(e.target.value)}
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -487,7 +488,7 @@ export default function ParokiCreateWizardPage() {
                     id="wiz-logo"
                     value={logoUrl}
                     onChange={(e) => setLogoUrl(e.target.value)}
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -501,24 +502,32 @@ export default function ParokiCreateWizardPage() {
                     id="wiz-kopsurat"
                     value={kopSurat}
                     onChange={(e) => setKopSurat(e.target.value)}
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                   />
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
-                <Button variant="outline" onClick={() => setStep(1)}>
+              <div className="flex flex-col-reverse items-stretch justify-between gap-2 pt-2 sm:flex-row sm:items-center">
+                <Button
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                  onClick={() => setStep(1)}
+                >
                   ← Kembali
                 </Button>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-col-reverse items-stretch gap-2 sm:flex-row sm:items-center">
                   <Button
                     variant="outline"
+                    className="w-full sm:w-auto"
                     disabled={createMut.isPending}
                     onClick={submitCreate}
                   >
                     Simpan &amp; Buat Paroki
                   </Button>
-                  <Button onClick={() => setStep(3)}>
+                  <Button
+                    className="w-full sm:w-auto"
+                    onClick={() => setStep(3)}
+                  >
                     Lanjut ke Domisili →
                   </Button>
                 </div>
@@ -543,7 +552,7 @@ export default function ParokiCreateWizardPage() {
                     id="wiz-timezone"
                     value={timezone}
                     onChange={(e) => setTimezone(e.target.value)}
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                   >
                     {PAROKI_TIMEZONES.map((tz) => (
                       <option key={tz.value} value={tz.value}>
@@ -568,7 +577,7 @@ export default function ParokiCreateWizardPage() {
                       setKecamatanId("");
                       setKelurahanId("");
                     }}
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                   >
                     <option value="">Pilih kota/kabupaten…</option>
                     {kotaList.map((k) => (
@@ -594,7 +603,7 @@ export default function ParokiCreateWizardPage() {
                       setKecamatanId(e.target.value);
                       setKelurahanId("");
                     }}
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg disabled:opacity-50 focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg disabled:opacity-50 focus:border-primary focus:outline-none sm:text-sm"
                   >
                     <option value="">Pilih kecamatan…</option>
                     {kecList.map((k) => (
@@ -617,7 +626,7 @@ export default function ParokiCreateWizardPage() {
                     disabled={!kecamatanId}
                     value={kelurahanId}
                     onChange={(e) => setKelurahanId(e.target.value)}
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg disabled:opacity-50 focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg disabled:opacity-50 focus:border-primary focus:outline-none sm:text-sm"
                   >
                     <option value="">Pilih kelurahan/desa…</option>
                     {kelList.map((k) => (
@@ -641,7 +650,7 @@ export default function ParokiCreateWizardPage() {
                   rows={2}
                   value={alamat}
                   onChange={(e) => setAlamat(e.target.value)}
-                  className="rounded-lg border border-line bg-canvas p-3 text-sm text-fg focus:border-primary focus:outline-none"
+                  className="rounded-lg border border-line bg-canvas p-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                 />
               </div>
 
@@ -660,7 +669,7 @@ export default function ParokiCreateWizardPage() {
                     value={latitudeStr}
                     onChange={(e) => setLatitudeStr(e.target.value)}
                     placeholder="-6.1695"
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -677,16 +686,24 @@ export default function ParokiCreateWizardPage() {
                     value={longitudeStr}
                     onChange={(e) => setLongitudeStr(e.target.value)}
                     placeholder="106.8331"
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                   />
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
-                <Button variant="outline" onClick={() => setStep(2)}>
+              <div className="flex flex-col-reverse items-stretch justify-between gap-2 pt-2 sm:flex-row sm:items-center">
+                <Button
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                  onClick={() => setStep(2)}
+                >
                   ← Kembali
                 </Button>
-                <Button disabled={createMut.isPending} onClick={submitCreate}>
+                <Button
+                  className="w-full sm:w-auto"
+                  disabled={createMut.isPending}
+                  onClick={submitCreate}
+                >
                   {createMut.isPending ? "Menyimpan…" : "Simpan & Buat Paroki"}
                 </Button>
               </div>

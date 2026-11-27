@@ -78,7 +78,7 @@ export default function ParokiListPage() {
     : "/settings/gerejawi/paroki/new";
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-8">
+    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
       <InductivePageHeader
         breadcrumbs={[
           { label: "Beranda", to: "/" },
@@ -110,7 +110,7 @@ export default function ParokiListPage() {
       {canManage ? (
         <>
           <InductiveFilterBar>
-            <div className="flex min-w-48 flex-1 flex-col gap-1.5">
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:min-w-48">
               <label
                 htmlFor="paroki-search"
                 className="text-xs font-semibold text-muted"
@@ -123,11 +123,11 @@ export default function ParokiListPage() {
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Cari kode atau nama paroki…"
-                className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
               />
             </div>
 
-            <div className="flex min-w-44 flex-col gap-1.5">
+            <div className="flex w-full flex-col gap-1.5 sm:w-auto sm:min-w-44">
               <label
                 htmlFor="paroki-keuskupan-filter"
                 className="text-xs font-semibold text-muted"
@@ -147,7 +147,7 @@ export default function ParokiListPage() {
                   next.delete("kevikepanId");
                   setSearchParams(next);
                 }}
-                className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
               >
                 <option value="">Semua Keuskupan</option>
                 {keuskupanList.map((k) => (
@@ -158,7 +158,7 @@ export default function ParokiListPage() {
               </select>
             </div>
 
-            <div className="flex min-w-44 flex-col gap-1.5">
+            <div className="flex w-full flex-col gap-1.5 sm:w-auto sm:min-w-44">
               <label
                 htmlFor="paroki-kevikepan-filter"
                 className="text-xs font-semibold text-muted"
@@ -177,7 +177,7 @@ export default function ParokiListPage() {
                   }
                   setSearchParams(next);
                 }}
-                className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
               >
                 <option value="">Semua Kevikepan</option>
                 {kevikepanList.map((k) => (
@@ -188,7 +188,7 @@ export default function ParokiListPage() {
               </select>
             </div>
 
-            <div className="flex min-w-32 flex-col gap-1.5">
+            <div className="flex w-full flex-col gap-1.5 sm:w-auto sm:min-w-32">
               <label
                 htmlFor="paroki-status-filter"
                 className="text-xs font-semibold text-muted"
@@ -201,7 +201,7 @@ export default function ParokiListPage() {
                 onChange={(e) =>
                   setActiveFilter(e.target.value as "" | "true" | "false")
                 }
-                className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
               >
                 <option value="">Semua</option>
                 <option value="true">Aktif</option>
@@ -228,9 +228,9 @@ export default function ParokiListPage() {
               {items.map((item) => (
                 <Card
                   key={item.id}
-                  className="flex flex-col justify-between gap-4 p-5 sm:flex-row sm:items-center"
+                  className="flex flex-col justify-between gap-4 p-4 sm:flex-row sm:items-center sm:p-6"
                 >
-                  <div className="flex flex-col gap-1">
+                  <div className="flex min-w-0 flex-1 flex-col gap-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-base font-semibold text-fg">
                         {item.nama}
@@ -255,9 +255,9 @@ export default function ParokiListPage() {
                   </div>
                   <Link
                     to={`/settings/gerejawi/paroki/${item.id}`}
-                    className={buttonClass("outline")}
+                    className={`${buttonClass("outline")} w-full sm:w-auto`}
                   >
-                    Ubah &amp; Kelola Admin
+                    Ubah Detail
                   </Link>
                 </Card>
               ))}

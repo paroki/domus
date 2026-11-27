@@ -1,23 +1,16 @@
-import { Trash2 } from "lucide-react";
+import { Users } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useMe } from "~/shared/api/session";
-import { Badge } from "~/shared/ui/Badge";
 import { Button } from "~/shared/ui/Button";
 import { ConfirmDialog } from "~/shared/ui/ConfirmDialog";
 import {
   InductiveDangerZone,
-  InductiveFormSection,
   InductivePageHeader,
+  InductiveStepCard,
 } from "~/shared/ui/iui";
-import {
-  useAddParokiMember,
-  useDeleteParoki,
-  useRemoveParokiMember,
-  useUpdateParoki,
-  useUpdateParokiMember,
-} from "../api/actions";
-import { useParokiDetail, useParokiMembersSearch } from "../api/queries";
+import { useDeleteParoki, useUpdateParoki } from "../api/actions";
+import { useParokiDetail } from "../api/queries";
 import type { UpdateParokiRequest } from "../api/types";
 import {
   ParokiDomisiliCard,
@@ -39,20 +32,13 @@ export default function ParokiDetailPage() {
   const canManage = isSuperAdmin(me?.roles);
 
   const detail = useParokiDetail(id, canManage && Boolean(id));
-  const membersQuery = useParokiMembersSearch(id, {}, canManage && Boolean(id));
-  const members = membersQuery.data?.pages.flatMap((p) => p.data ?? []) ?? [];
 
   const updateMut = useUpdateParoki();
   const deleteMut = useDeleteParoki();
-  const addMemberMut = useAddParokiMember();
-  const updateMemberMut = useUpdateParokiMember();
-  const removeMemberMut = useRemoveParokiMember();
 
   const [editingSection, setEditingSection] = useState<ParokiSectionKey | null>(
     null,
   );
-  const [adminEmail, setAdminEmail] = useState("");
-  const [adminName, setAdminName] = useState("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -66,27 +52,6 @@ export default function ParokiDetailPage() {
       setStatusMsg("Data paroki berhasil diperbarui.");
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "Gagal menyimpan.");
-    }
-  }
-
-  async function handleAddAdmin(e: React.FormEvent) {
-    e.preventDefault();
-    setErrorMsg(null);
-    setStatusMsg(null);
-    try {
-      await addMemberMut.mutateAsync({
-        parokiId: id,
-        body: {
-          email: adminEmail.trim(),
-          name: adminName.trim() || undefined,
-          role: "admin",
-        },
-      });
-      setAdminEmail("");
-      setAdminName("");
-      setStatusMsg("Admin paroki berhasil ditambahkan.");
-    } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Gagal menunjuk admin.");
     }
   }
 
@@ -104,7 +69,7 @@ export default function ParokiDetailPage() {
   const paroki = detail.data;
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-8">
+    <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
       <InductivePageHeader
         breadcrumbs={[
           { label: "Beranda", to: "/" },
@@ -114,7 +79,7 @@ export default function ParokiDetailPage() {
           { label: paroki?.nama ?? "Detail Paroki" },
         ]}
         title={paroki?.nama ?? "Detail Paroki"}
-        subtitle="Kelola struktur gerejawi, identitas, domisili, kontak, dan admin paroki per bagian."
+        subtitle="Kelola struktur gerejawi, identitas, domisili, dan kontak paroki per bagian."
       />
 
       {!meLoading && !canManage ? (
@@ -186,112 +151,13 @@ export default function ParokiDetailPage() {
             onSave={handleSaveSection}
           />
 
-          <InductiveFormSection
-            title="Admin &amp; Anggota Paroki"
-            description="Tunjuk pengguna sebagai Admin Paroki atau ubah perannya."
-          >
-            <form
-              onSubmit={handleAddAdmin}
-              className="grid grid-cols-1 gap-3 sm:grid-cols-3"
-            >
-              <div className="flex flex-col gap-1">
-                <label
-                  htmlFor="admin-email"
-                  className="text-xs font-semibold text-muted"
-                >
-                  Email Pengguna
-                </label>
-                <input
-                  id="admin-email"
-                  type="email"
-                  required
-                  value={adminEmail}
-                  onChange={(e) => setAdminEmail(e.target.value)}
-                  placeholder="admin@paroki.org"
-                  className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label
-                  htmlFor="admin-name"
-                  className="text-xs font-semibold text-muted"
-                >
-                  Nama (opsional)
-                </label>
-                <input
-                  id="admin-name"
-                  value={adminName}
-                  onChange={(e) => setAdminName(e.target.value)}
-                  placeholder="Nama lengkap"
-                  className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
-                />
-              </div>
-              <div className="flex items-end">
-                <Button
-                  type="submit"
-                  disabled={addMemberMut.isPending}
-                  className="w-full"
-                >
-                  Tunjuk Admin
-                </Button>
-              </div>
-            </form>
-
-            {members.length === 0 ? (
-              <p className="text-sm text-muted">Belum ada anggota terdaftar.</p>
-            ) : (
-              <div className="flex flex-col gap-2">
-                {members.map((m) => (
-                  <div
-                    key={m.id}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-line bg-canvas px-4 py-3"
-                  >
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-fg">
-                        {m.name || m.email}
-                      </span>
-                      <span className="text-xs text-muted">{m.email}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge tone={m.role === "admin" ? "success" : "neutral"}>
-                        {m.role === "admin" ? "Admin Paroki" : "Anggota"}
-                      </Badge>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          if (!m.userId) return;
-                          updateMemberMut.mutate({
-                            parokiId: id,
-                            userId: m.userId,
-                            body: {
-                              role: m.role === "admin" ? "member" : "admin",
-                            },
-                          });
-                        }}
-                      >
-                        {m.role === "admin"
-                          ? "Jadikan Anggota"
-                          : "Jadikan Admin"}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        aria-label="Hapus anggota"
-                        onClick={() => {
-                          if (!m.userId) return;
-                          removeMemberMut.mutate({
-                            parokiId: id,
-                            userId: m.userId,
-                          });
-                        }}
-                      >
-                        <Trash2 aria-hidden className="size-4 text-danger-fg" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </InductiveFormSection>
+          <InductiveStepCard
+            to="/users"
+            title="Kelola Admin & Anggota Paroki di Direktori Pengguna"
+            description="Penunjukan Admin Paroki, perubahan peran, dan pengelolaan keanggotaan paroki dilakukan terpusat di Direktori Pengguna."
+            icon={Users}
+            plate={4}
+          />
 
           <InductiveDangerZone
             title="Hapus Paroki"

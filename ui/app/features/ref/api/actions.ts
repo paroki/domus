@@ -4,7 +4,6 @@ import { useSwitchParoki } from "~/shared/api/session";
 import { REF_ERRORS } from "./errors";
 import { refKeys } from "./keys";
 import type {
-  AddParokiMemberRequest,
   CreateKecamatanRequest,
   CreateKelurahanRequest,
   CreateKeuskupanRequest,
@@ -21,7 +20,6 @@ import type {
   UpdateKotaRequest,
   UpdateLingkunganRequest,
   UpdateLookupRequest,
-  UpdateParokiMemberRequest,
   UpdateParokiProfileRequest,
   UpdateParokiRequest,
   UpdateWilayahRequest,
@@ -110,76 +108,6 @@ export function useDeleteParoki() {
         REF_ERRORS,
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: refKeys.all }),
-  });
-}
-
-export function useAddParokiMember() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      parokiId,
-      body,
-    }: {
-      parokiId: string;
-      body: AddParokiMemberRequest;
-    }) =>
-      unwrap(
-        api.POST("/ref/paroki/{id}/members", {
-          params: { path: { id: parokiId } },
-          body,
-        }),
-        REF_ERRORS,
-      ),
-    onSuccess: () =>
-      Promise.all([
-        qc.invalidateQueries({ queryKey: refKeys.all }),
-        qc.invalidateQueries({ queryKey: ["user", "me"] }),
-      ]),
-  });
-}
-
-export function useUpdateParokiMember() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      parokiId,
-      userId,
-      body,
-    }: {
-      parokiId: string;
-      userId: string;
-      body: UpdateParokiMemberRequest;
-    }) =>
-      unwrap(
-        api.PATCH("/ref/paroki/{id}/members/{userId}", {
-          params: { path: { id: parokiId, userId } },
-          body,
-        }),
-        REF_ERRORS,
-      ),
-    onSuccess: () =>
-      Promise.all([
-        qc.invalidateQueries({ queryKey: refKeys.all }),
-        qc.invalidateQueries({ queryKey: ["user", "me"] }),
-      ]),
-  });
-}
-
-export function useRemoveParokiMember() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ parokiId, userId }: { parokiId: string; userId: string }) =>
-      unwrapVoid(
-        api.DELETE("/ref/paroki/{id}/members/{userId}", {
-          params: { path: { id: parokiId, userId } },
-        }),
-        REF_ERRORS,
-      ),
-    onSuccess: () =>
-      Promise.all([
-        qc.invalidateQueries({ queryKey: refKeys.all }),
-        qc.invalidateQueries({ queryKey: ["user", "me"] }),
-      ]),
   });
 }
 

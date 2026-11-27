@@ -47,7 +47,7 @@ export default function ParokiProfilePage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8 sm:px-6">
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
       <InductivePageHeader
         breadcrumbs={[
           { label: "Beranda", to: "/" },
@@ -67,7 +67,7 @@ export default function ParokiProfilePage() {
           {t("ref.forbiddenParishAdmin")}
         </div>
       ) : !me?.activeParokiId ? (
-        <div className="rounded-xl border border-line bg-surface p-6 text-sm text-muted">
+        <div className="rounded-xl border border-line bg-surface p-4 text-sm text-muted sm:p-6">
           {t("ref.noActiveParish")}
         </div>
       ) : isLoading ? (

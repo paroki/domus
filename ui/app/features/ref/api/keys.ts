@@ -6,7 +6,6 @@ import type {
   SearchKotaRequest,
   SearchLingkunganRequest,
   SearchLookupsRequest,
-  SearchParokiMembersRequest,
   SearchParokiRequest,
   SearchWilayahRequest,
 } from "./types";
@@ -36,10 +35,6 @@ export const refKeys = {
     [...refKeys.all, "paroki", params ?? {}] as const,
   parokiDetail: (id: string) => [...refKeys.all, "paroki-detail", id] as const,
   currentParoki: () => [...refKeys.all, "current-paroki"] as const,
-  parokiMembers: (
-    parokiId: string,
-    params?: Omit<SearchParokiMembersRequest, "cursor">,
-  ) => [...refKeys.all, "paroki-members", parokiId, params ?? {}] as const,
   wilayah: (params?: Omit<SearchWilayahRequest, "cursor">) =>
     [...refKeys.all, "wilayah", params ?? {}] as const,
   wilayahDetail: (id: string) =>
