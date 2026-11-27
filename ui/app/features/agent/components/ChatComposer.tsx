@@ -96,7 +96,7 @@ export function ChatComposer({
             }}
             onKeyDown={handleKeyDown}
             placeholder={t("agent.composerPlaceholder")}
-            className="min-h-11 max-h-44 w-full resize-none bg-transparent px-3.5 pt-3 pb-1 text-sm text-fg placeholder:text-muted/70 focus:outline-none disabled:opacity-60"
+            className="min-h-11 max-h-44 w-full resize-none bg-transparent px-3.5 pt-3 pb-1 text-base text-fg placeholder:text-muted/70 focus:outline-none disabled:opacity-60 sm:text-sm"
           />
 
           <div className="flex items-center justify-between gap-2 px-3 pb-2">
@@ -116,7 +116,7 @@ export function ChatComposer({
                 type="button"
                 variant="outline"
                 onClick={onStop}
-                className="h-8 shrink-0 gap-1.5 rounded-lg px-3 text-xs"
+                className="min-h-11 shrink-0 gap-1.5 rounded-lg px-3 text-xs"
               >
                 <Square aria-hidden className="size-3.5" />
                 {t("agent.stop")}
@@ -125,7 +125,7 @@ export function ChatComposer({
               <Button
                 type="submit"
                 disabled={disabled || !text.trim()}
-                className="h-8 shrink-0 gap-1.5 rounded-lg px-3 text-xs"
+                className="min-h-11 shrink-0 gap-1.5 rounded-lg px-3 text-xs"
               >
                 <Send aria-hidden className="size-3.5" />
                 {t("agent.send")}

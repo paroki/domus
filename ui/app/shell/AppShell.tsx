@@ -1,5 +1,5 @@
 import { Outlet, useLocation } from "react-router";
-
+import { AgentBottomDock } from "~/features/agent/components/AgentBottomDock";
 import { Header } from "./Header";
 
 export default function AppShell() {
@@ -19,6 +19,7 @@ export default function AppShell() {
       <main className="flex min-h-0 flex-1 flex-col">
         <Outlet />
       </main>
+      {!isAgentWorkspace ? <AgentBottomDock /> : null}
     </div>
   );
 }
