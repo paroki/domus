@@ -220,7 +220,7 @@ func (s *Service) EnsureUser(ctx context.Context, email, name, phone, provider, 
 		u, err := txRepo.FindUserByEmailIncludeDeleted(ctx, normEmail)
 		switch {
 		case ent.IsNotFound(err):
-			u, err = txRepo.CreateUser(ctx, normEmail, strings.TrimSpace(name), phonePtr)
+			u, err = txRepo.CreateUser(ctx, normEmail, strings.TrimSpace(name), phonePtr, false)
 			if err != nil {
 				return err
 			}
@@ -365,6 +365,7 @@ func toUserResponse(u *ent.User) domain.UserResponse {
 		NotifyTelegram:  u.NotifyTelegram,
 		Status:          string(u.Status),
 		Onboarded:       u.Onboarded,
+		IsCantusAdmin:   u.CantusAdmin,
 		DefaultParokiID: u.DefaultParokiID,
 		LastLoginAt:     u.LastLoginAt,
 		CreatedAt:       u.CreatedAt,

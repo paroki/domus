@@ -141,7 +141,7 @@ func (s *Service) OAuthCallback(
 			return err
 		}
 		if avatarURL != nil && (updatedUser.AvatarURL == nil || *updatedUser.AvatarURL == "") {
-			updatedUser, err = txRepo.UpdateUser(ctx, u.ID, nil, nil, nil, nil, avatarURL, nil, nil, nil, nil, nil, nil, nil)
+			updatedUser, err = txRepo.UpdateUser(ctx, u.ID, nil, nil, nil, nil, avatarURL, nil, nil, nil, nil, nil, nil, nil, nil)
 			if err != nil {
 				return err
 			}

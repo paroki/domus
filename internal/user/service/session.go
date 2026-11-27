@@ -206,7 +206,7 @@ func (s *Service) BootstrapSuperAdmin(ctx context.Context) error {
 	err := s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
 		u, err := txRepo.FindUserByEmail(ctx, email)
 		if ent.IsNotFound(err) {
-			u, err = txRepo.CreateUser(ctx, email, name, nil)
+			u, err = txRepo.CreateUser(ctx, email, name, nil, false)
 			if err != nil {
 				return err
 			}

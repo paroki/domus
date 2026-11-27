@@ -20,6 +20,8 @@ type Tx struct {
 	AgentProvider *AgentProviderClient
 	// AgentSession is the client for interacting with the AgentSession builders.
 	AgentSession *AgentSessionClient
+	// Cantus is the client for interacting with the Cantus builders.
+	Cantus *CantusClient
 	// CasbinRule is the client for interacting with the CasbinRule builders.
 	CasbinRule *CasbinRuleClient
 	// Event is the client for interacting with the Event builders.
@@ -217,6 +219,7 @@ func (tx *Tx) init() {
 	tx.AgentMessage = NewAgentMessageClient(tx.config)
 	tx.AgentProvider = NewAgentProviderClient(tx.config)
 	tx.AgentSession = NewAgentSessionClient(tx.config)
+	tx.Cantus = NewCantusClient(tx.config)
 	tx.CasbinRule = NewCasbinRuleClient(tx.config)
 	tx.Event = NewEventClient(tx.config)
 	tx.EventLagu = NewEventLaguClient(tx.config)

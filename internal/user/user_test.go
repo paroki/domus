@@ -918,3 +918,83 @@ func (s *UserFeatureSuite) TestNotifyUser_DeduplicationAndRetentionCleanup() {
 	s.Require().NoError(err)
 	s.Equal(3, remaining)
 }
+
+func (s *UserFeatureSuite) TestCantusAdmin_CreateUpdateDeleteReactivateAndSearch() {
+	s.Require().NoError(s.feature.Bootstrap(context.Background()))
+	adminCookie := s.issueSessionFor("Admin@Paroki.org")
+	s.SetCookie(adminCookie)
+
+	// 1. Create user with isCantusAdmin=true -> DB cantus_admin=true + Casbin "cantus:admin" on "*"
+	s.Request("/api/users", http.MethodPost, map[string]any{
+		"email":         "cantus.admin@paroki.org",
+		"name":          "Cantus Admin",
+		"isCantusAdmin": true,
+	})
+	s.Created()
+	created := testutil.DecodeAs[domain.UserResponse](&s.ApiTestSuite).Data
+	s.True(created.IsCantusAdmin)
+	s.Contains(created.Roles, "cantus:admin")
+
+	roles, err := s.enforcer.RolesForUserInDomain(authz.UserSubject(created.ID), authz.DomainGlobal)
+	s.Require().NoError(err)
+	s.Contains(roles, "cantus:admin")
+
+	// 2. Search users filtered by cantusAdmin=true and cantusAdmin=false
+	trueVal := true
+	falseVal := false
+	s.Request("/api/users/search", http.MethodPost, domain.SearchUsersRequest{
+		Filter: &domain.UserSearchFilter{CantusAdmin: &trueVal},
+	})
+	s.OK()
+	trueList := testutil.DecodeAs[[]domain.UserResponse](&s.ApiTestSuite).Data
+	s.Len(trueList, 1)
+	s.Equal(created.ID, trueList[0].ID)
+
+	s.Request("/api/users/search", http.MethodPost, domain.SearchUsersRequest{
+		Filter: &domain.UserSearchFilter{CantusAdmin: &falseVal},
+	})
+	s.OK()
+	falseList := testutil.DecodeAs[[]domain.UserResponse](&s.ApiTestSuite).Data
+	s.NotEmpty(falseList)
+	for _, u := range falseList {
+		s.False(u.IsCantusAdmin)
+	}
+
+	// 3. Revoke cantusAdmin via PATCH /api/users/:id
+	s.Request("/api/users/"+created.ID.String(), http.MethodPatch, map[string]any{
+		"isCantusAdmin": false,
+	})
+	s.OK()
+	patched := testutil.DecodeAs[domain.UserResponse](&s.ApiTestSuite).Data
+	s.False(patched.IsCantusAdmin)
+	s.NotContains(patched.Roles, "cantus:admin")
+
+	roles, err = s.enforcer.RolesForUserInDomain(authz.UserSubject(created.ID), authz.DomainGlobal)
+	s.Require().NoError(err)
+	s.NotContains(roles, "cantus:admin")
+
+	// 4. Promote back to cantusAdmin=true, then soft-delete -> Casbin "cantus:admin" is revoked
+	s.Request("/api/users/"+created.ID.String(), http.MethodPatch, map[string]any{
+		"isCantusAdmin": true,
+	})
+	s.OK()
+	s.True(testutil.DecodeAs[domain.UserResponse](&s.ApiTestSuite).Data.IsCantusAdmin)
+
+	s.Request("/api/users/"+created.ID.String(), http.MethodDelete, nil)
+	s.NoContent()
+
+	roles, err = s.enforcer.RolesForUserInDomain(authz.UserSubject(created.ID), authz.DomainGlobal)
+	s.Require().NoError(err)
+	s.NotContains(roles, "cantus:admin")
+
+	// 5. Reactivate via AdminCreateUser without isCantusAdmin -> cantus_admin resets to false
+	s.Request("/api/users", http.MethodPost, map[string]any{
+		"email": "cantus.admin@paroki.org",
+		"name":  "Cantus Reactivated",
+	})
+	s.Created()
+	reactivated := testutil.DecodeAs[domain.UserResponse](&s.ApiTestSuite).Data
+	s.Equal(created.ID, reactivated.ID)
+	s.False(reactivated.IsCantusAdmin)
+	s.NotContains(reactivated.Roles, "cantus:admin")
+}

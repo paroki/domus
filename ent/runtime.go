@@ -10,6 +10,7 @@ import (
 	"github.com/paroki/domus/ent/agentmessage"
 	"github.com/paroki/domus/ent/agentprovider"
 	"github.com/paroki/domus/ent/agentsession"
+	"github.com/paroki/domus/ent/cantus"
 	"github.com/paroki/domus/ent/casbinrule"
 	"github.com/paroki/domus/ent/event"
 	"github.com/paroki/domus/ent/eventlagu"
@@ -172,6 +173,43 @@ func init() {
 	agentsessionDescID := agentsessionMixinFields0[0].Descriptor()
 	// agentsession.DefaultID holds the default value on creation for the id field.
 	agentsession.DefaultID = agentsessionDescID.Default.(func() uuid.UUID)
+	cantusMixin := schema.Cantus{}.Mixin()
+	cantusMixinFields0 := cantusMixin[0].Fields()
+	_ = cantusMixinFields0
+	cantusMixinFields1 := cantusMixin[1].Fields()
+	_ = cantusMixinFields1
+	cantusFields := schema.Cantus{}.Fields()
+	_ = cantusFields
+	// cantusDescCreatedAt is the schema descriptor for created_at field.
+	cantusDescCreatedAt := cantusMixinFields1[0].Descriptor()
+	// cantus.DefaultCreatedAt holds the default value on creation for the created_at field.
+	cantus.DefaultCreatedAt = cantusDescCreatedAt.Default.(func() time.Time)
+	// cantusDescUpdatedAt is the schema descriptor for updated_at field.
+	cantusDescUpdatedAt := cantusMixinFields1[1].Descriptor()
+	// cantus.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	cantus.DefaultUpdatedAt = cantusDescUpdatedAt.Default.(func() time.Time)
+	// cantus.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	cantus.UpdateDefaultUpdatedAt = cantusDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// cantusDescSlug is the schema descriptor for slug field.
+	cantusDescSlug := cantusFields[0].Descriptor()
+	// cantus.SlugValidator is a validator for the "slug" field. It is called by the builders before save.
+	cantus.SlugValidator = cantusDescSlug.Validators[0].(func(string) error)
+	// cantusDescJudul is the schema descriptor for judul field.
+	cantusDescJudul := cantusFields[4].Descriptor()
+	// cantus.JudulValidator is a validator for the "judul" field. It is called by the builders before save.
+	cantus.JudulValidator = cantusDescJudul.Validators[0].(func(string) error)
+	// cantusDescTag is the schema descriptor for tag field.
+	cantusDescTag := cantusFields[6].Descriptor()
+	// cantus.DefaultTag holds the default value on creation for the tag field.
+	cantus.DefaultTag = cantusDescTag.Default.([]string)
+	// cantusDescActive is the schema descriptor for active field.
+	cantusDescActive := cantusFields[12].Descriptor()
+	// cantus.DefaultActive holds the default value on creation for the active field.
+	cantus.DefaultActive = cantusDescActive.Default.(bool)
+	// cantusDescID is the schema descriptor for id field.
+	cantusDescID := cantusMixinFields0[0].Descriptor()
+	// cantus.DefaultID holds the default value on creation for the id field.
+	cantus.DefaultID = cantusDescID.Default.(func() uuid.UUID)
 	casbinruleMixin := schema.CasbinRule{}.Mixin()
 	casbinruleMixinFields0 := casbinruleMixin[0].Fields()
 	_ = casbinruleMixinFields0
@@ -940,6 +978,10 @@ func init() {
 	userDescOnboarded := userFields[11].Descriptor()
 	// user.DefaultOnboarded holds the default value on creation for the onboarded field.
 	user.DefaultOnboarded = userDescOnboarded.Default.(bool)
+	// userDescCantusAdmin is the schema descriptor for cantus_admin field.
+	userDescCantusAdmin := userFields[12].Descriptor()
+	// user.DefaultCantusAdmin holds the default value on creation for the cantus_admin field.
+	user.DefaultCantusAdmin = userDescCantusAdmin.Default.(bool)
 	// userDescID is the schema descriptor for id field.
 	userDescID := userMixinFields0[0].Descriptor()
 	// user.DefaultID holds the default value on creation for the id field.

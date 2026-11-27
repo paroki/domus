@@ -16,6 +16,7 @@ import (
 	"github.com/paroki/domus/ent/agentmessage"
 	"github.com/paroki/domus/ent/agentprovider"
 	"github.com/paroki/domus/ent/agentsession"
+	"github.com/paroki/domus/ent/cantus"
 	"github.com/paroki/domus/ent/casbinrule"
 	"github.com/paroki/domus/ent/event"
 	"github.com/paroki/domus/ent/eventlagu"
@@ -111,6 +112,7 @@ func checkColumn(t, c string) error {
 			agentmessage.Table:         agentmessage.ValidColumn,
 			agentprovider.Table:        agentprovider.ValidColumn,
 			agentsession.Table:         agentsession.ValidColumn,
+			cantus.Table:               cantus.ValidColumn,
 			casbinrule.Table:           casbinrule.ValidColumn,
 			event.Table:                event.ValidColumn,
 			eventlagu.Table:            eventlagu.ValidColumn,

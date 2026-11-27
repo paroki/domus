@@ -119,6 +119,58 @@ var (
 			},
 		},
 	}
+	// CantusColumns holds the columns for the "cantus" table.
+	CantusColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "slug", Type: field.TypeString},
+		{Name: "jenis", Type: field.TypeEnum, Enums: []string{"lagu", "mazmur", "profan"}},
+		{Name: "sumber", Type: field.TypeString, Nullable: true},
+		{Name: "nomor", Type: field.TypeString, Nullable: true},
+		{Name: "judul", Type: field.TypeString},
+		{Name: "kategori", Type: field.TypeString, Nullable: true},
+		{Name: "tag", Type: field.TypeJSON},
+		{Name: "nada_dasar", Type: field.TypeString, Nullable: true},
+		{Name: "lirik", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "kredit", Type: field.TypeJSON, Nullable: true},
+		{Name: "media", Type: field.TypeJSON, Nullable: true},
+		{Name: "meta", Type: field.TypeJSON, Nullable: true},
+		{Name: "active", Type: field.TypeBool, Default: true},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+	}
+	// CantusTable holds the schema information for the "cantus" table.
+	CantusTable = &schema.Table{
+		Name:       "cantus",
+		Columns:    CantusColumns,
+		PrimaryKey: []*schema.Column{CantusColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "cantus_slug_active_unique",
+				Unique:  true,
+				Columns: []*schema.Column{CantusColumns[4]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "cantus_sumber_nomor",
+				Unique:  false,
+				Columns: []*schema.Column{CantusColumns[6], CantusColumns[7]},
+			},
+			{
+				Name:    "cantus_jenis_sumber_active",
+				Unique:  false,
+				Columns: []*schema.Column{CantusColumns[5], CantusColumns[6], CantusColumns[16]},
+			},
+			{
+				Name:    "cantus_judul",
+				Unique:  false,
+				Columns: []*schema.Column{CantusColumns[8]},
+			},
+		},
+	}
 	// CasbinRulesColumns holds the columns for the "casbin_rules" table.
 	CasbinRulesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -1190,6 +1242,7 @@ var (
 		{Name: "notify_telegram", Type: field.TypeBool, Default: true},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "disabled"}, Default: "active"},
 		{Name: "onboarded", Type: field.TypeBool, Default: false},
+		{Name: "cantus_admin", Type: field.TypeBool, Default: false},
 		{Name: "default_paroki_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "last_login_at", Type: field.TypeTime, Nullable: true},
 	}
@@ -1482,6 +1535,7 @@ var (
 		AgentMessagesTable,
 		AgentProvidersTable,
 		AgentSessionsTable,
+		CantusTable,
 		CasbinRulesTable,
 		EventsTable,
 		EventLaguTable,
@@ -1529,6 +1583,9 @@ func init() {
 	}
 	AgentSessionsTable.Annotation = &entsql.Annotation{
 		Table: "agent_sessions",
+	}
+	CantusTable.Annotation = &entsql.Annotation{
+		Table: "cantus",
 	}
 	EventLaguTable.ForeignKeys[0].RefTable = EventsTable
 	EventLaguTable.Annotation = &entsql.Annotation{

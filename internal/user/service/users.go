@@ -14,15 +14,18 @@ import (
 	"github.com/paroki/domus/internal/user/repo"
 )
 
-// SearchUsers searches non-deleted users with optional query, status filter, and cursor pagination.
+const roleCantusAdmin = "cantus:admin"
+
+// SearchUsers searches non-deleted users with optional query, status, cantusAdmin filters, and cursor pagination.
 func (s *Service) SearchUsers(
 	ctx context.Context,
 	q, status string,
+	cantusAdmin *bool,
 	cursorCreatedAt *time.Time,
 	cursorID *uuid.UUID,
 	limit int,
 ) ([]domain.UserResponse, bool, error) {
-	rows, err := s.repo.SearchUsers(ctx, strings.TrimSpace(q), status, cursorCreatedAt, cursorID, limit+1)
+	rows, err := s.repo.SearchUsers(ctx, strings.TrimSpace(q), status, cantusAdmin, cursorCreatedAt, cursorID, limit+1)
 	if err != nil {
 		return nil, false, err
 	}
@@ -65,8 +68,12 @@ func (s *Service) AdminCreateUser(ctx context.Context, req domain.AdminCreateUse
 			return domain.ErrUserEmailConflict
 		case err == nil && existing.DeletedAt != nil:
 			u, err = txRepo.ReactivateUser(ctx, existing.ID, strings.TrimSpace(req.Name), phonePtr)
+			if err == nil && req.IsCantusAdmin {
+				cantusAdmin := true
+				u, err = txRepo.UpdateUser(ctx, existing.ID, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, &cantusAdmin)
+			}
 		case ent.IsNotFound(err):
-			u, err = txRepo.CreateUser(ctx, normEmail, strings.TrimSpace(req.Name), phonePtr)
+			u, err = txRepo.CreateUser(ctx, normEmail, strings.TrimSpace(req.Name), phonePtr, req.IsCantusAdmin)
 		default:
 			return err
 		}
@@ -93,6 +100,15 @@ func (s *Service) AdminCreateUser(ctx context.Context, req domain.AdminCreateUse
 		}
 		if req.IsSuperAdmin {
 			if err := s.enforcer.AssignRole(ctx, sub, domain.RoleSuperAdmin, authz.DomainGlobal); err != nil {
+				return domain.UserResponse{}, err
+			}
+		}
+		if req.IsCantusAdmin {
+			if err := s.enforcer.AssignRole(ctx, sub, roleCantusAdmin, authz.DomainGlobal); err != nil {
+				return domain.UserResponse{}, err
+			}
+		} else {
+			if err := s.enforcer.RevokeRole(ctx, sub, roleCantusAdmin, authz.DomainGlobal); err != nil {
 				return domain.UserResponse{}, err
 			}
 		}
@@ -168,7 +184,7 @@ func (s *Service) AdminUpdateUser(ctx context.Context, id uuid.UUID, req domain.
 	var updated *ent.User
 	err = s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
 		var txErr error
-		updated, txErr = txRepo.UpdateUser(ctx, id, namePtr, phonePtr, nil, nil, nil, nil, nil, statusPtr, nil, nil, nil, nil)
+		updated, txErr = txRepo.UpdateUser(ctx, id, namePtr, phonePtr, nil, nil, nil, nil, nil, statusPtr, nil, nil, nil, nil, req.IsCantusAdmin)
 		if txErr != nil {
 			return txErr
 		}
@@ -184,15 +200,28 @@ func (s *Service) AdminUpdateUser(ctx context.Context, id uuid.UUID, req domain.
 		return domain.UserResponse{}, err
 	}
 
-	if s.enforcer != nil && req.IsSuperAdmin != nil {
+	if s.enforcer != nil {
 		sub := authz.UserSubject(id)
-		if *req.IsSuperAdmin {
-			if err := s.enforcer.AssignRole(ctx, sub, domain.RoleSuperAdmin, authz.DomainGlobal); err != nil {
-				return domain.UserResponse{}, err
+		if req.IsSuperAdmin != nil {
+			if *req.IsSuperAdmin {
+				if err := s.enforcer.AssignRole(ctx, sub, domain.RoleSuperAdmin, authz.DomainGlobal); err != nil {
+					return domain.UserResponse{}, err
+				}
+			} else {
+				if err := s.enforcer.RevokeRole(ctx, sub, domain.RoleSuperAdmin, authz.DomainGlobal); err != nil {
+					return domain.UserResponse{}, err
+				}
 			}
-		} else {
-			if err := s.enforcer.RevokeRole(ctx, sub, domain.RoleSuperAdmin, authz.DomainGlobal); err != nil {
-				return domain.UserResponse{}, err
+		}
+		if req.IsCantusAdmin != nil {
+			if *req.IsCantusAdmin {
+				if err := s.enforcer.AssignRole(ctx, sub, roleCantusAdmin, authz.DomainGlobal); err != nil {
+					return domain.UserResponse{}, err
+				}
+			} else {
+				if err := s.enforcer.RevokeRole(ctx, sub, roleCantusAdmin, authz.DomainGlobal); err != nil {
+					return domain.UserResponse{}, err
+				}
 			}
 		}
 	}
@@ -237,7 +266,7 @@ func (s *Service) AdminDeleteUser(ctx context.Context, id uuid.UUID) error {
 
 	if s.enforcer != nil {
 		sub := authz.UserSubject(id)
-		for _, role := range []string{domain.RoleSuperAdmin, domain.RoleUser} {
+		for _, role := range []string{domain.RoleSuperAdmin, domain.RoleUser, roleCantusAdmin} {
 			if err := s.enforcer.RevokeRole(ctx, sub, role, authz.DomainGlobal); err != nil {
 				return err
 			}

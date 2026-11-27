@@ -142,6 +142,7 @@ func (s *Service) UpdateMe(ctx context.Context, p authx.Principal, req domain.Up
 		req.NotifyPush,
 		req.NotifyWhatsapp,
 		req.NotifyTelegram,
+		nil,
 	)
 	if ent.IsNotFound(err) {
 		return domain.UserResponse{}, domain.ErrUserNotFound

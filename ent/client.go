@@ -20,6 +20,7 @@ import (
 	"github.com/paroki/domus/ent/agentmessage"
 	"github.com/paroki/domus/ent/agentprovider"
 	"github.com/paroki/domus/ent/agentsession"
+	"github.com/paroki/domus/ent/cantus"
 	"github.com/paroki/domus/ent/casbinrule"
 	"github.com/paroki/domus/ent/event"
 	"github.com/paroki/domus/ent/eventlagu"
@@ -66,6 +67,8 @@ type Client struct {
 	AgentProvider *AgentProviderClient
 	// AgentSession is the client for interacting with the AgentSession builders.
 	AgentSession *AgentSessionClient
+	// Cantus is the client for interacting with the Cantus builders.
+	Cantus *CantusClient
 	// CasbinRule is the client for interacting with the CasbinRule builders.
 	CasbinRule *CasbinRuleClient
 	// Event is the client for interacting with the Event builders.
@@ -143,6 +146,7 @@ func (c *Client) init() {
 	c.AgentMessage = NewAgentMessageClient(c.config)
 	c.AgentProvider = NewAgentProviderClient(c.config)
 	c.AgentSession = NewAgentSessionClient(c.config)
+	c.Cantus = NewCantusClient(c.config)
 	c.CasbinRule = NewCasbinRuleClient(c.config)
 	c.Event = NewEventClient(c.config)
 	c.EventLagu = NewEventLaguClient(c.config)
@@ -270,6 +274,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		AgentMessage:         NewAgentMessageClient(cfg),
 		AgentProvider:        NewAgentProviderClient(cfg),
 		AgentSession:         NewAgentSessionClient(cfg),
+		Cantus:               NewCantusClient(cfg),
 		CasbinRule:           NewCasbinRuleClient(cfg),
 		Event:                NewEventClient(cfg),
 		EventLagu:            NewEventLaguClient(cfg),
@@ -324,6 +329,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		AgentMessage:         NewAgentMessageClient(cfg),
 		AgentProvider:        NewAgentProviderClient(cfg),
 		AgentSession:         NewAgentSessionClient(cfg),
+		Cantus:               NewCantusClient(cfg),
 		CasbinRule:           NewCasbinRuleClient(cfg),
 		Event:                NewEventClient(cfg),
 		EventLagu:            NewEventLaguClient(cfg),
@@ -384,13 +390,13 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.AgentMemory, c.AgentMessage, c.AgentProvider, c.AgentSession, c.CasbinRule,
-		c.Event, c.EventLagu, c.EventPetugas, c.EventRSVP, c.Kecamatan, c.Keluarga,
-		c.Kelurahan, c.Keuskupan, c.Kevikepan, c.Kota, c.Lingkungan, c.Lookup,
-		c.OrgInvite, c.OrgJabatan, c.OrgMember, c.OrgPeriode, c.Organization, c.Paroki,
-		c.ParokiMember, c.Setting, c.Umat, c.UmatSakramen, c.User, c.UserAccount,
-		c.UserNotificationLog, c.UserOTP, c.UserPushSubscription, c.UserSession,
-		c.UserToken, c.Wilayah,
+		c.AgentMemory, c.AgentMessage, c.AgentProvider, c.AgentSession, c.Cantus,
+		c.CasbinRule, c.Event, c.EventLagu, c.EventPetugas, c.EventRSVP, c.Kecamatan,
+		c.Keluarga, c.Kelurahan, c.Keuskupan, c.Kevikepan, c.Kota, c.Lingkungan,
+		c.Lookup, c.OrgInvite, c.OrgJabatan, c.OrgMember, c.OrgPeriode, c.Organization,
+		c.Paroki, c.ParokiMember, c.Setting, c.Umat, c.UmatSakramen, c.User,
+		c.UserAccount, c.UserNotificationLog, c.UserOTP, c.UserPushSubscription,
+		c.UserSession, c.UserToken, c.Wilayah,
 	} {
 		n.Use(hooks...)
 	}
@@ -400,13 +406,13 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.AgentMemory, c.AgentMessage, c.AgentProvider, c.AgentSession, c.CasbinRule,
-		c.Event, c.EventLagu, c.EventPetugas, c.EventRSVP, c.Kecamatan, c.Keluarga,
-		c.Kelurahan, c.Keuskupan, c.Kevikepan, c.Kota, c.Lingkungan, c.Lookup,
-		c.OrgInvite, c.OrgJabatan, c.OrgMember, c.OrgPeriode, c.Organization, c.Paroki,
-		c.ParokiMember, c.Setting, c.Umat, c.UmatSakramen, c.User, c.UserAccount,
-		c.UserNotificationLog, c.UserOTP, c.UserPushSubscription, c.UserSession,
-		c.UserToken, c.Wilayah,
+		c.AgentMemory, c.AgentMessage, c.AgentProvider, c.AgentSession, c.Cantus,
+		c.CasbinRule, c.Event, c.EventLagu, c.EventPetugas, c.EventRSVP, c.Kecamatan,
+		c.Keluarga, c.Kelurahan, c.Keuskupan, c.Kevikepan, c.Kota, c.Lingkungan,
+		c.Lookup, c.OrgInvite, c.OrgJabatan, c.OrgMember, c.OrgPeriode, c.Organization,
+		c.Paroki, c.ParokiMember, c.Setting, c.Umat, c.UmatSakramen, c.User,
+		c.UserAccount, c.UserNotificationLog, c.UserOTP, c.UserPushSubscription,
+		c.UserSession, c.UserToken, c.Wilayah,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -423,6 +429,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.AgentProvider.mutate(ctx, m)
 	case *AgentSessionMutation:
 		return c.AgentSession.mutate(ctx, m)
+	case *CantusMutation:
+		return c.Cantus.mutate(ctx, m)
 	case *CasbinRuleMutation:
 		return c.CasbinRule.mutate(ctx, m)
 	case *EventMutation:
@@ -1051,6 +1059,139 @@ func (c *AgentSessionClient) mutate(ctx context.Context, m *AgentSessionMutation
 		return (&AgentSessionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown AgentSession mutation op: %q", m.Op())
+	}
+}
+
+// CantusClient is a client for the Cantus schema.
+type CantusClient struct {
+	config
+}
+
+// NewCantusClient returns a client for the Cantus from the given config.
+func NewCantusClient(c config) *CantusClient {
+	return &CantusClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `cantus.Hooks(f(g(h())))`.
+func (c *CantusClient) Use(hooks ...Hook) {
+	c.hooks.Cantus = append(c.hooks.Cantus, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `cantus.Intercept(f(g(h())))`.
+func (c *CantusClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Cantus = append(c.inters.Cantus, interceptors...)
+}
+
+// Create returns a builder for creating a Cantus entity.
+func (c *CantusClient) Create() *CantusCreate {
+	mutation := newCantusMutation(c.config, OpCreate)
+	return &CantusCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Cantus entities.
+func (c *CantusClient) CreateBulk(builders ...*CantusCreate) *CantusCreateBulk {
+	return &CantusCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CantusClient) MapCreateBulk(slice any, setFunc func(*CantusCreate, int)) *CantusCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CantusCreateBulk{err: fmt.Errorf("calling to CantusClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CantusCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CantusCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Cantus.
+func (c *CantusClient) Update() *CantusUpdate {
+	mutation := newCantusMutation(c.config, OpUpdate)
+	return &CantusUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CantusClient) UpdateOne(_m *Cantus) *CantusUpdateOne {
+	mutation := newCantusMutation(c.config, OpUpdateOne, withCantus(_m))
+	return &CantusUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CantusClient) UpdateOneID(id uuid.UUID) *CantusUpdateOne {
+	mutation := newCantusMutation(c.config, OpUpdateOne, withCantusID(id))
+	return &CantusUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Cantus.
+func (c *CantusClient) Delete() *CantusDelete {
+	mutation := newCantusMutation(c.config, OpDelete)
+	return &CantusDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CantusClient) DeleteOne(_m *Cantus) *CantusDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CantusClient) DeleteOneID(id uuid.UUID) *CantusDeleteOne {
+	builder := c.Delete().Where(cantus.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CantusDeleteOne{builder}
+}
+
+// Query returns a query builder for Cantus.
+func (c *CantusClient) Query() *CantusQuery {
+	return &CantusQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCantus},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Cantus entity by its id.
+func (c *CantusClient) Get(ctx context.Context, id uuid.UUID) (*Cantus, error) {
+	return c.Query().Where(cantus.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CantusClient) GetX(ctx context.Context, id uuid.UUID) *Cantus {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *CantusClient) Hooks() []Hook {
+	return c.hooks.Cantus
+}
+
+// Interceptors returns the client interceptors.
+func (c *CantusClient) Interceptors() []Interceptor {
+	return c.inters.Cantus
+}
+
+func (c *CantusClient) mutate(ctx context.Context, m *CantusMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CantusCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CantusUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CantusUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CantusDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Cantus mutation op: %q", m.Op())
 	}
 }
 
@@ -6140,19 +6281,19 @@ func (c *WilayahClient) mutate(ctx context.Context, m *WilayahMutation) (Value, 
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		AgentMemory, AgentMessage, AgentProvider, AgentSession, CasbinRule, Event,
-		EventLagu, EventPetugas, EventRSVP, Kecamatan, Keluarga, Kelurahan, Keuskupan,
-		Kevikepan, Kota, Lingkungan, Lookup, OrgInvite, OrgJabatan, OrgMember,
-		OrgPeriode, Organization, Paroki, ParokiMember, Setting, Umat, UmatSakramen,
-		User, UserAccount, UserNotificationLog, UserOTP, UserPushSubscription,
-		UserSession, UserToken, Wilayah []ent.Hook
+		AgentMemory, AgentMessage, AgentProvider, AgentSession, Cantus, CasbinRule,
+		Event, EventLagu, EventPetugas, EventRSVP, Kecamatan, Keluarga, Kelurahan,
+		Keuskupan, Kevikepan, Kota, Lingkungan, Lookup, OrgInvite, OrgJabatan,
+		OrgMember, OrgPeriode, Organization, Paroki, ParokiMember, Setting, Umat,
+		UmatSakramen, User, UserAccount, UserNotificationLog, UserOTP,
+		UserPushSubscription, UserSession, UserToken, Wilayah []ent.Hook
 	}
 	inters struct {
-		AgentMemory, AgentMessage, AgentProvider, AgentSession, CasbinRule, Event,
-		EventLagu, EventPetugas, EventRSVP, Kecamatan, Keluarga, Kelurahan, Keuskupan,
-		Kevikepan, Kota, Lingkungan, Lookup, OrgInvite, OrgJabatan, OrgMember,
-		OrgPeriode, Organization, Paroki, ParokiMember, Setting, Umat, UmatSakramen,
-		User, UserAccount, UserNotificationLog, UserOTP, UserPushSubscription,
-		UserSession, UserToken, Wilayah []ent.Interceptor
+		AgentMemory, AgentMessage, AgentProvider, AgentSession, Cantus, CasbinRule,
+		Event, EventLagu, EventPetugas, EventRSVP, Kecamatan, Keluarga, Kelurahan,
+		Keuskupan, Kevikepan, Kota, Lingkungan, Lookup, OrgInvite, OrgJabatan,
+		OrgMember, OrgPeriode, Organization, Paroki, ParokiMember, Setting, Umat,
+		UmatSakramen, User, UserAccount, UserNotificationLog, UserOTP,
+		UserPushSubscription, UserSession, UserToken, Wilayah []ent.Interceptor
 	}
 )

@@ -31,10 +31,12 @@ func (h *Handler) SearchUsers(c fiber.Ctx) error {
 		return err
 	}
 	var status string
+	var cantusAdmin *bool
 	if req.Filter != nil {
 		status = req.Filter.Status
+		cantusAdmin = req.Filter.CantusAdmin
 	}
-	items, hasMore, err := h.service.SearchUsers(c.Context(), req.Q, status, cursorT, cursorID, limit)
+	items, hasMore, err := h.service.SearchUsers(c.Context(), req.Q, status, cantusAdmin, cursorT, cursorID, limit)
 	if err != nil {
 		return err
 	}

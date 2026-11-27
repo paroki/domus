@@ -16,6 +16,7 @@ import (
 	"github.com/paroki/domus/ent/agentmessage"
 	"github.com/paroki/domus/ent/agentprovider"
 	"github.com/paroki/domus/ent/agentsession"
+	"github.com/paroki/domus/ent/cantus"
 	"github.com/paroki/domus/ent/casbinrule"
 	"github.com/paroki/domus/ent/event"
 	"github.com/paroki/domus/ent/eventlagu"
@@ -64,6 +65,7 @@ const (
 	TypeAgentMessage         = "AgentMessage"
 	TypeAgentProvider        = "AgentProvider"
 	TypeAgentSession         = "AgentSession"
+	TypeCantus               = "Cantus"
 	TypeCasbinRule           = "CasbinRule"
 	TypeEvent                = "Event"
 	TypeEventLagu            = "EventLagu"
@@ -3492,6 +3494,1428 @@ func (m *AgentSessionMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown AgentSession edge %s", name)
+}
+
+// CantusMutation represents an operation that mutates the Cantus nodes in the graph.
+type CantusMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *uuid.UUID
+	created_at    *time.Time
+	updated_at    *time.Time
+	deleted_at    *time.Time
+	slug          *string
+	jenis         *cantus.Jenis
+	sumber        *string
+	nomor         *string
+	judul         *string
+	kategori      *string
+	tag           *[]string
+	appendtag     []string
+	nada_dasar    *string
+	lirik         *string
+	kredit        *map[string]string
+	media         *[]schema.CantusMediaItem
+	appendmedia   []schema.CantusMediaItem
+	meta          *map[string]interface{}
+	active        *bool
+	created_by    *uuid.UUID
+	clearedFields map[string]struct{}
+	done          bool
+	oldValue      func(context.Context) (*Cantus, error)
+	predicates    []predicate.Cantus
+}
+
+var _ ent.Mutation = (*CantusMutation)(nil)
+
+// cantusOption allows management of the mutation configuration using functional options.
+type cantusOption func(*CantusMutation)
+
+// newCantusMutation creates new mutation for the Cantus entity.
+func newCantusMutation(c config, op Op, opts ...cantusOption) *CantusMutation {
+	m := &CantusMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeCantus,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withCantusID sets the ID field of the mutation.
+func withCantusID(id uuid.UUID) cantusOption {
+	return func(m *CantusMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Cantus
+		)
+		m.oldValue = func(ctx context.Context) (*Cantus, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Cantus.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withCantus sets the old Cantus of the mutation.
+func withCantus(node *Cantus) cantusOption {
+	return func(m *CantusMutation) {
+		m.oldValue = func(context.Context) (*Cantus, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m CantusMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m CantusMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Cantus entities.
+func (m *CantusMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *CantusMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *CantusMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Cantus.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *CantusMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *CantusMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the Cantus entity.
+// If the Cantus object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CantusMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *CantusMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *CantusMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *CantusMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the Cantus entity.
+// If the Cantus object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CantusMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *CantusMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *CantusMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *CantusMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the Cantus entity.
+// If the Cantus object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CantusMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *CantusMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[cantus.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *CantusMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[cantus.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *CantusMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, cantus.FieldDeletedAt)
+}
+
+// SetSlug sets the "slug" field.
+func (m *CantusMutation) SetSlug(s string) {
+	m.slug = &s
+}
+
+// Slug returns the value of the "slug" field in the mutation.
+func (m *CantusMutation) Slug() (r string, exists bool) {
+	v := m.slug
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSlug returns the old "slug" field's value of the Cantus entity.
+// If the Cantus object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CantusMutation) OldSlug(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSlug is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSlug requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSlug: %w", err)
+	}
+	return oldValue.Slug, nil
+}
+
+// ResetSlug resets all changes to the "slug" field.
+func (m *CantusMutation) ResetSlug() {
+	m.slug = nil
+}
+
+// SetJenis sets the "jenis" field.
+func (m *CantusMutation) SetJenis(c cantus.Jenis) {
+	m.jenis = &c
+}
+
+// Jenis returns the value of the "jenis" field in the mutation.
+func (m *CantusMutation) Jenis() (r cantus.Jenis, exists bool) {
+	v := m.jenis
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldJenis returns the old "jenis" field's value of the Cantus entity.
+// If the Cantus object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CantusMutation) OldJenis(ctx context.Context) (v cantus.Jenis, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldJenis is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldJenis requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldJenis: %w", err)
+	}
+	return oldValue.Jenis, nil
+}
+
+// ResetJenis resets all changes to the "jenis" field.
+func (m *CantusMutation) ResetJenis() {
+	m.jenis = nil
+}
+
+// SetSumber sets the "sumber" field.
+func (m *CantusMutation) SetSumber(s string) {
+	m.sumber = &s
+}
+
+// Sumber returns the value of the "sumber" field in the mutation.
+func (m *CantusMutation) Sumber() (r string, exists bool) {
+	v := m.sumber
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSumber returns the old "sumber" field's value of the Cantus entity.
+// If the Cantus object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CantusMutation) OldSumber(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSumber is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSumber requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSumber: %w", err)
+	}
+	return oldValue.Sumber, nil
+}
+
+// ClearSumber clears the value of the "sumber" field.
+func (m *CantusMutation) ClearSumber() {
+	m.sumber = nil
+	m.clearedFields[cantus.FieldSumber] = struct{}{}
+}
+
+// SumberCleared returns if the "sumber" field was cleared in this mutation.
+func (m *CantusMutation) SumberCleared() bool {
+	_, ok := m.clearedFields[cantus.FieldSumber]
+	return ok
+}
+
+// ResetSumber resets all changes to the "sumber" field.
+func (m *CantusMutation) ResetSumber() {
+	m.sumber = nil
+	delete(m.clearedFields, cantus.FieldSumber)
+}
+
+// SetNomor sets the "nomor" field.
+func (m *CantusMutation) SetNomor(s string) {
+	m.nomor = &s
+}
+
+// Nomor returns the value of the "nomor" field in the mutation.
+func (m *CantusMutation) Nomor() (r string, exists bool) {
+	v := m.nomor
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNomor returns the old "nomor" field's value of the Cantus entity.
+// If the Cantus object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CantusMutation) OldNomor(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNomor is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNomor requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNomor: %w", err)
+	}
+	return oldValue.Nomor, nil
+}
+
+// ClearNomor clears the value of the "nomor" field.
+func (m *CantusMutation) ClearNomor() {
+	m.nomor = nil
+	m.clearedFields[cantus.FieldNomor] = struct{}{}
+}
+
+// NomorCleared returns if the "nomor" field was cleared in this mutation.
+func (m *CantusMutation) NomorCleared() bool {
+	_, ok := m.clearedFields[cantus.FieldNomor]
+	return ok
+}
+
+// ResetNomor resets all changes to the "nomor" field.
+func (m *CantusMutation) ResetNomor() {
+	m.nomor = nil
+	delete(m.clearedFields, cantus.FieldNomor)
+}
+
+// SetJudul sets the "judul" field.
+func (m *CantusMutation) SetJudul(s string) {
+	m.judul = &s
+}
+
+// Judul returns the value of the "judul" field in the mutation.
+func (m *CantusMutation) Judul() (r string, exists bool) {
+	v := m.judul
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldJudul returns the old "judul" field's value of the Cantus entity.
+// If the Cantus object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CantusMutation) OldJudul(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldJudul is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldJudul requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldJudul: %w", err)
+	}
+	return oldValue.Judul, nil
+}
+
+// ResetJudul resets all changes to the "judul" field.
+func (m *CantusMutation) ResetJudul() {
+	m.judul = nil
+}
+
+// SetKategori sets the "kategori" field.
+func (m *CantusMutation) SetKategori(s string) {
+	m.kategori = &s
+}
+
+// Kategori returns the value of the "kategori" field in the mutation.
+func (m *CantusMutation) Kategori() (r string, exists bool) {
+	v := m.kategori
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKategori returns the old "kategori" field's value of the Cantus entity.
+// If the Cantus object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CantusMutation) OldKategori(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldKategori is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldKategori requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKategori: %w", err)
+	}
+	return oldValue.Kategori, nil
+}
+
+// ClearKategori clears the value of the "kategori" field.
+func (m *CantusMutation) ClearKategori() {
+	m.kategori = nil
+	m.clearedFields[cantus.FieldKategori] = struct{}{}
+}
+
+// KategoriCleared returns if the "kategori" field was cleared in this mutation.
+func (m *CantusMutation) KategoriCleared() bool {
+	_, ok := m.clearedFields[cantus.FieldKategori]
+	return ok
+}
+
+// ResetKategori resets all changes to the "kategori" field.
+func (m *CantusMutation) ResetKategori() {
+	m.kategori = nil
+	delete(m.clearedFields, cantus.FieldKategori)
+}
+
+// SetTag sets the "tag" field.
+func (m *CantusMutation) SetTag(s []string) {
+	m.tag = &s
+	m.appendtag = nil
+}
+
+// Tag returns the value of the "tag" field in the mutation.
+func (m *CantusMutation) Tag() (r []string, exists bool) {
+	v := m.tag
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTag returns the old "tag" field's value of the Cantus entity.
+// If the Cantus object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CantusMutation) OldTag(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTag is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTag requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTag: %w", err)
+	}
+	return oldValue.Tag, nil
+}
+
+// AppendTag adds s to the "tag" field.
+func (m *CantusMutation) AppendTag(s []string) {
+	m.appendtag = append(m.appendtag, s...)
+}
+
+// AppendedTag returns the list of values that were appended to the "tag" field in this mutation.
+func (m *CantusMutation) AppendedTag() ([]string, bool) {
+	if len(m.appendtag) == 0 {
+		return nil, false
+	}
+	return m.appendtag, true
+}
+
+// ResetTag resets all changes to the "tag" field.
+func (m *CantusMutation) ResetTag() {
+	m.tag = nil
+	m.appendtag = nil
+}
+
+// SetNadaDasar sets the "nada_dasar" field.
+func (m *CantusMutation) SetNadaDasar(s string) {
+	m.nada_dasar = &s
+}
+
+// NadaDasar returns the value of the "nada_dasar" field in the mutation.
+func (m *CantusMutation) NadaDasar() (r string, exists bool) {
+	v := m.nada_dasar
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNadaDasar returns the old "nada_dasar" field's value of the Cantus entity.
+// If the Cantus object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CantusMutation) OldNadaDasar(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNadaDasar is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNadaDasar requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNadaDasar: %w", err)
+	}
+	return oldValue.NadaDasar, nil
+}
+
+// ClearNadaDasar clears the value of the "nada_dasar" field.
+func (m *CantusMutation) ClearNadaDasar() {
+	m.nada_dasar = nil
+	m.clearedFields[cantus.FieldNadaDasar] = struct{}{}
+}
+
+// NadaDasarCleared returns if the "nada_dasar" field was cleared in this mutation.
+func (m *CantusMutation) NadaDasarCleared() bool {
+	_, ok := m.clearedFields[cantus.FieldNadaDasar]
+	return ok
+}
+
+// ResetNadaDasar resets all changes to the "nada_dasar" field.
+func (m *CantusMutation) ResetNadaDasar() {
+	m.nada_dasar = nil
+	delete(m.clearedFields, cantus.FieldNadaDasar)
+}
+
+// SetLirik sets the "lirik" field.
+func (m *CantusMutation) SetLirik(s string) {
+	m.lirik = &s
+}
+
+// Lirik returns the value of the "lirik" field in the mutation.
+func (m *CantusMutation) Lirik() (r string, exists bool) {
+	v := m.lirik
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLirik returns the old "lirik" field's value of the Cantus entity.
+// If the Cantus object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CantusMutation) OldLirik(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLirik is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLirik requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLirik: %w", err)
+	}
+	return oldValue.Lirik, nil
+}
+
+// ClearLirik clears the value of the "lirik" field.
+func (m *CantusMutation) ClearLirik() {
+	m.lirik = nil
+	m.clearedFields[cantus.FieldLirik] = struct{}{}
+}
+
+// LirikCleared returns if the "lirik" field was cleared in this mutation.
+func (m *CantusMutation) LirikCleared() bool {
+	_, ok := m.clearedFields[cantus.FieldLirik]
+	return ok
+}
+
+// ResetLirik resets all changes to the "lirik" field.
+func (m *CantusMutation) ResetLirik() {
+	m.lirik = nil
+	delete(m.clearedFields, cantus.FieldLirik)
+}
+
+// SetKredit sets the "kredit" field.
+func (m *CantusMutation) SetKredit(value map[string]string) {
+	m.kredit = &value
+}
+
+// Kredit returns the value of the "kredit" field in the mutation.
+func (m *CantusMutation) Kredit() (r map[string]string, exists bool) {
+	v := m.kredit
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKredit returns the old "kredit" field's value of the Cantus entity.
+// If the Cantus object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CantusMutation) OldKredit(ctx context.Context) (v map[string]string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldKredit is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldKredit requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKredit: %w", err)
+	}
+	return oldValue.Kredit, nil
+}
+
+// ClearKredit clears the value of the "kredit" field.
+func (m *CantusMutation) ClearKredit() {
+	m.kredit = nil
+	m.clearedFields[cantus.FieldKredit] = struct{}{}
+}
+
+// KreditCleared returns if the "kredit" field was cleared in this mutation.
+func (m *CantusMutation) KreditCleared() bool {
+	_, ok := m.clearedFields[cantus.FieldKredit]
+	return ok
+}
+
+// ResetKredit resets all changes to the "kredit" field.
+func (m *CantusMutation) ResetKredit() {
+	m.kredit = nil
+	delete(m.clearedFields, cantus.FieldKredit)
+}
+
+// SetMedia sets the "media" field.
+func (m *CantusMutation) SetMedia(smi []schema.CantusMediaItem) {
+	m.media = &smi
+	m.appendmedia = nil
+}
+
+// Media returns the value of the "media" field in the mutation.
+func (m *CantusMutation) Media() (r []schema.CantusMediaItem, exists bool) {
+	v := m.media
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMedia returns the old "media" field's value of the Cantus entity.
+// If the Cantus object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CantusMutation) OldMedia(ctx context.Context) (v []schema.CantusMediaItem, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMedia is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMedia requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMedia: %w", err)
+	}
+	return oldValue.Media, nil
+}
+
+// AppendMedia adds smi to the "media" field.
+func (m *CantusMutation) AppendMedia(smi []schema.CantusMediaItem) {
+	m.appendmedia = append(m.appendmedia, smi...)
+}
+
+// AppendedMedia returns the list of values that were appended to the "media" field in this mutation.
+func (m *CantusMutation) AppendedMedia() ([]schema.CantusMediaItem, bool) {
+	if len(m.appendmedia) == 0 {
+		return nil, false
+	}
+	return m.appendmedia, true
+}
+
+// ClearMedia clears the value of the "media" field.
+func (m *CantusMutation) ClearMedia() {
+	m.media = nil
+	m.appendmedia = nil
+	m.clearedFields[cantus.FieldMedia] = struct{}{}
+}
+
+// MediaCleared returns if the "media" field was cleared in this mutation.
+func (m *CantusMutation) MediaCleared() bool {
+	_, ok := m.clearedFields[cantus.FieldMedia]
+	return ok
+}
+
+// ResetMedia resets all changes to the "media" field.
+func (m *CantusMutation) ResetMedia() {
+	m.media = nil
+	m.appendmedia = nil
+	delete(m.clearedFields, cantus.FieldMedia)
+}
+
+// SetMeta sets the "meta" field.
+func (m *CantusMutation) SetMeta(value map[string]interface{}) {
+	m.meta = &value
+}
+
+// Meta returns the value of the "meta" field in the mutation.
+func (m *CantusMutation) Meta() (r map[string]interface{}, exists bool) {
+	v := m.meta
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMeta returns the old "meta" field's value of the Cantus entity.
+// If the Cantus object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CantusMutation) OldMeta(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMeta is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMeta requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMeta: %w", err)
+	}
+	return oldValue.Meta, nil
+}
+
+// ClearMeta clears the value of the "meta" field.
+func (m *CantusMutation) ClearMeta() {
+	m.meta = nil
+	m.clearedFields[cantus.FieldMeta] = struct{}{}
+}
+
+// MetaCleared returns if the "meta" field was cleared in this mutation.
+func (m *CantusMutation) MetaCleared() bool {
+	_, ok := m.clearedFields[cantus.FieldMeta]
+	return ok
+}
+
+// ResetMeta resets all changes to the "meta" field.
+func (m *CantusMutation) ResetMeta() {
+	m.meta = nil
+	delete(m.clearedFields, cantus.FieldMeta)
+}
+
+// SetActive sets the "active" field.
+func (m *CantusMutation) SetActive(b bool) {
+	m.active = &b
+}
+
+// Active returns the value of the "active" field in the mutation.
+func (m *CantusMutation) Active() (r bool, exists bool) {
+	v := m.active
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldActive returns the old "active" field's value of the Cantus entity.
+// If the Cantus object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CantusMutation) OldActive(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldActive is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldActive requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldActive: %w", err)
+	}
+	return oldValue.Active, nil
+}
+
+// ResetActive resets all changes to the "active" field.
+func (m *CantusMutation) ResetActive() {
+	m.active = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *CantusMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *CantusMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the Cantus entity.
+// If the Cantus object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CantusMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *CantusMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[cantus.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *CantusMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[cantus.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *CantusMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, cantus.FieldCreatedBy)
+}
+
+// Where appends a list predicates to the CantusMutation builder.
+func (m *CantusMutation) Where(ps ...predicate.Cantus) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the CantusMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *CantusMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Cantus, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *CantusMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *CantusMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Cantus).
+func (m *CantusMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *CantusMutation) Fields() []string {
+	fields := make([]string, 0, 17)
+	if m.created_at != nil {
+		fields = append(fields, cantus.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, cantus.FieldUpdatedAt)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, cantus.FieldDeletedAt)
+	}
+	if m.slug != nil {
+		fields = append(fields, cantus.FieldSlug)
+	}
+	if m.jenis != nil {
+		fields = append(fields, cantus.FieldJenis)
+	}
+	if m.sumber != nil {
+		fields = append(fields, cantus.FieldSumber)
+	}
+	if m.nomor != nil {
+		fields = append(fields, cantus.FieldNomor)
+	}
+	if m.judul != nil {
+		fields = append(fields, cantus.FieldJudul)
+	}
+	if m.kategori != nil {
+		fields = append(fields, cantus.FieldKategori)
+	}
+	if m.tag != nil {
+		fields = append(fields, cantus.FieldTag)
+	}
+	if m.nada_dasar != nil {
+		fields = append(fields, cantus.FieldNadaDasar)
+	}
+	if m.lirik != nil {
+		fields = append(fields, cantus.FieldLirik)
+	}
+	if m.kredit != nil {
+		fields = append(fields, cantus.FieldKredit)
+	}
+	if m.media != nil {
+		fields = append(fields, cantus.FieldMedia)
+	}
+	if m.meta != nil {
+		fields = append(fields, cantus.FieldMeta)
+	}
+	if m.active != nil {
+		fields = append(fields, cantus.FieldActive)
+	}
+	if m.created_by != nil {
+		fields = append(fields, cantus.FieldCreatedBy)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *CantusMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case cantus.FieldCreatedAt:
+		return m.CreatedAt()
+	case cantus.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case cantus.FieldDeletedAt:
+		return m.DeletedAt()
+	case cantus.FieldSlug:
+		return m.Slug()
+	case cantus.FieldJenis:
+		return m.Jenis()
+	case cantus.FieldSumber:
+		return m.Sumber()
+	case cantus.FieldNomor:
+		return m.Nomor()
+	case cantus.FieldJudul:
+		return m.Judul()
+	case cantus.FieldKategori:
+		return m.Kategori()
+	case cantus.FieldTag:
+		return m.Tag()
+	case cantus.FieldNadaDasar:
+		return m.NadaDasar()
+	case cantus.FieldLirik:
+		return m.Lirik()
+	case cantus.FieldKredit:
+		return m.Kredit()
+	case cantus.FieldMedia:
+		return m.Media()
+	case cantus.FieldMeta:
+		return m.Meta()
+	case cantus.FieldActive:
+		return m.Active()
+	case cantus.FieldCreatedBy:
+		return m.CreatedBy()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *CantusMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case cantus.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case cantus.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case cantus.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case cantus.FieldSlug:
+		return m.OldSlug(ctx)
+	case cantus.FieldJenis:
+		return m.OldJenis(ctx)
+	case cantus.FieldSumber:
+		return m.OldSumber(ctx)
+	case cantus.FieldNomor:
+		return m.OldNomor(ctx)
+	case cantus.FieldJudul:
+		return m.OldJudul(ctx)
+	case cantus.FieldKategori:
+		return m.OldKategori(ctx)
+	case cantus.FieldTag:
+		return m.OldTag(ctx)
+	case cantus.FieldNadaDasar:
+		return m.OldNadaDasar(ctx)
+	case cantus.FieldLirik:
+		return m.OldLirik(ctx)
+	case cantus.FieldKredit:
+		return m.OldKredit(ctx)
+	case cantus.FieldMedia:
+		return m.OldMedia(ctx)
+	case cantus.FieldMeta:
+		return m.OldMeta(ctx)
+	case cantus.FieldActive:
+		return m.OldActive(ctx)
+	case cantus.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	}
+	return nil, fmt.Errorf("unknown Cantus field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *CantusMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case cantus.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case cantus.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case cantus.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case cantus.FieldSlug:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSlug(v)
+		return nil
+	case cantus.FieldJenis:
+		v, ok := value.(cantus.Jenis)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetJenis(v)
+		return nil
+	case cantus.FieldSumber:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSumber(v)
+		return nil
+	case cantus.FieldNomor:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNomor(v)
+		return nil
+	case cantus.FieldJudul:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetJudul(v)
+		return nil
+	case cantus.FieldKategori:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKategori(v)
+		return nil
+	case cantus.FieldTag:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTag(v)
+		return nil
+	case cantus.FieldNadaDasar:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNadaDasar(v)
+		return nil
+	case cantus.FieldLirik:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLirik(v)
+		return nil
+	case cantus.FieldKredit:
+		v, ok := value.(map[string]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKredit(v)
+		return nil
+	case cantus.FieldMedia:
+		v, ok := value.([]schema.CantusMediaItem)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMedia(v)
+		return nil
+	case cantus.FieldMeta:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMeta(v)
+		return nil
+	case cantus.FieldActive:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetActive(v)
+		return nil
+	case cantus.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Cantus field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *CantusMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *CantusMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *CantusMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Cantus numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *CantusMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(cantus.FieldDeletedAt) {
+		fields = append(fields, cantus.FieldDeletedAt)
+	}
+	if m.FieldCleared(cantus.FieldSumber) {
+		fields = append(fields, cantus.FieldSumber)
+	}
+	if m.FieldCleared(cantus.FieldNomor) {
+		fields = append(fields, cantus.FieldNomor)
+	}
+	if m.FieldCleared(cantus.FieldKategori) {
+		fields = append(fields, cantus.FieldKategori)
+	}
+	if m.FieldCleared(cantus.FieldNadaDasar) {
+		fields = append(fields, cantus.FieldNadaDasar)
+	}
+	if m.FieldCleared(cantus.FieldLirik) {
+		fields = append(fields, cantus.FieldLirik)
+	}
+	if m.FieldCleared(cantus.FieldKredit) {
+		fields = append(fields, cantus.FieldKredit)
+	}
+	if m.FieldCleared(cantus.FieldMedia) {
+		fields = append(fields, cantus.FieldMedia)
+	}
+	if m.FieldCleared(cantus.FieldMeta) {
+		fields = append(fields, cantus.FieldMeta)
+	}
+	if m.FieldCleared(cantus.FieldCreatedBy) {
+		fields = append(fields, cantus.FieldCreatedBy)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *CantusMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *CantusMutation) ClearField(name string) error {
+	switch name {
+	case cantus.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case cantus.FieldSumber:
+		m.ClearSumber()
+		return nil
+	case cantus.FieldNomor:
+		m.ClearNomor()
+		return nil
+	case cantus.FieldKategori:
+		m.ClearKategori()
+		return nil
+	case cantus.FieldNadaDasar:
+		m.ClearNadaDasar()
+		return nil
+	case cantus.FieldLirik:
+		m.ClearLirik()
+		return nil
+	case cantus.FieldKredit:
+		m.ClearKredit()
+		return nil
+	case cantus.FieldMedia:
+		m.ClearMedia()
+		return nil
+	case cantus.FieldMeta:
+		m.ClearMeta()
+		return nil
+	case cantus.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	}
+	return fmt.Errorf("unknown Cantus nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *CantusMutation) ResetField(name string) error {
+	switch name {
+	case cantus.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case cantus.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case cantus.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case cantus.FieldSlug:
+		m.ResetSlug()
+		return nil
+	case cantus.FieldJenis:
+		m.ResetJenis()
+		return nil
+	case cantus.FieldSumber:
+		m.ResetSumber()
+		return nil
+	case cantus.FieldNomor:
+		m.ResetNomor()
+		return nil
+	case cantus.FieldJudul:
+		m.ResetJudul()
+		return nil
+	case cantus.FieldKategori:
+		m.ResetKategori()
+		return nil
+	case cantus.FieldTag:
+		m.ResetTag()
+		return nil
+	case cantus.FieldNadaDasar:
+		m.ResetNadaDasar()
+		return nil
+	case cantus.FieldLirik:
+		m.ResetLirik()
+		return nil
+	case cantus.FieldKredit:
+		m.ResetKredit()
+		return nil
+	case cantus.FieldMedia:
+		m.ResetMedia()
+		return nil
+	case cantus.FieldMeta:
+		m.ResetMeta()
+		return nil
+	case cantus.FieldActive:
+		m.ResetActive()
+		return nil
+	case cantus.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	}
+	return fmt.Errorf("unknown Cantus field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *CantusMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *CantusMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *CantusMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *CantusMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *CantusMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *CantusMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *CantusMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown Cantus unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *CantusMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown Cantus edge %s", name)
 }
 
 // CasbinRuleMutation represents an operation that mutates the CasbinRule nodes in the graph.
@@ -30723,6 +32147,7 @@ type UserMutation struct {
 	notify_telegram           *bool
 	status                    *user.Status
 	onboarded                 *bool
+	cantus_admin              *bool
 	default_paroki_id         *uuid.UUID
 	last_login_at             *time.Time
 	clearedFields             map[string]struct{}
@@ -31452,6 +32877,42 @@ func (m *UserMutation) ResetOnboarded() {
 	m.onboarded = nil
 }
 
+// SetCantusAdmin sets the "cantus_admin" field.
+func (m *UserMutation) SetCantusAdmin(b bool) {
+	m.cantus_admin = &b
+}
+
+// CantusAdmin returns the value of the "cantus_admin" field in the mutation.
+func (m *UserMutation) CantusAdmin() (r bool, exists bool) {
+	v := m.cantus_admin
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCantusAdmin returns the old "cantus_admin" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldCantusAdmin(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCantusAdmin is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCantusAdmin requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCantusAdmin: %w", err)
+	}
+	return oldValue.CantusAdmin, nil
+}
+
+// ResetCantusAdmin resets all changes to the "cantus_admin" field.
+func (m *UserMutation) ResetCantusAdmin() {
+	m.cantus_admin = nil
+}
+
 // SetDefaultParokiID sets the "default_paroki_id" field.
 func (m *UserMutation) SetDefaultParokiID(u uuid.UUID) {
 	m.default_paroki_id = &u
@@ -31800,7 +33261,7 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 17)
+	fields := make([]string, 0, 18)
 	if m.created_at != nil {
 		fields = append(fields, user.FieldCreatedAt)
 	}
@@ -31846,6 +33307,9 @@ func (m *UserMutation) Fields() []string {
 	if m.onboarded != nil {
 		fields = append(fields, user.FieldOnboarded)
 	}
+	if m.cantus_admin != nil {
+		fields = append(fields, user.FieldCantusAdmin)
+	}
 	if m.default_paroki_id != nil {
 		fields = append(fields, user.FieldDefaultParokiID)
 	}
@@ -31890,6 +33354,8 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.Status()
 	case user.FieldOnboarded:
 		return m.Onboarded()
+	case user.FieldCantusAdmin:
+		return m.CantusAdmin()
 	case user.FieldDefaultParokiID:
 		return m.DefaultParokiID()
 	case user.FieldLastLoginAt:
@@ -31933,6 +33399,8 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldStatus(ctx)
 	case user.FieldOnboarded:
 		return m.OldOnboarded(ctx)
+	case user.FieldCantusAdmin:
+		return m.OldCantusAdmin(ctx)
 	case user.FieldDefaultParokiID:
 		return m.OldDefaultParokiID(ctx)
 	case user.FieldLastLoginAt:
@@ -32050,6 +33518,13 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetOnboarded(v)
+		return nil
+	case user.FieldCantusAdmin:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCantusAdmin(v)
 		return nil
 	case user.FieldDefaultParokiID:
 		v, ok := value.(uuid.UUID)
@@ -32203,6 +33678,9 @@ func (m *UserMutation) ResetField(name string) error {
 		return nil
 	case user.FieldOnboarded:
 		m.ResetOnboarded()
+		return nil
+	case user.FieldCantusAdmin:
+		m.ResetCantusAdmin()
 		return nil
 	case user.FieldDefaultParokiID:
 		m.ResetDefaultParokiID()

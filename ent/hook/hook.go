@@ -57,6 +57,18 @@ func (f AgentSessionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AgentSessionMutation", m)
 }
 
+// The CantusFunc type is an adapter to allow the use of ordinary
+// function as Cantus mutator.
+type CantusFunc func(context.Context, *ent.CantusMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CantusFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CantusMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CantusMutation", m)
+}
+
 // The CasbinRuleFunc type is an adapter to allow the use of ordinary
 // function as CasbinRule mutator.
 type CasbinRuleFunc func(context.Context, *ent.CasbinRuleMutation) (ent.Value, error)

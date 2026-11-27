@@ -55,6 +55,7 @@ type UserResponse struct {
 	PushSubscriptionCount int                    `json:"pushSubscriptionCount"`
 	Status                string                 `json:"status"`
 	Onboarded             bool                   `json:"onboarded"`
+	IsCantusAdmin         bool                   `json:"isCantusAdmin"`
 	LinkedProviders       []string               `json:"linkedProviders,omitempty"`
 	ActiveParokiID        *uuid.UUID             `json:"activeParokiId,omitempty"`
 	DefaultParokiID       *uuid.UUID             `json:"defaultParokiId,omitempty"`
@@ -179,7 +180,8 @@ type SearchTokensRequest struct {
 
 // UserSearchFilter filters the admin user directory search.
 type UserSearchFilter struct {
-	Status string `json:"status,omitempty" validate:"omitempty,oneof=active disabled"`
+	Status      string `json:"status,omitempty" validate:"omitempty,oneof=active disabled"`
+	CantusAdmin *bool  `json:"cantusAdmin,omitempty"`
 }
 
 // SearchUsersRequest searches the user directory with optional query, filter, and cursor pagination.
@@ -190,20 +192,22 @@ type SearchUsersRequest struct {
 	Limit  int               `json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
 }
 
-// AdminCreateUserRequest creates a new user (and optionally appoints Super Admin).
+// AdminCreateUserRequest creates a new user (and optionally appoints Super Admin or Cantus Admin).
 type AdminCreateUserRequest struct {
-	Email        string  `json:"email" validate:"required,email"`
-	Name         string  `json:"name" validate:"required,min=1"`
-	Phone        *string `json:"phone,omitempty"`
-	IsSuperAdmin bool    `json:"isSuperAdmin"`
+	Email         string  `json:"email" validate:"required,email"`
+	Name          string  `json:"name" validate:"required,min=1"`
+	Phone         *string `json:"phone,omitempty"`
+	IsSuperAdmin  bool    `json:"isSuperAdmin"`
+	IsCantusAdmin bool    `json:"isCantusAdmin,omitempty"`
 }
 
-// AdminUpdateUserRequest updates user profile, status, or Super Admin role.
+// AdminUpdateUserRequest updates user profile, status, Super Admin, or Cantus Admin role.
 type AdminUpdateUserRequest struct {
-	Name         *string `json:"name,omitempty" validate:"omitempty,min=1"`
-	Phone        *string `json:"phone,omitempty"`
-	Status       *string `json:"status,omitempty" validate:"omitempty,oneof=active disabled"`
-	IsSuperAdmin *bool   `json:"isSuperAdmin,omitempty"`
+	Name          *string `json:"name,omitempty" validate:"omitempty,min=1"`
+	Phone         *string `json:"phone,omitempty"`
+	Status        *string `json:"status,omitempty" validate:"omitempty,oneof=active disabled"`
+	IsSuperAdmin  *bool   `json:"isSuperAdmin,omitempty"`
+	IsCantusAdmin *bool   `json:"isCantusAdmin,omitempty"`
 }
 
 // VAPIDPublicKeyResponse returns the application's VAPID public key for Web Push subscription.

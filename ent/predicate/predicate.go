@@ -18,6 +18,9 @@ type AgentProvider func(*sql.Selector)
 // AgentSession is the predicate function for agentsession builders.
 type AgentSession func(*sql.Selector)
 
+// Cantus is the predicate function for cantus builders.
+type Cantus func(*sql.Selector)
+
 // CasbinRule is the predicate function for casbinrule builders.
 type CasbinRule func(*sql.Selector)
 

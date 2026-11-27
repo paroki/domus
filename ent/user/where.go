@@ -121,6 +121,11 @@ func Onboarded(v bool) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldOnboarded, v))
 }
 
+// CantusAdmin applies equality check predicate on the "cantus_admin" field. It's identical to CantusAdminEQ.
+func CantusAdmin(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldCantusAdmin, v))
+}
+
 // DefaultParokiID applies equality check predicate on the "default_paroki_id" field. It's identical to DefaultParokiIDEQ.
 func DefaultParokiID(v uuid.UUID) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldDefaultParokiID, v))
@@ -769,6 +774,16 @@ func OnboardedEQ(v bool) predicate.User {
 // OnboardedNEQ applies the NEQ predicate on the "onboarded" field.
 func OnboardedNEQ(v bool) predicate.User {
 	return predicate.User(sql.FieldNEQ(FieldOnboarded, v))
+}
+
+// CantusAdminEQ applies the EQ predicate on the "cantus_admin" field.
+func CantusAdminEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldCantusAdmin, v))
+}
+
+// CantusAdminNEQ applies the NEQ predicate on the "cantus_admin" field.
+func CantusAdminNEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldCantusAdmin, v))
 }
 
 // DefaultParokiIDEQ applies the EQ predicate on the "default_paroki_id" field.

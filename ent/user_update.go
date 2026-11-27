@@ -251,6 +251,20 @@ func (_u *UserUpdate) SetNillableOnboarded(v *bool) *UserUpdate {
 	return _u
 }
 
+// SetCantusAdmin sets the "cantus_admin" field.
+func (_u *UserUpdate) SetCantusAdmin(v bool) *UserUpdate {
+	_u.mutation.SetCantusAdmin(v)
+	return _u
+}
+
+// SetNillableCantusAdmin sets the "cantus_admin" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableCantusAdmin(v *bool) *UserUpdate {
+	if v != nil {
+		_u.SetCantusAdmin(*v)
+	}
+	return _u
+}
+
 // SetDefaultParokiID sets the "default_paroki_id" field.
 func (_u *UserUpdate) SetDefaultParokiID(v uuid.UUID) *UserUpdate {
 	_u.mutation.SetDefaultParokiID(v)
@@ -574,6 +588,9 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.Onboarded(); ok {
 		_spec.SetField(user.FieldOnboarded, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.CantusAdmin(); ok {
+		_spec.SetField(user.FieldCantusAdmin, field.TypeBool, value)
 	}
 	if value, ok := _u.mutation.DefaultParokiID(); ok {
 		_spec.SetField(user.FieldDefaultParokiID, field.TypeUUID, value)
@@ -1005,6 +1022,20 @@ func (_u *UserUpdateOne) SetNillableOnboarded(v *bool) *UserUpdateOne {
 	return _u
 }
 
+// SetCantusAdmin sets the "cantus_admin" field.
+func (_u *UserUpdateOne) SetCantusAdmin(v bool) *UserUpdateOne {
+	_u.mutation.SetCantusAdmin(v)
+	return _u
+}
+
+// SetNillableCantusAdmin sets the "cantus_admin" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableCantusAdmin(v *bool) *UserUpdateOne {
+	if v != nil {
+		_u.SetCantusAdmin(*v)
+	}
+	return _u
+}
+
 // SetDefaultParokiID sets the "default_paroki_id" field.
 func (_u *UserUpdateOne) SetDefaultParokiID(v uuid.UUID) *UserUpdateOne {
 	_u.mutation.SetDefaultParokiID(v)
@@ -1358,6 +1389,9 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	}
 	if value, ok := _u.mutation.Onboarded(); ok {
 		_spec.SetField(user.FieldOnboarded, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.CantusAdmin(); ok {
+		_spec.SetField(user.FieldCantusAdmin, field.TypeBool, value)
 	}
 	if value, ok := _u.mutation.DefaultParokiID(); ok {
 		_spec.SetField(user.FieldDefaultParokiID, field.TypeUUID, value)

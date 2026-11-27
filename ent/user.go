@@ -48,6 +48,8 @@ type User struct {
 	Status user.Status `json:"status,omitempty"`
 	// Onboarded holds the value of the "onboarded" field.
 	Onboarded bool `json:"onboarded,omitempty"`
+	// CantusAdmin holds the value of the "cantus_admin" field.
+	CantusAdmin bool `json:"cantus_admin,omitempty"`
 	// DefaultParokiID holds the value of the "default_paroki_id" field.
 	DefaultParokiID *uuid.UUID `json:"default_paroki_id,omitempty"`
 	// LastLoginAt holds the value of the "last_login_at" field.
@@ -116,7 +118,7 @@ func (*User) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case user.FieldDefaultParokiID:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
-		case user.FieldNotifyPush, user.FieldNotifyWhatsapp, user.FieldNotifyTelegram, user.FieldOnboarded:
+		case user.FieldNotifyPush, user.FieldNotifyWhatsapp, user.FieldNotifyTelegram, user.FieldOnboarded, user.FieldCantusAdmin:
 			values[i] = new(sql.NullBool)
 		case user.FieldEmail, user.FieldName, user.FieldPhone, user.FieldGender, user.FieldBirthDate, user.FieldAvatarURL, user.FieldTimezone, user.FieldStatus:
 			values[i] = new(sql.NullString)
@@ -239,6 +241,12 @@ func (_m *User) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field onboarded", values[i])
 			} else if value.Valid {
 				_m.Onboarded = value.Bool
+			}
+		case user.FieldCantusAdmin:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field cantus_admin", values[i])
+			} else if value.Valid {
+				_m.CantusAdmin = value.Bool
 			}
 		case user.FieldDefaultParokiID:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
@@ -364,6 +372,9 @@ func (_m *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("onboarded=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Onboarded))
+	builder.WriteString(", ")
+	builder.WriteString("cantus_admin=")
+	builder.WriteString(fmt.Sprintf("%v", _m.CantusAdmin))
 	builder.WriteString(", ")
 	if v := _m.DefaultParokiID; v != nil {
 		builder.WriteString("default_paroki_id=")

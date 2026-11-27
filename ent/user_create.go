@@ -219,6 +219,20 @@ func (_c *UserCreate) SetNillableOnboarded(v *bool) *UserCreate {
 	return _c
 }
 
+// SetCantusAdmin sets the "cantus_admin" field.
+func (_c *UserCreate) SetCantusAdmin(v bool) *UserCreate {
+	_c.mutation.SetCantusAdmin(v)
+	return _c
+}
+
+// SetNillableCantusAdmin sets the "cantus_admin" field if the given value is not nil.
+func (_c *UserCreate) SetNillableCantusAdmin(v *bool) *UserCreate {
+	if v != nil {
+		_c.SetCantusAdmin(*v)
+	}
+	return _c
+}
+
 // SetDefaultParokiID sets the "default_paroki_id" field.
 func (_c *UserCreate) SetDefaultParokiID(v uuid.UUID) *UserCreate {
 	_c.mutation.SetDefaultParokiID(v)
@@ -388,6 +402,10 @@ func (_c *UserCreate) defaults() {
 		v := user.DefaultOnboarded
 		_c.mutation.SetOnboarded(v)
 	}
+	if _, ok := _c.mutation.CantusAdmin(); !ok {
+		v := user.DefaultCantusAdmin
+		_c.mutation.SetCantusAdmin(v)
+	}
 	if _, ok := _c.mutation.ID(); !ok {
 		v := user.DefaultID()
 		_c.mutation.SetID(v)
@@ -450,6 +468,9 @@ func (_c *UserCreate) check() error {
 	}
 	if _, ok := _c.mutation.Onboarded(); !ok {
 		return &ValidationError{Name: "onboarded", err: errors.New(`ent: missing required field "User.onboarded"`)}
+	}
+	if _, ok := _c.mutation.CantusAdmin(); !ok {
+		return &ValidationError{Name: "cantus_admin", err: errors.New(`ent: missing required field "User.cantus_admin"`)}
 	}
 	return nil
 }
@@ -545,6 +566,10 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Onboarded(); ok {
 		_spec.SetField(user.FieldOnboarded, field.TypeBool, value)
 		_node.Onboarded = value
+	}
+	if value, ok := _c.mutation.CantusAdmin(); ok {
+		_spec.SetField(user.FieldCantusAdmin, field.TypeBool, value)
+		_node.CantusAdmin = value
 	}
 	if value, ok := _c.mutation.DefaultParokiID(); ok {
 		_spec.SetField(user.FieldDefaultParokiID, field.TypeUUID, value)

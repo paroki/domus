@@ -66,6 +66,7 @@ func (r *Repository) ReactivateUser(ctx context.Context, id uuid.UUID, name stri
 		ClearDeletedAt().
 		SetStatus(user.StatusActive).
 		SetOnboarded(false).
+		SetCantusAdmin(false).
 		SetName(name).
 		ClearGender().
 		ClearBirthDate().
@@ -92,10 +93,11 @@ func (r *Repository) FindUserByID(ctx context.Context, id uuid.UUID) (*ent.User,
 }
 
 // CreateUser inserts a new User record.
-func (r *Repository) CreateUser(ctx context.Context, email, name string, phone *string) (*ent.User, error) {
+func (r *Repository) CreateUser(ctx context.Context, email, name string, phone *string, cantusAdmin bool) (*ent.User, error) {
 	q := r.client.User.Create().
 		SetEmail(email).
-		SetName(name)
+		SetName(name).
+		SetCantusAdmin(cantusAdmin)
 	if phone != nil && *phone != "" {
 		q.SetPhone(*phone)
 	}
@@ -421,6 +423,7 @@ func (r *Repository) UpdateUser(
 	notifyPush *bool,
 	notifyWhatsapp *bool,
 	notifyTelegram *bool,
+	cantusAdmin *bool,
 ) (*ent.User, error) {
 	upd := r.client.User.UpdateOneID(id)
 	if name != nil {
@@ -478,6 +481,9 @@ func (r *Repository) UpdateUser(
 	}
 	if notifyTelegram != nil {
 		upd.SetNotifyTelegram(*notifyTelegram)
+	}
+	if cantusAdmin != nil {
+		upd.SetCantusAdmin(*cantusAdmin)
 	}
 	return upd.Save(ctx)
 }
@@ -678,11 +684,12 @@ func (r *Repository) FindUserAccountByID(ctx context.Context, accountID, userID 
 		Only(ctx)
 }
 
-// SearchUsers returns non-deleted users matching optional search query and status filter.
+// SearchUsers returns non-deleted users matching optional search query, status, and cantusAdmin filters.
 func (r *Repository) SearchUsers(
 	ctx context.Context,
 	q string,
 	status string,
+	cantusAdmin *bool,
 	cursorCreatedAt *time.Time,
 	cursorID *uuid.UUID,
 	limit int,
@@ -696,6 +703,9 @@ func (r *Repository) SearchUsers(
 	}
 	if status != "" {
 		query = query.Where(user.StatusEQ(user.Status(status)))
+	}
+	if cantusAdmin != nil {
+		query = query.Where(user.CantusAdminEQ(*cantusAdmin))
 	}
 	if cursorCreatedAt != nil && cursorID != nil {
 		query = query.Where(user.Or(
