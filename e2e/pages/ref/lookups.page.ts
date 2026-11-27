@@ -85,6 +85,10 @@ export class LookupsPage extends BasePage {
     });
   }
 
+  async filterLookupStatus(status: "" | "true" | "false"): Promise<void> {
+    await this.page.locator("#lookup-status-filter").selectOption(status);
+  }
+
   async expectLookupVisible(label: string, scopeLabel: string): Promise<void> {
     const card = this.page
       .locator("div.rounded-xl")

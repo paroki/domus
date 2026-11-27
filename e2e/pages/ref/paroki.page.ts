@@ -1,3 +1,4 @@
+import assert from "node:assert/strict";
 import { BasePage } from "../base.page";
 
 export class ParokiPage extends BasePage {
@@ -18,6 +19,10 @@ export class ParokiPage extends BasePage {
     code: string;
     name: string;
     bishopName?: string;
+    telepon?: string;
+    email?: string;
+    website?: string;
+    alamat?: string;
   }): Promise<void> {
     await this.goto("/settings/gerejawi/keuskupan/new");
     await this.page.locator("#keuskupan-kode").fill(input.code);
@@ -25,10 +30,26 @@ export class ParokiPage extends BasePage {
     if (input.bishopName) {
       await this.page.locator("#keuskupan-uskup").fill(input.bishopName);
     }
+    if (input.telepon) {
+      await this.page.locator("#keuskupan-telepon").fill(input.telepon);
+    }
+    if (input.email) {
+      await this.page.locator("#keuskupan-email").fill(input.email);
+    }
+    if (input.website) {
+      await this.page.locator("#keuskupan-website").fill(input.website);
+    }
+    if (input.alamat) {
+      await this.page.locator("#keuskupan-alamat").fill(input.alamat);
+    }
     await this.page.getByRole("button", { name: "Simpan Keuskupan" }).click();
     await this.page.waitForURL(/\/settings\/gerejawi\/keuskupan$/, {
       timeout: 10_000,
     });
+  }
+
+  async filterKeuskupanStatus(status: "" | "true" | "false"): Promise<void> {
+    await this.page.locator("#keuskupan-status-filter").selectOption(status);
   }
 
   async expectKeuskupanVisible(name: string, code: string): Promise<void> {
@@ -99,6 +120,14 @@ export class ParokiPage extends BasePage {
     await this.page.waitForURL(/\/settings\/gerejawi\/paroki\/[^/]+$/, {
       timeout: 10_000,
     });
+  }
+
+  async expectParokiUsersShortcut(): Promise<void> {
+    const shortcut = this.page.getByRole("link", {
+      name: /Kelola Admin & Anggota Paroki di Direktori Pengguna/,
+    });
+    await shortcut.waitFor({ state: "visible", timeout: 10_000 });
+    assert.equal(await shortcut.getAttribute("href"), "/users");
   }
 
   async editParokiStruktur(input: { kodeResmi?: string }): Promise<void> {

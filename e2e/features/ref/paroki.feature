@@ -23,10 +23,14 @@ Feature: Super Admin paroki settings, keuskupan, paroki, and global lookups
   Scenario: Super Admin manages keuskupan and paroki tenant lifecycle
     When I open "/settings/gerejawi/paroki"
     Then I see the paroki page
-    When I create a keuskupan with code "e2e-dioc-del" and name "Keuskupan Hapus E2E"
+    When I create a keuskupan with code "e2e-dioc-del", name "Keuskupan Hapus E2E", telepon "+62215550101", and email "sekretariat@keuskupan-e2e.org"
     Then I see keuskupan "Keuskupan Hapus E2E" with code "e2e-dioc-del"
-    When I create a paroki under keuskupan "Keuskupan Hapus E2E" with code "e2e-par-del" and name "Paroki Hapus E2E"
-    Then I see paroki "Paroki Hapus E2E" with code "e2e-par-del"
+    When I filter keuskupan by status "false"
+    Then I do not see keuskupan "Keuskupan Hapus E2E"
+    When I filter keuskupan by status "true"
+    And I create a paroki under keuskupan "Keuskupan Hapus E2E" with code "e2e-par-del" and name "Paroki Hapus E2E"
+    Then I see the paroki users directory shortcut
+    And I see paroki "Paroki Hapus E2E" with code "e2e-par-del"
     When I delete paroki "Paroki Hapus E2E"
     Then I do not see paroki "Paroki Hapus E2E"
     When I delete keuskupan "Keuskupan Hapus E2E"
@@ -41,7 +45,11 @@ Feature: Super Admin paroki settings, keuskupan, paroki, and global lookups
     When I edit lookup "Mandiri E2E" to label "Mandiri E2E Updated"
     Then I see lookup "Mandiri E2E Updated" with scope "Global"
     When I toggle active state for lookup "Mandiri E2E Updated"
-    And I delete lookup "Mandiri E2E Updated"
+    And I filter lookups by status "true"
+    Then I do not see lookup "Mandiri E2E Updated"
+    When I filter lookups by status "false"
+    Then I see lookup "Mandiri E2E Updated" with scope "Global"
+    When I delete lookup "Mandiri E2E Updated"
     Then I do not see lookup "Mandiri E2E Updated"
 
   @super-admin

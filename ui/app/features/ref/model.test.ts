@@ -70,6 +70,8 @@ test("slugifyCode normalizes mixed case and spaces into valid code slugs", () =>
     slugifyCode("Keuskupan Agung Jakarta"),
     "keuskupan-agung-jakarta",
   );
+  assert.equal(slugifyCode("Wilayah Santo Lukas"), "wilayah-santo-lukas");
+  assert.equal(slugifyCode("Lingkungan Petrus"), "lingkungan-petrus");
   assert.equal(slugifyCode("---abc_123---"), "abc_123");
 });
 
@@ -82,6 +84,9 @@ test("SIPIL_STEPS, timezone helpers, and validateCoordinatePair work", () => {
       "/settings/sipil/kelurahan",
     ],
   );
+  for (const step of SIPIL_STEPS) {
+    assert.doesNotMatch(step.title, /^Langkah\s+\d+/i);
+  }
   assert.equal(NIL_UUID, "00000000-0000-0000-0000-000000000000");
   assert.equal(DEFAULT_PAROKI_TIMEZONE, "Asia/Makassar");
   assert.equal(PAROKI_TIMEZONES.length, 3);

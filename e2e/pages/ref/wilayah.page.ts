@@ -1,3 +1,4 @@
+import assert from "node:assert/strict";
 import { BasePage } from "../base.page";
 
 export class WilayahPage extends BasePage {
@@ -9,17 +10,26 @@ export class WilayahPage extends BasePage {
 
   async createWilayah(input: {
     jenis?: "wilayah" | "stasi";
-    code: string;
+    code?: string;
     name: string;
     coordinatorName?: string;
     coordinatorPhone?: string;
+    expectedAutoCode?: string;
   }): Promise<void> {
     await this.goto("/settings/paroki/wilayah/new");
     if (input.jenis) {
       await this.page.locator("#wilayah-jenis").selectOption(input.jenis);
     }
-    await this.page.locator("#wilayah-kode").fill(input.code);
     await this.page.locator("#wilayah-nama").fill(input.name);
+    if (input.expectedAutoCode !== undefined) {
+      assert.equal(
+        await this.page.locator("#wilayah-kode").inputValue(),
+        input.expectedAutoCode,
+      );
+    }
+    if (input.code) {
+      await this.page.locator("#wilayah-kode").fill(input.code);
+    }
     if (input.coordinatorName) {
       await this.page
         .locator("#wilayah-koordinator")
@@ -32,6 +42,10 @@ export class WilayahPage extends BasePage {
     await this.page.waitForURL(/\/settings\/paroki\/wilayah$/, {
       timeout: 10_000,
     });
+  }
+
+  async filterWilayahStatus(status: "" | "true" | "false"): Promise<void> {
+    await this.page.locator("#wilayah-status-filter").selectOption(status);
   }
 
   async deleteWilayah(name: string): Promise<void> {
@@ -69,11 +83,12 @@ export class WilayahPage extends BasePage {
 
   async createLingkungan(input: {
     wilayahName?: string;
-    code: string;
+    code?: string;
     name: string;
     patronSaint?: string;
     headName?: string;
     headPhone?: string;
+    expectedAutoCode?: string;
   }): Promise<void> {
     await this.goto("/settings/paroki/lingkungan/new");
     if (input.wilayahName) {
@@ -83,8 +98,16 @@ export class WilayahPage extends BasePage {
         .waitFor({ state: "attached", timeout: 10_000 });
       await select.selectOption({ label: input.wilayahName });
     }
-    await this.page.locator("#lingkungan-kode").fill(input.code);
     await this.page.locator("#lingkungan-nama").fill(input.name);
+    if (input.expectedAutoCode !== undefined) {
+      assert.equal(
+        await this.page.locator("#lingkungan-kode").inputValue(),
+        input.expectedAutoCode,
+      );
+    }
+    if (input.code) {
+      await this.page.locator("#lingkungan-kode").fill(input.code);
+    }
     if (input.patronSaint) {
       await this.page.locator("#lingkungan-pelindung").fill(input.patronSaint);
     }
@@ -98,6 +121,10 @@ export class WilayahPage extends BasePage {
     await this.page.waitForURL(/\/settings\/paroki\/lingkungan/, {
       timeout: 10_000,
     });
+  }
+
+  async filterLingkunganStatus(status: "" | "true" | "false"): Promise<void> {
+    await this.page.locator("#lingkungan-status-filter").selectOption(status);
   }
 
   async deleteLingkungan(name: string): Promise<void> {

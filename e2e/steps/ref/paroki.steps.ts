@@ -51,6 +51,35 @@ When(
   },
 );
 
+When(
+  "I create a keuskupan with code {string}, name {string}, telepon {string}, and email {string}",
+  async function (
+    this: DomusWorld,
+    code: string,
+    name: string,
+    telepon: string,
+    email: string,
+  ) {
+    await this.pages.ref.paroki.createKeuskupan({ code, name, telepon, email });
+  },
+);
+
+When(
+  "I filter keuskupan by status {string}",
+  async function (this: DomusWorld, status: string) {
+    await this.pages.ref.paroki.filterKeuskupanStatus(
+      status as "" | "true" | "false",
+    );
+  },
+);
+
+Then(
+  "I see the paroki users directory shortcut",
+  async function (this: DomusWorld) {
+    await this.pages.ref.paroki.expectParokiUsersShortcut();
+  },
+);
+
 Then(
   "I see keuskupan {string} with code {string}",
   async function (this: DomusWorld, name: string, code: string) {
@@ -139,6 +168,15 @@ When(
   "I toggle active state for lookup {string}",
   async function (this: DomusWorld, label: string) {
     await this.pages.ref.lookups.toggleLookupActive(label);
+  },
+);
+
+When(
+  "I filter lookups by status {string}",
+  async function (this: DomusWorld, status: string) {
+    await this.pages.ref.lookups.filterLookupStatus(
+      status as "" | "true" | "false",
+    );
   },
 );
 

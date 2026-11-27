@@ -40,6 +40,22 @@ When(
   },
 );
 
+When(
+  "I create a wilayah named {string} expecting auto code {string}",
+  async function (this: DomusWorld, name: string, expectedAutoCode: string) {
+    await this.pages.ref.wilayah.createWilayah({ name, expectedAutoCode });
+  },
+);
+
+When(
+  "I filter wilayah by status {string}",
+  async function (this: DomusWorld, status: string) {
+    await this.pages.ref.wilayah.filterWilayahStatus(
+      status as "" | "true" | "false",
+    );
+  },
+);
+
 Then(
   "I see wilayah {string} with code {string}",
   async function (this: DomusWorld, name: string, code: string) {
@@ -56,6 +72,31 @@ When(
     name: string,
   ) {
     await this.pages.ref.wilayah.createLingkungan({ wilayahName, code, name });
+  },
+);
+
+When(
+  "I create a lingkungan under wilayah {string} named {string} expecting auto code {string}",
+  async function (
+    this: DomusWorld,
+    wilayahName: string,
+    name: string,
+    expectedAutoCode: string,
+  ) {
+    await this.pages.ref.wilayah.createLingkungan({
+      wilayahName,
+      name,
+      expectedAutoCode,
+    });
+  },
+);
+
+When(
+  "I filter lingkungan by status {string}",
+  async function (this: DomusWorld, status: string) {
+    await this.pages.ref.wilayah.filterLingkunganStatus(
+      status as "" | "true" | "false",
+    );
   },
 );
 
