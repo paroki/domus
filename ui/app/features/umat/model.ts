@@ -1,10 +1,107 @@
 import type { User } from "./api/types";
 
 export const ROLE_UMAT_ADMIN = "umat:admin";
+export const ROLE_SUPER_ADMIN = "user:super-admin";
 export const NIL_UUID = "00000000-0000-0000-0000-000000000000";
 
 export function isUmatAdmin(user?: User | null): boolean {
   return Boolean(user?.roles?.includes(ROLE_UMAT_ADMIN));
+}
+
+export function isSuperAdmin(user?: User | null): boolean {
+  return Boolean(user?.roles?.includes(ROLE_SUPER_ADMIN));
+}
+
+export function canEditUmatReferensi(
+  user?: User | null,
+  parokiId?: string,
+): boolean {
+  if (parokiId) {
+    return isUmatAdmin(user);
+  }
+  return isSuperAdmin(user);
+}
+
+export interface UmatReferensiCategoryMeta {
+  slug: string;
+  label: string;
+  description: string;
+}
+
+export const UMAT_REFERENSI_CATEGORIES: readonly UmatReferensiCategoryMeta[] = [
+  {
+    slug: "agama",
+    label: "Agama",
+    description: "Daftar agama untuk data umat dan keluarga.",
+  },
+  {
+    slug: "golongan_darah",
+    label: "Golongan Darah",
+    description: "Golongan darah umat (A, B, AB, O, rhesus).",
+  },
+  {
+    slug: "suku",
+    label: "Suku / Etnis",
+    description: "Latar belakang suku atau etnis umat.",
+  },
+  {
+    slug: "hubungan_keluarga",
+    label: "Hubungan Keluarga",
+    description: "Peran anggota dalam kartu keluarga paroki.",
+  },
+  {
+    slug: "status_pernikahan",
+    label: "Status Pernikahan",
+    description: "Status perkawinan sipil maupun gerejani.",
+  },
+  {
+    slug: "status_rumah",
+    label: "Status Tempat Tinggal",
+    description: "Status kepemilikan atau hunian rumah tangga.",
+  },
+  {
+    slug: "status_ekonomi",
+    label: "Status Ekonomi",
+    description: "Kategori kondisi ekonomi keluarga.",
+  },
+  {
+    slug: "pendidikan",
+    label: "Pendidikan",
+    description: "Jenjang pendidikan formal terakhir.",
+  },
+  {
+    slug: "pekerjaan",
+    label: "Pekerjaan",
+    description: "Bidang atau jenis pekerjaan utama.",
+  },
+  {
+    slug: "profesi",
+    label: "Profesi / Keahlian",
+    description: "Keahlian khusus untuk pelayanan paroki.",
+  },
+  {
+    slug: "disabilitas",
+    label: "Disabilitas",
+    description: "Kebutuhan khusus atau disabilitas umat.",
+  },
+  {
+    slug: "aktivitas_sosial",
+    label: "Aktivitas Sosial",
+    description: "Keterlibatan sosial dan kemasyarakatan.",
+  },
+] as const;
+
+export function getUmatReferensiCategoryLabel(slug: string): string {
+  return UMAT_REFERENSI_CATEGORIES.find((c) => c.slug === slug)?.label ?? slug;
+}
+
+export function slugifyReferensiCode(raw: string): string {
+  return raw
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 64);
 }
 
 export function optionalUuidForPatch(raw: string): string {

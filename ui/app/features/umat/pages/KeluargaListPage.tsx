@@ -1,4 +1,4 @@
-import { Home, Plus, Search, Users } from "lucide-react";
+import { BookOpen, Home, Plus, Search, Users } from "lucide-react";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useMe } from "~/shared/api/session";
@@ -8,7 +8,9 @@ import { Card } from "~/shared/ui/Card";
 import {
   InductiveEmptyState,
   InductiveFilterBar,
+  InductiveHubGrid,
   InductivePageHeader,
+  InductiveStepCard,
 } from "~/shared/ui/iui";
 import { useDebouncedValue } from "~/shared/util/use-debounced-value";
 import {
@@ -114,6 +116,16 @@ export default function KeluargaListPage() {
           </Link>
         }
       />
+
+      <InductiveHubGrid>
+        <InductiveStepCard
+          to="/umat/referensi"
+          icon={BookOpen}
+          plate={4}
+          title="Kamus Referensi Umat"
+          description="Kelola pilihan status tempat tinggal, status ekonomi, hubungan keluarga, dan referensi umat lainnya"
+        />
+      </InductiveHubGrid>
 
       <InductiveFilterBar>
         <label className="flex min-w-52 flex-1 flex-col gap-1 text-xs font-medium text-muted">

@@ -13,8 +13,33 @@ const UMAT_ERROR_MESSAGES: Record<string, string> = {
     "Akun pengguna tersebut sudah terhubung dengan data umat lain di paroki ini.",
   UMAT_IN_USE:
     "Kartu Keluarga masih memiliki anggota umat aktif dan tidak dapat dihapus.",
+  UMAT_REFERENSI_NOT_FOUND: "Item referensi umat tidak ditemukan.",
+  UMAT_REFERENSI_CONFLICT:
+    "Kode referensi sudah digunakan pada kategori dan cakupan ini.",
   TENANT_REQUIRED: "Pilih paroki aktif terlebih dahulu.",
 };
+
+const UMAT_REFERENSI_ERROR_MESSAGES: Record<string, string> = {
+  ...UMAT_ERROR_MESSAGES,
+  UMAT_FORBIDDEN:
+    "Anda tidak memiliki izin untuk mengelola kamus referensi umat.",
+  UMAT_IN_USE:
+    "Item referensi masih digunakan oleh data umat atau keluarga dan tidak dapat dihapus.",
+};
+
+export function resolveUmatReferensiErrorMessage(
+  err: unknown,
+  fallback = "Terjadi kesalahan saat memproses kamus referensi umat.",
+): string {
+  if (
+    err instanceof ApiError &&
+    err.code &&
+    UMAT_REFERENSI_ERROR_MESSAGES[err.code]
+  ) {
+    return UMAT_REFERENSI_ERROR_MESSAGES[err.code];
+  }
+  return resolveUmatErrorMessage(err, fallback);
+}
 
 export function resolveUmatErrorMessage(
   err: unknown,

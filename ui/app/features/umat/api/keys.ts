@@ -1,4 +1,8 @@
-import type { SearchKeluargaRequest, SearchUmatRequest } from "./types";
+import type {
+  SearchKeluargaRequest,
+  SearchUmatReferensiRequest,
+  SearchUmatRequest,
+} from "./types";
 
 export const umatKeys = {
   all: ["umat"] as const,
@@ -31,4 +35,12 @@ export const umatKeys = {
     [...umatKeys.refs(), "kelurahan", kecamatanId ?? "none"] as const,
   lookups: (parokiId: string, category: string) =>
     [...umatKeys.refs(), "lookups", parokiId, category] as const,
+  referensiLists: () => [...umatKeys.all, "referensi", "list"] as const,
+  referensiList: (
+    parokiId: string,
+    body: Omit<SearchUmatReferensiRequest, "cursor">,
+  ) => [...umatKeys.referensiLists(), parokiId, body] as const,
+  referensiDetails: () => [...umatKeys.all, "referensi", "detail"] as const,
+  referensiDetail: (parokiId: string, id: string) =>
+    [...umatKeys.referensiDetails(), parokiId, id] as const,
 };

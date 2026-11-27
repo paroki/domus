@@ -3,8 +3,10 @@ import { api, unwrap, unwrapVoid } from "~/shared/api/client";
 import { umatKeys } from "./keys";
 import type {
   CreateKeluargaRequest,
+  CreateUmatReferensiRequest,
   CreateUmatRequest,
   UpdateKeluargaRequest,
+  UpdateUmatReferensiRequest,
   UpdateUmatRequest,
   UpdateUmatSakramenRequest,
   UpsertUmatSakramenRequest,
@@ -153,6 +155,53 @@ export function useDeleteSakramen(parokiId: string, umatId: string) {
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: umatKeys.umatDetail(parokiId, umatId) });
+    },
+  });
+}
+
+export function useCreateUmatReferensi() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: CreateUmatReferensiRequest) =>
+      unwrap(api.POST("/umat/referensi", { body })),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: umatKeys.referensiLists() });
+      qc.invalidateQueries({ queryKey: umatKeys.refs() });
+    },
+  });
+}
+
+export function useUpdateUmatReferensi(parokiId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { id: string; body: UpdateUmatReferensiRequest }) =>
+      unwrap(
+        api.PATCH("/umat/referensi/{id}", {
+          params: { path: { id: vars.id } },
+          body: vars.body,
+        }),
+      ),
+    onSuccess: (updated, vars) => {
+      qc.invalidateQueries({ queryKey: umatKeys.referensiLists() });
+      qc.invalidateQueries({ queryKey: umatKeys.refs() });
+      qc.setQueryData(umatKeys.referensiDetail(parokiId, vars.id), updated);
+    },
+  });
+}
+
+export function useDeleteUmatReferensi(parokiId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      unwrapVoid(
+        api.DELETE("/umat/referensi/{id}", {
+          params: { path: { id } },
+        }),
+      ),
+    onSuccess: (_, id) => {
+      qc.invalidateQueries({ queryKey: umatKeys.referensiLists() });
+      qc.invalidateQueries({ queryKey: umatKeys.refs() });
+      qc.removeQueries({ queryKey: umatKeys.referensiDetail(parokiId, id) });
     },
   });
 }

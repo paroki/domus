@@ -1,7 +1,16 @@
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import {
+  infiniteQueryOptions,
+  queryOptions,
+  useInfiniteQuery,
+  useQuery,
+} from "@tanstack/react-query";
 import { api, unwrap, unwrapMeta } from "~/shared/api/client";
 import { umatKeys } from "./keys";
-import type { SearchKeluargaRequest, SearchUmatRequest } from "./types";
+import type {
+  SearchKeluargaRequest,
+  SearchUmatReferensiRequest,
+  SearchUmatRequest,
+} from "./types";
 
 export function useUmatSearch(
   parokiId: string,
@@ -204,9 +213,50 @@ export function useUmatLookups(
     enabled: Boolean(parokiId) && Boolean(category) && enabled,
     queryFn: () =>
       unwrap(
-        api.POST("/ref/lookups/search", {
+        api.POST("/umat/referensi/search", {
           body: { filter: { active: true, category }, limit: 100 },
         }),
       ),
   });
+}
+
+export function useUmatReferensiSearch(
+  parokiId: string,
+  body: Omit<SearchUmatReferensiRequest, "cursor"> = {},
+  enabled = true,
+) {
+  return useInfiniteQuery(
+    infiniteQueryOptions({
+      queryKey: umatKeys.referensiList(parokiId, body),
+      initialPageParam: undefined as string | undefined,
+      enabled,
+      queryFn: ({ pageParam }) =>
+        unwrapMeta(
+          api.POST("/umat/referensi/search", {
+            body: { ...body, cursor: pageParam, limit: body.limit ?? 50 },
+          }),
+        ),
+      getNextPageParam: (lastPage) =>
+        lastPage.meta?.hasMore ? lastPage.meta.nextCursor : undefined,
+    }),
+  );
+}
+
+export function useUmatReferensiDetail(
+  parokiId: string,
+  id: string,
+  enabled = true,
+) {
+  return useQuery(
+    queryOptions({
+      queryKey: umatKeys.referensiDetail(parokiId, id),
+      enabled: enabled && Boolean(id),
+      queryFn: () =>
+        unwrap(
+          api.GET("/umat/referensi/{id}", {
+            params: { path: { id } },
+          }),
+        ),
+    }),
+  );
 }

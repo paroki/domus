@@ -38,3 +38,12 @@ export type Kota = components["schemas"]["domain.KotaResponse"];
 export type Kecamatan = components["schemas"]["domain.KecamatanResponse"];
 export type Kelurahan = components["schemas"]["domain.KelurahanResponse"];
 export type Lookup = components["schemas"]["domain.LookupResponse"];
+
+export type UmatReferensi =
+  components["schemas"]["domain.UmatReferensiResponse"];
+export type SearchUmatReferensiRequest =
+  components["schemas"]["domain.SearchUmatReferensiRequest"];
+export type CreateUmatReferensiRequest =
+  components["schemas"]["domain.CreateUmatReferensiRequest"];
+export type UpdateUmatReferensiRequest =
+  components["schemas"]["domain.UpdateUmatReferensiRequest"];

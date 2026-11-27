@@ -14,6 +14,19 @@ export default [
     "./features/umat/pages/KeluargaDetailPage.tsx",
     { id: "umat-keluarga-detail" },
   ),
+  route("umat/referensi", "./features/umat/pages/UmatReferensiPage.tsx", {
+    id: "umat-referensi",
+  }),
+  route(
+    "umat/referensi/new",
+    "./features/umat/pages/UmatReferensiFormPage.tsx",
+    { id: "umat-referensi-new" },
+  ),
+  route(
+    "umat/referensi/:id",
+    "./features/umat/pages/UmatReferensiFormPage.tsx",
+    { id: "umat-referensi-edit" },
+  ),
   route("umat/:umatId", "./features/umat/pages/UmatDetailPage.tsx", {
     id: "umat-detail",
   }),

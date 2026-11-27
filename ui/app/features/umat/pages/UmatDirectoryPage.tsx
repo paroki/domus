@@ -1,4 +1,4 @@
-import { Home, Plus, Search, Users } from "lucide-react";
+import { BookOpen, Home, Plus, Search, Users } from "lucide-react";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useMe } from "~/shared/api/session";
@@ -134,13 +134,22 @@ export default function UmatDirectoryPage() {
         }
       />
 
-      <InductiveStepCard
-        to="/umat/keluarga"
-        icon={Home}
-        plate={3}
-        title="Kartu Keluarga"
-        description="Kelola Kartu Keluarga, alamat domisili, dan daftar anggota per Wilayah & Lingkungan"
-      />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <InductiveStepCard
+          to="/umat/keluarga"
+          icon={Home}
+          plate={3}
+          title="Kartu Keluarga"
+          description="Kelola Kartu Keluarga, alamat domisili, dan daftar anggota per Wilayah & Lingkungan"
+        />
+        <InductiveStepCard
+          to="/umat/referensi"
+          icon={BookOpen}
+          plate={4}
+          title="Kamus Referensi Umat"
+          description="Kelola daftar pilihan agama, pendidikan, pekerjaan, golongan darah, dan referensi umat lainnya"
+        />
+      </div>
 
       <InductiveFilterBar>
         <label className="flex min-w-52 flex-1 flex-col gap-1 text-xs font-medium text-muted">
