@@ -15,7 +15,7 @@ export interface paths {
     put?: never;
     /**
      * Chat with AI assistant (SSE)
-     * @description Validates request, resolves active model/session, and streams SSE events (session, agent_transfer, tool_start, tool_end, token, done, error).
+     * @description Validates request, resolves active model/session, and streams SSE events (session, agent_transfer, tool_start, tool_end, question, navigate, token, done, error).
      */
     post: operations["chatWithAgent"];
     delete?: never;
@@ -2770,6 +2770,7 @@ export interface components {
     };
     "domain.ChatRequest": {
       message: string;
+      pageContext?: components["schemas"]["domain.PageContextInput"];
       retry?: boolean;
       sessionId?: string;
     };
@@ -3588,6 +3589,10 @@ export interface components {
         | "community";
       myOrgsOnly?: boolean;
       parentId?: string;
+    };
+    "domain.PageContextInput": {
+      path?: string;
+      title?: string;
     };
     "domain.ParokiMemberResponse": {
       createdAt?: string;
