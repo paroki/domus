@@ -14,7 +14,7 @@ import {
   useUpdateLingkungan,
 } from "../api/actions";
 import { useLingkunganDetail, useWilayahSearch } from "../api/queries";
-import { isParokiAdmin } from "../model";
+import { isParokiAdmin, slugifyCode } from "../model";
 
 export function meta() {
   return [{ title: "Formulir Lingkungan — Domus" }];
@@ -44,6 +44,7 @@ export default function LingkunganFormPage() {
     searchParams.get("wilayahId") ?? "",
   );
   const [kode, setKode] = useState("");
+  const [kodeTouched, setKodeTouched] = useState(false);
   const [nama, setNama] = useState("");
   const [pelindung, setPelindung] = useState("");
   const [ketua, setKetua] = useState("");
@@ -83,7 +84,7 @@ export default function LingkunganFormPage() {
       } else {
         await createMut.mutateAsync({
           wilayahId,
-          kode: kode.trim(),
+          kode: (kode || slugifyCode(nama)).trim(),
           nama: nama.trim(),
           pelindung: pelindung.trim() || undefined,
           ketua: ketua.trim() || undefined,
@@ -115,7 +116,7 @@ export default function LingkunganFormPage() {
   const pending = createMut.isPending || updateMut.isPending;
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-8">
+    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
       <InductivePageHeader
         breadcrumbs={[
           { label: "Beranda", to: "/" },
@@ -166,7 +167,7 @@ export default function LingkunganFormPage() {
                   required
                   value={wilayahId}
                   onChange={(e) => setWilayahId(e.target.value)}
-                  className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                  className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                 >
                   <option value="">Pilih wilayah…</option>
                   {wilayahList.map((w) => (
@@ -189,9 +190,12 @@ export default function LingkunganFormPage() {
                     id="lingkungan-kode"
                     required
                     value={kode}
-                    onChange={(e) => setKode(e.target.value)}
+                    onChange={(e) => {
+                      setKodeTouched(true);
+                      setKode(e.target.value);
+                    }}
                     placeholder="mis. ling-01"
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 font-mono text-sm text-fg focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 font-mono text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -205,9 +209,15 @@ export default function LingkunganFormPage() {
                     id="lingkungan-nama"
                     required
                     value={nama}
-                    onChange={(e) => setNama(e.target.value)}
+                    onChange={(e) => {
+                      const next = e.target.value;
+                      setNama(next);
+                      if (!isEdit && !kodeTouched) {
+                        setKode(slugifyCode(next));
+                      }
+                    }}
                     placeholder="mis. Lingkungan Petrus"
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                   />
                 </div>
               </div>
@@ -225,7 +235,7 @@ export default function LingkunganFormPage() {
                     value={pelindung}
                     onChange={(e) => setPelindung(e.target.value)}
                     placeholder="mis. Santo Petrus"
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -240,7 +250,7 @@ export default function LingkunganFormPage() {
                     value={ketua}
                     onChange={(e) => setKetua(e.target.value)}
                     placeholder="mis. Ibu Maria"
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -255,13 +265,13 @@ export default function LingkunganFormPage() {
                     value={teleponKetua}
                     onChange={(e) => setTeleponKetua(e.target.value)}
                     placeholder="08123456789"
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                   />
                 </div>
               </div>
 
               {isEdit ? (
-                <label className="inline-flex items-center gap-2 text-sm text-fg">
+                <label className="inline-flex min-h-11 items-center gap-2 text-sm text-fg">
                   <input
                     type="checkbox"
                     checked={active}
@@ -272,14 +282,18 @@ export default function LingkunganFormPage() {
                 </label>
               ) : null}
 
-              <div className="flex items-center justify-end gap-2 pt-2">
+              <div className="flex flex-col-reverse items-stretch justify-end gap-2 pt-2 sm:flex-row sm:items-center">
                 <Link
                   to="/settings/paroki/lingkungan"
-                  className={buttonClass("outline")}
+                  className={`${buttonClass("outline")} w-full sm:w-auto`}
                 >
                   Batal
                 </Link>
-                <Button type="submit" disabled={pending}>
+                <Button
+                  type="submit"
+                  disabled={pending}
+                  className="w-full sm:w-auto"
+                >
                   {pending ? "Menyimpan…" : "Simpan Lingkungan"}
                 </Button>
               </div>

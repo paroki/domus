@@ -14,7 +14,7 @@ import {
   useUpdateWilayah,
 } from "../api/actions";
 import { useWilayahDetail } from "../api/queries";
-import { isParokiAdmin } from "../model";
+import { isParokiAdmin, slugifyCode } from "../model";
 
 export function meta() {
   return [{ title: "Formulir Wilayah — Domus" }];
@@ -35,6 +35,7 @@ export default function WilayahFormPage() {
 
   const [jenis, setJenis] = useState<"wilayah" | "stasi">("wilayah");
   const [kode, setKode] = useState("");
+  const [kodeTouched, setKodeTouched] = useState(false);
   const [nama, setNama] = useState("");
   const [koordinator, setKoordinator] = useState("");
   const [teleponKoordinator, setTeleponKoordinator] = useState("");
@@ -71,7 +72,7 @@ export default function WilayahFormPage() {
       } else {
         await createMut.mutateAsync({
           jenis,
-          kode: kode.trim(),
+          kode: (kode || slugifyCode(nama)).trim(),
           nama: nama.trim(),
           koordinator: koordinator.trim() || undefined,
           teleponKoordinator: teleponKoordinator.trim() || undefined,
@@ -98,7 +99,7 @@ export default function WilayahFormPage() {
   const pending = createMut.isPending || updateMut.isPending;
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-8">
+    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
       <InductivePageHeader
         breadcrumbs={[
           { label: "Beranda", to: "/" },
@@ -151,7 +152,7 @@ export default function WilayahFormPage() {
                     onChange={(e) =>
                       setJenis(e.target.value as "wilayah" | "stasi")
                     }
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                   >
                     <option value="wilayah">Wilayah</option>
                     <option value="stasi">Stasi</option>
@@ -168,9 +169,12 @@ export default function WilayahFormPage() {
                     id="wilayah-kode"
                     required
                     value={kode}
-                    onChange={(e) => setKode(e.target.value)}
+                    onChange={(e) => {
+                      setKodeTouched(true);
+                      setKode(e.target.value);
+                    }}
                     placeholder="mis. wil-01"
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 font-mono text-sm text-fg focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 font-mono text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -184,9 +188,15 @@ export default function WilayahFormPage() {
                     id="wilayah-nama"
                     required
                     value={nama}
-                    onChange={(e) => setNama(e.target.value)}
+                    onChange={(e) => {
+                      const next = e.target.value;
+                      setNama(next);
+                      if (!isEdit && !kodeTouched) {
+                        setKode(slugifyCode(next));
+                      }
+                    }}
                     placeholder="mis. Wilayah Santo Lukas"
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                   />
                 </div>
               </div>
@@ -204,7 +214,7 @@ export default function WilayahFormPage() {
                     value={koordinator}
                     onChange={(e) => setKoordinator(e.target.value)}
                     placeholder="mis. Bapak Anton"
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -219,13 +229,13 @@ export default function WilayahFormPage() {
                     value={teleponKoordinator}
                     onChange={(e) => setTeleponKoordinator(e.target.value)}
                     placeholder="08123456789"
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                   />
                 </div>
               </div>
 
               {isEdit ? (
-                <label className="inline-flex items-center gap-2 text-sm text-fg">
+                <label className="inline-flex min-h-11 items-center gap-2 text-sm text-fg">
                   <input
                     type="checkbox"
                     checked={active}
@@ -236,14 +246,18 @@ export default function WilayahFormPage() {
                 </label>
               ) : null}
 
-              <div className="flex items-center justify-end gap-2 pt-2">
+              <div className="flex flex-col-reverse items-stretch justify-end gap-2 pt-2 sm:flex-row sm:items-center">
                 <Link
                   to="/settings/paroki/wilayah"
-                  className={buttonClass("outline")}
+                  className={`${buttonClass("outline")} w-full sm:w-auto`}
                 >
                   Batal
                 </Link>
-                <Button type="submit" disabled={pending}>
+                <Button
+                  type="submit"
+                  disabled={pending}
+                  className="w-full sm:w-auto"
+                >
                   {pending ? "Menyimpan…" : "Simpan Wilayah"}
                 </Button>
               </div>

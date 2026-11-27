@@ -51,7 +51,7 @@ export default function KecamatanListPage() {
     : "/settings/sipil/kecamatan/new";
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-8">
+    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
       <InductivePageHeader
         breadcrumbs={[
           { label: "Beranda", to: "/" },
@@ -98,7 +98,7 @@ export default function KecamatanListPage() {
         ) : (
           <>
             <InductiveFilterBar>
-              <div className="flex min-w-52 flex-1 flex-col gap-1.5">
+              <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:min-w-52">
                 <label
                   htmlFor="kecamatan-search"
                   className="text-xs font-semibold text-muted"
@@ -111,11 +111,11 @@ export default function KecamatanListPage() {
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
                   placeholder="Cari kode atau nama kecamatan…"
-                  className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                  className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                 />
               </div>
 
-              <div className="flex min-w-52 flex-col gap-1.5">
+              <div className="flex w-full flex-col gap-1.5 sm:w-auto sm:min-w-44">
                 <label
                   htmlFor="kecamatan-kota-filter"
                   className="text-xs font-semibold text-muted"
@@ -134,7 +134,7 @@ export default function KecamatanListPage() {
                     }
                     setSearchParams(next);
                   }}
-                  className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                  className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                 >
                   <option value="">Semua Kota</option>
                   {kotaList.map((k) => (
@@ -145,7 +145,7 @@ export default function KecamatanListPage() {
                 </select>
               </div>
 
-              <div className="flex min-w-36 flex-col gap-1.5">
+              <div className="flex w-full flex-col gap-1.5 sm:w-auto sm:min-w-44">
                 <label
                   htmlFor="kecamatan-status-filter"
                   className="text-xs font-semibold text-muted"
@@ -158,7 +158,7 @@ export default function KecamatanListPage() {
                   onChange={(e) =>
                     setActiveFilter(e.target.value as "" | "true" | "false")
                   }
-                  className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                  className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                 >
                   <option value="">Semua</option>
                   <option value="true">Aktif</option>
@@ -185,9 +185,9 @@ export default function KecamatanListPage() {
                 {items.map((item) => (
                   <Card
                     key={item.id}
-                    className="flex flex-col justify-between gap-4 p-5 sm:flex-row sm:items-center"
+                    className="flex flex-col justify-between gap-4 p-4 sm:flex-row sm:items-center sm:p-6"
                   >
-                    <div className="flex flex-col gap-1">
+                    <div className="flex min-w-0 flex-1 flex-col gap-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-base font-semibold text-fg">
                           {item.nama}

@@ -26,6 +26,7 @@ export default function LingkunganListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const wilayahId = searchParams.get("wilayahId") ?? "";
   const [q, setQ] = useState("");
+  const [activeFilter, setActiveFilter] = useState<"" | "true" | "false">("");
   const debouncedQ = useDebouncedValue(q);
 
   const wilayahQuery = useWilayahSearch({}, canManage && hasTenant);
@@ -36,7 +37,13 @@ export default function LingkunganListPage() {
   const lingkunganQuery = useLingkunganSearch(
     {
       q: debouncedQ || undefined,
-      filter: wilayahId ? { wilayahId } : undefined,
+      filter:
+        wilayahId || activeFilter
+          ? {
+              wilayahId: wilayahId || undefined,
+              active: activeFilter === "" ? undefined : activeFilter === "true",
+            }
+          : undefined,
     },
     canManage && hasTenant,
   );
@@ -47,7 +54,7 @@ export default function LingkunganListPage() {
     : "/settings/paroki/lingkungan/new";
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-8">
+    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
       <InductivePageHeader
         breadcrumbs={[
           { label: "Beranda", to: "/" },
@@ -103,7 +110,7 @@ export default function LingkunganListPage() {
         ) : (
           <>
             <InductiveFilterBar>
-              <div className="flex min-w-56 flex-1 flex-col gap-1.5">
+              <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:min-w-56">
                 <label
                   htmlFor="lingkungan-search"
                   className="text-xs font-semibold text-muted"
@@ -116,11 +123,11 @@ export default function LingkunganListPage() {
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
                   placeholder="Cari kode atau nama lingkungan…"
-                  className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                  className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                 />
               </div>
 
-              <div className="flex min-w-56 flex-col gap-1.5">
+              <div className="flex w-full flex-col gap-1.5 sm:w-auto sm:min-w-44">
                 <label
                   htmlFor="lingkungan-wilayah-filter"
                   className="text-xs font-semibold text-muted"
@@ -139,7 +146,7 @@ export default function LingkunganListPage() {
                     }
                     setSearchParams(next);
                   }}
-                  className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-primary focus:outline-none"
+                  className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
                 >
                   <option value="">Semua wilayah</option>
                   {wilayahList.map((w) => (
@@ -147,6 +154,27 @@ export default function LingkunganListPage() {
                       {w.nama}
                     </option>
                   ))}
+                </select>
+              </div>
+
+              <div className="flex w-full flex-col gap-1.5 sm:w-auto sm:min-w-44">
+                <label
+                  htmlFor="lingkungan-status-filter"
+                  className="text-xs font-semibold text-muted"
+                >
+                  Status
+                </label>
+                <select
+                  id="lingkungan-status-filter"
+                  value={activeFilter}
+                  onChange={(e) =>
+                    setActiveFilter(e.target.value as "" | "true" | "false")
+                  }
+                  className="h-11 rounded-lg border border-line bg-canvas px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
+                >
+                  <option value="">Semua</option>
+                  <option value="true">Aktif</option>
+                  <option value="false">Nonaktif</option>
                 </select>
               </div>
             </InductiveFilterBar>
@@ -169,9 +197,9 @@ export default function LingkunganListPage() {
                 {items.map((item) => (
                   <Card
                     key={item.id}
-                    className="flex flex-col justify-between gap-4 p-5 sm:flex-row sm:items-center"
+                    className="flex flex-col justify-between gap-4 p-4 sm:flex-row sm:items-center sm:p-6"
                   >
-                    <div className="flex flex-col gap-1">
+                    <div className="flex min-w-0 flex-1 flex-col gap-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-base font-semibold text-fg">
                           {item.nama}
