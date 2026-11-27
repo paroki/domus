@@ -2,9 +2,9 @@ import assert from "node:assert/strict";
 import { BasePage } from "../base.page";
 
 export class OrgDetailPage extends BasePage {
-  private inviteForm() {
-    return this.page.locator("form").filter({
-      has: this.page.getByRole("button", { name: "Buat Tautan Undangan" }),
+  private profileCard() {
+    return this.page.locator("div").filter({
+      has: this.page.getByRole("heading", { name: "Profil Organisasi" }),
     });
   }
 
@@ -24,8 +24,8 @@ export class OrgDetailPage extends BasePage {
     canEdit: boolean;
     canDelete: boolean;
   }): Promise<void> {
-    const editBtn = this.page.getByRole("button", {
-      name: "Ubah Profil Organisasi",
+    const editBtn = this.profileCard().getByRole("button", {
+      name: "Ubah",
     });
     const deleteBtn = this.page.getByRole("button", {
       name: "Hapus Organisasi",
@@ -49,9 +49,7 @@ export class OrgDetailPage extends BasePage {
     description?: string;
     active?: boolean;
   }): Promise<void> {
-    await this.page
-      .getByRole("button", { name: "Ubah Profil Organisasi" })
-      .click();
+    await this.profileCard().getByRole("button", { name: "Ubah" }).click();
     if (input.name !== undefined) {
       await this.page.getByLabel("Nama Organisasi").fill(input.name);
     }
@@ -105,25 +103,32 @@ export class OrgDetailPage extends BasePage {
     ttlLabel?: string;
     maxUses?: number;
   }): Promise<void> {
-    const form = this.inviteForm();
+    await this.page.getByRole("link", { name: "Buat Tautan Undangan" }).click();
+    await this.page
+      .getByRole("heading", { name: "Buat Tautan Undangan" })
+      .waitFor({ state: "visible", timeout: 10_000 });
+
     if (input.roleLabel) {
-      await form
-        .locator("select")
-        .first()
+      await this.page
+        .getByLabel("Peran Anggota")
         .selectOption({ label: input.roleLabel });
     }
     if (input.ttlLabel) {
-      await form
-        .locator("select")
-        .nth(1)
+      await this.page
+        .getByLabel("Masa Berlaku")
         .selectOption({ label: input.ttlLabel });
     }
     if (input.maxUses !== undefined) {
-      await form
+      await this.page
         .getByPlaceholder("Maks. pakai (opsional)")
         .fill(String(input.maxUses));
     }
-    await form.getByRole("button", { name: "Buat Tautan Undangan" }).click();
+    await this.page
+      .getByRole("button", { name: "Buat Tautan Undangan" })
+      .click();
+    await this.page
+      .getByRole("heading", { name: "Tautan Undangan", exact: true })
+      .waitFor({ state: "visible", timeout: 10_000 });
   }
 
   async expectInviteVisible(options: {
@@ -146,11 +151,18 @@ export class OrgDetailPage extends BasePage {
     const rows = this.inviteRows();
     const scope = code ? rows.filter({ hasText: code }) : rows;
     await scope.first().getByRole("button", { name: "Cabut Tautan" }).click();
+    await this.page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Cabut Tautan" })
+      .click();
   }
 
   async leaveOrganization(): Promise<void> {
-    this.page.once("dialog", (dialog) => dialog.accept());
     await this.page
+      .getByRole("button", { name: "Keluar dari Organisasi" })
+      .click();
+    await this.page
+      .getByRole("dialog")
       .getByRole("button", { name: "Keluar dari Organisasi" })
       .click();
   }
@@ -217,7 +229,7 @@ export class OrgDetailPage extends BasePage {
   }
 
   async openNewPeriodeForm(): Promise<void> {
-    await this.page.getByRole("button", { name: "Tambah Periode" }).click();
+    await this.page.getByRole("link", { name: "Tambah Periode" }).click();
     await this.page
       .getByRole("heading", { name: "Tambah Periode Kepengurusan" })
       .waitFor({ state: "visible", timeout: 10_000 });
@@ -309,10 +321,10 @@ export class OrgDetailPage extends BasePage {
   }): Promise<void> {
     if (input.parentJabatan) {
       await this.jabatanRow(input.parentJabatan)
-        .getByRole("button", { name: "Tambah Sub-Jabatan" })
+        .getByRole("link", { name: "Tambah Sub-Jabatan" })
         .click();
     } else {
-      await this.page.getByRole("button", { name: "Tambah Jabatan" }).click();
+      await this.page.getByRole("link", { name: "Tambah Jabatan" }).click();
     }
     await this.page
       .getByRole("heading", { name: "Tambah Jabatan Organisasi" })

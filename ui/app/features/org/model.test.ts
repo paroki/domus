@@ -130,3 +130,18 @@ test("buildJabatanTree builds sorted multi-level hierarchy and handles orphans",
     ["root", "child-a", "orphan"],
   );
 });
+
+test("buildJabatanTree handles deep nesting beyond 3 levels", () => {
+  const tree = buildJabatanTree([
+    { id: "l0", parentId: null, jabatan: "Ketua", urutan: 1, active: true },
+    { id: "l1", parentId: "l0", jabatan: "Wakil", urutan: 1, active: true },
+    { id: "l2", parentId: "l1", jabatan: "Koord", urutan: 1, active: true },
+    { id: "l3", parentId: "l2", jabatan: "Sub", urutan: 1, active: true },
+    { id: "l4", parentId: "l3", jabatan: "Staf", urutan: 1, active: true },
+  ]);
+  assert.equal(tree[0].depth, 0);
+  assert.equal(
+    tree[0].children[0].children[0].children[0].children[0].depth,
+    4,
+  );
+});

@@ -15,11 +15,11 @@ export class OrgsPage extends BasePage {
   }
 
   async expectCreateButtonVisible(visible: boolean): Promise<void> {
-    const btn = this.page.getByRole("button", { name: "Tambah Organisasi" });
+    const link = this.page.getByRole("link", { name: "Tambah Organisasi" });
     if (visible) {
-      await btn.waitFor({ state: "visible", timeout: 10_000 });
+      await link.waitFor({ state: "visible", timeout: 10_000 });
     } else {
-      assert.equal(await btn.count(), 0);
+      assert.equal(await link.count(), 0);
     }
   }
 
@@ -31,26 +31,23 @@ export class OrgsPage extends BasePage {
     wilayahLabel?: string;
     lingkunganLabel?: string;
     description?: string;
+    selfAssign?: boolean;
+    initialAdminEmail?: string;
+    initialAdminName?: string;
   }): Promise<void> {
     const createHeading = this.page.getByRole("heading", {
       name: "Tambah Organisasi Baru",
     });
     if ((await createHeading.count()) === 0) {
       await this.page
-        .getByRole("button", { name: "Tambah Organisasi" })
+        .getByRole("link", { name: "Tambah Organisasi" })
+        .first()
         .click();
       await createHeading.waitFor({ state: "visible", timeout: 10_000 });
     }
     const submitBtn = this.page.getByRole("button", {
       name: "Simpan Organisasi",
     });
-
-    assert.equal(
-      await this.page.getByText("Jadikan saya Admin Organisasi ini").count(),
-      0,
-    );
-    assert.equal(await this.page.getByText("Email Admin Awal").count(), 0);
-    assert.equal(await this.page.getByText("Nama Admin Awal").count(), 0);
 
     if (input.kindLabel) {
       await this.page
@@ -87,6 +84,20 @@ export class OrgsPage extends BasePage {
         .getByLabel("Deskripsi (opsional)")
         .fill(input.description);
     }
+    if (input.selfAssign) {
+      await this.page.getByLabel("Jadikan saya Admin Organisasi ini").check();
+    } else {
+      if (input.initialAdminEmail) {
+        await this.page
+          .getByLabel("Email Admin Awal (opsional)")
+          .fill(input.initialAdminEmail);
+      }
+      if (input.initialAdminName) {
+        await this.page
+          .getByLabel("Nama Admin Awal (opsional)")
+          .fill(input.initialAdminName);
+      }
+    }
 
     await Promise.all([
       this.page.waitForResponse(
@@ -94,7 +105,7 @@ export class OrgsPage extends BasePage {
       ),
       submitBtn.click(),
     ]);
-    await createHeading.waitFor({ state: "detached", timeout: 10_000 });
+    await this.expectLoaded();
   }
 
   async filterByKind(kindLabel: string): Promise<void> {
