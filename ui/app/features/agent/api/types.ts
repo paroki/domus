@@ -81,8 +81,33 @@ export interface AgentProviderResponse {
   models?: ProviderModelItem[];
 }
 
+export interface QuestionOption {
+  label: string;
+  value: string;
+}
+
+export interface QuestionPayload {
+  question: string;
+  options: QuestionOption[];
+  multiSelect?: boolean;
+  allowCustom?: boolean;
+}
+
+export interface NavigationPayload {
+  path: string;
+  label: string;
+  description?: string;
+  autoRedirect?: boolean;
+}
+
+export interface PageContextInput {
+  path: string;
+  title?: string;
+}
+
 export interface ChatRequest {
   sessionId?: string;
   message: string;
   retry?: boolean;
+  pageContext?: PageContextInput;
 }

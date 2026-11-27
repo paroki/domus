@@ -1,3 +1,9 @@
+import type {
+  NavigationPayload,
+  QuestionOption,
+  QuestionPayload,
+} from "./api/types";
+
 export type MemoryCategory = "preference" | "fact" | "context";
 
 export const MEMORY_CATEGORIES: MemoryCategory[] = [
@@ -19,6 +25,12 @@ export function formatAgentLabel(agentName?: string): string {
       return "Mikael";
     case "rafael":
       return "Rafael";
+    case "yosef":
+      return "Yosef";
+    case "gregorius":
+      return "Gregorius";
+    case "sesilia":
+      return "Sesilia";
     default:
       return "Gabriel";
   }
@@ -27,6 +39,13 @@ export function formatAgentLabel(agentName?: string): string {
 export function safeUrlTransform(url: string): string {
   const trimmed = url.trim();
   if (!trimmed) return "";
+  if (
+    trimmed.startsWith("/") &&
+    !trimmed.startsWith("//") &&
+    !trimmed.includes("://")
+  ) {
+    return trimmed;
+  }
   try {
     const parsed = new URL(trimmed);
     const proto = parsed.protocol.toLowerCase();
@@ -37,6 +56,102 @@ export function safeUrlTransform(url: string): string {
   } catch {
     return "";
   }
+}
+
+export function getDockSessionKey(parokiId: string): string {
+  return `domus:agent:dockSession:${parokiId}`;
+}
+
+export function buildPageContext(pathname: string, hash: string) {
+  return {
+    path: pathname + hash,
+    title: typeof document !== "undefined" ? document.title : undefined,
+  };
+}
+
+export function performAgentNavigate(
+  targetPath: string,
+  currentPathname: string,
+  navigate: (to: string) => void,
+) {
+  const hashIdx = targetPath.indexOf("#");
+  const targetPathname =
+    hashIdx >= 0 ? targetPath.slice(0, hashIdx) : targetPath;
+  const targetHash = hashIdx >= 0 ? targetPath.slice(hashIdx) : "";
+  if (
+    typeof window !== "undefined" &&
+    targetPathname === currentPathname &&
+    targetHash
+  ) {
+    window.history.replaceState(null, "", targetPath);
+    const el = document.getElementById(targetHash.slice(1));
+    el?.scrollIntoView({ behavior: "smooth" });
+    return;
+  }
+  navigate(targetPath);
+}
+
+export function extractQuestionMeta(
+  meta?: Record<string, unknown>,
+): QuestionPayload | null {
+  if (!meta || typeof meta !== "object") return null;
+  const raw = meta.question;
+  if (!raw || typeof raw !== "object") return null;
+  const obj = raw as Record<string, unknown>;
+  if (typeof obj.question !== "string" || !obj.question.trim()) return null;
+  if (!Array.isArray(obj.options)) return null;
+  const options: QuestionOption[] = [];
+  for (const item of obj.options) {
+    if (!item || typeof item !== "object") continue;
+    const opt = item as Record<string, unknown>;
+    if (typeof opt.label === "string" && typeof opt.value === "string") {
+      options.push({ label: opt.label, value: opt.value });
+    }
+  }
+  if (options.length === 0) return null;
+  return {
+    question: obj.question,
+    options,
+    ...(typeof obj.multiSelect === "boolean"
+      ? { multiSelect: obj.multiSelect }
+      : {}),
+    ...(typeof obj.allowCustom === "boolean"
+      ? { allowCustom: obj.allowCustom }
+      : {}),
+  };
+}
+
+export function extractNavigationMeta(
+  meta?: Record<string, unknown>,
+): NavigationPayload | null {
+  if (!meta || typeof meta !== "object") return null;
+  const raw = meta.navigate;
+  if (!raw || typeof raw !== "object") return null;
+  const obj = raw as Record<string, unknown>;
+  if (typeof obj.path !== "string" || typeof obj.label !== "string") {
+    return null;
+  }
+  const path = obj.path.trim();
+  const label = obj.label.trim();
+  if (
+    !path ||
+    !label ||
+    !path.startsWith("/") ||
+    path.startsWith("//") ||
+    path.includes("://")
+  ) {
+    return null;
+  }
+  return {
+    path,
+    label,
+    ...(typeof obj.description === "string" && obj.description.trim()
+      ? { description: obj.description }
+      : {}),
+    ...(typeof obj.autoRedirect === "boolean"
+      ? { autoRedirect: obj.autoRedirect }
+      : {}),
+  };
 }
 
 export function validateMemoryContent(raw: string): string | null {
@@ -103,6 +218,8 @@ export type SSEFrame =
       };
     }
   | { event: "token"; data: { agent: string; delta: string } }
+  | { event: "question"; data: QuestionPayload }
+  | { event: "navigate"; data: NavigationPayload }
   | {
       event: "done";
       data: { sessionId: string; messageId: string; agent: string };
