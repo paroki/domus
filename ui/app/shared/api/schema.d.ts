@@ -1121,6 +1121,66 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/me/umat": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get my umat profile
+     * @description Returns the caller's linked umat, keluarga (with decrypted NIK and nomorKk), family members, and document metadata.
+     */
+    get: operations["getMyUmat"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/me/verify/confirm": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Confirm identity verification
+     * @description Re-validates reviewed identity data and documents, syncs keluarga and umat records, and marks the caller verified.
+     */
+    post: operations["verifyConfirm"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/me/verify/extract": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Extract identity documents
+     * @description Extracts structured identity data from KTP/Kartu Pelajar and KK photos using AI Vision and previews census match status.
+     */
+    post: operations["verifyExtract"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/orgs": {
     parameters: {
       query?: never;
@@ -2253,6 +2313,30 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/umat/dokumen/{dokumenId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get umat dokumen
+     * @description Decrypts and returns an identity document image (owner, head of keluarga, or umat:admin).
+     */
+    get: operations["getUmatDokumen"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete umat dokumen
+     * @description Hard-deletes an identity document (owner, head of keluarga, or umat:admin).
+     */
+    delete: operations["deleteUmatDokumen"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/umat/keluarga": {
     parameters: {
       query?: never;
@@ -2747,6 +2831,7 @@ export interface components {
       lingkunganId?: string;
       namaKeluarga: string;
       nomorKk?: string;
+      nomorRegistrasi?: string;
       statusEkonomi?: string;
       statusRumah?: string;
       wilayahId?: string;
@@ -2934,6 +3019,7 @@ export interface components {
       namaBaptis?: string;
       negara?: string;
       nik?: string;
+      nomorInduk?: string;
       pekerjaan?: string;
       pendidikan?: string;
       profesi?: string;
@@ -3033,6 +3119,40 @@ export interface components {
       /** @enum {string} */
       visibility?: "public" | "private";
     };
+    "domain.ExtractedKK": {
+      alamat?: string;
+      anggota?: components["schemas"]["domain.ExtractedKKMember"][];
+      namaKeluarga?: string;
+      nomorKk?: string;
+    };
+    "domain.ExtractedKKMember": {
+      agama?: string;
+      hubunganKeluarga?: string;
+      jenisKelamin?: string;
+      nama?: string;
+      nik?: string;
+      pekerjaan?: string;
+      pendidikan?: string;
+      statusPernikahan?: string;
+      tanggalLahir?: string;
+      tempatLahir?: string;
+    };
+    "domain.ExtractedKTP": {
+      agama?: string;
+      alamat?: string;
+      golonganDarah?: string;
+      jenisKelamin?: string;
+      nama?: string;
+      nik?: string;
+      pekerjaan?: string;
+      statusPernikahan?: string;
+      tanggalLahir?: string;
+      tempatLahir?: string;
+    };
+    "domain.IdentityExtraction": {
+      kk?: components["schemas"]["domain.ExtractedKK"];
+      ktp?: components["schemas"]["domain.ExtractedKTP"];
+    };
     "domain.KecamatanResponse": {
       active?: boolean;
       createdAt?: string;
@@ -3054,6 +3174,7 @@ export interface components {
       nama?: string;
       namaBaptis?: string;
       nikMasked?: string;
+      nomorInduk?: string;
     };
     "domain.KeluargaDetailResponse": {
       aktif?: boolean;
@@ -3070,6 +3191,7 @@ export interface components {
       namaKeluarga?: string;
       nomorKk?: string;
       nomorKkMasked?: string;
+      nomorRegistrasi?: string;
       parokiId?: string;
       statusEkonomi?: string;
       statusRumah?: string;
@@ -3089,6 +3211,7 @@ export interface components {
       lingkunganId?: string;
       namaKeluarga?: string;
       nomorKkMasked?: string;
+      nomorRegistrasi?: string;
       parokiId?: string;
       statusEkonomi?: string;
       statusRumah?: string;
@@ -3705,6 +3828,49 @@ export interface components {
       limit?: number;
       q?: string;
     };
+    "domain.SelfDokumenMeta": {
+      createdAt?: string;
+      id?: string;
+      jenis?: string;
+      keluargaId?: string;
+      mimeType?: string;
+      sizeBytes?: number;
+      umatId?: string;
+      updatedAt?: string;
+    };
+    "domain.SelfKeluargaInfo": {
+      alamat?: string;
+      id?: string;
+      lingkunganId?: string;
+      namaKeluarga?: string;
+      nomorKk?: string;
+      nomorRegistrasi?: string;
+      wilayahId?: string;
+    };
+    "domain.SelfUmatInfo": {
+      agama?: string;
+      alamat?: string;
+      golonganDarah?: string;
+      hubunganKeluarga?: string;
+      id?: string;
+      jenisKelamin?: string;
+      lingkunganId?: string;
+      nama?: string;
+      nik?: string;
+      nomorInduk?: string;
+      pekerjaan?: string;
+      statusPernikahan?: string;
+      tanggalLahir?: string;
+      tempatLahir?: string;
+      userId?: string;
+      wilayahId?: string;
+    };
+    "domain.SelfUmatProfile": {
+      dokumen?: components["schemas"]["domain.SelfDokumenMeta"][];
+      keluarga?: components["schemas"]["domain.SelfKeluargaInfo"];
+      members?: components["schemas"]["domain.SelfUmatInfo"][];
+      umat?: components["schemas"]["domain.SelfUmatInfo"];
+    };
     "domain.SessionDetailResponse": {
       createdAt?: string;
       effectiveModelId?: string;
@@ -3779,6 +3945,7 @@ export interface components {
       negara?: string;
       nik?: string;
       nikMasked?: string;
+      nomorInduk?: string;
       parokiId?: string;
       pekerjaan?: string;
       pendidikan?: string;
@@ -3798,6 +3965,7 @@ export interface components {
       id?: string;
       namaKeluarga?: string;
       nomorKkMasked?: string;
+      nomorRegistrasi?: string;
     };
     "domain.UmatListItemResponse": {
       agama?: string;
@@ -3824,6 +3992,7 @@ export interface components {
       namaBaptis?: string;
       negara?: string;
       nikMasked?: string;
+      nomorInduk?: string;
       parokiId?: string;
       pekerjaan?: string;
       pendidikan?: string;
@@ -3843,6 +4012,7 @@ export interface components {
       lingkunganId?: string;
       nama?: string;
       namaBaptis?: string;
+      nomorInduk?: string;
       parokiId?: string;
       userId?: string;
       wilayahId?: string;
@@ -3955,6 +4125,7 @@ export interface components {
       lingkunganId?: string;
       namaKeluarga?: string;
       nomorKk?: string;
+      nomorRegistrasi?: string;
       statusEkonomi?: string;
       statusRumah?: string;
       wilayahId?: string;
@@ -4201,6 +4372,7 @@ export interface components {
       namaBaptis?: string;
       negara?: string;
       nik?: string;
+      nomorInduk?: string;
       pekerjaan?: string;
       pendidikan?: string;
       profesi?: string;
@@ -4289,6 +4461,7 @@ export interface components {
       lastLoginAt?: string;
       linkedProviders?: string[];
       name?: string;
+      nomorInduk?: string;
       notifyPush?: boolean;
       notifyTelegram?: boolean;
       notifyWhatsapp?: boolean;
@@ -4299,7 +4472,10 @@ export interface components {
       roles?: string[];
       status?: string;
       timezone?: string;
+      umatId?: string;
       updatedAt?: string;
+      verified?: boolean;
+      verifiedAt?: string;
     };
     "domain.UserSearchFilter": {
       cantusAdmin?: boolean;
@@ -4326,6 +4502,20 @@ export interface components {
     };
     "domain.VAPIDPublicKeyResponse": {
       publicKey?: string;
+    };
+    "domain.VerifyConfirmResult": {
+      jenisKelamin?: string;
+      keluargaId?: string;
+      nama?: string;
+      nomorInduk?: string;
+      tanggalLahir?: string;
+      umatId?: string;
+      verified?: boolean;
+      verifiedAt?: string;
+    };
+    "domain.VerifyExtractResponse": {
+      extraction?: components["schemas"]["domain.IdentityExtraction"];
+      matchStatus?: string;
     };
     "domain.VerifyLinkAccountRequest": {
       /** @enum {string} */
@@ -4698,6 +4888,11 @@ export interface components {
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
+    "httpx.Envelope-domain_SelfUmatProfile": {
+      data?: components["schemas"]["domain.SelfUmatProfile"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
     "httpx.Envelope-domain_SessionDetailResponse": {
       data?: components["schemas"]["domain.SessionDetailResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
@@ -4745,6 +4940,16 @@ export interface components {
     };
     "httpx.Envelope-domain_VAPIDPublicKeyResponse": {
       data?: components["schemas"]["domain.VAPIDPublicKeyResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_VerifyConfirmResult": {
+      data?: components["schemas"]["domain.VerifyConfirmResult"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_VerifyExtractResponse": {
+      data?: components["schemas"]["domain.VerifyExtractResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -8637,6 +8842,211 @@ export interface operations {
       };
       /** @description Not Found */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  getMyUmat: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_SelfUmatProfile"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  verifyConfirm: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Reviewed IdentityExtraction JSON */
+    requestBody?: {
+      content: {
+        "multipart/form-data": {
+          /**
+           * Format: binary
+           * @description Kartu Pelajar image (JPEG/PNG/WebP, max 2 MiB)
+           */
+          kartuPelajar?: string;
+          /**
+           * Format: binary
+           * @description KIA image (JPEG/PNG/WebP, max 2 MiB)
+           */
+          kia?: string;
+          /**
+           * Format: binary
+           * @description Kartu Keluarga image (JPEG/PNG/WebP, max 2 MiB)
+           */
+          kk?: string;
+          /**
+           * Format: binary
+           * @description KTP image (JPEG/PNG/WebP, max 2 MiB)
+           */
+          ktp?: string;
+          /** @description Optional Lingkungan UUID */
+          lingkunganId?: string;
+          /** @description 0-based index of caller in kk.anggota */
+          memberIndex?: number;
+          /** @description Reviewed IdentityExtraction JSON */
+          payload: string;
+          /** @description Optional Wilayah UUID */
+          wilayahId?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_VerifyConfirmResult"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  verifyExtract: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description KTP image (JPEG/PNG/WebP, max 2 MiB) */
+    requestBody?: {
+      content: {
+        "multipart/form-data": {
+          /**
+           * Format: binary
+           * @description Kartu Pelajar / KIA image (JPEG/PNG/WebP, max 2 MiB)
+           */
+          kartuPelajar?: string;
+          /**
+           * Format: binary
+           * @description Kartu Keluarga image (JPEG/PNG/WebP, max 2 MiB; required when ktp is omitted)
+           */
+          kk?: string;
+          /**
+           * Format: binary
+           * @description KTP image (JPEG/PNG/WebP, max 2 MiB)
+           */
+          ktp?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_VerifyExtractResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
         headers: {
           [name: string]: unknown;
         };
@@ -13798,6 +14208,132 @@ export interface operations {
       };
       /** @description Unprocessable Entity */
       422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  getUmatDokumen: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Dokumen UUID */
+        dokumenId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "image/jpeg": Record<string, never>;
+          "image/png": Record<string, never>;
+          "image/webp": Record<string, never>;
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "image/jpeg": components["schemas"]["httpx.Envelope-any"];
+          "image/png": components["schemas"]["httpx.Envelope-any"];
+          "image/webp": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "image/jpeg": components["schemas"]["httpx.Envelope-any"];
+          "image/png": components["schemas"]["httpx.Envelope-any"];
+          "image/webp": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "image/jpeg": components["schemas"]["httpx.Envelope-any"];
+          "image/png": components["schemas"]["httpx.Envelope-any"];
+          "image/webp": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "image/jpeg": components["schemas"]["httpx.Envelope-any"];
+          "image/png": components["schemas"]["httpx.Envelope-any"];
+          "image/webp": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  deleteUmatDokumen: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Dokumen UUID */
+        dokumenId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
         headers: {
           [name: string]: unknown;
         };
