@@ -1,6 +1,7 @@
 import type { Page } from "playwright";
 import { AgentWorkspacePage } from "./agent/agent-workspace.page";
 import { BasePage } from "./base.page";
+import { CantusPage } from "./cantus/cantus.page";
 import { EventDetailPage } from "./event/event-detail.page";
 import { EventsPage } from "./event/events.page";
 import { OrgDetailPage } from "./org/org-detail.page";
@@ -46,6 +47,7 @@ export function createPages(page: Page) {
       home: new HomePage(page),
     },
     umat: new UmatPage(page),
+    cantus: new CantusPage(page),
     settings: new SystemSettingsPage(page),
     aiProvider: new AIProviderSettingsPage(page),
     aiAgent: new AIAgentSettingsPage(page),

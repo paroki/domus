@@ -108,6 +108,7 @@ export class UsersPage extends BasePage {
     options?: {
       status?: "Aktif" | "Nonaktif";
       hasSuperAdminBadge?: boolean;
+      hasCantusAdminBadge?: boolean;
     },
   ): Promise<void> {
     const row = this.rowFor(email);
@@ -127,6 +128,47 @@ export class UsersPage extends BasePage {
       const count = await row.getByText("Super Admin", { exact: true }).count();
       assert.equal(count, 0, `Expected no Super Admin badge for ${email}`);
     }
+    if (options?.hasCantusAdminBadge === true) {
+      await row
+        .getByText("Admin Nyanyian", { exact: true })
+        .waitFor({ state: "visible", timeout: 10_000 });
+    }
+    if (options?.hasCantusAdminBadge === false) {
+      const count = await row
+        .getByText("Admin Nyanyian", { exact: true })
+        .count();
+      assert.equal(count, 0, `Expected no Admin Nyanyian badge for ${email}`);
+    }
+  }
+
+  async expectDetailCantusAdminBadge(visible: boolean): Promise<void> {
+    const badge = this.page
+      .locator("div.flex.flex-wrap.items-center.gap-2")
+      .first()
+      .getByText("Admin Nyanyian", { exact: true });
+    if (visible) {
+      await badge.waitFor({ state: "visible", timeout: 10_000 });
+    } else {
+      await badge.waitFor({ state: "detached", timeout: 10_000 });
+    }
+  }
+
+  async grantCantusAdmin(): Promise<void> {
+    await this.page
+      .getByRole("button", { name: "Jadikan Admin Nyanyian" })
+      .click();
+    await this.expectDetailCantusAdminBadge(true);
+  }
+
+  async revokeCantusAdmin(): Promise<void> {
+    await this.page
+      .getByRole("button", { name: "Cabut Admin Nyanyian" })
+      .click();
+    await this.page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Cabut Admin Nyanyian" })
+      .click();
+    await this.expectDetailCantusAdminBadge(false);
   }
 
   async expectDetailSuperAdminBadge(visible: boolean): Promise<void> {
