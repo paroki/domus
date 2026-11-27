@@ -1,8 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { ApiError } from "~/shared/api/client";
+import {
+  resolveUmatErrorMessage,
+  resolveUmatReferensiErrorMessage,
+} from "./api/errors";
 import type { User } from "./api/types";
 import {
   canEditUmatReferensi,
+  countActiveAdvancedUmatFilters,
   genderLabel,
   getUmatReferensiCategoryLabel,
   isSuperAdmin,
@@ -112,4 +118,38 @@ test("parseUmatDirectoryFilters and parseKeluargaDirectoryFilters parse URLSearc
     lingkunganId: "",
     aktif: "false",
   });
+});
+
+test("countActiveAdvancedUmatFilters counts only secondary filters", () => {
+  const primaryOnly = parseUmatDirectoryFilters(
+    new URLSearchParams("q=Budi&wilayahId=w1&lingkunganId=l1"),
+  );
+  assert.equal(countActiveAdvancedUmatFilters(primaryOnly), 0);
+
+  const withAdvanced = parseUmatDirectoryFilters(
+    new URLSearchParams(
+      "q=Budi&nik=3174&jenisKelamin=pria&agama=katolik&almarhum=alive",
+    ),
+  );
+  assert.equal(countActiveAdvancedUmatFilters(withAdvanced), 4);
+});
+
+test("resolveUmatErrorMessage and resolveUmatReferensiErrorMessage distinguish UMAT_IN_USE contexts", () => {
+  const err = new ApiError(409, "UMAT_IN_USE", "Resource is still in use");
+  assert.equal(
+    resolveUmatErrorMessage(err, undefined, "keluarga"),
+    "Kartu Keluarga masih memiliki anggota umat aktif dan tidak dapat dihapus.",
+  );
+  assert.equal(
+    resolveUmatErrorMessage(err, undefined, "umat"),
+    "Data umat masih terhubung dengan jabatan kepengurusan aktif dan tidak dapat dihapus.",
+  );
+  assert.match(
+    resolveUmatErrorMessage(err),
+    /anggota keluarga atau jabatan kepengurusan aktif/,
+  );
+  assert.equal(
+    resolveUmatReferensiErrorMessage(err),
+    "Item referensi masih digunakan oleh data umat atau keluarga dan tidak dapat dihapus.",
+  );
 });

@@ -47,6 +47,9 @@ export class UmatPage extends BasePage {
       await this.page.getByLabel("Nomor KK").fill(input.nomorKk);
     }
     if (input.alamat) {
+      await this.page
+        .getByRole("button", { name: "Lanjut ke Alamat & Wilayah Sipil →" })
+        .click();
       await this.page.getByLabel("Alamat Lengkap").fill(input.alamat);
     }
     await this.page
@@ -177,7 +180,11 @@ export class UmatPage extends BasePage {
   async searchUmatByNik(nik: string): Promise<void> {
     await this.page.goto("/umat");
     await this.expectDirectoryLoaded();
-    await this.page.getByLabel("NIK (Tepat)").fill(nik);
+    const nikInput = this.page.getByLabel("NIK (Tepat)");
+    if (!(await nikInput.isVisible())) {
+      await this.page.getByRole("button", { name: /Filter Lanjutan/ }).click();
+    }
+    await nikInput.fill(nik);
   }
 
   async expectUmatRowMasked(
