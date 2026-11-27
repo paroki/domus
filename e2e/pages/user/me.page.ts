@@ -13,6 +13,7 @@ export class MePage extends BasePage {
     phone?: string;
     gender?: "pria" | "wanita";
     birthDate?: string;
+    timezone?: string;
   }): Promise<void> {
     await this.page.getByLabel("Nama lengkap").fill(input.name);
     if (input.phone !== undefined) {
@@ -24,12 +25,16 @@ export class MePage extends BasePage {
     await this.page
       .getByLabel("Tanggal lahir")
       .fill(input.birthDate ?? "1995-05-10");
+    if (input.timezone !== undefined) {
+      await this.page.getByLabel("Zona waktu").selectOption(input.timezone);
+    }
     await this.page.getByRole("button", { name: "Simpan Profil" }).click();
   }
 
   async expectProfileValues(input: {
     gender: string;
     birthDate: string;
+    timezone?: string;
   }): Promise<void> {
     const genderVal = await this.page.getByLabel("Jenis kelamin").inputValue();
     const birthDateVal = await this.page
@@ -37,6 +42,10 @@ export class MePage extends BasePage {
       .inputValue();
     assert.equal(genderVal, input.gender);
     assert.equal(birthDateVal, input.birthDate);
+    if (input.timezone !== undefined) {
+      const tzVal = await this.page.getByLabel("Zona waktu").inputValue();
+      assert.equal(tzVal, input.timezone);
+    }
   }
 
   async expectProfileSaved(): Promise<void> {

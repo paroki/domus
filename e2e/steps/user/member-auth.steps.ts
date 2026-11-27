@@ -138,6 +138,26 @@ When(
   },
 );
 
+When(
+  "I complete onboarding with name {string}, phone {string}, gender {string}, birth date {string}, and timezone {string}",
+  async function (
+    this: DomusWorld,
+    name: string,
+    phone: string,
+    gender: string,
+    birthDate: string,
+    timezone: string,
+  ) {
+    await this.pages.user.onboarding.completeBiodataAndFinish({
+      name,
+      phone,
+      gender: gender as "pria" | "wanita",
+      birthDate,
+      timezone,
+    });
+  },
+);
+
 Then(
   "I am on the invited organization detail page {string}",
   async function (this: DomusWorld, orgName: string) {
@@ -183,10 +203,46 @@ When(
   },
 );
 
+When(
+  "I update my profile to name {string}, phone {string}, gender {string}, birth date {string}, and timezone {string}",
+  async function (
+    this: DomusWorld,
+    name: string,
+    phone: string,
+    gender: string,
+    birthDate: string,
+    timezone: string,
+  ) {
+    await this.pages.user.me.updateProfile({
+      name,
+      phone,
+      gender: gender as "pria" | "wanita",
+      birthDate,
+      timezone,
+    });
+  },
+);
+
 Then(
   "I see my profile shows gender {string} and birth date {string}",
   async function (this: DomusWorld, gender: string, birthDate: string) {
     await this.pages.user.me.expectProfileValues({ gender, birthDate });
+  },
+);
+
+Then(
+  "I see my profile shows gender {string}, birth date {string}, and timezone {string}",
+  async function (
+    this: DomusWorld,
+    gender: string,
+    birthDate: string,
+    timezone: string,
+  ) {
+    await this.pages.user.me.expectProfileValues({
+      gender,
+      birthDate,
+      timezone,
+    });
   },
 );
 

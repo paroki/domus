@@ -30,6 +30,7 @@ export class OnboardingPage extends BasePage {
     phone?: string;
     gender?: "pria" | "wanita";
     birthDate?: string;
+    timezone?: string;
   }): Promise<void> {
     await this.page.getByLabel("Nama lengkap").fill(input.name);
     if (input.phone !== undefined) {
@@ -41,6 +42,9 @@ export class OnboardingPage extends BasePage {
     await this.page
       .getByLabel("Tanggal lahir")
       .fill(input.birthDate ?? "1995-05-10");
+    if (input.timezone !== undefined) {
+      await this.page.getByLabel("Zona waktu").selectOption(input.timezone);
+    }
 
     const finishBtn = this.page.getByRole("button", {
       name: "Simpan & Selesai",
