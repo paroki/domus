@@ -37,6 +37,9 @@ func TestRegisterSettings_PromptsAndModelValidation(t *testing.T) {
 		agent.SettingPromptGabriel,
 		agent.SettingPromptMikael,
 		agent.SettingPromptRafael,
+		agent.SettingPromptYosef,
+		agent.SettingPromptGregorius,
+		agent.SettingPromptSesilia,
 		agent.SettingPromptMemoryExtractor,
 	}
 	for _, k := range promptKeys {
@@ -74,16 +77,23 @@ func TestRegisterSettings_PromptsAndModelValidation(t *testing.T) {
 	}
 
 	// Model routing validation
-	for _, bad := range []string{
-		"gpt-4o",
-		"not-a-uuid:gpt-4o",
-		uuid.NewString() + ":",
-		uuid.NewString() + ":gpt-4o",
+	for _, key := range []string{
+		agent.SettingModelGabriel,
+		agent.SettingModelYosef,
+		agent.SettingModelGregorius,
+		agent.SettingModelSesilia,
 	} {
-		_, err := store.Update(ctx, map[string]string{
-			agent.SettingModelGabriel: bad,
-		})
-		require.Error(t, err, "expected validation error for %q", bad)
+		for _, bad := range []string{
+			"gpt-4o",
+			"not-a-uuid:gpt-4o",
+			uuid.NewString() + ":",
+			uuid.NewString() + ":gpt-4o",
+		} {
+			_, err := store.Update(ctx, map[string]string{
+				key: bad,
+			})
+			require.Error(t, err, "expected validation error for %s=%q", key, bad)
+		}
 	}
 
 	prov, err := db.AgentProvider.Create().
@@ -95,10 +105,16 @@ func TestRegisterSettings_PromptsAndModelValidation(t *testing.T) {
 
 	_, err = store.Update(ctx, map[string]string{
 		agent.SettingModelGabriel:   prov.ID.String() + ":gemini-2.5-flash",
+		agent.SettingModelYosef:     prov.ID.String() + ":gemini-2.5-flash",
+		agent.SettingModelGregorius: prov.ID.String() + ":gemini-2.5-flash",
+		agent.SettingModelSesilia:   prov.ID.String() + ":gemini-2.5-flash",
 		agent.SettingModelEmbedding: prov.ID.String() + ":gemini-embedding-001",
 	})
 	require.NoError(t, err)
 	require.Equal(t, prov.ID.String()+":gemini-2.5-flash", store.Get(agent.SettingModelGabriel))
+	require.Equal(t, prov.ID.String()+":gemini-2.5-flash", store.Get(agent.SettingModelYosef))
+	require.Equal(t, prov.ID.String()+":gemini-2.5-flash", store.Get(agent.SettingModelGregorius))
+	require.Equal(t, prov.ID.String()+":gemini-2.5-flash", store.Get(agent.SettingModelSesilia))
 }
 
 func TestRegisterPermissions(t *testing.T) {

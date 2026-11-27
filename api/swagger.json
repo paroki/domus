@@ -357,6 +357,9 @@
                     "message": {
                         "type": "string"
                     },
+                    "pageContext": {
+                        "$ref": "#/components/schemas/domain.PageContextInput"
+                    },
                     "retry": {
                         "type": "boolean"
                     },
@@ -2886,6 +2889,17 @@
                         "type": "boolean"
                     },
                     "parentId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.PageContextInput": {
+                "properties": {
+                    "path": {
+                        "type": "string"
+                    },
+                    "title": {
                         "type": "string"
                     }
                 },
@@ -7187,7 +7201,7 @@
     "paths": {
         "/agent/chat": {
             "post": {
-                "description": "Validates request, resolves active model/session, and streams SSE events (session, agent_transfer, tool_start, tool_end, token, done, error).",
+                "description": "Validates request, resolves active model/session, and streams SSE events (session, agent_transfer, tool_start, tool_end, question, navigate, token, done, error).",
                 "operationId": "chatWithAgent",
                 "requestBody": {
                     "content": {

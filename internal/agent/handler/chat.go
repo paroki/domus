@@ -15,7 +15,7 @@ import (
 // Chat streams a multi-agent AI assistant response over Server-Sent Events (SSE).
 //
 //	@Summary		Chat with AI assistant (SSE)
-//	@Description	Validates request, resolves active model/session, and streams SSE events (session, agent_transfer, tool_start, tool_end, token, done, error).
+//	@Description	Validates request, resolves active model/session, and streams SSE events (session, agent_transfer, tool_start, tool_end, question, navigate, token, done, error).
 //	@ID				chatWithAgent
 //	@Tags			Agent
 //	@Accept			json

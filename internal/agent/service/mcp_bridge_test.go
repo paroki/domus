@@ -46,41 +46,80 @@ func TestLoadMCPTools_RoutingAndTenantIsolation(t *testing.T) {
 	require.NoError(t, err)
 
 	srv := mcpx.NewServer("domus", userFeature, refFeature)
-	// Add a cantus_search tool to verify Gabriel allowlist routing
-	mcp.AddTool(srv, &mcp.Tool{Name: "cantus_search", Description: "Search hymns"}, func(_ context.Context, _ *mcp.CallToolRequest, _ struct{}) (*mcp.CallToolResult, map[string]string, error) {
+	noopHandler := func(_ context.Context, _ *mcp.CallToolRequest, _ struct{}) (*mcp.CallToolResult, map[string]string, error) {
 		return nil, map[string]string{"ok": "1"}, nil
-	})
+	}
+	for _, name := range []string{
+		"event_list",
+		"umat_search",
+		"liturgi_list_schedules",
+		"liturgi_get_schedule",
+		"liturgi_create_schedule",
+		"liturgi_set_lagu",
+		"cantus_search",
+		"cantus_create",
+	} {
+		mcp.AddTool(srv, &mcp.Tool{Name: name, Description: name}, noopHandler)
+	}
 
 	turnCtx := authx.WithPrincipal(ctx, authx.Principal{UserID: u.ID, ParokiID: paroki.ID})
 	sess, err := mcpx.ConnectInMemory(turnCtx, srv)
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = sess.Close() })
 
-	gabriel, mikael, rafael, err := service.LoadMCPTools(turnCtx, sess)
+	set, err := service.LoadMCPTools(turnCtx, sess)
 	require.NoError(t, err)
-	require.Empty(t, mikael) // no event_* registered on srv
 
-	var gabrielNames, rafaelNames []string
-	for _, tl := range gabriel {
-		info, err := tl.Info(turnCtx)
-		require.NoError(t, err)
-		gabrielNames = append(gabrielNames, info.Name)
-	}
-	var refGetParoki tool.InvokableTool
-	for _, tl := range rafael {
-		info, err := tl.Info(turnCtx)
-		require.NoError(t, err)
-		rafaelNames = append(rafaelNames, info.Name)
-		if info.Name == "ref_get_paroki" {
-			refGetParoki = tl.(tool.InvokableTool)
+	collectNames := func(tools []tool.BaseTool) []string {
+		names := make([]string, 0, len(tools))
+		for _, tl := range tools {
+			info, infoErr := tl.Info(turnCtx)
+			require.NoError(t, infoErr)
+			names = append(names, info.Name)
 		}
+		return names
 	}
 
-	require.Equal(t, []string{"cantus_search"}, gabrielNames)
+	mikaelNames := collectNames(set.Mikael)
+	rafaelNames := collectNames(set.Rafael)
+	yosefNames := collectNames(set.Yosef)
+	gregoriusNames := collectNames(set.Gregorius)
+	sesiliaNames := collectNames(set.Sesilia)
+
+	require.Equal(t, []string{"event_list"}, mikaelNames)
+
 	require.Contains(t, rafaelNames, "ref_get_paroki")
 	require.Contains(t, rafaelNames, "user_get_me")
 	require.NotContains(t, rafaelNames, "agent_remember")
+	require.NotContains(t, rafaelNames, "cantus_search")
 
+	require.Contains(t, yosefNames, "umat_search")
+	require.Contains(t, yosefNames, "ref_get_paroki")
+	require.Contains(t, yosefNames, "ref_list_wilayah")
+	require.Contains(t, yosefNames, "ref_list_lingkungan")
+	require.NotContains(t, yosefNames, "user_get_me")
+
+	require.Contains(t, gregoriusNames, "liturgi_list_schedules")
+	require.Contains(t, gregoriusNames, "liturgi_get_schedule")
+	require.Contains(t, gregoriusNames, "liturgi_create_schedule")
+	require.NotContains(t, gregoriusNames, "liturgi_set_lagu")
+
+	require.Contains(t, sesiliaNames, "cantus_search")
+	require.Contains(t, sesiliaNames, "cantus_create")
+	require.Contains(t, sesiliaNames, "liturgi_list_schedules")
+	require.Contains(t, sesiliaNames, "liturgi_get_schedule")
+	require.Contains(t, sesiliaNames, "liturgi_set_lagu")
+	require.NotContains(t, sesiliaNames, "liturgi_create_schedule")
+
+	var refGetParoki tool.InvokableTool
+	for _, tl := range set.Rafael {
+		info, infoErr := tl.Info(turnCtx)
+		require.NoError(t, infoErr)
+		if info.Name == "ref_get_paroki" {
+			refGetParoki = tl.(tool.InvokableTool)
+			break
+		}
+	}
 	require.NotNil(t, refGetParoki)
 	out, err := refGetParoki.InvokableRun(turnCtx, `{}`)
 	require.NoError(t, err)

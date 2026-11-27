@@ -13,7 +13,12 @@ import (
 	"github.com/google/uuid"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/paroki/domus/ent"
+	"github.com/paroki/domus/ent/cantus"
+	"github.com/paroki/domus/ent/event"
+	"github.com/paroki/domus/ent/keluarga"
+	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/paroki"
+	"github.com/paroki/domus/ent/umat"
 	entuser "github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/internal/agent/domain"
 	"github.com/paroki/domus/internal/agent/driver"
@@ -26,13 +31,19 @@ const (
 	maxChatMessageRunes = 16000
 	maxSessionTitleRune = 60
 
-	settingModelMikael  = "agent.model.mikael"
-	settingModelRafael  = "agent.model.rafael"
-	settingPromptGab    = "agent.prompt.gabriel"
-	settingPromptMik    = "agent.prompt.mikael"
-	settingPromptRaf    = "agent.prompt.rafael"
-	chatTurnTimeout     = 3 * time.Minute
-	chatKeepalivePeriod = 15 * time.Second
+	settingModelMikael    = "agent.model.mikael"
+	settingModelRafael    = "agent.model.rafael"
+	settingModelYosef     = "agent.model.yosef"
+	settingModelGregorius = "agent.model.gregorius"
+	settingModelSesilia   = "agent.model.sesilia"
+	settingPromptGab      = "agent.prompt.gabriel"
+	settingPromptMik      = "agent.prompt.mikael"
+	settingPromptRaf      = "agent.prompt.rafael"
+	settingPromptYos      = "agent.prompt.yosef"
+	settingPromptGreg     = "agent.prompt.gregorius"
+	settingPromptSes      = "agent.prompt.sesilia"
+	chatTurnTimeout       = 3 * time.Minute
+	chatKeepalivePeriod   = 15 * time.Second
 )
 
 type resolvedModelConfig struct {
@@ -51,9 +62,15 @@ type ChatTurnPrep struct {
 	GabrielModel    resolvedModelConfig
 	MikaelModel     resolvedModelConfig
 	RafaelModel     resolvedModelConfig
+	YosefModel      resolvedModelConfig
+	GregoriusModel  resolvedModelConfig
+	SesiliaModel    resolvedModelConfig
 	GabrielPrompt   string
 	MikaelPrompt    string
 	RafaelPrompt    string
+	YosefPrompt     string
+	GregoriusPrompt string
+	SesiliaPrompt   string
 	PromptContext   PromptContext
 	History         []*schema.Message
 	SkipAppendUser  bool
@@ -169,26 +186,47 @@ func (s *Service) PrepareChat(ctx context.Context, p authx.Principal, req domain
 		gabrielCfg = resolvedModelConfig{provider: prov, plainKey: key, modelID: mid}
 	}
 
-	mikaelCfg := gabrielCfg
-	if prov, key, mid, err := s.resolveSettingModel(ctx, settingModelMikael, true); err == nil {
-		mikaelCfg = resolvedModelConfig{provider: prov, plainKey: key, modelID: mid}
+	resolveOptionalModel := func(key string) resolvedModelConfig {
+		if prov, keyStr, mid, err := s.resolveSettingModel(ctx, key, true); err == nil {
+			return resolvedModelConfig{provider: prov, plainKey: keyStr, modelID: mid}
+		}
+		return gabrielCfg
 	}
-	rafaelCfg := gabrielCfg
-	if prov, key, mid, err := s.resolveSettingModel(ctx, settingModelRafael, true); err == nil {
-		rafaelCfg = resolvedModelConfig{provider: prov, plainKey: key, modelID: mid}
-	}
+	mikaelCfg := resolveOptionalModel(settingModelMikael)
+	rafaelCfg := resolveOptionalModel(settingModelRafael)
+	yosefCfg := resolveOptionalModel(settingModelYosef)
+	gregoriusCfg := resolveOptionalModel(settingModelGregorius)
+	sesiliaCfg := resolveOptionalModel(settingModelSesilia)
 
 	gabPrompt := s.resolvePrompt(settingPromptGab, prompts.Gabriel)
 	mikPrompt := s.resolvePrompt(settingPromptMik, prompts.Mikael)
 	rafPrompt := s.resolvePrompt(settingPromptRaf, prompts.Rafael)
+	yosPrompt := s.resolvePrompt(settingPromptYos, prompts.Yosef)
+	gregPrompt := s.resolvePrompt(settingPromptGreg, prompts.Gregorius)
+	sesPrompt := s.resolvePrompt(settingPromptSes, prompts.Sesilia)
 
-	var userName, parokiName string
+	var userName, parokiName, userTZ, parokiTZ string
 	if s.db != nil {
 		if u, err := s.db.User.Query().Where(entuser.IDEQ(p.UserID)).Only(ctx); err == nil {
 			userName = u.Name
+			userTZ = strings.TrimSpace(u.Timezone)
 		}
 		if pr, err := s.db.Paroki.Query().Where(paroki.IDEQ(p.ParokiID)).Only(ctx); err == nil {
 			parokiName = pr.Nama
+			parokiTZ = strings.TrimSpace(pr.Timezone)
+		}
+	}
+	parokiLoc, resolvedParokiTZ := loadTimezoneOrDefault(parokiTZ, defaultParokiTimezone)
+	if userTZ == "" {
+		userTZ = resolvedParokiTZ
+	}
+
+	var pagePath, pageTitle, activeEntity string
+	if req.PageContext != nil {
+		pagePath = strings.TrimSpace(req.PageContext.Path)
+		pageTitle = strings.TrimSpace(req.PageContext.Title)
+		if pagePath != "" {
+			activeEntity = s.resolvePageContextEntity(ctx, p.ParokiID, pagePath)
 		}
 	}
 
@@ -222,14 +260,25 @@ func (s *Service) PrepareChat(ctx context.Context, p authx.Principal, req domain
 		GabrielModel:    gabrielCfg,
 		MikaelModel:     mikaelCfg,
 		RafaelModel:     rafaelCfg,
+		YosefModel:      yosefCfg,
+		GregoriusModel:  gregoriusCfg,
+		SesiliaModel:    sesiliaCfg,
 		GabrielPrompt:   gabPrompt,
 		MikaelPrompt:    mikPrompt,
 		RafaelPrompt:    rafPrompt,
+		YosefPrompt:     yosPrompt,
+		GregoriusPrompt: gregPrompt,
+		SesiliaPrompt:   sesPrompt,
 		PromptContext: PromptContext{
 			UserName:          userName,
 			ParokiName:        parokiName,
 			UserRoles:         p.Roles,
-			CurrentTime:       time.Now().UTC().Format(time.RFC3339),
+			UserTimezone:      userTZ,
+			ParokiTimezone:    resolvedParokiTZ,
+			CurrentTime:       time.Now().In(parokiLoc).Format("Monday, 2006-01-02T15:04:05-07:00"),
+			PagePath:          pagePath,
+			PageTitle:         pageTitle,
+			ActiveEntity:      activeEntity,
 			RetrievedMemories: memories,
 		},
 		History:        history,
@@ -287,7 +336,7 @@ func (s *Service) ExecuteChatStream(prep *ChatTurnPrep, writeEvent func(StreamEv
 	defer turnCancel()
 
 	var mcpSess *mcp.ClientSession
-	var gabrielMCPTools, mikaelTools, rafaelTools []tool.BaseTool
+	var mcpTools MCPToolSet
 	if s.mcpServer != nil {
 		var err error
 		mcpSess, err = mcpx.ConnectInMemory(turnCtx, s.mcpServer)
@@ -297,7 +346,7 @@ func (s *Service) ExecuteChatStream(prep *ChatTurnPrep, writeEvent func(StreamEv
 		}
 		defer func() { _ = mcpSess.Close() }()
 
-		gabrielMCPTools, mikaelTools, rafaelTools, err = LoadMCPTools(turnCtx, mcpSess)
+		mcpTools, err = LoadMCPTools(turnCtx, mcpSess)
 		if err != nil {
 			_ = writeEvent(StreamEvent{Event: "error", Data: map[string]string{"code": "MCP_TOOLS_FAILED", "message": err.Error()}})
 			return
@@ -309,7 +358,36 @@ func (s *Service) ExecuteChatStream(prep *ChatTurnPrep, writeEvent func(StreamEv
 		_ = writeEvent(StreamEvent{Event: "error", Data: map[string]string{"code": "MEMORY_TOOLS_FAILED", "message": err.Error()}})
 		return
 	}
-	gabrielTools := append(append([]tool.BaseTool(nil), gabrielMCPTools...), memTools...)
+
+	eventCh := make(chan StreamEvent, 64)
+	emitAsync := func(ev StreamEvent) {
+		select {
+		case eventCh <- ev:
+		case <-turnCtx.Done():
+		}
+	}
+
+	recorder := &TurnMetaRecorder{}
+	uiTools, err := NewUITools(emitAsync, recorder)
+	if err != nil {
+		_ = writeEvent(StreamEvent{Event: "error", Data: map[string]string{"code": "UI_TOOLS_FAILED", "message": err.Error()}})
+		return
+	}
+
+	appendTools := func(groups ...[]tool.BaseTool) []tool.BaseTool {
+		var out []tool.BaseTool
+		for _, g := range groups {
+			out = append(out, g...)
+		}
+		return out
+	}
+
+	gabrielTools := appendTools(memTools, uiTools)
+	mikaelTools := appendTools(mcpTools.Mikael, uiTools)
+	rafaelTools := appendTools(mcpTools.Rafael, uiTools)
+	yosefTools := appendTools(mcpTools.Yosef, uiTools)
+	gregoriusTools := appendTools(mcpTools.Gregorius, uiTools)
+	sesiliaTools := appendTools(mcpTools.Sesilia, uiTools)
 
 	gabModel, err := s.drivers.NewChatModel(turnCtx, string(prep.GabrielModel.provider.Provider), prep.GabrielModel.provider.BaseURL, prep.GabrielModel.plainKey, prep.GabrielModel.modelID)
 	if err != nil {
@@ -326,27 +404,43 @@ func (s *Service) ExecuteChatStream(prep *ChatTurnPrep, writeEvent func(StreamEv
 		_ = writeEvent(StreamEvent{Event: "error", Data: map[string]string{"code": "AGENT_PROVIDER_UNAVAILABLE", "message": err.Error()}})
 		return
 	}
-
-	eventCh := make(chan StreamEvent, 64)
-	emitAsync := func(ev StreamEvent) {
-		select {
-		case eventCh <- ev:
-		case <-turnCtx.Done():
-		}
+	yosModel, err := s.drivers.NewChatModel(turnCtx, string(prep.YosefModel.provider.Provider), prep.YosefModel.provider.BaseURL, prep.YosefModel.plainKey, prep.YosefModel.modelID)
+	if err != nil {
+		_ = writeEvent(StreamEvent{Event: "error", Data: map[string]string{"code": "AGENT_PROVIDER_UNAVAILABLE", "message": err.Error()}})
+		return
+	}
+	gregModel, err := s.drivers.NewChatModel(turnCtx, string(prep.GregoriusModel.provider.Provider), prep.GregoriusModel.provider.BaseURL, prep.GregoriusModel.plainKey, prep.GregoriusModel.modelID)
+	if err != nil {
+		_ = writeEvent(StreamEvent{Event: "error", Data: map[string]string{"code": "AGENT_PROVIDER_UNAVAILABLE", "message": err.Error()}})
+		return
+	}
+	sesModel, err := s.drivers.NewChatModel(turnCtx, string(prep.SesiliaModel.provider.Provider), prep.SesiliaModel.provider.BaseURL, prep.SesiliaModel.plainKey, prep.SesiliaModel.modelID)
+	if err != nil {
+		_ = writeEvent(StreamEvent{Event: "error", Data: map[string]string{"code": "AGENT_PROVIDER_UNAVAILABLE", "message": err.Error()}})
+		return
 	}
 
 	runner, err := buildSupervisorRunner(turnCtx, supervisorConfig{
-		GabrielModel:  gabModel,
-		MikaelModel:   mikModel,
-		RafaelModel:   rafModel,
-		GabrielPrompt: prep.GabrielPrompt,
-		MikaelPrompt:  prep.MikaelPrompt,
-		RafaelPrompt:  prep.RafaelPrompt,
-		PromptContext: prep.PromptContext,
-		GabrielTools:  gabrielTools,
-		MikaelTools:   mikaelTools,
-		RafaelTools:   rafaelTools,
-		Emit:          emitAsync,
+		GabrielModel:    gabModel,
+		MikaelModel:     mikModel,
+		RafaelModel:     rafModel,
+		YosefModel:      yosModel,
+		GregoriusModel:  gregModel,
+		SesiliaModel:    sesModel,
+		GabrielPrompt:   prep.GabrielPrompt,
+		MikaelPrompt:    prep.MikaelPrompt,
+		RafaelPrompt:    prep.RafaelPrompt,
+		YosefPrompt:     prep.YosefPrompt,
+		GregoriusPrompt: prep.GregoriusPrompt,
+		SesiliaPrompt:   prep.SesiliaPrompt,
+		PromptContext:   prep.PromptContext,
+		GabrielTools:    gabrielTools,
+		MikaelTools:     mikaelTools,
+		RafaelTools:     rafaelTools,
+		YosefTools:      yosefTools,
+		GregoriusTools:  gregoriusTools,
+		SesiliaTools:    sesiliaTools,
+		Emit:            emitAsync,
 	})
 	if err != nil {
 		_ = writeEvent(StreamEvent{Event: "error", Data: map[string]string{"code": "SUPERVISOR_INIT_FAILED", "message": err.Error()}})
@@ -506,6 +600,9 @@ loop:
 		wrappedErr := driver.WrapProviderError(res.err, prep.GabrielModel.plainKey)
 		wrappedErr = driver.WrapProviderError(wrappedErr, prep.MikaelModel.plainKey)
 		wrappedErr = driver.WrapProviderError(wrappedErr, prep.RafaelModel.plainKey)
+		wrappedErr = driver.WrapProviderError(wrappedErr, prep.YosefModel.plainKey)
+		wrappedErr = driver.WrapProviderError(wrappedErr, prep.GregoriusModel.plainKey)
+		wrappedErr = driver.WrapProviderError(wrappedErr, prep.SesiliaModel.plainKey)
 		_ = writeEvent(StreamEvent{
 			Event: "error",
 			Data: map[string]string{
@@ -516,11 +613,27 @@ loop:
 		return
 	}
 
+	var meta map[string]any
+	q, nav := recorder.Snapshot()
+	if q != nil || nav != nil {
+		meta = make(map[string]any)
+		if q != nil {
+			meta["question"] = q
+		}
+		if nav != nil {
+			meta["navigation"] = nav
+		}
+	}
+	if strings.TrimSpace(res.finalText) == "" && q != nil {
+		res.finalText = q.Question
+	}
+
 	toPersist := append([]domain.AppendMessageInput(nil), res.completedTools...)
 	toPersist = append(toPersist, domain.AppendMessageInput{
 		AgentName: res.finalAgent,
 		Role:      "assistant",
 		Content:   res.finalText,
+		Meta:      meta,
 	})
 	persisted, err := s.repo.AppendMessages(persistCtx, prep.Principal.ParokiID, prep.Principal.UserID, sessionID, toPersist)
 	if err != nil {
@@ -551,6 +664,109 @@ func (s *Service) resolvePrompt(key, fallback string) string {
 		}
 	}
 	return strings.TrimSpace(fallback)
+}
+
+func loadTimezoneOrDefault(tz, fallback string) (*time.Location, string) {
+	if tz != "" {
+		if loc, err := time.LoadLocation(tz); err == nil {
+			return loc, tz
+		}
+	}
+	if loc, err := time.LoadLocation(fallback); err == nil {
+		return loc, fallback
+	}
+	return time.UTC, "UTC"
+}
+
+func (s *Service) resolvePageContextEntity(ctx context.Context, parokiID uuid.UUID, rawPath string) string {
+	if s.db == nil {
+		return ""
+	}
+	cleanPath := rawPath
+	if idx := strings.IndexAny(cleanPath, "?#"); idx >= 0 {
+		cleanPath = cleanPath[:idx]
+	}
+	segs := strings.Split(strings.Trim(cleanPath, "/"), "/")
+	if len(segs) < 2 {
+		return ""
+	}
+
+	switch segs[0] {
+	case "org":
+		id, err := uuid.Parse(segs[1])
+		if err != nil {
+			return ""
+		}
+		row, err := s.db.Organization.Query().
+			Where(organization.IDEQ(id), organization.ParokiIDEQ(parokiID), organization.DeletedAtIsNil()).
+			Only(ctx)
+		if err != nil {
+			return ""
+		}
+		return "Active Organization: " + row.Name + " (orgId: " + row.ID.String() + ")"
+
+	case "event", "liturgi":
+		id, err := uuid.Parse(segs[1])
+		if err != nil {
+			return ""
+		}
+		row, err := s.db.Event.Query().
+			Where(event.IDEQ(id), event.ParokiIDEQ(parokiID), event.DeletedAtIsNil()).
+			Only(ctx)
+		if err != nil {
+			return ""
+		}
+		return "Active Event: " + row.Title + " (eventId: " + row.ID.String() + ")"
+
+	case "umat":
+		if segs[1] == "keluarga" {
+			if len(segs) < 3 {
+				return ""
+			}
+			id, err := uuid.Parse(segs[2])
+			if err != nil {
+				return ""
+			}
+			row, err := s.db.Keluarga.Query().
+				Where(keluarga.IDEQ(id), keluarga.ParokiIDEQ(parokiID), keluarga.DeletedAtIsNil()).
+				Only(ctx)
+			if err != nil {
+				return ""
+			}
+			return "Active Keluarga: " + row.NamaKeluarga + " (keluargaId: " + row.ID.String() + ")"
+		}
+		if segs[1] == "new" || segs[1] == "referensi" {
+			return ""
+		}
+		id, err := uuid.Parse(segs[1])
+		if err != nil {
+			return ""
+		}
+		row, err := s.db.Umat.Query().
+			Where(umat.IDEQ(id), umat.ParokiIDEQ(parokiID), umat.DeletedAtIsNil()).
+			Only(ctx)
+		if err != nil {
+			return ""
+		}
+		return "Active Umat: " + row.Nama + " (umatId: " + row.ID.String() + ")"
+
+	case "cantus":
+		if segs[1] == "new" {
+			return ""
+		}
+		id, err := uuid.Parse(segs[1])
+		if err != nil {
+			return ""
+		}
+		row, err := s.db.Cantus.Query().
+			Where(cantus.IDEQ(id), cantus.DeletedAtIsNil()).
+			Only(ctx)
+		if err != nil {
+			return ""
+		}
+		return "Active Cantus: " + row.Judul + " (cantusId: " + row.ID.String() + ")"
+	}
+	return ""
 }
 
 func cleanTitle(msg string) string {

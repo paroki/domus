@@ -14,13 +14,30 @@ import (
 
 // Per-agent MCP tool routing constants (never hardcoded in DB prompts).
 var (
-	GabrielAllowedMCPTools = map[string]bool{
-		"cantus_search": true,
-		"cantus_get":    true,
+	GabrielAllowedMCPTools = map[string]bool{}
+
+	MikaelMCPPrefixes    = []string{"event_"}
+	RafaelMCPPrefixes    = []string{"org_", "ref_", "user_"}
+	YosefMCPPrefixes     = []string{"umat_"}
+	YosefSharedMCPTools  = map[string]bool{"ref_get_paroki": true, "ref_list_wilayah": true, "ref_list_lingkungan": true}
+	GregoriusMCPPrefixes = []string{"liturgi_"}
+	GregoriusExcluded    = map[string]bool{"liturgi_set_lagu": true}
+	SesiliaMCPPrefixes   = []string{"cantus_"}
+	SesiliaSharedTools   = map[string]bool{
+		"liturgi_list_schedules": true,
+		"liturgi_get_schedule":   true,
+		"liturgi_set_lagu":       true,
 	}
-	MikaelMCPPrefixes = []string{"event_"}
-	RafaelMCPPrefixes = []string{"org_", "ref_", "user_"}
 )
+
+// MCPToolSet holds partitioned MCP tools for each specialist sub-agent.
+type MCPToolSet struct {
+	Mikael    []tool.BaseTool
+	Rafael    []tool.BaseTool
+	Yosef     []tool.BaseTool
+	Gregorius []tool.BaseTool
+	Sesilia   []tool.BaseTool
+}
 
 type mcpToolAdapter struct {
 	session  *mcp.ClientSession
@@ -84,36 +101,51 @@ func (a *mcpToolAdapter) InvokableRun(ctx context.Context, argumentsInJSON strin
 }
 
 // LoadMCPTools lists tools from an open in-process MCP ClientSession and partitions them
-// by Go-constant routing rules for gabriel, mikael, and rafael.
-func LoadMCPTools(ctx context.Context, session *mcp.ClientSession) (gabriel, mikael, rafael []tool.BaseTool, err error) {
+// by Go-constant routing rules across Mikael, Rafael, Yosef, Gregorius, and Sesilia.
+func LoadMCPTools(ctx context.Context, session *mcp.ClientSession) (MCPToolSet, error) {
+	var set MCPToolSet
 	if session == nil {
-		return nil, nil, nil, nil
+		return set, nil
 	}
 	for mt, iterErr := range session.Tools(ctx, nil) {
 		if iterErr != nil {
-			return nil, nil, nil, iterErr
+			return MCPToolSet{}, iterErr
 		}
 		if mt == nil {
 			continue
 		}
-		var target *[]tool.BaseTool
-		switch {
-		case GabrielAllowedMCPTools[mt.Name]:
-			target = &gabriel
-		case hasAnyPrefix(mt.Name, MikaelMCPPrefixes):
-			target = &mikael
-		case hasAnyPrefix(mt.Name, RafaelMCPPrefixes):
-			target = &rafael
-		default:
+
+		toMikael := hasAnyPrefix(mt.Name, MikaelMCPPrefixes)
+		toRafael := hasAnyPrefix(mt.Name, RafaelMCPPrefixes)
+		toYosef := hasAnyPrefix(mt.Name, YosefMCPPrefixes) || YosefSharedMCPTools[mt.Name]
+		toGregorius := hasAnyPrefix(mt.Name, GregoriusMCPPrefixes) && !GregoriusExcluded[mt.Name]
+		toSesilia := hasAnyPrefix(mt.Name, SesiliaMCPPrefixes) || SesiliaSharedTools[mt.Name]
+
+		if !toMikael && !toRafael && !toYosef && !toGregorius && !toSesilia {
 			continue
 		}
+
 		adapter, err := newMCPToolAdapter(session, mt)
 		if err != nil {
-			return nil, nil, nil, err
+			return MCPToolSet{}, err
 		}
-		*target = append(*target, adapter)
+		if toMikael {
+			set.Mikael = append(set.Mikael, adapter)
+		}
+		if toRafael {
+			set.Rafael = append(set.Rafael, adapter)
+		}
+		if toYosef {
+			set.Yosef = append(set.Yosef, adapter)
+		}
+		if toGregorius {
+			set.Gregorius = append(set.Gregorius, adapter)
+		}
+		if toSesilia {
+			set.Sesilia = append(set.Sesilia, adapter)
+		}
 	}
-	return gabriel, mikael, rafael, nil
+	return set, nil
 }
 
 func hasAnyPrefix(name string, prefixes []string) bool {

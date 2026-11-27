@@ -21,17 +21,26 @@ type StreamEvent struct {
 }
 
 type supervisorConfig struct {
-	GabrielModel  model.ToolCallingChatModel
-	MikaelModel   model.ToolCallingChatModel
-	RafaelModel   model.ToolCallingChatModel
-	GabrielPrompt string
-	MikaelPrompt  string
-	RafaelPrompt  string
-	PromptContext PromptContext
-	GabrielTools  []tool.BaseTool
-	MikaelTools   []tool.BaseTool
-	RafaelTools   []tool.BaseTool
-	Emit          func(StreamEvent)
+	GabrielModel    model.ToolCallingChatModel
+	MikaelModel     model.ToolCallingChatModel
+	RafaelModel     model.ToolCallingChatModel
+	YosefModel      model.ToolCallingChatModel
+	GregoriusModel  model.ToolCallingChatModel
+	SesiliaModel    model.ToolCallingChatModel
+	GabrielPrompt   string
+	MikaelPrompt    string
+	RafaelPrompt    string
+	YosefPrompt     string
+	GregoriusPrompt string
+	SesiliaPrompt   string
+	PromptContext   PromptContext
+	GabrielTools    []tool.BaseTool
+	MikaelTools     []tool.BaseTool
+	RafaelTools     []tool.BaseTool
+	YosefTools      []tool.BaseTool
+	GregoriusTools  []tool.BaseTool
+	SesiliaTools    []tool.BaseTool
+	Emit            func(StreamEvent)
 }
 
 func newToolEventMiddleware(agentName string, emit func(StreamEvent), subAgents map[string]bool) compose.ToolMiddleware {
@@ -109,58 +118,82 @@ func newToolEventMiddleware(agentName string, emit func(StreamEvent), subAgents 
 	}
 }
 
+type subAgentSpec struct {
+	name   string
+	desc   string
+	model  model.ToolCallingChatModel
+	prompt string
+	tools  []tool.BaseTool
+}
+
 func buildSupervisorRunner(ctx context.Context, cfg supervisorConfig) (*adk.Runner, error) {
 	patchHandler, err := patchtoolcalls.New(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	mikaelAgent, err := adk.NewChatModelAgent(ctx, &adk.ChatModelAgentConfig{
-		Name:          "mikael",
-		Description:   "Parish events and RSVP specialist. Handles event_list, event_get, event_create, event_update, event_rsvp, and event_list_rsvps.",
-		Model:         cfg.MikaelModel,
-		MaxIterations: 6,
-		Handlers:      []adk.ChatModelAgentMiddleware{patchHandler},
-		GenModelInput: BuildGenModelInput(cfg.MikaelPrompt, cfg.PromptContext),
-		ToolsConfig: adk.ToolsConfig{
-			ToolsNodeConfig: compose.ToolsNodeConfig{
-				Tools:               cfg.MikaelTools,
-				ToolCallMiddlewares: []compose.ToolMiddleware{newToolEventMiddleware("mikael", cfg.Emit, nil)},
-			},
+	specs := []subAgentSpec{
+		{
+			name:   "mikael",
+			desc:   "Parish events and RSVP specialist. Handles event_list, event_get, event_create, event_update, event_rsvp, and event_list_rsvps.",
+			model:  cfg.MikaelModel,
+			prompt: cfg.MikaelPrompt,
+			tools:  cfg.MikaelTools,
 		},
-	})
-	if err != nil {
-		return nil, err
+		{
+			name:   "rafael",
+			desc:   "Parish organization, reference master data, and user directory specialist. Handles org_*, ref_*, and user_* tools.",
+			model:  cfg.RafaelModel,
+			prompt: cfg.RafaelPrompt,
+			tools:  cfg.RafaelTools,
+		},
+		{
+			name:   "yosef",
+			desc:   "Buku Induk Keluarga & Data Umat specialist. Handles umat_* and read-only territorial ref_get_paroki, ref_list_wilayah, ref_list_lingkungan.",
+			model:  cfg.YosefModel,
+			prompt: cfg.YosefPrompt,
+			tools:  cfg.YosefTools,
+		},
+		{
+			name:   "gregorius",
+			desc:   "Koordinator Liturgi & Petugas Liturgi specialist. Handles liturgi_list_schedules, liturgi_get_schedule, liturgi_create_schedule, liturgi_update_schedule, liturgi_set_ministry, liturgi_set_petugas, liturgi_respond_petugas, and liturgi_approve_substitute.",
+			model:  cfg.GregoriusModel,
+			prompt: cfg.GregoriusPrompt,
+			tools:  cfg.GregoriusTools,
+		},
+		{
+			name:   "sesilia",
+			desc:   "Musik & Lagu Liturgi specialist. Handles cantus_* and liturgi_list_schedules, liturgi_get_schedule, liturgi_set_lagu.",
+			model:  cfg.SesiliaModel,
+			prompt: cfg.SesiliaPrompt,
+			tools:  cfg.SesiliaTools,
+		},
 	}
 
-	rafaelAgent, err := adk.NewChatModelAgent(ctx, &adk.ChatModelAgentConfig{
-		Name:          "rafael",
-		Description:   "Parish organization, reference master data, and user directory specialist. Handles org_*, ref_*, and user_* tools.",
-		Model:         cfg.RafaelModel,
-		MaxIterations: 6,
-		Handlers:      []adk.ChatModelAgentMiddleware{patchHandler},
-		GenModelInput: BuildGenModelInput(cfg.RafaelPrompt, cfg.PromptContext),
-		ToolsConfig: adk.ToolsConfig{
-			ToolsNodeConfig: compose.ToolsNodeConfig{
-				Tools:               cfg.RafaelTools,
-				ToolCallMiddlewares: []compose.ToolMiddleware{newToolEventMiddleware("rafael", cfg.Emit, nil)},
-			},
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	mikaelTool := adk.NewAgentTool(ctx, mikaelAgent)
-	rafaelTool := adk.NewAgentTool(ctx, rafaelAgent)
-
-	gabrielAllTools := make([]tool.BaseTool, 0, len(cfg.GabrielTools)+2)
+	gabrielAllTools := make([]tool.BaseTool, 0, len(cfg.GabrielTools)+len(specs))
 	gabrielAllTools = append(gabrielAllTools, cfg.GabrielTools...)
-	gabrielAllTools = append(gabrielAllTools, mikaelTool, rafaelTool)
+	subAgents := make(map[string]bool, len(specs))
 
-	subAgents := map[string]bool{
-		"mikael": true,
-		"rafael": true,
+	for _, sp := range specs {
+		agent, err := adk.NewChatModelAgent(ctx, &adk.ChatModelAgentConfig{
+			Name:          sp.name,
+			Description:   sp.desc,
+			Model:         sp.model,
+			MaxIterations: 6,
+			Handlers:      []adk.ChatModelAgentMiddleware{patchHandler},
+			GenModelInput: BuildGenModelInput(sp.prompt, cfg.PromptContext),
+			ToolsConfig: adk.ToolsConfig{
+				ToolsNodeConfig: compose.ToolsNodeConfig{
+					Tools:               sp.tools,
+					ToolCallMiddlewares: []compose.ToolMiddleware{newToolEventMiddleware(sp.name, cfg.Emit, nil)},
+				},
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+		gabrielAllTools = append(gabrielAllTools, adk.NewAgentTool(ctx, agent))
+		subAgents[sp.name] = true
 	}
 
 	gabrielAgent, err := adk.NewChatModelAgent(ctx, &adk.ChatModelAgentConfig{

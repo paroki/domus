@@ -159,20 +159,20 @@ func TestCantusMCPTools_RBACAndGabrielRouting(t *testing.T) {
 	require.Equal(t, created.ID, gotBySlug.ID)
 	require.False(t, gotBySlug.CanManage)
 
-	// 4. Gabriel LoadMCPTools routing: only cantus_search and cantus_get go to gabriel
-	gabriel, mikael, rafael, err := agentservice.LoadMCPTools(memberCtx, memberSess)
+	// 4. Sesilia LoadMCPTools routing: cantus_* tools go to sesilia
+	set, err := agentservice.LoadMCPTools(memberCtx, memberSess)
 	require.NoError(t, err)
-	require.Empty(t, mikael)
+	require.Empty(t, set.Mikael)
 
-	var gabrielNames []string
-	for _, tl := range gabriel {
+	var sesiliaNames []string
+	for _, tl := range set.Sesilia {
 		info, infoErr := tl.Info(memberCtx)
 		require.NoError(t, infoErr)
-		gabrielNames = append(gabrielNames, info.Name)
+		sesiliaNames = append(sesiliaNames, info.Name)
 	}
-	require.ElementsMatch(t, []string{"cantus_search", "cantus_get"}, gabrielNames)
+	require.ElementsMatch(t, []string{"cantus_search", "cantus_get", "cantus_create", "cantus_update"}, sesiliaNames)
 
-	for _, tl := range rafael {
+	for _, tl := range set.Rafael {
 		info, infoErr := tl.Info(memberCtx)
 		require.NoError(t, infoErr)
 		require.NotContains(t, []string{"cantus_create", "cantus_update"}, info.Name)

@@ -668,6 +668,276 @@ func (s *ChatSuite) TestChatRetryDoesNotDuplicateUserMessage() {
 	s.Equal(1, assistantCount)
 }
 
+func (s *ChatSuite) TestChat_RuntimeContextAndPageContextResolution() {
+	ctx := context.Background()
+	err := s.client.Paroki.UpdateOneID(s.parokiID).SetTimezone("Asia/Jakarta").Exec(ctx)
+	s.Require().NoError(err)
+
+	orgRow, err := s.client.Organization.Create().
+		SetParokiID(s.parokiID).
+		SetCode("omk-yosef").
+		SetName("OMK St. Yosef").
+		Save(ctx)
+	s.Require().NoError(err)
+
+	provBody, _ := json.Marshal(map[string]any{
+		"name":     "Mock OpenAI",
+		"provider": "openai",
+		"baseUrl":  s.llmServer.URL,
+		"apiKey":   "sk-test-secret",
+	})
+	provReq := httptest.NewRequest(http.MethodPost, "/api/agent/providers", bytes.NewReader(provBody))
+	provReq.Header.Set("Content-Type", "application/json")
+	provReq.AddCookie(s.superCookie)
+	provResp, err := s.fiberApp.Test(provReq)
+	s.Require().NoError(err)
+	defer func() { _ = provResp.Body.Close() }()
+	var provEnv struct {
+		Data domain.AgentProviderResponse `json:"data"`
+	}
+	s.Require().NoError(json.NewDecoder(provResp.Body).Decode(&provEnv))
+
+	_, err = s.settings.Update(ctx, map[string]string{
+		"agent.model.gabriel": provEnv.Data.ID.String() + ":gpt-4o",
+	})
+	s.Require().NoError(err)
+
+	var capturedSystem string
+	s.setLLMHandler(func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			Messages []struct {
+				Role    string `json:"role"`
+				Content string `json:"content"`
+			} `json:"messages"`
+		}
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		for _, m := range body.Messages {
+			if m.Role == "system" {
+				capturedSystem = m.Content
+			}
+		}
+		w.Header().Set("Content-Type", "text/event-stream")
+		writeOpenAITextChunk(w, "Halo dari Gabriel!")
+	})
+
+	chatBody := fmt.Sprintf(`{"message":"Info organisasi ini?","pageContext":{"path":"/org/%s?tab=members","title":"Detail Organisasi"}}`, orgRow.ID)
+	req := httptest.NewRequest(http.MethodPost, "/api/agent/chat", strings.NewReader(chatBody))
+	req.Header.Set("Content-Type", "application/json")
+	req.AddCookie(s.memberCookie)
+	req.Header.Set("X-Paroki-Id", s.parokiID.String())
+
+	resp, err := s.fiberApp.Test(req, fiber.TestConfig{Timeout: 10 * time.Second})
+	s.Require().NoError(err)
+	_ = parseSSEEvents(s.T(), resp.Body)
+	_ = resp.Body.Close()
+
+	s.Contains(capturedSystem, "- User Timezone: Asia/Makassar")
+	s.Contains(capturedSystem, "- Paroki Timezone: Asia/Jakarta")
+	s.Contains(capturedSystem, "+07:00")
+	s.Contains(capturedSystem, fmt.Sprintf("- Active Page: /org/%s?tab=members (Detail Organisasi)", orgRow.ID))
+	s.Contains(capturedSystem, fmt.Sprintf("- Active Organization: OMK St. Yosef (orgId: %s)", orgRow.ID))
+	s.Contains(capturedSystem, "- Language Rule: Always reply to the user in Bahasa Indonesia.")
+}
+
+func (s *ChatSuite) TestChat_SubAgentDelegation_YosefGregoriusSesilia() {
+	ctx := context.Background()
+	provBody, _ := json.Marshal(map[string]any{
+		"name":     "Mock OpenAI",
+		"provider": "openai",
+		"baseUrl":  s.llmServer.URL,
+		"apiKey":   "sk-test-secret",
+	})
+	provReq := httptest.NewRequest(http.MethodPost, "/api/agent/providers", bytes.NewReader(provBody))
+	provReq.Header.Set("Content-Type", "application/json")
+	provReq.AddCookie(s.superCookie)
+	provResp, err := s.fiberApp.Test(provReq)
+	s.Require().NoError(err)
+	defer func() { _ = provResp.Body.Close() }()
+	var provEnv struct {
+		Data domain.AgentProviderResponse `json:"data"`
+	}
+	s.Require().NoError(json.NewDecoder(provResp.Body).Decode(&provEnv))
+
+	_, err = s.settings.Update(ctx, map[string]string{
+		"agent.model.gabriel": provEnv.Data.ID.String() + ":gpt-4o",
+	})
+	s.Require().NoError(err)
+
+	for _, target := range []string{"yosef", "gregorius", "sesilia"} {
+		s.Run(target, func() {
+			var turn atomic.Int32
+			s.setLLMHandler(func(w http.ResponseWriter, r *http.Request) {
+				rawBody, _ := io.ReadAll(r.Body)
+				if strings.Contains(string(rawBody), "Memory Extractor") {
+					w.Header().Set("Content-Type", "text/event-stream")
+					writeOpenAITextChunk(w, "[]")
+					return
+				}
+				step := turn.Add(1)
+				w.Header().Set("Content-Type", "text/event-stream")
+				switch step {
+				case 1:
+					writeOpenAIToolChunk(w, "call_sub", target, `{"request":"Cek data"}`)
+				case 2:
+					writeOpenAITextChunk(w, "Hasil dari "+target)
+				default:
+					writeOpenAITextChunk(w, "Selesai dari "+target)
+				}
+			})
+
+			req := httptest.NewRequest(http.MethodPost, "/api/agent/chat", strings.NewReader(`{"message":"Tolong cek"}`))
+			req.Header.Set("Content-Type", "application/json")
+			req.AddCookie(s.memberCookie)
+			req.Header.Set("X-Paroki-Id", s.parokiID.String())
+
+			resp, err := s.fiberApp.Test(req, fiber.TestConfig{Timeout: 10 * time.Second})
+			s.Require().NoError(err)
+			events := parseSSEEvents(s.T(), resp.Body)
+			_ = resp.Body.Close()
+
+			foundTransfer := false
+			for _, ev := range events {
+				if ev.name == "agent_transfer" && strings.Contains(ev.data, `"`+target+`"`) {
+					foundTransfer = true
+				}
+			}
+			s.True(foundTransfer, "expected agent_transfer to %s, got events: %+v", target, events)
+		})
+	}
+}
+
+func (s *ChatSuite) TestChat_AgentAskUserAndNavigate_SSEAndMetaPersistence() {
+	ctx := context.Background()
+	provBody, _ := json.Marshal(map[string]any{
+		"name":     "Mock OpenAI",
+		"provider": "openai",
+		"baseUrl":  s.llmServer.URL,
+		"apiKey":   "sk-test-secret",
+	})
+	provReq := httptest.NewRequest(http.MethodPost, "/api/agent/providers", bytes.NewReader(provBody))
+	provReq.Header.Set("Content-Type", "application/json")
+	provReq.AddCookie(s.superCookie)
+	provResp, err := s.fiberApp.Test(provReq)
+	s.Require().NoError(err)
+	defer func() { _ = provResp.Body.Close() }()
+	var provEnv struct {
+		Data domain.AgentProviderResponse `json:"data"`
+	}
+	s.Require().NoError(json.NewDecoder(provResp.Body).Decode(&provEnv))
+
+	_, err = s.settings.Update(ctx, map[string]string{
+		"agent.model.gabriel": provEnv.Data.ID.String() + ":gpt-4o",
+	})
+	s.Require().NoError(err)
+
+	s.Run("agent_ask_user", func() {
+		var turn atomic.Int32
+		s.setLLMHandler(func(w http.ResponseWriter, r *http.Request) {
+			rawBody, _ := io.ReadAll(r.Body)
+			if strings.Contains(string(rawBody), "Memory Extractor") {
+				w.Header().Set("Content-Type", "text/event-stream")
+				writeOpenAITextChunk(w, "[]")
+				return
+			}
+			step := turn.Add(1)
+			w.Header().Set("Content-Type", "text/event-stream")
+			if step == 1 {
+				writeOpenAIToolChunk(w, "call_ask", "agent_ask_user", `{"question":"Pilih misa?","options":[{"label":"Misa Pagi"},{"label":"Misa Sore"}]}`)
+				return
+			}
+			writeOpenAITextChunk(w, "")
+		})
+
+		req := httptest.NewRequest(http.MethodPost, "/api/agent/chat", strings.NewReader(`{"message":"Jadwalkan misa"}`))
+		req.Header.Set("Content-Type", "application/json")
+		req.AddCookie(s.memberCookie)
+		req.Header.Set("X-Paroki-Id", s.parokiID.String())
+
+		resp, err := s.fiberApp.Test(req, fiber.TestConfig{Timeout: 10 * time.Second})
+		s.Require().NoError(err)
+		events := parseSSEEvents(s.T(), resp.Body)
+		_ = resp.Body.Close()
+
+		var questionEv, doneEv sseEvent
+		for _, ev := range events {
+			if ev.name == "question" {
+				questionEv = ev
+			}
+			if ev.name == "done" {
+				doneEv = ev
+			}
+		}
+		s.NotEmpty(questionEv.data)
+		var qPayload domain.QuestionPayload
+		s.Require().NoError(json.Unmarshal([]byte(questionEv.data), &qPayload))
+		s.Equal("Pilih misa?", qPayload.Question)
+		s.True(qPayload.AllowCustom)
+		s.False(qPayload.MultiSelect)
+		s.Equal("Misa Pagi", qPayload.Options[0].Value)
+
+		var doneData map[string]string
+		s.Require().NoError(json.Unmarshal([]byte(doneEv.data), &doneData))
+		msgID, err := uuid.Parse(doneData["messageId"])
+		s.Require().NoError(err)
+		msgRow, err := s.client.AgentMessage.Get(ctx, msgID)
+		s.Require().NoError(err)
+		s.Equal("Pilih misa?", msgRow.Content)
+		s.NotNil(msgRow.Meta["question"])
+	})
+
+	s.Run("agent_navigate", func() {
+		var turn atomic.Int32
+		s.setLLMHandler(func(w http.ResponseWriter, r *http.Request) {
+			rawBody, _ := io.ReadAll(r.Body)
+			if strings.Contains(string(rawBody), "Memory Extractor") {
+				w.Header().Set("Content-Type", "text/event-stream")
+				writeOpenAITextChunk(w, "[]")
+				return
+			}
+			step := turn.Add(1)
+			w.Header().Set("Content-Type", "text/event-stream")
+			if step == 1 {
+				writeOpenAIToolChunk(w, "call_nav", "agent_navigate", `{"path":"/umat","label":"Buka Daftar Umat","autoRedirect":true}`)
+				return
+			}
+			writeOpenAITextChunk(w, "Membuka halaman daftar umat.")
+		})
+
+		req := httptest.NewRequest(http.MethodPost, "/api/agent/chat", strings.NewReader(`{"message":"Buka halaman umat"}`))
+		req.Header.Set("Content-Type", "application/json")
+		req.AddCookie(s.memberCookie)
+		req.Header.Set("X-Paroki-Id", s.parokiID.String())
+
+		resp, err := s.fiberApp.Test(req, fiber.TestConfig{Timeout: 10 * time.Second})
+		s.Require().NoError(err)
+		events := parseSSEEvents(s.T(), resp.Body)
+		_ = resp.Body.Close()
+
+		var navEv, doneEv sseEvent
+		for _, ev := range events {
+			if ev.name == "navigate" {
+				navEv = ev
+			}
+			if ev.name == "done" {
+				doneEv = ev
+			}
+		}
+		s.NotEmpty(navEv.data)
+		var navPayload domain.NavigationPayload
+		s.Require().NoError(json.Unmarshal([]byte(navEv.data), &navPayload))
+		s.Equal("/umat", navPayload.Path)
+		s.True(navPayload.AutoRedirect)
+
+		var doneData map[string]string
+		s.Require().NoError(json.Unmarshal([]byte(doneEv.data), &doneData))
+		msgID, err := uuid.Parse(doneData["messageId"])
+		s.Require().NoError(err)
+		msgRow, err := s.client.AgentMessage.Get(ctx, msgID)
+		s.Require().NoError(err)
+		s.NotNil(msgRow.Meta["navigation"])
+	})
+}
+
 type sseEvent struct {
 	name string
 	data string

@@ -17,6 +17,9 @@ var (
 	SettingModelGabriel         = setting.Key("agent", "model.gabriel")
 	SettingModelMikael          = setting.Key("agent", "model.mikael")
 	SettingModelRafael          = setting.Key("agent", "model.rafael")
+	SettingModelYosef           = setting.Key("agent", "model.yosef")
+	SettingModelGregorius       = setting.Key("agent", "model.gregorius")
+	SettingModelSesilia         = setting.Key("agent", "model.sesilia")
 	SettingModelMemoryExtractor = setting.Key("agent", "model.memory_extractor")
 	SettingModelEmbedding       = setting.Key("agent", "model.embedding")
 	SettingModelVision          = setting.Key("agent", "model.vision")
@@ -24,6 +27,9 @@ var (
 	SettingPromptGabriel         = setting.Key("agent", "prompt.gabriel")
 	SettingPromptMikael          = setting.Key("agent", "prompt.mikael")
 	SettingPromptRafael          = setting.Key("agent", "prompt.rafael")
+	SettingPromptYosef           = setting.Key("agent", "prompt.yosef")
+	SettingPromptGregorius       = setting.Key("agent", "prompt.gregorius")
+	SettingPromptSesilia         = setting.Key("agent", "prompt.sesilia")
 	SettingPromptMemoryExtractor = setting.Key("agent", "prompt.memory_extractor")
 )
 
@@ -31,6 +37,9 @@ var modelSettingKeys = []string{
 	SettingModelGabriel,
 	SettingModelMikael,
 	SettingModelRafael,
+	SettingModelYosef,
+	SettingModelGregorius,
+	SettingModelSesilia,
 	SettingModelMemoryExtractor,
 	SettingModelEmbedding,
 	SettingModelVision,
@@ -62,6 +71,27 @@ func (f *Feature) RegisterSettings(s *setting.Store) {
 		Group:       groupModelRouting,
 		Label:       "Model Rafael",
 		Description: "Model chat opsional untuk agen Rafael; mengikuti Gabriel jika kosong.",
+		Placeholder: "<providerId>:gemini-2.5-flash",
+	})
+	s.Register(setting.Descriptor{
+		Key:         SettingModelYosef,
+		Group:       groupModelRouting,
+		Label:       "Model Yosef",
+		Description: "Model chat opsional untuk agen Yosef; mengikuti Gabriel jika kosong.",
+		Placeholder: "<providerId>:gemini-2.5-flash",
+	})
+	s.Register(setting.Descriptor{
+		Key:         SettingModelGregorius,
+		Group:       groupModelRouting,
+		Label:       "Model Gregorius",
+		Description: "Model chat opsional untuk agen Gregorius; mengikuti Gabriel jika kosong.",
+		Placeholder: "<providerId>:gemini-2.5-flash",
+	})
+	s.Register(setting.Descriptor{
+		Key:         SettingModelSesilia,
+		Group:       groupModelRouting,
+		Label:       "Model Sesilia",
+		Description: "Model chat opsional untuk agen Sesilia; mengikuti Gabriel jika kosong.",
 		Placeholder: "<providerId>:gemini-2.5-flash",
 	})
 	s.Register(setting.Descriptor{
@@ -109,6 +139,30 @@ func (f *Feature) RegisterSettings(s *setting.Store) {
 		Description:  "Instruksi sistem default untuk agen Rafael.",
 		Multiline:    true,
 		DefaultValue: strings.TrimSpace(prompts.Rafael),
+	})
+	s.Register(setting.Descriptor{
+		Key:          SettingPromptYosef,
+		Group:        groupPersonaPrompts,
+		Label:        "Prompt Yosef",
+		Description:  "Instruksi sistem default untuk agen Yosef.",
+		Multiline:    true,
+		DefaultValue: strings.TrimSpace(prompts.Yosef),
+	})
+	s.Register(setting.Descriptor{
+		Key:          SettingPromptGregorius,
+		Group:        groupPersonaPrompts,
+		Label:        "Prompt Gregorius",
+		Description:  "Instruksi sistem default untuk agen Gregorius.",
+		Multiline:    true,
+		DefaultValue: strings.TrimSpace(prompts.Gregorius),
+	})
+	s.Register(setting.Descriptor{
+		Key:          SettingPromptSesilia,
+		Group:        groupPersonaPrompts,
+		Label:        "Prompt Sesilia",
+		Description:  "Instruksi sistem default untuk agen Sesilia.",
+		Multiline:    true,
+		DefaultValue: strings.TrimSpace(prompts.Sesilia),
 	})
 	s.Register(setting.Descriptor{
 		Key:          SettingPromptMemoryExtractor,
