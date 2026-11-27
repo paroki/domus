@@ -129,7 +129,7 @@ export default function KeluargaListPage() {
 
       <InductiveFilterBar>
         <label className="flex min-w-52 flex-1 flex-col gap-1 text-xs font-medium text-muted">
-          Cari Nama Keluarga / Alamat
+          Cari Nama Keluarga / Alamat / No. Registrasi
           <div className="relative">
             <Search
               aria-hidden
@@ -142,7 +142,7 @@ export default function KeluargaListPage() {
                 setQInput(e.target.value);
                 updateParam("q", e.target.value);
               }}
-              placeholder="Nama keluarga atau alamat…"
+              placeholder="Nama keluarga, alamat, atau no. registrasi…"
               className="h-10 w-full rounded-lg border border-line bg-canvas pr-3 pl-9 text-sm text-fg"
             />
           </div>
@@ -261,6 +261,11 @@ export default function KeluargaListPage() {
                     <span className="text-sm font-bold text-fg">
                       {k.namaKeluarga}
                     </span>
+                    {k.nomorRegistrasi ? (
+                      <Badge tone="neutral">
+                        <span className="font-mono">{k.nomorRegistrasi}</span>
+                      </Badge>
+                    ) : null}
                     {k.nomorKkMasked ? (
                       <Badge tone="neutral">
                         <span className="font-mono">{k.nomorKkMasked}</span>

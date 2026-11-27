@@ -364,6 +364,14 @@ export function KeluargaSectionCards({
           </form>
         ) : (
           <dl className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="flex flex-col gap-0.5">
+              <dt className="text-xs font-medium text-muted">
+                Nomor Registrasi
+              </dt>
+              <dd className="font-mono text-sm font-medium text-fg">
+                {keluarga.nomorRegistrasi || "-"}
+              </dd>
+            </div>
             <DetailRow label="Nama Keluarga" value={keluarga.namaKeluarga} />
             <div className="flex flex-col gap-0.5">
               <dt className="text-xs font-medium text-muted">Nomor KK</dt>

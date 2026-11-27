@@ -566,6 +566,14 @@ export function UmatSectionCards({
           </form>
         ) : (
           <dl className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="flex flex-col gap-0.5">
+              <dt className="text-xs font-medium text-muted">
+                Nomor Induk Umat
+              </dt>
+              <dd className="font-mono text-sm font-medium text-fg">
+                {umat.nomorInduk || "-"}
+              </dd>
+            </div>
             <DetailRow label="Nama Lengkap" value={umat.nama} />
             <DetailRow label="Nama Baptis" value={umat.namaBaptis} />
             <div className="flex flex-col gap-0.5">

@@ -46,7 +46,11 @@ export default function KeluargaDetailPage() {
           { label: detailQuery.data?.namaKeluarga ?? "Detail" },
         ]}
         title={detailQuery.data?.namaKeluarga ?? "Detail Kartu Keluarga"}
-        subtitle="Kelola identitas Kartu Keluarga, alamat domisili, kondisi rumah tangga, dan anggota."
+        subtitle={
+          detailQuery.data?.nomorRegistrasi
+            ? `Nomor Registrasi: ${detailQuery.data.nomorRegistrasi} · Kelola identitas Kartu Keluarga, alamat domisili, kondisi rumah tangga, dan anggota.`
+            : "Kelola identitas Kartu Keluarga, alamat domisili, kondisi rumah tangga, dan anggota."
+        }
       />
 
       {feedback ? (

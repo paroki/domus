@@ -153,7 +153,7 @@ export default function UmatDirectoryPage() {
 
       <InductiveFilterBar>
         <label className="flex min-w-52 flex-1 flex-col gap-1 text-xs font-medium text-muted">
-          Cari Nama / Nama Baptis
+          Cari Nama / Nama Baptis / Nomor Induk
           <div className="relative">
             <Search
               aria-hidden
@@ -166,7 +166,7 @@ export default function UmatDirectoryPage() {
                 setQInput(e.target.value);
                 updateParam("q", e.target.value);
               }}
-              placeholder="Nama atau nama baptis…"
+              placeholder="Nama, nama baptis, atau nomor induk…"
               className="h-10 w-full rounded-lg border border-line bg-canvas pr-3 pl-9 text-sm text-fg"
             />
           </div>
@@ -327,6 +327,11 @@ export default function UmatDirectoryPage() {
                       {u.nama}
                       {u.namaBaptis ? ` (${u.namaBaptis})` : ""}
                     </span>
+                    {u.nomorInduk ? (
+                      <Badge tone="neutral">
+                        <span className="font-mono">{u.nomorInduk}</span>
+                      </Badge>
+                    ) : null}
                     {u.nikMasked ? (
                       <Badge tone="neutral">
                         <span className="font-mono">{u.nikMasked}</span>

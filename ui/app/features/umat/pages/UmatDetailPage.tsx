@@ -56,7 +56,11 @@ export default function UmatDetailPage() {
       <InductivePageHeader
         breadcrumbs={breadcrumbs}
         title={umat?.nama ?? "Profil Umat"}
-        subtitle="Kelola identitas pribadi, Kartu Keluarga, kontak, pekerjaan, tautan akun, dan sakramen."
+        subtitle={
+          umat?.nomorInduk
+            ? `Nomor Induk: ${umat.nomorInduk} · Kelola identitas pribadi, Kartu Keluarga, kontak, pekerjaan, tautan akun, dan sakramen.`
+            : "Kelola identitas pribadi, Kartu Keluarga, kontak, pekerjaan, tautan akun, dan sakramen."
+        }
       />
 
       {feedback ? (
