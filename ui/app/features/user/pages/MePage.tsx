@@ -10,6 +10,7 @@ import { DEFAULT_TIMEZONE, getTimezoneOptions } from "~/shared/util/timezone";
 import { useLogout, useUpdateMe } from "../api/actions";
 import { useMe } from "../api/queries";
 import { AccountList } from "../components/AccountList";
+import { PwaDeviceCard } from "../components/PwaDeviceCard";
 import { SessionList } from "../components/SessionList";
 import { TokenList } from "../components/TokenList";
 import { getBirthDateBounds, USER_GENDERS } from "../model";
@@ -195,6 +196,7 @@ export default function MePage() {
         </form>
       </Card>
 
+      <PwaDeviceCard />
       <SessionList />
       <AccountList />
       <TokenList />

@@ -4,6 +4,7 @@ import { Link, useSearchParams } from "react-router";
 import { apps } from "~/apps";
 import { useMe } from "~/features/user/api/queries";
 import i18n from "~/shared/i18n";
+import { PwaInstallBanner } from "~/shared/pwa/PwaInstallBanner";
 import { plateBg } from "~/shared/ui/plate";
 
 import type { Route } from "./+types/HomePage";
@@ -65,6 +66,7 @@ export default function HomePage() {
           })}
         </nav>
       )}
+      <PwaInstallBanner />
     </div>
   );
 }

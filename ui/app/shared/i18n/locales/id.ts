@@ -657,6 +657,28 @@ const id = {
     starterPrompt2: "Daftar organisasi & pengurus aktif",
     starterPrompt3: "Catat preferensi saya",
   },
+  pwa: {
+    bannerTitle: "Pasang Aplikasi Domus",
+    bannerSubtitle:
+      "Akses lebih cepat langsung dari layar utama perangkat Anda.",
+    installAction: "Pasang",
+    dismissLabel: "Tutup banner pasang aplikasi",
+    closeLabel: "Tutup",
+    iosDialogTitle: "Pasang Domus di iPhone / iPad",
+    iosDialogSubtitle:
+      "Ikuti langkah berikut di Safari untuk menambahkan Domus ke layar utama:",
+    iosStep1: "Ketuk tombol Bagikan di bilah bawah Safari",
+    iosStep2: 'Pilih "Tambah ke Layar Utama" (Add to Home Screen)',
+    iosStep3: 'Ketuk "Tambah" di pojok kanan atas',
+    iosGotIt: "Mengerti",
+    deviceCardTitle: "Aplikasi & Notifikasi Perangkat",
+    deviceCardDescription:
+      "Pasang Domus sebagai aplikasi perangkat untuk pengalaman layar penuh dan akses cepat.",
+    installedBadge: "Terinstal (Mode Aplikasi)",
+    installDeviceButton: "Install Aplikasi di Perangkat Ini",
+    unsupportedHint:
+      "Gunakan Chrome, Edge, atau Safari iOS jika ingin memasang Domus ke layar utama perangkat ini.",
+  },
 } as const;
 
 export default id;
