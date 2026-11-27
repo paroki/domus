@@ -387,7 +387,9 @@ func (f *Feature) RegisterSettings(s *setting.Store) {
 			f.compositeNotification.SetChannel(service.ChannelPush, service.NewPushNotification(pushSender))
 			f.service.SetVAPIDPublicKey(vapidPub)
 		} else {
-			f.compositeNotification.RemoveChannel(service.ChannelPush)
+			if !f.customNotifyChannels[service.ChannelPush] {
+				f.compositeNotification.RemoveChannel(service.ChannelPush)
+			}
 			f.service.SetVAPIDPublicKey("")
 		}
 		return nil
