@@ -86,9 +86,12 @@ export default function OrgJoinPage() {
     }
   }
 
+  const mainClass =
+    "flex min-h-dvh items-center justify-center bg-canvas px-4 py-10 pt-[max(2.5rem,env(safe-area-inset-top))] pb-[max(2.5rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]";
+
   if (previewQuery.isLoading || meQuery.isLoading) {
     return (
-      <main className="flex min-h-dvh items-center justify-center bg-canvas px-4 py-10">
+      <main className={mainClass}>
         <p className="text-sm text-muted">Memuat undangan organisasi…</p>
       </main>
     );
@@ -96,8 +99,8 @@ export default function OrgJoinPage() {
 
   if (previewQuery.isError || !preview) {
     return (
-      <main className="flex min-h-dvh items-center justify-center bg-canvas px-4 py-10">
-        <Card className="w-full max-w-md p-6 text-center">
+      <main className={mainClass}>
+        <Card className="w-full max-w-md p-4 text-center sm:p-6">
           <AlertTriangle
             aria-hidden
             className="mx-auto mb-3 size-8 text-danger-fg"
@@ -119,8 +122,8 @@ export default function OrgJoinPage() {
   const statusMeta = inviteStatusMeta(preview.status ?? "");
 
   return (
-    <main className="flex min-h-dvh items-center justify-center bg-canvas px-4 py-10">
-      <Card className="w-full max-w-md p-6 sm:p-8">
+    <main className={mainClass}>
+      <Card className="w-full max-w-md p-4 sm:p-6">
         <div className="mb-6 flex flex-col items-center gap-2 text-center">
           <span className="flex size-12 items-center justify-center rounded-xl bg-primary text-on-primary">
             <Building2 aria-hidden className="size-6" />

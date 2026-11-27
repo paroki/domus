@@ -1,22 +1,19 @@
 import { Building2, Plus, Search } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { useMe } from "~/shared/api/session";
 import i18n from "~/shared/i18n";
 import { Badge } from "~/shared/ui/Badge";
-import { Button } from "~/shared/ui/Button";
+import { Button, buttonClass } from "~/shared/ui/Button";
 import { Card } from "~/shared/ui/Card";
-import { useCreateOrg } from "../api/actions";
-import { resolveOrgError } from "../api/errors";
-import { useOrgLingkungan, useOrgs, useOrgWilayah } from "../api/queries";
 import {
-  isParokiAdmin,
-  kindLabel,
-  ORG_KINDS,
-  type OrgKind,
-  slugifyCode,
-} from "../model";
+  InductiveEmptyState,
+  InductiveFilterBar,
+  InductivePageHeader,
+} from "~/shared/ui/iui";
+import { useOrgs } from "../api/queries";
+import { isParokiAdmin, kindLabel, ORG_KINDS, type OrgKind } from "../model";
 import type { Route } from "./+types/OrgsPage";
 
 export function meta({}: Route.MetaArgs) {
@@ -33,17 +30,6 @@ export default function OrgsPage() {
   const [kindFilter, setKindFilter] = useState("");
   const [q, setQ] = useState("");
 
-  const [showCreate, setShowCreate] = useState(false);
-  const [kind, setKind] = useState<OrgKind>("section");
-  const [name, setName] = useState("");
-  const [code, setCode] = useState("");
-  const [codeEdited, setCodeEdited] = useState(false);
-  const [description, setDescription] = useState("");
-  const [parentId, setParentId] = useState("");
-  const [wilayahId, setWilayahId] = useState("");
-  const [lingkunganId, setLingkunganId] = useState("");
-  const [formError, setFormError] = useState<string | null>(null);
-
   const orgsQuery = useOrgs(
     {
       q: q.trim() || undefined,
@@ -54,238 +40,61 @@ export default function OrgsPage() {
     },
     hasParoki,
   );
-  const allOrgsForParent = useOrgs({ limit: 100 }, hasParoki && showCreate);
-  const wilayahQuery = useOrgWilayah(
-    hasParoki && showCreate && kind === "wilayah",
-  );
-  const lingkunganQuery = useOrgLingkungan(
-    hasParoki && showCreate && kind === "lingkungan",
-  );
-
-  const createOrg = useCreateOrg();
 
   const items = orgsQuery.data?.pages.flatMap((p) => p.data ?? []) ?? [];
-  const parentOptions =
-    allOrgsForParent.data?.pages.flatMap((p) => p.data ?? []) ?? [];
-
-  function handleNameChange(val: string) {
-    setName(val);
-    if (!codeEdited) {
-      setCode(slugifyCode(val));
-    }
-  }
-
-  async function handleCreate(e: FormEvent) {
-    e.preventDefault();
-    setFormError(null);
-    try {
-      await createOrg.mutateAsync({
-        kind,
-        code: code.trim(),
-        name: name.trim(),
-        description: description.trim() || undefined,
-        parentId: parentId || undefined,
-        wilayahId: kind === "wilayah" && wilayahId ? wilayahId : undefined,
-        lingkunganId:
-          kind === "lingkungan" && lingkunganId ? lingkunganId : undefined,
-      });
-      setName("");
-      setCode("");
-      setCodeEdited(false);
-      setDescription("");
-      setParentId("");
-      setWilayahId("");
-      setLingkunganId("");
-      setShowCreate(false);
-    } catch (err) {
-      setFormError(resolveOrgError(err));
-    }
-  }
 
   if (!hasParoki) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-8">
-        <Card className="p-6 text-center">
-          <Building2 aria-hidden className="mx-auto mb-3 size-8 text-muted" />
-          <h1 className="text-lg font-semibold text-fg">
-            {t("org.noParishTitle")}
-          </h1>
-          <p className="mt-1 text-sm text-muted">
-            {t("org.noParishDescription")}
-          </p>
-        </Card>
+      <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8">
+        <InductiveEmptyState
+          icon={Building2}
+          title={t("org.noParishTitle")}
+          description={t("org.noParishDescription")}
+        />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-fg">{t("org.title")}</h1>
-          <p className="mt-1 text-sm text-muted">{t("org.subtitle")}</p>
-        </div>
-        {parokiAdmin && (
-          <Button onClick={() => setShowCreate((v) => !v)}>
-            <Plus aria-hidden className="size-4" />
-            {t("org.addOrg")}
-          </Button>
-        )}
-      </div>
+    <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
+      <InductivePageHeader
+        breadcrumbs={[{ label: "Beranda", to: "/" }, { label: t("org.title") }]}
+        title={t("org.title")}
+        subtitle={t("org.subtitle")}
+        action={
+          parokiAdmin ? (
+            <Link to="/org/new" className={buttonClass("primary")}>
+              <Plus aria-hidden className="size-4" />
+              {t("org.addOrg")}
+            </Link>
+          ) : undefined
+        }
+      />
 
-      {parokiAdmin && showCreate && (
-        <Card className="p-5">
-          <h2 className="mb-4 text-base font-semibold text-fg">
-            {t("org.createOrgTitle")}
-          </h2>
-          {formError && (
-            <div
-              role="alert"
-              className="mb-4 rounded-lg bg-danger-bg px-3.5 py-2.5 text-sm font-medium text-danger-fg"
-            >
-              {formError}
-            </div>
-          )}
-          <form onSubmit={handleCreate} className="grid gap-4 sm:grid-cols-2">
-            <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
-              Jenis Organisasi
-              <select
-                value={kind}
-                onChange={(e) => setKind(e.target.value as OrgKind)}
-                className="h-11 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
-              >
-                {ORG_KINDS.map((k) => (
-                  <option key={k.value} value={k.value}>
-                    {k.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
-              Nama Organisasi
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => handleNameChange(e.target.value)}
-                placeholder="mis. Seksi Liturgi"
-                className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
-              />
-            </label>
-
-            <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
-              Kode
-              <input
-                type="text"
-                required
-                value={code}
-                onChange={(e) => {
-                  setCodeEdited(true);
-                  setCode(e.target.value);
-                }}
-                placeholder="mis. sek-liturgi"
-                className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
-              />
-            </label>
-
-            <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
-              Induk Organisasi (opsional)
-              <select
-                value={parentId}
-                onChange={(e) => setParentId(e.target.value)}
-                className="h-11 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
-              >
-                <option value="">Tanpa induk</option>
-                {parentOptions.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.name} ({o.code})
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            {kind === "wilayah" && (
-              <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
-                Wilayah / Stasi (opsional)
-                <select
-                  value={wilayahId}
-                  onChange={(e) => setWilayahId(e.target.value)}
-                  className="h-11 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
-                >
-                  <option value="">Pilih wilayah</option>
-                  {(wilayahQuery.data ?? []).map((z) => (
-                    <option key={z.id} value={z.id}>
-                      {z.nama} ({z.kode})
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-
-            {kind === "lingkungan" && (
-              <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
-                Lingkungan (opsional)
-                <select
-                  value={lingkunganId}
-                  onChange={(e) => setLingkunganId(e.target.value)}
-                  className="h-11 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
-                >
-                  <option value="">Pilih lingkungan</option>
-                  {(lingkunganQuery.data ?? []).map((w) => (
-                    <option key={w.id} value={w.id}>
-                      {w.nama} ({w.kode})
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-
-            <label className="flex flex-col gap-1.5 text-sm font-medium text-fg sm:col-span-2">
-              Deskripsi (opsional)
-              <input
-                type="text"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Keterangan singkat organisasi"
-                className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
-              />
-            </label>
-
-            <div className="flex justify-end gap-2 sm:col-span-2">
-              <Button variant="outline" onClick={() => setShowCreate(false)}>
-                Batal
-              </Button>
-              <Button type="submit" disabled={createOrg.isPending}>
-                {createOrg.isPending ? "Menyimpan…" : "Simpan Organisasi"}
-              </Button>
-            </div>
-          </form>
-        </Card>
-      )}
-
-      <Card className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <InductiveFilterBar className="flex-col items-stretch sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap gap-2">
           <Button
             variant={myOrgsOnly ? "outline" : "primary"}
             onClick={() => setMyOrgsOnly(false)}
+            className="min-h-10"
           >
             {t("org.allOrgs")}
           </Button>
           <Button
             variant={myOrgsOnly ? "primary" : "outline"}
             onClick={() => setMyOrgsOnly(true)}
+            className="min-h-10"
           >
             {t("org.myOrgs")}
           </Button>
         </div>
 
-        <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
+        <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
           <select
             aria-label={t("org.allKinds")}
             value={kindFilter}
             onChange={(e) => setKindFilter(e.target.value)}
-            className="h-11 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+            className="h-11 w-full rounded-lg border border-line bg-canvas px-3 text-sm text-fg sm:w-auto"
           >
             <option value="">{t("org.allKinds")}</option>
             {ORG_KINDS.map((k) => (
@@ -295,7 +104,7 @@ export default function OrgsPage() {
             ))}
           </select>
 
-          <div className="relative min-w-[220px] flex-1 sm:max-w-xs">
+          <div className="relative w-full sm:max-w-xs">
             <Search
               aria-hidden
               className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted"
@@ -309,20 +118,30 @@ export default function OrgsPage() {
             />
           </div>
         </div>
-      </Card>
+      </InductiveFilterBar>
 
       {orgsQuery.isLoading ? (
         <p className="text-sm text-muted">Memuat organisasi…</p>
       ) : items.length === 0 ? (
-        <Card className="p-6 text-center text-sm text-muted">
-          Belum ada organisasi yang sesuai dengan filter.
-        </Card>
+        <InductiveEmptyState
+          icon={Building2}
+          title="Organisasi tidak ditemukan"
+          description="Belum ada organisasi yang sesuai dengan filter."
+          action={
+            parokiAdmin ? (
+              <Link to="/org/new" className={buttonClass("primary")}>
+                <Plus aria-hidden className="size-4" />
+                {t("org.addOrg")}
+              </Link>
+            ) : undefined
+          }
+        />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {items.map((org) => (
             <Card
               key={org.id}
-              className="flex flex-col justify-between gap-4 p-5"
+              className="flex flex-col justify-between gap-4 p-4 sm:p-5"
             >
               <div className="flex flex-col gap-2">
                 <div className="flex flex-wrap items-center justify-between gap-2">
@@ -372,8 +191,9 @@ export default function OrgsPage() {
             variant="outline"
             disabled={orgsQuery.isFetchingNextPage}
             onClick={() => orgsQuery.fetchNextPage()}
+            className="w-full sm:w-auto"
           >
-            {orgsQuery.isFetchingNextPage ? "Memuat…" : "Muat Lebih Banyak"}
+            {orgsQuery.isFetchingNextPage ? "Memuat…" : t("org.loadMore")}
           </Button>
         </div>
       )}

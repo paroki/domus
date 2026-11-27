@@ -97,7 +97,7 @@ export default function OrgPeriodeFormPage() {
   const pending = createPeriode.isPending || updatePeriode.isPending;
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-8">
+    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
       <InductivePageHeader
         breadcrumbs={[
           { label: "Beranda", to: "/" },
@@ -112,14 +112,16 @@ export default function OrgPeriodeFormPage() {
       />
 
       {!orgQuery.isLoading && !canManage ? (
-        <Card className="p-6 text-sm text-danger-fg">
+        <Card className="p-4 text-sm text-danger-fg sm:p-6">
           Hanya Admin Organisasi atau Admin Paroki yang dapat mengelola periode
           kepengurusan.
         </Card>
       ) : isEdit && detailQuery.isLoading ? (
-        <Card className="p-6 text-sm text-muted">Memuat data periode…</Card>
+        <Card className="p-4 text-sm text-muted sm:p-6">
+          Memuat data periode…
+        </Card>
       ) : (
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           {errorMsg && (
             <div
               role="alert"
@@ -193,7 +195,7 @@ export default function OrgPeriodeFormPage() {
               />
             </label>
 
-            <label className="flex items-center gap-2.5 text-sm font-medium text-fg sm:col-span-2">
+            <label className="flex min-h-11 cursor-pointer items-center gap-2.5 text-sm font-medium text-fg sm:col-span-2">
               <input
                 type="checkbox"
                 checked={isCurrent}
@@ -203,14 +205,19 @@ export default function OrgPeriodeFormPage() {
               Jadikan sebagai Periode Aktif saat ini
             </label>
 
-            <div className="flex justify-end gap-3 pt-2 sm:col-span-2">
+            <div className="flex flex-col-reverse gap-2 pt-2 sm:col-span-2 sm:flex-row sm:justify-end sm:gap-3">
               <Button
                 variant="outline"
                 onClick={() => navigate(`/org/${orgId}`)}
+                className="w-full sm:w-auto"
               >
                 Batal
               </Button>
-              <Button type="submit" disabled={pending}>
+              <Button
+                type="submit"
+                disabled={pending}
+                className="w-full sm:w-auto"
+              >
                 {isEdit ? "Simpan Perubahan" : "Simpan Periode"}
               </Button>
             </div>

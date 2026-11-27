@@ -2,7 +2,12 @@ import { type RouteConfig, route } from "@react-router/dev/routes";
 
 export default [
   route("org", "./features/org/pages/OrgsPage.tsx"),
+  route("org/new", "./features/org/pages/OrgCreatePage.tsx"),
   route("org/:orgId", "./features/org/pages/OrgDetailPage.tsx"),
+  route(
+    "org/:orgId/invites/new",
+    "./features/org/pages/OrgInviteCreatePage.tsx",
+  ),
   route(
     "org/:orgId/periode/new",
     "./features/org/pages/OrgPeriodeFormPage.tsx",

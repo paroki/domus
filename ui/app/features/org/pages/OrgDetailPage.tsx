@@ -1,5 +1,4 @@
 import {
-  ArrowLeft,
   Building2,
   CalendarRange,
   Check,
@@ -24,11 +23,15 @@ import { Link, useNavigate, useParams } from "react-router";
 import { useMe } from "~/shared/api/session";
 import i18n from "~/shared/i18n";
 import { Badge } from "~/shared/ui/Badge";
-import { Button } from "~/shared/ui/Button";
+import { Button, buttonClass } from "~/shared/ui/Button";
 import { Card } from "~/shared/ui/Card";
 import { ConfirmDialog } from "~/shared/ui/ConfirmDialog";
 import {
-  useCreateOrgInvite,
+  InductiveDangerZone,
+  InductiveEmptyState,
+  InductivePageHeader,
+} from "~/shared/ui/iui";
+import {
   useDeleteOrg,
   useDeleteOrgJabatan,
   useDeleteOrgPeriode,
@@ -45,12 +48,15 @@ import {
   useOrgMembers,
   useOrgPeriodeList,
 } from "../api/queries";
-import type { OrgJabatanResponse, OrgPeriodeResponse } from "../api/types";
+import type {
+  OrgInviteResponse,
+  OrgJabatanResponse,
+  OrgPeriodeResponse,
+} from "../api/types";
 import {
   buildInviteJoinUrl,
   buildJabatanTree,
   computeInviteStatus,
-  INVITE_TTL_OPTIONS,
   inviteStatusMeta,
   isParokiAdmin,
   kindLabel,
@@ -86,10 +92,6 @@ export default function OrgDetailPage() {
   const [memberQ, setMemberQ] = useState("");
   const [memberRoleFilter, setMemberRoleFilter] = useState("");
   const [memberStatusFilter, setMemberStatusFilter] = useState("");
-
-  const [invRole, setInvRole] = useState<"member" | "admin">("member");
-  const [invTTL, setInvTTL] = useState(86400);
-  const [invMaxUses, setInvMaxUses] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const membersQuery = useOrgMembers(
@@ -108,7 +110,6 @@ export default function OrgDetailPage() {
   const updateOrg = useUpdateOrg(orgId);
   const deleteOrg = useDeleteOrg();
   const removeMember = useRemoveOrgMember(orgId);
-  const createInvite = useCreateOrgInvite(orgId);
   const revokeInvite = useRevokeOrgInvite(orgId);
   const updatePeriode = useUpdateOrgPeriode(orgId);
   const deletePeriode = useDeleteOrgPeriode(orgId);
@@ -147,6 +148,10 @@ export default function OrgDetailPage() {
     useState<OrgPeriodeResponse | null>(null);
   const [pendingDeleteJabatan, setPendingDeleteJabatan] =
     useState<OrgJabatanResponse | null>(null);
+  const [pendingRevokeInvite, setPendingRevokeInvite] =
+    useState<OrgInviteResponse | null>(null);
+  const [pendingLeaveOrg, setPendingLeaveOrg] = useState(false);
+  const [pendingDeleteOrg, setPendingDeleteOrg] = useState(false);
 
   function startEdit() {
     if (!org) return;
@@ -171,55 +176,6 @@ export default function OrgDetailPage() {
     }
   }
 
-  async function handleDeleteOrg() {
-    if (!window.confirm(t("org.confirmDeleteOrg"))) return;
-    setPageError(null);
-    try {
-      await deleteOrg.mutateAsync(orgId);
-      navigate("/org", { replace: true });
-    } catch (err) {
-      setPageError(resolveOrgError(err));
-    }
-  }
-
-  async function handleRemoveMember(userId: string) {
-    const isLeaving = userId === me?.id;
-    if (
-      !window.confirm(
-        isLeaving ? t("org.confirmLeaveOrg") : t("org.confirmRemoveMember"),
-      )
-    ) {
-      return;
-    }
-    setPageError(null);
-    try {
-      await removeMember.mutateAsync(userId);
-      if (isLeaving) {
-        navigate("/org", { replace: true });
-      }
-    } catch (err) {
-      setPageError(resolveOrgError(err));
-    }
-  }
-
-  async function handleCreateInvite(e: FormEvent) {
-    e.preventDefault();
-    setPageError(null);
-    try {
-      const parsedMax = invMaxUses.trim()
-        ? Number.parseInt(invMaxUses.trim(), 10)
-        : undefined;
-      await createInvite.mutateAsync({
-        role: invRole,
-        ttlSeconds: invTTL,
-        maxUses: parsedMax && parsedMax > 0 ? parsedMax : undefined,
-      });
-      setInvMaxUses("");
-    } catch (err) {
-      setPageError(resolveOrgError(err));
-    }
-  }
-
   async function handleCopyInvite(inviteId: string, code: string) {
     setPageError(null);
     try {
@@ -232,34 +188,21 @@ export default function OrgDetailPage() {
     }
   }
 
-  async function handleRevokeInvite(invId: string) {
-    setPageError(null);
-    try {
-      await revokeInvite.mutateAsync(invId);
-    } catch (err) {
-      setPageError(resolveOrgError(err));
-    }
-  }
-
   if (!meLoading && !hasParoki) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-8">
-        <Card className="p-6 text-center">
-          <Building2 aria-hidden className="mx-auto mb-3 size-8 text-muted" />
-          <h1 className="text-lg font-semibold text-fg">
-            {t("org.noParishTitle")}
-          </h1>
-          <p className="mt-1 text-sm text-muted">
-            {t("org.noParishDescription")}
-          </p>
-        </Card>
+      <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8">
+        <InductiveEmptyState
+          icon={Building2}
+          title={t("org.noParishTitle")}
+          description={t("org.noParishDescription")}
+        />
       </div>
     );
   }
 
   if (meLoading || orgQuery.isLoading) {
     return (
-      <div className="mx-auto max-w-5xl px-4 py-8 text-sm text-muted">
+      <div className="mx-auto max-w-5xl px-4 py-6 text-sm text-muted sm:px-6 sm:py-8">
         Memuat detail organisasi…
       </div>
     );
@@ -267,35 +210,40 @@ export default function OrgDetailPage() {
 
   if (orgQuery.isError || !org) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-8">
-        <Card className="p-6 text-center">
-          <p className="text-sm text-muted">
-            {orgQuery.isError
+      <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8">
+        <InductiveEmptyState
+          icon={Building2}
+          title="Organisasi tidak ditemukan"
+          description={
+            orgQuery.isError
               ? resolveOrgError(orgQuery.error)
-              : "Organisasi tidak ditemukan."}
-          </p>
-          <Link to="/org" className="mt-3 inline-block text-sm text-primary">
-            ← {t("org.backToDirectory")}
-          </Link>
-        </Card>
+              : "Organisasi yang Anda cari tidak tersedia."
+          }
+          action={
+            <Link to="/org" className={buttonClass("outline")}>
+              {t("org.backToDirectory")}
+            </Link>
+          }
+        />
       </div>
     );
   }
 
   const members = membersQuery.data?.pages.flatMap((p) => p.data ?? []) ?? [];
   const invites = invitesQuery.data?.pages.flatMap((p) => p.data ?? []) ?? [];
+  const showDangerZone = (isOrgMember && Boolean(me?.id)) || parokiAdmin;
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-6">
-      <div>
-        <Link
-          to="/org"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-        >
-          <ArrowLeft aria-hidden className="size-4" />
-          {t("org.backToDirectory")}
-        </Link>
-      </div>
+    <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
+      <InductivePageHeader
+        breadcrumbs={[
+          { label: "Beranda", to: "/" },
+          { label: "Organisasi", to: "/org" },
+          { label: org.name ?? "Detail Organisasi" },
+        ]}
+        title={org.name ?? ""}
+        subtitle={org.code ? `Kode: ${org.code}` : ""}
+      />
 
       {pageError && (
         <div
@@ -306,52 +254,69 @@ export default function OrgDetailPage() {
         </div>
       )}
 
-      <Card className="p-5">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="flex flex-col gap-1.5">
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl font-bold text-fg">{org.name}</h1>
-              <Badge tone={org.active ? "success" : "neutral"}>
-                {org.active ? "Aktif" : "Nonaktif"}
-              </Badge>
-              <Badge tone="neutral">{kindLabel(org.kind ?? "")}</Badge>
-              {org.myRole === "admin" && (
-                <Badge tone="warning">{t("org.orgAdminBadge")}</Badge>
-              )}
-              {org.myRole === "member" && (
-                <Badge tone="success">{t("org.orgMemberBadge")}</Badge>
-              )}
-            </div>
-            <p className="font-mono text-xs text-muted">{org.code}</p>
-            {org.description && (
-              <p className="mt-1 text-sm text-muted">{org.description}</p>
+      <Card className="p-4 sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-lg font-semibold text-fg">Profil Organisasi</h2>
+            <Badge tone={org.active ? "success" : "neutral"}>
+              {org.active ? "Aktif" : "Nonaktif"}
+            </Badge>
+            <Badge tone="neutral">{kindLabel(org.kind ?? "")}</Badge>
+            {org.myRole === "admin" && (
+              <Badge tone="warning">{t("org.orgAdminBadge")}</Badge>
+            )}
+            {org.myRole === "member" && (
+              <Badge tone="success">{t("org.orgMemberBadge")}</Badge>
             )}
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            {(isOrgAdmin || parokiAdmin) && (
-              <Button variant="outline" onClick={startEdit}>
-                <Pencil aria-hidden className="size-4" />
-                {t("org.editOrg")}
-              </Button>
-            )}
-            {parokiAdmin && (
-              <Button
-                variant="danger"
-                disabled={deleteOrg.isPending}
-                onClick={handleDeleteOrg}
-              >
-                <Trash2 aria-hidden className="size-4" />
-                {t("org.deleteOrg")}
-              </Button>
-            )}
-          </div>
+          {canManageOrg && !editing && (
+            <Button
+              variant="outline"
+              onClick={startEdit}
+              className="min-h-10 w-full sm:w-auto"
+            >
+              <Pencil aria-hidden className="size-4" />
+              Ubah
+            </Button>
+          )}
         </div>
 
-        {editing && (
+        {!editing ? (
+          <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div>
+              <dt className="text-xs font-medium text-muted">
+                Nama Organisasi
+              </dt>
+              <dd className="mt-1 text-sm font-medium text-fg">{org.name}</dd>
+            </div>
+            <div>
+              <dt className="text-xs font-medium text-muted">Kode</dt>
+              <dd className="mt-1 font-mono text-sm text-fg">{org.code}</dd>
+            </div>
+            <div>
+              <dt className="text-xs font-medium text-muted">
+                Jenis Organisasi
+              </dt>
+              <dd className="mt-1 text-sm text-fg">
+                {kindLabel(org.kind ?? "")}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs font-medium text-muted">Status</dt>
+              <dd className="mt-1 text-sm text-fg">
+                {org.active ? "Aktif" : "Nonaktif"}
+              </dd>
+            </div>
+            <div className="sm:col-span-2">
+              <dt className="text-xs font-medium text-muted">Deskripsi</dt>
+              <dd className="mt-1 text-sm text-fg">{org.description || "—"}</dd>
+            </div>
+          </dl>
+        ) : (
           <form
             onSubmit={handleSaveOrg}
-            className="mt-5 grid gap-4 border-t border-line pt-4 sm:grid-cols-2"
+            className="mt-4 grid gap-4 sm:grid-cols-2"
           >
             <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
               Nama Organisasi
@@ -372,7 +337,7 @@ export default function OrgDetailPage() {
                 className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
               />
             </label>
-            <label className="flex items-center gap-2 text-sm font-medium text-fg">
+            <label className="flex min-h-11 cursor-pointer items-center gap-2.5 text-sm font-medium text-fg sm:col-span-2">
               <input
                 type="checkbox"
                 checked={editActive}
@@ -381,11 +346,19 @@ export default function OrgDetailPage() {
               />
               Organisasi Aktif
             </label>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setEditing(false)}>
+            <div className="flex flex-col-reverse gap-2 sm:col-span-2 sm:flex-row sm:justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setEditing(false)}
+                className="w-full sm:w-auto"
+              >
                 Batal
               </Button>
-              <Button type="submit" disabled={updateOrg.isPending}>
+              <Button
+                type="submit"
+                disabled={updateOrg.isPending}
+                className="w-full sm:w-auto"
+              >
                 Simpan Perubahan
               </Button>
             </div>
@@ -394,18 +367,15 @@ export default function OrgDetailPage() {
       </Card>
 
       {!canReadOrgInternal && (
-        <Card className="p-6 text-center">
-          <h2 className="text-base font-semibold text-fg">
-            {t("org.rosterRestrictedTitle")}
-          </h2>
-          <p className="mt-1 text-sm text-muted">
-            {t("org.rosterRestrictedDescription")}
-          </p>
-        </Card>
+        <InductiveEmptyState
+          icon={Building2}
+          title={t("org.rosterRestrictedTitle")}
+          description={t("org.rosterRestrictedDescription")}
+        />
       )}
 
       {canReadOrgInternal && (
-        <Card className="flex flex-col gap-4 p-5">
+        <Card className="flex flex-col gap-4 p-4 sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <CalendarRange aria-hidden className="size-5 text-primary" />
@@ -414,11 +384,12 @@ export default function OrgDetailPage() {
               </h2>
             </div>
             {canManageOrg && (
-              <Link to={`/org/${orgId}/periode/new`}>
-                <Button className="h-9 px-3 text-xs">
-                  <Plus aria-hidden className="size-4" />
-                  Tambah Periode
-                </Button>
+              <Link
+                to={`/org/${orgId}/periode/new`}
+                className={`${buttonClass("primary")} min-h-11 w-full sm:w-auto`}
+              >
+                <Plus aria-hidden className="size-4" />
+                Tambah Periode
               </Link>
             )}
           </div>
@@ -436,7 +407,7 @@ export default function OrgDetailPage() {
                   key={p.id}
                   className="flex flex-wrap items-center justify-between gap-3 py-3"
                 >
-                  <div className="flex flex-col gap-1">
+                  <div className="flex min-w-0 flex-1 flex-col gap-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-semibold text-fg">{p.nama}</span>
                       <span className="font-mono text-xs text-muted">
@@ -459,7 +430,7 @@ export default function OrgDetailPage() {
                       {!p.isCurrent && (
                         <Button
                           variant="outline"
-                          className="h-8 px-2.5 text-xs"
+                          className="min-h-10 px-3 text-xs"
                           disabled={updatePeriode.isPending}
                           onClick={async () => {
                             setPageError(null);
@@ -478,7 +449,7 @@ export default function OrgDetailPage() {
                       )}
                       <Button
                         variant="outline"
-                        className="h-8 px-2.5 text-xs"
+                        className="min-h-10 px-3 text-xs"
                         disabled={updatePeriode.isPending}
                         onClick={async () => {
                           setPageError(null);
@@ -496,18 +467,16 @@ export default function OrgDetailPage() {
                       >
                         {p.status === "open" ? "Tutup" : "Buka"}
                       </Button>
-                      <Link to={`/org/${orgId}/periode/${p.id}/edit`}>
-                        <Button
-                          variant="outline"
-                          className="h-8 px-2.5 text-xs"
-                        >
-                          <Pencil aria-hidden className="size-3.5" />
-                          Ubah
-                        </Button>
+                      <Link
+                        to={`/org/${orgId}/periode/${p.id}/edit`}
+                        className={`${buttonClass("outline")} min-h-10 px-3 text-xs`}
+                      >
+                        <Pencil aria-hidden className="size-3.5" />
+                        Ubah
                       </Link>
                       <Button
                         variant="danger"
-                        className="h-8 px-2.5 text-xs"
+                        className="min-h-10 px-3 text-xs"
                         disabled={deletePeriode.isPending}
                         onClick={() => setPendingDeletePeriode(p)}
                       >
@@ -524,7 +493,7 @@ export default function OrgDetailPage() {
       )}
 
       {canReadOrgInternal && (
-        <Card className="flex flex-col gap-4 p-5">
+        <Card className="flex flex-col gap-4 p-4 sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <Network aria-hidden className="size-5 text-primary" />
@@ -532,13 +501,13 @@ export default function OrgDetailPage() {
                 Struktur &amp; Jabatan Organisasi
               </h2>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
               {periods.length > 0 && (
                 <select
                   aria-label="Pilih periode struktur jabatan"
                   value={selectedPeriodeId}
                   onChange={(e) => setSelectedPeriodeId(e.target.value)}
-                  className="h-9 rounded-lg border border-line bg-canvas px-3 text-xs text-fg"
+                  className="h-11 w-full rounded-lg border border-line bg-canvas px-3 text-sm text-fg sm:w-auto"
                 >
                   {periods.map((p) => (
                     <option key={p.id} value={p.id}>
@@ -551,11 +520,10 @@ export default function OrgDetailPage() {
               {canManageOrg && selectedPeriodeId && (
                 <Link
                   to={`/org/${orgId}/periode/${selectedPeriodeId}/jabatan/new`}
+                  className={`${buttonClass("primary")} min-h-11 w-full sm:w-auto`}
                 >
-                  <Button className="h-9 px-3 text-xs">
-                    <Plus aria-hidden className="size-4" />
-                    Tambah Jabatan
-                  </Button>
+                  <Plus aria-hidden className="size-4" />
+                  Tambah Jabatan
                 </Link>
               )}
             </div>
@@ -581,25 +549,13 @@ export default function OrgDetailPage() {
       )}
 
       {isOrgMember && (
-        <Card className="flex flex-col gap-4 p-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-fg">
-              {t("org.rosterTitle")}
-            </h2>
-            {me?.id && (
-              <Button
-                variant="outline"
-                disabled={removeMember.isPending}
-                onClick={() => handleRemoveMember(me.id ?? "")}
-              >
-                <LogOut aria-hidden className="size-4" />
-                {t("org.leaveOrg")}
-              </Button>
-            )}
-          </div>
+        <Card className="flex flex-col gap-4 p-4 sm:p-6">
+          <h2 className="text-lg font-semibold text-fg">
+            {t("org.rosterTitle")}
+          </h2>
 
-          <div className="flex flex-wrap gap-2">
-            <div className="relative min-w-[200px] flex-1">
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+            <div className="relative min-w-0 flex-1">
               <Search
                 aria-hidden
                 className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted"
@@ -609,13 +565,13 @@ export default function OrgDetailPage() {
                 value={memberQ}
                 onChange={(e) => setMemberQ(e.target.value)}
                 placeholder="Cari nama atau email…"
-                className="h-10 w-full rounded-lg border border-line bg-canvas pl-9 pr-3 text-sm text-fg"
+                className="h-11 w-full rounded-lg border border-line bg-canvas pl-9 pr-3 text-sm text-fg"
               />
             </div>
             <select
               value={memberRoleFilter}
               onChange={(e) => setMemberRoleFilter(e.target.value)}
-              className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+              className="h-11 w-full rounded-lg border border-line bg-canvas px-3 text-sm text-fg sm:w-auto"
             >
               <option value="">Semua Peran</option>
               <option value="admin">Admin</option>
@@ -624,7 +580,7 @@ export default function OrgDetailPage() {
             <select
               value={memberStatusFilter}
               onChange={(e) => setMemberStatusFilter(e.target.value)}
-              className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+              className="h-11 w-full rounded-lg border border-line bg-canvas px-3 text-sm text-fg sm:w-auto"
             >
               <option value="">Semua Status</option>
               <option value="active">Aktif</option>
@@ -641,7 +597,7 @@ export default function OrgDetailPage() {
               {members.map((m) => (
                 <div key={m.id} className="flex flex-col gap-3 py-3">
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="font-medium text-fg">{m.name}</span>
                         <Badge
@@ -657,7 +613,7 @@ export default function OrgDetailPage() {
                           {m.status === "active" ? "Aktif" : "Nonaktif"}
                         </Badge>
                       </div>
-                      <p className="text-xs text-muted">{m.email}</p>
+                      <p className="break-all text-xs text-muted">{m.email}</p>
                     </div>
                   </div>
                 </div>
@@ -671,6 +627,7 @@ export default function OrgDetailPage() {
                 variant="outline"
                 disabled={membersQuery.isFetchingNextPage}
                 onClick={() => membersQuery.fetchNextPage()}
+                className="w-full sm:w-auto"
               >
                 {t("org.loadMore")}
               </Button>
@@ -680,51 +637,22 @@ export default function OrgDetailPage() {
       )}
 
       {isOrgAdmin && (
-        <Card className="flex flex-col gap-4 p-5">
-          <div className="flex items-center gap-2">
-            <Link2 aria-hidden className="size-5 text-primary" />
-            <h2 className="text-lg font-semibold text-fg">
-              {t("org.invitesTitle")}
-            </h2>
-          </div>
-
-          <form
-            onSubmit={handleCreateInvite}
-            className="grid gap-3 rounded-lg border border-line bg-canvas p-4 sm:grid-cols-3"
-          >
-            <select
-              value={invRole}
-              onChange={(e) => setInvRole(e.target.value as "member" | "admin")}
-              className="h-10 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
-            >
-              <option value="member">Anggota (member)</option>
-              <option value="admin">Admin Organisasi (admin)</option>
-            </select>
-            <select
-              value={invTTL}
-              onChange={(e) => setInvTTL(Number(e.target.value))}
-              className="h-10 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
-            >
-              {INVITE_TTL_OPTIONS.map((opt) => (
-                <option key={opt.seconds} value={opt.seconds}>
-                  Berlaku {opt.label}
-                </option>
-              ))}
-            </select>
-            <input
-              type="number"
-              min={1}
-              value={invMaxUses}
-              onChange={(e) => setInvMaxUses(e.target.value)}
-              placeholder="Maks. pakai (opsional)"
-              className="h-10 rounded-lg border border-line bg-surface px-3 text-sm text-fg"
-            />
-            <div className="sm:col-span-3 flex justify-end">
-              <Button type="submit" disabled={createInvite.isPending}>
-                {t("org.createInvite")}
-              </Button>
+        <Card id="invites" className="flex flex-col gap-4 p-4 sm:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Link2 aria-hidden className="size-5 text-primary" />
+              <h2 className="text-lg font-semibold text-fg">
+                {t("org.invitesTitle")}
+              </h2>
             </div>
-          </form>
+            <Link
+              to={`/org/${orgId}/invites/new`}
+              className={`${buttonClass("primary")} min-h-11 w-full sm:w-auto`}
+            >
+              <Plus aria-hidden className="size-4" />
+              {t("org.createInvite")}
+            </Link>
+          </div>
 
           {invitesQuery.isLoading ? (
             <p className="text-sm text-muted">{t("org.loadingInvites")}</p>
@@ -751,7 +679,7 @@ export default function OrgDetailPage() {
                     key={invId}
                     className="flex flex-wrap items-center justify-between gap-3 py-3"
                   >
-                    <div className="flex flex-col gap-1">
+                    <div className="flex min-w-0 flex-1 flex-col gap-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="font-mono text-sm font-semibold text-fg">
                           {invCode}
@@ -759,7 +687,7 @@ export default function OrgDetailPage() {
                         <Badge tone={meta.tone}>{meta.label}</Badge>
                         <Badge tone="neutral">{inv.role}</Badge>
                       </div>
-                      <p className="text-xs text-muted">
+                      <p className="min-w-0 break-all text-xs text-muted">
                         {shareUrl} · Terpakai: {inv.usedCount ?? 0}
                         {inv.maxUses != null ? ` / ${inv.maxUses}` : ""} ·
                         Kedaluwarsa:{" "}
@@ -772,6 +700,7 @@ export default function OrgDetailPage() {
                     <div className="flex flex-wrap gap-2">
                       <Button
                         variant="outline"
+                        className="min-h-10"
                         onClick={() => handleCopyInvite(invId, invCode)}
                       >
                         {copiedId === invId ? (
@@ -789,8 +718,9 @@ export default function OrgDetailPage() {
                       {status === "active" && (
                         <Button
                           variant="danger"
+                          className="min-h-10"
                           disabled={revokeInvite.isPending}
-                          onClick={() => handleRevokeInvite(invId)}
+                          onClick={() => setPendingRevokeInvite(inv)}
                         >
                           {t("org.revokeInvite")}
                         </Button>
@@ -808,12 +738,46 @@ export default function OrgDetailPage() {
                 variant="outline"
                 disabled={invitesQuery.isFetchingNextPage}
                 onClick={() => invitesQuery.fetchNextPage()}
+                className="w-full sm:w-auto"
               >
                 {t("org.loadMore")}
               </Button>
             </div>
           )}
         </Card>
+      )}
+
+      {showDangerZone && (
+        <InductiveDangerZone
+          title="Zona Berbahaya"
+          description="Tindakan di bawah ini mengubah keanggotaan Anda atau menonaktifkan organisasi dari direktori."
+          action={
+            <div className="flex flex-col gap-2 sm:flex-row">
+              {isOrgMember && me?.id && (
+                <Button
+                  variant="outline"
+                  disabled={removeMember.isPending}
+                  onClick={() => setPendingLeaveOrg(true)}
+                  className="w-full sm:w-auto"
+                >
+                  <LogOut aria-hidden className="size-4" />
+                  {t("org.leaveOrg")}
+                </Button>
+              )}
+              {parokiAdmin && (
+                <Button
+                  variant="danger"
+                  disabled={deleteOrg.isPending}
+                  onClick={() => setPendingDeleteOrg(true)}
+                  className="w-full sm:w-auto"
+                >
+                  <Trash2 aria-hidden className="size-4" />
+                  {t("org.deleteOrg")}
+                </Button>
+              )}
+            </div>
+          }
+        />
       )}
 
       <ConfirmDialog
@@ -861,6 +825,71 @@ export default function OrgDetailPage() {
           }
         }}
       />
+
+      <ConfirmDialog
+        open={Boolean(pendingRevokeInvite)}
+        title="Cabut tautan undangan?"
+        description={
+          pendingRevokeInvite
+            ? `Tautan undangan "${pendingRevokeInvite.code}" tidak akan dapat digunakan lagi setelah dicabut.`
+            : ""
+        }
+        confirmLabel={t("org.revokeInvite")}
+        pending={revokeInvite.isPending}
+        onCancel={() => setPendingRevokeInvite(null)}
+        onConfirm={async () => {
+          if (!pendingRevokeInvite?.id) return;
+          setPageError(null);
+          try {
+            await revokeInvite.mutateAsync(pendingRevokeInvite.id);
+            setPendingRevokeInvite(null);
+          } catch (err) {
+            setPendingRevokeInvite(null);
+            setPageError(resolveOrgError(err));
+          }
+        }}
+      />
+
+      <ConfirmDialog
+        open={pendingLeaveOrg}
+        title={t("org.leaveOrg")}
+        description={t("org.confirmLeaveOrg")}
+        confirmLabel={t("org.leaveOrg")}
+        pending={removeMember.isPending}
+        onCancel={() => setPendingLeaveOrg(false)}
+        onConfirm={async () => {
+          if (!me?.id) return;
+          setPageError(null);
+          try {
+            await removeMember.mutateAsync(me.id);
+            setPendingLeaveOrg(false);
+            navigate("/org", { replace: true });
+          } catch (err) {
+            setPendingLeaveOrg(false);
+            setPageError(resolveOrgError(err));
+          }
+        }}
+      />
+
+      <ConfirmDialog
+        open={pendingDeleteOrg}
+        title={t("org.deleteOrg")}
+        description={t("org.confirmDeleteOrg")}
+        confirmLabel={t("org.deleteOrg")}
+        pending={deleteOrg.isPending}
+        onCancel={() => setPendingDeleteOrg(false)}
+        onConfirm={async () => {
+          setPageError(null);
+          try {
+            await deleteOrg.mutateAsync(orgId);
+            setPendingDeleteOrg(false);
+            navigate("/org", { replace: true });
+          } catch (err) {
+            setPendingDeleteOrg(false);
+            setPageError(resolveOrgError(err));
+          }
+        }}
+      />
     </div>
   );
 
@@ -869,13 +898,15 @@ export default function OrgDetailPage() {
   ): ReactNode[] {
     return nodes.flatMap((node) => {
       const j = node.item;
+      // ponytail: cap visual tree indentation at 48px (3 levels) to prevent horizontal overflow on 360px screens
+      const indentPx = Math.min(node.depth, 3) * 16;
       const row = (
         <div
           key={j.id}
           className="flex flex-wrap items-center justify-between gap-3 py-3"
-          style={{ paddingLeft: `${node.depth * 24}px` }}
+          style={{ paddingLeft: `${indentPx}px` }}
         >
-          <div className="flex flex-col gap-1">
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
             <div className="flex flex-wrap items-center gap-2">
               {node.depth > 0 && <span className="text-xs text-muted">↳</span>}
               <span className="font-semibold text-fg">{j.jabatan}</span>
@@ -899,23 +930,21 @@ export default function OrgDetailPage() {
             <div className="flex flex-wrap items-center gap-2">
               <Link
                 to={`/org/${orgId}/periode/${selectedPeriodeId}/jabatan/new?parentId=${j.id}`}
+                className={`${buttonClass("outline")} min-h-10 px-3 text-xs`}
               >
-                <Button variant="outline" className="h-8 px-2.5 text-xs">
-                  <Plus aria-hidden className="size-3.5" />
-                  Tambah Sub-Jabatan
-                </Button>
+                <Plus aria-hidden className="size-3.5" />
+                Tambah Sub-Jabatan
               </Link>
               <Link
                 to={`/org/${orgId}/periode/${selectedPeriodeId}/jabatan/${j.id}/edit`}
+                className={`${buttonClass("outline")} min-h-10 px-3 text-xs`}
               >
-                <Button variant="outline" className="h-8 px-2.5 text-xs">
-                  <Pencil aria-hidden className="size-3.5" />
-                  Ubah
-                </Button>
+                <Pencil aria-hidden className="size-3.5" />
+                Ubah
               </Link>
               <Button
                 variant="danger"
-                className="h-8 px-2.5 text-xs"
+                className="min-h-10 px-3 text-xs"
                 disabled={deleteJabatan.isPending}
                 onClick={() => setPendingDeleteJabatan(j)}
               >

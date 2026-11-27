@@ -199,7 +199,7 @@ export default function OrgJabatanFormPage() {
   const pending = createJabatan.isPending || updateJabatan.isPending;
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-8">
+    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
       <InductivePageHeader
         breadcrumbs={[
           { label: "Beranda", to: "/" },
@@ -216,14 +216,16 @@ export default function OrgJabatanFormPage() {
       />
 
       {!orgQuery.isLoading && !canManage ? (
-        <Card className="p-6 text-sm text-danger-fg">
+        <Card className="p-4 text-sm text-danger-fg sm:p-6">
           Hanya Admin Organisasi atau Admin Paroki yang dapat mengelola struktur
           jabatan.
         </Card>
       ) : isEdit && detailQuery.isLoading ? (
-        <Card className="p-6 text-sm text-muted">Memuat data jabatan…</Card>
+        <Card className="p-4 text-sm text-muted sm:p-6">
+          Memuat data jabatan…
+        </Card>
       ) : (
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           {errorMsg && (
             <div
               role="alert"
@@ -273,7 +275,7 @@ export default function OrgJabatanFormPage() {
               <span className="text-sm font-semibold text-fg">
                 Sumber Data Pengurus
               </span>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:gap-3">
                 {(
                   [
                     {
@@ -289,7 +291,7 @@ export default function OrgJabatanFormPage() {
                 ).map((opt) => (
                   <label
                     key={opt.value}
-                    className="flex cursor-pointer items-center gap-2 text-sm text-fg"
+                    className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-fg"
                   >
                     <input
                       type="radio"
@@ -396,7 +398,7 @@ export default function OrgJabatanFormPage() {
               />
             </label>
 
-            <label className="flex items-center gap-2.5 self-end pb-2 text-sm font-medium text-fg">
+            <label className="flex min-h-11 cursor-pointer items-center gap-2.5 self-end text-sm font-medium text-fg">
               <input
                 type="checkbox"
                 checked={active}
@@ -406,14 +408,19 @@ export default function OrgJabatanFormPage() {
               Jabatan Aktif
             </label>
 
-            <div className="flex justify-end gap-3 pt-2 sm:col-span-2">
+            <div className="flex flex-col-reverse gap-2 pt-2 sm:col-span-2 sm:flex-row sm:justify-end sm:gap-3">
               <Button
                 variant="outline"
                 onClick={() => navigate(`/org/${orgId}`)}
+                className="w-full sm:w-auto"
               >
                 Batal
               </Button>
-              <Button type="submit" disabled={pending}>
+              <Button
+                type="submit"
+                disabled={pending}
+                className="w-full sm:w-auto"
+              >
                 {isEdit ? "Simpan Perubahan" : "Simpan Jabatan"}
               </Button>
             </div>
