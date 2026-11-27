@@ -2341,6 +2341,74 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/umat/referensi": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create umat referensi
+     * @description Creates a global (super-admin) or parish-scoped (umat:admin) umat referensi, reactivating soft-deleted matches.
+     */
+    post: operations["createUmatReferensi"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/umat/referensi/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Search umat referensi
+     * @description Searches global and/or parish-scoped Data Umat referensi entries with tenant override on matching (category, code).
+     */
+    post: operations["searchUmatReferensi"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/umat/referensi/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get umat referensi
+     * @description Returns a single non-deleted umat referensi if global or owned by the active parish.
+     */
+    get: operations["getUmatReferensi"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete umat referensi
+     * @description Soft-deletes a global (super-admin) or parish-scoped (umat:admin) umat referensi if not in use.
+     */
+    delete: operations["deleteUmatReferensi"];
+    options?: never;
+    head?: never;
+    /**
+     * Update umat referensi
+     * @description Updates mutable fields of a global (super-admin) or parish-scoped (umat:admin) umat referensi.
+     */
+    patch: operations["updateUmatReferensi"];
+    trace?: never;
+  };
   "/umat/search": {
     parameters: {
       query?: never;
@@ -2834,6 +2902,13 @@ export interface components {
       telepon?: string;
       timezone?: string;
       website?: string;
+    };
+    "domain.CreateUmatReferensiRequest": {
+      category: string;
+      code: string;
+      global?: boolean;
+      label: string;
+      sortOrder?: number;
     };
     "domain.CreateUmatRequest": {
       agama?: string;
@@ -3604,6 +3679,12 @@ export interface components {
       cursor?: string;
       limit?: number;
     };
+    "domain.SearchUmatReferensiRequest": {
+      cursor?: string;
+      filter?: components["schemas"]["domain.UmatReferensiSearchFilter"];
+      limit?: number;
+      q?: string;
+    };
     "domain.SearchUmatRequest": {
       cursor?: string;
       filter?: components["schemas"]["domain.UmatSearchFilter"];
@@ -3765,6 +3846,23 @@ export interface components {
       parokiId?: string;
       userId?: string;
       wilayahId?: string;
+    };
+    "domain.UmatReferensiResponse": {
+      active?: boolean;
+      category?: string;
+      code?: string;
+      createdAt?: string;
+      id?: string;
+      label?: string;
+      parokiId?: string;
+      sortOrder?: number;
+      updatedAt?: string;
+    };
+    "domain.UmatReferensiSearchFilter": {
+      active?: boolean;
+      category?: string;
+      /** @enum {string} */
+      scope?: "all" | "global" | "paroki";
     };
     "domain.UmatSakramenResponse": {
       buku?: string;
@@ -4071,6 +4169,13 @@ export interface components {
       modelId?: string;
       providerId?: string;
       title?: string;
+    };
+    "domain.UpdateUmatReferensiRequest": {
+      active?: boolean;
+      category?: string;
+      code?: string;
+      label?: string;
+      sortOrder?: number;
     };
     "domain.UpdateUmatRequest": {
       agama?: string;
@@ -4403,6 +4508,11 @@ export interface components {
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
+    "httpx.Envelope-array_domain_UmatReferensiResponse": {
+      data?: components["schemas"]["domain.UmatReferensiResponse"][];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
     "httpx.Envelope-array_domain_UserAccountResponse": {
       data?: components["schemas"]["domain.UserAccountResponse"][];
       error?: components["schemas"]["httpx.ErrorPayload"];
@@ -4610,6 +4720,11 @@ export interface components {
     };
     "httpx.Envelope-domain_UmatDetailResponse": {
       data?: components["schemas"]["domain.UmatDetailResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_UmatReferensiResponse": {
+      data?: components["schemas"]["domain.UmatReferensiResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -14064,6 +14179,335 @@ export interface operations {
       };
       /** @description Forbidden */
       403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  createUmatReferensi: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Referensi creation payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.CreateUmatReferensiRequest"];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_UmatReferensiResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  searchUmatReferensi: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Search parameters */
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["domain.SearchUmatReferensiRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_UmatReferensiResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  getUmatReferensi: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Referensi UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_UmatReferensiResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  deleteUmatReferensi: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Referensi UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  updateUmatReferensi: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Referensi UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Referensi update payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UpdateUmatReferensiRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_UmatReferensiResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
         headers: {
           [name: string]: unknown;
         };
