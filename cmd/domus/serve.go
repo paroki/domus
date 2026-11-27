@@ -98,7 +98,8 @@ func newServeCmd() *cobra.Command {
 				return err
 			}
 			eventFeature := event.New(db, enforcer, userFeature, orgFeature, eventCfg, event.WithRef(refFeature))
-			liturgiFeature := liturgi.New(db, enforcer, userFeature, orgFeature, eventFeature)
+			liturgiFeature := liturgi.New(db, enforcer, userFeature, orgFeature, eventFeature, liturgi.WithCantus(cantusFeature), liturgi.WithRef(refFeature))
+			cantusFeature.SetInUseChecker(liturgiFeature.IsCantusInUse)
 			settingStore := setting.NewStore(db, setting.WithCipher(cipher))
 			agentFeature := agent.New(
 				nil,
@@ -127,6 +128,7 @@ func newServeCmd() *cobra.Command {
 				return err
 			}
 			eventFeature.StartReminderScheduler(ctx, time.Minute, logger)
+			liturgiFeature.StartReminderScheduler(ctx, time.Minute, logger)
 
 			fiberApp := app.GetFiber(cfg, logger, userFeature, refFeature, orgFeature, eventFeature, liturgiFeature, umatFeature, cantusFeature, settingFeature, agentFeature)
 			return app.New(cfg, fiberApp, logger).Serve(ctx)

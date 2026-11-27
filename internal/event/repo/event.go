@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/ent/event"
+	"github.com/paroki/domus/ent/liturgipetugas"
 	"github.com/paroki/domus/ent/orgmember"
 	"github.com/paroki/domus/ent/predicate"
 )
@@ -74,6 +75,43 @@ func (r *Repository) ListActiveOrgMemberUserIDs(ctx context.Context, orgID uuid.
 	ids := make([]uuid.UUID, 0, len(rows))
 	for _, row := range rows {
 		ids = append(ids, row.UserID)
+	}
+	return ids, nil
+}
+
+// ListActiveLiturgiPetugasRecipients returns distinct user IDs for non-declined liturgi_petugas on eventID, expanding org assignments.
+func (r *Repository) ListActiveLiturgiPetugasRecipients(ctx context.Context, eventID uuid.UUID) ([]uuid.UUID, error) {
+	rows, err := r.client.LiturgiPetugas.Query().
+		Where(
+			liturgipetugas.EventIDEQ(eventID),
+			liturgipetugas.StatusNEQ(liturgipetugas.StatusDeclined),
+		).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	seen := make(map[uuid.UUID]struct{})
+	ids := make([]uuid.UUID, 0, len(rows))
+	for _, row := range rows {
+		if row.UserID != nil && *row.UserID != uuid.Nil {
+			if _, ok := seen[*row.UserID]; !ok {
+				seen[*row.UserID] = struct{}{}
+				ids = append(ids, *row.UserID)
+			}
+		} else if row.OrgID != nil && *row.OrgID != uuid.Nil {
+			members, err := r.ListActiveOrgMemberUserIDs(ctx, *row.OrgID)
+			if err != nil {
+				return nil, err
+			}
+			for _, uid := range members {
+				if uid != uuid.Nil {
+					if _, ok := seen[uid]; !ok {
+						seen[uid] = struct{}{}
+						ids = append(ids, uid)
+					}
+				}
+			}
+		}
 	}
 	return ids, nil
 }

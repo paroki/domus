@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"regexp"
 	"slices"
 	"time"
 
@@ -57,25 +58,28 @@ type UpdateLiturgiMinistryRequest struct {
 
 // LiturgiPetugasResponse is the public API representation of a liturgical officer assignment.
 type LiturgiPetugasResponse struct {
-	ID               uuid.UUID  `json:"id"`
-	ParokiID         uuid.UUID  `json:"parokiId"`
-	EventID          uuid.UUID  `json:"eventId"`
-	Role             string     `json:"role"`
-	SlotLabel        *string    `json:"slotLabel,omitempty"`
-	UserID           *uuid.UUID `json:"userId,omitempty"`
-	OrgID            *uuid.UUID `json:"orgId,omitempty"`
-	Name             string     `json:"name"`
-	Urutan           int        `json:"urutan"`
-	Status           string     `json:"status"`
-	Note             *string    `json:"note,omitempty"`
-	RespondedAt      *time.Time `json:"respondedAt,omitempty"`
-	RespondedBy      *uuid.UUID `json:"respondedBy,omitempty"`
-	SubstituteUserID *uuid.UUID `json:"substituteUserId,omitempty"`
-	SubstituteOrgID  *uuid.UUID `json:"substituteOrgId,omitempty"`
-	SubstituteName   *string    `json:"substituteName,omitempty"`
-	CanConfirm       bool       `json:"canConfirm"`
-	CreatedAt        time.Time  `json:"createdAt"`
-	UpdatedAt        time.Time  `json:"updatedAt"`
+	ID                   uuid.UUID  `json:"id"`
+	ParokiID             uuid.UUID  `json:"parokiId"`
+	EventID              uuid.UUID  `json:"eventId"`
+	Role                 string     `json:"role"`
+	SlotLabel            *string    `json:"slotLabel,omitempty"`
+	UserID               *uuid.UUID `json:"userId,omitempty"`
+	OrgID                *uuid.UUID `json:"orgId,omitempty"`
+	Name                 string     `json:"name"`
+	Urutan               int        `json:"urutan"`
+	Status               string     `json:"status"`
+	Note                 *string    `json:"note,omitempty"`
+	RespondedAt          *time.Time `json:"respondedAt,omitempty"`
+	RespondedBy          *uuid.UUID `json:"respondedBy,omitempty"`
+	SubstituteUserID     *uuid.UUID `json:"substituteUserId,omitempty"`
+	SubstituteOrgID      *uuid.UUID `json:"substituteOrgId,omitempty"`
+	SubstituteName       *string    `json:"substituteName,omitempty"`
+	CanConfirm           bool       `json:"canConfirm"`
+	CanEdit              bool       `json:"canEdit"`
+	CanRespond           bool       `json:"canRespond"`
+	CanApproveSubstitute bool       `json:"canApproveSubstitute"`
+	CreatedAt            time.Time  `json:"createdAt"`
+	UpdatedAt            time.Time  `json:"updatedAt"`
 }
 
 // LiturgiLaguResponse is the public API representation of a liturgical song entry.
@@ -190,4 +194,97 @@ type UpdateLiturgiScheduleRequest struct {
 	RsvpDeadline      *time.Time `json:"rsvpDeadline,omitempty"`
 	ClearRsvpDeadline *bool      `json:"clearRsvpDeadline,omitempty"`
 	Status            *string    `json:"status,omitempty" validate:"omitempty,oneof=scheduled cancelled"`
+}
+
+// DefaultSongParts is the canonical list of default liturgical song part slugs.
+var DefaultSongParts = []string{
+	"pembuka",
+	"kyrie",
+	"gloria",
+	"mazmur",
+	"bpi",
+	"persembahan",
+	"sanctus",
+	"agnus-dei",
+	"komuni",
+	"madah-syukur",
+	"penutup",
+	"lainnya",
+}
+
+var songPartSlugRe = regexp.MustCompile(`^[a-z0-9][a-z0-9_-]{1,63}$`)
+
+// IsValidSongPartSlug reports whether slug matches the allowed song part format.
+func IsValidSongPartSlug(slug string) bool {
+	return songPartSlugRe.MatchString(slug)
+}
+
+// IsDefaultSongPart reports whether slug is one of DefaultSongParts.
+func IsDefaultSongPart(slug string) bool {
+	return slices.Contains(DefaultSongParts, slug)
+}
+
+// CreateLiturgiPetugasRequest creates a liturgical officer assignment for a Mass schedule.
+type CreateLiturgiPetugasRequest struct {
+	Role      string     `json:"role" validate:"required"`
+	SlotLabel *string    `json:"slotLabel,omitempty"`
+	UserID    *uuid.UUID `json:"userId,omitempty"`
+	OrgID     *uuid.UUID `json:"orgId,omitempty"`
+	Name      string     `json:"name,omitempty"`
+	Urutan    *int       `json:"urutan,omitempty"`
+	Status    *string    `json:"status,omitempty" validate:"omitempty,oneof=assigned confirmed declined"`
+	Note      *string    `json:"note,omitempty"`
+}
+
+// UpdateLiturgiPetugasRequest updates an existing liturgical officer assignment.
+type UpdateLiturgiPetugasRequest struct {
+	Role      *string    `json:"role,omitempty"`
+	SlotLabel *string    `json:"slotLabel,omitempty"`
+	UserID    *uuid.UUID `json:"userId,omitempty"`
+	ClearUser *bool      `json:"clearUser,omitempty"`
+	OrgID     *uuid.UUID `json:"orgId,omitempty"`
+	ClearOrg  *bool      `json:"clearOrg,omitempty"`
+	Name      *string    `json:"name,omitempty"`
+	Urutan    *int       `json:"urutan,omitempty"`
+	Status    *string    `json:"status,omitempty" validate:"omitempty,oneof=assigned confirmed declined"`
+	Note      *string    `json:"note,omitempty"`
+}
+
+// RespondLiturgiPetugasRequest records an officer confirmation or decline (optionally with a substitute proposal).
+type RespondLiturgiPetugasRequest struct {
+	Status           string     `json:"status" validate:"required"`
+	Note             *string    `json:"note,omitempty"`
+	SubstituteUserID *uuid.UUID `json:"substituteUserId,omitempty"`
+	SubstituteOrgID  *uuid.UUID `json:"substituteOrgId,omitempty"`
+	SubstituteName   *string    `json:"substituteName,omitempty"`
+}
+
+// ApproveLiturgiSubstituteRequest promotes a proposed substitute onto the active assignment.
+type ApproveLiturgiSubstituteRequest struct {
+	MarkConfirmed bool `json:"markConfirmed"`
+}
+
+// CreateLiturgiLaguRequest creates a liturgical song entry for a Mass schedule.
+type CreateLiturgiLaguRequest struct {
+	Urutan    *int       `json:"urutan,omitempty"`
+	Bagian    string     `json:"bagian" validate:"required"`
+	CantusID  *uuid.UUID `json:"cantusId,omitempty"`
+	Sumber    *string    `json:"sumber,omitempty"`
+	Nomor     *string    `json:"nomor,omitempty"`
+	Judul     string     `json:"judul,omitempty"`
+	NadaDasar *string    `json:"nadaDasar,omitempty"`
+	Note      *string    `json:"note,omitempty"`
+}
+
+// UpdateLiturgiLaguRequest updates a liturgical song entry for a Mass schedule.
+type UpdateLiturgiLaguRequest struct {
+	Urutan        *int       `json:"urutan,omitempty"`
+	Bagian        *string    `json:"bagian,omitempty"`
+	CantusID      *uuid.UUID `json:"cantusId,omitempty"`
+	ClearCantusID *bool      `json:"clearCantusId,omitempty"`
+	Sumber        *string    `json:"sumber,omitempty"`
+	Nomor         *string    `json:"nomor,omitempty"`
+	Judul         *string    `json:"judul,omitempty"`
+	NadaDasar     *string    `json:"nadaDasar,omitempty"`
+	Note          *string    `json:"note,omitempty"`
 }

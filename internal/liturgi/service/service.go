@@ -30,12 +30,53 @@ type OrgReader interface {
 	ListUserOrgs(ctx context.Context, parokiID, userID uuid.UUID) ([]OrgInfo, error)
 }
 
+// CantusInfo holds minimal song catalog metadata needed by the liturgi service.
+type CantusInfo struct {
+	ID        uuid.UUID
+	Sumber    *string
+	Nomor     *string
+	Judul     string
+	NadaDasar *string
+}
+
+// CantusReader reads global cantus entries.
+type CantusReader interface {
+	GetCantus(ctx context.Context, id uuid.UUID) (*CantusInfo, error)
+}
+
+// RefReader reads parish metadata and lookups from the ref feature.
+type RefReader interface {
+	GetParokiTimezone(ctx context.Context, parokiID uuid.UUID) (string, error)
+	HasActiveLookup(ctx context.Context, parokiID uuid.UUID, category, code string) (bool, error)
+}
+
+// NotificationPayload describes a multi-channel notification message.
+type NotificationPayload struct {
+	Title string
+	Body  string
+	Icon  string
+	Badge string
+	Tag   string
+	URL   string
+}
+
+// UserNotifier dispatches multi-channel notifications and resolves user timezones.
+type UserNotifier interface {
+	NotifyUser(ctx context.Context, userID uuid.UUID, parokiID *uuid.UUID, kind string, refID uuid.UUID, window string, payload NotificationPayload) (bool, error)
+	NotifyUsers(ctx context.Context, userIDs []uuid.UUID, parokiID *uuid.UUID, kind string, refID uuid.UUID, window string, payload NotificationPayload) (int, error)
+	ResolveUserTimezones(ctx context.Context, userIDs []uuid.UUID) (map[uuid.UUID]string, error)
+	CleanupExpiredNotificationLogs(ctx context.Context, before time.Time) (int, error)
+}
+
 // Service implements business logic for liturgical ministries and parish Mass schedules.
 type Service struct {
 	repo     *repo.Repository
 	enforcer *authz.Enforcer
 	orgs     OrgReader
 	events   *event.Feature
+	cantus   CantusReader
+	refs     RefReader
+	notifier UserNotifier
 }
 
 // New constructs a liturgi Service.
@@ -46,6 +87,21 @@ func New(r *repo.Repository, enforcer *authz.Enforcer, orgs OrgReader, events *e
 		orgs:     orgs,
 		events:   events,
 	}
+}
+
+// SetCantus wires the CantusReader dependency.
+func (s *Service) SetCantus(c CantusReader) {
+	s.cantus = c
+}
+
+// SetRef wires the RefReader dependency.
+func (s *Service) SetRef(r RefReader) {
+	s.refs = r
+}
+
+// SetNotifier wires the UserNotifier dependency.
+func (s *Service) SetNotifier(n UserNotifier) {
+	s.notifier = n
 }
 
 func (s *Service) isLiturgiOrParokiAdmin(p authx.Principal) (bool, error) {
@@ -440,30 +496,42 @@ func (s *Service) enrichSchedules(ctx context.Context, p authx.Principal, events
 	}
 
 	orgAdminCache := make(map[uuid.UUID]bool)
+	canManageLaguByEvent := make(map[uuid.UUID]bool, len(eventIDs))
 	petugasByEvent := make(map[uuid.UUID][]domain.LiturgiPetugasResponse, len(eventIDs))
 	for _, row := range petugasRows {
-		canConfirm := canManageRole[string(row.Role)]
-		if !canConfirm && row.UserID != nil && *row.UserID == p.UserID {
-			canConfirm = true
+		canEdit := canManageRole[string(row.Role)]
+		canRespond := canEdit
+		if !canRespond && row.UserID != nil && *row.UserID == p.UserID {
+			canRespond = true
 		}
-		if !canConfirm && row.SubstituteUserID != nil && *row.SubstituteUserID == p.UserID {
-			canConfirm = true
+		if !canRespond && row.SubstituteUserID != nil && *row.SubstituteUserID == p.UserID {
+			canRespond = true
 		}
-		if !canConfirm && row.OrgID != nil {
+		isRowOrgAdmin := false
+		if row.OrgID != nil {
 			adm, err := s.isOrgAdminCached(ctx, p.UserID, *row.OrgID, orgAdminCache)
 			if err != nil {
 				return nil, err
 			}
-			canConfirm = adm
+			isRowOrgAdmin = adm
+			if !canRespond {
+				canRespond = adm
+			}
 		}
-		if !canConfirm && row.SubstituteOrgID != nil {
+		if !canRespond && row.SubstituteOrgID != nil {
 			adm, err := s.isOrgAdminCached(ctx, p.UserID, *row.SubstituteOrgID, orgAdminCache)
 			if err != nil {
 				return nil, err
 			}
-			canConfirm = adm
+			canRespond = adm
 		}
-		petugasByEvent[row.EventID] = append(petugasByEvent[row.EventID], toPetugasResponse(row, canConfirm))
+		if !canManageLagu && string(row.Status) != "declined" && (row.Role == "organis" || row.Role == "kor") {
+			if (row.UserID != nil && *row.UserID == p.UserID) || isRowOrgAdmin {
+				canManageLaguByEvent[row.EventID] = true
+			}
+		}
+		canApprove := canEdit && hasProposedSubstitute(row)
+		petugasByEvent[row.EventID] = append(petugasByEvent[row.EventID], toPetugasResponse(row, canRespond, canEdit, canRespond, canApprove))
 	}
 
 	laguByEvent := make(map[uuid.UUID][]domain.LiturgiLaguResponse, len(eventIDs))
@@ -531,7 +599,7 @@ func (s *Service) enrichSchedules(ctx context.Context, p authx.Principal, events
 			RsvpSummary:       rsvpSummary,
 			CanManageSchedule: isAdmin,
 			ManageableRoles:   manageableRoles,
-			CanManageLagu:     canManageLagu,
+			CanManageLagu:     canManageLagu || canManageLaguByEvent[ev.ID],
 			Petugas:           pList,
 			Lagu:              lList,
 			CreatedAt:         ev.CreatedAt,
@@ -561,27 +629,30 @@ func mapEventError(err error) error {
 	}
 }
 
-func toPetugasResponse(row *ent.LiturgiPetugas, canConfirm bool) domain.LiturgiPetugasResponse {
+func toPetugasResponse(row *ent.LiturgiPetugas, canConfirm, canEdit, canRespond, canApproveSubstitute bool) domain.LiturgiPetugasResponse {
 	return domain.LiturgiPetugasResponse{
-		ID:               row.ID,
-		ParokiID:         row.ParokiID,
-		EventID:          row.EventID,
-		Role:             string(row.Role),
-		SlotLabel:        row.SlotLabel,
-		UserID:           row.UserID,
-		OrgID:            row.OrgID,
-		Name:             row.Name,
-		Urutan:           row.Urutan,
-		Status:           string(row.Status),
-		Note:             row.Note,
-		RespondedAt:      row.RespondedAt,
-		RespondedBy:      row.RespondedBy,
-		SubstituteUserID: row.SubstituteUserID,
-		SubstituteOrgID:  row.SubstituteOrgID,
-		SubstituteName:   row.SubstituteName,
-		CanConfirm:       canConfirm,
-		CreatedAt:        row.CreatedAt,
-		UpdatedAt:        row.UpdatedAt,
+		ID:                   row.ID,
+		ParokiID:             row.ParokiID,
+		EventID:              row.EventID,
+		Role:                 string(row.Role),
+		SlotLabel:            row.SlotLabel,
+		UserID:               row.UserID,
+		OrgID:                row.OrgID,
+		Name:                 row.Name,
+		Urutan:               row.Urutan,
+		Status:               string(row.Status),
+		Note:                 row.Note,
+		RespondedAt:          row.RespondedAt,
+		RespondedBy:          row.RespondedBy,
+		SubstituteUserID:     row.SubstituteUserID,
+		SubstituteOrgID:      row.SubstituteOrgID,
+		SubstituteName:       row.SubstituteName,
+		CanConfirm:           canConfirm,
+		CanEdit:              canEdit,
+		CanRespond:           canRespond,
+		CanApproveSubstitute: canApproveSubstitute,
+		CreatedAt:            row.CreatedAt,
+		UpdatedAt:            row.UpdatedAt,
 	}
 }
 

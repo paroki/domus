@@ -2,10 +2,13 @@ package liturgi
 
 import (
 	"context"
+	"log/slog"
+	"time"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
+	"github.com/paroki/domus/internal/cantus"
 	"github.com/paroki/domus/internal/event"
 	"github.com/paroki/domus/internal/liturgi/domain"
 	"github.com/paroki/domus/internal/liturgi/handler"
@@ -60,6 +63,96 @@ func (a orgReaderAdapter) ListUserOrgs(ctx context.Context, parokiID, userID uui
 	return out, nil
 }
 
+type cantusReaderAdapter struct {
+	cantus *cantus.Feature
+}
+
+func (a cantusReaderAdapter) GetCantus(ctx context.Context, id uuid.UUID) (*service.CantusInfo, error) {
+	c, err := a.cantus.GetCantus(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return &service.CantusInfo{
+		ID:        c.ID,
+		Sumber:    c.Sumber,
+		Nomor:     c.Nomor,
+		Judul:     c.Judul,
+		NadaDasar: c.NadaDasar,
+	}, nil
+}
+
+type refReaderAdapter struct {
+	refs *ref.Feature
+}
+
+func (a refReaderAdapter) GetParokiTimezone(ctx context.Context, parokiID uuid.UUID) (string, error) {
+	p, err := a.refs.GetParoki(ctx, parokiID)
+	if err != nil {
+		return "", err
+	}
+	return p.Timezone, nil
+}
+
+func (a refReaderAdapter) HasActiveLookup(ctx context.Context, parokiID uuid.UUID, category, code string) (bool, error) {
+	return a.refs.HasActiveLookup(ctx, parokiID, category, code)
+}
+
+type userNotifierAdapter struct {
+	users *user.Feature
+}
+
+func (a userNotifierAdapter) NotifyUser(ctx context.Context, userID uuid.UUID, parokiID *uuid.UUID, kind string, refID uuid.UUID, window string, payload service.NotificationPayload) (bool, error) {
+	return a.users.NotifyUser(ctx, userID, parokiID, kind, refID, window, user.NotificationPayload{
+		Title: payload.Title,
+		Body:  payload.Body,
+		Icon:  payload.Icon,
+		Badge: payload.Badge,
+		Tag:   payload.Tag,
+		URL:   payload.URL,
+	})
+}
+
+func (a userNotifierAdapter) NotifyUsers(ctx context.Context, userIDs []uuid.UUID, parokiID *uuid.UUID, kind string, refID uuid.UUID, window string, payload service.NotificationPayload) (int, error) {
+	return a.users.NotifyUsers(ctx, userIDs, parokiID, kind, refID, window, user.NotificationPayload{
+		Title: payload.Title,
+		Body:  payload.Body,
+		Icon:  payload.Icon,
+		Badge: payload.Badge,
+		Tag:   payload.Tag,
+		URL:   payload.URL,
+	})
+}
+
+func (a userNotifierAdapter) ResolveUserTimezones(ctx context.Context, userIDs []uuid.UUID) (map[uuid.UUID]string, error) {
+	return a.users.ResolveUserTimezones(ctx, userIDs)
+}
+
+func (a userNotifierAdapter) CleanupExpiredNotificationLogs(ctx context.Context, before time.Time) (int, error) {
+	return a.users.CleanupExpiredNotificationLogs(ctx, before)
+}
+
+// Option configures optional dependencies on the liturgi Feature.
+type Option func(*options)
+
+type options struct {
+	cantus *cantus.Feature
+	refs   *ref.Feature
+}
+
+// WithCantus wires the cantus.Feature for resolving cantusId song metadata.
+func WithCantus(c *cantus.Feature) Option {
+	return func(o *options) {
+		o.cantus = c
+	}
+}
+
+// WithRef wires the ref.Feature for reading parish timezone and liturgi_song_part lookups.
+func WithRef(r *ref.Feature) Option {
+	return func(o *options) {
+		o.refs = r
+	}
+}
+
 // Feature wires liturgical ministry configuration and parish Mass schedule management.
 type Feature struct {
 	service *service.Service
@@ -68,19 +161,49 @@ type Feature struct {
 }
 
 // New constructs the liturgi Feature.
-func New(db *ent.Client, enforcer *authz.Enforcer, users *user.Feature, orgs *org.Feature, events *event.Feature) *Feature {
+func New(db *ent.Client, enforcer *authz.Enforcer, users *user.Feature, orgs *org.Feature, events *event.Feature, opts ...Option) *Feature {
+	var o options
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&o)
+		}
+	}
 	r := repo.New(db)
 	var orgReader service.OrgReader
 	if orgs != nil {
 		orgReader = orgReaderAdapter{orgs: orgs}
 	}
 	svc := service.New(r, enforcer, orgReader, events)
+	if o.cantus != nil {
+		svc.SetCantus(cantusReaderAdapter{cantus: o.cantus})
+	}
+	if o.refs != nil {
+		svc.SetRef(refReaderAdapter{refs: o.refs})
+	}
+	if users != nil {
+		svc.SetNotifier(userNotifierAdapter{users: users})
+	}
 	h := handler.New(svc)
 	return &Feature{
 		service: svc,
 		handler: h,
 		users:   users,
 	}
+}
+
+// IsCantusInUse reports whether cantusID is referenced by any liturgi_lagu row of a non-deleted Event.
+func (f *Feature) IsCantusInUse(ctx context.Context, cantusID uuid.UUID) (bool, error) {
+	return f.service.IsCantusInUse(ctx, cantusID)
+}
+
+// RunReminderTick dispatches due liturgy officer reminders for the given reference time.
+func (f *Feature) RunReminderTick(ctx context.Context, now time.Time) error {
+	return f.service.RunReminderTick(ctx, now)
+}
+
+// StartReminderScheduler starts the background liturgy reminder scheduler until ctx is cancelled.
+func (f *Feature) StartReminderScheduler(ctx context.Context, interval time.Duration, logger *slog.Logger) {
+	f.service.StartReminderScheduler(ctx, interval, logger)
 }
 
 // Register mounts /liturgi routes under /api.

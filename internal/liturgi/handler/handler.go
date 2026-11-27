@@ -43,6 +43,16 @@ func (h *Handler) Register(
 	liturgi.Post("/schedules", h.CreateSchedule)
 	liturgi.Patch("/schedules/:eventId", h.UpdateSchedule)
 	liturgi.Delete("/schedules/:eventId", h.DeleteSchedule)
+
+	liturgi.Post("/schedules/:eventId/petugas", h.CreatePetugas)
+	liturgi.Patch("/schedules/:eventId/petugas/:petugasId", h.UpdatePetugas)
+	liturgi.Patch("/schedules/:eventId/petugas/:petugasId/respond", h.RespondPetugas)
+	liturgi.Post("/schedules/:eventId/petugas/:petugasId/approve-substitute", h.ApproveSubstitute)
+	liturgi.Delete("/schedules/:eventId/petugas/:petugasId", h.DeletePetugas)
+
+	liturgi.Post("/schedules/:eventId/lagu", h.CreateLagu)
+	liturgi.Patch("/schedules/:eventId/lagu/:laguId", h.UpdateLagu)
+	liturgi.Delete("/schedules/:eventId/lagu/:laguId", h.DeleteLagu)
 }
 
 // ListMinistries returns all 6 liturgical ministry configurations for the active parish.

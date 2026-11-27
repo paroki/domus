@@ -50,6 +50,37 @@ func (s *Service) notifyEventCreated(ctx context.Context, creatorID uuid.UUID, c
 	})
 }
 
+func isParishMassEvent(ev *ent.Event) bool {
+	return ev != nil && ev.OrgID == nil && ev.Jenis != nil && *ev.Jenis == "misa"
+}
+
+func (s *Service) resolveEventNotificationTarget(ctx context.Context, ev *ent.Event) ([]uuid.UUID, string, error) {
+	recipients, _, err := s.resolveEventRecipients(ctx, ev.ID)
+	if err != nil {
+		return nil, "", err
+	}
+	targetURL := "/events/" + ev.ID.String()
+	if !isParishMassEvent(ev) {
+		return recipients, targetURL, nil
+	}
+	targetURL = "/liturgi/" + ev.ID.String()
+	petugasIDs, err := s.repo.ListActiveLiturgiPetugasRecipients(ctx, ev.ID)
+	if err != nil {
+		return nil, "", err
+	}
+	seen := make(map[uuid.UUID]struct{}, len(recipients)+len(petugasIDs))
+	for _, uid := range recipients {
+		seen[uid] = struct{}{}
+	}
+	for _, uid := range petugasIDs {
+		if _, ok := seen[uid]; !ok {
+			seen[uid] = struct{}{}
+			recipients = append(recipients, uid)
+		}
+	}
+	return recipients, targetURL, nil
+}
+
 func (s *Service) notifyEventUpdated(ctx context.Context, existing, updated *ent.Event) {
 	if s.notifier == nil || existing == nil || updated == nil {
 		return
@@ -57,7 +88,7 @@ func (s *Service) notifyEventUpdated(ctx context.Context, existing, updated *ent
 	if existing.Status != event.StatusScheduled || updated.Status != event.StatusScheduled || updated.StartAt.Equal(existing.StartAt) {
 		return
 	}
-	recipients, _, err := s.resolveEventRecipients(ctx, updated.ID)
+	recipients, targetURL, err := s.resolveEventNotificationTarget(ctx, updated)
 	if err != nil || len(recipients) == 0 {
 		return
 	}
@@ -68,7 +99,7 @@ func (s *Service) notifyEventUpdated(ctx context.Context, existing, updated *ent
 		Icon:  "/logo-192.png",
 		Badge: "/logo-192.png",
 		Tag:   "event-" + updated.ID.String(),
-		URL:   "/events/" + updated.ID.String(),
+		URL:   targetURL,
 	})
 }
 
@@ -79,7 +110,7 @@ func (s *Service) notifyEventCancelled(ctx context.Context, existing, updated *e
 	if existing.Status == event.StatusCancelled || updated.Status != event.StatusCancelled {
 		return
 	}
-	recipients, _, err := s.resolveEventRecipients(ctx, updated.ID)
+	recipients, targetURL, err := s.resolveEventNotificationTarget(ctx, updated)
 	if err != nil || len(recipients) == 0 {
 		return
 	}
@@ -89,7 +120,7 @@ func (s *Service) notifyEventCancelled(ctx context.Context, existing, updated *e
 		Icon:  "/logo-192.png",
 		Badge: "/logo-192.png",
 		Tag:   "event-" + updated.ID.String(),
-		URL:   "/events/" + updated.ID.String(),
+		URL:   targetURL,
 	})
 }
 

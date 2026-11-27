@@ -10,6 +10,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
+	"github.com/paroki/domus/ent/usernotificationlog"
+	"github.com/paroki/domus/internal/cantus"
+	cantusdomain "github.com/paroki/domus/internal/cantus/domain"
 	"github.com/paroki/domus/internal/event"
 	eventdomain "github.com/paroki/domus/internal/event/domain"
 	"github.com/paroki/domus/internal/liturgi"
@@ -42,6 +45,7 @@ type LiturgiFeatureSuite struct {
 	userFeature    *user.Feature
 	refFeature     *ref.Feature
 	orgFeature     *org.Feature
+	cantusFeature  *cantus.Feature
 	eventFeature   *event.Feature
 	liturgiFeature *liturgi.Feature
 }
@@ -80,14 +84,16 @@ func (s *LiturgiFeatureSuite) SetupTest() {
 	s.refFeature = ref.New(s.client, s.enforcer, s.userFeature)
 	s.orgFeature = org.New(s.client, s.enforcer, s.userFeature, s.refFeature, orgCfg)
 	s.userFeature.SetInviteJoiner(s.orgFeature)
+	s.cantusFeature = cantus.New(s.client, s.enforcer, s.userFeature)
 	s.eventFeature = event.New(s.client, s.enforcer, s.userFeature, s.orgFeature, eventCfg, event.WithRef(s.refFeature))
-	s.liturgiFeature = liturgi.New(s.client, s.enforcer, s.userFeature, s.orgFeature, s.eventFeature)
+	s.liturgiFeature = liturgi.New(s.client, s.enforcer, s.userFeature, s.orgFeature, s.eventFeature, liturgi.WithCantus(s.cantusFeature), liturgi.WithRef(s.refFeature))
+	s.cantusFeature.SetInUseChecker(s.liturgiFeature.IsCantusInUse)
 
 	ctx := context.Background()
-	s.Require().NoError(authz.RegisterFeatures(ctx, s.enforcer, s.userFeature, s.refFeature, s.orgFeature, s.eventFeature, s.liturgiFeature))
+	s.Require().NoError(authz.RegisterFeatures(ctx, s.enforcer, s.userFeature, s.refFeature, s.orgFeature, s.cantusFeature, s.eventFeature, s.liturgiFeature))
 	s.Require().NoError(s.userFeature.Bootstrap(ctx))
 
-	s.WithFeatures(s.userFeature, s.refFeature, s.orgFeature, s.eventFeature, s.liturgiFeature)
+	s.WithFeatures(s.userFeature, s.refFeature, s.orgFeature, s.cantusFeature, s.eventFeature, s.liturgiFeature)
 }
 
 func (s *LiturgiFeatureSuite) loginViaOTP(email string) {
@@ -488,4 +494,370 @@ func (s *LiturgiFeatureSuite) TestSchedules_CRUD_SearchFilters_AndEventRSVPCompa
 	s.Request("/api/liturgi/schedules/"+sched.ID.String(), http.MethodGet, nil)
 	s.NotFound()
 	s.Equal("LITURGI_SCHEDULE_NOT_FOUND", s.GetErrorResponse().Error.Code)
+}
+
+func (s *LiturgiFeatureSuite) TestPetugasLifecycleAndPermissions() {
+	seed := s.seedParish()
+
+	// Create a second member in paroki for substitution testing.
+	s.loginViaOTP("super@paroki.org")
+	s.Request("/api/ref/paroki/"+seed.parokiID.String()+"/members", http.MethodPost, refdomain.AddParokiMemberRequest{
+		Email: "sub@paroki.org",
+		Name:  "Pengganti Lektor",
+		Role:  "member",
+	})
+	s.Created()
+	subID := testutil.DecodeAs[refdomain.ParokiMemberResponse](s).Data.UserID
+
+	// Configure lektor ministry leader = leader@paroki.org.
+	s.loginViaOTP("litadmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", seed.parokiID.String())
+	s.Request("/api/liturgi/ministries/lektor", http.MethodPatch, domain.UpdateLiturgiMinistryRequest{
+		LeaderUserID: &seed.leaderID,
+	})
+	s.OK()
+
+	// Create Mass schedule.
+	startAt := time.Now().UTC().Add(48 * time.Hour).Truncate(time.Second)
+	endAt := startAt.Add(90 * time.Minute)
+	s.Request("/api/liturgi/schedules", http.MethodPost, domain.CreateLiturgiScheduleRequest{
+		Title:   "Misa Harian",
+		StartAt: startAt,
+		EndAt:   endAt,
+	})
+	s.Created()
+	schedID := testutil.DecodeAs[domain.LiturgiScheduleResponse](s).Data.ID
+
+	// Lektor leader cannot manage misdinar -> 403 LITURGI_FORBIDDEN.
+	s.loginViaOTP("leader@paroki.org")
+	s.SetHeader("X-Paroki-Id", seed.parokiID.String())
+	s.Request("/api/liturgi/schedules/"+schedID.String()+"/petugas", http.MethodPost, domain.CreateLiturgiPetugasRequest{
+		Role: "misdinar",
+		Name: "Misdinar Tamu",
+	})
+	s.Forbidden()
+	s.Equal("LITURGI_FORBIDDEN", s.GetErrorResponse().Error.Code)
+
+	// Mutual exclusion: userId + orgId -> 422 VALIDATION_ERROR.
+	s.Request("/api/liturgi/schedules/"+schedID.String()+"/petugas", http.MethodPost, domain.CreateLiturgiPetugasRequest{
+		Role:   "lektor",
+		UserID: &seed.memberID,
+		OrgID:  &seed.orgID,
+	})
+	s.UnprocessableEntity()
+	s.Equal("VALIDATION_ERROR", s.GetErrorResponse().Error.Code)
+
+	// 1. User mode: auto-fills name from user.
+	s.Request("/api/liturgi/schedules/"+schedID.String()+"/petugas", http.MethodPost, domain.CreateLiturgiPetugasRequest{
+		Role:   "lektor",
+		UserID: &seed.memberID,
+	})
+	s.Created()
+	pUser := testutil.DecodeAs[domain.LiturgiPetugasResponse](s).Data
+	s.Equal("Umat Biasa", pUser.Name)
+	s.Equal("assigned", pUser.Status)
+	s.True(pUser.CanEdit)
+	s.True(pUser.CanRespond)
+	s.False(pUser.CanApproveSubstitute)
+
+	// 2. Org mode: auto-fills name from org.
+	s.Request("/api/liturgi/schedules/"+schedID.String()+"/petugas", http.MethodPost, domain.CreateLiturgiPetugasRequest{
+		Role:  "lektor",
+		OrgID: &seed.orgID,
+	})
+	s.Created()
+	pOrg := testutil.DecodeAs[domain.LiturgiPetugasResponse](s).Data
+	s.Equal("Seksi Paduan Suara", pOrg.Name)
+
+	// 3. Manual name mode.
+	s.Request("/api/liturgi/schedules/"+schedID.String()+"/petugas", http.MethodPost, domain.CreateLiturgiPetugasRequest{
+		Role: "lektor",
+		Name: "Lektor Tamu",
+	})
+	s.Created()
+	pManual := testutil.DecodeAs[domain.LiturgiPetugasResponse](s).Data
+	s.Equal("Lektor Tamu", pManual.Name)
+
+	// Unrelated user cannot respond -> 403 LITURGI_FORBIDDEN.
+	s.loginViaOTP("sub@paroki.org")
+	s.SetHeader("X-Paroki-Id", seed.parokiID.String())
+	s.Request("/api/liturgi/schedules/"+schedID.String()+"/petugas/"+pUser.ID.String()+"/respond", http.MethodPatch, domain.RespondLiturgiPetugasRequest{
+		Status: "confirmed",
+	})
+	s.Forbidden()
+	s.Equal("LITURGI_FORBIDDEN", s.GetErrorResponse().Error.Code)
+
+	// Assigned user confirms -> respondedAt & respondedBy populated.
+	s.loginViaOTP("member@paroki.org")
+	s.SetHeader("X-Paroki-Id", seed.parokiID.String())
+	s.Request("/api/liturgi/schedules/"+schedID.String()+"/petugas/"+pUser.ID.String()+"/respond", http.MethodPatch, domain.RespondLiturgiPetugasRequest{
+		Status: "confirmed",
+	})
+	s.OK()
+	confirmed := testutil.DecodeAs[domain.LiturgiPetugasResponse](s).Data
+	s.Equal("confirmed", confirmed.Status)
+	s.Require().NotNil(confirmed.RespondedAt)
+	s.Require().NotNil(confirmed.RespondedBy)
+	s.Equal(seed.memberID, *confirmed.RespondedBy)
+
+	// Assigned user declines with mutually exclusive substituteUserId + substituteOrgId -> 422 MUTUALLY_EXCLUSIVE.
+	s.Request("/api/liturgi/schedules/"+schedID.String()+"/petugas/"+pUser.ID.String()+"/respond", http.MethodPatch, domain.RespondLiturgiPetugasRequest{
+		Status:           "declined",
+		SubstituteUserID: &subID,
+		SubstituteOrgID:  &seed.orgID,
+	})
+	s.UnprocessableEntity()
+	s.Equal("VALIDATION_ERROR", s.GetErrorResponse().Error.Code)
+
+	// Assigned user declines with substituteUserId -> auto-fills substituteName.
+	s.Request("/api/liturgi/schedules/"+schedID.String()+"/petugas/"+pUser.ID.String()+"/respond", http.MethodPatch, domain.RespondLiturgiPetugasRequest{
+		Status:           "declined",
+		SubstituteUserID: &subID,
+		Note:             new("Sedang di luar kota"),
+	})
+	s.OK()
+	declined := testutil.DecodeAs[domain.LiturgiPetugasResponse](s).Data
+	s.Equal("declined", declined.Status)
+	s.Require().NotNil(declined.SubstituteUserID)
+	s.Equal(subID, *declined.SubstituteUserID)
+	s.Require().NotNil(declined.SubstituteName)
+	s.Equal("Pengganti Lektor", *declined.SubstituteName)
+
+	// Leader approves substitute with markConfirmed=true.
+	s.loginViaOTP("leader@paroki.org")
+	s.SetHeader("X-Paroki-Id", seed.parokiID.String())
+	s.Request("/api/liturgi/schedules/"+schedID.String()+"/petugas/"+pUser.ID.String()+"/approve-substitute", http.MethodPost, domain.ApproveLiturgiSubstituteRequest{
+		MarkConfirmed: true,
+	})
+	s.OK()
+	approved := testutil.DecodeAs[domain.LiturgiPetugasResponse](s).Data
+	s.Require().NotNil(approved.UserID)
+	s.Equal(subID, *approved.UserID)
+	s.Equal("Pengganti Lektor", approved.Name)
+	s.Equal("confirmed", approved.Status)
+	s.Nil(approved.SubstituteUserID)
+	s.Nil(approved.SubstituteName)
+
+	// Approve substitute when none exists -> 422 SUBSTITUTE_REQUIRED.
+	s.Request("/api/liturgi/schedules/"+schedID.String()+"/petugas/"+pUser.ID.String()+"/approve-substitute", http.MethodPost, domain.ApproveLiturgiSubstituteRequest{})
+	s.UnprocessableEntity()
+	s.Equal("VALIDATION_ERROR", s.GetErrorResponse().Error.Code)
+
+	// Reassign via PATCH resets respondedAt/respondedBy and status to assigned.
+	s.Request("/api/liturgi/schedules/"+schedID.String()+"/petugas/"+pUser.ID.String(), http.MethodPatch, domain.UpdateLiturgiPetugasRequest{
+		UserID: &seed.memberID,
+	})
+	s.OK()
+	reassigned := testutil.DecodeAs[domain.LiturgiPetugasResponse](s).Data
+	s.Equal("assigned", reassigned.Status)
+	s.Nil(reassigned.RespondedAt)
+	s.Nil(reassigned.RespondedBy)
+	s.Equal("Umat Biasa", reassigned.Name)
+
+	// Delete manual assignment.
+	s.Request("/api/liturgi/schedules/"+schedID.String()+"/petugas/"+pManual.ID.String(), http.MethodDelete, nil)
+	s.NoContent()
+}
+
+func (s *LiturgiFeatureSuite) TestLaguCantusIntegrationAnd409InUse() {
+	seed := s.seedParish()
+
+	// Grant liturgiAdmin cantus:admin and create a Cantus entry.
+	ctx := context.Background()
+	s.Require().NoError(s.enforcer.AssignRole(ctx, authz.UserSubject(seed.liturgiAdminID), cantus.RoleAdmin, authz.DomainGlobal))
+	s.loginViaOTP("litadmin@paroki.org")
+	s.Request("/api/cantus", http.MethodPost, cantusdomain.CreateCantusRequest{
+		Slug:      "ps-351-tuhan-kasihanilah",
+		Jenis:     "lagu",
+		Judul:     "Tuhan Kasihanilah Kami",
+		Sumber:    new("Puji Syukur"),
+		Nomor:     new("351"),
+		NadaDasar: new("F"),
+	})
+	s.Created()
+	cantusID := testutil.DecodeAs[cantusdomain.CantusResponse](s).Data.ID
+
+	// Create schedule + assign member@paroki.org as lektor and another member as organis.
+	s.loginViaOTP("super@paroki.org")
+	s.Request("/api/ref/paroki/"+seed.parokiID.String()+"/members", http.MethodPost, refdomain.AddParokiMemberRequest{
+		Email: "organis@paroki.org",
+		Name:  "Organis Paroki",
+		Role:  "member",
+	})
+	s.Created()
+	organisID := testutil.DecodeAs[refdomain.ParokiMemberResponse](s).Data.UserID
+
+	s.loginViaOTP("litadmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", seed.parokiID.String())
+	startAt := time.Now().UTC().Add(48 * time.Hour).Truncate(time.Second)
+	s.Request("/api/liturgi/schedules", http.MethodPost, domain.CreateLiturgiScheduleRequest{
+		Title:   "Misa Minggu",
+		StartAt: startAt,
+		EndAt:   startAt.Add(time.Hour),
+	})
+	s.Created()
+	schedID := testutil.DecodeAs[domain.LiturgiScheduleResponse](s).Data.ID
+
+	s.Request("/api/liturgi/schedules/"+schedID.String()+"/petugas", http.MethodPost, domain.CreateLiturgiPetugasRequest{
+		Role:   "lektor",
+		UserID: &seed.memberID,
+	})
+	s.Created()
+	s.Request("/api/liturgi/schedules/"+schedID.String()+"/petugas", http.MethodPost, domain.CreateLiturgiPetugasRequest{
+		Role:   "organis",
+		UserID: &organisID,
+	})
+	s.Created()
+
+	// Lektor officer cannot manage lagu -> 403 LITURGI_FORBIDDEN.
+	s.loginViaOTP("member@paroki.org")
+	s.SetHeader("X-Paroki-Id", seed.parokiID.String())
+	s.Request("/api/liturgi/schedules/"+schedID.String()+"/lagu", http.MethodPost, domain.CreateLiturgiLaguRequest{
+		Bagian:   "kyrie",
+		CantusID: &cantusID,
+	})
+	s.Forbidden()
+	s.Equal("LITURGI_FORBIDDEN", s.GetErrorResponse().Error.Code)
+
+	// Assigned organis officer can add lagu with cantusId auto-fill.
+	s.loginViaOTP("organis@paroki.org")
+	s.SetHeader("X-Paroki-Id", seed.parokiID.String())
+	s.Request("/api/liturgi/schedules/"+schedID.String()+"/lagu", http.MethodPost, domain.CreateLiturgiLaguRequest{
+		Bagian:   "kyrie",
+		CantusID: &cantusID,
+		Urutan:   new(2),
+	})
+	s.Created()
+	lagu := testutil.DecodeAs[domain.LiturgiLaguResponse](s).Data
+	s.Equal("Tuhan Kasihanilah Kami", lagu.Judul)
+	s.Require().NotNil(lagu.Sumber)
+	s.Equal("Puji Syukur", *lagu.Sumber)
+	s.Require().NotNil(lagu.Nomor)
+	s.Equal("351", *lagu.Nomor)
+	s.Require().NotNil(lagu.NadaDasar)
+	s.Equal("F", *lagu.NadaDasar)
+
+	// Deleting Cantus while referenced by active Mass schedule -> 409 CANTUS_IN_USE.
+	s.loginViaOTP("litadmin@paroki.org")
+	s.Request("/api/cantus/"+cantusID.String(), http.MethodDelete, nil)
+	s.Conflict()
+	s.Equal("CANTUS_IN_USE", s.GetErrorResponse().Error.Code)
+
+	// Delete the lagu entry, then Cantus delete succeeds.
+	s.loginViaOTP("organis@paroki.org")
+	s.SetHeader("X-Paroki-Id", seed.parokiID.String())
+	s.Request("/api/liturgi/schedules/"+schedID.String()+"/lagu/"+lagu.ID.String(), http.MethodDelete, nil)
+	s.NoContent()
+
+	s.loginViaOTP("litadmin@paroki.org")
+	s.Request("/api/cantus/"+cantusID.String(), http.MethodDelete, nil)
+	s.NoContent()
+}
+
+func (s *LiturgiFeatureSuite) TestLiturgiNotificationsAndReminders() {
+	seed := s.seedParish()
+	ctx := context.Background()
+
+	// Configure lektor leader = leader@paroki.org.
+	s.loginViaOTP("litadmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", seed.parokiID.String())
+	s.Request("/api/liturgi/ministries/lektor", http.MethodPatch, domain.UpdateLiturgiMinistryRequest{
+		LeaderUserID: &seed.leaderID,
+	})
+	s.OK()
+
+	jktLoc, err := time.LoadLocation("Asia/Jakarta")
+	s.Require().NoError(err)
+	// Mass starts at 10:00 WIB -> h-24h is 10:00 WIB (outside quiet hours), h-1h is 09:00 WIB (outside quiet hours).
+	startAt := time.Date(2030, 6, 15, 10, 0, 0, 0, jktLoc).UTC()
+	s.Request("/api/liturgi/schedules", http.MethodPost, domain.CreateLiturgiScheduleRequest{
+		Title:   "Misa Kudus",
+		StartAt: startAt,
+		EndAt:   startAt.Add(time.Hour),
+	})
+	s.Created()
+	schedID := testutil.DecodeAs[domain.LiturgiScheduleResponse](s).Data.ID
+
+	// Assign member@paroki.org -> triggers liturgi_assigned.
+	s.Request("/api/liturgi/schedules/"+schedID.String()+"/petugas", http.MethodPost, domain.CreateLiturgiPetugasRequest{
+		Role:   "lektor",
+		UserID: &seed.memberID,
+	})
+	s.Created()
+	petugasID := testutil.DecodeAs[domain.LiturgiPetugasResponse](s).Data.ID
+
+	assignedCount, err := s.client.UserNotificationLog.Query().
+		Where(
+			usernotificationlog.UserIDEQ(seed.memberID),
+			usernotificationlog.KindEQ("liturgi_assigned"),
+			usernotificationlog.RefIDEQ(schedID),
+		).Count(ctx)
+	s.Require().NoError(err)
+	s.Equal(1, assignedCount)
+
+	// Member declines with substitute -> triggers liturgi_substitute_proposed to leader.
+	s.loginViaOTP("member@paroki.org")
+	s.SetHeader("X-Paroki-Id", seed.parokiID.String())
+	s.Request("/api/liturgi/schedules/"+schedID.String()+"/petugas/"+petugasID.String()+"/respond", http.MethodPatch, domain.RespondLiturgiPetugasRequest{
+		Status:           "declined",
+		SubstituteUserID: &seed.orgAdminID,
+	})
+	s.OK()
+
+	proposedCount, err := s.client.UserNotificationLog.Query().
+		Where(
+			usernotificationlog.UserIDEQ(seed.leaderID),
+			usernotificationlog.KindEQ("liturgi_substitute_proposed"),
+			usernotificationlog.RefIDEQ(schedID),
+		).Count(ctx)
+	s.Require().NoError(err)
+	s.Equal(1, proposedCount)
+
+	// Leader approves substitute -> triggers liturgi_substitute_approved to orgAdminID and memberID.
+	s.loginViaOTP("leader@paroki.org")
+	s.SetHeader("X-Paroki-Id", seed.parokiID.String())
+	s.Request("/api/liturgi/schedules/"+schedID.String()+"/petugas/"+petugasID.String()+"/approve-substitute", http.MethodPost, domain.ApproveLiturgiSubstituteRequest{
+		MarkConfirmed: true,
+	})
+	s.OK()
+
+	approvedCount, err := s.client.UserNotificationLog.Query().
+		Where(
+			usernotificationlog.UserIDEQ(seed.orgAdminID),
+			usernotificationlog.KindEQ("liturgi_substitute_approved"),
+			usernotificationlog.RefIDEQ(schedID),
+		).Count(ctx)
+	s.Require().NoError(err)
+	s.Equal(1, approvedCount)
+
+	// RunReminderTick at h-24h -> dispatches liturgi_reminder for orgAdminID.
+	s.Require().NoError(s.liturgiFeature.RunReminderTick(ctx, startAt.Add(-23*time.Hour)))
+	rem24Count, err := s.client.UserNotificationLog.Query().
+		Where(
+			usernotificationlog.UserIDEQ(seed.orgAdminID),
+			usernotificationlog.KindEQ("liturgi_reminder"),
+			usernotificationlog.RefIDEQ(schedID),
+			usernotificationlog.WindowEQ("h-24h"),
+		).Count(ctx)
+	s.Require().NoError(err)
+	s.Equal(1, rem24Count)
+
+	// Updating Mass schedule start time triggers event_updated to active liturgi_petugas (orgAdminID).
+	s.loginViaOTP("litadmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", seed.parokiID.String())
+	newStart := startAt.Add(30 * time.Minute)
+	s.Request("/api/liturgi/schedules/"+schedID.String(), http.MethodPatch, domain.UpdateLiturgiScheduleRequest{
+		StartAt: &newStart,
+		EndAt:   new(newStart.Add(time.Hour)),
+	})
+	s.OK()
+
+	evUpdatedCount, err := s.client.UserNotificationLog.Query().
+		Where(
+			usernotificationlog.UserIDEQ(seed.orgAdminID),
+			usernotificationlog.KindEQ("event_updated"),
+			usernotificationlog.RefIDEQ(schedID),
+		).Count(ctx)
+	s.Require().NoError(err)
+	s.Equal(1, evUpdatedCount)
 }

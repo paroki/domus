@@ -189,6 +189,14 @@
                 },
                 "type": "object"
             },
+            "domain.ApproveLiturgiSubstituteRequest": {
+                "properties": {
+                    "markConfirmed": {
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
             "domain.AuthProvidersResponse": {
                 "properties": {
                     "otpChannels": {
@@ -709,6 +717,75 @@
                     "kode",
                     "nama",
                     "wilayahId"
+                ],
+                "type": "object"
+            },
+            "domain.CreateLiturgiLaguRequest": {
+                "properties": {
+                    "bagian": {
+                        "type": "string"
+                    },
+                    "cantusId": {
+                        "type": "string"
+                    },
+                    "judul": {
+                        "type": "string"
+                    },
+                    "nadaDasar": {
+                        "type": "string"
+                    },
+                    "nomor": {
+                        "type": "string"
+                    },
+                    "note": {
+                        "type": "string"
+                    },
+                    "sumber": {
+                        "type": "string"
+                    },
+                    "urutan": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "bagian"
+                ],
+                "type": "object"
+            },
+            "domain.CreateLiturgiPetugasRequest": {
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "note": {
+                        "type": "string"
+                    },
+                    "orgId": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "type": "string"
+                    },
+                    "slotLabel": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "enum": [
+                            "assigned",
+                            "confirmed",
+                            "declined"
+                        ],
+                        "type": "string"
+                    },
+                    "urutan": {
+                        "type": "integer"
+                    },
+                    "userId": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "role"
                 ],
                 "type": "object"
             },
@@ -1906,7 +1983,16 @@
             },
             "domain.LiturgiPetugasResponse": {
                 "properties": {
+                    "canApproveSubstitute": {
+                        "type": "boolean"
+                    },
                     "canConfirm": {
+                        "type": "boolean"
+                    },
+                    "canEdit": {
+                        "type": "boolean"
+                    },
+                    "canRespond": {
                         "type": "boolean"
                     },
                     "createdAt": {
@@ -2891,6 +2977,29 @@
                         "type": "string"
                     }
                 },
+                "type": "object"
+            },
+            "domain.RespondLiturgiPetugasRequest": {
+                "properties": {
+                    "note": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "substituteName": {
+                        "type": "string"
+                    },
+                    "substituteOrgId": {
+                        "type": "string"
+                    },
+                    "substituteUserId": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "status"
+                ],
                 "type": "object"
             },
             "domain.SearchAccountsRequest": {
@@ -4210,6 +4319,38 @@
                 },
                 "type": "object"
             },
+            "domain.UpdateLiturgiLaguRequest": {
+                "properties": {
+                    "bagian": {
+                        "type": "string"
+                    },
+                    "cantusId": {
+                        "type": "string"
+                    },
+                    "clearCantusId": {
+                        "type": "boolean"
+                    },
+                    "judul": {
+                        "type": "string"
+                    },
+                    "nadaDasar": {
+                        "type": "string"
+                    },
+                    "nomor": {
+                        "type": "string"
+                    },
+                    "note": {
+                        "type": "string"
+                    },
+                    "sumber": {
+                        "type": "string"
+                    },
+                    "urutan": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
             "domain.UpdateLiturgiMinistryRequest": {
                 "properties": {
                     "clearLeaderUserId": {
@@ -4222,6 +4363,46 @@
                         "type": "string"
                     },
                     "orgId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.UpdateLiturgiPetugasRequest": {
+                "properties": {
+                    "clearOrg": {
+                        "type": "boolean"
+                    },
+                    "clearUser": {
+                        "type": "boolean"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "note": {
+                        "type": "string"
+                    },
+                    "orgId": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "type": "string"
+                    },
+                    "slotLabel": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "enum": [
+                            "assigned",
+                            "confirmed",
+                            "declined"
+                        ],
+                        "type": "string"
+                    },
+                    "urutan": {
+                        "type": "integer"
+                    },
+                    "userId": {
                         "type": "string"
                     }
                 },
@@ -6019,10 +6200,38 @@
                 },
                 "type": "object"
             },
+            "httpx.Envelope-domain_LiturgiLaguResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.LiturgiLaguResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
             "httpx.Envelope-domain_LiturgiMinistryResponse": {
                 "properties": {
                     "data": {
                         "$ref": "#/components/schemas/domain.LiturgiMinistryResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_LiturgiPetugasResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.LiturgiPetugasResponse"
                     },
                     "error": {
                         "$ref": "#/components/schemas/httpx.ErrorPayload"
@@ -9560,6 +9769,763 @@
                     }
                 },
                 "summary": "Update Mass schedule",
+                "tags": [
+                    "Liturgi"
+                ]
+            }
+        },
+        "/liturgi/schedules/{eventId}/lagu": {
+            "post": {
+                "description": "Adds a liturgical song entry (optionally linked to cantusId with auto-filled metadata) to a Mass schedule.",
+                "operationId": "createLiturgiLagu",
+                "parameters": [
+                    {
+                        "description": "Mass schedule event UUID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.CreateLiturgiLaguRequest",
+                                "summary": "body",
+                                "description": "Song entry payload"
+                            }
+                        }
+                    },
+                    "description": "Song entry payload",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_LiturgiLaguResponse"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Add liturgy song",
+                "tags": [
+                    "Liturgi"
+                ]
+            }
+        },
+        "/liturgi/schedules/{eventId}/lagu/{laguId}": {
+            "delete": {
+                "description": "Removes a liturgical song entry from a Mass schedule.",
+                "operationId": "deleteLiturgiLagu",
+                "parameters": [
+                    {
+                        "description": "Mass schedule event UUID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Song entry UUID",
+                        "in": "path",
+                        "name": "laguId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Delete liturgy song",
+                "tags": [
+                    "Liturgi"
+                ]
+            },
+            "patch": {
+                "description": "Updates a liturgical song entry on a Mass schedule.",
+                "operationId": "updateLiturgiLagu",
+                "parameters": [
+                    {
+                        "description": "Mass schedule event UUID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Song entry UUID",
+                        "in": "path",
+                        "name": "laguId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.UpdateLiturgiLaguRequest",
+                                "summary": "body",
+                                "description": "Song entry update payload"
+                            }
+                        }
+                    },
+                    "description": "Song entry update payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_LiturgiLaguResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Update liturgy song",
+                "tags": [
+                    "Liturgi"
+                ]
+            }
+        },
+        "/liturgi/schedules/{eventId}/petugas": {
+            "post": {
+                "description": "Creates a liturgical officer assignment for a Mass schedule (requires liturgi:admin, ref:paroki-admin, or ministry leader/org:admin for the role).",
+                "operationId": "createLiturgiPetugas",
+                "parameters": [
+                    {
+                        "description": "Mass schedule event UUID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.CreateLiturgiPetugasRequest",
+                                "summary": "body",
+                                "description": "Officer assignment payload"
+                            }
+                        }
+                    },
+                    "description": "Officer assignment payload",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_LiturgiPetugasResponse"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Assign liturgy officer",
+                "tags": [
+                    "Liturgi"
+                ]
+            }
+        },
+        "/liturgi/schedules/{eventId}/petugas/{petugasId}": {
+            "delete": {
+                "description": "Removes an officer assignment from a Mass schedule (requires ministry management permission).",
+                "operationId": "deleteLiturgiPetugas",
+                "parameters": [
+                    {
+                        "description": "Mass schedule event UUID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Officer assignment UUID",
+                        "in": "path",
+                        "name": "petugasId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Delete liturgy officer",
+                "tags": [
+                    "Liturgi"
+                ]
+            },
+            "patch": {
+                "description": "Updates an officer assignment on a Mass schedule (requires permission to manage both existing and target roles).",
+                "operationId": "updateLiturgiPetugas",
+                "parameters": [
+                    {
+                        "description": "Mass schedule event UUID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Officer assignment UUID",
+                        "in": "path",
+                        "name": "petugasId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.UpdateLiturgiPetugasRequest",
+                                "summary": "body",
+                                "description": "Officer update payload"
+                            }
+                        }
+                    },
+                    "description": "Officer update payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_LiturgiPetugasResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Update liturgy officer",
+                "tags": [
+                    "Liturgi"
+                ]
+            }
+        },
+        "/liturgi/schedules/{eventId}/petugas/{petugasId}/approve-substitute": {
+            "post": {
+                "description": "Atomically promotes the proposed substitute onto the active officer assignment (requires ministry management permission).",
+                "operationId": "approveLiturgiSubstitute",
+                "parameters": [
+                    {
+                        "description": "Mass schedule event UUID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Officer assignment UUID",
+                        "in": "path",
+                        "name": "petugasId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.ApproveLiturgiSubstituteRequest",
+                                "summary": "body",
+                                "description": "Substitute approval options"
+                            }
+                        }
+                    },
+                    "description": "Substitute approval options"
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_LiturgiPetugasResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Approve proposed substitute",
+                "tags": [
+                    "Liturgi"
+                ]
+            }
+        },
+        "/liturgi/schedules/{eventId}/petugas/{petugasId}/respond": {
+            "patch": {
+                "description": "Records officer confirmation or decline (optionally proposing a substitute) for an assigned officer, assigned org admin, or ministry leader.",
+                "operationId": "respondLiturgiPetugas",
+                "parameters": [
+                    {
+                        "description": "Mass schedule event UUID",
+                        "in": "path",
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Officer assignment UUID",
+                        "in": "path",
+                        "name": "petugasId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.RespondLiturgiPetugasRequest",
+                                "summary": "body",
+                                "description": "Officer response payload"
+                            }
+                        }
+                    },
+                    "description": "Officer response payload",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_LiturgiPetugasResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Respond to liturgy assignment",
                 "tags": [
                     "Liturgi"
                 ]
