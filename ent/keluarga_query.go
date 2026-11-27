@@ -16,6 +16,7 @@ import (
 	"github.com/paroki/domus/ent/keluarga"
 	"github.com/paroki/domus/ent/predicate"
 	"github.com/paroki/domus/ent/umat"
+	"github.com/paroki/domus/ent/umatdokumen"
 )
 
 // KeluargaQuery is the builder for querying Keluarga entities.
@@ -26,6 +27,7 @@ type KeluargaQuery struct {
 	inters      []Interceptor
 	predicates  []predicate.Keluarga
 	withAnggota *UmatQuery
+	withDokumen *UmatDokumenQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -77,6 +79,28 @@ func (_q *KeluargaQuery) QueryAnggota() *UmatQuery {
 			sqlgraph.From(keluarga.Table, keluarga.FieldID, selector),
 			sqlgraph.To(umat.Table, umat.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, keluarga.AnggotaTable, keluarga.AnggotaColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryDokumen chains the current query on the "dokumen" edge.
+func (_q *KeluargaQuery) QueryDokumen() *UmatDokumenQuery {
+	query := (&UmatDokumenClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(keluarga.Table, keluarga.FieldID, selector),
+			sqlgraph.To(umatdokumen.Table, umatdokumen.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, keluarga.DokumenTable, keluarga.DokumenColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -277,6 +301,7 @@ func (_q *KeluargaQuery) Clone() *KeluargaQuery {
 		inters:      append([]Interceptor{}, _q.inters...),
 		predicates:  append([]predicate.Keluarga{}, _q.predicates...),
 		withAnggota: _q.withAnggota.Clone(),
+		withDokumen: _q.withDokumen.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -291,6 +316,17 @@ func (_q *KeluargaQuery) WithAnggota(opts ...func(*UmatQuery)) *KeluargaQuery {
 		opt(query)
 	}
 	_q.withAnggota = query
+	return _q
+}
+
+// WithDokumen tells the query-builder to eager-load the nodes that are connected to
+// the "dokumen" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *KeluargaQuery) WithDokumen(opts ...func(*UmatDokumenQuery)) *KeluargaQuery {
+	query := (&UmatDokumenClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withDokumen = query
 	return _q
 }
 
@@ -372,8 +408,9 @@ func (_q *KeluargaQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Kel
 	var (
 		nodes       = []*Keluarga{}
 		_spec       = _q.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			_q.withAnggota != nil,
+			_q.withDokumen != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -401,6 +438,13 @@ func (_q *KeluargaQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Kel
 			return nil, err
 		}
 	}
+	if query := _q.withDokumen; query != nil {
+		if err := _q.loadDokumen(ctx, query, nodes,
+			func(n *Keluarga) { n.Edges.Dokumen = []*UmatDokumen{} },
+			func(n *Keluarga, e *UmatDokumen) { n.Edges.Dokumen = append(n.Edges.Dokumen, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
 }
 
@@ -419,6 +463,39 @@ func (_q *KeluargaQuery) loadAnggota(ctx context.Context, query *UmatQuery, node
 	}
 	query.Where(predicate.Umat(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(keluarga.AnggotaColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.KeluargaID
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "keluarga_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "keluarga_id" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *KeluargaQuery) loadDokumen(ctx context.Context, query *UmatDokumenQuery, nodes []*Keluarga, init func(*Keluarga), assign func(*Keluarga, *UmatDokumen)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Keluarga)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(umatdokumen.FieldKeluargaID)
+	}
+	query.Where(predicate.UmatDokumen(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(keluarga.DokumenColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

@@ -14,6 +14,7 @@ var (
 	ErrProviderRateLimited    = errx.RateLimited("AGENT_PROVIDER_RATE_LIMITED", "AI provider rate limit exceeded.")
 	ErrProviderOverloaded     = errx.Invalid("AGENT_PROVIDER_OVERLOADED", "AI provider is temporarily overloaded due to high demand.")
 	ErrProviderRequestInvalid = errx.Invalid("AGENT_PROVIDER_REQUEST_INVALID", "AI provider rejected the request.")
+	ErrVerifyExtractionFailed = errx.New(errx.KindValidation, "VERIFY_EXTRACTION_FAILED", "Failed to extract structured identity data from the document image.")
 )
 
 // ValidationError constructs a 422 VALIDATION_ERROR domain error for a single field.

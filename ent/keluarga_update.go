@@ -15,6 +15,7 @@ import (
 	"github.com/paroki/domus/ent/keluarga"
 	"github.com/paroki/domus/ent/predicate"
 	"github.com/paroki/domus/ent/umat"
+	"github.com/paroki/domus/ent/umatdokumen"
 )
 
 // KeluargaUpdate is the builder for updating Keluarga entities.
@@ -107,6 +108,20 @@ func (_u *KeluargaUpdate) SetNillableLingkunganID(v *uuid.UUID) *KeluargaUpdate 
 // ClearLingkunganID clears the value of the "lingkungan_id" field.
 func (_u *KeluargaUpdate) ClearLingkunganID() *KeluargaUpdate {
 	_u.mutation.ClearLingkunganID()
+	return _u
+}
+
+// SetNomorRegistrasi sets the "nomor_registrasi" field.
+func (_u *KeluargaUpdate) SetNomorRegistrasi(v string) *KeluargaUpdate {
+	_u.mutation.SetNomorRegistrasi(v)
+	return _u
+}
+
+// SetNillableNomorRegistrasi sets the "nomor_registrasi" field if the given value is not nil.
+func (_u *KeluargaUpdate) SetNillableNomorRegistrasi(v *string) *KeluargaUpdate {
+	if v != nil {
+		_u.SetNomorRegistrasi(*v)
+	}
 	return _u
 }
 
@@ -353,6 +368,21 @@ func (_u *KeluargaUpdate) AddAnggota(v ...*Umat) *KeluargaUpdate {
 	return _u.AddAnggotumIDs(ids...)
 }
 
+// AddDokumanIDs adds the "dokumen" edge to the UmatDokumen entity by IDs.
+func (_u *KeluargaUpdate) AddDokumanIDs(ids ...uuid.UUID) *KeluargaUpdate {
+	_u.mutation.AddDokumanIDs(ids...)
+	return _u
+}
+
+// AddDokumen adds the "dokumen" edges to the UmatDokumen entity.
+func (_u *KeluargaUpdate) AddDokumen(v ...*UmatDokumen) *KeluargaUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddDokumanIDs(ids...)
+}
+
 // Mutation returns the KeluargaMutation object of the builder.
 func (_u *KeluargaUpdate) Mutation() *KeluargaMutation {
 	return _u.mutation
@@ -377,6 +407,27 @@ func (_u *KeluargaUpdate) RemoveAnggota(v ...*Umat) *KeluargaUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveAnggotumIDs(ids...)
+}
+
+// ClearDokumen clears all "dokumen" edges to the UmatDokumen entity.
+func (_u *KeluargaUpdate) ClearDokumen() *KeluargaUpdate {
+	_u.mutation.ClearDokumen()
+	return _u
+}
+
+// RemoveDokumanIDs removes the "dokumen" edge to UmatDokumen entities by IDs.
+func (_u *KeluargaUpdate) RemoveDokumanIDs(ids ...uuid.UUID) *KeluargaUpdate {
+	_u.mutation.RemoveDokumanIDs(ids...)
+	return _u
+}
+
+// RemoveDokumen removes "dokumen" edges to UmatDokumen entities.
+func (_u *KeluargaUpdate) RemoveDokumen(v ...*UmatDokumen) *KeluargaUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveDokumanIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -417,6 +468,11 @@ func (_u *KeluargaUpdate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_u *KeluargaUpdate) check() error {
+	if v, ok := _u.mutation.NomorRegistrasi(); ok {
+		if err := keluarga.NomorRegistrasiValidator(v); err != nil {
+			return &ValidationError{Name: "nomor_registrasi", err: fmt.Errorf(`ent: validator failed for field "Keluarga.nomor_registrasi": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.NamaKeluarga(); ok {
 		if err := keluarga.NamaKeluargaValidator(v); err != nil {
 			return &ValidationError{Name: "nama_keluarga", err: fmt.Errorf(`ent: validator failed for field "Keluarga.nama_keluarga": %w`, err)}
@@ -460,6 +516,9 @@ func (_u *KeluargaUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.LingkunganIDCleared() {
 		_spec.ClearField(keluarga.FieldLingkunganID, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.NomorRegistrasi(); ok {
+		_spec.SetField(keluarga.FieldNomorRegistrasi, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.NomorKkEnc(); ok {
 		_spec.SetField(keluarga.FieldNomorKkEnc, field.TypeString, value)
@@ -572,6 +631,51 @@ func (_u *KeluargaUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.DokumenCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   keluarga.DokumenTable,
+			Columns: []string{keluarga.DokumenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(umatdokumen.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedDokumenIDs(); len(nodes) > 0 && !_u.mutation.DokumenCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   keluarga.DokumenTable,
+			Columns: []string{keluarga.DokumenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(umatdokumen.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.DokumenIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   keluarga.DokumenTable,
+			Columns: []string{keluarga.DokumenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(umatdokumen.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{keluarga.Label}
@@ -669,6 +773,20 @@ func (_u *KeluargaUpdateOne) SetNillableLingkunganID(v *uuid.UUID) *KeluargaUpda
 // ClearLingkunganID clears the value of the "lingkungan_id" field.
 func (_u *KeluargaUpdateOne) ClearLingkunganID() *KeluargaUpdateOne {
 	_u.mutation.ClearLingkunganID()
+	return _u
+}
+
+// SetNomorRegistrasi sets the "nomor_registrasi" field.
+func (_u *KeluargaUpdateOne) SetNomorRegistrasi(v string) *KeluargaUpdateOne {
+	_u.mutation.SetNomorRegistrasi(v)
+	return _u
+}
+
+// SetNillableNomorRegistrasi sets the "nomor_registrasi" field if the given value is not nil.
+func (_u *KeluargaUpdateOne) SetNillableNomorRegistrasi(v *string) *KeluargaUpdateOne {
+	if v != nil {
+		_u.SetNomorRegistrasi(*v)
+	}
 	return _u
 }
 
@@ -915,6 +1033,21 @@ func (_u *KeluargaUpdateOne) AddAnggota(v ...*Umat) *KeluargaUpdateOne {
 	return _u.AddAnggotumIDs(ids...)
 }
 
+// AddDokumanIDs adds the "dokumen" edge to the UmatDokumen entity by IDs.
+func (_u *KeluargaUpdateOne) AddDokumanIDs(ids ...uuid.UUID) *KeluargaUpdateOne {
+	_u.mutation.AddDokumanIDs(ids...)
+	return _u
+}
+
+// AddDokumen adds the "dokumen" edges to the UmatDokumen entity.
+func (_u *KeluargaUpdateOne) AddDokumen(v ...*UmatDokumen) *KeluargaUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddDokumanIDs(ids...)
+}
+
 // Mutation returns the KeluargaMutation object of the builder.
 func (_u *KeluargaUpdateOne) Mutation() *KeluargaMutation {
 	return _u.mutation
@@ -939,6 +1072,27 @@ func (_u *KeluargaUpdateOne) RemoveAnggota(v ...*Umat) *KeluargaUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveAnggotumIDs(ids...)
+}
+
+// ClearDokumen clears all "dokumen" edges to the UmatDokumen entity.
+func (_u *KeluargaUpdateOne) ClearDokumen() *KeluargaUpdateOne {
+	_u.mutation.ClearDokumen()
+	return _u
+}
+
+// RemoveDokumanIDs removes the "dokumen" edge to UmatDokumen entities by IDs.
+func (_u *KeluargaUpdateOne) RemoveDokumanIDs(ids ...uuid.UUID) *KeluargaUpdateOne {
+	_u.mutation.RemoveDokumanIDs(ids...)
+	return _u
+}
+
+// RemoveDokumen removes "dokumen" edges to UmatDokumen entities.
+func (_u *KeluargaUpdateOne) RemoveDokumen(v ...*UmatDokumen) *KeluargaUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveDokumanIDs(ids...)
 }
 
 // Where appends a list predicates to the KeluargaUpdate builder.
@@ -992,6 +1146,11 @@ func (_u *KeluargaUpdateOne) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_u *KeluargaUpdateOne) check() error {
+	if v, ok := _u.mutation.NomorRegistrasi(); ok {
+		if err := keluarga.NomorRegistrasiValidator(v); err != nil {
+			return &ValidationError{Name: "nomor_registrasi", err: fmt.Errorf(`ent: validator failed for field "Keluarga.nomor_registrasi": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.NamaKeluarga(); ok {
 		if err := keluarga.NamaKeluargaValidator(v); err != nil {
 			return &ValidationError{Name: "nama_keluarga", err: fmt.Errorf(`ent: validator failed for field "Keluarga.nama_keluarga": %w`, err)}
@@ -1052,6 +1211,9 @@ func (_u *KeluargaUpdateOne) sqlSave(ctx context.Context) (_node *Keluarga, err 
 	}
 	if _u.mutation.LingkunganIDCleared() {
 		_spec.ClearField(keluarga.FieldLingkunganID, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.NomorRegistrasi(); ok {
+		_spec.SetField(keluarga.FieldNomorRegistrasi, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.NomorKkEnc(); ok {
 		_spec.SetField(keluarga.FieldNomorKkEnc, field.TypeString, value)
@@ -1157,6 +1319,51 @@ func (_u *KeluargaUpdateOne) sqlSave(ctx context.Context) (_node *Keluarga, err 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(umat.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.DokumenCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   keluarga.DokumenTable,
+			Columns: []string{keluarga.DokumenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(umatdokumen.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedDokumenIDs(); len(nodes) > 0 && !_u.mutation.DokumenCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   keluarga.DokumenTable,
+			Columns: []string{keluarga.DokumenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(umatdokumen.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.DokumenIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   keluarga.DokumenTable,
+			Columns: []string{keluarga.DokumenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(umatdokumen.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

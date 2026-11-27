@@ -34,6 +34,7 @@ type MCPUmat struct {
 	WilayahID        *string   `json:"wilayahId,omitempty"`
 	LingkunganID     *string   `json:"lingkunganId,omitempty"`
 	UserID           *string   `json:"userId,omitempty"`
+	NomorInduk       string    `json:"nomorInduk"`
 	Nama             string    `json:"nama"`
 	NamaBaptis       *string   `json:"namaBaptis,omitempty"`
 	NIKMasked        *string   `json:"nikMasked,omitempty"`
@@ -79,9 +80,10 @@ type UmatGetInput struct {
 
 // MCPUmatKeluargaSummary is the PII-masked household summary inside MCPUmatDetail.
 type MCPUmatKeluargaSummary struct {
-	ID            string  `json:"id"`
-	NamaKeluarga  string  `json:"namaKeluarga"`
-	NomorKKMasked *string `json:"nomorKkMasked,omitempty"`
+	ID              string  `json:"id"`
+	NomorRegistrasi string  `json:"nomorRegistrasi"`
+	NamaKeluarga    string  `json:"namaKeluarga"`
+	NomorKKMasked   *string `json:"nomorKkMasked,omitempty"`
 }
 
 // MCPUmatSakramen is the MCP representation of a sacramental record.
@@ -110,6 +112,7 @@ type MCPUmatDetail struct {
 	WilayahID        *string                 `json:"wilayahId,omitempty"`
 	LingkunganID     *string                 `json:"lingkunganId,omitempty"`
 	UserID           *string                 `json:"userId,omitempty"`
+	NomorInduk       string                  `json:"nomorInduk"`
 	Nama             string                  `json:"nama"`
 	NamaBaptis       *string                 `json:"namaBaptis,omitempty"`
 	NIKMasked        *string                 `json:"nikMasked,omitempty"`
@@ -156,23 +159,24 @@ type UmatListKeluargaInput struct {
 
 // MCPKeluarga is the PII-masked MCP representation of a Keluarga.
 type MCPKeluarga struct {
-	ID            string    `json:"id"`
-	ParokiID      string    `json:"parokiId"`
-	WilayahID     *string   `json:"wilayahId,omitempty"`
-	LingkunganID  *string   `json:"lingkunganId,omitempty"`
-	NomorKKMasked *string   `json:"nomorKkMasked,omitempty"`
-	NamaKeluarga  string    `json:"namaKeluarga"`
-	Alamat        *string   `json:"alamat,omitempty"`
-	KotaID        *string   `json:"kotaId,omitempty"`
-	KecamatanID   *string   `json:"kecamatanId,omitempty"`
-	KelurahanID   *string   `json:"kelurahanId,omitempty"`
-	KodePos       *string   `json:"kodePos,omitempty"`
-	StatusRumah   *string   `json:"statusRumah,omitempty"`
-	StatusEkonomi *string   `json:"statusEkonomi,omitempty"`
-	Aktif         bool      `json:"aktif"`
-	Catatan       *string   `json:"catatan,omitempty"`
-	CreatedAt     time.Time `json:"createdAt"`
-	UpdatedAt     time.Time `json:"updatedAt"`
+	ID              string    `json:"id"`
+	ParokiID        string    `json:"parokiId"`
+	WilayahID       *string   `json:"wilayahId,omitempty"`
+	LingkunganID    *string   `json:"lingkunganId,omitempty"`
+	NomorRegistrasi string    `json:"nomorRegistrasi"`
+	NomorKKMasked   *string   `json:"nomorKkMasked,omitempty"`
+	NamaKeluarga    string    `json:"namaKeluarga"`
+	Alamat          *string   `json:"alamat,omitempty"`
+	KotaID          *string   `json:"kotaId,omitempty"`
+	KecamatanID     *string   `json:"kecamatanId,omitempty"`
+	KelurahanID     *string   `json:"kelurahanId,omitempty"`
+	KodePos         *string   `json:"kodePos,omitempty"`
+	StatusRumah     *string   `json:"statusRumah,omitempty"`
+	StatusEkonomi   *string   `json:"statusEkonomi,omitempty"`
+	Aktif           bool      `json:"aktif"`
+	Catatan         *string   `json:"catatan,omitempty"`
+	CreatedAt       time.Time `json:"createdAt"`
+	UpdatedAt       time.Time `json:"updatedAt"`
 }
 
 // UmatListKeluargaOutput is the output schema for umat_list_keluarga.
@@ -188,6 +192,7 @@ type UmatGetKeluargaInput struct {
 // MCPKeluargaAnggotaSummary is the PII-masked member summary inside MCPKeluargaDetail.
 type MCPKeluargaAnggotaSummary struct {
 	ID               string  `json:"id"`
+	NomorInduk       string  `json:"nomorInduk"`
 	Nama             string  `json:"nama"`
 	NamaBaptis       *string `json:"namaBaptis,omitempty"`
 	NIKMasked        *string `json:"nikMasked,omitempty"`
@@ -198,24 +203,25 @@ type MCPKeluargaAnggotaSummary struct {
 
 // MCPKeluargaDetail is the PII-masked MCP detail representation of a Keluarga (never exposes raw NomorKK or NIK).
 type MCPKeluargaDetail struct {
-	ID            string                      `json:"id"`
-	ParokiID      string                      `json:"parokiId"`
-	WilayahID     *string                     `json:"wilayahId,omitempty"`
-	LingkunganID  *string                     `json:"lingkunganId,omitempty"`
-	NomorKKMasked *string                     `json:"nomorKkMasked,omitempty"`
-	NamaKeluarga  string                      `json:"namaKeluarga"`
-	Alamat        *string                     `json:"alamat,omitempty"`
-	KotaID        *string                     `json:"kotaId,omitempty"`
-	KecamatanID   *string                     `json:"kecamatanId,omitempty"`
-	KelurahanID   *string                     `json:"kelurahanId,omitempty"`
-	KodePos       *string                     `json:"kodePos,omitempty"`
-	StatusRumah   *string                     `json:"statusRumah,omitempty"`
-	StatusEkonomi *string                     `json:"statusEkonomi,omitempty"`
-	Aktif         bool                        `json:"aktif"`
-	Catatan       *string                     `json:"catatan,omitempty"`
-	Anggota       []MCPKeluargaAnggotaSummary `json:"anggota"`
-	CreatedAt     time.Time                   `json:"createdAt"`
-	UpdatedAt     time.Time                   `json:"updatedAt"`
+	ID              string                      `json:"id"`
+	ParokiID        string                      `json:"parokiId"`
+	WilayahID       *string                     `json:"wilayahId,omitempty"`
+	LingkunganID    *string                     `json:"lingkunganId,omitempty"`
+	NomorRegistrasi string                      `json:"nomorRegistrasi"`
+	NomorKKMasked   *string                     `json:"nomorKkMasked,omitempty"`
+	NamaKeluarga    string                      `json:"namaKeluarga"`
+	Alamat          *string                     `json:"alamat,omitempty"`
+	KotaID          *string                     `json:"kotaId,omitempty"`
+	KecamatanID     *string                     `json:"kecamatanId,omitempty"`
+	KelurahanID     *string                     `json:"kelurahanId,omitempty"`
+	KodePos         *string                     `json:"kodePos,omitempty"`
+	StatusRumah     *string                     `json:"statusRumah,omitempty"`
+	StatusEkonomi   *string                     `json:"statusEkonomi,omitempty"`
+	Aktif           bool                        `json:"aktif"`
+	Catatan         *string                     `json:"catatan,omitempty"`
+	Anggota         []MCPKeluargaAnggotaSummary `json:"anggota"`
+	CreatedAt       time.Time                   `json:"createdAt"`
+	UpdatedAt       time.Time                   `json:"updatedAt"`
 }
 
 // RegisterMCP registers read-only PII-masked umat_* tools on the MCP server.
@@ -342,6 +348,7 @@ func (f *Feature) mcpUmatSearch(ctx context.Context, _ *mcp.CallToolRequest, in 
 			WilayahID:        uuidPtrStr(it.WilayahID),
 			LingkunganID:     uuidPtrStr(it.LingkunganID),
 			UserID:           uuidPtrStr(it.UserID),
+			NomorInduk:       it.NomorInduk,
 			Nama:             it.Nama,
 			NamaBaptis:       it.NamaBaptis,
 			NIKMasked:        it.NIKMasked,
@@ -394,9 +401,10 @@ func (f *Feature) mcpUmatGet(ctx context.Context, _ *mcp.CallToolRequest, in Uma
 	var kel *MCPUmatKeluargaSummary
 	if d.Keluarga != nil {
 		kel = &MCPUmatKeluargaSummary{
-			ID:            d.Keluarga.ID.String(),
-			NamaKeluarga:  d.Keluarga.NamaKeluarga,
-			NomorKKMasked: d.Keluarga.NomorKKMasked,
+			ID:              d.Keluarga.ID.String(),
+			NomorRegistrasi: d.Keluarga.NomorRegistrasi,
+			NamaKeluarga:    d.Keluarga.NamaKeluarga,
+			NomorKKMasked:   d.Keluarga.NomorKKMasked,
 		}
 	}
 	sak := make([]MCPUmatSakramen, 0, len(d.Sakramen))
@@ -425,6 +433,7 @@ func (f *Feature) mcpUmatGet(ctx context.Context, _ *mcp.CallToolRequest, in Uma
 		WilayahID:        uuidPtrStr(d.WilayahID),
 		LingkunganID:     uuidPtrStr(d.LingkunganID),
 		UserID:           uuidPtrStr(d.UserID),
+		NomorInduk:       d.NomorInduk,
 		Nama:             d.Nama,
 		NamaBaptis:       d.NamaBaptis,
 		NIKMasked:        d.NIKMasked,
@@ -488,23 +497,24 @@ func (f *Feature) mcpUmatListKeluarga(ctx context.Context, _ *mcp.CallToolReques
 	out := make([]MCPKeluarga, 0, len(items))
 	for _, it := range items {
 		out = append(out, MCPKeluarga{
-			ID:            it.ID.String(),
-			ParokiID:      it.ParokiID.String(),
-			WilayahID:     uuidPtrStr(it.WilayahID),
-			LingkunganID:  uuidPtrStr(it.LingkunganID),
-			NomorKKMasked: it.NomorKKMasked,
-			NamaKeluarga:  it.NamaKeluarga,
-			Alamat:        it.Alamat,
-			KotaID:        uuidPtrStr(it.KotaID),
-			KecamatanID:   uuidPtrStr(it.KecamatanID),
-			KelurahanID:   uuidPtrStr(it.KelurahanID),
-			KodePos:       it.KodePos,
-			StatusRumah:   it.StatusRumah,
-			StatusEkonomi: it.StatusEkonomi,
-			Aktif:         it.Aktif,
-			Catatan:       it.Catatan,
-			CreatedAt:     it.CreatedAt,
-			UpdatedAt:     it.UpdatedAt,
+			ID:              it.ID.String(),
+			ParokiID:        it.ParokiID.String(),
+			WilayahID:       uuidPtrStr(it.WilayahID),
+			LingkunganID:    uuidPtrStr(it.LingkunganID),
+			NomorRegistrasi: it.NomorRegistrasi,
+			NomorKKMasked:   it.NomorKKMasked,
+			NamaKeluarga:    it.NamaKeluarga,
+			Alamat:          it.Alamat,
+			KotaID:          uuidPtrStr(it.KotaID),
+			KecamatanID:     uuidPtrStr(it.KecamatanID),
+			KelurahanID:     uuidPtrStr(it.KelurahanID),
+			KodePos:         it.KodePos,
+			StatusRumah:     it.StatusRumah,
+			StatusEkonomi:   it.StatusEkonomi,
+			Aktif:           it.Aktif,
+			Catatan:         it.Catatan,
+			CreatedAt:       it.CreatedAt,
+			UpdatedAt:       it.UpdatedAt,
 		})
 	}
 	return nil, UmatListKeluargaOutput{Keluarga: out}, nil
@@ -527,6 +537,7 @@ func (f *Feature) mcpUmatGetKeluarga(ctx context.Context, _ *mcp.CallToolRequest
 	for _, a := range d.Anggota {
 		anggota = append(anggota, MCPKeluargaAnggotaSummary{
 			ID:               a.ID.String(),
+			NomorInduk:       a.NomorInduk,
 			Nama:             a.Nama,
 			NamaBaptis:       a.NamaBaptis,
 			NIKMasked:        a.NIKMasked,
@@ -536,24 +547,25 @@ func (f *Feature) mcpUmatGetKeluarga(ctx context.Context, _ *mcp.CallToolRequest
 		})
 	}
 	return nil, MCPKeluargaDetail{
-		ID:            d.ID.String(),
-		ParokiID:      d.ParokiID.String(),
-		WilayahID:     uuidPtrStr(d.WilayahID),
-		LingkunganID:  uuidPtrStr(d.LingkunganID),
-		NomorKKMasked: d.NomorKKMasked,
-		NamaKeluarga:  d.NamaKeluarga,
-		Alamat:        d.Alamat,
-		KotaID:        uuidPtrStr(d.KotaID),
-		KecamatanID:   uuidPtrStr(d.KecamatanID),
-		KelurahanID:   uuidPtrStr(d.KelurahanID),
-		KodePos:       d.KodePos,
-		StatusRumah:   d.StatusRumah,
-		StatusEkonomi: d.StatusEkonomi,
-		Aktif:         d.Aktif,
-		Catatan:       d.Catatan,
-		Anggota:       anggota,
-		CreatedAt:     d.CreatedAt,
-		UpdatedAt:     d.UpdatedAt,
+		ID:              d.ID.String(),
+		ParokiID:        d.ParokiID.String(),
+		WilayahID:       uuidPtrStr(d.WilayahID),
+		LingkunganID:    uuidPtrStr(d.LingkunganID),
+		NomorRegistrasi: d.NomorRegistrasi,
+		NomorKKMasked:   d.NomorKKMasked,
+		NamaKeluarga:    d.NamaKeluarga,
+		Alamat:          d.Alamat,
+		KotaID:          uuidPtrStr(d.KotaID),
+		KecamatanID:     uuidPtrStr(d.KecamatanID),
+		KelurahanID:     uuidPtrStr(d.KelurahanID),
+		KodePos:         d.KodePos,
+		StatusRumah:     d.StatusRumah,
+		StatusEkonomi:   d.StatusEkonomi,
+		Aktif:           d.Aktif,
+		Catatan:         d.Catatan,
+		Anggota:         anggota,
+		CreatedAt:       d.CreatedAt,
+		UpdatedAt:       d.UpdatedAt,
 	}, nil
 }
 

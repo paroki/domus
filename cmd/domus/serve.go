@@ -110,6 +110,8 @@ func newServeCmd() *cobra.Command {
 				agent.WithCipher(cipher),
 				agent.WithSettings(settingStore),
 			)
+			userFeature.SetIdentityExtractor(agentFeature)
+			userFeature.SetCensusVerifier(umatFeature)
 			if err := authz.RegisterFeatures(ctx, enforcer, userFeature, refFeature, orgFeature, eventFeature, liturgiFeature, umatFeature, cantusFeature, agentFeature); err != nil {
 				return err
 			}

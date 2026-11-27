@@ -99,11 +99,13 @@ func (s *UmatSuite) TestPartialUniqueIndexes_IgnoreSoftDeletedAndNulls() {
 	// Multiple rows with NULL hashes/user_id are allowed in the same paroki.
 	kNull1, err := s.client.Keluarga.Create().
 		SetParokiID(parokiID).
+		SetNomorRegistrasi("KK-2026-000001").
 		SetNamaKeluarga("Keluarga Tanpa KK 1").
 		Save(ctx)
 	s.Require().NoError(err)
 	_, err = s.client.Keluarga.Create().
 		SetParokiID(parokiID).
+		SetNomorRegistrasi("KK-2026-000002").
 		SetNamaKeluarga("Keluarga Tanpa KK 2").
 		Save(ctx)
 	s.Require().NoError(err)
@@ -111,6 +113,7 @@ func (s *UmatSuite) TestPartialUniqueIndexes_IgnoreSoftDeletedAndNulls() {
 	// Active duplicate nomor_kk_hash in same paroki fails; soft-deleted allows reuse.
 	k1, err := s.client.Keluarga.Create().
 		SetParokiID(parokiID).
+		SetNomorRegistrasi("KK-2026-000003").
 		SetNamaKeluarga("Keluarga A").
 		SetNomorKkHash(kkHash).
 		Save(ctx)
@@ -118,6 +121,7 @@ func (s *UmatSuite) TestPartialUniqueIndexes_IgnoreSoftDeletedAndNulls() {
 
 	_, err = s.client.Keluarga.Create().
 		SetParokiID(parokiID).
+		SetNomorRegistrasi("KK-2026-000004").
 		SetNamaKeluarga("Keluarga A Dup").
 		SetNomorKkHash(kkHash).
 		Save(ctx)
@@ -128,6 +132,7 @@ func (s *UmatSuite) TestPartialUniqueIndexes_IgnoreSoftDeletedAndNulls() {
 
 	k2, err := s.client.Keluarga.Create().
 		SetParokiID(parokiID).
+		SetNomorRegistrasi("KK-2026-000005").
 		SetNamaKeluarga("Keluarga A Reused").
 		SetNomorKkHash(kkHash).
 		Save(ctx)
@@ -137,6 +142,7 @@ func (s *UmatSuite) TestPartialUniqueIndexes_IgnoreSoftDeletedAndNulls() {
 	// Multiple Umat with NULL nik_hash & user_id are allowed.
 	_, err = s.client.Umat.Create().
 		SetParokiID(parokiID).
+		SetNomorInduk("NIU-2026-000001").
 		SetKeluargaID(kNull1.ID).
 		SetNama("Umat Null 1").
 		SetJenisKelamin(entumat.JenisKelaminPria).
@@ -146,6 +152,7 @@ func (s *UmatSuite) TestPartialUniqueIndexes_IgnoreSoftDeletedAndNulls() {
 	// Active duplicate nik_hash and user_id fail; soft-deleting allows reuse.
 	u1, err := s.client.Umat.Create().
 		SetParokiID(parokiID).
+		SetNomorInduk("NIU-2026-000002").
 		SetKeluargaID(k2.ID).
 		SetNama("Budi").
 		SetJenisKelamin(entumat.JenisKelaminPria).
@@ -156,6 +163,7 @@ func (s *UmatSuite) TestPartialUniqueIndexes_IgnoreSoftDeletedAndNulls() {
 
 	_, err = s.client.Umat.Create().
 		SetParokiID(parokiID).
+		SetNomorInduk("NIU-2026-000003").
 		SetNama("Budi Dup NIK").
 		SetJenisKelamin(entumat.JenisKelaminPria).
 		SetNikHash(nikHash).
@@ -165,6 +173,7 @@ func (s *UmatSuite) TestPartialUniqueIndexes_IgnoreSoftDeletedAndNulls() {
 
 	_, err = s.client.Umat.Create().
 		SetParokiID(parokiID).
+		SetNomorInduk("NIU-2026-000004").
 		SetNama("Budi Dup User").
 		SetJenisKelamin(entumat.JenisKelaminPria).
 		SetUserID(userID).
@@ -176,6 +185,7 @@ func (s *UmatSuite) TestPartialUniqueIndexes_IgnoreSoftDeletedAndNulls() {
 
 	u2, err := s.client.Umat.Create().
 		SetParokiID(parokiID).
+		SetNomorInduk("NIU-2026-000005").
 		SetKeluargaID(k2.ID).
 		SetNama("Budi Reused").
 		SetJenisKelamin(entumat.JenisKelaminPria).

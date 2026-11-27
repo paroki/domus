@@ -30,6 +30,8 @@ type Keluarga struct {
 	WilayahID *uuid.UUID `json:"wilayah_id,omitempty"`
 	// LingkunganID holds the value of the "lingkungan_id" field.
 	LingkunganID *uuid.UUID `json:"lingkungan_id,omitempty"`
+	// NomorRegistrasi holds the value of the "nomor_registrasi" field.
+	NomorRegistrasi string `json:"nomor_registrasi,omitempty"`
 	// NomorKkEnc holds the value of the "nomor_kk_enc" field.
 	NomorKkEnc *string `json:"nomor_kk_enc,omitempty"`
 	// NomorKkHash holds the value of the "nomor_kk_hash" field.
@@ -64,9 +66,11 @@ type Keluarga struct {
 type KeluargaEdges struct {
 	// Anggota holds the value of the anggota edge.
 	Anggota []*Umat `json:"anggota,omitempty"`
+	// Dokumen holds the value of the dokumen edge.
+	Dokumen []*UmatDokumen `json:"dokumen,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // AnggotaOrErr returns the Anggota value or an error if the edge
@@ -78,6 +82,15 @@ func (e KeluargaEdges) AnggotaOrErr() ([]*Umat, error) {
 	return nil, &NotLoadedError{edge: "anggota"}
 }
 
+// DokumenOrErr returns the Dokumen value or an error if the edge
+// was not loaded in eager-loading.
+func (e KeluargaEdges) DokumenOrErr() ([]*UmatDokumen, error) {
+	if e.loadedTypes[1] {
+		return e.Dokumen, nil
+	}
+	return nil, &NotLoadedError{edge: "dokumen"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Keluarga) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -87,7 +100,7 @@ func (*Keluarga) scanValues(columns []string) ([]any, error) {
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case keluarga.FieldAktif:
 			values[i] = new(sql.NullBool)
-		case keluarga.FieldNomorKkEnc, keluarga.FieldNomorKkHash, keluarga.FieldNamaKeluarga, keluarga.FieldAlamat, keluarga.FieldKodePos, keluarga.FieldStatusRumah, keluarga.FieldStatusEkonomi, keluarga.FieldCatatan:
+		case keluarga.FieldNomorRegistrasi, keluarga.FieldNomorKkEnc, keluarga.FieldNomorKkHash, keluarga.FieldNamaKeluarga, keluarga.FieldAlamat, keluarga.FieldKodePos, keluarga.FieldStatusRumah, keluarga.FieldStatusEkonomi, keluarga.FieldCatatan:
 			values[i] = new(sql.NullString)
 		case keluarga.FieldCreatedAt, keluarga.FieldUpdatedAt, keluarga.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
@@ -152,6 +165,12 @@ func (_m *Keluarga) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.LingkunganID = new(uuid.UUID)
 				*_m.LingkunganID = *value.S.(*uuid.UUID)
+			}
+		case keluarga.FieldNomorRegistrasi:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field nomor_registrasi", values[i])
+			} else if value.Valid {
+				_m.NomorRegistrasi = value.String
 			}
 		case keluarga.FieldNomorKkEnc:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -253,6 +272,11 @@ func (_m *Keluarga) QueryAnggota() *UmatQuery {
 	return NewKeluargaClient(_m.config).QueryAnggota(_m)
 }
 
+// QueryDokumen queries the "dokumen" edge of the Keluarga entity.
+func (_m *Keluarga) QueryDokumen() *UmatDokumenQuery {
+	return NewKeluargaClient(_m.config).QueryDokumen(_m)
+}
+
 // Update returns a builder for updating this Keluarga.
 // Note that you need to call Keluarga.Unwrap() before calling this method if this Keluarga
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -299,6 +323,9 @@ func (_m *Keluarga) String() string {
 		builder.WriteString("lingkungan_id=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
+	builder.WriteString(", ")
+	builder.WriteString("nomor_registrasi=")
+	builder.WriteString(_m.NomorRegistrasi)
 	builder.WriteString(", ")
 	if v := _m.NomorKkEnc; v != nil {
 		builder.WriteString("nomor_kk_enc=")

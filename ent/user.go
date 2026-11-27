@@ -48,6 +48,10 @@ type User struct {
 	Status user.Status `json:"status,omitempty"`
 	// Onboarded holds the value of the "onboarded" field.
 	Onboarded bool `json:"onboarded,omitempty"`
+	// Verified holds the value of the "verified" field.
+	Verified bool `json:"verified,omitempty"`
+	// VerifiedAt holds the value of the "verified_at" field.
+	VerifiedAt *time.Time `json:"verified_at,omitempty"`
 	// CantusAdmin holds the value of the "cantus_admin" field.
 	CantusAdmin bool `json:"cantus_admin,omitempty"`
 	// DefaultParokiID holds the value of the "default_paroki_id" field.
@@ -118,11 +122,11 @@ func (*User) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case user.FieldDefaultParokiID:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
-		case user.FieldNotifyPush, user.FieldNotifyWhatsapp, user.FieldNotifyTelegram, user.FieldOnboarded, user.FieldCantusAdmin:
+		case user.FieldNotifyPush, user.FieldNotifyWhatsapp, user.FieldNotifyTelegram, user.FieldOnboarded, user.FieldVerified, user.FieldCantusAdmin:
 			values[i] = new(sql.NullBool)
 		case user.FieldEmail, user.FieldName, user.FieldPhone, user.FieldGender, user.FieldBirthDate, user.FieldAvatarURL, user.FieldTimezone, user.FieldStatus:
 			values[i] = new(sql.NullString)
-		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldDeletedAt, user.FieldLastLoginAt:
+		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldDeletedAt, user.FieldVerifiedAt, user.FieldLastLoginAt:
 			values[i] = new(sql.NullTime)
 		case user.FieldID:
 			values[i] = new(uuid.UUID)
@@ -241,6 +245,19 @@ func (_m *User) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field onboarded", values[i])
 			} else if value.Valid {
 				_m.Onboarded = value.Bool
+			}
+		case user.FieldVerified:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field verified", values[i])
+			} else if value.Valid {
+				_m.Verified = value.Bool
+			}
+		case user.FieldVerifiedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field verified_at", values[i])
+			} else if value.Valid {
+				_m.VerifiedAt = new(time.Time)
+				*_m.VerifiedAt = value.Time
 			}
 		case user.FieldCantusAdmin:
 			if value, ok := values[i].(*sql.NullBool); !ok {
@@ -372,6 +389,14 @@ func (_m *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("onboarded=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Onboarded))
+	builder.WriteString(", ")
+	builder.WriteString("verified=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Verified))
+	builder.WriteString(", ")
+	if v := _m.VerifiedAt; v != nil {
+		builder.WriteString("verified_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
 	builder.WriteString(", ")
 	builder.WriteString("cantus_admin=")
 	builder.WriteString(fmt.Sprintf("%v", _m.CantusAdmin))

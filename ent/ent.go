@@ -40,6 +40,7 @@ import (
 	"github.com/paroki/domus/ent/parokimember"
 	"github.com/paroki/domus/ent/setting"
 	"github.com/paroki/domus/ent/umat"
+	"github.com/paroki/domus/ent/umatdokumen"
 	"github.com/paroki/domus/ent/umatreferensi"
 	"github.com/paroki/domus/ent/umatsakramen"
 	"github.com/paroki/domus/ent/user"
@@ -138,6 +139,7 @@ func checkColumn(t, c string) error {
 			parokimember.Table:         parokimember.ValidColumn,
 			setting.Table:              setting.ValidColumn,
 			umat.Table:                 umat.ValidColumn,
+			umatdokumen.Table:          umatdokumen.ValidColumn,
 			umatreferensi.Table:        umatreferensi.ValidColumn,
 			umatsakramen.Table:         umatsakramen.ValidColumn,
 			user.Table:                 user.ValidColumn,

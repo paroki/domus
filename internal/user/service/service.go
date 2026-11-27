@@ -103,6 +103,10 @@ type Service struct {
 	telegramClient        *telegram.Client
 	oauthProviders        map[string]domain.OAuthProvider
 	inviteJoiner          InviteJoiner
+	identityExtractor     domain.IdentityExtractor
+	censusVerifier        domain.CensusVerifier
+	verifyRateMu          sync.Mutex
+	verifyExtractHits     map[uuid.UUID][]time.Time
 }
 
 // SetCompositeNotification wires the CompositeNotification registry into Service.
@@ -120,6 +124,16 @@ func (s *Service) SetVAPIDPublicKey(pub string) {
 // SetInviteJoiner wires the organization invite joiner into the auth service.
 func (s *Service) SetInviteJoiner(j InviteJoiner) {
 	s.inviteJoiner = j
+}
+
+// SetIdentityExtractor wires the AI vision identity document extractor into the user service.
+func (s *Service) SetIdentityExtractor(e domain.IdentityExtractor) {
+	s.identityExtractor = e
+}
+
+// SetCensusVerifier wires the parishioner census verifier into the user service.
+func (s *Service) SetCensusVerifier(v domain.CensusVerifier) {
+	s.censusVerifier = v
 }
 
 // SetTelegramClient wires the optional Telegram Bot API client into the service.
@@ -365,6 +379,8 @@ func toUserResponse(u *ent.User) domain.UserResponse {
 		NotifyTelegram:  u.NotifyTelegram,
 		Status:          string(u.Status),
 		Onboarded:       u.Onboarded,
+		Verified:        u.Verified,
+		VerifiedAt:      u.VerifiedAt,
 		IsCantusAdmin:   u.CantusAdmin,
 		DefaultParokiID: u.DefaultParokiID,
 		LastLoginAt:     u.LastLoginAt,

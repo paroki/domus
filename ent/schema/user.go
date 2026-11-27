@@ -37,6 +37,8 @@ func (User) Fields() []ent.Field {
 		field.Bool("notify_telegram").Default(true),
 		field.Enum("status").Values("active", "disabled").Default("active"),
 		field.Bool("onboarded").Default(false),
+		field.Bool("verified").Default(false),
+		field.Time("verified_at").Optional().Nillable(),
 		field.Bool("cantus_admin").Default(false),
 		field.UUID("default_paroki_id", uuid.UUID{}).Optional().Nillable(),
 		field.Time("last_login_at").Optional().Nillable(),

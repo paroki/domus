@@ -251,6 +251,40 @@ func (_u *UserUpdate) SetNillableOnboarded(v *bool) *UserUpdate {
 	return _u
 }
 
+// SetVerified sets the "verified" field.
+func (_u *UserUpdate) SetVerified(v bool) *UserUpdate {
+	_u.mutation.SetVerified(v)
+	return _u
+}
+
+// SetNillableVerified sets the "verified" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableVerified(v *bool) *UserUpdate {
+	if v != nil {
+		_u.SetVerified(*v)
+	}
+	return _u
+}
+
+// SetVerifiedAt sets the "verified_at" field.
+func (_u *UserUpdate) SetVerifiedAt(v time.Time) *UserUpdate {
+	_u.mutation.SetVerifiedAt(v)
+	return _u
+}
+
+// SetNillableVerifiedAt sets the "verified_at" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableVerifiedAt(v *time.Time) *UserUpdate {
+	if v != nil {
+		_u.SetVerifiedAt(*v)
+	}
+	return _u
+}
+
+// ClearVerifiedAt clears the value of the "verified_at" field.
+func (_u *UserUpdate) ClearVerifiedAt() *UserUpdate {
+	_u.mutation.ClearVerifiedAt()
+	return _u
+}
+
 // SetCantusAdmin sets the "cantus_admin" field.
 func (_u *UserUpdate) SetCantusAdmin(v bool) *UserUpdate {
 	_u.mutation.SetCantusAdmin(v)
@@ -588,6 +622,15 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.Onboarded(); ok {
 		_spec.SetField(user.FieldOnboarded, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.Verified(); ok {
+		_spec.SetField(user.FieldVerified, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.VerifiedAt(); ok {
+		_spec.SetField(user.FieldVerifiedAt, field.TypeTime, value)
+	}
+	if _u.mutation.VerifiedAtCleared() {
+		_spec.ClearField(user.FieldVerifiedAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.CantusAdmin(); ok {
 		_spec.SetField(user.FieldCantusAdmin, field.TypeBool, value)
@@ -1022,6 +1065,40 @@ func (_u *UserUpdateOne) SetNillableOnboarded(v *bool) *UserUpdateOne {
 	return _u
 }
 
+// SetVerified sets the "verified" field.
+func (_u *UserUpdateOne) SetVerified(v bool) *UserUpdateOne {
+	_u.mutation.SetVerified(v)
+	return _u
+}
+
+// SetNillableVerified sets the "verified" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableVerified(v *bool) *UserUpdateOne {
+	if v != nil {
+		_u.SetVerified(*v)
+	}
+	return _u
+}
+
+// SetVerifiedAt sets the "verified_at" field.
+func (_u *UserUpdateOne) SetVerifiedAt(v time.Time) *UserUpdateOne {
+	_u.mutation.SetVerifiedAt(v)
+	return _u
+}
+
+// SetNillableVerifiedAt sets the "verified_at" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableVerifiedAt(v *time.Time) *UserUpdateOne {
+	if v != nil {
+		_u.SetVerifiedAt(*v)
+	}
+	return _u
+}
+
+// ClearVerifiedAt clears the value of the "verified_at" field.
+func (_u *UserUpdateOne) ClearVerifiedAt() *UserUpdateOne {
+	_u.mutation.ClearVerifiedAt()
+	return _u
+}
+
 // SetCantusAdmin sets the "cantus_admin" field.
 func (_u *UserUpdateOne) SetCantusAdmin(v bool) *UserUpdateOne {
 	_u.mutation.SetCantusAdmin(v)
@@ -1389,6 +1466,15 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	}
 	if value, ok := _u.mutation.Onboarded(); ok {
 		_spec.SetField(user.FieldOnboarded, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.Verified(); ok {
+		_spec.SetField(user.FieldVerified, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.VerifiedAt(); ok {
+		_spec.SetField(user.FieldVerifiedAt, field.TypeTime, value)
+	}
+	if _u.mutation.VerifiedAtCleared() {
+		_spec.ClearField(user.FieldVerifiedAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.CantusAdmin(); ok {
 		_spec.SetField(user.FieldCantusAdmin, field.TypeBool, value)

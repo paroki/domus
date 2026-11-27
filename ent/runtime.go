@@ -35,6 +35,7 @@ import (
 	"github.com/paroki/domus/ent/schema"
 	"github.com/paroki/domus/ent/setting"
 	"github.com/paroki/domus/ent/umat"
+	"github.com/paroki/domus/ent/umatdokumen"
 	"github.com/paroki/domus/ent/umatreferensi"
 	"github.com/paroki/domus/ent/umatsakramen"
 	"github.com/paroki/domus/ent/user"
@@ -349,12 +350,16 @@ func init() {
 	keluarga.DefaultUpdatedAt = keluargaDescUpdatedAt.Default.(func() time.Time)
 	// keluarga.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	keluarga.UpdateDefaultUpdatedAt = keluargaDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// keluargaDescNomorRegistrasi is the schema descriptor for nomor_registrasi field.
+	keluargaDescNomorRegistrasi := keluargaFields[3].Descriptor()
+	// keluarga.NomorRegistrasiValidator is a validator for the "nomor_registrasi" field. It is called by the builders before save.
+	keluarga.NomorRegistrasiValidator = keluargaDescNomorRegistrasi.Validators[0].(func(string) error)
 	// keluargaDescNamaKeluarga is the schema descriptor for nama_keluarga field.
-	keluargaDescNamaKeluarga := keluargaFields[5].Descriptor()
+	keluargaDescNamaKeluarga := keluargaFields[6].Descriptor()
 	// keluarga.NamaKeluargaValidator is a validator for the "nama_keluarga" field. It is called by the builders before save.
 	keluarga.NamaKeluargaValidator = keluargaDescNamaKeluarga.Validators[0].(func(string) error)
 	// keluargaDescAktif is the schema descriptor for aktif field.
-	keluargaDescAktif := keluargaFields[13].Descriptor()
+	keluargaDescAktif := keluargaFields[14].Descriptor()
 	// keluarga.DefaultAktif holds the default value on creation for the aktif field.
 	keluarga.DefaultAktif = keluargaDescAktif.Default.(bool)
 	// keluargaDescID is the schema descriptor for id field.
@@ -921,18 +926,43 @@ func init() {
 	umat.DefaultUpdatedAt = umatDescUpdatedAt.Default.(func() time.Time)
 	// umat.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	umat.UpdateDefaultUpdatedAt = umatDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// umatDescNomorInduk is the schema descriptor for nomor_induk field.
+	umatDescNomorInduk := umatFields[5].Descriptor()
+	// umat.NomorIndukValidator is a validator for the "nomor_induk" field. It is called by the builders before save.
+	umat.NomorIndukValidator = umatDescNomorInduk.Validators[0].(func(string) error)
 	// umatDescNama is the schema descriptor for nama field.
-	umatDescNama := umatFields[5].Descriptor()
+	umatDescNama := umatFields[6].Descriptor()
 	// umat.NamaValidator is a validator for the "nama" field. It is called by the builders before save.
 	umat.NamaValidator = umatDescNama.Validators[0].(func(string) error)
 	// umatDescAlmarhum is the schema descriptor for almarhum field.
-	umatDescAlmarhum := umatFields[19].Descriptor()
+	umatDescAlmarhum := umatFields[20].Descriptor()
 	// umat.DefaultAlmarhum holds the default value on creation for the almarhum field.
 	umat.DefaultAlmarhum = umatDescAlmarhum.Default.(bool)
 	// umatDescID is the schema descriptor for id field.
 	umatDescID := umatMixinFields0[0].Descriptor()
 	// umat.DefaultID holds the default value on creation for the id field.
 	umat.DefaultID = umatDescID.Default.(func() uuid.UUID)
+	umatdokumenMixin := schema.UmatDokumen{}.Mixin()
+	umatdokumenMixinFields0 := umatdokumenMixin[0].Fields()
+	_ = umatdokumenMixinFields0
+	umatdokumenMixinFields1 := umatdokumenMixin[1].Fields()
+	_ = umatdokumenMixinFields1
+	umatdokumenFields := schema.UmatDokumen{}.Fields()
+	_ = umatdokumenFields
+	// umatdokumenDescCreatedAt is the schema descriptor for created_at field.
+	umatdokumenDescCreatedAt := umatdokumenMixinFields1[0].Descriptor()
+	// umatdokumen.DefaultCreatedAt holds the default value on creation for the created_at field.
+	umatdokumen.DefaultCreatedAt = umatdokumenDescCreatedAt.Default.(func() time.Time)
+	// umatdokumenDescUpdatedAt is the schema descriptor for updated_at field.
+	umatdokumenDescUpdatedAt := umatdokumenMixinFields1[1].Descriptor()
+	// umatdokumen.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	umatdokumen.DefaultUpdatedAt = umatdokumenDescUpdatedAt.Default.(func() time.Time)
+	// umatdokumen.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	umatdokumen.UpdateDefaultUpdatedAt = umatdokumenDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// umatdokumenDescID is the schema descriptor for id field.
+	umatdokumenDescID := umatdokumenMixinFields0[0].Descriptor()
+	// umatdokumen.DefaultID holds the default value on creation for the id field.
+	umatdokumen.DefaultID = umatdokumenDescID.Default.(func() uuid.UUID)
 	umatreferensiMixin := schema.UmatReferensi{}.Mixin()
 	umatreferensiMixinFields0 := umatreferensiMixin[0].Fields()
 	_ = umatreferensiMixinFields0
@@ -1042,8 +1072,12 @@ func init() {
 	userDescOnboarded := userFields[11].Descriptor()
 	// user.DefaultOnboarded holds the default value on creation for the onboarded field.
 	user.DefaultOnboarded = userDescOnboarded.Default.(bool)
+	// userDescVerified is the schema descriptor for verified field.
+	userDescVerified := userFields[12].Descriptor()
+	// user.DefaultVerified holds the default value on creation for the verified field.
+	user.DefaultVerified = userDescVerified.Default.(bool)
 	// userDescCantusAdmin is the schema descriptor for cantus_admin field.
-	userDescCantusAdmin := userFields[12].Descriptor()
+	userDescCantusAdmin := userFields[14].Descriptor()
 	// user.DefaultCantusAdmin holds the default value on creation for the cantus_admin field.
 	user.DefaultCantusAdmin = userDescCantusAdmin.Default.(bool)
 	// userDescID is the schema descriptor for id field.

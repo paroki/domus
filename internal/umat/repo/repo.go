@@ -3,6 +3,8 @@ package repo
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -80,6 +82,7 @@ func (r *Repository) SearchKeluarga(ctx context.Context, parokiID uuid.UUID, f K
 		q = q.Where(keluarga.Or(
 			keluarga.NamaKeluargaContainsFold(f.Q),
 			keluarga.AlamatContainsFold(f.Q),
+			keluarga.NomorRegistrasiContainsFold(f.Q),
 		))
 	}
 	if f.WilayahID != nil && *f.WilayahID != uuid.Nil {
@@ -163,6 +166,7 @@ func (r *Repository) SearchUmat(ctx context.Context, parokiID uuid.UUID, f UmatF
 		q = q.Where(umat.Or(
 			umat.NamaContainsFold(f.Q),
 			umat.NamaBaptisContainsFold(f.Q),
+			umat.NomorIndukContainsFold(f.Q),
 		))
 	}
 	if f.KeluargaID != nil && *f.KeluargaID != uuid.Nil {
@@ -347,4 +351,72 @@ func (r *Repository) HasActiveUserLink(ctx context.Context, parokiID, userID uui
 		q = q.Where(umat.IDNEQ(*excludeID))
 	}
 	return q.Exist(ctx)
+}
+
+// HasActiveNomorRegistrasi reports whether an active Keluarga in parokiID already uses nomorRegistrasi.
+func (r *Repository) HasActiveNomorRegistrasi(ctx context.Context, parokiID uuid.UUID, nomor string, excludeID *uuid.UUID) (bool, error) {
+	q := r.client.Keluarga.Query().
+		Where(keluarga.ParokiIDEQ(parokiID), keluarga.NomorRegistrasiEQ(nomor), keluarga.DeletedAtIsNil())
+	if excludeID != nil {
+		q = q.Where(keluarga.IDNEQ(*excludeID))
+	}
+	return q.Exist(ctx)
+}
+
+// HasActiveNomorInduk reports whether an active Umat in parokiID already uses nomorInduk.
+func (r *Repository) HasActiveNomorInduk(ctx context.Context, parokiID uuid.UUID, nomor string, excludeID *uuid.UUID) (bool, error) {
+	q := r.client.Umat.Query().
+		Where(umat.ParokiIDEQ(parokiID), umat.NomorIndukEQ(nomor), umat.DeletedAtIsNil())
+	if excludeID != nil {
+		q = q.Where(umat.IDNEQ(*excludeID))
+	}
+	return q.Exist(ctx)
+}
+
+// NextNomorRegistrasi computes the next KK-<YYYY>-<6-digit> value for parokiID and year.
+func (r *Repository) NextNomorRegistrasi(ctx context.Context, parokiID uuid.UUID, year int) (string, error) {
+	prefix := fmt.Sprintf("KK-%04d-", year)
+	existing, err := r.client.Keluarga.Query().
+		Where(
+			keluarga.ParokiIDEQ(parokiID),
+			keluarga.NomorRegistrasiHasPrefix(prefix),
+			keluarga.DeletedAtIsNil(),
+		).
+		Select(keluarga.FieldNomorRegistrasi).
+		Strings(ctx)
+	if err != nil {
+		return "", err
+	}
+	return formatNextSequence(prefix, existing), nil
+}
+
+// NextNomorInduk computes the next NIU-<YYYY>-<6-digit> value for parokiID and year.
+func (r *Repository) NextNomorInduk(ctx context.Context, parokiID uuid.UUID, year int) (string, error) {
+	prefix := fmt.Sprintf("NIU-%04d-", year)
+	existing, err := r.client.Umat.Query().
+		Where(
+			umat.ParokiIDEQ(parokiID),
+			umat.NomorIndukHasPrefix(prefix),
+			umat.DeletedAtIsNil(),
+		).
+		Select(umat.FieldNomorInduk).
+		Strings(ctx)
+	if err != nil {
+		return "", err
+	}
+	return formatNextSequence(prefix, existing), nil
+}
+
+func formatNextSequence(prefix string, existing []string) string {
+	maxSeq := 0
+	for _, s := range existing {
+		if !strings.HasPrefix(s, prefix) {
+			continue
+		}
+		n, err := strconv.Atoi(s[len(prefix):])
+		if err == nil && n > maxSeq {
+			maxSeq = n
+		}
+	}
+	return fmt.Sprintf("%s%06d", prefix, maxSeq+1)
 }

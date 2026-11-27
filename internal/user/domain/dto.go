@@ -55,6 +55,10 @@ type UserResponse struct {
 	PushSubscriptionCount int                    `json:"pushSubscriptionCount"`
 	Status                string                 `json:"status"`
 	Onboarded             bool                   `json:"onboarded"`
+	Verified              bool                   `json:"verified"`
+	VerifiedAt            *time.Time             `json:"verifiedAt,omitempty"`
+	UmatID                *uuid.UUID             `json:"umatId,omitempty"`
+	NomorInduk            *string                `json:"nomorInduk,omitempty"`
 	IsCantusAdmin         bool                   `json:"isCantusAdmin"`
 	LinkedProviders       []string               `json:"linkedProviders,omitempty"`
 	ActiveParokiID        *uuid.UUID             `json:"activeParokiId,omitempty"`

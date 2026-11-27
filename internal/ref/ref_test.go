@@ -1364,6 +1364,7 @@ func (s *RefFeatureSuite) TestRefDeleteGuards_UmatReferences() {
 	// Create Keluarga + Umat + UmatSakramen referencing these ref entities.
 	keluargaRow, err := s.client.Keluarga.Create().
 		SetParokiID(paroki.ID).
+		SetNomorRegistrasi("KK-2026-000001").
 		SetWilayahID(wil.ID).
 		SetLingkunganID(ling.ID).
 		SetKotaID(kota.ID).
@@ -1375,6 +1376,7 @@ func (s *RefFeatureSuite) TestRefDeleteGuards_UmatReferences() {
 
 	umatRow, err := s.client.Umat.Create().
 		SetParokiID(paroki.ID).
+		SetNomorInduk("NIU-2026-000001").
 		SetKeluargaID(keluargaRow.ID).
 		SetWilayahID(wil.ID).
 		SetLingkunganID(ling.ID).

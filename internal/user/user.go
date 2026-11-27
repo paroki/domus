@@ -28,8 +28,24 @@ import (
 
 // Re-export transport-agnostic principal and notification types for downstream features.
 type (
-	Principal           = authx.Principal
-	NotificationPayload = domain.NotificationPayload
+	Principal             = authx.Principal
+	NotificationPayload   = domain.NotificationPayload
+	IdentityImageInput    = domain.IdentityImageInput
+	IdentityExtractInput  = domain.IdentityExtractInput
+	ExtractedKTP          = domain.ExtractedKTP
+	ExtractedKKMember     = domain.ExtractedKKMember
+	ExtractedKK           = domain.ExtractedKK
+	IdentityExtraction    = domain.IdentityExtraction
+	VerifyPreviewResult   = domain.VerifyPreviewResult
+	VerifyConfirmDocument = domain.VerifyConfirmDocument
+	VerifyConfirmInput    = domain.VerifyConfirmInput
+	VerifyConfirmResult   = domain.VerifyConfirmResult
+	SelfDokumenMeta       = domain.SelfDokumenMeta
+	SelfUmatInfo          = domain.SelfUmatInfo
+	SelfKeluargaInfo      = domain.SelfKeluargaInfo
+	SelfUmatProfile       = domain.SelfUmatProfile
+	IdentityExtractor     = domain.IdentityExtractor
+	CensusVerifier        = domain.CensusVerifier
 )
 
 var (
@@ -619,6 +635,16 @@ type InviteJoiner = service.InviteJoiner
 // SetInviteJoiner wires the organization invite joiner into the user auth service.
 func (f *Feature) SetInviteJoiner(j InviteJoiner) {
 	f.service.SetInviteJoiner(j)
+}
+
+// SetIdentityExtractor wires the AI vision identity document extractor into the user service.
+func (f *Feature) SetIdentityExtractor(e IdentityExtractor) {
+	f.service.SetIdentityExtractor(e)
+}
+
+// SetCensusVerifier wires the parishioner census verifier into the user service.
+func (f *Feature) SetCensusVerifier(v CensusVerifier) {
+	f.service.SetCensusVerifier(v)
 }
 
 // SwitchSessionParoki updates the active paroki on sessionID for userID.

@@ -55,28 +55,30 @@ func MaskPII(plain string) string {
 
 // KeluargaListItemResponse is the masked list representation of a Keluarga.
 type KeluargaListItemResponse struct {
-	ID            uuid.UUID  `json:"id"`
-	ParokiID      uuid.UUID  `json:"parokiId"`
-	WilayahID     *uuid.UUID `json:"wilayahId,omitempty"`
-	LingkunganID  *uuid.UUID `json:"lingkunganId,omitempty"`
-	NomorKKMasked *string    `json:"nomorKkMasked,omitempty"`
-	NamaKeluarga  string     `json:"namaKeluarga"`
-	Alamat        *string    `json:"alamat,omitempty"`
-	KotaID        *uuid.UUID `json:"kotaId,omitempty"`
-	KecamatanID   *uuid.UUID `json:"kecamatanId,omitempty"`
-	KelurahanID   *uuid.UUID `json:"kelurahanId,omitempty"`
-	KodePos       *string    `json:"kodePos,omitempty"`
-	StatusRumah   *string    `json:"statusRumah,omitempty"`
-	StatusEkonomi *string    `json:"statusEkonomi,omitempty"`
-	Aktif         bool       `json:"aktif"`
-	Catatan       *string    `json:"catatan,omitempty"`
-	CreatedAt     time.Time  `json:"createdAt"`
-	UpdatedAt     time.Time  `json:"updatedAt"`
+	ID              uuid.UUID  `json:"id"`
+	ParokiID        uuid.UUID  `json:"parokiId"`
+	WilayahID       *uuid.UUID `json:"wilayahId,omitempty"`
+	LingkunganID    *uuid.UUID `json:"lingkunganId,omitempty"`
+	NomorRegistrasi string     `json:"nomorRegistrasi"`
+	NomorKKMasked   *string    `json:"nomorKkMasked,omitempty"`
+	NamaKeluarga    string     `json:"namaKeluarga"`
+	Alamat          *string    `json:"alamat,omitempty"`
+	KotaID          *uuid.UUID `json:"kotaId,omitempty"`
+	KecamatanID     *uuid.UUID `json:"kecamatanId,omitempty"`
+	KelurahanID     *uuid.UUID `json:"kelurahanId,omitempty"`
+	KodePos         *string    `json:"kodePos,omitempty"`
+	StatusRumah     *string    `json:"statusRumah,omitempty"`
+	StatusEkonomi   *string    `json:"statusEkonomi,omitempty"`
+	Aktif           bool       `json:"aktif"`
+	Catatan         *string    `json:"catatan,omitempty"`
+	CreatedAt       time.Time  `json:"createdAt"`
+	UpdatedAt       time.Time  `json:"updatedAt"`
 }
 
 // KeluargaAnggotaSummary is the masked summary of a member inside KeluargaDetailResponse.
 type KeluargaAnggotaSummary struct {
 	ID               uuid.UUID `json:"id"`
+	NomorInduk       string    `json:"nomorInduk"`
 	Nama             string    `json:"nama"`
 	NamaBaptis       *string   `json:"namaBaptis,omitempty"`
 	NIKMasked        *string   `json:"nikMasked,omitempty"`
@@ -87,25 +89,26 @@ type KeluargaAnggotaSummary struct {
 
 // KeluargaDetailResponse is the single-entity representation of a Keluarga including decrypted NomorKK and Anggota.
 type KeluargaDetailResponse struct {
-	ID            uuid.UUID                `json:"id"`
-	ParokiID      uuid.UUID                `json:"parokiId"`
-	WilayahID     *uuid.UUID               `json:"wilayahId,omitempty"`
-	LingkunganID  *uuid.UUID               `json:"lingkunganId,omitempty"`
-	NomorKK       *string                  `json:"nomorKk,omitempty"`
-	NomorKKMasked *string                  `json:"nomorKkMasked,omitempty"`
-	NamaKeluarga  string                   `json:"namaKeluarga"`
-	Alamat        *string                  `json:"alamat,omitempty"`
-	KotaID        *uuid.UUID               `json:"kotaId,omitempty"`
-	KecamatanID   *uuid.UUID               `json:"kecamatanId,omitempty"`
-	KelurahanID   *uuid.UUID               `json:"kelurahanId,omitempty"`
-	KodePos       *string                  `json:"kodePos,omitempty"`
-	StatusRumah   *string                  `json:"statusRumah,omitempty"`
-	StatusEkonomi *string                  `json:"statusEkonomi,omitempty"`
-	Aktif         bool                     `json:"aktif"`
-	Catatan       *string                  `json:"catatan,omitempty"`
-	Anggota       []KeluargaAnggotaSummary `json:"anggota"`
-	CreatedAt     time.Time                `json:"createdAt"`
-	UpdatedAt     time.Time                `json:"updatedAt"`
+	ID              uuid.UUID                `json:"id"`
+	ParokiID        uuid.UUID                `json:"parokiId"`
+	WilayahID       *uuid.UUID               `json:"wilayahId,omitempty"`
+	LingkunganID    *uuid.UUID               `json:"lingkunganId,omitempty"`
+	NomorRegistrasi string                   `json:"nomorRegistrasi"`
+	NomorKK         *string                  `json:"nomorKk,omitempty"`
+	NomorKKMasked   *string                  `json:"nomorKkMasked,omitempty"`
+	NamaKeluarga    string                   `json:"namaKeluarga"`
+	Alamat          *string                  `json:"alamat,omitempty"`
+	KotaID          *uuid.UUID               `json:"kotaId,omitempty"`
+	KecamatanID     *uuid.UUID               `json:"kecamatanId,omitempty"`
+	KelurahanID     *uuid.UUID               `json:"kelurahanId,omitempty"`
+	KodePos         *string                  `json:"kodePos,omitempty"`
+	StatusRumah     *string                  `json:"statusRumah,omitempty"`
+	StatusEkonomi   *string                  `json:"statusEkonomi,omitempty"`
+	Aktif           bool                     `json:"aktif"`
+	Catatan         *string                  `json:"catatan,omitempty"`
+	Anggota         []KeluargaAnggotaSummary `json:"anggota"`
+	CreatedAt       time.Time                `json:"createdAt"`
+	UpdatedAt       time.Time                `json:"updatedAt"`
 }
 
 // KeluargaSearchFilter filters Keluarga search results.
@@ -127,43 +130,46 @@ type SearchKeluargaRequest struct {
 
 // CreateKeluargaRequest creates a new Keluarga record.
 type CreateKeluargaRequest struct {
-	WilayahID     *uuid.UUID `json:"wilayahId,omitempty"`
-	LingkunganID  *uuid.UUID `json:"lingkunganId,omitempty"`
-	NomorKK       *string    `json:"nomorKk,omitempty"`
-	NamaKeluarga  string     `json:"namaKeluarga" validate:"required"`
-	Alamat        *string    `json:"alamat,omitempty"`
-	KotaID        *uuid.UUID `json:"kotaId,omitempty"`
-	KecamatanID   *uuid.UUID `json:"kecamatanId,omitempty"`
-	KelurahanID   *uuid.UUID `json:"kelurahanId,omitempty"`
-	KodePos       *string    `json:"kodePos,omitempty"`
-	StatusRumah   *string    `json:"statusRumah,omitempty"`
-	StatusEkonomi *string    `json:"statusEkonomi,omitempty"`
-	Aktif         *bool      `json:"aktif,omitempty"`
-	Catatan       *string    `json:"catatan,omitempty"`
+	WilayahID       *uuid.UUID `json:"wilayahId,omitempty"`
+	LingkunganID    *uuid.UUID `json:"lingkunganId,omitempty"`
+	NomorRegistrasi *string    `json:"nomorRegistrasi,omitempty"`
+	NomorKK         *string    `json:"nomorKk,omitempty"`
+	NamaKeluarga    string     `json:"namaKeluarga" validate:"required"`
+	Alamat          *string    `json:"alamat,omitempty"`
+	KotaID          *uuid.UUID `json:"kotaId,omitempty"`
+	KecamatanID     *uuid.UUID `json:"kecamatanId,omitempty"`
+	KelurahanID     *uuid.UUID `json:"kelurahanId,omitempty"`
+	KodePos         *string    `json:"kodePos,omitempty"`
+	StatusRumah     *string    `json:"statusRumah,omitempty"`
+	StatusEkonomi   *string    `json:"statusEkonomi,omitempty"`
+	Aktif           *bool      `json:"aktif,omitempty"`
+	Catatan         *string    `json:"catatan,omitempty"`
 }
 
 // UpdateKeluargaRequest partially updates a Keluarga record.
 type UpdateKeluargaRequest struct {
-	WilayahID     *uuid.UUID `json:"wilayahId,omitempty"`
-	LingkunganID  *uuid.UUID `json:"lingkunganId,omitempty"`
-	NomorKK       *string    `json:"nomorKk,omitempty"`
-	NamaKeluarga  *string    `json:"namaKeluarga,omitempty"`
-	Alamat        *string    `json:"alamat,omitempty"`
-	KotaID        *uuid.UUID `json:"kotaId,omitempty"`
-	KecamatanID   *uuid.UUID `json:"kecamatanId,omitempty"`
-	KelurahanID   *uuid.UUID `json:"kelurahanId,omitempty"`
-	KodePos       *string    `json:"kodePos,omitempty"`
-	StatusRumah   *string    `json:"statusRumah,omitempty"`
-	StatusEkonomi *string    `json:"statusEkonomi,omitempty"`
-	Aktif         *bool      `json:"aktif,omitempty"`
-	Catatan       *string    `json:"catatan,omitempty"`
+	WilayahID       *uuid.UUID `json:"wilayahId,omitempty"`
+	LingkunganID    *uuid.UUID `json:"lingkunganId,omitempty"`
+	NomorRegistrasi *string    `json:"nomorRegistrasi,omitempty"`
+	NomorKK         *string    `json:"nomorKk,omitempty"`
+	NamaKeluarga    *string    `json:"namaKeluarga,omitempty"`
+	Alamat          *string    `json:"alamat,omitempty"`
+	KotaID          *uuid.UUID `json:"kotaId,omitempty"`
+	KecamatanID     *uuid.UUID `json:"kecamatanId,omitempty"`
+	KelurahanID     *uuid.UUID `json:"kelurahanId,omitempty"`
+	KodePos         *string    `json:"kodePos,omitempty"`
+	StatusRumah     *string    `json:"statusRumah,omitempty"`
+	StatusEkonomi   *string    `json:"statusEkonomi,omitempty"`
+	Aktif           *bool      `json:"aktif,omitempty"`
+	Catatan         *string    `json:"catatan,omitempty"`
 }
 
 // UmatKeluargaSummary is the masked household summary embedded in UmatDetailResponse.
 type UmatKeluargaSummary struct {
-	ID            uuid.UUID `json:"id"`
-	NamaKeluarga  string    `json:"namaKeluarga"`
-	NomorKKMasked *string   `json:"nomorKkMasked,omitempty"`
+	ID              uuid.UUID `json:"id"`
+	NomorRegistrasi string    `json:"nomorRegistrasi"`
+	NamaKeluarga    string    `json:"namaKeluarga"`
+	NomorKKMasked   *string   `json:"nomorKkMasked,omitempty"`
 }
 
 // UmatSakramenResponse represents a sacramental history record for an Umat.
@@ -192,6 +198,7 @@ type UmatListItemResponse struct {
 	WilayahID        *uuid.UUID `json:"wilayahId,omitempty"`
 	LingkunganID     *uuid.UUID `json:"lingkunganId,omitempty"`
 	UserID           *uuid.UUID `json:"userId,omitempty"`
+	NomorInduk       string     `json:"nomorInduk"`
 	Nama             string     `json:"nama"`
 	NamaBaptis       *string    `json:"namaBaptis,omitempty"`
 	NIKMasked        *string    `json:"nikMasked,omitempty"`
@@ -233,6 +240,7 @@ type UmatDetailResponse struct {
 	WilayahID        *uuid.UUID             `json:"wilayahId,omitempty"`
 	LingkunganID     *uuid.UUID             `json:"lingkunganId,omitempty"`
 	UserID           *uuid.UUID             `json:"userId,omitempty"`
+	NomorInduk       string                 `json:"nomorInduk"`
 	Nama             string                 `json:"nama"`
 	NamaBaptis       *string                `json:"namaBaptis,omitempty"`
 	NIK              *string                `json:"nik,omitempty"`
@@ -297,6 +305,7 @@ type CreateUmatRequest struct {
 	WilayahID        *uuid.UUID `json:"wilayahId,omitempty"`
 	LingkunganID     *uuid.UUID `json:"lingkunganId,omitempty"`
 	UserID           *uuid.UUID `json:"userId,omitempty"`
+	NomorInduk       *string    `json:"nomorInduk,omitempty"`
 	Nama             string     `json:"nama" validate:"required"`
 	NamaBaptis       *string    `json:"namaBaptis,omitempty"`
 	NIK              *string    `json:"nik,omitempty"`
@@ -334,6 +343,7 @@ type UpdateUmatRequest struct {
 	WilayahID        *uuid.UUID `json:"wilayahId,omitempty"`
 	LingkunganID     *uuid.UUID `json:"lingkunganId,omitempty"`
 	UserID           *uuid.UUID `json:"userId,omitempty"`
+	NomorInduk       *string    `json:"nomorInduk,omitempty"`
 	Nama             *string    `json:"nama,omitempty"`
 	NamaBaptis       *string    `json:"namaBaptis,omitempty"`
 	NIK              *string    `json:"nik,omitempty"`
@@ -395,6 +405,7 @@ type UpdateUmatSakramenRequest struct {
 type UmatLookupItemResponse struct {
 	ID           uuid.UUID  `json:"id"`
 	ParokiID     uuid.UUID  `json:"parokiId"`
+	NomorInduk   string     `json:"nomorInduk"`
 	Nama         string     `json:"nama"`
 	NamaBaptis   *string    `json:"namaBaptis,omitempty"`
 	WilayahID    *uuid.UUID `json:"wilayahId,omitempty"`
@@ -454,4 +465,18 @@ type UpdateUmatReferensiRequest struct {
 	Label     *string `json:"label,omitempty" validate:"omitempty,min=1"`
 	SortOrder *int    `json:"sortOrder,omitempty"`
 	Active    *bool   `json:"active,omitempty"`
+}
+
+// UmatDokumenMetaResponse represents metadata for an encrypted identity document (no bytes).
+type UmatDokumenMetaResponse struct {
+	ID         uuid.UUID  `json:"id"`
+	ParokiID   uuid.UUID  `json:"parokiId"`
+	UmatID     *uuid.UUID `json:"umatId,omitempty"`
+	KeluargaID *uuid.UUID `json:"keluargaId,omitempty"`
+	Jenis      string     `json:"jenis"`
+	MimeType   string     `json:"mimeType"`
+	SizeBytes  int        `json:"sizeBytes"`
+	UploadedBy uuid.UUID  `json:"uploadedBy"`
+	CreatedAt  time.Time  `json:"createdAt"`
+	UpdatedAt  time.Time  `json:"updatedAt"`
 }

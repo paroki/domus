@@ -42,6 +42,7 @@ import (
 	"github.com/paroki/domus/ent/schema"
 	"github.com/paroki/domus/ent/setting"
 	"github.com/paroki/domus/ent/umat"
+	"github.com/paroki/domus/ent/umatdokumen"
 	"github.com/paroki/domus/ent/umatreferensi"
 	"github.com/paroki/domus/ent/umatsakramen"
 	"github.com/paroki/domus/ent/user"
@@ -91,6 +92,7 @@ const (
 	TypeParokiMember         = "ParokiMember"
 	TypeSetting              = "Setting"
 	TypeUmat                 = "Umat"
+	TypeUmatDokumen          = "UmatDokumen"
 	TypeUmatReferensi        = "UmatReferensi"
 	TypeUmatSakramen         = "UmatSakramen"
 	TypeUser                 = "User"
@@ -8565,34 +8567,38 @@ func (m *KecamatanMutation) ResetEdge(name string) error {
 // KeluargaMutation represents an operation that mutates the Keluarga nodes in the graph.
 type KeluargaMutation struct {
 	config
-	op             Op
-	typ            string
-	id             *uuid.UUID
-	created_at     *time.Time
-	updated_at     *time.Time
-	deleted_at     *time.Time
-	paroki_id      *uuid.UUID
-	wilayah_id     *uuid.UUID
-	lingkungan_id  *uuid.UUID
-	nomor_kk_enc   *string
-	nomor_kk_hash  *string
-	nama_keluarga  *string
-	alamat         *string
-	kota_id        *uuid.UUID
-	kecamatan_id   *uuid.UUID
-	kelurahan_id   *uuid.UUID
-	kode_pos       *string
-	status_rumah   *string
-	status_ekonomi *string
-	aktif          *bool
-	catatan        *string
-	clearedFields  map[string]struct{}
-	anggota        map[uuid.UUID]struct{}
-	removedanggota map[uuid.UUID]struct{}
-	clearedanggota bool
-	done           bool
-	oldValue       func(context.Context) (*Keluarga, error)
-	predicates     []predicate.Keluarga
+	op               Op
+	typ              string
+	id               *uuid.UUID
+	created_at       *time.Time
+	updated_at       *time.Time
+	deleted_at       *time.Time
+	paroki_id        *uuid.UUID
+	wilayah_id       *uuid.UUID
+	lingkungan_id    *uuid.UUID
+	nomor_registrasi *string
+	nomor_kk_enc     *string
+	nomor_kk_hash    *string
+	nama_keluarga    *string
+	alamat           *string
+	kota_id          *uuid.UUID
+	kecamatan_id     *uuid.UUID
+	kelurahan_id     *uuid.UUID
+	kode_pos         *string
+	status_rumah     *string
+	status_ekonomi   *string
+	aktif            *bool
+	catatan          *string
+	clearedFields    map[string]struct{}
+	anggota          map[uuid.UUID]struct{}
+	removedanggota   map[uuid.UUID]struct{}
+	clearedanggota   bool
+	dokumen          map[uuid.UUID]struct{}
+	removeddokumen   map[uuid.UUID]struct{}
+	cleareddokumen   bool
+	done             bool
+	oldValue         func(context.Context) (*Keluarga, error)
+	predicates       []predicate.Keluarga
 }
 
 var _ ent.Mutation = (*KeluargaMutation)(nil)
@@ -8952,6 +8958,42 @@ func (m *KeluargaMutation) LingkunganIDCleared() bool {
 func (m *KeluargaMutation) ResetLingkunganID() {
 	m.lingkungan_id = nil
 	delete(m.clearedFields, keluarga.FieldLingkunganID)
+}
+
+// SetNomorRegistrasi sets the "nomor_registrasi" field.
+func (m *KeluargaMutation) SetNomorRegistrasi(s string) {
+	m.nomor_registrasi = &s
+}
+
+// NomorRegistrasi returns the value of the "nomor_registrasi" field in the mutation.
+func (m *KeluargaMutation) NomorRegistrasi() (r string, exists bool) {
+	v := m.nomor_registrasi
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNomorRegistrasi returns the old "nomor_registrasi" field's value of the Keluarga entity.
+// If the Keluarga object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KeluargaMutation) OldNomorRegistrasi(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNomorRegistrasi is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNomorRegistrasi requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNomorRegistrasi: %w", err)
+	}
+	return oldValue.NomorRegistrasi, nil
+}
+
+// ResetNomorRegistrasi resets all changes to the "nomor_registrasi" field.
+func (m *KeluargaMutation) ResetNomorRegistrasi() {
+	m.nomor_registrasi = nil
 }
 
 // SetNomorKkEnc sets the "nomor_kk_enc" field.
@@ -9570,6 +9612,60 @@ func (m *KeluargaMutation) ResetAnggota() {
 	m.removedanggota = nil
 }
 
+// AddDokumanIDs adds the "dokumen" edge to the UmatDokumen entity by ids.
+func (m *KeluargaMutation) AddDokumanIDs(ids ...uuid.UUID) {
+	if m.dokumen == nil {
+		m.dokumen = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.dokumen[ids[i]] = struct{}{}
+	}
+}
+
+// ClearDokumen clears the "dokumen" edge to the UmatDokumen entity.
+func (m *KeluargaMutation) ClearDokumen() {
+	m.cleareddokumen = true
+}
+
+// DokumenCleared reports if the "dokumen" edge to the UmatDokumen entity was cleared.
+func (m *KeluargaMutation) DokumenCleared() bool {
+	return m.cleareddokumen
+}
+
+// RemoveDokumanIDs removes the "dokumen" edge to the UmatDokumen entity by IDs.
+func (m *KeluargaMutation) RemoveDokumanIDs(ids ...uuid.UUID) {
+	if m.removeddokumen == nil {
+		m.removeddokumen = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.dokumen, ids[i])
+		m.removeddokumen[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedDokumen returns the removed IDs of the "dokumen" edge to the UmatDokumen entity.
+func (m *KeluargaMutation) RemovedDokumenIDs() (ids []uuid.UUID) {
+	for id := range m.removeddokumen {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// DokumenIDs returns the "dokumen" edge IDs in the mutation.
+func (m *KeluargaMutation) DokumenIDs() (ids []uuid.UUID) {
+	for id := range m.dokumen {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetDokumen resets all changes to the "dokumen" edge.
+func (m *KeluargaMutation) ResetDokumen() {
+	m.dokumen = nil
+	m.cleareddokumen = false
+	m.removeddokumen = nil
+}
+
 // Where appends a list predicates to the KeluargaMutation builder.
 func (m *KeluargaMutation) Where(ps ...predicate.Keluarga) {
 	m.predicates = append(m.predicates, ps...)
@@ -9604,7 +9700,7 @@ func (m *KeluargaMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *KeluargaMutation) Fields() []string {
-	fields := make([]string, 0, 18)
+	fields := make([]string, 0, 19)
 	if m.created_at != nil {
 		fields = append(fields, keluarga.FieldCreatedAt)
 	}
@@ -9622,6 +9718,9 @@ func (m *KeluargaMutation) Fields() []string {
 	}
 	if m.lingkungan_id != nil {
 		fields = append(fields, keluarga.FieldLingkunganID)
+	}
+	if m.nomor_registrasi != nil {
+		fields = append(fields, keluarga.FieldNomorRegistrasi)
 	}
 	if m.nomor_kk_enc != nil {
 		fields = append(fields, keluarga.FieldNomorKkEnc)
@@ -9679,6 +9778,8 @@ func (m *KeluargaMutation) Field(name string) (ent.Value, bool) {
 		return m.WilayahID()
 	case keluarga.FieldLingkunganID:
 		return m.LingkunganID()
+	case keluarga.FieldNomorRegistrasi:
+		return m.NomorRegistrasi()
 	case keluarga.FieldNomorKkEnc:
 		return m.NomorKkEnc()
 	case keluarga.FieldNomorKkHash:
@@ -9724,6 +9825,8 @@ func (m *KeluargaMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldWilayahID(ctx)
 	case keluarga.FieldLingkunganID:
 		return m.OldLingkunganID(ctx)
+	case keluarga.FieldNomorRegistrasi:
+		return m.OldNomorRegistrasi(ctx)
 	case keluarga.FieldNomorKkEnc:
 		return m.OldNomorKkEnc(ctx)
 	case keluarga.FieldNomorKkHash:
@@ -9798,6 +9901,13 @@ func (m *KeluargaMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetLingkunganID(v)
+		return nil
+	case keluarga.FieldNomorRegistrasi:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNomorRegistrasi(v)
 		return nil
 	case keluarga.FieldNomorKkEnc:
 		v, ok := value.(string)
@@ -10031,6 +10141,9 @@ func (m *KeluargaMutation) ResetField(name string) error {
 	case keluarga.FieldLingkunganID:
 		m.ResetLingkunganID()
 		return nil
+	case keluarga.FieldNomorRegistrasi:
+		m.ResetNomorRegistrasi()
+		return nil
 	case keluarga.FieldNomorKkEnc:
 		m.ResetNomorKkEnc()
 		return nil
@@ -10073,9 +10186,12 @@ func (m *KeluargaMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *KeluargaMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.anggota != nil {
 		edges = append(edges, keluarga.EdgeAnggota)
+	}
+	if m.dokumen != nil {
+		edges = append(edges, keluarga.EdgeDokumen)
 	}
 	return edges
 }
@@ -10090,15 +10206,24 @@ func (m *KeluargaMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case keluarga.EdgeDokumen:
+		ids := make([]ent.Value, 0, len(m.dokumen))
+		for id := range m.dokumen {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *KeluargaMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.removedanggota != nil {
 		edges = append(edges, keluarga.EdgeAnggota)
+	}
+	if m.removeddokumen != nil {
+		edges = append(edges, keluarga.EdgeDokumen)
 	}
 	return edges
 }
@@ -10113,15 +10238,24 @@ func (m *KeluargaMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case keluarga.EdgeDokumen:
+		ids := make([]ent.Value, 0, len(m.removeddokumen))
+		for id := range m.removeddokumen {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *KeluargaMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedanggota {
 		edges = append(edges, keluarga.EdgeAnggota)
+	}
+	if m.cleareddokumen {
+		edges = append(edges, keluarga.EdgeDokumen)
 	}
 	return edges
 }
@@ -10132,6 +10266,8 @@ func (m *KeluargaMutation) EdgeCleared(name string) bool {
 	switch name {
 	case keluarga.EdgeAnggota:
 		return m.clearedanggota
+	case keluarga.EdgeDokumen:
+		return m.cleareddokumen
 	}
 	return false
 }
@@ -10150,6 +10286,9 @@ func (m *KeluargaMutation) ResetEdge(name string) error {
 	switch name {
 	case keluarga.EdgeAnggota:
 		m.ResetAnggota()
+		return nil
+	case keluarga.EdgeDokumen:
+		m.ResetDokumen()
 		return nil
 	}
 	return fmt.Errorf("unknown Keluarga edge %s", name)
@@ -28808,6 +28947,7 @@ type UmatMutation struct {
 	wilayah_id        *uuid.UUID
 	lingkungan_id     *uuid.UUID
 	user_id           *uuid.UUID
+	nomor_induk       *string
 	nama              *string
 	nama_baptis       *string
 	nik_enc           *string
@@ -28844,6 +28984,9 @@ type UmatMutation struct {
 	sakramen          map[uuid.UUID]struct{}
 	removedsakramen   map[uuid.UUID]struct{}
 	clearedsakramen   bool
+	dokumen           map[uuid.UUID]struct{}
+	removeddokumen    map[uuid.UUID]struct{}
+	cleareddokumen    bool
 	done              bool
 	oldValue          func(context.Context) (*Umat, error)
 	predicates        []predicate.Umat
@@ -29304,6 +29447,42 @@ func (m *UmatMutation) UserIDCleared() bool {
 func (m *UmatMutation) ResetUserID() {
 	m.user_id = nil
 	delete(m.clearedFields, umat.FieldUserID)
+}
+
+// SetNomorInduk sets the "nomor_induk" field.
+func (m *UmatMutation) SetNomorInduk(s string) {
+	m.nomor_induk = &s
+}
+
+// NomorInduk returns the value of the "nomor_induk" field in the mutation.
+func (m *UmatMutation) NomorInduk() (r string, exists bool) {
+	v := m.nomor_induk
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNomorInduk returns the old "nomor_induk" field's value of the Umat entity.
+// If the Umat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatMutation) OldNomorInduk(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNomorInduk is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNomorInduk requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNomorInduk: %w", err)
+	}
+	return oldValue.NomorInduk, nil
+}
+
+// ResetNomorInduk resets all changes to the "nomor_induk" field.
+func (m *UmatMutation) ResetNomorInduk() {
+	m.nomor_induk = nil
 }
 
 // SetNama sets the "nama" field.
@@ -30818,6 +30997,60 @@ func (m *UmatMutation) ResetSakramen() {
 	m.removedsakramen = nil
 }
 
+// AddDokumanIDs adds the "dokumen" edge to the UmatDokumen entity by ids.
+func (m *UmatMutation) AddDokumanIDs(ids ...uuid.UUID) {
+	if m.dokumen == nil {
+		m.dokumen = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.dokumen[ids[i]] = struct{}{}
+	}
+}
+
+// ClearDokumen clears the "dokumen" edge to the UmatDokumen entity.
+func (m *UmatMutation) ClearDokumen() {
+	m.cleareddokumen = true
+}
+
+// DokumenCleared reports if the "dokumen" edge to the UmatDokumen entity was cleared.
+func (m *UmatMutation) DokumenCleared() bool {
+	return m.cleareddokumen
+}
+
+// RemoveDokumanIDs removes the "dokumen" edge to the UmatDokumen entity by IDs.
+func (m *UmatMutation) RemoveDokumanIDs(ids ...uuid.UUID) {
+	if m.removeddokumen == nil {
+		m.removeddokumen = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.dokumen, ids[i])
+		m.removeddokumen[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedDokumen returns the removed IDs of the "dokumen" edge to the UmatDokumen entity.
+func (m *UmatMutation) RemovedDokumenIDs() (ids []uuid.UUID) {
+	for id := range m.removeddokumen {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// DokumenIDs returns the "dokumen" edge IDs in the mutation.
+func (m *UmatMutation) DokumenIDs() (ids []uuid.UUID) {
+	for id := range m.dokumen {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetDokumen resets all changes to the "dokumen" edge.
+func (m *UmatMutation) ResetDokumen() {
+	m.dokumen = nil
+	m.cleareddokumen = false
+	m.removeddokumen = nil
+}
+
 // Where appends a list predicates to the UmatMutation builder.
 func (m *UmatMutation) Where(ps ...predicate.Umat) {
 	m.predicates = append(m.predicates, ps...)
@@ -30852,7 +31085,7 @@ func (m *UmatMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UmatMutation) Fields() []string {
-	fields := make([]string, 0, 38)
+	fields := make([]string, 0, 39)
 	if m.created_at != nil {
 		fields = append(fields, umat.FieldCreatedAt)
 	}
@@ -30876,6 +31109,9 @@ func (m *UmatMutation) Fields() []string {
 	}
 	if m.user_id != nil {
 		fields = append(fields, umat.FieldUserID)
+	}
+	if m.nomor_induk != nil {
+		fields = append(fields, umat.FieldNomorInduk)
 	}
 	if m.nama != nil {
 		fields = append(fields, umat.FieldNama)
@@ -30991,6 +31227,8 @@ func (m *UmatMutation) Field(name string) (ent.Value, bool) {
 		return m.LingkunganID()
 	case umat.FieldUserID:
 		return m.UserID()
+	case umat.FieldNomorInduk:
+		return m.NomorInduk()
 	case umat.FieldNama:
 		return m.Nama()
 	case umat.FieldNamaBaptis:
@@ -31076,6 +31314,8 @@ func (m *UmatMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldLingkunganID(ctx)
 	case umat.FieldUserID:
 		return m.OldUserID(ctx)
+	case umat.FieldNomorInduk:
+		return m.OldNomorInduk(ctx)
 	case umat.FieldNama:
 		return m.OldNama(ctx)
 	case umat.FieldNamaBaptis:
@@ -31200,6 +31440,13 @@ func (m *UmatMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetUserID(v)
+		return nil
+	case umat.FieldNomorInduk:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNomorInduk(v)
 		return nil
 	case umat.FieldNama:
 		v, ok := value.(string)
@@ -31679,6 +31926,9 @@ func (m *UmatMutation) ResetField(name string) error {
 	case umat.FieldUserID:
 		m.ResetUserID()
 		return nil
+	case umat.FieldNomorInduk:
+		m.ResetNomorInduk()
+		return nil
 	case umat.FieldNama:
 		m.ResetNama()
 		return nil
@@ -31775,12 +32025,15 @@ func (m *UmatMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UmatMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.keluarga != nil {
 		edges = append(edges, umat.EdgeKeluarga)
 	}
 	if m.sakramen != nil {
 		edges = append(edges, umat.EdgeSakramen)
+	}
+	if m.dokumen != nil {
+		edges = append(edges, umat.EdgeDokumen)
 	}
 	return edges
 }
@@ -31799,15 +32052,24 @@ func (m *UmatMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case umat.EdgeDokumen:
+		ids := make([]ent.Value, 0, len(m.dokumen))
+		for id := range m.dokumen {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UmatMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.removedsakramen != nil {
 		edges = append(edges, umat.EdgeSakramen)
+	}
+	if m.removeddokumen != nil {
+		edges = append(edges, umat.EdgeDokumen)
 	}
 	return edges
 }
@@ -31822,18 +32084,27 @@ func (m *UmatMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case umat.EdgeDokumen:
+		ids := make([]ent.Value, 0, len(m.removeddokumen))
+		for id := range m.removeddokumen {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UmatMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.clearedkeluarga {
 		edges = append(edges, umat.EdgeKeluarga)
 	}
 	if m.clearedsakramen {
 		edges = append(edges, umat.EdgeSakramen)
+	}
+	if m.cleareddokumen {
+		edges = append(edges, umat.EdgeDokumen)
 	}
 	return edges
 }
@@ -31846,6 +32117,8 @@ func (m *UmatMutation) EdgeCleared(name string) bool {
 		return m.clearedkeluarga
 	case umat.EdgeSakramen:
 		return m.clearedsakramen
+	case umat.EdgeDokumen:
+		return m.cleareddokumen
 	}
 	return false
 }
@@ -31871,8 +32144,1006 @@ func (m *UmatMutation) ResetEdge(name string) error {
 	case umat.EdgeSakramen:
 		m.ResetSakramen()
 		return nil
+	case umat.EdgeDokumen:
+		m.ResetDokumen()
+		return nil
 	}
 	return fmt.Errorf("unknown Umat edge %s", name)
+}
+
+// UmatDokumenMutation represents an operation that mutates the UmatDokumen nodes in the graph.
+type UmatDokumenMutation struct {
+	config
+	op              Op
+	typ             string
+	id              *uuid.UUID
+	created_at      *time.Time
+	updated_at      *time.Time
+	paroki_id       *uuid.UUID
+	jenis           *umatdokumen.Jenis
+	mime_type       *umatdokumen.MimeType
+	size_bytes      *int
+	addsize_bytes   *int
+	data_enc        *[]byte
+	uploaded_by     *uuid.UUID
+	clearedFields   map[string]struct{}
+	umat            *uuid.UUID
+	clearedumat     bool
+	keluarga        *uuid.UUID
+	clearedkeluarga bool
+	done            bool
+	oldValue        func(context.Context) (*UmatDokumen, error)
+	predicates      []predicate.UmatDokumen
+}
+
+var _ ent.Mutation = (*UmatDokumenMutation)(nil)
+
+// umatdokumenOption allows management of the mutation configuration using functional options.
+type umatdokumenOption func(*UmatDokumenMutation)
+
+// newUmatDokumenMutation creates new mutation for the UmatDokumen entity.
+func newUmatDokumenMutation(c config, op Op, opts ...umatdokumenOption) *UmatDokumenMutation {
+	m := &UmatDokumenMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeUmatDokumen,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withUmatDokumenID sets the ID field of the mutation.
+func withUmatDokumenID(id uuid.UUID) umatdokumenOption {
+	return func(m *UmatDokumenMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *UmatDokumen
+		)
+		m.oldValue = func(ctx context.Context) (*UmatDokumen, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().UmatDokumen.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withUmatDokumen sets the old UmatDokumen of the mutation.
+func withUmatDokumen(node *UmatDokumen) umatdokumenOption {
+	return func(m *UmatDokumenMutation) {
+		m.oldValue = func(context.Context) (*UmatDokumen, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m UmatDokumenMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m UmatDokumenMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of UmatDokumen entities.
+func (m *UmatDokumenMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *UmatDokumenMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *UmatDokumenMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().UmatDokumen.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *UmatDokumenMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *UmatDokumenMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the UmatDokumen entity.
+// If the UmatDokumen object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatDokumenMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *UmatDokumenMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *UmatDokumenMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *UmatDokumenMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the UmatDokumen entity.
+// If the UmatDokumen object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatDokumenMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *UmatDokumenMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetParokiID sets the "paroki_id" field.
+func (m *UmatDokumenMutation) SetParokiID(u uuid.UUID) {
+	m.paroki_id = &u
+}
+
+// ParokiID returns the value of the "paroki_id" field in the mutation.
+func (m *UmatDokumenMutation) ParokiID() (r uuid.UUID, exists bool) {
+	v := m.paroki_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldParokiID returns the old "paroki_id" field's value of the UmatDokumen entity.
+// If the UmatDokumen object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatDokumenMutation) OldParokiID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldParokiID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldParokiID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldParokiID: %w", err)
+	}
+	return oldValue.ParokiID, nil
+}
+
+// ResetParokiID resets all changes to the "paroki_id" field.
+func (m *UmatDokumenMutation) ResetParokiID() {
+	m.paroki_id = nil
+}
+
+// SetUmatID sets the "umat_id" field.
+func (m *UmatDokumenMutation) SetUmatID(u uuid.UUID) {
+	m.umat = &u
+}
+
+// UmatID returns the value of the "umat_id" field in the mutation.
+func (m *UmatDokumenMutation) UmatID() (r uuid.UUID, exists bool) {
+	v := m.umat
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUmatID returns the old "umat_id" field's value of the UmatDokumen entity.
+// If the UmatDokumen object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatDokumenMutation) OldUmatID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUmatID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUmatID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUmatID: %w", err)
+	}
+	return oldValue.UmatID, nil
+}
+
+// ClearUmatID clears the value of the "umat_id" field.
+func (m *UmatDokumenMutation) ClearUmatID() {
+	m.umat = nil
+	m.clearedFields[umatdokumen.FieldUmatID] = struct{}{}
+}
+
+// UmatIDCleared returns if the "umat_id" field was cleared in this mutation.
+func (m *UmatDokumenMutation) UmatIDCleared() bool {
+	_, ok := m.clearedFields[umatdokumen.FieldUmatID]
+	return ok
+}
+
+// ResetUmatID resets all changes to the "umat_id" field.
+func (m *UmatDokumenMutation) ResetUmatID() {
+	m.umat = nil
+	delete(m.clearedFields, umatdokumen.FieldUmatID)
+}
+
+// SetKeluargaID sets the "keluarga_id" field.
+func (m *UmatDokumenMutation) SetKeluargaID(u uuid.UUID) {
+	m.keluarga = &u
+}
+
+// KeluargaID returns the value of the "keluarga_id" field in the mutation.
+func (m *UmatDokumenMutation) KeluargaID() (r uuid.UUID, exists bool) {
+	v := m.keluarga
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKeluargaID returns the old "keluarga_id" field's value of the UmatDokumen entity.
+// If the UmatDokumen object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatDokumenMutation) OldKeluargaID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldKeluargaID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldKeluargaID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKeluargaID: %w", err)
+	}
+	return oldValue.KeluargaID, nil
+}
+
+// ClearKeluargaID clears the value of the "keluarga_id" field.
+func (m *UmatDokumenMutation) ClearKeluargaID() {
+	m.keluarga = nil
+	m.clearedFields[umatdokumen.FieldKeluargaID] = struct{}{}
+}
+
+// KeluargaIDCleared returns if the "keluarga_id" field was cleared in this mutation.
+func (m *UmatDokumenMutation) KeluargaIDCleared() bool {
+	_, ok := m.clearedFields[umatdokumen.FieldKeluargaID]
+	return ok
+}
+
+// ResetKeluargaID resets all changes to the "keluarga_id" field.
+func (m *UmatDokumenMutation) ResetKeluargaID() {
+	m.keluarga = nil
+	delete(m.clearedFields, umatdokumen.FieldKeluargaID)
+}
+
+// SetJenis sets the "jenis" field.
+func (m *UmatDokumenMutation) SetJenis(u umatdokumen.Jenis) {
+	m.jenis = &u
+}
+
+// Jenis returns the value of the "jenis" field in the mutation.
+func (m *UmatDokumenMutation) Jenis() (r umatdokumen.Jenis, exists bool) {
+	v := m.jenis
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldJenis returns the old "jenis" field's value of the UmatDokumen entity.
+// If the UmatDokumen object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatDokumenMutation) OldJenis(ctx context.Context) (v umatdokumen.Jenis, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldJenis is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldJenis requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldJenis: %w", err)
+	}
+	return oldValue.Jenis, nil
+}
+
+// ResetJenis resets all changes to the "jenis" field.
+func (m *UmatDokumenMutation) ResetJenis() {
+	m.jenis = nil
+}
+
+// SetMimeType sets the "mime_type" field.
+func (m *UmatDokumenMutation) SetMimeType(ut umatdokumen.MimeType) {
+	m.mime_type = &ut
+}
+
+// MimeType returns the value of the "mime_type" field in the mutation.
+func (m *UmatDokumenMutation) MimeType() (r umatdokumen.MimeType, exists bool) {
+	v := m.mime_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMimeType returns the old "mime_type" field's value of the UmatDokumen entity.
+// If the UmatDokumen object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatDokumenMutation) OldMimeType(ctx context.Context) (v umatdokumen.MimeType, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMimeType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMimeType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMimeType: %w", err)
+	}
+	return oldValue.MimeType, nil
+}
+
+// ResetMimeType resets all changes to the "mime_type" field.
+func (m *UmatDokumenMutation) ResetMimeType() {
+	m.mime_type = nil
+}
+
+// SetSizeBytes sets the "size_bytes" field.
+func (m *UmatDokumenMutation) SetSizeBytes(i int) {
+	m.size_bytes = &i
+	m.addsize_bytes = nil
+}
+
+// SizeBytes returns the value of the "size_bytes" field in the mutation.
+func (m *UmatDokumenMutation) SizeBytes() (r int, exists bool) {
+	v := m.size_bytes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSizeBytes returns the old "size_bytes" field's value of the UmatDokumen entity.
+// If the UmatDokumen object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatDokumenMutation) OldSizeBytes(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSizeBytes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSizeBytes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSizeBytes: %w", err)
+	}
+	return oldValue.SizeBytes, nil
+}
+
+// AddSizeBytes adds i to the "size_bytes" field.
+func (m *UmatDokumenMutation) AddSizeBytes(i int) {
+	if m.addsize_bytes != nil {
+		*m.addsize_bytes += i
+	} else {
+		m.addsize_bytes = &i
+	}
+}
+
+// AddedSizeBytes returns the value that was added to the "size_bytes" field in this mutation.
+func (m *UmatDokumenMutation) AddedSizeBytes() (r int, exists bool) {
+	v := m.addsize_bytes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSizeBytes resets all changes to the "size_bytes" field.
+func (m *UmatDokumenMutation) ResetSizeBytes() {
+	m.size_bytes = nil
+	m.addsize_bytes = nil
+}
+
+// SetDataEnc sets the "data_enc" field.
+func (m *UmatDokumenMutation) SetDataEnc(b []byte) {
+	m.data_enc = &b
+}
+
+// DataEnc returns the value of the "data_enc" field in the mutation.
+func (m *UmatDokumenMutation) DataEnc() (r []byte, exists bool) {
+	v := m.data_enc
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDataEnc returns the old "data_enc" field's value of the UmatDokumen entity.
+// If the UmatDokumen object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatDokumenMutation) OldDataEnc(ctx context.Context) (v []byte, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDataEnc is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDataEnc requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDataEnc: %w", err)
+	}
+	return oldValue.DataEnc, nil
+}
+
+// ResetDataEnc resets all changes to the "data_enc" field.
+func (m *UmatDokumenMutation) ResetDataEnc() {
+	m.data_enc = nil
+}
+
+// SetUploadedBy sets the "uploaded_by" field.
+func (m *UmatDokumenMutation) SetUploadedBy(u uuid.UUID) {
+	m.uploaded_by = &u
+}
+
+// UploadedBy returns the value of the "uploaded_by" field in the mutation.
+func (m *UmatDokumenMutation) UploadedBy() (r uuid.UUID, exists bool) {
+	v := m.uploaded_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUploadedBy returns the old "uploaded_by" field's value of the UmatDokumen entity.
+// If the UmatDokumen object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UmatDokumenMutation) OldUploadedBy(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUploadedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUploadedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUploadedBy: %w", err)
+	}
+	return oldValue.UploadedBy, nil
+}
+
+// ResetUploadedBy resets all changes to the "uploaded_by" field.
+func (m *UmatDokumenMutation) ResetUploadedBy() {
+	m.uploaded_by = nil
+}
+
+// ClearUmat clears the "umat" edge to the Umat entity.
+func (m *UmatDokumenMutation) ClearUmat() {
+	m.clearedumat = true
+	m.clearedFields[umatdokumen.FieldUmatID] = struct{}{}
+}
+
+// UmatCleared reports if the "umat" edge to the Umat entity was cleared.
+func (m *UmatDokumenMutation) UmatCleared() bool {
+	return m.UmatIDCleared() || m.clearedumat
+}
+
+// UmatIDs returns the "umat" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UmatID instead. It exists only for internal usage by the builders.
+func (m *UmatDokumenMutation) UmatIDs() (ids []uuid.UUID) {
+	if id := m.umat; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetUmat resets all changes to the "umat" edge.
+func (m *UmatDokumenMutation) ResetUmat() {
+	m.umat = nil
+	m.clearedumat = false
+}
+
+// ClearKeluarga clears the "keluarga" edge to the Keluarga entity.
+func (m *UmatDokumenMutation) ClearKeluarga() {
+	m.clearedkeluarga = true
+	m.clearedFields[umatdokumen.FieldKeluargaID] = struct{}{}
+}
+
+// KeluargaCleared reports if the "keluarga" edge to the Keluarga entity was cleared.
+func (m *UmatDokumenMutation) KeluargaCleared() bool {
+	return m.KeluargaIDCleared() || m.clearedkeluarga
+}
+
+// KeluargaIDs returns the "keluarga" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// KeluargaID instead. It exists only for internal usage by the builders.
+func (m *UmatDokumenMutation) KeluargaIDs() (ids []uuid.UUID) {
+	if id := m.keluarga; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetKeluarga resets all changes to the "keluarga" edge.
+func (m *UmatDokumenMutation) ResetKeluarga() {
+	m.keluarga = nil
+	m.clearedkeluarga = false
+}
+
+// Where appends a list predicates to the UmatDokumenMutation builder.
+func (m *UmatDokumenMutation) Where(ps ...predicate.UmatDokumen) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the UmatDokumenMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *UmatDokumenMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.UmatDokumen, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *UmatDokumenMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *UmatDokumenMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (UmatDokumen).
+func (m *UmatDokumenMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *UmatDokumenMutation) Fields() []string {
+	fields := make([]string, 0, 10)
+	if m.created_at != nil {
+		fields = append(fields, umatdokumen.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, umatdokumen.FieldUpdatedAt)
+	}
+	if m.paroki_id != nil {
+		fields = append(fields, umatdokumen.FieldParokiID)
+	}
+	if m.umat != nil {
+		fields = append(fields, umatdokumen.FieldUmatID)
+	}
+	if m.keluarga != nil {
+		fields = append(fields, umatdokumen.FieldKeluargaID)
+	}
+	if m.jenis != nil {
+		fields = append(fields, umatdokumen.FieldJenis)
+	}
+	if m.mime_type != nil {
+		fields = append(fields, umatdokumen.FieldMimeType)
+	}
+	if m.size_bytes != nil {
+		fields = append(fields, umatdokumen.FieldSizeBytes)
+	}
+	if m.data_enc != nil {
+		fields = append(fields, umatdokumen.FieldDataEnc)
+	}
+	if m.uploaded_by != nil {
+		fields = append(fields, umatdokumen.FieldUploadedBy)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *UmatDokumenMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case umatdokumen.FieldCreatedAt:
+		return m.CreatedAt()
+	case umatdokumen.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case umatdokumen.FieldParokiID:
+		return m.ParokiID()
+	case umatdokumen.FieldUmatID:
+		return m.UmatID()
+	case umatdokumen.FieldKeluargaID:
+		return m.KeluargaID()
+	case umatdokumen.FieldJenis:
+		return m.Jenis()
+	case umatdokumen.FieldMimeType:
+		return m.MimeType()
+	case umatdokumen.FieldSizeBytes:
+		return m.SizeBytes()
+	case umatdokumen.FieldDataEnc:
+		return m.DataEnc()
+	case umatdokumen.FieldUploadedBy:
+		return m.UploadedBy()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *UmatDokumenMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case umatdokumen.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case umatdokumen.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case umatdokumen.FieldParokiID:
+		return m.OldParokiID(ctx)
+	case umatdokumen.FieldUmatID:
+		return m.OldUmatID(ctx)
+	case umatdokumen.FieldKeluargaID:
+		return m.OldKeluargaID(ctx)
+	case umatdokumen.FieldJenis:
+		return m.OldJenis(ctx)
+	case umatdokumen.FieldMimeType:
+		return m.OldMimeType(ctx)
+	case umatdokumen.FieldSizeBytes:
+		return m.OldSizeBytes(ctx)
+	case umatdokumen.FieldDataEnc:
+		return m.OldDataEnc(ctx)
+	case umatdokumen.FieldUploadedBy:
+		return m.OldUploadedBy(ctx)
+	}
+	return nil, fmt.Errorf("unknown UmatDokumen field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UmatDokumenMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case umatdokumen.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case umatdokumen.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case umatdokumen.FieldParokiID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetParokiID(v)
+		return nil
+	case umatdokumen.FieldUmatID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUmatID(v)
+		return nil
+	case umatdokumen.FieldKeluargaID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKeluargaID(v)
+		return nil
+	case umatdokumen.FieldJenis:
+		v, ok := value.(umatdokumen.Jenis)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetJenis(v)
+		return nil
+	case umatdokumen.FieldMimeType:
+		v, ok := value.(umatdokumen.MimeType)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMimeType(v)
+		return nil
+	case umatdokumen.FieldSizeBytes:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSizeBytes(v)
+		return nil
+	case umatdokumen.FieldDataEnc:
+		v, ok := value.([]byte)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDataEnc(v)
+		return nil
+	case umatdokumen.FieldUploadedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUploadedBy(v)
+		return nil
+	}
+	return fmt.Errorf("unknown UmatDokumen field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *UmatDokumenMutation) AddedFields() []string {
+	var fields []string
+	if m.addsize_bytes != nil {
+		fields = append(fields, umatdokumen.FieldSizeBytes)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *UmatDokumenMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case umatdokumen.FieldSizeBytes:
+		return m.AddedSizeBytes()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UmatDokumenMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case umatdokumen.FieldSizeBytes:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSizeBytes(v)
+		return nil
+	}
+	return fmt.Errorf("unknown UmatDokumen numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *UmatDokumenMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(umatdokumen.FieldUmatID) {
+		fields = append(fields, umatdokumen.FieldUmatID)
+	}
+	if m.FieldCleared(umatdokumen.FieldKeluargaID) {
+		fields = append(fields, umatdokumen.FieldKeluargaID)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *UmatDokumenMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *UmatDokumenMutation) ClearField(name string) error {
+	switch name {
+	case umatdokumen.FieldUmatID:
+		m.ClearUmatID()
+		return nil
+	case umatdokumen.FieldKeluargaID:
+		m.ClearKeluargaID()
+		return nil
+	}
+	return fmt.Errorf("unknown UmatDokumen nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *UmatDokumenMutation) ResetField(name string) error {
+	switch name {
+	case umatdokumen.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case umatdokumen.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case umatdokumen.FieldParokiID:
+		m.ResetParokiID()
+		return nil
+	case umatdokumen.FieldUmatID:
+		m.ResetUmatID()
+		return nil
+	case umatdokumen.FieldKeluargaID:
+		m.ResetKeluargaID()
+		return nil
+	case umatdokumen.FieldJenis:
+		m.ResetJenis()
+		return nil
+	case umatdokumen.FieldMimeType:
+		m.ResetMimeType()
+		return nil
+	case umatdokumen.FieldSizeBytes:
+		m.ResetSizeBytes()
+		return nil
+	case umatdokumen.FieldDataEnc:
+		m.ResetDataEnc()
+		return nil
+	case umatdokumen.FieldUploadedBy:
+		m.ResetUploadedBy()
+		return nil
+	}
+	return fmt.Errorf("unknown UmatDokumen field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *UmatDokumenMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.umat != nil {
+		edges = append(edges, umatdokumen.EdgeUmat)
+	}
+	if m.keluarga != nil {
+		edges = append(edges, umatdokumen.EdgeKeluarga)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *UmatDokumenMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case umatdokumen.EdgeUmat:
+		if id := m.umat; id != nil {
+			return []ent.Value{*id}
+		}
+	case umatdokumen.EdgeKeluarga:
+		if id := m.keluarga; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *UmatDokumenMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *UmatDokumenMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *UmatDokumenMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedumat {
+		edges = append(edges, umatdokumen.EdgeUmat)
+	}
+	if m.clearedkeluarga {
+		edges = append(edges, umatdokumen.EdgeKeluarga)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *UmatDokumenMutation) EdgeCleared(name string) bool {
+	switch name {
+	case umatdokumen.EdgeUmat:
+		return m.clearedumat
+	case umatdokumen.EdgeKeluarga:
+		return m.clearedkeluarga
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *UmatDokumenMutation) ClearEdge(name string) error {
+	switch name {
+	case umatdokumen.EdgeUmat:
+		m.ClearUmat()
+		return nil
+	case umatdokumen.EdgeKeluarga:
+		m.ClearKeluarga()
+		return nil
+	}
+	return fmt.Errorf("unknown UmatDokumen unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *UmatDokumenMutation) ResetEdge(name string) error {
+	switch name {
+	case umatdokumen.EdgeUmat:
+		m.ResetUmat()
+		return nil
+	case umatdokumen.EdgeKeluarga:
+		m.ResetKeluarga()
+		return nil
+	}
+	return fmt.Errorf("unknown UmatDokumen edge %s", name)
 }
 
 // UmatReferensiMutation represents an operation that mutates the UmatReferensi nodes in the graph.
@@ -33926,6 +35197,8 @@ type UserMutation struct {
 	notify_telegram           *bool
 	status                    *user.Status
 	onboarded                 *bool
+	verified                  *bool
+	verified_at               *time.Time
 	cantus_admin              *bool
 	default_paroki_id         *uuid.UUID
 	last_login_at             *time.Time
@@ -34656,6 +35929,91 @@ func (m *UserMutation) ResetOnboarded() {
 	m.onboarded = nil
 }
 
+// SetVerified sets the "verified" field.
+func (m *UserMutation) SetVerified(b bool) {
+	m.verified = &b
+}
+
+// Verified returns the value of the "verified" field in the mutation.
+func (m *UserMutation) Verified() (r bool, exists bool) {
+	v := m.verified
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVerified returns the old "verified" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldVerified(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVerified is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVerified requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVerified: %w", err)
+	}
+	return oldValue.Verified, nil
+}
+
+// ResetVerified resets all changes to the "verified" field.
+func (m *UserMutation) ResetVerified() {
+	m.verified = nil
+}
+
+// SetVerifiedAt sets the "verified_at" field.
+func (m *UserMutation) SetVerifiedAt(t time.Time) {
+	m.verified_at = &t
+}
+
+// VerifiedAt returns the value of the "verified_at" field in the mutation.
+func (m *UserMutation) VerifiedAt() (r time.Time, exists bool) {
+	v := m.verified_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVerifiedAt returns the old "verified_at" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldVerifiedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVerifiedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVerifiedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVerifiedAt: %w", err)
+	}
+	return oldValue.VerifiedAt, nil
+}
+
+// ClearVerifiedAt clears the value of the "verified_at" field.
+func (m *UserMutation) ClearVerifiedAt() {
+	m.verified_at = nil
+	m.clearedFields[user.FieldVerifiedAt] = struct{}{}
+}
+
+// VerifiedAtCleared returns if the "verified_at" field was cleared in this mutation.
+func (m *UserMutation) VerifiedAtCleared() bool {
+	_, ok := m.clearedFields[user.FieldVerifiedAt]
+	return ok
+}
+
+// ResetVerifiedAt resets all changes to the "verified_at" field.
+func (m *UserMutation) ResetVerifiedAt() {
+	m.verified_at = nil
+	delete(m.clearedFields, user.FieldVerifiedAt)
+}
+
 // SetCantusAdmin sets the "cantus_admin" field.
 func (m *UserMutation) SetCantusAdmin(b bool) {
 	m.cantus_admin = &b
@@ -35040,7 +36398,7 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 18)
+	fields := make([]string, 0, 20)
 	if m.created_at != nil {
 		fields = append(fields, user.FieldCreatedAt)
 	}
@@ -35085,6 +36443,12 @@ func (m *UserMutation) Fields() []string {
 	}
 	if m.onboarded != nil {
 		fields = append(fields, user.FieldOnboarded)
+	}
+	if m.verified != nil {
+		fields = append(fields, user.FieldVerified)
+	}
+	if m.verified_at != nil {
+		fields = append(fields, user.FieldVerifiedAt)
 	}
 	if m.cantus_admin != nil {
 		fields = append(fields, user.FieldCantusAdmin)
@@ -35133,6 +36497,10 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.Status()
 	case user.FieldOnboarded:
 		return m.Onboarded()
+	case user.FieldVerified:
+		return m.Verified()
+	case user.FieldVerifiedAt:
+		return m.VerifiedAt()
 	case user.FieldCantusAdmin:
 		return m.CantusAdmin()
 	case user.FieldDefaultParokiID:
@@ -35178,6 +36546,10 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldStatus(ctx)
 	case user.FieldOnboarded:
 		return m.OldOnboarded(ctx)
+	case user.FieldVerified:
+		return m.OldVerified(ctx)
+	case user.FieldVerifiedAt:
+		return m.OldVerifiedAt(ctx)
 	case user.FieldCantusAdmin:
 		return m.OldCantusAdmin(ctx)
 	case user.FieldDefaultParokiID:
@@ -35298,6 +36670,20 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetOnboarded(v)
 		return nil
+	case user.FieldVerified:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVerified(v)
+		return nil
+	case user.FieldVerifiedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVerifiedAt(v)
+		return nil
 	case user.FieldCantusAdmin:
 		v, ok := value.(bool)
 		if !ok {
@@ -35364,6 +36750,9 @@ func (m *UserMutation) ClearedFields() []string {
 	if m.FieldCleared(user.FieldAvatarURL) {
 		fields = append(fields, user.FieldAvatarURL)
 	}
+	if m.FieldCleared(user.FieldVerifiedAt) {
+		fields = append(fields, user.FieldVerifiedAt)
+	}
 	if m.FieldCleared(user.FieldDefaultParokiID) {
 		fields = append(fields, user.FieldDefaultParokiID)
 	}
@@ -35398,6 +36787,9 @@ func (m *UserMutation) ClearField(name string) error {
 		return nil
 	case user.FieldAvatarURL:
 		m.ClearAvatarURL()
+		return nil
+	case user.FieldVerifiedAt:
+		m.ClearVerifiedAt()
 		return nil
 	case user.FieldDefaultParokiID:
 		m.ClearDefaultParokiID()
@@ -35457,6 +36849,12 @@ func (m *UserMutation) ResetField(name string) error {
 		return nil
 	case user.FieldOnboarded:
 		m.ResetOnboarded()
+		return nil
+	case user.FieldVerified:
+		m.ResetVerified()
+		return nil
+	case user.FieldVerifiedAt:
+		m.ResetVerifiedAt()
 		return nil
 	case user.FieldCantusAdmin:
 		m.ResetCantusAdmin()

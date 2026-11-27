@@ -27,6 +27,8 @@ const (
 	FieldWilayahID = "wilayah_id"
 	// FieldLingkunganID holds the string denoting the lingkungan_id field in the database.
 	FieldLingkunganID = "lingkungan_id"
+	// FieldNomorRegistrasi holds the string denoting the nomor_registrasi field in the database.
+	FieldNomorRegistrasi = "nomor_registrasi"
 	// FieldNomorKkEnc holds the string denoting the nomor_kk_enc field in the database.
 	FieldNomorKkEnc = "nomor_kk_enc"
 	// FieldNomorKkHash holds the string denoting the nomor_kk_hash field in the database.
@@ -53,6 +55,8 @@ const (
 	FieldCatatan = "catatan"
 	// EdgeAnggota holds the string denoting the anggota edge name in mutations.
 	EdgeAnggota = "anggota"
+	// EdgeDokumen holds the string denoting the dokumen edge name in mutations.
+	EdgeDokumen = "dokumen"
 	// Table holds the table name of the keluarga in the database.
 	Table = "keluarga"
 	// AnggotaTable is the table that holds the anggota relation/edge.
@@ -62,6 +66,13 @@ const (
 	AnggotaInverseTable = "umat"
 	// AnggotaColumn is the table column denoting the anggota relation/edge.
 	AnggotaColumn = "keluarga_id"
+	// DokumenTable is the table that holds the dokumen relation/edge.
+	DokumenTable = "umat_dokumen"
+	// DokumenInverseTable is the table name for the UmatDokumen entity.
+	// It exists in this package in order to avoid circular dependency with the "umatdokumen" package.
+	DokumenInverseTable = "umat_dokumen"
+	// DokumenColumn is the table column denoting the dokumen relation/edge.
+	DokumenColumn = "keluarga_id"
 )
 
 // Columns holds all SQL columns for keluarga fields.
@@ -73,6 +84,7 @@ var Columns = []string{
 	FieldParokiID,
 	FieldWilayahID,
 	FieldLingkunganID,
+	FieldNomorRegistrasi,
 	FieldNomorKkEnc,
 	FieldNomorKkHash,
 	FieldNamaKeluarga,
@@ -104,6 +116,8 @@ var (
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
 	UpdateDefaultUpdatedAt func() time.Time
+	// NomorRegistrasiValidator is a validator for the "nomor_registrasi" field. It is called by the builders before save.
+	NomorRegistrasiValidator func(string) error
 	// NamaKeluargaValidator is a validator for the "nama_keluarga" field. It is called by the builders before save.
 	NamaKeluargaValidator func(string) error
 	// DefaultAktif holds the default value on creation for the "aktif" field.
@@ -148,6 +162,11 @@ func ByWilayahID(opts ...sql.OrderTermOption) OrderOption {
 // ByLingkunganID orders the results by the lingkungan_id field.
 func ByLingkunganID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldLingkunganID, opts...).ToFunc()
+}
+
+// ByNomorRegistrasi orders the results by the nomor_registrasi field.
+func ByNomorRegistrasi(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldNomorRegistrasi, opts...).ToFunc()
 }
 
 // ByNomorKkEnc orders the results by the nomor_kk_enc field.
@@ -223,10 +242,31 @@ func ByAnggota(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newAnggotaStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByDokumenCount orders the results by dokumen count.
+func ByDokumenCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newDokumenStep(), opts...)
+	}
+}
+
+// ByDokumen orders the results by dokumen terms.
+func ByDokumen(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newDokumenStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newAnggotaStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AnggotaInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, AnggotaTable, AnggotaColumn),
+	)
+}
+func newDokumenStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(DokumenInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, DokumenTable, DokumenColumn),
 	)
 }

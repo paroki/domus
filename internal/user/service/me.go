@@ -172,6 +172,16 @@ func (s *Service) enrichMeResponse(ctx context.Context, u *ent.User, p authx.Pri
 	if p.ParokiID != uuid.Nil {
 		pid := p.ParokiID
 		res.ActiveParokiID = &pid
+		if s.censusVerifier != nil {
+			if profile, gerr := s.censusVerifier.GetSelfProfile(ctx, p.ParokiID, u.ID); gerr == nil && profile != nil && profile.Umat != nil {
+				uid := profile.Umat.ID
+				res.UmatID = &uid
+				if profile.Umat.NomorInduk != "" {
+					ni := profile.Umat.NomorInduk
+					res.NomorInduk = &ni
+				}
+			}
+		}
 	}
 	return res, nil
 }

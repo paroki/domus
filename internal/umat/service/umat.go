@@ -209,49 +209,99 @@ func (s *Service) CreateUmat(ctx context.Context, parokiID uuid.UUID, req domain
 		tanggalMeninggal = nil
 	}
 
-	created, err := s.repo.CreateUmat(ctx, func(c *ent.UmatCreate) *ent.UmatCreate {
-		c.SetParokiID(parokiID).
-			SetNama(nama).
-			SetJenisKelamin(umat.JenisKelamin(req.JenisKelamin)).
-			SetAlmarhum(almarhum).
-			SetNillableKeluargaID(keluargaID).
-			SetNillableWilayahID(wilayahID).
-			SetNillableLingkunganID(lingkunganID).
-			SetNillableUserID(userID).
-			SetNillableNamaBaptis(trimOptString(req.NamaBaptis)).
-			SetNillableNikEnc(nikEnc).
-			SetNillableNikHash(nikHash).
-			SetNillableTempatLahir(trimOptString(req.TempatLahir)).
-			SetNillableTanggalLahir(nilIfEmpty(tanggalLahir)).
-			SetNillableGolonganDarah(nilIfEmpty(lookups.GolonganDarah)).
-			SetNillableSuku(nilIfEmpty(lookups.Suku)).
-			SetNillableAgama(nilIfEmpty(lookups.Agama)).
-			SetNillableKewarganegaraan(trimOptString(req.Kewarganegaraan)).
-			SetNillableNegara(trimOptString(req.Negara)).
-			SetNillableHubunganKeluarga(nilIfEmpty(lookups.HubunganKeluarga)).
-			SetNillableStatusPernikahan(nilIfEmpty(lookups.StatusPernikahan)).
-			SetNillableTanggalMeninggal(nilIfEmpty(tanggalMeninggal)).
-			SetNillableAlamat(trimOptString(req.Alamat)).
-			SetNillableKotaID(kotaID).
-			SetNillableKecamatanID(kecamatanID).
-			SetNillableKelurahanID(kelurahanID).
-			SetNillableTelepon(nilIfEmpty(telepon)).
-			SetNillableEmail(nilIfEmpty(email)).
-			SetNillableFotoURL(trimOptString(req.FotoURL)).
-			SetNillablePendidikan(nilIfEmpty(lookups.Pendidikan)).
-			SetNillableJurusan(trimOptString(req.Jurusan)).
-			SetNillablePekerjaan(nilIfEmpty(lookups.Pekerjaan)).
-			SetNillableProfesi(nilIfEmpty(lookups.Profesi)).
-			SetNillableKeterampilan(trimOptString(req.Keterampilan)).
-			SetNillableDisabilitas(nilIfEmpty(lookups.Disabilitas)).
-			SetNillableAktivitasSosial(nilIfEmpty(lookups.AktivitasSosial))
-		return c
-	})
-	if err != nil {
-		if ent.IsConstraintError(err) {
-			return domain.UmatDetailResponse{}, s.classifyUmatConstraintError(ctx, parokiID, nikHash, userID, nil)
+	var customNomor *string
+	if req.NomorInduk != nil {
+		if trimmed := strings.TrimSpace(*req.NomorInduk); trimmed != "" {
+			exists, err := s.repo.HasActiveNomorInduk(ctx, parokiID, trimmed, nil)
+			if err != nil {
+				return domain.UmatDetailResponse{}, err
+			}
+			if exists {
+				return domain.UmatDetailResponse{}, domain.ErrNomorIndukConflict
+			}
+			customNomor = &trimmed
 		}
-		return domain.UmatDetailResponse{}, err
+	}
+
+	var created *ent.Umat
+	const maxAttempts = 3
+	for attempt := range maxAttempts {
+		txErr := s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
+			nomorInduk := ""
+			if customNomor != nil {
+				nomorInduk = *customNomor
+			} else {
+				var gerr error
+				nomorInduk, gerr = txRepo.NextNomorInduk(ctx, parokiID, time.Now().UTC().Year())
+				if gerr != nil {
+					return gerr
+				}
+			}
+			row, cerr := txRepo.CreateUmat(ctx, func(c *ent.UmatCreate) *ent.UmatCreate {
+				c.SetParokiID(parokiID).
+					SetNomorInduk(nomorInduk).
+					SetNama(nama).
+					SetJenisKelamin(umat.JenisKelamin(req.JenisKelamin)).
+					SetAlmarhum(almarhum).
+					SetNillableKeluargaID(keluargaID).
+					SetNillableWilayahID(wilayahID).
+					SetNillableLingkunganID(lingkunganID).
+					SetNillableUserID(userID).
+					SetNillableNamaBaptis(trimOptString(req.NamaBaptis)).
+					SetNillableNikEnc(nikEnc).
+					SetNillableNikHash(nikHash).
+					SetNillableTempatLahir(trimOptString(req.TempatLahir)).
+					SetNillableTanggalLahir(nilIfEmpty(tanggalLahir)).
+					SetNillableGolonganDarah(nilIfEmpty(lookups.GolonganDarah)).
+					SetNillableSuku(nilIfEmpty(lookups.Suku)).
+					SetNillableAgama(nilIfEmpty(lookups.Agama)).
+					SetNillableKewarganegaraan(trimOptString(req.Kewarganegaraan)).
+					SetNillableNegara(trimOptString(req.Negara)).
+					SetNillableHubunganKeluarga(nilIfEmpty(lookups.HubunganKeluarga)).
+					SetNillableStatusPernikahan(nilIfEmpty(lookups.StatusPernikahan)).
+					SetNillableTanggalMeninggal(nilIfEmpty(tanggalMeninggal)).
+					SetNillableAlamat(trimOptString(req.Alamat)).
+					SetNillableKotaID(kotaID).
+					SetNillableKecamatanID(kecamatanID).
+					SetNillableKelurahanID(kelurahanID).
+					SetNillableTelepon(nilIfEmpty(telepon)).
+					SetNillableEmail(nilIfEmpty(email)).
+					SetNillableFotoURL(trimOptString(req.FotoURL)).
+					SetNillablePendidikan(nilIfEmpty(lookups.Pendidikan)).
+					SetNillableJurusan(trimOptString(req.Jurusan)).
+					SetNillablePekerjaan(nilIfEmpty(lookups.Pekerjaan)).
+					SetNillableProfesi(nilIfEmpty(lookups.Profesi)).
+					SetNillableKeterampilan(trimOptString(req.Keterampilan)).
+					SetNillableDisabilitas(nilIfEmpty(lookups.Disabilitas)).
+					SetNillableAktivitasSosial(nilIfEmpty(lookups.AktivitasSosial))
+				return c
+			})
+			if cerr != nil {
+				return cerr
+			}
+			created = row
+			return nil
+		})
+		if txErr == nil {
+			break
+		}
+		if ent.IsConstraintError(txErr) {
+			if customNomor == nil && attempt < maxAttempts-1 {
+				if nikHash != nil {
+					if ok, herr := s.repo.HasActiveNIKHash(ctx, parokiID, *nikHash, nil); herr == nil && ok {
+						return domain.UmatDetailResponse{}, domain.ErrNIKConflict
+					}
+				}
+				if userID != nil {
+					if ok, herr := s.repo.HasActiveUserLink(ctx, parokiID, *userID, nil); herr == nil && ok {
+						return domain.UmatDetailResponse{}, domain.ErrUserAlreadyLinked
+					}
+				}
+				continue
+			}
+			return domain.UmatDetailResponse{}, s.classifyUmatConstraintError(ctx, parokiID, nikHash, userID, customNomor, nil)
+		}
+		return domain.UmatDetailResponse{}, txErr
 	}
 
 	refetched, err := s.repo.FindUmatByID(ctx, parokiID, created.ID)
@@ -269,6 +319,22 @@ func (s *Service) UpdateUmat(ctx context.Context, parokiID, id uuid.UUID, req do
 	}
 	if err != nil {
 		return domain.UmatDetailResponse{}, err
+	}
+
+	var nomorInduk *string
+	if req.NomorInduk != nil {
+		trimmed := strings.TrimSpace(*req.NomorInduk)
+		if trimmed == "" {
+			return domain.UmatDetailResponse{}, domain.ValidationError("nomorInduk", "REQUIRED", "Nomor induk cannot be empty.")
+		}
+		exists, err := s.repo.HasActiveNomorInduk(ctx, parokiID, trimmed, &id)
+		if err != nil {
+			return domain.UmatDetailResponse{}, err
+		}
+		if exists {
+			return domain.UmatDetailResponse{}, domain.ErrNomorIndukConflict
+		}
+		nomorInduk = &trimmed
 	}
 
 	var nama *string
@@ -409,6 +475,9 @@ func (s *Service) UpdateUmat(ctx context.Context, parokiID, id uuid.UUID, req do
 	}
 
 	_, err = s.repo.UpdateUmat(ctx, id, func(u *ent.UmatUpdateOne) *ent.UmatUpdateOne {
+		if nomorInduk != nil {
+			u.SetNomorInduk(*nomorInduk)
+		}
 		if nama != nil {
 			u.SetNama(*nama)
 		}
@@ -488,7 +557,7 @@ func (s *Service) UpdateUmat(ctx context.Context, parokiID, id uuid.UUID, req do
 	})
 	if err != nil {
 		if ent.IsConstraintError(err) {
-			return domain.UmatDetailResponse{}, s.classifyUmatConstraintError(ctx, parokiID, nikHash, userID, &id)
+			return domain.UmatDetailResponse{}, s.classifyUmatConstraintError(ctx, parokiID, nikHash, userID, nomorInduk, &id)
 		}
 		return domain.UmatDetailResponse{}, err
 	}
@@ -598,6 +667,7 @@ func toUmatBasic(u *ent.Umat) domain.UmatLookupItemResponse {
 	return domain.UmatLookupItemResponse{
 		ID:           u.ID,
 		ParokiID:     u.ParokiID,
+		NomorInduk:   u.NomorInduk,
 		Nama:         u.Nama,
 		NamaBaptis:   u.NamaBaptis,
 		WilayahID:    u.WilayahID,
@@ -626,7 +696,12 @@ func (s *Service) validateUserLink(ctx context.Context, parokiID, userID uuid.UU
 	return nil
 }
 
-func (s *Service) classifyUmatConstraintError(ctx context.Context, parokiID uuid.UUID, nikHash *string, userID, excludeID *uuid.UUID) error {
+func (s *Service) classifyUmatConstraintError(ctx context.Context, parokiID uuid.UUID, nikHash *string, userID *uuid.UUID, nomorInduk *string, excludeID *uuid.UUID) error {
+	if nomorInduk != nil {
+		if ok, err := s.repo.HasActiveNomorInduk(ctx, parokiID, *nomorInduk, excludeID); err == nil && ok {
+			return domain.ErrNomorIndukConflict
+		}
+	}
 	if nikHash != nil {
 		if ok, err := s.repo.HasActiveNIKHash(ctx, parokiID, *nikHash, excludeID); err == nil && ok {
 			return domain.ErrNIKConflict
@@ -698,6 +773,7 @@ func (s *Service) toUmatListItem(u *ent.Umat) domain.UmatListItemResponse {
 		WilayahID:        u.WilayahID,
 		LingkunganID:     u.LingkunganID,
 		UserID:           u.UserID,
+		NomorInduk:       u.NomorInduk,
 		Nama:             u.Nama,
 		NamaBaptis:       u.NamaBaptis,
 		NIKMasked:        nikMasked,
@@ -738,9 +814,10 @@ func (s *Service) toUmatDetail(u *ent.Umat) domain.UmatDetailResponse {
 	if u.Edges.Keluarga != nil {
 		_, kkMasked := s.decryptAndMask(u.Edges.Keluarga.NomorKkEnc)
 		kelSummary = &domain.UmatKeluargaSummary{
-			ID:            u.Edges.Keluarga.ID,
-			NamaKeluarga:  u.Edges.Keluarga.NamaKeluarga,
-			NomorKKMasked: kkMasked,
+			ID:              u.Edges.Keluarga.ID,
+			NomorRegistrasi: u.Edges.Keluarga.NomorRegistrasi,
+			NamaKeluarga:    u.Edges.Keluarga.NamaKeluarga,
+			NomorKKMasked:   kkMasked,
 		}
 	}
 	sakramen := make([]domain.UmatSakramenResponse, 0, len(u.Edges.Sakramen))
@@ -764,6 +841,7 @@ func (s *Service) toUmatDetail(u *ent.Umat) domain.UmatDetailResponse {
 		WilayahID:        u.WilayahID,
 		LingkunganID:     u.LingkunganID,
 		UserID:           u.UserID,
+		NomorInduk:       u.NomorInduk,
 		Nama:             u.Nama,
 		NamaBaptis:       u.NamaBaptis,
 		NIK:              nikPlain,

@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent/keluarga"
 	"github.com/paroki/domus/ent/umat"
+	"github.com/paroki/domus/ent/umatdokumen"
 	"github.com/paroki/domus/ent/umatsakramen"
 )
 
@@ -124,6 +125,12 @@ func (_c *UmatCreate) SetNillableUserID(v *uuid.UUID) *UmatCreate {
 	if v != nil {
 		_c.SetUserID(*v)
 	}
+	return _c
+}
+
+// SetNomorInduk sets the "nomor_induk" field.
+func (_c *UmatCreate) SetNomorInduk(v string) *UmatCreate {
+	_c.mutation.SetNomorInduk(v)
 	return _c
 }
 
@@ -565,6 +572,21 @@ func (_c *UmatCreate) AddSakramen(v ...*UmatSakramen) *UmatCreate {
 	return _c.AddSakramanIDs(ids...)
 }
 
+// AddDokumanIDs adds the "dokumen" edge to the UmatDokumen entity by IDs.
+func (_c *UmatCreate) AddDokumanIDs(ids ...uuid.UUID) *UmatCreate {
+	_c.mutation.AddDokumanIDs(ids...)
+	return _c
+}
+
+// AddDokumen adds the "dokumen" edges to the UmatDokumen entity.
+func (_c *UmatCreate) AddDokumen(v ...*UmatDokumen) *UmatCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddDokumanIDs(ids...)
+}
+
 // Mutation returns the UmatMutation object of the builder.
 func (_c *UmatCreate) Mutation() *UmatMutation {
 	return _c.mutation
@@ -628,6 +650,14 @@ func (_c *UmatCreate) check() error {
 	}
 	if _, ok := _c.mutation.ParokiID(); !ok {
 		return &ValidationError{Name: "paroki_id", err: errors.New(`ent: missing required field "Umat.paroki_id"`)}
+	}
+	if _, ok := _c.mutation.NomorInduk(); !ok {
+		return &ValidationError{Name: "nomor_induk", err: errors.New(`ent: missing required field "Umat.nomor_induk"`)}
+	}
+	if v, ok := _c.mutation.NomorInduk(); ok {
+		if err := umat.NomorIndukValidator(v); err != nil {
+			return &ValidationError{Name: "nomor_induk", err: fmt.Errorf(`ent: validator failed for field "Umat.nomor_induk": %w`, err)}
+		}
 	}
 	if _, ok := _c.mutation.Nama(); !ok {
 		return &ValidationError{Name: "nama", err: errors.New(`ent: missing required field "Umat.nama"`)}
@@ -710,6 +740,10 @@ func (_c *UmatCreate) createSpec() (*Umat, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.UserID(); ok {
 		_spec.SetField(umat.FieldUserID, field.TypeUUID, value)
 		_node.UserID = &value
+	}
+	if value, ok := _c.mutation.NomorInduk(); ok {
+		_spec.SetField(umat.FieldNomorInduk, field.TypeString, value)
+		_node.NomorInduk = value
 	}
 	if value, ok := _c.mutation.Nama(); ok {
 		_spec.SetField(umat.FieldNama, field.TypeString, value)
@@ -857,6 +891,22 @@ func (_c *UmatCreate) createSpec() (*Umat, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(umatsakramen.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.DokumenIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   umat.DokumenTable,
+			Columns: []string{umat.DokumenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(umatdokumen.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

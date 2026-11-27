@@ -345,6 +345,18 @@ func (f UmatFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error)
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UmatMutation", m)
 }
 
+// The UmatDokumenFunc type is an adapter to allow the use of ordinary
+// function as UmatDokumen mutator.
+type UmatDokumenFunc func(context.Context, *ent.UmatDokumenMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f UmatDokumenFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.UmatDokumenMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UmatDokumenMutation", m)
+}
+
 // The UmatReferensiFunc type is an adapter to allow the use of ordinary
 // function as UmatReferensi mutator.
 type UmatReferensiFunc func(context.Context, *ent.UmatReferensiMutation) (ent.Value, error)

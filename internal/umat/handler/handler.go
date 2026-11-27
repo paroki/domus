@@ -54,6 +54,8 @@ func (h *Handler) Register(
 
 	u.Post("/search", requireUmatRead, h.SearchUmat)
 	u.Post("/lookup", h.LookupUmat)
+	u.Get("/dokumen/:dokumenId", h.GetDokumen)
+	u.Delete("/dokumen/:dokumenId", h.DeleteDokumen)
 	u.Get("/:id", requireUmatRead, h.GetUmat)
 	u.Post("", requireUmatWrite, h.CreateUmat)
 	u.Patch("/:id", requireUmatWrite, h.UpdateUmat)

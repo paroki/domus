@@ -571,6 +571,9 @@
                     "nomorKk": {
                         "type": "string"
                     },
+                    "nomorRegistrasi": {
+                        "type": "string"
+                    },
                     "statusEkonomi": {
                         "type": "string"
                     },
@@ -1189,6 +1192,9 @@
                     "nik": {
                         "type": "string"
                     },
+                    "nomorInduk": {
+                        "type": "string"
+                    },
                     "pekerjaan": {
                         "type": "string"
                     },
@@ -1499,6 +1505,108 @@
                 },
                 "type": "object"
             },
+            "domain.ExtractedKK": {
+                "properties": {
+                    "alamat": {
+                        "type": "string"
+                    },
+                    "anggota": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.ExtractedKKMember"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "namaKeluarga": {
+                        "type": "string"
+                    },
+                    "nomorKk": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.ExtractedKKMember": {
+                "properties": {
+                    "agama": {
+                        "type": "string"
+                    },
+                    "hubunganKeluarga": {
+                        "type": "string"
+                    },
+                    "jenisKelamin": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "type": "string"
+                    },
+                    "nik": {
+                        "type": "string"
+                    },
+                    "pekerjaan": {
+                        "type": "string"
+                    },
+                    "pendidikan": {
+                        "type": "string"
+                    },
+                    "statusPernikahan": {
+                        "type": "string"
+                    },
+                    "tanggalLahir": {
+                        "type": "string"
+                    },
+                    "tempatLahir": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.ExtractedKTP": {
+                "properties": {
+                    "agama": {
+                        "type": "string"
+                    },
+                    "alamat": {
+                        "type": "string"
+                    },
+                    "golonganDarah": {
+                        "type": "string"
+                    },
+                    "jenisKelamin": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "type": "string"
+                    },
+                    "nik": {
+                        "type": "string"
+                    },
+                    "pekerjaan": {
+                        "type": "string"
+                    },
+                    "statusPernikahan": {
+                        "type": "string"
+                    },
+                    "tanggalLahir": {
+                        "type": "string"
+                    },
+                    "tempatLahir": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.IdentityExtraction": {
+                "properties": {
+                    "kk": {
+                        "$ref": "#/components/schemas/domain.ExtractedKK"
+                    },
+                    "ktp": {
+                        "$ref": "#/components/schemas/domain.ExtractedKTP"
+                    }
+                },
+                "type": "object"
+            },
             "domain.KecamatanResponse": {
                 "properties": {
                     "active": {
@@ -1558,6 +1666,9 @@
                     },
                     "nikMasked": {
                         "type": "string"
+                    },
+                    "nomorInduk": {
+                        "type": "string"
                     }
                 },
                 "type": "object"
@@ -1608,6 +1719,9 @@
                         "type": "string"
                     },
                     "nomorKkMasked": {
+                        "type": "string"
+                    },
+                    "nomorRegistrasi": {
                         "type": "string"
                     },
                     "parokiId": {
@@ -1664,6 +1778,9 @@
                         "type": "string"
                     },
                     "nomorKkMasked": {
+                        "type": "string"
+                    },
+                    "nomorRegistrasi": {
                         "type": "string"
                     },
                     "parokiId": {
@@ -3523,6 +3640,139 @@
                 },
                 "type": "object"
             },
+            "domain.SelfDokumenMeta": {
+                "properties": {
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "jenis": {
+                        "type": "string"
+                    },
+                    "keluargaId": {
+                        "type": "string"
+                    },
+                    "mimeType": {
+                        "type": "string"
+                    },
+                    "sizeBytes": {
+                        "type": "integer"
+                    },
+                    "umatId": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.SelfKeluargaInfo": {
+                "properties": {
+                    "alamat": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "lingkunganId": {
+                        "type": "string"
+                    },
+                    "namaKeluarga": {
+                        "type": "string"
+                    },
+                    "nomorKk": {
+                        "type": "string"
+                    },
+                    "nomorRegistrasi": {
+                        "type": "string"
+                    },
+                    "wilayahId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.SelfUmatInfo": {
+                "properties": {
+                    "agama": {
+                        "type": "string"
+                    },
+                    "alamat": {
+                        "type": "string"
+                    },
+                    "golonganDarah": {
+                        "type": "string"
+                    },
+                    "hubunganKeluarga": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "jenisKelamin": {
+                        "type": "string"
+                    },
+                    "lingkunganId": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "type": "string"
+                    },
+                    "nik": {
+                        "type": "string"
+                    },
+                    "nomorInduk": {
+                        "type": "string"
+                    },
+                    "pekerjaan": {
+                        "type": "string"
+                    },
+                    "statusPernikahan": {
+                        "type": "string"
+                    },
+                    "tanggalLahir": {
+                        "type": "string"
+                    },
+                    "tempatLahir": {
+                        "type": "string"
+                    },
+                    "userId": {
+                        "type": "string"
+                    },
+                    "wilayahId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.SelfUmatProfile": {
+                "properties": {
+                    "dokumen": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.SelfDokumenMeta"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "keluarga": {
+                        "$ref": "#/components/schemas/domain.SelfKeluargaInfo"
+                    },
+                    "members": {
+                        "items": {
+                            "$ref": "#/components/schemas/domain.SelfUmatInfo"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "umat": {
+                        "$ref": "#/components/schemas/domain.SelfUmatInfo"
+                    }
+                },
+                "type": "object"
+            },
             "domain.SessionDetailResponse": {
                 "properties": {
                     "createdAt": {
@@ -3752,6 +4002,9 @@
                     "nikMasked": {
                         "type": "string"
                     },
+                    "nomorInduk": {
+                        "type": "string"
+                    },
                     "parokiId": {
                         "type": "string"
                     },
@@ -3810,6 +4063,9 @@
                         "type": "string"
                     },
                     "nomorKkMasked": {
+                        "type": "string"
+                    },
+                    "nomorRegistrasi": {
                         "type": "string"
                     }
                 },
@@ -3889,6 +4145,9 @@
                     "nikMasked": {
                         "type": "string"
                     },
+                    "nomorInduk": {
+                        "type": "string"
+                    },
                     "parokiId": {
                         "type": "string"
                     },
@@ -3943,6 +4202,9 @@
                         "type": "string"
                     },
                     "namaBaptis": {
+                        "type": "string"
+                    },
+                    "nomorInduk": {
                         "type": "string"
                     },
                     "parokiId": {
@@ -4287,6 +4549,9 @@
                         "type": "string"
                     },
                     "nomorKk": {
+                        "type": "string"
+                    },
+                    "nomorRegistrasi": {
                         "type": "string"
                     },
                     "statusEkonomi": {
@@ -5014,6 +5279,9 @@
                     "nik": {
                         "type": "string"
                     },
+                    "nomorInduk": {
+                        "type": "string"
+                    },
                     "pekerjaan": {
                         "type": "string"
                     },
@@ -5256,6 +5524,9 @@
                     "name": {
                         "type": "string"
                     },
+                    "nomorInduk": {
+                        "type": "string"
+                    },
                     "notifyPush": {
                         "type": "boolean"
                     },
@@ -5294,7 +5565,16 @@
                     "timezone": {
                         "type": "string"
                     },
+                    "umatId": {
+                        "type": "string"
+                    },
                     "updatedAt": {
+                        "type": "string"
+                    },
+                    "verified": {
+                        "type": "boolean"
+                    },
+                    "verifiedAt": {
                         "type": "string"
                     }
                 },
@@ -5370,6 +5650,46 @@
             "domain.VAPIDPublicKeyResponse": {
                 "properties": {
                     "publicKey": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.VerifyConfirmResult": {
+                "properties": {
+                    "jenisKelamin": {
+                        "type": "string"
+                    },
+                    "keluargaId": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "type": "string"
+                    },
+                    "nomorInduk": {
+                        "type": "string"
+                    },
+                    "tanggalLahir": {
+                        "type": "string"
+                    },
+                    "umatId": {
+                        "type": "string"
+                    },
+                    "verified": {
+                        "type": "boolean"
+                    },
+                    "verifiedAt": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.VerifyExtractResponse": {
+                "properties": {
+                    "extraction": {
+                        "$ref": "#/components/schemas/domain.IdentityExtraction"
+                    },
+                    "matchStatus": {
                         "type": "string"
                     }
                 },
@@ -6559,6 +6879,20 @@
                 },
                 "type": "object"
             },
+            "httpx.Envelope-domain_SelfUmatProfile": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.SelfUmatProfile"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
             "httpx.Envelope-domain_SessionDetailResponse": {
                 "properties": {
                     "data": {
@@ -6689,6 +7023,34 @@
                 "properties": {
                     "data": {
                         "$ref": "#/components/schemas/domain.VAPIDPublicKeyResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_VerifyConfirmResult": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.VerifyConfirmResult"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_VerifyExtractResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.VerifyExtractResponse"
                     },
                     "error": {
                         "$ref": "#/components/schemas/httpx.ErrorPayload"
@@ -11578,6 +11940,250 @@
                 "summary": "Revoke a personal access token",
                 "tags": [
                     "Me"
+                ]
+            }
+        },
+        "/me/umat": {
+            "get": {
+                "description": "Returns the caller's linked umat, keluarga (with decrypted NIK and nomorKk), family members, and document metadata.",
+                "operationId": "getMyUmat",
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_SelfUmatProfile"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    }
+                },
+                "summary": "Get my umat profile",
+                "tags": [
+                    "Users"
+                ]
+            }
+        },
+        "/me/verify/confirm": {
+            "post": {
+                "description": "Re-validates reviewed identity data and documents, syncs keluarga and umat records, and marks the caller verified.",
+                "operationId": "verifyConfirm",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "kartuPelajar": {
+                                        "description": "Kartu Pelajar image (JPEG/PNG/WebP, max 2 MiB)",
+                                        "format": "binary",
+                                        "type": "string"
+                                    },
+                                    "kia": {
+                                        "description": "KIA image (JPEG/PNG/WebP, max 2 MiB)",
+                                        "format": "binary",
+                                        "type": "string"
+                                    },
+                                    "kk": {
+                                        "description": "Kartu Keluarga image (JPEG/PNG/WebP, max 2 MiB)",
+                                        "format": "binary",
+                                        "type": "string"
+                                    },
+                                    "ktp": {
+                                        "description": "KTP image (JPEG/PNG/WebP, max 2 MiB)",
+                                        "format": "binary",
+                                        "type": "string"
+                                    },
+                                    "lingkunganId": {
+                                        "description": "Optional Lingkungan UUID",
+                                        "type": "string"
+                                    },
+                                    "memberIndex": {
+                                        "description": "0-based index of caller in kk.anggota",
+                                        "type": "integer"
+                                    },
+                                    "payload": {
+                                        "description": "Reviewed IdentityExtraction JSON",
+                                        "type": "string"
+                                    },
+                                    "wilayahId": {
+                                        "description": "Optional Wilayah UUID",
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "payload"
+                                ],
+                                "type": "object"
+                            }
+                        }
+                    },
+                    "description": "Reviewed IdentityExtraction JSON"
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_VerifyConfirmResult"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Conflict"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Confirm identity verification",
+                "tags": [
+                    "Users"
+                ]
+            }
+        },
+        "/me/verify/extract": {
+            "post": {
+                "description": "Extracts structured identity data from KTP/Kartu Pelajar and KK photos using AI Vision and previews census match status.",
+                "operationId": "verifyExtract",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "kartuPelajar": {
+                                        "description": "Kartu Pelajar / KIA image (JPEG/PNG/WebP, max 2 MiB)",
+                                        "format": "binary",
+                                        "type": "string"
+                                    },
+                                    "kk": {
+                                        "description": "Kartu Keluarga image (JPEG/PNG/WebP, max 2 MiB; required when ktp is omitted)",
+                                        "format": "binary",
+                                        "type": "string"
+                                    },
+                                    "ktp": {
+                                        "description": "KTP image (JPEG/PNG/WebP, max 2 MiB)",
+                                        "format": "binary",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    },
+                    "description": "KTP image (JPEG/PNG/WebP, max 2 MiB)"
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_VerifyExtractResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    },
+                    "429": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Too Many Requests"
+                    }
+                },
+                "summary": "Extract identity documents",
+                "tags": [
+                    "Users"
                 ]
             }
         },
@@ -17998,6 +18604,193 @@
                     }
                 },
                 "summary": "Create umat",
+                "tags": [
+                    "Umat"
+                ]
+            }
+        },
+        "/umat/dokumen/{dokumenId}": {
+            "delete": {
+                "description": "Hard-deletes an identity document (owner, head of keluarga, or umat:admin).",
+                "operationId": "deleteUmatDokumen",
+                "parameters": [
+                    {
+                        "description": "Dokumen UUID",
+                        "in": "path",
+                        "name": "dokumenId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Delete umat dokumen",
+                "tags": [
+                    "Umat"
+                ]
+            },
+            "get": {
+                "description": "Decrypts and returns an identity document image (owner, head of keluarga, or umat:admin).",
+                "operationId": "getUmatDokumen",
+                "parameters": [
+                    {
+                        "description": "Dokumen UUID",
+                        "in": "path",
+                        "name": "dokumenId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "image/jpeg": {
+                                "schema": {
+                                    "type": "file"
+                                }
+                            },
+                            "image/png": {
+                                "schema": {
+                                    "type": "file"
+                                }
+                            },
+                            "image/webp": {
+                                "schema": {
+                                    "type": "file"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "image/jpeg": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            },
+                            "image/png": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            },
+                            "image/webp": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "image/jpeg": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            },
+                            "image/png": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            },
+                            "image/webp": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "content": {
+                            "image/jpeg": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            },
+                            "image/png": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            },
+                            "image/webp": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "image/jpeg": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            },
+                            "image/png": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            },
+                            "image/webp": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    }
+                },
+                "summary": "Get umat dokumen",
                 "tags": [
                     "Umat"
                 ]

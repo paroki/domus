@@ -91,6 +91,9 @@ func (h *Handler) Register(
 	me.Post("/push/subscribe", h.SubscribePush)
 	me.Post("/push/unsubscribe", h.UnsubscribePush)
 	me.Post("/push/test", h.TestPushNotification)
+	me.Post("/verify/extract", h.VerifyExtract)
+	me.Post("/verify/confirm", h.VerifyConfirm)
+	me.Get("/umat", h.GetMyUmat)
 
 	api.Post("/telegram/hooks", h.TelegramWebhook)
 

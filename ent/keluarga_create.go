@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent/keluarga"
 	"github.com/paroki/domus/ent/umat"
+	"github.com/paroki/domus/ent/umatdokumen"
 )
 
 // KeluargaCreate is the builder for creating a Keluarga entity.
@@ -95,6 +96,12 @@ func (_c *KeluargaCreate) SetNillableLingkunganID(v *uuid.UUID) *KeluargaCreate 
 	if v != nil {
 		_c.SetLingkunganID(*v)
 	}
+	return _c
+}
+
+// SetNomorRegistrasi sets the "nomor_registrasi" field.
+func (_c *KeluargaCreate) SetNomorRegistrasi(v string) *KeluargaCreate {
+	_c.mutation.SetNomorRegistrasi(v)
 	return _c
 }
 
@@ -287,6 +294,21 @@ func (_c *KeluargaCreate) AddAnggota(v ...*Umat) *KeluargaCreate {
 	return _c.AddAnggotumIDs(ids...)
 }
 
+// AddDokumanIDs adds the "dokumen" edge to the UmatDokumen entity by IDs.
+func (_c *KeluargaCreate) AddDokumanIDs(ids ...uuid.UUID) *KeluargaCreate {
+	_c.mutation.AddDokumanIDs(ids...)
+	return _c
+}
+
+// AddDokumen adds the "dokumen" edges to the UmatDokumen entity.
+func (_c *KeluargaCreate) AddDokumen(v ...*UmatDokumen) *KeluargaCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddDokumanIDs(ids...)
+}
+
 // Mutation returns the KeluargaMutation object of the builder.
 func (_c *KeluargaCreate) Mutation() *KeluargaMutation {
 	return _c.mutation
@@ -350,6 +372,14 @@ func (_c *KeluargaCreate) check() error {
 	}
 	if _, ok := _c.mutation.ParokiID(); !ok {
 		return &ValidationError{Name: "paroki_id", err: errors.New(`ent: missing required field "Keluarga.paroki_id"`)}
+	}
+	if _, ok := _c.mutation.NomorRegistrasi(); !ok {
+		return &ValidationError{Name: "nomor_registrasi", err: errors.New(`ent: missing required field "Keluarga.nomor_registrasi"`)}
+	}
+	if v, ok := _c.mutation.NomorRegistrasi(); ok {
+		if err := keluarga.NomorRegistrasiValidator(v); err != nil {
+			return &ValidationError{Name: "nomor_registrasi", err: fmt.Errorf(`ent: validator failed for field "Keluarga.nomor_registrasi": %w`, err)}
+		}
 	}
 	if _, ok := _c.mutation.NamaKeluarga(); !ok {
 		return &ValidationError{Name: "nama_keluarga", err: errors.New(`ent: missing required field "Keluarga.nama_keluarga"`)}
@@ -421,6 +451,10 @@ func (_c *KeluargaCreate) createSpec() (*Keluarga, *sqlgraph.CreateSpec) {
 		_spec.SetField(keluarga.FieldLingkunganID, field.TypeUUID, value)
 		_node.LingkunganID = &value
 	}
+	if value, ok := _c.mutation.NomorRegistrasi(); ok {
+		_spec.SetField(keluarga.FieldNomorRegistrasi, field.TypeString, value)
+		_node.NomorRegistrasi = value
+	}
 	if value, ok := _c.mutation.NomorKkEnc(); ok {
 		_spec.SetField(keluarga.FieldNomorKkEnc, field.TypeString, value)
 		_node.NomorKkEnc = &value
@@ -478,6 +512,22 @@ func (_c *KeluargaCreate) createSpec() (*Keluarga, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(umat.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.DokumenIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   keluarga.DokumenTable,
+			Columns: []string{keluarga.DokumenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(umatdokumen.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

@@ -35,6 +35,8 @@ type Umat struct {
 	LingkunganID *uuid.UUID `json:"lingkungan_id,omitempty"`
 	// UserID holds the value of the "user_id" field.
 	UserID *uuid.UUID `json:"user_id,omitempty"`
+	// NomorInduk holds the value of the "nomor_induk" field.
+	NomorInduk string `json:"nomor_induk,omitempty"`
 	// Nama holds the value of the "nama" field.
 	Nama string `json:"nama,omitempty"`
 	// NamaBaptis holds the value of the "nama_baptis" field.
@@ -107,9 +109,11 @@ type UmatEdges struct {
 	Keluarga *Keluarga `json:"keluarga,omitempty"`
 	// Sakramen holds the value of the sakramen edge.
 	Sakramen []*UmatSakramen `json:"sakramen,omitempty"`
+	// Dokumen holds the value of the dokumen edge.
+	Dokumen []*UmatDokumen `json:"dokumen,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // KeluargaOrErr returns the Keluarga value or an error if the edge
@@ -132,6 +136,15 @@ func (e UmatEdges) SakramenOrErr() ([]*UmatSakramen, error) {
 	return nil, &NotLoadedError{edge: "sakramen"}
 }
 
+// DokumenOrErr returns the Dokumen value or an error if the edge
+// was not loaded in eager-loading.
+func (e UmatEdges) DokumenOrErr() ([]*UmatDokumen, error) {
+	if e.loadedTypes[2] {
+		return e.Dokumen, nil
+	}
+	return nil, &NotLoadedError{edge: "dokumen"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Umat) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -141,7 +154,7 @@ func (*Umat) scanValues(columns []string) ([]any, error) {
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case umat.FieldAlmarhum:
 			values[i] = new(sql.NullBool)
-		case umat.FieldNama, umat.FieldNamaBaptis, umat.FieldNikEnc, umat.FieldNikHash, umat.FieldJenisKelamin, umat.FieldTempatLahir, umat.FieldTanggalLahir, umat.FieldGolonganDarah, umat.FieldSuku, umat.FieldAgama, umat.FieldKewarganegaraan, umat.FieldNegara, umat.FieldHubunganKeluarga, umat.FieldStatusPernikahan, umat.FieldTanggalMeninggal, umat.FieldAlamat, umat.FieldTelepon, umat.FieldEmail, umat.FieldFotoURL, umat.FieldPendidikan, umat.FieldJurusan, umat.FieldPekerjaan, umat.FieldProfesi, umat.FieldKeterampilan, umat.FieldDisabilitas, umat.FieldAktivitasSosial:
+		case umat.FieldNomorInduk, umat.FieldNama, umat.FieldNamaBaptis, umat.FieldNikEnc, umat.FieldNikHash, umat.FieldJenisKelamin, umat.FieldTempatLahir, umat.FieldTanggalLahir, umat.FieldGolonganDarah, umat.FieldSuku, umat.FieldAgama, umat.FieldKewarganegaraan, umat.FieldNegara, umat.FieldHubunganKeluarga, umat.FieldStatusPernikahan, umat.FieldTanggalMeninggal, umat.FieldAlamat, umat.FieldTelepon, umat.FieldEmail, umat.FieldFotoURL, umat.FieldPendidikan, umat.FieldJurusan, umat.FieldPekerjaan, umat.FieldProfesi, umat.FieldKeterampilan, umat.FieldDisabilitas, umat.FieldAktivitasSosial:
 			values[i] = new(sql.NullString)
 		case umat.FieldCreatedAt, umat.FieldUpdatedAt, umat.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
@@ -220,6 +233,12 @@ func (_m *Umat) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.UserID = new(uuid.UUID)
 				*_m.UserID = *value.S.(*uuid.UUID)
+			}
+		case umat.FieldNomorInduk:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field nomor_induk", values[i])
+			} else if value.Valid {
+				_m.NomorInduk = value.String
 			}
 		case umat.FieldNama:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -451,6 +470,11 @@ func (_m *Umat) QuerySakramen() *UmatSakramenQuery {
 	return NewUmatClient(_m.config).QuerySakramen(_m)
 }
 
+// QueryDokumen queries the "dokumen" edge of the Umat entity.
+func (_m *Umat) QueryDokumen() *UmatDokumenQuery {
+	return NewUmatClient(_m.config).QueryDokumen(_m)
+}
+
 // Update returns a builder for updating this Umat.
 // Note that you need to call Umat.Unwrap() before calling this method if this Umat
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -507,6 +531,9 @@ func (_m *Umat) String() string {
 		builder.WriteString("user_id=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
+	builder.WriteString(", ")
+	builder.WriteString("nomor_induk=")
+	builder.WriteString(_m.NomorInduk)
 	builder.WriteString(", ")
 	builder.WriteString("nama=")
 	builder.WriteString(_m.Nama)

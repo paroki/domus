@@ -146,6 +146,16 @@ func (f *Feature) Drivers() *driver.Registry {
 	return f.drivers
 }
 
+// ExtractIdentityDocument extracts structured identity fields from document images via AI Vision.
+func (f *Feature) ExtractIdentityDocument(ctx context.Context, in user.IdentityExtractInput) (user.IdentityExtraction, error) {
+	return f.service.ExtractIdentityDocument(ctx, in)
+}
+
+// SetChatModelFactory overrides chat model creation (intended for unit tests with fake models).
+func (f *Feature) SetChatModelFactory(fn service.ChatModelFactory) {
+	f.service.SetChatModelFactory(fn)
+}
+
 // RegisterPermissions registers agent feature policies with the Casbin enforcer.
 func (f *Feature) RegisterPermissions(ctx context.Context, e *authz.Enforcer) error {
 	if e == nil {

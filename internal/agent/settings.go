@@ -19,6 +19,7 @@ var (
 	SettingModelRafael          = setting.Key("agent", "model.rafael")
 	SettingModelMemoryExtractor = setting.Key("agent", "model.memory_extractor")
 	SettingModelEmbedding       = setting.Key("agent", "model.embedding")
+	SettingModelVision          = setting.Key("agent", "model.vision")
 
 	SettingPromptGabriel         = setting.Key("agent", "prompt.gabriel")
 	SettingPromptMikael          = setting.Key("agent", "prompt.mikael")
@@ -32,6 +33,7 @@ var modelSettingKeys = []string{
 	SettingModelRafael,
 	SettingModelMemoryExtractor,
 	SettingModelEmbedding,
+	SettingModelVision,
 }
 
 const (
@@ -75,6 +77,13 @@ func (f *Feature) RegisterSettings(s *setting.Store) {
 		Label:       "Model Embedding",
 		Description: "Model embedding 768-dimensi opsional (contoh: <providerId>:gemini-embedding-001); kosong berarti mode BM25 saja.",
 		Placeholder: "<providerId>:gemini-embedding-001",
+	})
+	s.Register(setting.Descriptor{
+		Key:         SettingModelVision,
+		Group:       groupModelRouting,
+		Label:       "Model Vision",
+		Description: "Model multimodal opsional untuk ekstraksi KTP/KK; mengikuti Gabriel jika kosong.",
+		Placeholder: "<providerId>:gemini-2.5-flash",
 	})
 
 	s.Register(setting.Descriptor{

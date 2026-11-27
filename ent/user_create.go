@@ -219,6 +219,34 @@ func (_c *UserCreate) SetNillableOnboarded(v *bool) *UserCreate {
 	return _c
 }
 
+// SetVerified sets the "verified" field.
+func (_c *UserCreate) SetVerified(v bool) *UserCreate {
+	_c.mutation.SetVerified(v)
+	return _c
+}
+
+// SetNillableVerified sets the "verified" field if the given value is not nil.
+func (_c *UserCreate) SetNillableVerified(v *bool) *UserCreate {
+	if v != nil {
+		_c.SetVerified(*v)
+	}
+	return _c
+}
+
+// SetVerifiedAt sets the "verified_at" field.
+func (_c *UserCreate) SetVerifiedAt(v time.Time) *UserCreate {
+	_c.mutation.SetVerifiedAt(v)
+	return _c
+}
+
+// SetNillableVerifiedAt sets the "verified_at" field if the given value is not nil.
+func (_c *UserCreate) SetNillableVerifiedAt(v *time.Time) *UserCreate {
+	if v != nil {
+		_c.SetVerifiedAt(*v)
+	}
+	return _c
+}
+
 // SetCantusAdmin sets the "cantus_admin" field.
 func (_c *UserCreate) SetCantusAdmin(v bool) *UserCreate {
 	_c.mutation.SetCantusAdmin(v)
@@ -402,6 +430,10 @@ func (_c *UserCreate) defaults() {
 		v := user.DefaultOnboarded
 		_c.mutation.SetOnboarded(v)
 	}
+	if _, ok := _c.mutation.Verified(); !ok {
+		v := user.DefaultVerified
+		_c.mutation.SetVerified(v)
+	}
 	if _, ok := _c.mutation.CantusAdmin(); !ok {
 		v := user.DefaultCantusAdmin
 		_c.mutation.SetCantusAdmin(v)
@@ -468,6 +500,9 @@ func (_c *UserCreate) check() error {
 	}
 	if _, ok := _c.mutation.Onboarded(); !ok {
 		return &ValidationError{Name: "onboarded", err: errors.New(`ent: missing required field "User.onboarded"`)}
+	}
+	if _, ok := _c.mutation.Verified(); !ok {
+		return &ValidationError{Name: "verified", err: errors.New(`ent: missing required field "User.verified"`)}
 	}
 	if _, ok := _c.mutation.CantusAdmin(); !ok {
 		return &ValidationError{Name: "cantus_admin", err: errors.New(`ent: missing required field "User.cantus_admin"`)}
@@ -566,6 +601,14 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Onboarded(); ok {
 		_spec.SetField(user.FieldOnboarded, field.TypeBool, value)
 		_node.Onboarded = value
+	}
+	if value, ok := _c.mutation.Verified(); ok {
+		_spec.SetField(user.FieldVerified, field.TypeBool, value)
+		_node.Verified = value
+	}
+	if value, ok := _c.mutation.VerifiedAt(); ok {
+		_spec.SetField(user.FieldVerifiedAt, field.TypeTime, value)
+		_node.VerifiedAt = &value
 	}
 	if value, ok := _c.mutation.CantusAdmin(); ok {
 		_spec.SetField(user.FieldCantusAdmin, field.TypeBool, value)

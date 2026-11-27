@@ -179,34 +179,80 @@ func (s *Service) CreateKeluarga(ctx context.Context, parokiID uuid.UUID, req do
 		return domain.KeluargaDetailResponse{}, err
 	}
 
+	var customNomor *string
+	if req.NomorRegistrasi != nil {
+		if trimmed := strings.TrimSpace(*req.NomorRegistrasi); trimmed != "" {
+			exists, err := s.repo.HasActiveNomorRegistrasi(ctx, parokiID, trimmed, nil)
+			if err != nil {
+				return domain.KeluargaDetailResponse{}, err
+			}
+			if exists {
+				return domain.KeluargaDetailResponse{}, domain.ErrRegistrasiConflict
+			}
+			customNomor = &trimmed
+		}
+	}
+
 	aktif := true
 	if req.Aktif != nil {
 		aktif = *req.Aktif
 	}
 
-	created, err := s.repo.CreateKeluarga(ctx, func(c *ent.KeluargaCreate) *ent.KeluargaCreate {
-		c.SetParokiID(parokiID).
-			SetNamaKeluarga(nama).
-			SetAktif(aktif).
-			SetNillableWilayahID(wilayahID).
-			SetNillableLingkunganID(lingkunganID).
-			SetNillableNomorKkEnc(kkEnc).
-			SetNillableNomorKkHash(kkHash).
-			SetNillableAlamat(trimOptString(req.Alamat)).
-			SetNillableKotaID(kotaID).
-			SetNillableKecamatanID(kecamatanID).
-			SetNillableKelurahanID(kelurahanID).
-			SetNillableKodePos(trimOptString(req.KodePos)).
-			SetNillableStatusRumah(nilIfEmpty(statusRumah)).
-			SetNillableStatusEkonomi(nilIfEmpty(statusEkonomi)).
-			SetNillableCatatan(trimOptString(req.Catatan))
-		return c
-	})
-	if err != nil {
-		if ent.IsConstraintError(err) {
-			return domain.KeluargaDetailResponse{}, domain.ErrKKConflict
+	var created *ent.Keluarga
+	const maxAttempts = 3
+	for attempt := range maxAttempts {
+		txErr := s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
+			nomorReg := ""
+			if customNomor != nil {
+				nomorReg = *customNomor
+			} else {
+				var gerr error
+				nomorReg, gerr = txRepo.NextNomorRegistrasi(ctx, parokiID, time.Now().UTC().Year())
+				if gerr != nil {
+					return gerr
+				}
+			}
+			row, cerr := txRepo.CreateKeluarga(ctx, func(c *ent.KeluargaCreate) *ent.KeluargaCreate {
+				c.SetParokiID(parokiID).
+					SetNomorRegistrasi(nomorReg).
+					SetNamaKeluarga(nama).
+					SetAktif(aktif).
+					SetNillableWilayahID(wilayahID).
+					SetNillableLingkunganID(lingkunganID).
+					SetNillableNomorKkEnc(kkEnc).
+					SetNillableNomorKkHash(kkHash).
+					SetNillableAlamat(trimOptString(req.Alamat)).
+					SetNillableKotaID(kotaID).
+					SetNillableKecamatanID(kecamatanID).
+					SetNillableKelurahanID(kelurahanID).
+					SetNillableKodePos(trimOptString(req.KodePos)).
+					SetNillableStatusRumah(nilIfEmpty(statusRumah)).
+					SetNillableStatusEkonomi(nilIfEmpty(statusEkonomi)).
+					SetNillableCatatan(trimOptString(req.Catatan))
+				return c
+			})
+			if cerr != nil {
+				return cerr
+			}
+			created = row
+			return nil
+		})
+		if txErr == nil {
+			break
 		}
-		return domain.KeluargaDetailResponse{}, err
+		if ent.IsConstraintError(txErr) {
+			if customNomor == nil && attempt < maxAttempts-1 {
+				// Retry if auto-generated nomorRegistrasi collided, unless it was actually a NomorKK conflict.
+				if kkHash != nil {
+					if ok, herr := s.repo.HasActiveNomorKKHash(ctx, parokiID, *kkHash, nil); herr == nil && ok {
+						return domain.KeluargaDetailResponse{}, domain.ErrKKConflict
+					}
+				}
+				continue
+			}
+			return domain.KeluargaDetailResponse{}, s.classifyKeluargaConstraintError(ctx, parokiID, kkHash, customNomor, nil)
+		}
+		return domain.KeluargaDetailResponse{}, txErr
 	}
 	return s.toKeluargaDetail(created), nil
 }
@@ -219,6 +265,22 @@ func (s *Service) UpdateKeluarga(ctx context.Context, parokiID, id uuid.UUID, re
 	}
 	if err != nil {
 		return domain.KeluargaDetailResponse{}, err
+	}
+
+	var nomorReg *string
+	if req.NomorRegistrasi != nil {
+		trimmed := strings.TrimSpace(*req.NomorRegistrasi)
+		if trimmed == "" {
+			return domain.KeluargaDetailResponse{}, domain.ValidationError("nomorRegistrasi", "REQUIRED", "Nomor registrasi cannot be empty.")
+		}
+		exists, err := s.repo.HasActiveNomorRegistrasi(ctx, parokiID, trimmed, &id)
+		if err != nil {
+			return domain.KeluargaDetailResponse{}, err
+		}
+		if exists {
+			return domain.KeluargaDetailResponse{}, domain.ErrRegistrasiConflict
+		}
+		nomorReg = &trimmed
 	}
 
 	var nama *string
@@ -282,6 +344,9 @@ func (s *Service) UpdateKeluarga(ctx context.Context, parokiID, id uuid.UUID, re
 	}
 
 	_, err = s.repo.UpdateKeluarga(ctx, id, func(u *ent.KeluargaUpdateOne) *ent.KeluargaUpdateOne {
+		if nomorReg != nil {
+			u.SetNomorRegistrasi(*nomorReg)
+		}
 		if nama != nil {
 			u.SetNamaKeluarga(*nama)
 		}
@@ -327,7 +392,7 @@ func (s *Service) UpdateKeluarga(ctx context.Context, parokiID, id uuid.UUID, re
 	})
 	if err != nil {
 		if ent.IsConstraintError(err) {
-			return domain.KeluargaDetailResponse{}, domain.ErrKKConflict
+			return domain.KeluargaDetailResponse{}, s.classifyKeluargaConstraintError(ctx, parokiID, kkHash, nomorReg, &id)
 		}
 		return domain.KeluargaDetailResponse{}, err
 	}
@@ -356,6 +421,20 @@ func (s *Service) DeleteKeluarga(ctx context.Context, parokiID, id uuid.UUID) er
 	return s.repo.SoftDeleteKeluarga(ctx, id, time.Now().UTC())
 }
 
+func (s *Service) classifyKeluargaConstraintError(ctx context.Context, parokiID uuid.UUID, kkHash, nomorReg *string, excludeID *uuid.UUID) error {
+	if nomorReg != nil {
+		if ok, err := s.repo.HasActiveNomorRegistrasi(ctx, parokiID, *nomorReg, excludeID); err == nil && ok {
+			return domain.ErrRegistrasiConflict
+		}
+	}
+	if kkHash != nil {
+		if ok, err := s.repo.HasActiveNomorKKHash(ctx, parokiID, *kkHash, excludeID); err == nil && ok {
+			return domain.ErrKKConflict
+		}
+	}
+	return domain.ErrKKConflict
+}
+
 func (s *Service) decryptAndMask(enc *string) (plain *string, masked *string) {
 	if enc == nil || *enc == "" || s.cipher == nil {
 		return nil, nil
@@ -371,23 +450,24 @@ func (s *Service) decryptAndMask(enc *string) (plain *string, masked *string) {
 func (s *Service) toKeluargaListItem(k *ent.Keluarga) domain.KeluargaListItemResponse {
 	_, masked := s.decryptAndMask(k.NomorKkEnc)
 	return domain.KeluargaListItemResponse{
-		ID:            k.ID,
-		ParokiID:      k.ParokiID,
-		WilayahID:     k.WilayahID,
-		LingkunganID:  k.LingkunganID,
-		NomorKKMasked: masked,
-		NamaKeluarga:  k.NamaKeluarga,
-		Alamat:        k.Alamat,
-		KotaID:        k.KotaID,
-		KecamatanID:   k.KecamatanID,
-		KelurahanID:   k.KelurahanID,
-		KodePos:       k.KodePos,
-		StatusRumah:   k.StatusRumah,
-		StatusEkonomi: k.StatusEkonomi,
-		Aktif:         k.Aktif,
-		Catatan:       k.Catatan,
-		CreatedAt:     k.CreatedAt,
-		UpdatedAt:     k.UpdatedAt,
+		ID:              k.ID,
+		ParokiID:        k.ParokiID,
+		WilayahID:       k.WilayahID,
+		LingkunganID:    k.LingkunganID,
+		NomorRegistrasi: k.NomorRegistrasi,
+		NomorKKMasked:   masked,
+		NamaKeluarga:    k.NamaKeluarga,
+		Alamat:          k.Alamat,
+		KotaID:          k.KotaID,
+		KecamatanID:     k.KecamatanID,
+		KelurahanID:     k.KelurahanID,
+		KodePos:         k.KodePos,
+		StatusRumah:     k.StatusRumah,
+		StatusEkonomi:   k.StatusEkonomi,
+		Aktif:           k.Aktif,
+		Catatan:         k.Catatan,
+		CreatedAt:       k.CreatedAt,
+		UpdatedAt:       k.UpdatedAt,
 	}
 }
 
@@ -398,6 +478,7 @@ func (s *Service) toKeluargaDetail(k *ent.Keluarga) domain.KeluargaDetailRespons
 		_, nikMasked := s.decryptAndMask(a.NikEnc)
 		anggota = append(anggota, domain.KeluargaAnggotaSummary{
 			ID:               a.ID,
+			NomorInduk:       a.NomorInduk,
 			Nama:             a.Nama,
 			NamaBaptis:       a.NamaBaptis,
 			NIKMasked:        nikMasked,
@@ -407,25 +488,26 @@ func (s *Service) toKeluargaDetail(k *ent.Keluarga) domain.KeluargaDetailRespons
 		})
 	}
 	return domain.KeluargaDetailResponse{
-		ID:            k.ID,
-		ParokiID:      k.ParokiID,
-		WilayahID:     k.WilayahID,
-		LingkunganID:  k.LingkunganID,
-		NomorKK:       plain,
-		NomorKKMasked: masked,
-		NamaKeluarga:  k.NamaKeluarga,
-		Alamat:        k.Alamat,
-		KotaID:        k.KotaID,
-		KecamatanID:   k.KecamatanID,
-		KelurahanID:   k.KelurahanID,
-		KodePos:       k.KodePos,
-		StatusRumah:   k.StatusRumah,
-		StatusEkonomi: k.StatusEkonomi,
-		Aktif:         k.Aktif,
-		Catatan:       k.Catatan,
-		Anggota:       anggota,
-		CreatedAt:     k.CreatedAt,
-		UpdatedAt:     k.UpdatedAt,
+		ID:              k.ID,
+		ParokiID:        k.ParokiID,
+		WilayahID:       k.WilayahID,
+		LingkunganID:    k.LingkunganID,
+		NomorRegistrasi: k.NomorRegistrasi,
+		NomorKK:         plain,
+		NomorKKMasked:   masked,
+		NamaKeluarga:    k.NamaKeluarga,
+		Alamat:          k.Alamat,
+		KotaID:          k.KotaID,
+		KecamatanID:     k.KecamatanID,
+		KelurahanID:     k.KelurahanID,
+		KodePos:         k.KodePos,
+		StatusRumah:     k.StatusRumah,
+		StatusEkonomi:   k.StatusEkonomi,
+		Aktif:           k.Aktif,
+		Catatan:         k.Catatan,
+		Anggota:         anggota,
+		CreatedAt:       k.CreatedAt,
+		UpdatedAt:       k.UpdatedAt,
 	}
 }
 

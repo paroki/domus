@@ -104,6 +104,30 @@ func (r *Repository) CreateUser(ctx context.Context, email, name string, phone *
 	return q.Save(ctx)
 }
 
+// MarkUserVerified syncs verified identity fields and sets verified=true on a User.
+func (r *Repository) MarkUserVerified(
+	ctx context.Context,
+	userID uuid.UUID,
+	name string,
+	gender *user.Gender,
+	birthDate *string,
+	verifiedAt time.Time,
+) (*ent.User, error) {
+	q := r.client.User.UpdateOneID(userID).
+		SetVerified(true).
+		SetVerifiedAt(verifiedAt)
+	if name != "" {
+		q.SetName(name)
+	}
+	if gender != nil {
+		q.SetGender(*gender)
+	}
+	if birthDate != nil && *birthDate != "" {
+		q.SetBirthDate(*birthDate)
+	}
+	return q.Save(ctx)
+}
+
 // UpdateUserLastLogin updates last_login_at for the given user ID.
 func (r *Repository) UpdateUserLastLogin(ctx context.Context, id uuid.UUID, at time.Time) (*ent.User, error) {
 	return r.client.User.UpdateOneID(id).

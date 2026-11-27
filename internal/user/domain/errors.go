@@ -22,6 +22,8 @@ var (
 	ErrUserAccountConflict    = errx.Conflict("USER_ACCOUNT_CONFLICT", "Account is already linked to another user.")
 	ErrAuthChannelDisabled    = errx.Invalid("AUTH_CHANNEL_DISABLED", "Requested OTP channel is not configured.")
 	ErrPushNotConfigured      = errx.Invalid("PUSH_NOT_CONFIGURED", "Web Push VAPID is not configured.")
+	ErrVerifyRateLimited      = errx.RateLimited("VERIFY_RATE_LIMITED", "Verification extraction rate limit exceeded. Please try again later.")
+	ErrVerifyUnavailable      = errx.Invalid("VERIFY_UNAVAILABLE", "Identity verification service is not configured.")
 )
 
 // ValidationError constructs a 422 VALIDATION_ERROR domain error for a single field.

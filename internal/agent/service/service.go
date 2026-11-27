@@ -6,6 +6,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/cloudwego/eino/components/model"
 	"github.com/google/uuid"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/paroki/domus/ent"
@@ -21,7 +22,11 @@ import (
 const (
 	settingModelGabriel   = "agent.model.gabriel"
 	settingModelEmbedding = "agent.model.embedding"
+	settingModelVision    = "agent.model.vision"
 )
+
+// ChatModelFactory constructs a ToolCallingChatModel for a resolved provider and model ID.
+type ChatModelFactory func(ctx context.Context, provider, baseURL, apiKey, modelID string) (model.ToolCallingChatModel, error)
 
 // Service implements business logic for agent sessions, messages, and long-term memories.
 type Service struct {
@@ -32,6 +37,7 @@ type Service struct {
 	settings     *setting.Store
 	mcpServer    *mcp.Server
 	logger       *slog.Logger
+	chatFactory  ChatModelFactory
 	sessionMu    sync.Mutex
 	busySessions map[uuid.UUID]*sessionLock
 	extractSem   chan struct{}
@@ -64,6 +70,11 @@ func New(
 // SetMCPServer binds the shared in-process MCP server for agent tool execution.
 func (s *Service) SetMCPServer(srv *mcp.Server) {
 	s.mcpServer = srv
+}
+
+// SetChatModelFactory overrides chat model creation (intended for unit tests with fake models).
+func (s *Service) SetChatModelFactory(fn ChatModelFactory) {
+	s.chatFactory = fn
 }
 
 func (s *Service) resolveSettingModel(ctx context.Context, key string, fallbackToGabriel bool) (*ent.AgentProvider, string, string, error) {

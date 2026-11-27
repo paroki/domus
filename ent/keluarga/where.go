@@ -86,6 +86,11 @@ func LingkunganID(v uuid.UUID) predicate.Keluarga {
 	return predicate.Keluarga(sql.FieldEQ(FieldLingkunganID, v))
 }
 
+// NomorRegistrasi applies equality check predicate on the "nomor_registrasi" field. It's identical to NomorRegistrasiEQ.
+func NomorRegistrasi(v string) predicate.Keluarga {
+	return predicate.Keluarga(sql.FieldEQ(FieldNomorRegistrasi, v))
+}
+
 // NomorKkEnc applies equality check predicate on the "nomor_kk_enc" field. It's identical to NomorKkEncEQ.
 func NomorKkEnc(v string) predicate.Keluarga {
 	return predicate.Keluarga(sql.FieldEQ(FieldNomorKkEnc, v))
@@ -414,6 +419,71 @@ func LingkunganIDIsNil() predicate.Keluarga {
 // LingkunganIDNotNil applies the NotNil predicate on the "lingkungan_id" field.
 func LingkunganIDNotNil() predicate.Keluarga {
 	return predicate.Keluarga(sql.FieldNotNull(FieldLingkunganID))
+}
+
+// NomorRegistrasiEQ applies the EQ predicate on the "nomor_registrasi" field.
+func NomorRegistrasiEQ(v string) predicate.Keluarga {
+	return predicate.Keluarga(sql.FieldEQ(FieldNomorRegistrasi, v))
+}
+
+// NomorRegistrasiNEQ applies the NEQ predicate on the "nomor_registrasi" field.
+func NomorRegistrasiNEQ(v string) predicate.Keluarga {
+	return predicate.Keluarga(sql.FieldNEQ(FieldNomorRegistrasi, v))
+}
+
+// NomorRegistrasiIn applies the In predicate on the "nomor_registrasi" field.
+func NomorRegistrasiIn(vs ...string) predicate.Keluarga {
+	return predicate.Keluarga(sql.FieldIn(FieldNomorRegistrasi, vs...))
+}
+
+// NomorRegistrasiNotIn applies the NotIn predicate on the "nomor_registrasi" field.
+func NomorRegistrasiNotIn(vs ...string) predicate.Keluarga {
+	return predicate.Keluarga(sql.FieldNotIn(FieldNomorRegistrasi, vs...))
+}
+
+// NomorRegistrasiGT applies the GT predicate on the "nomor_registrasi" field.
+func NomorRegistrasiGT(v string) predicate.Keluarga {
+	return predicate.Keluarga(sql.FieldGT(FieldNomorRegistrasi, v))
+}
+
+// NomorRegistrasiGTE applies the GTE predicate on the "nomor_registrasi" field.
+func NomorRegistrasiGTE(v string) predicate.Keluarga {
+	return predicate.Keluarga(sql.FieldGTE(FieldNomorRegistrasi, v))
+}
+
+// NomorRegistrasiLT applies the LT predicate on the "nomor_registrasi" field.
+func NomorRegistrasiLT(v string) predicate.Keluarga {
+	return predicate.Keluarga(sql.FieldLT(FieldNomorRegistrasi, v))
+}
+
+// NomorRegistrasiLTE applies the LTE predicate on the "nomor_registrasi" field.
+func NomorRegistrasiLTE(v string) predicate.Keluarga {
+	return predicate.Keluarga(sql.FieldLTE(FieldNomorRegistrasi, v))
+}
+
+// NomorRegistrasiContains applies the Contains predicate on the "nomor_registrasi" field.
+func NomorRegistrasiContains(v string) predicate.Keluarga {
+	return predicate.Keluarga(sql.FieldContains(FieldNomorRegistrasi, v))
+}
+
+// NomorRegistrasiHasPrefix applies the HasPrefix predicate on the "nomor_registrasi" field.
+func NomorRegistrasiHasPrefix(v string) predicate.Keluarga {
+	return predicate.Keluarga(sql.FieldHasPrefix(FieldNomorRegistrasi, v))
+}
+
+// NomorRegistrasiHasSuffix applies the HasSuffix predicate on the "nomor_registrasi" field.
+func NomorRegistrasiHasSuffix(v string) predicate.Keluarga {
+	return predicate.Keluarga(sql.FieldHasSuffix(FieldNomorRegistrasi, v))
+}
+
+// NomorRegistrasiEqualFold applies the EqualFold predicate on the "nomor_registrasi" field.
+func NomorRegistrasiEqualFold(v string) predicate.Keluarga {
+	return predicate.Keluarga(sql.FieldEqualFold(FieldNomorRegistrasi, v))
+}
+
+// NomorRegistrasiContainsFold applies the ContainsFold predicate on the "nomor_registrasi" field.
+func NomorRegistrasiContainsFold(v string) predicate.Keluarga {
+	return predicate.Keluarga(sql.FieldContainsFold(FieldNomorRegistrasi, v))
 }
 
 // NomorKkEncEQ applies the EQ predicate on the "nomor_kk_enc" field.
@@ -1181,6 +1251,29 @@ func HasAnggota() predicate.Keluarga {
 func HasAnggotaWith(preds ...predicate.Umat) predicate.Keluarga {
 	return predicate.Keluarga(func(s *sql.Selector) {
 		step := newAnggotaStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasDokumen applies the HasEdge predicate on the "dokumen" edge.
+func HasDokumen() predicate.Keluarga {
+	return predicate.Keluarga(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, DokumenTable, DokumenColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasDokumenWith applies the HasEdge predicate on the "dokumen" edge with a given conditions (other predicates).
+func HasDokumenWith(preds ...predicate.UmatDokumen) predicate.Keluarga {
+	return predicate.Keluarga(func(s *sql.Selector) {
+		step := newDokumenStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

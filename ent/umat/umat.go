@@ -32,6 +32,8 @@ const (
 	FieldLingkunganID = "lingkungan_id"
 	// FieldUserID holds the string denoting the user_id field in the database.
 	FieldUserID = "user_id"
+	// FieldNomorInduk holds the string denoting the nomor_induk field in the database.
+	FieldNomorInduk = "nomor_induk"
 	// FieldNama holds the string denoting the nama field in the database.
 	FieldNama = "nama"
 	// FieldNamaBaptis holds the string denoting the nama_baptis field in the database.
@@ -96,6 +98,8 @@ const (
 	EdgeKeluarga = "keluarga"
 	// EdgeSakramen holds the string denoting the sakramen edge name in mutations.
 	EdgeSakramen = "sakramen"
+	// EdgeDokumen holds the string denoting the dokumen edge name in mutations.
+	EdgeDokumen = "dokumen"
 	// Table holds the table name of the umat in the database.
 	Table = "umat"
 	// KeluargaTable is the table that holds the keluarga relation/edge.
@@ -112,6 +116,13 @@ const (
 	SakramenInverseTable = "umat_sakramen"
 	// SakramenColumn is the table column denoting the sakramen relation/edge.
 	SakramenColumn = "umat_id"
+	// DokumenTable is the table that holds the dokumen relation/edge.
+	DokumenTable = "umat_dokumen"
+	// DokumenInverseTable is the table name for the UmatDokumen entity.
+	// It exists in this package in order to avoid circular dependency with the "umatdokumen" package.
+	DokumenInverseTable = "umat_dokumen"
+	// DokumenColumn is the table column denoting the dokumen relation/edge.
+	DokumenColumn = "umat_id"
 )
 
 // Columns holds all SQL columns for umat fields.
@@ -125,6 +136,7 @@ var Columns = []string{
 	FieldWilayahID,
 	FieldLingkunganID,
 	FieldUserID,
+	FieldNomorInduk,
 	FieldNama,
 	FieldNamaBaptis,
 	FieldNikEnc,
@@ -174,6 +186,8 @@ var (
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
 	UpdateDefaultUpdatedAt func() time.Time
+	// NomorIndukValidator is a validator for the "nomor_induk" field. It is called by the builders before save.
+	NomorIndukValidator func(string) error
 	// NamaValidator is a validator for the "nama" field. It is called by the builders before save.
 	NamaValidator func(string) error
 	// DefaultAlmarhum holds the default value on creation for the "almarhum" field.
@@ -251,6 +265,11 @@ func ByLingkunganID(opts ...sql.OrderTermOption) OrderOption {
 // ByUserID orders the results by the user_id field.
 func ByUserID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUserID, opts...).ToFunc()
+}
+
+// ByNomorInduk orders the results by the nomor_induk field.
+func ByNomorInduk(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldNomorInduk, opts...).ToFunc()
 }
 
 // ByNama orders the results by the nama field.
@@ -423,6 +442,20 @@ func BySakramen(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newSakramenStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByDokumenCount orders the results by dokumen count.
+func ByDokumenCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newDokumenStep(), opts...)
+	}
+}
+
+// ByDokumen orders the results by dokumen terms.
+func ByDokumen(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newDokumenStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newKeluargaStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -435,5 +468,12 @@ func newSakramenStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(SakramenInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, SakramenTable, SakramenColumn),
+	)
+}
+func newDokumenStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(DokumenInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, DokumenTable, DokumenColumn),
 	)
 }

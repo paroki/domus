@@ -336,6 +336,7 @@ var (
 		{Name: "paroki_id", Type: field.TypeUUID},
 		{Name: "wilayah_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "lingkungan_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "nomor_registrasi", Type: field.TypeString},
 		{Name: "nomor_kk_enc", Type: field.TypeString, Nullable: true},
 		{Name: "nomor_kk_hash", Type: field.TypeString, Nullable: true},
 		{Name: "nama_keluarga", Type: field.TypeString},
@@ -356,9 +357,17 @@ var (
 		PrimaryKey: []*schema.Column{KeluargaColumns[0]},
 		Indexes: []*schema.Index{
 			{
+				Name:    "keluarga_paroki_nomor_registrasi_active",
+				Unique:  true,
+				Columns: []*schema.Column{KeluargaColumns[4], KeluargaColumns[7]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
 				Name:    "keluarga_paroki_nomor_kk_hash_active",
 				Unique:  true,
-				Columns: []*schema.Column{KeluargaColumns[4], KeluargaColumns[8]},
+				Columns: []*schema.Column{KeluargaColumns[4], KeluargaColumns[9]},
 				Annotation: &entsql.IndexAnnotation{
 					Where: "nomor_kk_hash IS NOT NULL AND deleted_at IS NULL",
 				},
@@ -366,12 +375,12 @@ var (
 			{
 				Name:    "keluarga_paroki_id_wilayah_id_lingkungan_id_aktif",
 				Unique:  false,
-				Columns: []*schema.Column{KeluargaColumns[4], KeluargaColumns[5], KeluargaColumns[6], KeluargaColumns[17]},
+				Columns: []*schema.Column{KeluargaColumns[4], KeluargaColumns[5], KeluargaColumns[6], KeluargaColumns[18]},
 			},
 			{
 				Name:    "keluarga_paroki_id_nama_keluarga",
 				Unique:  false,
-				Columns: []*schema.Column{KeluargaColumns[4], KeluargaColumns[9]},
+				Columns: []*schema.Column{KeluargaColumns[4], KeluargaColumns[10]},
 			},
 		},
 	}
@@ -1152,6 +1161,7 @@ var (
 		{Name: "wilayah_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "lingkungan_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "user_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "nomor_induk", Type: field.TypeString},
 		{Name: "nama", Type: field.TypeString},
 		{Name: "nama_baptis", Type: field.TypeString, Nullable: true},
 		{Name: "nik_enc", Type: field.TypeString, Nullable: true},
@@ -1192,16 +1202,24 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "umat_keluarga_anggota",
-				Columns:    []*schema.Column{UmatColumns[38]},
+				Columns:    []*schema.Column{UmatColumns[39]},
 				RefColumns: []*schema.Column{KeluargaColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
 		Indexes: []*schema.Index{
 			{
+				Name:    "umat_paroki_nomor_induk_active",
+				Unique:  true,
+				Columns: []*schema.Column{UmatColumns[4], UmatColumns[8]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
 				Name:    "umat_paroki_nik_hash_active",
 				Unique:  true,
-				Columns: []*schema.Column{UmatColumns[4], UmatColumns[11]},
+				Columns: []*schema.Column{UmatColumns[4], UmatColumns[12]},
 				Annotation: &entsql.IndexAnnotation{
 					Where: "nik_hash IS NOT NULL AND deleted_at IS NULL",
 				},
@@ -1217,17 +1235,69 @@ var (
 			{
 				Name:    "umat_paroki_id_keluarga_id",
 				Unique:  false,
-				Columns: []*schema.Column{UmatColumns[4], UmatColumns[38]},
+				Columns: []*schema.Column{UmatColumns[4], UmatColumns[39]},
 			},
 			{
 				Name:    "umat_paroki_id_wilayah_id_lingkungan_id_almarhum",
 				Unique:  false,
-				Columns: []*schema.Column{UmatColumns[4], UmatColumns[5], UmatColumns[6], UmatColumns[22]},
+				Columns: []*schema.Column{UmatColumns[4], UmatColumns[5], UmatColumns[6], UmatColumns[23]},
 			},
 			{
 				Name:    "umat_paroki_id_nama",
 				Unique:  false,
-				Columns: []*schema.Column{UmatColumns[4], UmatColumns[8]},
+				Columns: []*schema.Column{UmatColumns[4], UmatColumns[9]},
+			},
+		},
+	}
+	// UmatDokumenColumns holds the columns for the "umat_dokumen" table.
+	UmatDokumenColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "paroki_id", Type: field.TypeUUID},
+		{Name: "jenis", Type: field.TypeEnum, Enums: []string{"ktp", "kia", "kartu_pelajar", "kk"}},
+		{Name: "mime_type", Type: field.TypeEnum, Enums: []string{"image/webp", "image/jpeg", "image/png"}},
+		{Name: "size_bytes", Type: field.TypeInt},
+		{Name: "data_enc", Type: field.TypeBytes},
+		{Name: "uploaded_by", Type: field.TypeUUID},
+		{Name: "keluarga_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "umat_id", Type: field.TypeUUID, Nullable: true},
+	}
+	// UmatDokumenTable holds the schema information for the "umat_dokumen" table.
+	UmatDokumenTable = &schema.Table{
+		Name:       "umat_dokumen",
+		Columns:    UmatDokumenColumns,
+		PrimaryKey: []*schema.Column{UmatDokumenColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "umat_dokumen_keluarga_dokumen",
+				Columns:    []*schema.Column{UmatDokumenColumns[9]},
+				RefColumns: []*schema.Column{KeluargaColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "umat_dokumen_umat_dokumen",
+				Columns:    []*schema.Column{UmatDokumenColumns[10]},
+				RefColumns: []*schema.Column{UmatColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "umat_dokumen_paroki_umat_jenis_uq",
+				Unique:  true,
+				Columns: []*schema.Column{UmatDokumenColumns[3], UmatDokumenColumns[10], UmatDokumenColumns[4]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "umat_id IS NOT NULL",
+				},
+			},
+			{
+				Name:    "umat_dokumen_paroki_keluarga_jenis_uq",
+				Unique:  true,
+				Columns: []*schema.Column{UmatDokumenColumns[3], UmatDokumenColumns[9], UmatDokumenColumns[4]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "keluarga_id IS NOT NULL",
+				},
 			},
 		},
 	}
@@ -1331,6 +1401,8 @@ var (
 		{Name: "notify_telegram", Type: field.TypeBool, Default: true},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "disabled"}, Default: "active"},
 		{Name: "onboarded", Type: field.TypeBool, Default: false},
+		{Name: "verified", Type: field.TypeBool, Default: false},
+		{Name: "verified_at", Type: field.TypeTime, Nullable: true},
 		{Name: "cantus_admin", Type: field.TypeBool, Default: false},
 		{Name: "default_paroki_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "last_login_at", Type: field.TypeTime, Nullable: true},
@@ -1648,6 +1720,7 @@ var (
 		ParokiMembersTable,
 		SettingsTable,
 		UmatTable,
+		UmatDokumenTable,
 		UmatReferensiTable,
 		UmatSakramenTable,
 		UsersTable,
@@ -1747,6 +1820,11 @@ func init() {
 	UmatTable.ForeignKeys[0].RefTable = KeluargaTable
 	UmatTable.Annotation = &entsql.Annotation{
 		Table: "umat",
+	}
+	UmatDokumenTable.ForeignKeys[0].RefTable = KeluargaTable
+	UmatDokumenTable.ForeignKeys[1].RefTable = UmatTable
+	UmatDokumenTable.Annotation = &entsql.Annotation{
+		Table: "umat_dokumen",
 	}
 	UmatReferensiTable.Annotation = &entsql.Annotation{
 		Table: "umat_referensi",

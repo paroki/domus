@@ -63,6 +63,7 @@ func TestUmatMCPTools_RBACAndPIIMasking(t *testing.T) {
 
 	kel, err := db.Keluarga.Create().
 		SetParokiID(paroki1.ID).
+		SetNomorRegistrasi("KK-2026-000001").
 		SetNamaKeluarga("Keluarga MCP").
 		SetNomorKkEnc(kkEnc).
 		SetNomorKkHash(cipher.BlindIndex(plainKK)).
@@ -71,6 +72,7 @@ func TestUmatMCPTools_RBACAndPIIMasking(t *testing.T) {
 
 	uRow, err := db.Umat.Create().
 		SetParokiID(paroki1.ID).
+		SetNomorInduk("NIU-2026-000001").
 		SetKeluargaID(kel.ID).
 		SetNama("Budi MCP").
 		SetJenisKelamin("pria").

@@ -111,6 +111,21 @@ func (f *Feature) GetByUserID(ctx context.Context, parokiID, userID uuid.UUID) (
 	return f.service.GetByUserID(ctx, parokiID, userID)
 }
 
+// PreviewVerification checks whether extracted identity data matches an existing parishioner or conflicts with another user.
+func (f *Feature) PreviewVerification(ctx context.Context, parokiID, userID uuid.UUID, extraction user.IdentityExtraction) (user.VerifyPreviewResult, error) {
+	return f.service.PreviewVerification(ctx, parokiID, userID, extraction)
+}
+
+// VerifyAndSyncCensus re-validates reviewed identity data and syncs keluarga, umat, and encrypted documents in one transaction.
+func (f *Feature) VerifyAndSyncCensus(ctx context.Context, in user.VerifyConfirmInput) (user.VerifyConfirmResult, error) {
+	return f.service.VerifyAndSyncCensus(ctx, in)
+}
+
+// GetSelfProfile returns the caller's linked umat, keluarga, members, and document metadata.
+func (f *Feature) GetSelfProfile(ctx context.Context, parokiID, userID uuid.UUID) (*user.SelfUmatProfile, error) {
+	return f.service.GetSelfProfile(ctx, parokiID, userID)
+}
+
 func requireTenantMiddleware() fiber.Handler {
 	return func(c fiber.Ctx) error {
 		if _, err := user.RequireTenant(c.Context()); err != nil {

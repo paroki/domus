@@ -46,6 +46,10 @@ const (
 	FieldStatus = "status"
 	// FieldOnboarded holds the string denoting the onboarded field in the database.
 	FieldOnboarded = "onboarded"
+	// FieldVerified holds the string denoting the verified field in the database.
+	FieldVerified = "verified"
+	// FieldVerifiedAt holds the string denoting the verified_at field in the database.
+	FieldVerifiedAt = "verified_at"
 	// FieldCantusAdmin holds the string denoting the cantus_admin field in the database.
 	FieldCantusAdmin = "cantus_admin"
 	// FieldDefaultParokiID holds the string denoting the default_paroki_id field in the database.
@@ -110,6 +114,8 @@ var Columns = []string{
 	FieldNotifyTelegram,
 	FieldStatus,
 	FieldOnboarded,
+	FieldVerified,
+	FieldVerifiedAt,
 	FieldCantusAdmin,
 	FieldDefaultParokiID,
 	FieldLastLoginAt,
@@ -148,6 +154,8 @@ var (
 	DefaultNotifyTelegram bool
 	// DefaultOnboarded holds the default value on creation for the "onboarded" field.
 	DefaultOnboarded bool
+	// DefaultVerified holds the default value on creation for the "verified" field.
+	DefaultVerified bool
 	// DefaultCantusAdmin holds the default value on creation for the "cantus_admin" field.
 	DefaultCantusAdmin bool
 	// DefaultID holds the default value on creation for the "id" field.
@@ -284,6 +292,16 @@ func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 // ByOnboarded orders the results by the onboarded field.
 func ByOnboarded(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldOnboarded, opts...).ToFunc()
+}
+
+// ByVerified orders the results by the verified field.
+func ByVerified(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVerified, opts...).ToFunc()
+}
+
+// ByVerifiedAt orders the results by the verified_at field.
+func ByVerifiedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVerifiedAt, opts...).ToFunc()
 }
 
 // ByCantusAdmin orders the results by the cantus_admin field.

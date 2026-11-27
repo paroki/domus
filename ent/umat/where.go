@@ -96,6 +96,11 @@ func UserID(v uuid.UUID) predicate.Umat {
 	return predicate.Umat(sql.FieldEQ(FieldUserID, v))
 }
 
+// NomorInduk applies equality check predicate on the "nomor_induk" field. It's identical to NomorIndukEQ.
+func NomorInduk(v string) predicate.Umat {
+	return predicate.Umat(sql.FieldEQ(FieldNomorInduk, v))
+}
+
 // Nama applies equality check predicate on the "nama" field. It's identical to NamaEQ.
 func Nama(v string) predicate.Umat {
 	return predicate.Umat(sql.FieldEQ(FieldNama, v))
@@ -589,6 +594,71 @@ func UserIDIsNil() predicate.Umat {
 // UserIDNotNil applies the NotNil predicate on the "user_id" field.
 func UserIDNotNil() predicate.Umat {
 	return predicate.Umat(sql.FieldNotNull(FieldUserID))
+}
+
+// NomorIndukEQ applies the EQ predicate on the "nomor_induk" field.
+func NomorIndukEQ(v string) predicate.Umat {
+	return predicate.Umat(sql.FieldEQ(FieldNomorInduk, v))
+}
+
+// NomorIndukNEQ applies the NEQ predicate on the "nomor_induk" field.
+func NomorIndukNEQ(v string) predicate.Umat {
+	return predicate.Umat(sql.FieldNEQ(FieldNomorInduk, v))
+}
+
+// NomorIndukIn applies the In predicate on the "nomor_induk" field.
+func NomorIndukIn(vs ...string) predicate.Umat {
+	return predicate.Umat(sql.FieldIn(FieldNomorInduk, vs...))
+}
+
+// NomorIndukNotIn applies the NotIn predicate on the "nomor_induk" field.
+func NomorIndukNotIn(vs ...string) predicate.Umat {
+	return predicate.Umat(sql.FieldNotIn(FieldNomorInduk, vs...))
+}
+
+// NomorIndukGT applies the GT predicate on the "nomor_induk" field.
+func NomorIndukGT(v string) predicate.Umat {
+	return predicate.Umat(sql.FieldGT(FieldNomorInduk, v))
+}
+
+// NomorIndukGTE applies the GTE predicate on the "nomor_induk" field.
+func NomorIndukGTE(v string) predicate.Umat {
+	return predicate.Umat(sql.FieldGTE(FieldNomorInduk, v))
+}
+
+// NomorIndukLT applies the LT predicate on the "nomor_induk" field.
+func NomorIndukLT(v string) predicate.Umat {
+	return predicate.Umat(sql.FieldLT(FieldNomorInduk, v))
+}
+
+// NomorIndukLTE applies the LTE predicate on the "nomor_induk" field.
+func NomorIndukLTE(v string) predicate.Umat {
+	return predicate.Umat(sql.FieldLTE(FieldNomorInduk, v))
+}
+
+// NomorIndukContains applies the Contains predicate on the "nomor_induk" field.
+func NomorIndukContains(v string) predicate.Umat {
+	return predicate.Umat(sql.FieldContains(FieldNomorInduk, v))
+}
+
+// NomorIndukHasPrefix applies the HasPrefix predicate on the "nomor_induk" field.
+func NomorIndukHasPrefix(v string) predicate.Umat {
+	return predicate.Umat(sql.FieldHasPrefix(FieldNomorInduk, v))
+}
+
+// NomorIndukHasSuffix applies the HasSuffix predicate on the "nomor_induk" field.
+func NomorIndukHasSuffix(v string) predicate.Umat {
+	return predicate.Umat(sql.FieldHasSuffix(FieldNomorInduk, v))
+}
+
+// NomorIndukEqualFold applies the EqualFold predicate on the "nomor_induk" field.
+func NomorIndukEqualFold(v string) predicate.Umat {
+	return predicate.Umat(sql.FieldEqualFold(FieldNomorInduk, v))
+}
+
+// NomorIndukContainsFold applies the ContainsFold predicate on the "nomor_induk" field.
+func NomorIndukContainsFold(v string) predicate.Umat {
+	return predicate.Umat(sql.FieldContainsFold(FieldNomorInduk, v))
 }
 
 // NamaEQ applies the EQ predicate on the "nama" field.
@@ -2674,6 +2744,29 @@ func HasSakramen() predicate.Umat {
 func HasSakramenWith(preds ...predicate.UmatSakramen) predicate.Umat {
 	return predicate.Umat(func(s *sql.Selector) {
 		step := newSakramenStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasDokumen applies the HasEdge predicate on the "dokumen" edge.
+func HasDokumen() predicate.Umat {
+	return predicate.Umat(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, DokumenTable, DokumenColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasDokumenWith applies the HasEdge predicate on the "dokumen" edge with a given conditions (other predicates).
+func HasDokumenWith(preds ...predicate.UmatDokumen) predicate.Umat {
+	return predicate.Umat(func(s *sql.Selector) {
+		step := newDokumenStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

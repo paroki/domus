@@ -39,6 +39,7 @@ func (Umat) Fields() []ent.Field {
 		field.UUID("wilayah_id", uuid.UUID{}).Optional().Nillable(),
 		field.UUID("lingkungan_id", uuid.UUID{}).Optional().Nillable(),
 		field.UUID("user_id", uuid.UUID{}).Optional().Nillable(),
+		field.String("nomor_induk").NotEmpty(),
 		field.String("nama").NotEmpty(),
 		field.String("nama_baptis").Optional().Nillable(),
 		field.String("nik_enc").Optional().Nillable(),
@@ -80,12 +81,17 @@ func (Umat) Edges() []ent.Edge {
 			Field("keluarga_id").
 			Unique(),
 		edge.To("sakramen", UmatSakramen.Type),
+		edge.To("dokumen", UmatDokumen.Type),
 	}
 }
 
 // Indexes returns the indexes for the Umat entity.
 func (Umat) Indexes() []ent.Index {
 	return []ent.Index{
+		index.Fields("paroki_id", "nomor_induk").
+			Unique().
+			Annotations(entsql.IndexWhere("deleted_at IS NULL")).
+			StorageKey("umat_paroki_nomor_induk_active"),
 		index.Fields("paroki_id", "nik_hash").
 			Unique().
 			Annotations(entsql.IndexWhere("nik_hash IS NOT NULL AND deleted_at IS NULL")).

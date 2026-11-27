@@ -37,6 +37,7 @@ func (Keluarga) Fields() []ent.Field {
 		field.UUID("paroki_id", uuid.UUID{}),
 		field.UUID("wilayah_id", uuid.UUID{}).Optional().Nillable(),
 		field.UUID("lingkungan_id", uuid.UUID{}).Optional().Nillable(),
+		field.String("nomor_registrasi").NotEmpty(),
 		field.String("nomor_kk_enc").Optional().Nillable(),
 		field.String("nomor_kk_hash").Optional().Nillable(),
 		field.String("nama_keluarga").NotEmpty(),
@@ -56,12 +57,17 @@ func (Keluarga) Fields() []ent.Field {
 func (Keluarga) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("anggota", Umat.Type),
+		edge.To("dokumen", UmatDokumen.Type),
 	}
 }
 
 // Indexes returns the indexes for the Keluarga entity.
 func (Keluarga) Indexes() []ent.Index {
 	return []ent.Index{
+		index.Fields("paroki_id", "nomor_registrasi").
+			Unique().
+			Annotations(entsql.IndexWhere("deleted_at IS NULL")).
+			StorageKey("keluarga_paroki_nomor_registrasi_active"),
 		index.Fields("paroki_id", "nomor_kk_hash").
 			Unique().
 			Annotations(entsql.IndexWhere("nomor_kk_hash IS NOT NULL AND deleted_at IS NULL")).

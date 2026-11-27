@@ -15,6 +15,7 @@ import (
 	"github.com/paroki/domus/ent/keluarga"
 	"github.com/paroki/domus/ent/predicate"
 	"github.com/paroki/domus/ent/umat"
+	"github.com/paroki/domus/ent/umatdokumen"
 	"github.com/paroki/domus/ent/umatsakramen"
 )
 
@@ -148,6 +149,20 @@ func (_u *UmatUpdate) SetNillableUserID(v *uuid.UUID) *UmatUpdate {
 // ClearUserID clears the value of the "user_id" field.
 func (_u *UmatUpdate) ClearUserID() *UmatUpdate {
 	_u.mutation.ClearUserID()
+	return _u
+}
+
+// SetNomorInduk sets the "nomor_induk" field.
+func (_u *UmatUpdate) SetNomorInduk(v string) *UmatUpdate {
+	_u.mutation.SetNomorInduk(v)
+	return _u
+}
+
+// SetNillableNomorInduk sets the "nomor_induk" field if the given value is not nil.
+func (_u *UmatUpdate) SetNillableNomorInduk(v *string) *UmatUpdate {
+	if v != nil {
+		_u.SetNomorInduk(*v)
+	}
 	return _u
 }
 
@@ -753,6 +768,21 @@ func (_u *UmatUpdate) AddSakramen(v ...*UmatSakramen) *UmatUpdate {
 	return _u.AddSakramanIDs(ids...)
 }
 
+// AddDokumanIDs adds the "dokumen" edge to the UmatDokumen entity by IDs.
+func (_u *UmatUpdate) AddDokumanIDs(ids ...uuid.UUID) *UmatUpdate {
+	_u.mutation.AddDokumanIDs(ids...)
+	return _u
+}
+
+// AddDokumen adds the "dokumen" edges to the UmatDokumen entity.
+func (_u *UmatUpdate) AddDokumen(v ...*UmatDokumen) *UmatUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddDokumanIDs(ids...)
+}
+
 // Mutation returns the UmatMutation object of the builder.
 func (_u *UmatUpdate) Mutation() *UmatMutation {
 	return _u.mutation
@@ -783,6 +813,27 @@ func (_u *UmatUpdate) RemoveSakramen(v ...*UmatSakramen) *UmatUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveSakramanIDs(ids...)
+}
+
+// ClearDokumen clears all "dokumen" edges to the UmatDokumen entity.
+func (_u *UmatUpdate) ClearDokumen() *UmatUpdate {
+	_u.mutation.ClearDokumen()
+	return _u
+}
+
+// RemoveDokumanIDs removes the "dokumen" edge to UmatDokumen entities by IDs.
+func (_u *UmatUpdate) RemoveDokumanIDs(ids ...uuid.UUID) *UmatUpdate {
+	_u.mutation.RemoveDokumanIDs(ids...)
+	return _u
+}
+
+// RemoveDokumen removes "dokumen" edges to UmatDokumen entities.
+func (_u *UmatUpdate) RemoveDokumen(v ...*UmatDokumen) *UmatUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveDokumanIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -823,6 +874,11 @@ func (_u *UmatUpdate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_u *UmatUpdate) check() error {
+	if v, ok := _u.mutation.NomorInduk(); ok {
+		if err := umat.NomorIndukValidator(v); err != nil {
+			return &ValidationError{Name: "nomor_induk", err: fmt.Errorf(`ent: validator failed for field "Umat.nomor_induk": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.Nama(); ok {
 		if err := umat.NamaValidator(v); err != nil {
 			return &ValidationError{Name: "nama", err: fmt.Errorf(`ent: validator failed for field "Umat.nama": %w`, err)}
@@ -877,6 +933,9 @@ func (_u *UmatUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.UserIDCleared() {
 		_spec.ClearField(umat.FieldUserID, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.NomorInduk(); ok {
+		_spec.SetField(umat.FieldNomorInduk, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.Nama(); ok {
 		_spec.SetField(umat.FieldNama, field.TypeString, value)
@@ -1123,6 +1182,51 @@ func (_u *UmatUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.DokumenCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   umat.DokumenTable,
+			Columns: []string{umat.DokumenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(umatdokumen.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedDokumenIDs(); len(nodes) > 0 && !_u.mutation.DokumenCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   umat.DokumenTable,
+			Columns: []string{umat.DokumenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(umatdokumen.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.DokumenIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   umat.DokumenTable,
+			Columns: []string{umat.DokumenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(umatdokumen.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{umat.Label}
@@ -1260,6 +1364,20 @@ func (_u *UmatUpdateOne) SetNillableUserID(v *uuid.UUID) *UmatUpdateOne {
 // ClearUserID clears the value of the "user_id" field.
 func (_u *UmatUpdateOne) ClearUserID() *UmatUpdateOne {
 	_u.mutation.ClearUserID()
+	return _u
+}
+
+// SetNomorInduk sets the "nomor_induk" field.
+func (_u *UmatUpdateOne) SetNomorInduk(v string) *UmatUpdateOne {
+	_u.mutation.SetNomorInduk(v)
+	return _u
+}
+
+// SetNillableNomorInduk sets the "nomor_induk" field if the given value is not nil.
+func (_u *UmatUpdateOne) SetNillableNomorInduk(v *string) *UmatUpdateOne {
+	if v != nil {
+		_u.SetNomorInduk(*v)
+	}
 	return _u
 }
 
@@ -1865,6 +1983,21 @@ func (_u *UmatUpdateOne) AddSakramen(v ...*UmatSakramen) *UmatUpdateOne {
 	return _u.AddSakramanIDs(ids...)
 }
 
+// AddDokumanIDs adds the "dokumen" edge to the UmatDokumen entity by IDs.
+func (_u *UmatUpdateOne) AddDokumanIDs(ids ...uuid.UUID) *UmatUpdateOne {
+	_u.mutation.AddDokumanIDs(ids...)
+	return _u
+}
+
+// AddDokumen adds the "dokumen" edges to the UmatDokumen entity.
+func (_u *UmatUpdateOne) AddDokumen(v ...*UmatDokumen) *UmatUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddDokumanIDs(ids...)
+}
+
 // Mutation returns the UmatMutation object of the builder.
 func (_u *UmatUpdateOne) Mutation() *UmatMutation {
 	return _u.mutation
@@ -1895,6 +2028,27 @@ func (_u *UmatUpdateOne) RemoveSakramen(v ...*UmatSakramen) *UmatUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveSakramanIDs(ids...)
+}
+
+// ClearDokumen clears all "dokumen" edges to the UmatDokumen entity.
+func (_u *UmatUpdateOne) ClearDokumen() *UmatUpdateOne {
+	_u.mutation.ClearDokumen()
+	return _u
+}
+
+// RemoveDokumanIDs removes the "dokumen" edge to UmatDokumen entities by IDs.
+func (_u *UmatUpdateOne) RemoveDokumanIDs(ids ...uuid.UUID) *UmatUpdateOne {
+	_u.mutation.RemoveDokumanIDs(ids...)
+	return _u
+}
+
+// RemoveDokumen removes "dokumen" edges to UmatDokumen entities.
+func (_u *UmatUpdateOne) RemoveDokumen(v ...*UmatDokumen) *UmatUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveDokumanIDs(ids...)
 }
 
 // Where appends a list predicates to the UmatUpdate builder.
@@ -1948,6 +2102,11 @@ func (_u *UmatUpdateOne) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_u *UmatUpdateOne) check() error {
+	if v, ok := _u.mutation.NomorInduk(); ok {
+		if err := umat.NomorIndukValidator(v); err != nil {
+			return &ValidationError{Name: "nomor_induk", err: fmt.Errorf(`ent: validator failed for field "Umat.nomor_induk": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.Nama(); ok {
 		if err := umat.NamaValidator(v); err != nil {
 			return &ValidationError{Name: "nama", err: fmt.Errorf(`ent: validator failed for field "Umat.nama": %w`, err)}
@@ -2019,6 +2178,9 @@ func (_u *UmatUpdateOne) sqlSave(ctx context.Context) (_node *Umat, err error) {
 	}
 	if _u.mutation.UserIDCleared() {
 		_spec.ClearField(umat.FieldUserID, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.NomorInduk(); ok {
+		_spec.SetField(umat.FieldNomorInduk, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.Nama(); ok {
 		_spec.SetField(umat.FieldNama, field.TypeString, value)
@@ -2258,6 +2420,51 @@ func (_u *UmatUpdateOne) sqlSave(ctx context.Context) (_node *Umat, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(umatsakramen.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.DokumenCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   umat.DokumenTable,
+			Columns: []string{umat.DokumenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(umatdokumen.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedDokumenIDs(); len(nodes) > 0 && !_u.mutation.DokumenCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   umat.DokumenTable,
+			Columns: []string{umat.DokumenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(umatdokumen.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.DokumenIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   umat.DokumenTable,
+			Columns: []string{umat.DokumenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(umatdokumen.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

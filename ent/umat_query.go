@@ -16,6 +16,7 @@ import (
 	"github.com/paroki/domus/ent/keluarga"
 	"github.com/paroki/domus/ent/predicate"
 	"github.com/paroki/domus/ent/umat"
+	"github.com/paroki/domus/ent/umatdokumen"
 	"github.com/paroki/domus/ent/umatsakramen"
 )
 
@@ -28,6 +29,7 @@ type UmatQuery struct {
 	predicates   []predicate.Umat
 	withKeluarga *KeluargaQuery
 	withSakramen *UmatSakramenQuery
+	withDokumen  *UmatDokumenQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -101,6 +103,28 @@ func (_q *UmatQuery) QuerySakramen() *UmatSakramenQuery {
 			sqlgraph.From(umat.Table, umat.FieldID, selector),
 			sqlgraph.To(umatsakramen.Table, umatsakramen.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, umat.SakramenTable, umat.SakramenColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryDokumen chains the current query on the "dokumen" edge.
+func (_q *UmatQuery) QueryDokumen() *UmatDokumenQuery {
+	query := (&UmatDokumenClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(umat.Table, umat.FieldID, selector),
+			sqlgraph.To(umatdokumen.Table, umatdokumen.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, umat.DokumenTable, umat.DokumenColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -302,6 +326,7 @@ func (_q *UmatQuery) Clone() *UmatQuery {
 		predicates:   append([]predicate.Umat{}, _q.predicates...),
 		withKeluarga: _q.withKeluarga.Clone(),
 		withSakramen: _q.withSakramen.Clone(),
+		withDokumen:  _q.withDokumen.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -327,6 +352,17 @@ func (_q *UmatQuery) WithSakramen(opts ...func(*UmatSakramenQuery)) *UmatQuery {
 		opt(query)
 	}
 	_q.withSakramen = query
+	return _q
+}
+
+// WithDokumen tells the query-builder to eager-load the nodes that are connected to
+// the "dokumen" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UmatQuery) WithDokumen(opts ...func(*UmatDokumenQuery)) *UmatQuery {
+	query := (&UmatDokumenClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withDokumen = query
 	return _q
 }
 
@@ -408,9 +444,10 @@ func (_q *UmatQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Umat, e
 	var (
 		nodes       = []*Umat{}
 		_spec       = _q.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			_q.withKeluarga != nil,
 			_q.withSakramen != nil,
+			_q.withDokumen != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -441,6 +478,13 @@ func (_q *UmatQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Umat, e
 		if err := _q.loadSakramen(ctx, query, nodes,
 			func(n *Umat) { n.Edges.Sakramen = []*UmatSakramen{} },
 			func(n *Umat, e *UmatSakramen) { n.Edges.Sakramen = append(n.Edges.Sakramen, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withDokumen; query != nil {
+		if err := _q.loadDokumen(ctx, query, nodes,
+			func(n *Umat) { n.Edges.Dokumen = []*UmatDokumen{} },
+			func(n *Umat, e *UmatDokumen) { n.Edges.Dokumen = append(n.Edges.Dokumen, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -504,6 +548,39 @@ func (_q *UmatQuery) loadSakramen(ctx context.Context, query *UmatSakramenQuery,
 		node, ok := nodeids[fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "umat_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UmatQuery) loadDokumen(ctx context.Context, query *UmatDokumenQuery, nodes []*Umat, init func(*Umat), assign func(*Umat, *UmatDokumen)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Umat)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(umatdokumen.FieldUmatID)
+	}
+	query.Where(predicate.UmatDokumen(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(umat.DokumenColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UmatID
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "umat_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "umat_id" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}
