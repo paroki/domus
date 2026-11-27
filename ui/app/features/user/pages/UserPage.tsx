@@ -16,6 +16,7 @@ import {
 import { UserAvatar, useDebouncedValue } from "../components/DirectoryShared";
 import {
   canManageUsers,
+  isCantusAdmin,
   isOrgAdmin,
   isParokiAdmin,
   isSuperAdmin,
@@ -40,6 +41,7 @@ type UnifiedUserRow = UserDirectoryPreview & {
   status?: string;
   highlight?: boolean;
   isSuperAdmin?: boolean;
+  isCantusAdmin?: boolean;
   parishRole?: string;
   umatAdmin?: boolean;
   onboarded?: boolean;
@@ -60,6 +62,9 @@ export default function UserPage() {
   const [statusFilter, setStatusFilter] = useState<
     "all" | "active" | "disabled"
   >("all");
+  const [cantusAdminFilter, setCantusAdminFilter] = useState<
+    "all" | "cantusAdmin"
+  >("all");
   const [parokiRoleFilter, setParokiRoleFilter] = useState<
     "all" | "admin" | "umatAdmin" | "member"
   >("all");
@@ -72,10 +77,18 @@ export default function UserPage() {
     !superAdminCaller && !parokiDirectoryCaller && isOrgAdmin(me);
   const activeParokiId = me?.activeParokiId ?? "";
 
+  const globalFilter =
+    statusFilter === "all" && cantusAdminFilter === "all"
+      ? undefined
+      : {
+          ...(statusFilter !== "all" ? { status: statusFilter } : {}),
+          ...(cantusAdminFilter === "cantusAdmin" ? { cantusAdmin: true } : {}),
+        };
+
   const usersQuery = useUsersSearch(
     {
       q: debouncedQ || undefined,
-      filter: statusFilter === "all" ? undefined : { status: statusFilter },
+      filter: globalFilter,
     },
     Boolean(me && superAdminCaller),
   );
@@ -123,6 +136,7 @@ export default function UserPage() {
         .filter((u): u is typeof u & { id: string } => Boolean(u.id))
         .map((u) => {
           const superAdmin = isSuperAdmin(u);
+          const cantusAdmin = isCantusAdmin(u);
           const providers = u.linkedProviders?.map(providerLabel) ?? [];
           return {
             id: u.id,
@@ -130,8 +144,9 @@ export default function UserPage() {
             email: u.email ?? "",
             phone: u.phone,
             status: u.status,
-            highlight: superAdmin,
+            highlight: superAdmin || cantusAdmin,
             isSuperAdmin: superAdmin,
+            isCantusAdmin: cantusAdmin,
             onboarded: u.onboarded,
             metaLine: [
               u.email,
@@ -273,6 +288,21 @@ export default function UserPage() {
                     {opt.label}
                   </button>
                 ))}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCantusAdminFilter((prev) =>
+                      prev === "cantusAdmin" ? "all" : "cantusAdmin",
+                    )
+                  }
+                  className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                    cantusAdminFilter === "cantusAdmin"
+                      ? "bg-primary text-on-primary"
+                      : "border border-line bg-surface text-muted hover:text-fg"
+                  }`}
+                >
+                  {t("users.filterCantusAdminOnly")}
+                </button>
               </div>
             )}
 
@@ -345,6 +375,11 @@ export default function UserPage() {
                           {u.isSuperAdmin && (
                             <Badge tone="warning">
                               {t("users.roleSuperAdmin")}
+                            </Badge>
+                          )}
+                          {u.isCantusAdmin && (
+                            <Badge tone="success">
+                              {t("users.roleCantusAdmin")}
                             </Badge>
                           )}
                           {u.parishRole && (

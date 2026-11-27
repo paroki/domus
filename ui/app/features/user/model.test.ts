@@ -10,12 +10,14 @@ import {
   getAvailableUserScopes,
   getBirthDateBounds,
   getInitials,
+  isCantusAdmin,
   isOrgAdmin,
   isParokiAdmin,
   isSuperAdmin,
   isUmatAdmin,
   parseUserDetailTab,
   providerLabel,
+  ROLE_CANTUS_ADMIN,
   ROLE_ORG_ADMIN,
   ROLE_PAROKI_ADMIN,
   ROLE_SUPER_ADMIN,
@@ -57,6 +59,20 @@ test("isSuperAdmin checks user:super-admin role", () => {
   assert.equal(isSuperAdmin(admin), true);
   assert.equal(isSuperAdmin(member), false);
   assert.equal(isSuperAdmin(null), false);
+});
+
+test("isCantusAdmin checks isCantusAdmin flag and cantus:admin role without granting /users access", () => {
+  const byFlag = { isCantusAdmin: true, roles: [ROLE_USER] } as User;
+  const byRole = { roles: [ROLE_CANTUS_ADMIN, ROLE_USER] } as User;
+  const plain = { isCantusAdmin: false, roles: [ROLE_USER] } as User;
+
+  assert.equal(isCantusAdmin(byFlag), true);
+  assert.equal(isCantusAdmin(byRole), true);
+  assert.equal(isCantusAdmin(plain), false);
+  assert.equal(isCantusAdmin(null), false);
+  assert.equal(canManageUsers(byRole), false);
+  assert.deepEqual(getAvailableUserScopes([ROLE_CANTUS_ADMIN]), []);
+  assert.deepEqual(getAvailableUserDetailTabs([ROLE_CANTUS_ADMIN]), []);
 });
 
 test("role helpers and getAvailableUserScopes resolve directory scopes", () => {

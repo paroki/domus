@@ -44,6 +44,7 @@ import { UserOrgTab } from "../components/UserOrgTab";
 import {
   canManageUsers,
   getAvailableUserDetailTabs,
+  isCantusAdmin,
   isOrgAdmin,
   isParokiAdmin,
   isSuperAdmin,
@@ -62,6 +63,7 @@ export function meta({}: Route.MetaArgs) {
 type PendingConfirm =
   | { kind: "deleteUser" }
   | { kind: "demoteSuperAdmin" }
+  | { kind: "revokeCantusAdmin" }
   | { kind: "disableUser" }
   | { kind: "demoteParokiAdmin"; parokiId: string; parokiName: string }
   | { kind: "revokeUmatAdmin"; parokiId: string; parokiName: string }
@@ -298,6 +300,7 @@ export default function UserDetailPage() {
   const userDisplayName = user.name || user.email || "";
   const fullUser = superAdminCaller ? userQuery.data : undefined;
   const targetIsSuperAdmin = isSuperAdmin(fullUser);
+  const targetIsCantusAdmin = isCantusAdmin(fullUser);
   const isSelf = userId === me?.id;
   const providers = fullUser?.linkedProviders?.map(providerLabel) ?? [];
   const lastLoginText = formatDate(fullUser?.lastLoginAt);
@@ -403,6 +406,17 @@ export default function UserDetailPage() {
         });
         return;
       }
+      if (action.kind === "revokeCantusAdmin") {
+        await updateUser.mutateAsync({
+          id: userId,
+          body: { isCantusAdmin: false },
+        });
+        setFeedback({
+          tone: "success",
+          message: t("users.userUpdated", { name: userDisplayName }),
+        });
+        return;
+      }
       if (action.kind === "disableUser") {
         await updateUser.mutateAsync({
           id: userId,
@@ -473,6 +487,14 @@ export default function UserDetailPage() {
             name: userDisplayName,
           }),
           confirmLabel: t("users.demoteSuperAdmin"),
+        };
+      case "revokeCantusAdmin":
+        return {
+          title: t("users.confirmRevokeCantusAdminTitle"),
+          description: t("users.confirmRevokeCantusAdminDescription", {
+            name: userDisplayName,
+          }),
+          confirmLabel: t("users.revokeCantusAdmin"),
         };
       case "disableUser":
         return {
@@ -577,7 +599,7 @@ export default function UserDetailPage() {
             <UserAvatar
               name={user.name}
               email={user.email}
-              highlight={targetIsSuperAdmin}
+              highlight={targetIsSuperAdmin || targetIsCantusAdmin}
             />
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
@@ -596,6 +618,9 @@ export default function UserDetailPage() {
                 )}
                 {targetIsSuperAdmin && (
                   <Badge tone="warning">{t("users.roleSuperAdmin")}</Badge>
+                )}
+                {targetIsCantusAdmin && (
+                  <Badge tone="success">{t("users.roleCantusAdmin")}</Badge>
                 )}
                 {fullUser?.onboarded === false && (
                   <Badge tone="neutral">{t("users.notOnboarded")}</Badge>
@@ -753,6 +778,39 @@ export default function UserDetailPage() {
                 {targetIsSuperAdmin
                   ? t("users.demoteSuperAdmin")
                   : t("users.promoteSuperAdmin")}
+              </Button>
+
+              <Button
+                variant="outline"
+                disabled={updateUser.isPending}
+                onClick={async () => {
+                  if (targetIsCantusAdmin) {
+                    setPendingConfirm({ kind: "revokeCantusAdmin" });
+                    return;
+                  }
+                  setFeedback(null);
+                  try {
+                    await updateUser.mutateAsync({
+                      id: userId,
+                      body: { isCantusAdmin: true },
+                    });
+                    setFeedback({
+                      tone: "success",
+                      message: t("users.userUpdated", {
+                        name: userDisplayName,
+                      }),
+                    });
+                  } catch (err) {
+                    if (err instanceof ApiError) {
+                      setFeedback({ tone: "error", message: err.message });
+                    }
+                  }
+                }}
+              >
+                <ShieldCheck aria-hidden className="size-4" />
+                {targetIsCantusAdmin
+                  ? t("users.revokeCantusAdmin")
+                  : t("users.grantCantusAdmin")}
               </Button>
 
               <Button

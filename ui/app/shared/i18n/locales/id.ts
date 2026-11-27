@@ -49,6 +49,11 @@ const id = {
       name: "Data Umat",
       description: "Kartu keluarga, profil umat, dan riwayat sakramen paroki.",
     },
+    cantus: {
+      name: "Nyanyian",
+      description:
+        "Katalog lagu liturgi, mazmur tanggapan, dan bait pengantar Injil",
+    },
     agent: {
       name: "Asisten AI",
       description: "Asisten AI paroki untuk jadwal, organisasi, dan memori.",
@@ -240,6 +245,13 @@ const id = {
     roleLabel: "Peran",
     roleAll: "Semua Peran",
     roleSuperAdmin: "Super Admin",
+    roleCantusAdmin: "Admin Nyanyian",
+    grantCantusAdmin: "Jadikan Admin Nyanyian",
+    revokeCantusAdmin: "Cabut Admin Nyanyian",
+    confirmRevokeCantusAdminTitle: "Cabut peran Admin Nyanyian?",
+    confirmRevokeCantusAdminDescription:
+      "{{name}} tidak akan lagi dapat mengelola katalog nyanyian global.",
+    filterCantusAdminOnly: "Admin Nyanyian",
     roleUser: "Pengguna",
     roleParishAdmin: "Admin Paroki",
     roleUmatAdmin: "Admin Data Umat",

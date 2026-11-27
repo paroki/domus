@@ -6,6 +6,7 @@ import type {
 } from "./api/types";
 
 export const ROLE_SUPER_ADMIN = "user:super-admin";
+export const ROLE_CANTUS_ADMIN = "cantus:admin";
 export const ROLE_USER = "user:user";
 export const ROLE_PAROKI_ADMIN = "ref:paroki-admin";
 export const ROLE_UMAT_ADMIN = "umat:admin";
@@ -19,6 +20,13 @@ export const ROLE_DESCRIPTORS: RoleDescriptor[] = [
     scope: "global",
     description:
       "Mengelola pengguna global, keuskupan, tenant paroki, dan kamus referensi global.",
+  },
+  {
+    code: ROLE_CANTUS_ADMIN,
+    name: "Admin Nyanyian",
+    scope: "global",
+    description:
+      "Mengelola inventaris lagu, mazmur, dan BPI global lintas-paroki.",
   },
   {
     code: ROLE_USER,
@@ -142,6 +150,12 @@ export function deduplicateOrgMembers(
 
 export function isSuperAdmin(user?: User | null): boolean {
   return Boolean(user?.roles?.includes(ROLE_SUPER_ADMIN));
+}
+
+export function isCantusAdmin(user?: User | null): boolean {
+  return Boolean(
+    user?.isCantusAdmin || user?.roles?.includes(ROLE_CANTUS_ADMIN),
+  );
 }
 
 export function isParokiAdmin(user?: User | null): boolean {
