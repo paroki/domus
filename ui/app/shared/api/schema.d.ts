@@ -284,6 +284,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/auth/push/vapid-public-key": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get VAPID public key
+     * @description Returns the base64url-encoded ECDSA P-256 VAPID public key for PushManager.subscribe.
+     */
+    get: operations["getPushVAPIDPublicKey"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/auth/roles": {
     parameters: {
       query?: never;
@@ -700,6 +720,66 @@ export interface paths {
      * @description Removes a linked account unless it is the user's last remaining authentication method.
      */
     delete: operations["unlinkMeAccount"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/me/push/subscribe": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Subscribe to Web Push notifications
+     * @description Validates and upserts a browser PushSubscription for the authenticated user and current session.
+     */
+    post: operations["subscribeMePush"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/me/push/test": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Send test notification
+     * @description Dispatches a test notification to the authenticated user's enabled push, WhatsApp, or Telegram channels.
+     */
+    post: operations["testMePush"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/me/push/unsubscribe": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Unsubscribe from Web Push notifications
+     * @description Deletes the matching Web Push subscription owned by the authenticated user.
+     */
+    post: operations["unsubscribeMePush"];
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -2996,6 +3076,10 @@ export interface components {
       id?: string;
       name?: string;
     };
+    "domain.PushSubscriptionKeys": {
+      auth: string;
+      p256dh: string;
+    };
     "domain.RedeemOrgInviteResponse": {
       membership?: components["schemas"]["domain.OrgMemberResponse"];
       organization?: components["schemas"]["domain.OrganizationResponse"];
@@ -3173,6 +3257,10 @@ export interface components {
       updatedAt?: string;
       userId?: string;
     };
+    "domain.SubscribePushRequest": {
+      endpoint: string;
+      keys: components["schemas"]["domain.PushSubscriptionKeys"];
+    };
     "domain.SwitchSessionParokiRequest": {
       activeParokiId: string;
     };
@@ -3314,6 +3402,9 @@ export interface components {
       tanggalLahir?: string;
       wilayahId?: string;
     };
+    "domain.UnsubscribePushRequest": {
+      endpoint: string;
+    };
     "domain.UpdateAgentProviderRequest": {
       apiKey?: string;
       baseUrl?: string;
@@ -3428,6 +3519,9 @@ export interface components {
       defaultParokiId?: string;
       gender?: string;
       name?: string;
+      notifyPush?: boolean;
+      notifyTelegram?: boolean;
+      notifyWhatsapp?: boolean;
       onboarded?: boolean;
       phone?: string;
       timezone?: string;
@@ -3653,8 +3747,12 @@ export interface components {
       lastLoginAt?: string;
       linkedProviders?: string[];
       name?: string;
+      notifyPush?: boolean;
+      notifyTelegram?: boolean;
+      notifyWhatsapp?: boolean;
       onboarded?: boolean;
       phone?: string;
+      pushSubscriptionCount?: number;
       roleDetails?: components["schemas"]["authz.RoleDescriptor"][];
       roles?: string[];
       status?: string;
@@ -3682,6 +3780,9 @@ export interface components {
       lastUsedAt?: string;
       name?: string;
       tokenPrefix?: string;
+    };
+    "domain.VAPIDPublicKeyResponse": {
+      publicKey?: string;
     };
     "domain.VerifyLinkAccountRequest": {
       /** @enum {string} */
@@ -4056,6 +4157,11 @@ export interface components {
     };
     "httpx.Envelope-domain_UserResponse": {
       data?: components["schemas"]["domain.UserResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_VAPIDPublicKeyResponse": {
+      data?: components["schemas"]["domain.VAPIDPublicKeyResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -5156,6 +5262,35 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["httpx.Envelope-domain_AuthProvidersResponse"];
+        };
+      };
+    };
+  };
+  getPushVAPIDPublicKey: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_VAPIDPublicKeyResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
         };
       };
     };
@@ -6625,6 +6760,124 @@ export interface operations {
       };
       /** @description Conflict */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  subscribeMePush: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Web Push subscription payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.SubscribePushRequest"];
+      };
+    };
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  testMePush: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  unsubscribeMePush: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Web Push endpoint to remove */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UnsubscribePushRequest"];
+      };
+    };
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
         headers: {
           [name: string]: unknown;
         };
