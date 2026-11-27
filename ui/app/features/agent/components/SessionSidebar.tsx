@@ -2,6 +2,7 @@ import { Check, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
+import { ConfirmDialog } from "~/shared/ui/ConfirmDialog";
 import { useDeleteAgentSession, useUpdateAgentSession } from "../api/actions";
 import { useAgentProviders, useAgentSessions } from "../api/queries";
 import type { SessionDetailResponse } from "../api/types";
@@ -27,7 +28,10 @@ export function SessionSidebar({
   const [query, setQuery] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
   const renameInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -121,7 +125,7 @@ export function SessionSidebar({
             onSelectNew();
             onCloseMobile();
           }}
-          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-on-primary hover:opacity-90"
+          className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-on-primary hover:opacity-90"
         >
           <Plus aria-hidden className="size-4" />
           {t("agent.newSession")}
@@ -130,7 +134,7 @@ export function SessionSidebar({
           type="button"
           aria-label={t("agent.cancel")}
           onClick={onCloseMobile}
-          className="rounded-lg p-1.5 text-muted hover:bg-fg/8 hover:text-fg lg:hidden"
+          className="inline-flex size-11 items-center justify-center rounded-lg text-muted hover:bg-fg/8 hover:text-fg lg:hidden"
         >
           <X aria-hidden className="size-4" />
         </button>
@@ -140,21 +144,21 @@ export function SessionSidebar({
         <div className="relative">
           <Search
             aria-hidden
-            className="pointer-events-none absolute top-2.5 left-2.5 size-3.5 text-muted"
+            className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted"
           />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t("agent.searchSessionsPlaceholder")}
-            className="w-full rounded-lg border border-line bg-bg py-1.5 pr-7 pl-8 text-xs text-fg placeholder:text-muted/70 focus:border-accent focus:outline-none"
+            className="h-11 w-full rounded-lg border border-line bg-bg pr-9 pl-8 text-base text-fg placeholder:text-muted/70 focus:border-accent focus:outline-none sm:text-sm"
           />
           {query ? (
             <button
               type="button"
               aria-label={t("agent.cancel")}
               onClick={() => setQuery("")}
-              className="absolute top-1.5 right-1.5 rounded p-0.5 text-muted hover:text-fg"
+              className="absolute top-1/2 right-1.5 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded text-muted hover:text-fg"
             >
               <X aria-hidden className="size-3.5" />
             </button>
@@ -175,7 +179,7 @@ export function SessionSidebar({
               return (
                 <li
                   key={sess.id}
-                  className={`group flex items-center gap-1 rounded-lg px-2.5 py-2 text-xs ${
+                  className={`group flex min-h-11 items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs ${
                     isActive
                       ? "bg-primary/10 font-semibold text-fg"
                       : "text-muted hover:bg-fg/6 hover:text-fg"
@@ -195,44 +199,16 @@ export function SessionSidebar({
                             setEditingId(null);
                           }
                         }}
-                        className="min-w-0 flex-1 rounded border border-line bg-bg px-1.5 py-0.5 text-xs text-fg focus:outline-none"
+                        className="h-10 min-w-0 flex-1 rounded border border-line bg-bg px-2 text-base text-fg focus:outline-none sm:text-sm"
                       />
                       <button
                         type="button"
                         aria-label={t("agent.renameSession")}
                         onClick={() => void handleSaveTitle(sess.id)}
-                        className="p-0.5 text-emerald-600"
+                        className="inline-flex min-h-9 min-w-9 items-center justify-center rounded text-emerald-600 hover:bg-emerald-600/10"
                       >
                         <Check aria-hidden className="size-3.5" />
                       </button>
-                    </div>
-                  ) : confirmDeleteId === sess.id ? (
-                    <div className="flex flex-1 items-center justify-between gap-1.5">
-                      <span className="truncate text-xs font-medium text-danger">
-                        {t("agent.confirmDeleteSession")}
-                      </span>
-                      <div className="flex shrink-0 items-center gap-1">
-                        <button
-                          type="button"
-                          aria-label={t("agent.deleteSession")}
-                          disabled={deleteSession.isPending}
-                          onClick={() => {
-                            setConfirmDeleteId(null);
-                            void handleDelete(sess.id);
-                          }}
-                          className="rounded p-0.5 text-danger hover:bg-danger/10"
-                        >
-                          <Check aria-hidden className="size-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          aria-label={t("agent.cancel")}
-                          onClick={() => setConfirmDeleteId(null)}
-                          className="rounded p-0.5 text-muted hover:text-fg"
-                        >
-                          <X aria-hidden className="size-3.5" />
-                        </button>
-                      </div>
                     </div>
                   ) : (
                     <>
@@ -240,7 +216,7 @@ export function SessionSidebar({
                         to={`/agent/sessions/${sess.id}`}
                         aria-current={isActive ? "page" : undefined}
                         onClick={onCloseMobile}
-                        className="min-w-0 flex-1 truncate text-inherit no-underline"
+                        className="min-w-0 flex-1 truncate py-1.5 text-inherit no-underline"
                       >
                         {sess.title}
                       </Link>
@@ -248,21 +224,23 @@ export function SessionSidebar({
                         type="button"
                         aria-label={t("agent.renameSession")}
                         onClick={() => {
-                          setConfirmDeleteId(null);
+                          setDeleteTarget(null);
                           setEditingId(sess.id);
                           setEditingTitle(sess.title);
                         }}
-                        className="inline-flex rounded p-0.5 text-muted opacity-100 transition-opacity hover:text-fg sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
+                        className="inline-flex min-h-9 min-w-9 items-center justify-center rounded text-muted opacity-100 transition-opacity hover:text-fg sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
                       >
-                        <Pencil aria-hidden className="size-3" />
+                        <Pencil aria-hidden className="size-3.5" />
                       </button>
                       <button
                         type="button"
                         aria-label={t("agent.deleteSession")}
-                        onClick={() => setConfirmDeleteId(sess.id)}
-                        className="inline-flex rounded p-0.5 text-muted opacity-100 transition-opacity hover:text-red-600 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
+                        onClick={() =>
+                          setDeleteTarget({ id: sess.id, title: sess.title })
+                        }
+                        className="inline-flex min-h-9 min-w-9 items-center justify-center rounded text-muted opacity-100 transition-opacity hover:text-red-600 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
                       >
-                        <Trash2 aria-hidden className="size-3" />
+                        <Trash2 aria-hidden className="size-3.5" />
                       </button>
                     </>
                   )}
@@ -284,7 +262,7 @@ export function SessionSidebar({
               value={currentOverrideValue}
               disabled={updateSession.isPending}
               onChange={(e) => void handleModelChange(e.target.value)}
-              className="w-full rounded-lg border border-line bg-bg px-2.5 py-1.5 text-xs text-fg focus:border-accent focus:outline-none"
+              className="h-11 w-full rounded-lg border border-line bg-bg px-2.5 text-base text-fg focus:border-accent focus:outline-none sm:text-sm"
             >
               <option value="">{t("agent.modelDefaultBadge")}</option>
               {modelOptions.map((opt) => (
@@ -333,6 +311,25 @@ export function SessionSidebar({
           />
         </div>
       ) : null}
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title={t("agent.confirmDeleteSession")}
+        description={
+          deleteTarget
+            ? `${t("agent.confirmDeleteSessionDescription")} (${deleteTarget.title})`
+            : t("agent.confirmDeleteSessionDescription")
+        }
+        confirmLabel={t("agent.deleteSession")}
+        cancelLabel={t("agent.cancel")}
+        pending={deleteSession.isPending}
+        onConfirm={() => {
+          if (!deleteTarget) return;
+          const id = deleteTarget.id;
+          setDeleteTarget(null);
+          void handleDelete(id);
+        }}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </>
   );
 }

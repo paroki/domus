@@ -32,6 +32,12 @@ export function ChatComposer({
 
   useEffect(() => {
     if (disabled) return;
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(pointer: coarse)").matches
+    ) {
+      return;
+    }
     textareaRef.current?.focus();
   }, [focusKey, disabled]);
 
@@ -77,7 +83,7 @@ export function ChatComposer({
   return (
     <form
       onSubmit={handleSubmit}
-      className="border-t border-line bg-surface px-4 py-3 sm:px-6"
+      className="border-t border-line bg-surface px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6"
     >
       <div className="mx-auto flex max-w-3xl flex-col gap-1.5">
         {err ? <p className="text-xs text-danger">{err}</p> : null}
@@ -116,7 +122,7 @@ export function ChatComposer({
                 type="button"
                 variant="outline"
                 onClick={onStop}
-                className="min-h-11 shrink-0 gap-1.5 rounded-lg px-3 text-xs"
+                className="h-11 shrink-0 gap-1.5 rounded-lg px-4 text-xs sm:text-sm"
               >
                 <Square aria-hidden className="size-3.5" />
                 {t("agent.stop")}
@@ -125,7 +131,7 @@ export function ChatComposer({
               <Button
                 type="submit"
                 disabled={disabled || !text.trim()}
-                className="min-h-11 shrink-0 gap-1.5 rounded-lg px-3 text-xs"
+                className="h-11 shrink-0 gap-1.5 rounded-lg px-4 text-xs sm:text-sm"
               >
                 <Send aria-hidden className="size-3.5" />
                 {t("agent.send")}

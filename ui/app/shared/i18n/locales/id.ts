@@ -811,6 +811,23 @@ const id = {
     loadOlder: "Muat Pesan Lama",
     memoryButton: "Memori AI",
     memoryDrawerTitle: "Memori AI",
+    memoriesBreadcrumb: "Memori Saya",
+    memoriesSubtitle:
+      "Kelola fakta, preferensi, dan konteks yang diingat oleh Gabriel.",
+    memoryCategoryLabel: "Kategori",
+    memoryContentLabel: "Isi Memori",
+    memoryFormSubtitleAdd:
+      "Tambahkan fakta atau preferensi baru untuk diingat Gabriel.",
+    memoryFormSubtitleEdit:
+      "Perbarui isi atau kategori memori yang sudah tersimpan.",
+    memoryFormSectionTitle: "Detail Memori",
+    memoryNotFound: "Memori tidak ditemukan.",
+    confirmDeleteMemory: "Hapus memori ini?",
+    confirmDeleteMemoryDescription:
+      "Memori yang dihapus tidak dapat dikembalikan dan Gabriel tidak akan mengingatnya lagi.",
+    confirmDeleteSessionDescription:
+      "Percakapan dan seluruh pesannya akan dihapus permanen.",
+    backToMemories: "Kembali ke Memori AI",
     memoryPersonalTab: "Memori Pribadi",
     memoryParishTab: "FAQ & Pengetahuan Paroki",
     memoryPinnedCount: "{{count}} / 5 disematkan",

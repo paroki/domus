@@ -239,7 +239,7 @@ function CopyMessageButton({ content }: { content: string }) {
       type="button"
       onClick={handleCopy}
       aria-label={copied ? t("agent.copiedMessage") : t("agent.copyMessage")}
-      className="pointer-events-auto inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-xs font-medium text-muted opacity-100 transition-opacity hover:bg-fg/8 hover:text-fg focus:opacity-100 sm:pointer-events-none sm:opacity-0 sm:group-hover/msg:pointer-events-auto sm:group-hover/msg:opacity-100"
+      className="pointer-events-auto inline-flex min-h-9 items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium text-muted opacity-100 transition-opacity hover:bg-fg/8 hover:text-fg focus:opacity-100 sm:pointer-events-none sm:opacity-0 sm:group-hover/msg:pointer-events-auto sm:group-hover/msg:opacity-100"
     >
       {copied ? (
         <>
@@ -287,7 +287,7 @@ function CollapsibleToolItem({
     }
   }, [isError, verbose]);
 
-  const pillClass = `inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-colors ${
+  const pillClass = `inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors ${
     isError
       ? "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300"
       : "border-line bg-surface text-muted"
@@ -523,7 +523,7 @@ export function ChatTimeline({
                       <button
                         type="button"
                         onClick={() => onRetry(msg.content)}
-                        className="inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-xs font-medium text-muted opacity-100 transition-opacity hover:bg-fg/8 hover:text-fg focus:opacity-100 sm:opacity-0 sm:group-hover/msg:opacity-100"
+                        className="inline-flex min-h-9 items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium text-muted opacity-100 transition-opacity hover:bg-fg/8 hover:text-fg focus:opacity-100 sm:opacity-0 sm:group-hover/msg:opacity-100"
                       >
                         <RotateCcw aria-hidden className="size-3" />
                         {t("agent.retry")}
@@ -709,7 +709,7 @@ export function ChatTimeline({
           <button
             type="button"
             onClick={() => scrollToBottom("smooth")}
-            className="pointer-events-auto inline-flex items-center gap-1.5 rounded-full border border-line bg-surface/95 px-3 py-1.5 text-xs font-medium text-fg shadow-md backdrop-blur-xs transition-transform hover:scale-105 hover:bg-surface"
+            className="pointer-events-auto inline-flex min-h-10 items-center gap-1.5 rounded-full border border-line bg-surface/95 px-3.5 py-2 text-xs font-medium text-fg shadow-md backdrop-blur-xs transition-transform hover:scale-105 hover:bg-surface"
           >
             <ArrowDown aria-hidden className="size-3.5 text-primary" />
             {t("agent.scrollToBottom")}

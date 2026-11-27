@@ -2,7 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Brain, Menu, RotateCcw, Terminal } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { ApiError } from "~/shared/api/client";
 import { useMe } from "~/shared/api/session";
 import { agentKeys } from "../api/keys";
@@ -16,7 +16,6 @@ import {
   type LiveToolCall,
   type LiveTransfer,
 } from "./ChatTimeline";
-import { MemoryDrawer } from "./MemoryDrawer";
 import { SessionSidebar } from "./SessionSidebar";
 
 interface AgentWorkspaceProps {
@@ -34,7 +33,6 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
     initialSessionId,
   );
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [memoryOpen, setMemoryOpen] = useState(false);
   const [verbose, setVerbose] = useState(() => {
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem("domus:agent:verbose") === "true";
@@ -244,7 +242,7 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
               type="button"
               aria-label={t("agent.sessionsTitle")}
               onClick={() => setMobileSidebarOpen(true)}
-              className="rounded-lg p-1.5 text-muted hover:bg-fg/8 hover:text-fg lg:hidden"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg p-1.5 text-muted hover:bg-fg/8 hover:text-fg lg:hidden"
             >
               <Menu aria-hidden className="size-4" />
             </button>
@@ -274,7 +272,7 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
                   return next;
                 });
               }}
-              className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3 ${
+              className={`inline-flex min-h-11 items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3 ${
                 verbose
                   ? "border-primary/40 bg-primary/10 text-primary"
                   : "border-line bg-bg text-muted hover:bg-fg/6 hover:text-fg"
@@ -284,14 +282,13 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
               <span className="hidden sm:inline">{t("agent.verboseMode")}</span>
             </button>
 
-            <button
-              type="button"
-              onClick={() => setMemoryOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-bg px-2.5 py-1.5 text-xs font-medium text-fg hover:bg-fg/6 sm:px-3"
+            <Link
+              to="/agent/memories"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-line bg-bg px-2.5 py-1.5 text-xs font-medium text-fg no-underline hover:bg-fg/6 sm:px-3"
             >
               <Brain aria-hidden className="size-3.5 text-primary" />
               {t("agent.memoryButton")}
-            </button>
+            </Link>
           </div>
         </div>
 
@@ -345,8 +342,6 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
           onStop={handleStop}
         />
       </div>
-
-      <MemoryDrawer open={memoryOpen} onClose={() => setMemoryOpen(false)} />
     </div>
   );
 }
