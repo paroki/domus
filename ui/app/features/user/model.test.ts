@@ -35,10 +35,15 @@ import {
   sanitizeRedirect,
   shouldRedirectToOnboarding,
   USER_GENDERS,
+  USER_ROUTES,
 } from "./model";
 import MePage from "./pages/MePage";
 import TelegramLinkPage from "./pages/TelegramLinkPage";
 import TokenCreatePage from "./pages/TokenCreatePage";
+import UserCreatePage from "./pages/UserCreatePage";
+import UserOrgAddPage from "./pages/UserOrgAddPage";
+import UserPage from "./pages/UserPage";
+import UserParokiAddPage from "./pages/UserParokiAddPage";
 import WhatsAppLinkPage from "./pages/WhatsAppLinkPage";
 
 test("formatUserAgent detects common browsers and OS", () => {
@@ -108,8 +113,9 @@ test("role helpers and getAvailableUserScopes resolve directory scopes", () => {
   assert.equal(canManageUsers(plainUser), false);
 
   assert.deepEqual(getAvailableUserScopes(superUser.roles), ["global"]);
-  assert.deepEqual(getAvailableUserScopes(parokiUser.roles), ["org"]);
-  assert.deepEqual(getAvailableUserScopes(umatUser.roles), ["org"]);
+  assert.deepEqual(getAvailableUserScopes(superUser), ["global"]);
+  assert.deepEqual(getAvailableUserScopes(parokiUser.roles), ["paroki", "org"]);
+  assert.deepEqual(getAvailableUserScopes(umatUser.roles), ["paroki"]);
   assert.deepEqual(getAvailableUserScopes(orgUser.roles), ["org"]);
   assert.deepEqual(getAvailableUserScopes([ROLE_SUPER_ADMIN, ROLE_ORG_ADMIN]), [
     "global",
@@ -302,4 +308,54 @@ test("Me sub-pages SSR render InductivePageHeader and dedicated forms", () => {
     "/me/accounts/telegram",
   );
   assert.ok(tgPageHtml.includes("Hubungkan Telegram"));
+});
+
+test("USER_ROUTES and user sub-pages SSR render InductivePageHeader without inline creation forms", () => {
+  assert.equal(USER_ROUTES.index, "/users");
+  assert.equal(USER_ROUTES.new, "/users/new");
+  assert.equal(USER_ROUTES.detail("u1"), "/users/u1");
+  assert.equal(USER_ROUTES.parokiNew("u1"), "/users/u1/paroki/new");
+  assert.equal(USER_ROUTES.orgNew("u1"), "/users/u1/org/new");
+
+  const usersHtml = renderWithProviders(
+    createElement(UserPage, {
+      loaderData: undefined,
+      params: {},
+      matches: [] as never,
+    }),
+    "/users",
+  );
+  assert.ok(usersHtml.includes("Direktori Pengguna"));
+  assert.equal(usersHtml.includes("Buat Pengguna"), false);
+
+  const createHtml = renderWithProviders(
+    createElement(UserCreatePage, {
+      loaderData: undefined,
+      params: {},
+      matches: [] as never,
+    }),
+    "/users/new",
+  );
+  assert.ok(createHtml.includes("Tambah Pengguna Baru"));
+  assert.ok(createHtml.includes("Buat Pengguna"));
+
+  const parokiAddHtml = renderWithProviders(
+    createElement(UserParokiAddPage, {
+      loaderData: undefined,
+      params: { id: "u1" },
+      matches: [] as never,
+    }),
+    "/users/u1/paroki/new",
+  );
+  assert.ok(parokiAddHtml.includes("Tambahkan ke Paroki"));
+
+  const orgAddHtml = renderWithProviders(
+    createElement(UserOrgAddPage, {
+      loaderData: undefined,
+      params: { id: "u1" },
+      matches: [] as never,
+    }),
+    "/users/u1/org/new",
+  );
+  assert.ok(orgAddHtml.includes("Tambahkan ke Organisasi"));
 });

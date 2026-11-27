@@ -41,3 +41,13 @@ Feature: Super Admin users directory and parish admin appointment
     And I switch user detail tab to "Paroki"
     And I add user to paroki "Paroki Users E2E" with role "Admin Paroki"
     Then I see user paroki membership "Paroki Users E2E" with role "Admin Paroki"
+
+  @super-admin
+  Scenario: Super Admin creates a global user via /users/new and edits profile via read-first toggle
+    When I open "/users"
+    Then I see the users directory page
+    When I create a global user via UI with email "baru.iui.e2e@domus.test" name "Pengguna Baru IUI" phone "+6281234567000"
+    And I update user detail profile to name "Pengguna Baru Diubah" phone "+6281234567001"
+    And I go back to the users directory
+    And I search users for "baru.iui.e2e@domus.test"
+    Then I see global user "Pengguna Baru Diubah" with email "baru.iui.e2e@domus.test" and status "Aktif"

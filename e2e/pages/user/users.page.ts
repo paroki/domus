@@ -85,15 +85,51 @@ export class UsersPage extends BasePage {
   async openUserDetail(nameOrEmail: string): Promise<void> {
     await this.rowFor(nameOrEmail).click();
     await this.page
-      .getByRole("link", { name: "Kembali ke Direktori Pengguna" })
+      .getByRole("navigation", { name: "Breadcrumb" })
+      .getByRole("link", { name: "Direktori Pengguna" })
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
   async backToDirectory(): Promise<void> {
     await this.page
-      .getByRole("link", { name: "Kembali ke Direktori Pengguna" })
+      .getByRole("navigation", { name: "Breadcrumb" })
+      .getByRole("link", { name: "Direktori Pengguna" })
       .click();
     await this.expectLoaded();
+  }
+
+  async createGlobalUser(input: {
+    email: string;
+    name: string;
+    phone?: string;
+  }): Promise<void> {
+    await this.page.getByRole("link", { name: "Tambah Pengguna" }).click();
+    await this.page
+      .getByRole("heading", { name: "Tambah Pengguna Baru" })
+      .waitFor({ state: "visible", timeout: 10_000 });
+    await this.page.getByLabel("Alamat email").fill(input.email);
+    await this.page.getByLabel("Nama lengkap").fill(input.name);
+    if (input.phone) {
+      await this.page.getByLabel("Nomor telepon (opsional)").fill(input.phone);
+    }
+    await this.page.getByRole("button", { name: "Buat Pengguna" }).click();
+    await this.page
+      .getByRole("heading", { name: input.name })
+      .waitFor({ state: "visible", timeout: 10_000 });
+  }
+
+  async updateProfile(input: { name: string; phone?: string }): Promise<void> {
+    const panel = this.page.locator("#user-tabpanel-profile");
+    await panel.getByRole("button", { name: "Ubah", exact: true }).click();
+    await panel.getByLabel("Nama lengkap").fill(input.name);
+    if (input.phone !== undefined) {
+      await panel.getByLabel("Nomor telepon (opsional)").fill(input.phone);
+    }
+    await panel.getByRole("button", { name: "Simpan Perubahan" }).click();
+    await panel
+      .locator("dl")
+      .getByText(input.name, { exact: true })
+      .waitFor({ state: "visible", timeout: 10_000 });
   }
 
   async selectDetailTab(tabLabel: UserDetailTabLabel): Promise<void> {
@@ -246,13 +282,17 @@ export class UsersPage extends BasePage {
     roleLabel: "Admin Paroki" | "Anggota",
   ): Promise<void> {
     const panel = this.page.locator("#user-tabpanel-paroki");
-    const select = panel.getByLabel("Pilih paroki");
+    await panel.getByRole("link", { name: "Tambahkan ke Paroki" }).click();
+    const select = this.page.getByLabel("Pilih paroki");
     await select
       .locator("option", { hasText: parokiName })
       .waitFor({ state: "attached", timeout: 10_000 });
     await select.selectOption({ label: parokiName });
-    await panel.getByLabel("Peran").selectOption({ label: roleLabel });
-    await panel.getByRole("button", { name: "Tambahkan ke Paroki" }).click();
+    await this.page.getByLabel("Peran").selectOption({ label: roleLabel });
+    await this.page
+      .getByRole("button", { name: "Tambahkan ke Paroki" })
+      .click();
+    await panel.waitFor({ state: "visible", timeout: 10_000 });
   }
 
   async expectParokiMembershipVisible(
@@ -371,18 +411,20 @@ export class UsersPage extends BasePage {
     roleLabel: "Admin Organisasi" | "Anggota";
   }): Promise<void> {
     const panel = this.page.locator("#user-tabpanel-org");
-    const select = panel.getByLabel("Pilih organisasi");
+    await panel.getByRole("link", { name: "Tambahkan ke Organisasi" }).click();
+    const select = this.page.getByLabel("Pilih organisasi");
     await select
       .locator("option", { hasText: input.orgName })
       .waitFor({ state: "attached", timeout: 10_000 });
     await select.selectOption({ label: input.orgName });
-    const roleSelect = panel.getByLabel("Peran");
+    const roleSelect = this.page.getByLabel("Peran");
     if (await roleSelect.isEnabled()) {
       await roleSelect.selectOption({ label: input.roleLabel });
     }
-    await panel
+    await this.page
       .getByRole("button", { name: "Tambahkan ke Organisasi" })
       .click();
+    await panel.waitFor({ state: "visible", timeout: 10_000 });
   }
 
   async expectOrgMembershipVisible(

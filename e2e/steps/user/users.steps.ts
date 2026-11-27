@@ -128,6 +128,25 @@ Given(
 );
 
 When(
+  "I create a global user via UI with email {string} name {string} phone {string}",
+  async function (
+    this: DomusWorld,
+    email: string,
+    name: string,
+    phone: string,
+  ) {
+    await this.pages.user.users.createGlobalUser({ email, name, phone });
+  },
+);
+
+When(
+  "I update user detail profile to name {string} phone {string}",
+  async function (this: DomusWorld, name: string, phone: string) {
+    await this.pages.user.users.updateProfile({ name, phone });
+  },
+);
+
+When(
   "I add user to paroki {string} with role {string}",
   async function (this: DomusWorld, parokiName: string, roleLabel: string) {
     await this.pages.user.users.addToParoki(
