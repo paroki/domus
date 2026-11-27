@@ -1,8 +1,7 @@
-import { ArrowLeft } from "lucide-react";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router";
 import { useMe } from "~/shared/api/session";
+import { InductivePageHeader } from "~/shared/ui/iui";
 import { useSettings } from "../api/queries";
 import type { SettingResponse } from "../api/types";
 import { buildSettingsDraft, indexSettingsByKey, isSuperAdmin } from "../model";
@@ -50,10 +49,9 @@ export function useSettingsEditor() {
 }
 
 interface SettingsSubpageShellProps {
-  backTo: string;
-  backLabel: string;
   title: string;
   subtitle?: string;
+  action?: ReactNode;
   meLoading: boolean;
   canManage: boolean;
   settingsLoading: boolean;
@@ -64,10 +62,9 @@ interface SettingsSubpageShellProps {
 }
 
 export function SettingsSubpageShell({
-  backTo,
-  backLabel,
   title,
   subtitle,
+  action,
   meLoading,
   canManage,
   settingsLoading,
@@ -79,18 +76,18 @@ export function SettingsSubpageShell({
   const { t } = useTranslation();
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-8">
-      <div>
-        <Link
-          to={backTo}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-muted no-underline hover:text-fg"
-        >
-          <ArrowLeft aria-hidden className="size-4" />
-          {backLabel}
-        </Link>
-        <h1 className="mt-2 text-2xl font-bold text-fg">{title}</h1>
-        {subtitle ? <p className="text-sm text-muted">{subtitle}</p> : null}
-      </div>
+    <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
+      <InductivePageHeader
+        breadcrumbs={[
+          { label: "Beranda", to: "/" },
+          { label: t("settings.title"), to: "/settings" },
+          { label: "Sistem & Integrasi", to: "/settings/system" },
+          { label: title },
+        ]}
+        title={title}
+        subtitle={subtitle ?? ""}
+        action={canManage ? action : undefined}
+      />
 
       {!meLoading && !canManage ? (
         <div

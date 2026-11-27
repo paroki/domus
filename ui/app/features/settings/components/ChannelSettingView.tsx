@@ -1,7 +1,9 @@
-import type { FormEvent } from "react";
+import { type FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ApiError } from "~/shared/api/client";
 import { Button } from "~/shared/ui/Button";
+import { ConfirmDialog } from "~/shared/ui/ConfirmDialog";
+import { InductiveDangerZone } from "~/shared/ui/iui";
 import { useUpdateSettings } from "../api/actions";
 import {
   buildClearValues,
@@ -29,6 +31,8 @@ export function ChannelSettingView({
   const editor = useSettingsEditor();
   const updateSettings = useUpdateSettings();
   const group = findChannelGroup(editor.items, groupName);
+  const [editing, setEditing] = useState(false);
+  const [confirmClearOpen, setConfirmClearOpen] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -42,6 +46,7 @@ export function ChannelSettingView({
     }
     try {
       await updateSettings.mutateAsync({ values });
+      setEditing(false);
       editor.setStatus(t("settings.saved"), null);
     } catch (err) {
       editor.setStatus(
@@ -59,8 +64,11 @@ export function ChannelSettingView({
       await updateSettings.mutateAsync({
         values: buildClearValues(target.items),
       });
+      setConfirmClearOpen(false);
+      setEditing(false);
       editor.setStatus(t("settings.saved"), null);
     } catch (err) {
+      setConfirmClearOpen(false);
       editor.setStatus(
         null,
         err instanceof ApiError || err instanceof Error
@@ -72,8 +80,6 @@ export function ChannelSettingView({
 
   return (
     <SettingsSubpageShell
-      backTo="/settings/system"
-      backLabel={t("settings.backToSettings")}
       title={title}
       subtitle={subtitle}
       meLoading={editor.meLoading}
@@ -88,27 +94,54 @@ export function ChannelSettingView({
           {t("settings.channels.notConfiguredGroup")}
         </p>
       ) : (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <>
           <SettingGroupCard
             group={group}
             draft={editor.draft}
+            editing={editing}
             busy={updateSettings.isPending}
+            onStartEdit={() => {
+              editor.setStatus(null, null);
+              setEditing(true);
+            }}
+            onCancelEdit={() => {
+              setEditing(false);
+              for (const item of group.items) {
+                if (item.key) {
+                  editor.updateDraft(item.key, item.value ?? "");
+                }
+              }
+            }}
             onChange={editor.updateDraft}
-            onClear={handleClear}
+            onSubmit={(e) => void handleSubmit(e)}
           />
 
-          <div className="flex justify-end">
-            <Button
-              type="submit"
-              disabled={updateSettings.isPending}
-              className="h-10"
-            >
-              {updateSettings.isPending
-                ? t("settings.saving")
-                : t("settings.save")}
-            </Button>
-          </div>
-        </form>
+          <InductiveDangerZone
+            title={t("settings.clearGroup")}
+            description="Menghapus kredensial akan menonaktifkan integrasi kanal ini sampai dikonfigurasi ulang."
+            action={
+              <Button
+                type="button"
+                variant="danger"
+                disabled={updateSettings.isPending || !group.configured}
+                onClick={() => setConfirmClearOpen(true)}
+                className="w-full sm:w-auto"
+              >
+                {t("settings.clearGroup")}
+              </Button>
+            }
+          />
+
+          <ConfirmDialog
+            open={confirmClearOpen}
+            title={`${t("settings.clearGroup")}?`}
+            description={`Semua nilai konfigurasi pada ${group.name} akan dikosongkan.`}
+            confirmLabel={t("settings.clearGroup")}
+            pending={updateSettings.isPending}
+            onConfirm={() => void handleClear(group)}
+            onCancel={() => setConfirmClearOpen(false)}
+          />
+        </>
       )}
     </SettingsSubpageShell>
   );

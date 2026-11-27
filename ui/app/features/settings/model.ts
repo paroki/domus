@@ -88,25 +88,40 @@ export function getVisibleSettingsHubs(
 export interface SettingsLauncherItem {
   id: "telegram" | "whatsapp" | "aiProvider" | "aiAgent";
   path: string;
+  description: string;
   plate: 1 | 2 | 3 | 4 | 5 | 6;
   icon: LucideIcon;
 }
 
 export const SETTINGS_LAUNCHERS: SettingsLauncherItem[] = [
-  { id: "telegram", path: "/settings/system/telegram", plate: 1, icon: Send },
+  {
+    id: "telegram",
+    path: "/settings/system/telegram",
+    description: "Konfigurasi token bot dan integrasi kanal Telegram.",
+    plate: 1,
+    icon: Send,
+  },
   {
     id: "whatsapp",
     path: "/settings/system/whatsapp",
+    description: "Konfigurasi integrasi GOWA untuk kanal WhatsApp.",
     plate: 2,
     icon: MessageCircle,
   },
   {
     id: "aiProvider",
     path: "/settings/system/ai-provider",
+    description: "Kelola penyedia LLM, API key, dan katalog model AI.",
     plate: 3,
     icon: Cpu,
   },
-  { id: "aiAgent", path: "/settings/system/ai-agent", plate: 4, icon: Bot },
+  {
+    id: "aiAgent",
+    path: "/settings/system/ai-agent",
+    description: "Atur routing model dan persona untuk setiap agen AI.",
+    plate: 4,
+    icon: Bot,
+  },
 ];
 
 export const AGENT_MODEL_KEYS = [

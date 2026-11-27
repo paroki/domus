@@ -1,40 +1,19 @@
-import { type FormEvent, useState } from "react";
+import { Bot, Cpu, Plus } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router";
 import { ApiError } from "~/shared/api/client";
-import { Button } from "~/shared/ui/Button";
-import {
-  useCreateAgentProvider,
-  useDeleteAgentProvider,
-  useSyncProviderModels,
-  useUpdateAgentProvider,
-} from "../api/actions";
+import { Badge } from "~/shared/ui/Badge";
+import { Button, buttonClass } from "~/shared/ui/Button";
+import { InductiveEmptyState, InductiveStepCard } from "~/shared/ui/iui";
+import { useSyncProviderModels } from "../api/actions";
 import { useAgentProviders } from "../api/queries";
 import type { AgentProviderResponse } from "../api/types";
-import {
-  getProviderLabel,
-  LLM_PROVIDERS,
-  type LLMProviderType,
-} from "../model";
+import { getProviderLabel } from "../model";
 
 interface LLMProvidersSectionProps {
   onStatus: (msg: string | null, err: string | null) => void;
 }
-
-interface ProviderFormState {
-  name: string;
-  description: string;
-  provider: LLMProviderType;
-  apiKey: string;
-  baseUrl: string;
-}
-
-const EMPTY_FORM: ProviderFormState = {
-  name: "",
-  description: "",
-  provider: "gemini",
-  apiKey: "",
-  baseUrl: "",
-};
 
 function errMessage(err: unknown): string {
   return err instanceof ApiError || err instanceof Error
@@ -45,84 +24,8 @@ function errMessage(err: unknown): string {
 export function LLMProvidersSection({ onStatus }: LLMProvidersSectionProps) {
   const { t } = useTranslation();
   const { data: providers = [], isLoading } = useAgentProviders();
-  const createProvider = useCreateAgentProvider();
-  const updateProvider = useUpdateAgentProvider();
-  const deleteProvider = useDeleteAgentProvider();
   const syncModels = useSyncProviderModels();
-
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [showForm, setShowForm] = useState(false);
-  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
-  const [form, setForm] = useState<ProviderFormState>(EMPTY_FORM);
   const [activeId, setActiveId] = useState<string | null>(null);
-
-  const busy =
-    createProvider.isPending ||
-    updateProvider.isPending ||
-    deleteProvider.isPending ||
-    syncModels.isPending;
-
-  const selectedDef = LLM_PROVIDERS.find((p) => p.id === form.provider);
-
-  function startCreate() {
-    onStatus(null, null);
-    setEditingId(null);
-    setShowApiKeyInput(true);
-    setForm(EMPTY_FORM);
-    setShowForm(true);
-  }
-
-  function startEdit(p: AgentProviderResponse) {
-    onStatus(null, null);
-    setEditingId(p.id ?? null);
-    setShowApiKeyInput(false);
-    setForm({
-      name: p.name ?? "",
-      description: p.description ?? "",
-      provider: (p.provider as LLMProviderType) ?? "gemini",
-      apiKey: "",
-      baseUrl: p.baseUrl ?? "",
-    });
-    setShowForm(true);
-  }
-
-  function cancelForm() {
-    setShowForm(false);
-    setEditingId(null);
-    setShowApiKeyInput(false);
-    setForm(EMPTY_FORM);
-  }
-
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    onStatus(null, null);
-    try {
-      if (editingId) {
-        await updateProvider.mutateAsync({
-          providerId: editingId,
-          body: {
-            name: form.name,
-            description: form.description,
-            provider: form.provider,
-            apiKey: form.apiKey,
-            baseUrl: form.baseUrl,
-          },
-        });
-      } else {
-        await createProvider.mutateAsync({
-          name: form.name,
-          description: form.description,
-          provider: form.provider,
-          apiKey: form.apiKey,
-          baseUrl: form.baseUrl,
-        });
-      }
-      cancelForm();
-      onStatus(t("settings.saved"), null);
-    } catch (err) {
-      onStatus(null, errMessage(err));
-    }
-  }
 
   async function handleSync(p: AgentProviderResponse) {
     if (!p.id) return;
@@ -141,197 +44,25 @@ export function LLMProvidersSection({ onStatus }: LLMProvidersSectionProps) {
     }
   }
 
-  async function handleDelete(p: AgentProviderResponse) {
-    if (!p.id) return;
-    onStatus(null, null);
-    setActiveId(p.id);
-    try {
-      await deleteProvider.mutateAsync(p.id);
-      if (editingId === p.id) {
-        cancelForm();
-      }
-      onStatus(t("settings.providers.deleted"), null);
-    } catch (err) {
-      onStatus(null, errMessage(err));
-    } finally {
-      setActiveId(null);
-    }
-  }
-
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex justify-end">
-        <Button
-          type="button"
-          disabled={busy}
-          onClick={startCreate}
-          className="h-9 px-4 text-xs"
-        >
-          {t("settings.providers.add")}
-        </Button>
-      </div>
-
-      {showForm ? (
-        <form
-          onSubmit={handleSubmit}
-          className="rounded-xl border border-line bg-surface p-5 shadow-xs"
-        >
-          <h2 className="mb-4 text-base font-semibold text-fg">
-            {editingId
-              ? t("settings.providers.edit")
-              : t("settings.providers.add")}
-          </h2>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="provider-name"
-                className="text-sm font-medium text-fg"
-              >
-                {t("settings.providers.name")}
-              </label>
-              <input
-                id="provider-name"
-                type="text"
-                required
-                maxLength={100}
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="Gemini 1"
-                className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg placeholder:text-muted focus:border-fg/40 focus:outline-none"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="provider-type"
-                className="text-sm font-medium text-fg"
-              >
-                {t("settings.providers.providerType")}
-              </label>
-              <select
-                id="provider-type"
-                value={form.provider}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    provider: e.target.value as LLMProviderType,
-                  })
-                }
-                className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg focus:border-fg/40 focus:outline-none"
-              >
-                {LLM_PROVIDERS.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex flex-col gap-1.5 sm:col-span-2">
-              <label
-                htmlFor="provider-desc"
-                className="text-sm font-medium text-fg"
-              >
-                {t("settings.providers.description")}
-              </label>
-              <input
-                id="provider-desc"
-                type="text"
-                maxLength={500}
-                value={form.description}
-                onChange={(e) =>
-                  setForm({ ...form, description: e.target.value })
-                }
-                placeholder="API key utama paroki..."
-                className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg placeholder:text-muted focus:border-fg/40 focus:outline-none"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between gap-2">
-                <label
-                  htmlFor="provider-apikey"
-                  className="text-sm font-medium text-fg"
-                >
-                  {t("settings.providers.apiKey")}
-                </label>
-                {editingId && showApiKeyInput ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowApiKeyInput(false);
-                      setForm({ ...form, apiKey: "" });
-                    }}
-                    className="text-[11px] font-medium text-muted underline-offset-2 hover:text-fg hover:underline"
-                  >
-                    {t("settings.providers.cancel")}
-                  </button>
-                ) : null}
-              </div>
-              {editingId && !showApiKeyInput ? (
-                <button
-                  type="button"
-                  onClick={() => setShowApiKeyInput(true)}
-                  className="flex h-10 w-fit items-center rounded-lg border border-line bg-canvas px-3 text-xs font-medium text-fg transition hover:bg-fg/6"
-                >
-                  {t("settings.providers.updateApiKey")}
-                </button>
-              ) : (
-                <input
-                  id="provider-apikey"
-                  type="password"
-                  required
-                  value={form.apiKey}
-                  onChange={(e) => setForm({ ...form, apiKey: e.target.value })}
-                  placeholder="sk-..."
-                  autoComplete="off"
-                  className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg placeholder:text-muted focus:border-fg/40 focus:outline-none"
-                />
-              )}
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="provider-baseurl"
-                className="text-sm font-medium text-fg"
-              >
-                {t("settings.providers.baseUrl")}
-              </label>
-              <input
-                id="provider-baseurl"
-                type="url"
-                value={form.baseUrl}
-                onChange={(e) => setForm({ ...form, baseUrl: e.target.value })}
-                placeholder={selectedDef?.defaultBaseURL ?? ""}
-                autoComplete="off"
-                className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg placeholder:text-muted focus:border-fg/40 focus:outline-none"
-              />
-            </div>
-          </div>
-
-          <div className="mt-4 flex flex-wrap items-center justify-end gap-2.5">
-            <button
-              type="button"
-              disabled={busy}
-              onClick={cancelForm}
-              className="h-9 rounded-lg border border-line px-4 text-xs font-medium text-muted transition hover:bg-fg/6 hover:text-fg disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {t("settings.providers.cancel")}
-            </button>
-            <Button type="submit" disabled={busy} className="h-9 px-4 text-xs">
-              {t("settings.providers.save")}
-            </Button>
-          </div>
-        </form>
-      ) : null}
-
       {isLoading ? (
         <div className="h-32 animate-pulse rounded-xl border border-line bg-surface" />
       ) : providers.length === 0 ? (
-        <p className="rounded-xl border border-line bg-surface p-6 text-center text-sm text-muted">
-          {t("settings.providers.empty")}
-        </p>
+        <InductiveEmptyState
+          icon={Cpu}
+          title="Belum ada AI Provider"
+          description={t("settings.providers.empty")}
+          action={
+            <Link
+              to="/settings/system/ai-provider/new"
+              className={buttonClass("primary")}
+            >
+              <Plus aria-hidden className="size-4" />
+              {t("settings.providers.add")}
+            </Link>
+          }
+        />
       ) : (
         providers.map((p) => {
           const models = p.models ?? [];
@@ -340,68 +71,57 @@ export function LLMProvidersSection({ onStatus }: LLMProvidersSectionProps) {
           return (
             <section
               key={p.id}
-              className="rounded-xl border border-line bg-surface p-5 shadow-xs"
+              className="rounded-xl border border-line bg-surface p-4 sm:p-6"
             >
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
+              <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+                <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="text-base font-semibold text-fg">
                       {p.name}
                     </h2>
-                    <span className="inline-flex items-center rounded-full bg-fg/8 px-2.5 py-0.5 text-xs font-medium text-fg">
-                      {getProviderLabel(p.provider)}
-                    </span>
-                    <span className="inline-flex items-center rounded-full bg-success-bg px-2.5 py-0.5 text-xs font-medium text-success-fg">
+                    <Badge tone="neutral">{getProviderLabel(p.provider)}</Badge>
+                    <Badge tone="success">
                       {p.apiKeyMasked || t("settings.active")}
-                    </span>
-                    <span className="inline-flex items-center rounded-full bg-fg/6 px-2.5 py-0.5 text-xs text-muted">
+                    </Badge>
+                    <Badge tone="neutral">
                       {t("settings.providers.modelCount", {
                         count: models.length,
                       })}
-                    </span>
+                    </Badge>
                   </div>
                   {p.description ? (
-                    <p className="mt-1 text-xs text-muted">{p.description}</p>
+                    <p className="mt-1.5 text-sm text-muted">{p.description}</p>
                   ) : null}
                   {p.baseUrl ? (
-                    <p className="mt-0.5 font-mono text-[11px] text-muted">
+                    <p className="mt-1 break-all font-mono text-xs text-muted">
                       {p.baseUrl}
                     </p>
                   ) : null}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
+                <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+                  <Button
                     type="button"
-                    disabled={busy}
+                    variant="outline"
+                    disabled={syncModels.isPending}
                     onClick={() => void handleSync(p)}
-                    className="rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-fg transition hover:bg-fg/6 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="w-full sm:w-auto"
                   >
                     {isThisSyncing
                       ? t("settings.providers.syncing")
                       : t("settings.providers.sync")}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => startEdit(p)}
-                    className="rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-fg transition hover:bg-fg/6 disabled:cursor-not-allowed disabled:opacity-50"
+                  </Button>
+                  <Link
+                    to={`/settings/system/ai-provider/${p.id}`}
+                    className={`${buttonClass("outline")} w-full sm:w-auto`}
                   >
-                    {t("settings.providers.edit")}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void handleDelete(p)}
-                    className="rounded-lg border border-danger-fg/30 px-3 py-1.5 text-xs font-medium text-danger-fg transition hover:bg-danger-bg disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {t("settings.providers.delete")}
-                  </button>
+                    Kelola
+                  </Link>
                 </div>
               </div>
 
               {models.length > 0 ? (
-                <details className="mt-3">
+                <details className="mt-4">
                   <summary className="cursor-pointer text-xs font-medium text-muted hover:text-fg">
                     {t("settings.providers.catalogToggle", {
                       count: models.length,
@@ -423,6 +143,14 @@ export function LLMProvidersSection({ onStatus }: LLMProvidersSectionProps) {
           );
         })
       )}
+
+      <InductiveStepCard
+        to="/settings/system/ai-agent"
+        title={t("settings.launcher.aiAgent")}
+        description="Atur routing model dan persona untuk setiap agen AI setelah penyedia tersedia."
+        icon={Bot}
+        plate={4}
+      />
     </div>
   );
 }

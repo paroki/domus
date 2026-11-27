@@ -1,4 +1,7 @@
+import { Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router";
+import { buttonClass } from "~/shared/ui/Button";
 import { LLMProvidersSection } from "../components/LLMProvidersSection";
 import {
   SettingsSubpageShell,
@@ -15,14 +18,21 @@ export default function AIProviderPage() {
 
   return (
     <SettingsSubpageShell
-      backTo="/settings/system"
-      backLabel={t("settings.backToSettings")}
       title={t("settings.providers.title")}
       subtitle={t("settings.providers.subtitle")}
+      action={
+        <Link
+          to="/settings/system/ai-provider/new"
+          className={buttonClass("primary")}
+        >
+          <Plus aria-hidden className="size-4" />
+          {t("settings.providers.add")}
+        </Link>
+      }
       meLoading={editor.meLoading}
       canManage={editor.canManage}
       settingsLoading={editor.settingsLoading}
-      isEmpty={editor.items.length === 0}
+      isEmpty={false}
       errorMsg={editor.errorMsg}
       savedMsg={editor.savedMsg}
     >

@@ -16,6 +16,16 @@ export default [
     "./features/settings/pages/AIProviderPage.tsx",
   ),
   route(
+    "settings/system/ai-provider/new",
+    "./features/settings/pages/AIProviderFormPage.tsx",
+    { id: "settings-system-ai-provider-new" },
+  ),
+  route(
+    "settings/system/ai-provider/:id",
+    "./features/settings/pages/AIProviderFormPage.tsx",
+    { id: "settings-system-ai-provider-edit" },
+  ),
+  route(
     "settings/system/ai-agent",
     "./features/settings/pages/AIAgentPage.tsx",
   ),

@@ -17,7 +17,7 @@ export default function SystemHubPage() {
   const canManage = isSuperAdmin(me?.roles);
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-8">
+    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
       <InductivePageHeader
         breadcrumbs={[
           { label: "Beranda", to: "/" },
@@ -40,13 +40,12 @@ export default function SystemHubPage() {
       {canManage ? (
         <nav aria-label="Sistem & Integrasi">
           <InductiveHubGrid>
-            {SETTINGS_LAUNCHERS.map((item, idx) => (
+            {SETTINGS_LAUNCHERS.map((item) => (
               <InductiveStepCard
                 key={item.id}
                 to={item.path}
-                step={idx + 1}
                 title={t(`settings.launcher.${item.id}`)}
-                description="Konfigurasi integrasi dan parameter sistem."
+                description={item.description}
                 icon={item.icon}
                 plate={item.plate}
               />
