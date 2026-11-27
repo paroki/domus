@@ -1,11 +1,18 @@
-import { ArrowLeft, CalendarDays, MapPin, Pencil, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  CalendarDays,
+  Church,
+  MapPin,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router";
 import { useMe } from "~/shared/api/session";
 import i18n from "~/shared/i18n";
 import { Badge } from "~/shared/ui/Badge";
-import { Button } from "~/shared/ui/Button";
+import { Button, buttonClass } from "~/shared/ui/Button";
 import { Card } from "~/shared/ui/Card";
 import {
   useDeleteEvent,
@@ -331,6 +338,30 @@ export default function EventDetailPage() {
           </p>
         )}
       </Card>
+
+      {ev.jenis === "misa" && (
+        <Card className="flex flex-col justify-between gap-4 border-primary/30 bg-primary/5 sm:flex-row sm:items-center">
+          <div className="flex items-start gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-on-primary">
+              <Church aria-hidden className="size-5" />
+            </span>
+            <div>
+              <h2 className="text-base font-semibold text-fg">
+                {t("event.liturgiShortcutTitle")}
+              </h2>
+              <p className="mt-0.5 text-sm text-muted">
+                {t("event.liturgiShortcutDescription")}
+              </p>
+            </div>
+          </div>
+          <Link
+            to={`/liturgi/${ev.id}`}
+            className={`${buttonClass("primary")} h-11 w-full shrink-0 sm:w-auto`}
+          >
+            {t("event.liturgiShortcutCta")}
+          </Link>
+        </Card>
+      )}
 
       {editing && canManage && (
         <Card>
