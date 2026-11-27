@@ -12,7 +12,7 @@ export default function AppShell() {
       className={
         isAgentWorkspace
           ? "flex h-dvh flex-col overflow-hidden pb-[env(safe-area-inset-bottom)]"
-          : "flex min-h-screen flex-col pb-[env(safe-area-inset-bottom)]"
+          : "flex min-h-screen flex-col pb-[calc(5.5rem+env(safe-area-inset-bottom))]"
       }
     >
       <Header />

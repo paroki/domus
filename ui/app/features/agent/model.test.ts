@@ -144,18 +144,18 @@ test("extractQuestionMeta and extractNavigationMeta parse and validate payloads"
 
   assert.equal(extractNavigationMeta(undefined), null);
   assert.equal(
-    extractNavigationMeta({ navigate: { path: "//evil.com", label: "Go" } }),
+    extractNavigationMeta({ navigation: { path: "//evil.com", label: "Go" } }),
     null,
   );
   assert.equal(
     extractNavigationMeta({
-      navigate: { path: "javascript:alert(1)", label: "Go" },
+      navigation: { path: "javascript:alert(1)", label: "Go" },
     }),
     null,
   );
   assert.deepEqual(
     extractNavigationMeta({
-      navigate: {
+      navigation: {
         path: "/org/123#invites",
         label: "Buka Undangan",
         description: "Kelola undangan anggota",

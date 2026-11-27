@@ -158,6 +158,10 @@
   --plate-6: #3b7fa0;
 }
 
+html {
+  scroll-padding-bottom: 5.5rem;
+}
+
 html,
 body {
   @apply bg-canvas text-fg;

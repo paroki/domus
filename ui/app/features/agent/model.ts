@@ -125,7 +125,7 @@ export function extractNavigationMeta(
   meta?: Record<string, unknown>,
 ): NavigationPayload | null {
   if (!meta || typeof meta !== "object") return null;
-  const raw = meta.navigate;
+  const raw = meta.navigation;
   if (!raw || typeof raw !== "object") return null;
   const obj = raw as Record<string, unknown>;
   if (typeof obj.path !== "string" || typeof obj.label !== "string") {
