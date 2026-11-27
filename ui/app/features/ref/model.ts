@@ -12,18 +12,6 @@ export const ROLE_PAROKI_ADMIN = "ref:paroki-admin";
 
 export const LOOKUP_CATEGORIES = [
   "status_paroki",
-  "agama",
-  "golongan_darah",
-  "suku",
-  "hubungan_keluarga",
-  "status_pernikahan",
-  "status_rumah",
-  "pendidikan",
-  "pekerjaan",
-  "profesi",
-  "disabilitas",
-  "status_ekonomi",
-  "aktivitas_sosial",
   "org_position",
   "event_type",
   "liturgi_song_part",
@@ -42,66 +30,6 @@ export const LOOKUP_CATEGORY_META: LookupCategoryMeta[] = [
     slug: "status_paroki",
     label: "Status Paroki",
     description: "Klasifikasi status kanonik paroki dan stasi.",
-  },
-  {
-    slug: "agama",
-    label: "Agama",
-    description: "Daftar agama untuk data umat dan keluarga.",
-  },
-  {
-    slug: "golongan_darah",
-    label: "Golongan Darah",
-    description: "Golongan darah umat (A, B, AB, O, rhesus).",
-  },
-  {
-    slug: "suku",
-    label: "Suku / Etnis",
-    description: "Latar belakang suku atau etnis umat.",
-  },
-  {
-    slug: "hubungan_keluarga",
-    label: "Hubungan Keluarga",
-    description: "Peran anggota dalam kartu keluarga paroki.",
-  },
-  {
-    slug: "status_pernikahan",
-    label: "Status Pernikahan",
-    description: "Status perkawinan sipil maupun gerejani.",
-  },
-  {
-    slug: "status_rumah",
-    label: "Status Tempat Tinggal",
-    description: "Status kepemilikan atau hunian rumah tangga.",
-  },
-  {
-    slug: "pendidikan",
-    label: "Pendidikan",
-    description: "Jenjang pendidikan formal terakhir.",
-  },
-  {
-    slug: "pekerjaan",
-    label: "Pekerjaan",
-    description: "Bidang atau jenis pekerjaan utama.",
-  },
-  {
-    slug: "profesi",
-    label: "Profesi / Keahlian",
-    description: "Keahlian khusus untuk pelayanan paroki.",
-  },
-  {
-    slug: "disabilitas",
-    label: "Disabilitas",
-    description: "Kebutuhan khusus atau disabilitas umat.",
-  },
-  {
-    slug: "status_ekonomi",
-    label: "Status Ekonomi",
-    description: "Kategori kondisi ekonomi keluarga.",
-  },
-  {
-    slug: "aktivitas_sosial",
-    label: "Aktivitas Sosial",
-    description: "Keterlibatan sosial dan kemasyarakatan.",
   },
   {
     slug: "org_position",

@@ -27,26 +27,14 @@ test("role helpers detect user:super-admin and ref:paroki-admin", () => {
   assert.equal(hasAnyRefAdminRole([ROLE_PAROKI_ADMIN]), true);
 });
 
-test("LOOKUP_CATEGORIES contains all 16 Bahasa Indonesia categories", () => {
+test("LOOKUP_CATEGORIES contains the 4 non-umat Bahasa Indonesia categories", () => {
   assert.deepEqual(LOOKUP_CATEGORIES, [
     "status_paroki",
-    "agama",
-    "golongan_darah",
-    "suku",
-    "hubungan_keluarga",
-    "status_pernikahan",
-    "status_rumah",
-    "pendidikan",
-    "pekerjaan",
-    "profesi",
-    "disabilitas",
-    "status_ekonomi",
-    "aktivitas_sosial",
     "org_position",
     "event_type",
     "liturgi_song_part",
   ]);
-  assert.equal(LOOKUP_CATEGORY_META.length, 16);
+  assert.equal(LOOKUP_CATEGORY_META.length, 4);
   assert.equal(getLookupCategoryLabel("status_paroki"), "Status Paroki");
   assert.equal(getLookupCategoryLabel("event_type"), "Jenis Kegiatan");
   assert.equal(
