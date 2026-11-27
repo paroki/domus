@@ -196,6 +196,22 @@ export class UmatPage extends BasePage {
     );
   }
 
+  async expectUmatRowHasNomorInduk(nama: string): Promise<void> {
+    const row = this.page.locator("div.divide-y > a").filter({ hasText: nama });
+    await row.waitFor({ state: "visible", timeout: 10_000 });
+    const badges = row.locator("span.font-mono");
+    const count = await badges.count();
+    assert.ok(
+      count >= 2,
+      `Expected nomorInduk and masked NIK badges for ${nama}, got ${count}`,
+    );
+    const nomorIndukText = ((await badges.first().textContent()) ?? "").trim();
+    assert.ok(
+      nomorIndukText.length > 0 && !nomorIndukText.startsWith("*"),
+      `Expected non-empty nomorInduk badge, got "${nomorIndukText}"`,
+    );
+  }
+
   async openUmatDetail(nama: string): Promise<void> {
     await this.page
       .locator("div.divide-y > a")

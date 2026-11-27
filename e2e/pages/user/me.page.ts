@@ -193,4 +193,22 @@ export class MePage extends BasePage {
     ]);
     await row.waitFor({ state: "detached", timeout: 10_000 });
   }
+
+  async expectVerifyCtaVisible(): Promise<void> {
+    await this.page
+      .getByRole("link", { name: "Verifikasi Data Umat" })
+      .waitFor({ state: "visible", timeout: 10_000 });
+  }
+
+  async expectVerifiedUmatCardVisible(): Promise<void> {
+    await this.page
+      .getByRole("heading", { name: "Data Umat & Keluarga Saya" })
+      .waitFor({ state: "visible", timeout: 10_000 });
+    await this.page
+      .getByText("Terverifikasi", { exact: true })
+      .waitFor({ state: "visible", timeout: 10_000 });
+    await this.page
+      .getByText("Nomor Induk Umat", { exact: true })
+      .waitFor({ state: "visible", timeout: 10_000 });
+  }
 }

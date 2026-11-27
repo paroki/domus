@@ -363,3 +363,190 @@ Then(
     );
   },
 );
+
+const FIXTURE_PNG_BUFFER = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+  "base64",
+);
+
+Then(
+  "I see the verification CTA card on profile",
+  async function (this: DomusWorld) {
+    await this.pages.user.me.expectVerifyCtaVisible();
+  },
+);
+
+Then(
+  "I see the verified Data Umat card on profile",
+  async function (this: DomusWorld) {
+    await this.pages.user.me.expectVerifiedUmatCardVisible();
+  },
+);
+
+When(
+  "I complete KTP-only self-verification for {string} with nik {string}",
+  async function (this: DomusWorld, nama: string, nik: string) {
+    await this.page.route("**/api/me/verify/extract", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          data: {
+            matchStatus: "new",
+            extraction: {
+              ktp: {
+                nama,
+                nik,
+                jenisKelamin: "pria",
+                tempatLahir: "Jakarta",
+                tanggalLahir: "1995-05-10",
+                alamat: "Jl. Katedral No. 7",
+              },
+            },
+          },
+        }),
+      });
+    });
+
+    await this.page.getByRole("link", { name: "Verifikasi Data Umat" }).click();
+    await this.pages.base.expectPath("/me/verify");
+
+    await this.page.getByLabel("Foto KTP *").setInputFiles({
+      name: "ktp.png",
+      mimeType: "image/png",
+      buffer: FIXTURE_PNG_BUFFER,
+    });
+    await this.page.getByRole("button", { name: "Lanjut ke Tinjauan" }).click();
+
+    await this.page
+      .getByText("Pendaftaran data umat baru", { exact: true })
+      .waitFor({ state: "visible", timeout: 10_000 });
+    await this.page
+      .getByRole("button", { name: "Konfirmasi & Simpan" })
+      .click();
+    await this.pages.base.expectPath("/me");
+  },
+);
+
+When(
+  "I complete Kartu Pelajar and KK self-verification selecting {string} with nomorKk {string}",
+  async function (this: DomusWorld, memberNama: string, nomorKk: string) {
+    await this.page.route("**/api/me/verify/extract", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          data: {
+            matchStatus: "new",
+            extraction: {
+              kk: {
+                nomorKk,
+                namaKeluarga: "Keluarga Pelajar E2E",
+                alamat: "Jl. Gereja No. 2",
+                anggota: [
+                  {
+                    nama: "Kepala Keluarga E2E",
+                    nik: "3174010101702221",
+                    hubunganKeluarga: "Kepala Keluarga",
+                    jenisKelamin: "pria",
+                    tempatLahir: "Jakarta",
+                    tanggalLahir: "1970-01-01",
+                  },
+                  {
+                    nama: memberNama,
+                    nik: "3174010101082222",
+                    hubunganKeluarga: "Anak",
+                    jenisKelamin: "wanita",
+                    tempatLahir: "Jakarta",
+                    tanggalLahir: "2008-05-10",
+                  },
+                ],
+              },
+            },
+          },
+        }),
+      });
+    });
+
+    await this.pages.base.goto("/me/verify");
+    await this.page.getByLabel("Belum punya KTP (pelajar/anak)").check();
+    await this.page
+      .getByLabel("Foto Kartu Pelajar / KIA (opsional)")
+      .setInputFiles({
+        name: "kartu-pelajar.png",
+        mimeType: "image/png",
+        buffer: FIXTURE_PNG_BUFFER,
+      });
+    await this.page.getByLabel("Foto Kartu Keluarga (KK) *").setInputFiles({
+      name: "kk.png",
+      mimeType: "image/png",
+      buffer: FIXTURE_PNG_BUFFER,
+    });
+    await this.page.getByRole("button", { name: "Lanjut ke Tinjauan" }).click();
+
+    await this.page.getByRole("radio", { name: `Pilih ${memberNama}` }).check();
+    await this.page
+      .getByRole("button", { name: "Konfirmasi & Simpan" })
+      .click();
+    await this.pages.base.expectPath("/me");
+  },
+);
+
+When(
+  "I submit KTP self-verification that hits conflict {string}",
+  async function (this: DomusWorld, code: string) {
+    await this.page.route("**/api/me/verify/extract", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          data: {
+            matchStatus: "conflict",
+            extraction: {
+              ktp: {
+                nama: "Verify Conflict E2E",
+                nik: "3174010101909999",
+                jenisKelamin: "pria",
+                tempatLahir: "Jakarta",
+                tanggalLahir: "1990-01-01",
+              },
+            },
+          },
+        }),
+      });
+    });
+    await this.page.route("**/api/me/verify/confirm", async (route) => {
+      await route.fulfill({
+        status: 409,
+        contentType: "application/json",
+        body: JSON.stringify({
+          error: {
+            code,
+            message: "umat already linked",
+          },
+        }),
+      });
+    });
+
+    await this.pages.base.goto("/me/verify");
+    await this.page.getByLabel("Foto KTP *").setInputFiles({
+      name: "ktp.png",
+      mimeType: "image/png",
+      buffer: FIXTURE_PNG_BUFFER,
+    });
+    await this.page.getByRole("button", { name: "Lanjut ke Tinjauan" }).click();
+    await this.page
+      .getByRole("button", { name: "Konfirmasi & Simpan" })
+      .click();
+  },
+);
+
+Then(
+  "I see verification error containing {string}",
+  async function (this: DomusWorld, text: string) {
+    await this.page
+      .getByRole("alert")
+      .filter({ hasText: text })
+      .waitFor({ state: "visible", timeout: 10_000 });
+  },
+);

@@ -62,3 +62,28 @@ Feature: Invite-only login guard, guest invite sign-up, onboarding, and profile 
     Then the personal access token "CLI Exporter E2E" is rejected by "/api/me"
     When I log out from header menu
     Then I am on "/login"
+
+  @paroki-admin
+  Scenario: Unverified user completes KTP-only self-verification and sees verified Data Umat card on /me
+    Given a paroki member "verify-ktp-e2e@domus.test" named "Verify KTP E2E" exists in the active paroki
+    And I sign in as "verify-ktp-e2e@domus.test" on the active paroki
+    When I open "/me"
+    Then I see the verification CTA card on profile
+    When I complete KTP-only self-verification for "Verify KTP E2E" with nik "3174010101901111"
+    Then I am on "/me"
+    And I see the verified Data Umat card on profile
+
+  @paroki-admin
+  Scenario: Unverified user completes Kartu Pelajar and KK self-verification with member row selection
+    Given a paroki member "verify-kk-e2e@domus.test" named "Pelajar E2E" exists in the active paroki
+    And I sign in as "verify-kk-e2e@domus.test" on the active paroki
+    When I complete Kartu Pelajar and KK self-verification selecting "Pelajar E2E" with nomorKk "3174010101902222"
+    Then I am on "/me"
+    And I see the verified Data Umat card on profile
+
+  @paroki-admin
+  Scenario: Self-verification shows conflict error when umat is already linked
+    Given a paroki member "verify-conflict-e2e@domus.test" named "Verify Conflict E2E" exists in the active paroki
+    And I sign in as "verify-conflict-e2e@domus.test" on the active paroki
+    When I submit KTP self-verification that hits conflict "UMAT_USER_ALREADY_LINKED"
+    Then I see verification error containing "sudah terhubung dengan akun Domus lain"

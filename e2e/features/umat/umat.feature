@@ -31,6 +31,7 @@ Feature: Umat administration, Kartu Keluarga, 3-step Umat wizard, and Sakramen
     And I delete sakramen "Baptis"
     When I search umat by nik "3174010101907777"
     Then I see masked umat "Yohanes E2E" with "************7777" and no raw "3174010101907777"
+    And I see nomor induk on umat row "Yohanes E2E"
     When I open "/umat/keluarga"
     And I open keluarga detail for "Keluarga E2E"
     And I try to delete the Kartu Keluarga

@@ -357,3 +357,10 @@ Then(
     await this.pages.ref.lookups.expectCategoryNotVisible(categoryLabel);
   },
 );
+
+Then(
+  "I see nomor induk on umat row {string}",
+  async function (this: DomusWorld, nama: string) {
+    await this.pages.umat.expectUmatRowHasNomorInduk(nama);
+  },
+);
