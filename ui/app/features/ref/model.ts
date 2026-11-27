@@ -26,8 +26,7 @@ export const LOOKUP_CATEGORIES = [
   "aktivitas_sosial",
   "org_position",
   "event_type",
-  "event_role",
-  "event_song_part",
+  "liturgi_song_part",
 ] as const;
 
 export type LookupCategory = (typeof LOOKUP_CATEGORIES)[number];
@@ -116,16 +115,10 @@ export const LOOKUP_CATEGORY_META: LookupCategoryMeta[] = [
       "Klasifikasi jenis kegiatan paroki dan organisasi (Misa, Ibadat, Rapat, Latihan, dll.).",
   },
   {
-    slug: "event_role",
-    label: "Peran Petugas Kegiatan",
-    description:
-      "Daftar peran petugas liturgi dan kegiatan (Selebran, Organis, Dirigen, Lektor, Pemazmur, Tatib, dll.).",
-  },
-  {
-    slug: "event_song_part",
+    slug: "liturgi_song_part",
     label: "Bagian Lagu Liturgi",
     description:
-      "Bagian nyanyian dalam tata perayaan liturgi atau ibadat (Pembuka, Kyrie, Gloria, Mazmur, Komuni, Penutup, dll.).",
+      "Bagian nyanyian dalam tata perayaan liturgi Misa (Pembuka, Kyrie, Gloria, Mazmur, BPI, Persembahan, Sanctus, Agnus Dei, Komuni, Madah Syukur, Penutup).",
   },
 ];
 

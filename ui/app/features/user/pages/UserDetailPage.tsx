@@ -67,6 +67,7 @@ type PendingConfirm =
   | { kind: "disableUser" }
   | { kind: "demoteParokiAdmin"; parokiId: string; parokiName: string }
   | { kind: "revokeUmatAdmin"; parokiId: string; parokiName: string }
+  | { kind: "revokeLiturgiAdmin"; parokiId: string; parokiName: string }
   | { kind: "removeParokiMember"; parokiId: string; parokiName: string };
 
 function formatDate(iso?: string | null): string | null {
@@ -208,6 +209,7 @@ export default function UserDetailPage() {
     "member",
   );
   const [newParokiUmatAdmin, setNewParokiUmatAdmin] = useState(false);
+  const [newParokiLiturgiAdmin, setNewParokiLiturgiAdmin] = useState(false);
   const [feedback, setFeedback] = useState<DirectoryFeedback | null>(null);
   const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm | null>(
     null,
@@ -346,8 +348,13 @@ export default function UserDetailPage() {
           userId,
           role: canDelegateParokiRole ? newParokiRole : "member",
           ...(newParokiUmatAdmin ? { umatAdmin: true } : {}),
+          ...(canDelegateParokiRole && newParokiLiturgiAdmin
+            ? { liturgiAdmin: true }
+            : {}),
         },
       });
+      setNewParokiUmatAdmin(false);
+      setNewParokiLiturgiAdmin(false);
       setFeedback({
         tone: "success",
         message: t("users.parishMemberAdded"),
@@ -364,7 +371,11 @@ export default function UserDetailPage() {
 
   async function executeUpdateParokiRole(
     parokiId: string,
-    body: { role?: "admin" | "member"; umatAdmin?: boolean },
+    body: {
+      role?: "admin" | "member";
+      umatAdmin?: boolean;
+      liturgiAdmin?: boolean;
+    },
   ) {
     setFeedback(null);
     try {
@@ -452,6 +463,18 @@ export default function UserDetailPage() {
         });
         return;
       }
+      if (action.kind === "revokeLiturgiAdmin") {
+        await updateParokiMember.mutateAsync({
+          parokiId: action.parokiId,
+          userId,
+          body: { liturgiAdmin: false },
+        });
+        setFeedback({
+          tone: "success",
+          message: t("users.parishMemberUpdated", { name: userDisplayName }),
+        });
+        return;
+      }
       if (action.kind === "removeParokiMember") {
         await removeParokiMember.mutateAsync({
           parokiId: action.parokiId,
@@ -519,6 +542,14 @@ export default function UserDetailPage() {
             name: userDisplayName,
           })} (${pendingConfirm.parokiName})`,
           confirmLabel: t("users.revokeUmatAdmin"),
+        };
+      case "revokeLiturgiAdmin":
+        return {
+          title: t("users.confirmRevokeLiturgiAdminTitle"),
+          description: `${t("users.confirmRevokeLiturgiAdminDescription", {
+            name: userDisplayName,
+          })} (${pendingConfirm.parokiName})`,
+          confirmLabel: t("users.revokeLiturgiAdmin"),
         };
       case "removeParokiMember":
         return {
@@ -913,6 +944,11 @@ export default function UserDetailPage() {
                             {t("users.roleUmatAdmin")}
                           </Badge>
                         ) : null}
+                        {member.liturgiAdmin ? (
+                          <Badge tone="success">
+                            {t("users.roleLiturgiAdmin")}
+                          </Badge>
+                        ) : null}
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2">
@@ -948,6 +984,40 @@ export default function UserDetailPage() {
                             {t("users.grantUmatAdmin")}
                           </Button>
                         )}
+
+                        {canDelegateParokiRole &&
+                          (member.liturgiAdmin ? (
+                            <Button
+                              variant="outline"
+                              className="h-9 px-3 text-xs"
+                              disabled={updateParokiMember.isPending}
+                              onClick={() =>
+                                paroki.id &&
+                                setPendingConfirm({
+                                  kind: "revokeLiturgiAdmin",
+                                  parokiId: paroki.id,
+                                  parokiName: paroki.nama ?? "",
+                                })
+                              }
+                            >
+                              {t("users.revokeLiturgiAdmin")}
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              className="h-9 px-3 text-xs"
+                              disabled={updateParokiMember.isPending}
+                              onClick={() =>
+                                paroki.id &&
+                                executeUpdateParokiRole(paroki.id, {
+                                  liturgiAdmin: true,
+                                })
+                              }
+                            >
+                              <ShieldCheck aria-hidden className="size-3.5" />
+                              {t("users.grantLiturgiAdmin")}
+                            </Button>
+                          ))}
 
                         {canDelegateParokiRole &&
                           (isAdmin ? (
@@ -1060,6 +1130,20 @@ export default function UserDetailPage() {
                     />
                     {t("users.roleUmatAdmin")}
                   </label>
+
+                  {canDelegateParokiRole && (
+                    <label className="flex h-11 items-center gap-2 text-sm font-medium text-fg">
+                      <input
+                        type="checkbox"
+                        checked={newParokiLiturgiAdmin}
+                        onChange={(e) =>
+                          setNewParokiLiturgiAdmin(e.target.checked)
+                        }
+                        className="size-4 rounded border-line"
+                      />
+                      {t("users.roleLiturgiAdmin")}
+                    </label>
+                  )}
 
                   <Button
                     type="submit"

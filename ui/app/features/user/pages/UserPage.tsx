@@ -44,6 +44,7 @@ type UnifiedUserRow = UserDirectoryPreview & {
   isCantusAdmin?: boolean;
   parishRole?: string;
   umatAdmin?: boolean;
+  liturgiAdmin?: boolean;
   onboarded?: boolean;
   metaLine: string;
 };
@@ -66,7 +67,7 @@ export default function UserPage() {
     "all" | "cantusAdmin"
   >("all");
   const [parokiRoleFilter, setParokiRoleFilter] = useState<
-    "all" | "admin" | "umatAdmin" | "member"
+    "all" | "admin" | "umatAdmin" | "liturgiAdmin" | "member"
   >("all");
 
   const allowed = canManageUsers(me);
@@ -102,7 +103,9 @@ export default function UserPage() {
           ? undefined
           : parokiRoleFilter === "umatAdmin"
             ? { umatAdmin: true }
-            : { role: parokiRoleFilter },
+            : parokiRoleFilter === "liturgiAdmin"
+              ? { liturgiAdmin: true }
+              : { role: parokiRoleFilter },
     },
     Boolean(me && parokiDirectoryCaller && activeParokiId),
   );
@@ -169,9 +172,13 @@ export default function UserPage() {
           name: m.name ?? "",
           email: m.email ?? "",
           phone: m.phone,
-          highlight: m.role === "admin" || Boolean(m.umatAdmin),
+          highlight:
+            m.role === "admin" ||
+            Boolean(m.umatAdmin) ||
+            Boolean(m.liturgiAdmin),
           parishRole: m.role,
           umatAdmin: Boolean(m.umatAdmin),
+          liturgiAdmin: Boolean(m.liturgiAdmin),
           metaLine: [m.email, m.phone].filter(Boolean).join(" · "),
         }));
     }
@@ -234,12 +241,13 @@ export default function UserPage() {
   ];
 
   const parishRoleOptions: Array<{
-    value: "all" | "admin" | "umatAdmin" | "member";
+    value: "all" | "admin" | "umatAdmin" | "liturgiAdmin" | "member";
     label: string;
   }> = [
     { value: "all", label: t("users.roleAll") },
     { value: "admin", label: t("users.roleParishAdmin") },
     { value: "umatAdmin", label: t("users.roleUmatAdmin") },
+    { value: "liturgiAdmin", label: t("users.roleLiturgiAdmin") },
     { value: "member", label: t("users.roleMember") },
   ];
 
@@ -396,6 +404,11 @@ export default function UserPage() {
                           {u.umatAdmin && (
                             <Badge tone="success">
                               {t("users.roleUmatAdmin")}
+                            </Badge>
+                          )}
+                          {u.liturgiAdmin && (
+                            <Badge tone="success">
+                              {t("users.roleLiturgiAdmin")}
                             </Badge>
                           )}
                           {u.onboarded === false && (

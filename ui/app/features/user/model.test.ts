@@ -11,6 +11,7 @@ import {
   getBirthDateBounds,
   getInitials,
   isCantusAdmin,
+  isLiturgiAdmin,
   isOrgAdmin,
   isParokiAdmin,
   isSuperAdmin,
@@ -18,6 +19,7 @@ import {
   parseUserDetailTab,
   providerLabel,
   ROLE_CANTUS_ADMIN,
+  ROLE_LITURGI_ADMIN,
   ROLE_ORG_ADMIN,
   ROLE_PAROKI_ADMIN,
   ROLE_SUPER_ADMIN,
@@ -80,10 +82,13 @@ test("role helpers and getAvailableUserScopes resolve directory scopes", () => {
   const parokiUser = { roles: [ROLE_PAROKI_ADMIN, ROLE_USER] } as User;
   const orgUser = { roles: [ROLE_ORG_ADMIN, ROLE_USER] } as User;
   const umatUser = { roles: [ROLE_UMAT_ADMIN, ROLE_USER] } as User;
+  const liturgiUser = { roles: [ROLE_LITURGI_ADMIN, ROLE_USER] } as User;
   const plainUser = { roles: [ROLE_USER] } as User;
 
   assert.equal(isParokiAdmin(parokiUser), true);
   assert.equal(isUmatAdmin(umatUser), true);
+  assert.equal(isLiturgiAdmin(liturgiUser), true);
+  assert.equal(isLiturgiAdmin(plainUser), false);
   assert.equal(isOrgAdmin(orgUser), true);
   assert.equal(canManageUsers(superUser), true);
   assert.equal(canManageUsers(parokiUser), true);
