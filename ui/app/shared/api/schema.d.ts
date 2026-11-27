@@ -689,6 +689,134 @@ export interface paths {
     patch: operations["updateLiturgiSchedule"];
     trace?: never;
   };
+  "/liturgi/schedules/{eventId}/lagu": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Add liturgy song
+     * @description Adds a liturgical song entry (optionally linked to cantusId with auto-filled metadata) to a Mass schedule.
+     */
+    post: operations["createLiturgiLagu"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/liturgi/schedules/{eventId}/lagu/{laguId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Delete liturgy song
+     * @description Removes a liturgical song entry from a Mass schedule.
+     */
+    delete: operations["deleteLiturgiLagu"];
+    options?: never;
+    head?: never;
+    /**
+     * Update liturgy song
+     * @description Updates a liturgical song entry on a Mass schedule.
+     */
+    patch: operations["updateLiturgiLagu"];
+    trace?: never;
+  };
+  "/liturgi/schedules/{eventId}/petugas": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Assign liturgy officer
+     * @description Creates a liturgical officer assignment for a Mass schedule (requires liturgi:admin, ref:paroki-admin, or ministry leader/org:admin for the role).
+     */
+    post: operations["createLiturgiPetugas"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/liturgi/schedules/{eventId}/petugas/{petugasId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Delete liturgy officer
+     * @description Removes an officer assignment from a Mass schedule (requires ministry management permission).
+     */
+    delete: operations["deleteLiturgiPetugas"];
+    options?: never;
+    head?: never;
+    /**
+     * Update liturgy officer
+     * @description Updates an officer assignment on a Mass schedule (requires permission to manage both existing and target roles).
+     */
+    patch: operations["updateLiturgiPetugas"];
+    trace?: never;
+  };
+  "/liturgi/schedules/{eventId}/petugas/{petugasId}/approve-substitute": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Approve proposed substitute
+     * @description Atomically promotes the proposed substitute onto the active officer assignment (requires ministry management permission).
+     */
+    post: operations["approveLiturgiSubstitute"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/liturgi/schedules/{eventId}/petugas/{petugasId}/respond": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Respond to liturgy assignment
+     * @description Records officer confirmation or decline (optionally proposing a substitute) for an assigned officer, assigned org admin, or ministry leader.
+     */
+    patch: operations["respondLiturgiPetugas"];
+    trace?: never;
+  };
   "/me": {
     parameters: {
       query?: never;
@@ -2435,6 +2563,9 @@ export interface components {
       provider?: string;
       updatedAt?: string;
     };
+    "domain.ApproveLiturgiSubstituteRequest": {
+      markConfirmed?: boolean;
+    };
     "domain.AuthProvidersResponse": {
       otpChannels?: string[];
       providers?: string[];
@@ -2588,6 +2719,27 @@ export interface components {
       pelindung?: string;
       teleponKetua?: string;
       wilayahId: string;
+    };
+    "domain.CreateLiturgiLaguRequest": {
+      bagian: string;
+      cantusId?: string;
+      judul?: string;
+      nadaDasar?: string;
+      nomor?: string;
+      note?: string;
+      sumber?: string;
+      urutan?: number;
+    };
+    "domain.CreateLiturgiPetugasRequest": {
+      name?: string;
+      note?: string;
+      orgId?: string;
+      role: string;
+      slotLabel?: string;
+      /** @enum {string} */
+      status?: "assigned" | "confirmed" | "declined";
+      urutan?: number;
+      userId?: string;
     };
     "domain.CreateLiturgiScheduleRequest": {
       description?: string;
@@ -2980,7 +3132,10 @@ export interface components {
       updatedAt?: string;
     };
     "domain.LiturgiPetugasResponse": {
+      canApproveSubstitute?: boolean;
       canConfirm?: boolean;
+      canEdit?: boolean;
+      canRespond?: boolean;
       createdAt?: string;
       eventId?: string;
       id?: string;
@@ -3312,6 +3467,13 @@ export interface components {
     "domain.RequestOTPResponse": {
       expiresInSeconds?: number;
       message?: string;
+    };
+    "domain.RespondLiturgiPetugasRequest": {
+      note?: string;
+      status: string;
+      substituteName?: string;
+      substituteOrgId?: string;
+      substituteUserId?: string;
     };
     "domain.SearchAccountsRequest": {
       cursor?: string;
@@ -3737,11 +3899,35 @@ export interface components {
       teleponKetua?: string;
       wilayahId?: string;
     };
+    "domain.UpdateLiturgiLaguRequest": {
+      bagian?: string;
+      cantusId?: string;
+      clearCantusId?: boolean;
+      judul?: string;
+      nadaDasar?: string;
+      nomor?: string;
+      note?: string;
+      sumber?: string;
+      urutan?: number;
+    };
     "domain.UpdateLiturgiMinistryRequest": {
       clearLeaderUserId?: boolean;
       clearOrgId?: boolean;
       leaderUserId?: string;
       orgId?: string;
+    };
+    "domain.UpdateLiturgiPetugasRequest": {
+      clearOrg?: boolean;
+      clearUser?: boolean;
+      name?: string;
+      note?: string;
+      orgId?: string;
+      role?: string;
+      slotLabel?: string;
+      /** @enum {string} */
+      status?: "assigned" | "confirmed" | "declined";
+      urutan?: number;
+      userId?: string;
     };
     "domain.UpdateLiturgiScheduleRequest": {
       clearRsvpDeadline?: boolean;
@@ -4322,8 +4508,18 @@ export interface components {
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
+    "httpx.Envelope-domain_LiturgiLaguResponse": {
+      data?: components["schemas"]["domain.LiturgiLaguResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
     "httpx.Envelope-domain_LiturgiMinistryResponse": {
       data?: components["schemas"]["domain.LiturgiMinistryResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_LiturgiPetugasResponse": {
+      data?: components["schemas"]["domain.LiturgiPetugasResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -6961,6 +7157,570 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["httpx.Envelope-domain_LiturgiScheduleResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  createLiturgiLagu: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Mass schedule event UUID */
+        eventId: string;
+      };
+      cookie?: never;
+    };
+    /** @description Song entry payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.CreateLiturgiLaguRequest"];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_LiturgiLaguResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  deleteLiturgiLagu: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Mass schedule event UUID */
+        eventId: string;
+        /** @description Song entry UUID */
+        laguId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  updateLiturgiLagu: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Mass schedule event UUID */
+        eventId: string;
+        /** @description Song entry UUID */
+        laguId: string;
+      };
+      cookie?: never;
+    };
+    /** @description Song entry update payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UpdateLiturgiLaguRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_LiturgiLaguResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  createLiturgiPetugas: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Mass schedule event UUID */
+        eventId: string;
+      };
+      cookie?: never;
+    };
+    /** @description Officer assignment payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.CreateLiturgiPetugasRequest"];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_LiturgiPetugasResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  deleteLiturgiPetugas: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Mass schedule event UUID */
+        eventId: string;
+        /** @description Officer assignment UUID */
+        petugasId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  updateLiturgiPetugas: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Mass schedule event UUID */
+        eventId: string;
+        /** @description Officer assignment UUID */
+        petugasId: string;
+      };
+      cookie?: never;
+    };
+    /** @description Officer update payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UpdateLiturgiPetugasRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_LiturgiPetugasResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  approveLiturgiSubstitute: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Mass schedule event UUID */
+        eventId: string;
+        /** @description Officer assignment UUID */
+        petugasId: string;
+      };
+      cookie?: never;
+    };
+    /** @description Substitute approval options */
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["domain.ApproveLiturgiSubstituteRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_LiturgiPetugasResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  respondLiturgiPetugas: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Mass schedule event UUID */
+        eventId: string;
+        /** @description Officer assignment UUID */
+        petugasId: string;
+      };
+      cookie?: never;
+    };
+    /** @description Officer response payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.RespondLiturgiPetugasRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_LiturgiPetugasResponse"];
         };
       };
       /** @description Bad Request */
