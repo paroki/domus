@@ -55,17 +55,38 @@ Then(
   },
 );
 
+Then(
+  "I see model selectors and prompt editors for all AI agents",
+  async function (this: DomusWorld) {
+    await this.pages.aiAgent.expectLoaded();
+    await this.pages.aiAgent.expectAllAgentControlsVisible();
+  },
+);
+
 When(
-  "I bind AI agent models gabriel {string}, mikael {string}, rafael {string}, embedding {string}",
+  "I bind AI agent models gabriel {string}, mikael {string}, rafael {string}, yosef {string}, gregorius {string}, sesilia {string}, memory_extractor {string}, embedding {string}",
   async function (
     this: DomusWorld,
     gabriel: string,
     mikael: string,
     rafael: string,
+    yosef: string,
+    gregorius: string,
+    sesilia: string,
+    memoryExtractor: string,
     embedding: string,
   ) {
     await this.pages.aiAgent.expectLoaded();
-    await this.pages.aiAgent.bindModels({ gabriel, mikael, rafael, embedding });
+    await this.pages.aiAgent.bindModels({
+      gabriel,
+      mikael,
+      rafael,
+      yosef,
+      gregorius,
+      sesilia,
+      memory_extractor: memoryExtractor,
+      embedding,
+    });
   },
 );
 

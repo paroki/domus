@@ -65,14 +65,89 @@ function hasToolResultInCurrentTurn(messages: ChatMessage[]): boolean {
 function pickToolCall(
   tools: ChatTool[],
   userText: string,
+  _messages?: ChatMessage[],
 ): { name: string; arguments: string } | null {
   const names = tools
     .map((t) => t.function?.name ?? "")
     .filter((n) => n.length > 0);
   if (names.length === 0) return null;
 
+  const isSupervisor =
+    names.includes("mikael") ||
+    names.includes("rafael") ||
+    names.includes("yosef") ||
+    names.includes("gregorius") ||
+    names.includes("sesilia");
+
+  // UI tools (available to Gabriel and sub-agents)
+  if (
+    (/\[ASK_USER\]/i.test(userText) || /tanya konfirmasi/i.test(userText)) &&
+    names.includes("agent_ask_user")
+  ) {
+    return {
+      name: "agent_ask_user",
+      arguments: JSON.stringify({
+        question: "Pilih jadwal Misa yang diinginkan:",
+        options: [
+          {
+            label: "Misa Sabtu Sore 18:00",
+            value: "Misa Sabtu Sore 18:00",
+          },
+          {
+            label: "Misa Minggu Pagi 08:00",
+            value: "Misa Minggu Pagi 08:00",
+          },
+        ],
+        multiSelect: false,
+        allowCustom: true,
+      }),
+    };
+  }
+  if (
+    (/\[NAVIGATE_AUTO\]/i.test(userText) ||
+      /buka halaman organisasi/i.test(userText)) &&
+    names.includes("agent_navigate")
+  ) {
+    return {
+      name: "agent_navigate",
+      arguments: JSON.stringify({
+        path: "/org",
+        label: "Buka Direktori Organisasi",
+        description: "Menuju halaman daftar organisasi paroki",
+        autoRedirect: true,
+      }),
+    };
+  }
+
   // Gabriel supervisor routing via adk.NewAgentTool
-  if (names.includes("mikael") || names.includes("rafael")) {
+  if (isSupervisor) {
+    if (
+      /data umat|kartu keluarga|buku induk/i.test(userText) &&
+      names.includes("yosef")
+    ) {
+      return {
+        name: "yosef",
+        arguments: JSON.stringify({ request: userText }),
+      };
+    }
+    if (
+      /petugas liturgi|jadwal misa/i.test(userText) &&
+      names.includes("gregorius")
+    ) {
+      return {
+        name: "gregorius",
+        arguments: JSON.stringify({ request: userText }),
+      };
+    }
+    if (
+      /lagu|nyanyian|mazmur|cantus/i.test(userText) &&
+      names.includes("sesilia")
+    ) {
+      return {
+        name: "sesilia",
+        arguments: JSON.stringify({ request: userText }),
+      };
+    }
     if (/kegiatan|jadwal|acara/i.test(userText) && names.includes("mikael")) {
       return {
         name: "mikael",
@@ -92,6 +167,21 @@ function pickToolCall(
   }
 
   // Sub-agent leaf MCP tools
+  if (names.includes("umat_list_keluarga")) {
+    return { name: "umat_list_keluarga", arguments: "{}" };
+  }
+  if (names.includes("umat_search")) {
+    return { name: "umat_search", arguments: JSON.stringify({ q: "Umat" }) };
+  }
+  if (names.includes("cantus_search")) {
+    return {
+      name: "cantus_search",
+      arguments: JSON.stringify({ q: "Puji" }),
+    };
+  }
+  if (names.includes("liturgi_list_schedules")) {
+    return { name: "liturgi_list_schedules", arguments: "{}" };
+  }
   if (names.includes("event_list")) {
     return { name: "event_list", arguments: "{}" };
   }
@@ -211,7 +301,9 @@ export async function startMockLLMServer(): Promise<string> {
         return;
       }
 
-      const chosenTool = !hasToolResult ? pickToolCall(tools, userText) : null;
+      const chosenTool = !hasToolResult
+        ? pickToolCall(tools, userText, messages)
+        : null;
       if (chosenTool) {
         writeSseChunk(res, {
           role: "assistant",
@@ -244,9 +336,20 @@ export async function startMockLLMServer(): Promise<string> {
         if (res.writableEnded) return;
       }
 
-      const summaryText = hasToolResult
+      const allSystemText = messages
+        .filter((m) => m.role === "system")
+        .map((m) => String(m.content ?? ""))
+        .join("\n");
+      const activePageMatch = allSystemText.match(
+        /-\s*Active Page:\s*[^\n\r]+/,
+      );
+
+      let summaryText = hasToolResult
         ? "Berdasarkan data paroki, informasi kegiatan dan organisasi sudah tersedia."
         : "Halo! Ada yang bisa Gabriel bantu untuk keperluan paroki Anda?";
+      if (userText.includes("[ECHO_CONTEXT]") && activePageMatch) {
+        summaryText = `Konteks halaman aktif diterima (${activePageMatch[0].trim()}).`;
+      }
 
       writeSseChunk(
         res,

@@ -30,15 +30,66 @@ export class AIAgentSettingsPage extends BasePage {
     await select.selectOption(optionVal);
   }
 
+  async expectAllAgentControlsVisible(): Promise<void> {
+    const modelAgents = [
+      "gabriel",
+      "mikael",
+      "rafael",
+      "yosef",
+      "gregorius",
+      "sesilia",
+      "memory_extractor",
+      "embedding",
+    ];
+    for (const agent of modelAgents) {
+      await this.page
+        .locator(`[id="setting-agent.model.${agent}"]`)
+        .waitFor({ state: "visible", timeout: 10_000 });
+    }
+    const promptAgents = [
+      "gabriel",
+      "mikael",
+      "rafael",
+      "yosef",
+      "gregorius",
+      "sesilia",
+      "memory_extractor",
+    ];
+    for (const agent of promptAgents) {
+      await this.page
+        .locator(`[id="setting-agent.prompt.${agent}"]`)
+        .waitFor({ state: "visible", timeout: 10_000 });
+    }
+  }
+
   async bindModels(models: {
     gabriel: string;
     mikael: string;
     rafael: string;
+    yosef?: string;
+    gregorius?: string;
+    sesilia?: string;
+    memory_extractor?: string;
     embedding: string;
   }): Promise<void> {
     await this.selectModelBySuffix("agent.model.gabriel", models.gabriel);
     await this.selectModelBySuffix("agent.model.mikael", models.mikael);
     await this.selectModelBySuffix("agent.model.rafael", models.rafael);
+    if (models.yosef) {
+      await this.selectModelBySuffix("agent.model.yosef", models.yosef);
+    }
+    if (models.gregorius) {
+      await this.selectModelBySuffix("agent.model.gregorius", models.gregorius);
+    }
+    if (models.sesilia) {
+      await this.selectModelBySuffix("agent.model.sesilia", models.sesilia);
+    }
+    if (models.memory_extractor) {
+      await this.selectModelBySuffix(
+        "agent.model.memory_extractor",
+        models.memory_extractor,
+      );
+    }
     await this.selectModelBySuffix("agent.model.embedding", models.embedding);
 
     await Promise.all([

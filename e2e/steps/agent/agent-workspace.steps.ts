@@ -35,6 +35,10 @@ Given(
         "agent.model.gabriel": `${provId}:gpt-4.1-mini`,
         "agent.model.mikael": `${provId}:gpt-4.1`,
         "agent.model.rafael": `${provId}:gpt-4.1`,
+        "agent.model.yosef": `${provId}:gpt-4.1`,
+        "agent.model.gregorius": `${provId}:gpt-4.1`,
+        "agent.model.sesilia": `${provId}:gpt-4.1`,
+        "agent.model.memory_extractor": `${provId}:gpt-4.1-mini`,
         "agent.model.embedding": `${provId}:text-embedding-3-small`,
       },
     });
@@ -131,5 +135,48 @@ When(
   "I delete AI memory {string}",
   async function (this: DomusWorld, text: string) {
     await this.pages.agent.workspace.deleteMemory(text);
+  },
+);
+
+When(
+  "I filter AI memories by category {string}",
+  async function (this: DomusWorld, categoryLabel: string) {
+    await this.pages.agent.workspace.filterMemoryByCategory(categoryLabel);
+  },
+);
+
+When(
+  "I click AI quick-reply option {string}",
+  async function (this: DomusWorld, label: string) {
+    await this.pages.agent.workspace.clickQuickReplyOption(label);
+  },
+);
+
+When("I open the AI bottom dock", async function (this: DomusWorld) {
+  await this.pages.agent.workspace.openBottomDock();
+});
+
+Then("the AI bottom dock remains open", async function (this: DomusWorld) {
+  await this.pages.agent.workspace.expectBottomDockOpen();
+});
+
+When(
+  "I send AI bottom dock message {string}",
+  async function (this: DomusWorld, text: string) {
+    await this.pages.agent.workspace.sendDockMessage(text);
+  },
+);
+
+Then(
+  "I see AI bottom dock reply containing {string}",
+  async function (this: DomusWorld, text: string) {
+    await this.pages.agent.workspace.expectDockReply(text);
+  },
+);
+
+When(
+  "I click Buka Penuh in the AI bottom dock",
+  async function (this: DomusWorld) {
+    await this.pages.agent.workspace.clickDockOpenFull();
   },
 );

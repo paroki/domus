@@ -21,7 +21,8 @@ Feature: Super Admin system settings for communication channels and LLM provider
     Then I see provider "OpenAI" model catalog containing "gpt-4.1-mini, gpt-4.1, text-embedding-3-small"
     When I open settings launcher "Kembali ke Pengaturan"
     And I open settings launcher "AI Agent"
-    And I bind AI agent models gabriel "gpt-4.1-mini", mikael "gpt-4.1", rafael "gpt-4.1", embedding "text-embedding-3-small"
+    Then I see model selectors and prompt editors for all AI agents
+    And I bind AI agent models gabriel "gpt-4.1-mini", mikael "gpt-4.1", rafael "gpt-4.1", yosef "gpt-4.1", gregorius "gpt-4.1", sesilia "gpt-4.1", memory_extractor "gpt-4.1-mini", embedding "text-embedding-3-small"
     And I customize Gabriel prompt to "Instruksi kustom E2E dengan {curly_braces}."
     And I reset Gabriel prompt to default
     When I open settings launcher "Kembali ke Pengaturan"

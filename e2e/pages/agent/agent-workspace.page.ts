@@ -184,4 +184,68 @@ export class AgentWorkspacePage extends BasePage {
     ]);
     await item.waitFor({ state: "detached", timeout: 10_000 });
   }
+
+  async filterMemoryByCategory(categoryLabel: string): Promise<void> {
+    await this.page
+      .getByRole("group", { name: "Kategori" })
+      .getByRole("button", { name: categoryLabel, exact: true })
+      .click();
+  }
+
+  async clickQuickReplyOption(label: string): Promise<void> {
+    const btn = this.page
+      .getByRole("button", { name: label, exact: true })
+      .first();
+    await btn.waitFor({ state: "visible", timeout: 15_000 });
+    await btn.click();
+  }
+
+  async openBottomDock(): Promise<void> {
+    await this.page
+      .getByRole("button", { name: "Tanya Gabriel tentang halaman ini…" })
+      .click();
+    await this.page
+      .getByRole("region", { name: "Asisten AI" })
+      .waitFor({ state: "visible", timeout: 10_000 });
+  }
+
+  async expectBottomDockOpen(): Promise<void> {
+    await this.page
+      .getByRole("region", { name: "Asisten AI" })
+      .waitFor({ state: "visible", timeout: 10_000 });
+  }
+
+  async sendDockMessage(text: string): Promise<void> {
+    const dock = this.page.getByRole("region", { name: "Asisten AI" });
+    const composer = dock.getByPlaceholder(
+      "Tanyakan jadwal kegiatan, organisasi, atau informasi paroki…",
+    );
+    await composer.waitFor({ state: "visible", timeout: 10_000 });
+    await composer.fill(text);
+    await Promise.all([
+      this.page.waitForResponse(
+        (r) =>
+          r.url().includes("/api/agent/chat") &&
+          r.request().method() === "POST" &&
+          r.status() === 200,
+      ),
+      dock.getByRole("button", { name: "Kirim" }).click(),
+    ]);
+  }
+
+  async expectDockReply(textIncludes: string): Promise<void> {
+    const dock = this.page.getByRole("region", { name: "Asisten AI" });
+    await dock
+      .getByText(textIncludes)
+      .first()
+      .waitFor({ state: "visible", timeout: 15_000 });
+  }
+
+  async clickDockOpenFull(): Promise<void> {
+    const dock = this.page.getByRole("region", { name: "Asisten AI" });
+    await dock.getByRole("link", { name: "Buka Penuh" }).click();
+    await this.page.waitForURL(/\/agent\/sessions\/[0-9a-f-]+$/, {
+      timeout: 15_000,
+    });
+  }
 }
