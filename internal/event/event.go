@@ -2,6 +2,8 @@ package event
 
 import (
 	"context"
+	"log/slog"
+	"time"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
@@ -94,6 +96,40 @@ func (a parokiReaderAdapter) HasActiveLookup(ctx context.Context, parokiID uuid.
 	return a.refs.HasActiveLookup(ctx, parokiID, category, code)
 }
 
+type userNotifierAdapter struct {
+	users *user.Feature
+}
+
+func (a userNotifierAdapter) NotifyUser(ctx context.Context, userID uuid.UUID, parokiID *uuid.UUID, kind string, refID uuid.UUID, window string, payload service.NotificationPayload) (bool, error) {
+	return a.users.NotifyUser(ctx, userID, parokiID, kind, refID, window, user.NotificationPayload{
+		Title: payload.Title,
+		Body:  payload.Body,
+		Icon:  payload.Icon,
+		Badge: payload.Badge,
+		Tag:   payload.Tag,
+		URL:   payload.URL,
+	})
+}
+
+func (a userNotifierAdapter) NotifyUsers(ctx context.Context, userIDs []uuid.UUID, parokiID *uuid.UUID, kind string, refID uuid.UUID, window string, payload service.NotificationPayload) (int, error) {
+	return a.users.NotifyUsers(ctx, userIDs, parokiID, kind, refID, window, user.NotificationPayload{
+		Title: payload.Title,
+		Body:  payload.Body,
+		Icon:  payload.Icon,
+		Badge: payload.Badge,
+		Tag:   payload.Tag,
+		URL:   payload.URL,
+	})
+}
+
+func (a userNotifierAdapter) ResolveUserTimezones(ctx context.Context, userIDs []uuid.UUID) (map[uuid.UUID]string, error) {
+	return a.users.ResolveUserTimezones(ctx, userIDs)
+}
+
+func (a userNotifierAdapter) CleanupExpiredNotificationLogs(ctx context.Context, before time.Time) (int, error) {
+	return a.users.CleanupExpiredNotificationLogs(ctx, before)
+}
+
 // Option configures optional dependencies on the event Feature.
 type Option func(*options)
 
@@ -137,6 +173,9 @@ func New(db *ent.Client, enforcer *authz.Enforcer, users *user.Feature, orgs *or
 		DefaultVisibility: cfg.DefaultVisibility,
 		RSVPGracePeriod:   cfg.RSVPGracePeriod,
 	})
+	if users != nil {
+		svc.SetNotifier(userNotifierAdapter{users: users})
+	}
 	h := handler.New(svc)
 	return &Feature{
 		service: svc,
@@ -144,6 +183,16 @@ func New(db *ent.Client, enforcer *authz.Enforcer, users *user.Feature, orgs *or
 		users:   users,
 		cfg:     cfg,
 	}
+}
+
+// RunReminderTick dispatches due event reminders for the given reference time.
+func (f *Feature) RunReminderTick(ctx context.Context, now time.Time) error {
+	return f.service.RunReminderTick(ctx, now)
+}
+
+// StartReminderScheduler starts the background event reminder scheduler until ctx is cancelled.
+func (f *Feature) StartReminderScheduler(ctx context.Context, interval time.Duration, logger *slog.Logger) {
+	f.service.StartReminderScheduler(ctx, interval, logger)
 }
 
 // Register mounts /events routes under /api.

@@ -37,6 +37,7 @@ type EventFeatureSuite struct {
 	client       *ent.Client
 	enforcer     *authz.Enforcer
 	sender       *stubOTPSender
+	waStub       *stubChannelNotif
 	userFeature  *user.Feature
 	refFeature   *ref.Feature
 	orgFeature   *org.Feature
@@ -54,6 +55,7 @@ func (s *EventFeatureSuite) SetupTest() {
 	s.Require().NoError(err)
 	s.enforcer = enforcer
 	s.sender = &stubOTPSender{}
+	s.waStub = &stubChannelNotif{}
 
 	userCfg := user.Config{
 		SuperAdminEmail: "super@paroki.org",
@@ -73,7 +75,7 @@ func (s *EventFeatureSuite) SetupTest() {
 		RSVPGracePeriod:   30 * time.Minute,
 	}
 
-	s.userFeature = user.New(s.client, s.enforcer, userCfg, slog.New(slog.DiscardHandler), user.WithOTPSender(s.sender))
+	s.userFeature = user.New(s.client, s.enforcer, userCfg, slog.New(slog.DiscardHandler), user.WithOTPSender(s.sender), user.WithChannelNotification("whatsapp", s.waStub))
 	s.refFeature = ref.New(s.client, s.enforcer, s.userFeature)
 	s.orgFeature = org.New(s.client, s.enforcer, s.userFeature, s.refFeature, orgCfg)
 	s.userFeature.SetInviteJoiner(s.orgFeature)
@@ -993,4 +995,128 @@ func (s *EventFeatureSuite) TestEventLaguCRUDAndOrdering() {
 	// 6. Manager deletes lagu1.
 	s.Request(fmt.Sprintf("/api/events/%s/lagu/%s", ev.ID, lagu1.ID), http.MethodDelete, nil)
 	s.NoContent()
+}
+
+type stubChannelNotif struct {
+	calls []struct {
+		target  string
+		payload user.NotificationPayload
+	}
+}
+
+func (n *stubChannelNotif) SendNotification(_ context.Context, target string, payload user.NotificationPayload) error {
+	n.calls = append(n.calls, struct {
+		target  string
+		payload user.NotificationPayload
+	}{target: target, payload: payload})
+	return nil
+}
+
+func (s *EventFeatureSuite) TestNotifications_InstantTriggersAndQuietHourReminders() {
+	ctx := context.Background()
+	parokiID, orgID := s.seedParokiAndOrg()
+
+	member, err := s.userFeature.EnsureUser(ctx, "orgmember@paroki.org", "OMK Member", "", "email", "orgmember@paroki.org")
+	s.Require().NoError(err)
+	_, err = s.client.User.UpdateOneID(member.ID).
+		SetPhone("+6281000000002").
+		SetTimezone("Asia/Jakarta").
+		Save(ctx)
+	s.Require().NoError(err)
+	s.waStub.calls = nil
+
+	// 1. Parish-level event (org_id == nil) MUST NOT auto-broadcast event_created
+	s.loginViaOTP("padmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+	parishStart := time.Date(2030, 5, 10, 10, 0, 0, 0, time.UTC)
+	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
+		Title:   "Misa Paroki",
+		StartAt: parishStart,
+		EndAt:   parishStart.Add(2 * time.Hour),
+	})
+	s.Created()
+	s.Len(s.waStub.calls, 0)
+
+	// 2. Org-owned event notifies active org member (excluding creator)
+	s.loginViaOTP("orgadmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+	orgStart := time.Date(2030, 5, 11, 10, 0, 0, 0, time.UTC)
+	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
+		OrgID:   &orgID,
+		Title:   "Latihan Koor OMK",
+		StartAt: orgStart,
+		EndAt:   orgStart.Add(2 * time.Hour),
+	})
+	s.Created()
+	orgEv := testutil.DecodeAs[domain.EventResponse](s).Data
+	s.Len(s.waStub.calls, 1)
+	s.Equal("+6281000000002", s.waStub.calls[0].target)
+	s.Equal("Latihan Koor OMK", s.waStub.calls[0].payload.Title)
+
+	// Member RSVPs "going" AND is assigned as petugas "Dirigen"
+	s.loginViaOTP("orgmember@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+	s.Request(fmt.Sprintf("/api/events/%s/rsvp", orgEv.ID), http.MethodPost, domain.UpsertEventRSVPRequest{Status: "going"})
+	s.OK()
+
+	s.loginViaOTP("orgadmin@paroki.org")
+	s.SetHeader("X-Paroki-Id", parokiID.String())
+	s.Request(fmt.Sprintf("/api/events/%s/petugas", orgEv.ID), http.MethodPost, domain.CreateEventPetugasRequest{
+		Role:   "Dirigen",
+		UserID: &member.ID,
+	})
+	s.Created()
+
+	// 3. Rescheduling StartAt triggers event_updated
+	s.waStub.calls = nil
+	newStart := orgStart.Add(time.Hour)
+	newEnd := newStart.Add(2 * time.Hour)
+	s.Request(fmt.Sprintf("/api/events/%s", orgEv.ID), http.MethodPatch, domain.UpdateEventRequest{
+		StartAt: &newStart,
+		EndAt:   &newEnd,
+	})
+	s.OK()
+	s.Len(s.waStub.calls, 1)
+	s.Contains(s.waStub.calls[0].payload.Body, "diperbarui")
+
+	// 4. ReminderScheduler h-24h quiet-hour shift + combined role body
+	s.waStub.calls = nil
+	jktLoc, err := time.LoadLocation("Asia/Jakarta")
+	s.Require().NoError(err)
+
+	quietStartLocal := time.Date(2030, 5, 20, 1, 0, 0, 0, jktLoc)
+	quietEv, err := s.client.Event.Create().
+		SetParokiID(parokiID).
+		SetOrgID(orgID).
+		SetCreatedBy(member.ID).
+		SetTitle("Misa Tengah Malam").
+		SetStartAt(quietStartLocal.UTC()).
+		SetEndAt(quietStartLocal.Add(time.Hour).UTC()).
+		SetVisibility("public").
+		SetStatus("scheduled").
+		Save(ctx)
+	s.Require().NoError(err)
+	_, err = s.client.EventRSVP.Create().SetParokiID(parokiID).SetEventID(quietEv.ID).SetUserID(member.ID).SetStatus("going").Save(ctx)
+	s.Require().NoError(err)
+	_, err = s.client.EventPetugas.Create().SetParokiID(parokiID).SetEventID(quietEv.ID).SetUserID(member.ID).SetRole("Lektor").SetName("Member").SetUrutan(1).SetStatus("assigned").Save(ctx)
+	s.Require().NoError(err)
+
+	// At 19:30 WIB May 18 -> before shifted 20:00 WIB -> not sent
+	s.Require().NoError(s.eventFeature.RunReminderTick(ctx, time.Date(2030, 5, 18, 19, 30, 0, 0, jktLoc)))
+	s.Len(s.waStub.calls, 0)
+
+	// At 20:05 WIB May 18 -> sent once with combined officer role in Body
+	s.Require().NoError(s.eventFeature.RunReminderTick(ctx, time.Date(2030, 5, 18, 20, 5, 0, 0, jktLoc)))
+	s.Len(s.waStub.calls, 1)
+	s.Contains(s.waStub.calls[0].payload.Body, "Lektor")
+
+	// 5. Cancelling event triggers event_cancelled
+	s.waStub.calls = nil
+	cancelled := "cancelled"
+	s.Request(fmt.Sprintf("/api/events/%s", orgEv.ID), http.MethodPatch, domain.UpdateEventRequest{
+		Status: &cancelled,
+	})
+	s.OK()
+	s.Len(s.waStub.calls, 1)
+	s.Contains(s.waStub.calls[0].payload.Body, "dibatalkan")
 }

@@ -290,6 +290,102 @@ func (s *Service) DispatchPushToUser(ctx context.Context, userID uuid.UUID, payl
 	return firstErr
 }
 
+// NotifyUser dispatches payload to userID across their enabled channels, deduplicated by (userID, kind, refID, window).
+func (s *Service) NotifyUser(
+	ctx context.Context,
+	userID uuid.UUID,
+	parokiID *uuid.UUID,
+	kind string,
+	refID uuid.UUID,
+	window string,
+	payload domain.NotificationPayload,
+) (bool, error) {
+	u, err := guardActiveUser(s.repo.FindUserByID(ctx, userID))
+	if err != nil {
+		if errors.Is(err, domain.ErrUserNotFound) || errors.Is(err, domain.ErrUserDisabled) {
+			return false, nil
+		}
+		return false, err
+	}
+	if !u.NotifyPush && !u.NotifyWhatsapp && !u.NotifyTelegram {
+		return false, nil
+	}
+	recorded, err := s.repo.TryRecordNotificationLog(ctx, userID, parokiID, kind, refID, window, time.Now().UTC())
+	if err != nil || !recorded {
+		return false, err
+	}
+
+	if u.NotifyPush {
+		_ = s.DispatchPushToUser(ctx, u.ID, payload)
+	}
+	if u.NotifyWhatsapp && u.Phone != nil && *u.Phone != "" {
+		if ch, ok := s.getNotificationChannel(ChannelWhatsApp); ok {
+			_ = ch.SendNotification(ctx, *u.Phone, payload)
+		}
+	}
+	if u.NotifyTelegram {
+		if acc, accErr := s.repo.FindUserAccountByUserAndProvider(ctx, u.ID, domain.ProviderTelegram); accErr == nil && acc != nil {
+			if ch, ok := s.getNotificationChannel(ChannelTelegram); ok {
+				_ = ch.SendNotification(ctx, acc.Subject, payload)
+			}
+		}
+	}
+	return true, nil
+}
+
+// NotifyUsers dispatches payload to a deduplicated list of userIDs and returns the count notified.
+func (s *Service) NotifyUsers(
+	ctx context.Context,
+	userIDs []uuid.UUID,
+	parokiID *uuid.UUID,
+	kind string,
+	refID uuid.UUID,
+	window string,
+	payload domain.NotificationPayload,
+) (int, error) {
+	seen := make(map[uuid.UUID]struct{}, len(userIDs))
+	sent := 0
+	for _, uid := range userIDs {
+		if uid == uuid.Nil {
+			continue
+		}
+		if _, dup := seen[uid]; dup {
+			continue
+		}
+		seen[uid] = struct{}{}
+		ok, err := s.NotifyUser(ctx, uid, parokiID, kind, refID, window, payload)
+		if err != nil {
+			return sent, err
+		}
+		if ok {
+			sent++
+		}
+	}
+	return sent, nil
+}
+
+// ResolveUserTimezones returns each user's IANA timezone, falling back to "Asia/Makassar".
+func (s *Service) ResolveUserTimezones(ctx context.Context, userIDs []uuid.UUID) (map[uuid.UUID]string, error) {
+	raw, err := s.repo.ListUserTimezonesByIDs(ctx, userIDs)
+	if err != nil {
+		return nil, err
+	}
+	out := make(map[uuid.UUID]string, len(userIDs))
+	for _, uid := range userIDs {
+		tz := strings.TrimSpace(raw[uid])
+		if tz == "" {
+			tz = "Asia/Makassar"
+		}
+		out[uid] = tz
+	}
+	return out, nil
+}
+
+// CleanupExpiredNotificationLogs deletes ephemeral notification logs older than before.
+func (s *Service) CleanupExpiredNotificationLogs(ctx context.Context, before time.Time) (int, error) {
+	return s.repo.DeleteNotificationLogsBefore(ctx, before)
+}
+
 func (s *Service) getNotificationChannel(channel string) (domain.NotificationSender, bool) {
 	if s.compositeNotification == nil {
 		return nil, false

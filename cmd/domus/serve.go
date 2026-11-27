@@ -2,6 +2,7 @@ package main
 
 import (
 	"strings"
+	"time"
 
 	"github.com/paroki/domus/internal/agent"
 	"github.com/paroki/domus/internal/app"
@@ -121,6 +122,7 @@ func newServeCmd() *cobra.Command {
 			if err := userFeature.Bootstrap(ctx); err != nil {
 				return err
 			}
+			eventFeature.StartReminderScheduler(ctx, time.Minute, logger)
 
 			fiberApp := app.GetFiber(cfg, logger, userFeature, refFeature, orgFeature, eventFeature, umatFeature, settingFeature, agentFeature)
 			return app.New(cfg, fiberApp, logger).Serve(ctx)

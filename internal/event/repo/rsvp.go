@@ -125,6 +125,25 @@ func (r *Repository) CountActiveParokiMembers(ctx context.Context, parokiID uuid
 		Count(ctx)
 }
 
+// ListAttendeeUserIDsForEvent returns user IDs with going or maybe RSVP status for eventID.
+func (r *Repository) ListAttendeeUserIDsForEvent(ctx context.Context, eventID uuid.UUID) ([]uuid.UUID, error) {
+	rows, err := r.client.EventRSVP.Query().
+		Where(
+			eventrsvp.EventIDEQ(eventID),
+			eventrsvp.StatusIn(eventrsvp.StatusGoing, eventrsvp.StatusMaybe),
+		).
+		Select(eventrsvp.FieldUserID).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ids := make([]uuid.UUID, 0, len(rows))
+	for _, row := range rows {
+		ids = append(ids, row.UserID)
+	}
+	return ids, nil
+}
+
 // GetRSVPSummary returns RSVP counts by status and active member count for an event.
 func (r *Repository) GetRSVPSummary(ctx context.Context, parokiID, eventID uuid.UUID, orgID *uuid.UUID) (RSVPSummaryCounts, error) {
 	var counts RSVPSummaryCounts

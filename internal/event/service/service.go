@@ -48,6 +48,24 @@ type ParokiReader interface {
 	HasActiveLookup(ctx context.Context, parokiID uuid.UUID, category, code string) (bool, error)
 }
 
+// NotificationPayload describes a notification dispatched by event triggers and reminders.
+type NotificationPayload struct {
+	Title string
+	Body  string
+	Icon  string
+	Badge string
+	Tag   string
+	URL   string
+}
+
+// Notifier dispatches deduplicated user notifications and resolves user timezones.
+type Notifier interface {
+	NotifyUser(ctx context.Context, userID uuid.UUID, parokiID *uuid.UUID, kind string, refID uuid.UUID, window string, payload NotificationPayload) (bool, error)
+	NotifyUsers(ctx context.Context, userIDs []uuid.UUID, parokiID *uuid.UUID, kind string, refID uuid.UUID, window string, payload NotificationPayload) (int, error)
+	ResolveUserTimezones(ctx context.Context, userIDs []uuid.UUID) (map[uuid.UUID]string, error)
+	CleanupExpiredNotificationLogs(ctx context.Context, before time.Time) (int, error)
+}
+
 // Config holds runtime configuration for the event service.
 type Config struct {
 	DefaultVisibility string
@@ -60,7 +78,13 @@ type Service struct {
 	enforcer *authz.Enforcer
 	orgs     OrgReader
 	parokis  ParokiReader
+	notifier Notifier
 	cfg      Config
+}
+
+// SetNotifier wires the multi-channel Notifier into the event Service.
+func (s *Service) SetNotifier(n Notifier) {
+	s.notifier = n
 }
 
 // New constructs an event Service.

@@ -9,6 +9,7 @@ import (
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/ent/event"
 	"github.com/paroki/domus/ent/eventpetugas"
+	"github.com/paroki/domus/ent/orgmember"
 	"github.com/paroki/domus/ent/predicate"
 )
 
@@ -49,7 +50,36 @@ type SearchEventsInput struct {
 	Limit          int
 }
 
+// ListScheduledEventsBetween returns non-deleted scheduled events with start_at in [from, to].
+func (r *Repository) ListScheduledEventsBetween(ctx context.Context, from, to time.Time) ([]*ent.Event, error) {
+	return r.client.Event.Query().
+		Where(
+			event.DeletedAtIsNil(),
+			event.StatusEQ(event.StatusScheduled),
+			event.StartAtGTE(from),
+			event.StartAtLTE(to),
+		).
+		Order(event.ByStartAt(sql.OrderAsc())).
+		All(ctx)
+}
+
 // SearchEvents returns paginated non-deleted events visible to the caller in parokiID.
+
+// ListActiveOrgMemberUserIDs returns active member user IDs for orgID.
+func (r *Repository) ListActiveOrgMemberUserIDs(ctx context.Context, orgID uuid.UUID) ([]uuid.UUID, error) {
+	rows, err := r.client.OrgMember.Query().
+		Where(orgmember.OrgIDEQ(orgID), orgmember.StatusEQ(orgmember.StatusActive)).
+		Select(orgmember.FieldUserID).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ids := make([]uuid.UUID, 0, len(rows))
+	for _, row := range rows {
+		ids = append(ids, row.UserID)
+	}
+	return ids, nil
+}
 func (r *Repository) SearchEvents(ctx context.Context, in SearchEventsInput) ([]*ent.Event, error) {
 	query := r.client.Event.Query().
 		Where(event.ParokiIDEQ(in.ParokiID), event.DeletedAtIsNil())
@@ -120,6 +150,8 @@ func (r *Repository) SearchEvents(ctx context.Context, in SearchEventsInput) ([]
 		Limit(in.Limit).
 		All(ctx)
 }
+
+// SearchEvents returns paginated non-deleted events visible to the caller in parokiID.
 
 // FindEventInParoki returns a non-deleted Event belonging to parokiID.
 func (r *Repository) FindEventInParoki(ctx context.Context, parokiID, eventID uuid.UUID) (*ent.Event, error) {

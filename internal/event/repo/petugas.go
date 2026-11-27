@@ -45,6 +45,17 @@ func (r *Repository) ListPetugasForEvent(ctx context.Context, eventID uuid.UUID)
 		All(ctx)
 }
 
+// ListActivePetugasForEvent returns assigned or confirmed EventPetugas rows for eventID.
+func (r *Repository) ListActivePetugasForEvent(ctx context.Context, eventID uuid.UUID) ([]*ent.EventPetugas, error) {
+	return r.client.EventPetugas.Query().
+		Where(
+			eventpetugas.EventIDEQ(eventID),
+			eventpetugas.StatusIn(eventpetugas.StatusAssigned, eventpetugas.StatusConfirmed),
+		).
+		Order(eventpetugas.ByUrutan(sql.OrderAsc()), eventpetugas.ByCreatedAt(sql.OrderAsc())).
+		All(ctx)
+}
+
 // FindPetugasInEvent returns an EventPetugas row belonging to parokiID and eventID.
 func (r *Repository) FindPetugasInEvent(ctx context.Context, parokiID, eventID, petugasID uuid.UUID) (*ent.EventPetugas, error) {
 	return r.client.EventPetugas.Query().

@@ -403,6 +403,7 @@ func (s *Service) CreateEvent(ctx context.Context, p authx.Principal, req domain
 	if err != nil {
 		return domain.EventResponse{}, err
 	}
+	s.notifyEventCreated(ctx, p.UserID, created)
 
 	return s.toEventResponse(created, info, myRole, true, canRsvp, time.Now().UTC()), nil
 }
@@ -500,6 +501,8 @@ func (s *Service) UpdateEvent(ctx context.Context, p authx.Principal, eventID uu
 	if err != nil {
 		return domain.EventResponse{}, err
 	}
+	s.notifyEventCancelled(ctx, existing, updated)
+	s.notifyEventUpdated(ctx, existing, updated)
 
 	var info OrgInfo
 	if updated.OrgID != nil {

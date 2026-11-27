@@ -26,8 +26,11 @@ import (
 	"github.com/paroki/domus/internal/user/service"
 )
 
-// Re-export transport-agnostic principal types and helpers for downstream features.
-type Principal = authx.Principal
+// Re-export transport-agnostic principal and notification types for downstream features.
+type (
+	Principal           = authx.Principal
+	NotificationPayload = domain.NotificationPayload
+)
 
 var (
 	FromContext   = authx.FromContext
@@ -470,6 +473,42 @@ func (f *Feature) Bootstrap(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+// NotifyUser dispatches payload to userID across enabled channels, deduplicated by (userID, kind, refID, window).
+func (f *Feature) NotifyUser(
+	ctx context.Context,
+	userID uuid.UUID,
+	parokiID *uuid.UUID,
+	kind string,
+	refID uuid.UUID,
+	window string,
+	payload NotificationPayload,
+) (bool, error) {
+	return f.service.NotifyUser(ctx, userID, parokiID, kind, refID, window, payload)
+}
+
+// NotifyUsers dispatches payload to a deduplicated list of userIDs and returns the count notified.
+func (f *Feature) NotifyUsers(
+	ctx context.Context,
+	userIDs []uuid.UUID,
+	parokiID *uuid.UUID,
+	kind string,
+	refID uuid.UUID,
+	window string,
+	payload NotificationPayload,
+) (int, error) {
+	return f.service.NotifyUsers(ctx, userIDs, parokiID, kind, refID, window, payload)
+}
+
+// ResolveUserTimezones returns each user's IANA timezone, falling back to "Asia/Makassar".
+func (f *Feature) ResolveUserTimezones(ctx context.Context, userIDs []uuid.UUID) (map[uuid.UUID]string, error) {
+	return f.service.ResolveUserTimezones(ctx, userIDs)
+}
+
+// CleanupExpiredNotificationLogs deletes ephemeral notification logs older than before.
+func (f *Feature) CleanupExpiredNotificationLogs(ctx context.Context, before time.Time) (int, error) {
+	return f.service.CleanupExpiredNotificationLogs(ctx, before)
 }
 
 // AuthenticateMiddleware resolves a session cookie or Bearer token and attaches authx.Principal to the request context.

@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
+	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/usernotificationlog"
 	"github.com/paroki/domus/ent/userpushsubscription"
 )
@@ -135,4 +136,23 @@ func (r *Repository) DeleteNotificationLogsBefore(ctx context.Context, before ti
 	return r.client.UserNotificationLog.Delete().
 		Where(usernotificationlog.SentAtLT(before)).
 		Exec(ctx)
+}
+
+// ListUserTimezonesByIDs returns a map of userID -> timezone for non-deleted users.
+func (r *Repository) ListUserTimezonesByIDs(ctx context.Context, userIDs []uuid.UUID) (map[uuid.UUID]string, error) {
+	out := make(map[uuid.UUID]string, len(userIDs))
+	if len(userIDs) == 0 {
+		return out, nil
+	}
+	rows, err := r.client.User.Query().
+		Where(user.IDIn(userIDs...), user.DeletedAtIsNil()).
+		Select(user.FieldID, user.FieldTimezone).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, u := range rows {
+		out[u.ID] = u.Timezone
+	}
+	return out, nil
 }

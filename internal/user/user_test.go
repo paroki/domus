@@ -853,3 +853,68 @@ func (s *UserFeatureSuite) TestPushTestEndpoint_ChannelsAndAutoPrune410() {
 	me := testutil.DecodeAs[domain.UserResponse](suite).Data
 	s.Equal(1, me.PushSubscriptionCount)
 }
+
+func (s *UserFeatureSuite) TestNotifyUser_DeduplicationAndRetentionCleanup() {
+	ctx := context.Background()
+	waStub := &stubNotificationSender{}
+	f := user.New(
+		s.client,
+		s.enforcer,
+		user.Config{CookieName: "domus_session"},
+		slog.New(slog.NewTextHandler(io.Discard, nil)),
+		user.WithChannelNotification("whatsapp", waStub),
+	)
+
+	u1, err := f.EnsureUser(ctx, "dedup1@paroki.org", "Dedup One", "+6281111111111", "email", "dedup1@paroki.org")
+	s.Require().NoError(err)
+	u2, err := f.EnsureUser(ctx, "dedup2@paroki.org", "Dedup Two", "+6282222222222", "email", "dedup2@paroki.org")
+	s.Require().NoError(err)
+	_, err = s.client.User.UpdateOneID(u2.ID).SetTimezone("Asia/Jakarta").Save(ctx)
+	s.Require().NoError(err)
+
+	refID := uuid.New()
+	parokiID := uuid.New()
+	payload := user.NotificationPayload{Title: "Event", Body: "Body", URL: "/events"}
+
+	sent, err := f.NotifyUser(ctx, u1.ID, &parokiID, "event_reminder", refID, "h-24h", payload)
+	s.Require().NoError(err)
+	s.True(sent)
+	s.Len(waStub.calls, 1)
+
+	// Duplicate (user_id, kind, ref_id, window) is skipped
+	sent, err = f.NotifyUser(ctx, u1.ID, &parokiID, "event_reminder", refID, "h-24h", payload)
+	s.Require().NoError(err)
+	s.False(sent)
+	s.Len(waStub.calls, 1)
+
+	// Different window sends again; NotifyUsers deduplicates duplicate IDs
+	count, err := f.NotifyUsers(ctx, []uuid.UUID{u1.ID, u1.ID, u2.ID}, &parokiID, "event_reminder", refID, "h-1h", payload)
+	s.Require().NoError(err)
+	s.Equal(2, count)
+	s.Len(waStub.calls, 3)
+
+	// ResolveUserTimezones
+	tzMap, err := f.ResolveUserTimezones(ctx, []uuid.UUID{u1.ID, u2.ID})
+	s.Require().NoError(err)
+	s.Equal("Asia/Makassar", tzMap[u1.ID])
+	s.Equal("Asia/Jakarta", tzMap[u2.ID])
+
+	// Retention cleanup deletes logs older than 7 days and keeps fresh logs
+	oldRef := uuid.New()
+	_, err = s.client.UserNotificationLog.Create().
+		SetUserID(u1.ID).
+		SetKind("event_reminder").
+		SetRefID(oldRef).
+		SetWindow("h-24h").
+		SetSentAt(time.Now().UTC().Add(-8 * 24 * time.Hour)).
+		Save(ctx)
+	s.Require().NoError(err)
+
+	deleted, err := f.CleanupExpiredNotificationLogs(ctx, time.Now().UTC().Add(-7*24*time.Hour))
+	s.Require().NoError(err)
+	s.Equal(1, deleted)
+
+	remaining, err := s.client.UserNotificationLog.Query().Count(ctx)
+	s.Require().NoError(err)
+	s.Equal(3, remaining)
+}
