@@ -1,19 +1,19 @@
-import {
-  ArrowLeft,
-  CalendarDays,
-  Church,
-  MapPin,
-  Pencil,
-  Trash2,
-} from "lucide-react";
+import { ArrowLeft, CalendarDays, Church, Pencil, Trash2 } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router";
 import { useMe } from "~/shared/api/session";
 import i18n from "~/shared/i18n";
 import { Badge } from "~/shared/ui/Badge";
-import { Button, buttonClass } from "~/shared/ui/Button";
+import { Button } from "~/shared/ui/Button";
 import { Card } from "~/shared/ui/Card";
+import { ConfirmDialog } from "~/shared/ui/ConfirmDialog";
+import {
+  InductiveDangerZone,
+  InductiveEmptyState,
+  InductivePageHeader,
+  InductiveStepCard,
+} from "~/shared/ui/iui";
 import {
   useDeleteEvent,
   useDeleteEventRSVP,
@@ -34,6 +34,7 @@ import {
   type EventVisibility,
   eventTypeLabel,
   formatEventRange,
+  formatParokiTimezoneShort,
   fromLocalDatetimeInputValue,
   lifecycleMeta,
   mergeEventTypeOptions,
@@ -58,6 +59,7 @@ export default function EventDetailPage() {
   const activeParokiQuery = useActiveParoki(hasParish);
   const activeParoki = activeParokiQuery.data;
   const parokiTimezone = activeParoki?.timezone || DEFAULT_PAROKI_TIMEZONE;
+  const tzShort = formatParokiTimezoneShort(parokiTimezone);
 
   const typeLookupsQuery = useEventTypeLookups(hasParish);
   const typeLookups = typeLookupsQuery.data ?? [];
@@ -99,6 +101,9 @@ export default function EventDetailPage() {
 
   const [rsvpNote, setRsvpNote] = useState("");
   const [actionError, setActionError] = useState<string | null>(null);
+  const [pendingCancelToggle, setPendingCancelToggle] = useState(false);
+  const [pendingDeleteEvent, setPendingDeleteEvent] = useState(false);
+  const [pendingDeleteRsvp, setPendingDeleteRsvp] = useState(false);
 
   useEffect(() => {
     if (!ev) return;
@@ -117,24 +122,21 @@ export default function EventDetailPage() {
 
   if (!hasParish) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-8">
-        <Card>
-          <h1 className="text-xl font-bold text-ink">
-            {t("event.noParishTitle")}
-          </h1>
-          <p className="mt-2 text-sm text-ink-muted">
-            {t("event.noParishDescription")}
-          </p>
-        </Card>
+      <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8">
+        <InductiveEmptyState
+          icon={CalendarDays}
+          title={t("event.noParishTitle")}
+          description={t("event.noParishDescription")}
+        />
       </div>
     );
   }
 
   if (eventQuery.isLoading) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-8">
-        <Card>
-          <p className="text-sm text-ink-muted">Memuat detail kegiatan…</p>
+      <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8">
+        <Card className="p-4 sm:p-6">
+          <p className="text-sm text-muted">Memuat detail kegiatan…</p>
         </Card>
       </div>
     );
@@ -142,15 +144,15 @@ export default function EventDetailPage() {
 
   if (eventQuery.isError || !ev) {
     return (
-      <div className="mx-auto max-w-4xl space-y-4 px-4 py-8">
+      <div className="mx-auto max-w-4xl space-y-4 px-4 py-6 sm:px-6 sm:py-8">
         <Link
           to="/event"
           className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft aria-hidden className="size-4" />
           {t("event.backToList")}
         </Link>
-        <Card>
+        <Card className="p-4 sm:p-6">
           <p className="text-sm text-danger-fg">
             {resolveEventError(eventQuery.error)}
           </p>
@@ -165,6 +167,7 @@ export default function EventDetailPage() {
   const summary = summaryQuery.data ?? ev.rsvpSummary;
   const rsvpRows = rsvpsQuery.data?.pages.flatMap((p) => p.data ?? []) ?? [];
   const myRsvpMeta = ev.myRsvp ? rsvpStatusMeta(ev.myRsvp.status ?? "") : null;
+  const isCancelled = ev.status === "cancelled";
 
   async function handleSaveEdit(e: FormEvent) {
     e.preventDefault();
@@ -191,30 +194,27 @@ export default function EventDetailPage() {
     }
   }
 
-  async function handleToggleCancel() {
+  async function confirmToggleCancel() {
     if (!ev) return;
     const nextStatus = ev.status === "cancelled" ? "scheduled" : "cancelled";
-    const promptMsg =
-      nextStatus === "cancelled"
-        ? "Batalkan kegiatan ini? Anggota tidak lagi dapat mengirim RSVP."
-        : "Jadwalkan kembali kegiatan ini?";
-    if (!window.confirm(promptMsg)) return;
     setActionError(null);
     try {
       await updateEvent.mutateAsync({ status: nextStatus });
+      setPendingCancelToggle(false);
     } catch (err) {
       setActionError(resolveEventError(err));
+      setPendingCancelToggle(false);
     }
   }
 
-  async function handleDeleteEvent() {
-    if (!window.confirm("Hapus kegiatan ini secara permanen?")) return;
+  async function confirmDeleteEvent() {
     setActionError(null);
     try {
       await deleteEvent.mutateAsync(eventId);
       navigate("/event", { replace: true });
     } catch (err) {
       setActionError(resolveEventError(err));
+      setPendingDeleteEvent(false);
     }
   }
 
@@ -230,162 +230,140 @@ export default function EventDetailPage() {
     }
   }
 
-  async function handleDeleteRSVP() {
-    if (!window.confirm("Hapus konfirmasi kehadiran (RSVP) Anda?")) return;
+  async function confirmDeleteRSVP() {
     setActionError(null);
     try {
       await deleteRSVP.mutateAsync();
       setRsvpNote("");
+      setPendingDeleteRsvp(false);
     } catch (err) {
       setActionError(resolveEventError(err));
+      setPendingDeleteRsvp(false);
     }
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 px-4 py-8">
-      <Link
-        to="/event"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {t("event.backToList")}
-      </Link>
+    <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
+      <InductivePageHeader
+        breadcrumbs={[
+          { label: "Beranda", to: "/" },
+          { label: t("event.title"), to: "/event" },
+          { label: ev.title ?? "Detail Kegiatan" },
+        ]}
+        title={ev.title ?? ""}
+        subtitle={formatEventRange(ev.startAt, ev.endAt, parokiTimezone)}
+      />
 
       {actionError && (
-        <div className="rounded-lg border border-danger-fg/30 bg-danger-bg px-4 py-3 text-sm text-danger-fg">
+        <div
+          role="alert"
+          className="rounded-lg border border-danger-fg/30 bg-danger-bg px-4 py-3 text-sm text-danger-fg"
+        >
           {actionError}
         </div>
       )}
 
-      <Card className="space-y-4">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
-              {ev.orgId ? (
-                <Link
-                  to={`/org/${ev.orgId}`}
-                  className="inline-flex items-center rounded-full bg-neutral-bg px-3 py-1 text-[13px] font-semibold text-neutral-fg hover:underline"
-                >
-                  {ev.orgName}
-                </Link>
-              ) : (
-                <Badge tone="neutral">{activeParoki?.nama ?? "Paroki"}</Badge>
-              )}
-              {ev.jenis && (
-                <Badge tone="neutral">
-                  {eventTypeLabel(ev.jenis, typeLookups)}
-                </Badge>
-              )}
-              <Badge tone={visMeta.tone}>{visMeta.label}</Badge>
-              <Badge tone={lcMeta.tone}>{lcMeta.label}</Badge>
-            </div>
-            <h1 className="text-2xl font-bold text-ink">{ev.title}</h1>
-            <p className="flex items-center gap-2 text-sm text-ink-muted">
-              <CalendarDays className="h-4 w-4" />
-              {formatEventRange(ev.startAt, ev.endAt, parokiTimezone)}
-            </p>
-            {ev.location && (
-              <p className="flex items-center gap-2 text-sm text-ink-muted">
-                <MapPin className="h-4 w-4" />
-                {ev.location}
-              </p>
+      <Card className="p-4 sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
+          <div className="flex flex-wrap items-center gap-2">
+            {ev.orgId ? (
+              <Link
+                to={`/org/${ev.orgId}`}
+                className="inline-flex items-center rounded-full bg-neutral-bg px-3 py-1 text-[13px] font-semibold text-neutral-fg hover:underline"
+              >
+                {ev.orgName}
+              </Link>
+            ) : (
+              <Badge tone="neutral">{activeParoki?.nama ?? "Paroki"}</Badge>
             )}
-            <p className="text-xs text-ink-muted">
-              {ev.rsvpEnabled
-                ? ev.rsvpDeadline
-                  ? `Batas RSVP: ${formatEventRange(ev.rsvpDeadline, undefined, parokiTimezone)}`
-                  : "RSVP dibuka hingga 30 menit setelah acara dimulai"
-                : "RSVP dinonaktifkan untuk kegiatan ini"}
-            </p>
+            {ev.jenis && (
+              <Badge tone="neutral">
+                {eventTypeLabel(ev.jenis, typeLookups)}
+              </Badge>
+            )}
+            <Badge tone={visMeta.tone}>{visMeta.label}</Badge>
+            <Badge tone={lcMeta.tone}>{lcMeta.label}</Badge>
           </div>
 
-          {canManage && (
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setEditing((v) => !v)}
-              >
-                <Pencil className="h-4 w-4" />
-                {t("event.editEvent")}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={updateEvent.isPending}
-                onClick={handleToggleCancel}
-              >
-                {ev.status === "cancelled"
-                  ? t("event.rescheduleEvent")
-                  : t("event.cancelEvent")}
-              </Button>
-              <Button
-                type="button"
-                variant="danger"
-                disabled={deleteEvent.isPending}
-                onClick={handleDeleteEvent}
-              >
-                <Trash2 className="h-4 w-4" />
-                {t("event.deleteEvent")}
-              </Button>
-            </div>
+          {canManage && !editing && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setEditing(true)}
+              className="min-h-10 w-full sm:w-auto"
+            >
+              <Pencil aria-hidden className="size-4" />
+              Ubah
+            </Button>
           )}
         </div>
 
-        {ev.description && (
-          <p className="whitespace-pre-line border-t border-line pt-4 text-sm text-ink">
-            {ev.description}
-          </p>
-        )}
-      </Card>
-
-      {ev.jenis === "misa" && (
-        <Card className="flex flex-col justify-between gap-4 border-primary/30 bg-primary/5 sm:flex-row sm:items-center">
-          <div className="flex items-start gap-3">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-on-primary">
-              <Church aria-hidden className="size-5" />
-            </span>
+        {!editing ? (
+          <dl className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
-              <h2 className="text-base font-semibold text-fg">
-                {t("event.liturgiShortcutTitle")}
-              </h2>
-              <p className="mt-0.5 text-sm text-muted">
-                {t("event.liturgiShortcutDescription")}
-              </p>
+              <dt className="text-xs font-medium text-muted">Penyelenggara</dt>
+              <dd className="mt-1 text-sm font-medium text-fg">
+                {ev.orgId ? ev.orgName : (activeParoki?.nama ?? "Paroki")}
+              </dd>
             </div>
-          </div>
-          <Link
-            to={`/liturgi/${ev.id}`}
-            className={`${buttonClass("primary")} h-11 w-full shrink-0 sm:w-auto`}
-          >
-            {t("event.liturgiShortcutCta")}
-          </Link>
-        </Card>
-      )}
-
-      {editing && canManage && (
-        <Card>
-          <h2 className="text-lg font-semibold text-ink">
-            {t("event.editEvent")}
-          </h2>
+            <div>
+              <dt className="text-xs font-medium text-muted">Jenis Kegiatan</dt>
+              <dd className="mt-1 text-sm text-fg">
+                {ev.jenis ? eventTypeLabel(ev.jenis, typeLookups) : "Umum"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs font-medium text-muted">Waktu</dt>
+              <dd className="mt-1 text-sm text-fg">
+                {formatEventRange(ev.startAt, ev.endAt, parokiTimezone)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs font-medium text-muted">Lokasi</dt>
+              <dd className="mt-1 text-sm text-fg">{ev.location || "—"}</dd>
+            </div>
+            <div>
+              <dt className="text-xs font-medium text-muted">Visibilitas</dt>
+              <dd className="mt-1 text-sm text-fg">{visMeta.label}</dd>
+            </div>
+            <div>
+              <dt className="text-xs font-medium text-muted">
+                Konfirmasi Kehadiran (RSVP)
+              </dt>
+              <dd className="mt-1 text-sm text-fg">
+                {ev.rsvpEnabled
+                  ? ev.rsvpDeadline
+                    ? `Batas RSVP: ${formatEventRange(ev.rsvpDeadline, undefined, parokiTimezone)}`
+                    : "Dibuka hingga 30 menit setelah mulai"
+                  : "Dinonaktifkan"}
+              </dd>
+            </div>
+            <div className="sm:col-span-2">
+              <dt className="text-xs font-medium text-muted">Deskripsi</dt>
+              <dd className="mt-1 whitespace-pre-line text-sm text-fg">
+                {ev.description || "—"}
+              </dd>
+            </div>
+          </dl>
+        ) : (
           <form onSubmit={handleSaveEdit} className="mt-4 space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-sm font-medium text-ink">
+              <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
                 Judul Kegiatan
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
+                  className="h-11 w-full rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
                   required
                 />
               </label>
-              <label className="block text-sm font-medium text-ink">
+              <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
                 Jenis Kegiatan
                 <select
                   value={jenis}
                   onChange={(e) => setJenis(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
+                  className="h-11 w-full rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
                 >
                   <option value="">Tanpa Jenis / Umum</option>
                   {eventTypeOptions.map((opt) => (
@@ -398,39 +376,39 @@ export default function EventDetailPage() {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-sm font-medium text-ink">
-                Waktu Mulai
+              <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
+                Waktu Mulai ({tzShort})
                 <input
                   type="datetime-local"
                   value={startAt}
                   onChange={(e) => setStartAt(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
+                  className="h-11 w-full rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
                   required
                 />
               </label>
-              <label className="block text-sm font-medium text-ink">
-                Waktu Selesai
+              <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
+                Waktu Selesai ({tzShort})
                 <input
                   type="datetime-local"
                   value={endAt}
                   onChange={(e) => setEndAt(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
+                  className="h-11 w-full rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
                   required
                 />
               </label>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-sm font-medium text-ink">
+              <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
                 Lokasi
                 <input
                   type="text"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
+                  className="h-11 w-full rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
                 />
               </label>
-              <label className="block text-sm font-medium text-ink">
+              <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
                 Visibilitas
                 <select
                   value={ev.orgId ? visibility : "public"}
@@ -438,7 +416,7 @@ export default function EventDetailPage() {
                     setVisibility(e.target.value as EventVisibility)
                   }
                   disabled={!ev.orgId}
-                  className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink disabled:opacity-60"
+                  className="h-11 w-full rounded-lg border border-line bg-canvas px-3 text-sm text-fg disabled:opacity-60"
                 >
                   <option value="public">Publik Paroki</option>
                   <option value="private" disabled={!ev.orgId}>
@@ -449,72 +427,90 @@ export default function EventDetailPage() {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-sm font-medium text-ink">
-                Batas Waktu RSVP
+              <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
+                Batas Waktu RSVP ({tzShort})
                 <input
                   type="datetime-local"
                   value={rsvpDeadline}
                   disabled={clearRsvpDeadline}
                   onChange={(e) => setRsvpDeadline(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink disabled:opacity-50"
+                  className="h-11 w-full rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg disabled:opacity-50"
                 />
               </label>
-              <div className="flex items-end pb-2">
-                <label className="flex items-center gap-2 text-sm text-ink">
+              <div className="flex items-end">
+                <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-fg">
                   <input
                     type="checkbox"
                     checked={clearRsvpDeadline}
                     onChange={(e) => setClearRsvpDeadline(e.target.checked)}
-                    className="h-4 w-4 rounded border-line"
+                    className="size-4 rounded border-line"
                   />
                   Hapus batas waktu RSVP
                 </label>
               </div>
             </div>
 
-            <label className="block text-sm font-medium text-ink">
+            <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
               Deskripsi
               <textarea
                 rows={3}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
+                className="w-full rounded-lg border border-line bg-canvas px-3.5 py-2.5 text-sm text-fg"
               />
             </label>
 
-            <label className="flex items-center gap-2 text-sm text-ink">
+            <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-fg">
               <input
                 type="checkbox"
                 checked={rsvpEnabled}
                 onChange={(e) => setRsvpEnabled(e.target.checked)}
-                className="h-4 w-4 rounded border-line"
+                className="size-4 rounded border-line"
               />
               Aktifkan konfirmasi kehadiran (RSVP)
             </label>
 
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setEditing(false)}
+                className="w-full sm:w-auto"
               >
                 Batal
               </Button>
-              <Button type="submit" disabled={updateEvent.isPending}>
+              <Button
+                type="submit"
+                disabled={updateEvent.isPending}
+                className="w-full sm:w-auto"
+              >
                 {updateEvent.isPending ? "Menyimpan…" : "Simpan Perubahan"}
               </Button>
             </div>
           </form>
-        </Card>
+        )}
+      </Card>
+
+      {ev.jenis === "misa" && (
+        <InductiveStepCard
+          to={`/liturgi/${ev.id}`}
+          icon={Church}
+          plate={1}
+          title={t("event.liturgiShortcutCta")}
+          description={t("event.liturgiShortcutDescription")}
+          badge={
+            <Badge tone="neutral">{t("event.liturgiShortcutTitle")}</Badge>
+          }
+        />
       )}
 
       {!canRsvp ? (
-        <Card>
-          <h2 className="text-base font-semibold text-ink">
+        <Card className="p-4 sm:p-6">
+          <h2 className="text-base font-semibold text-fg">
             {t("event.rsvpRestrictedTitle")}
           </h2>
           {ev.orgId ? (
-            <p className="mt-1 text-sm text-ink-muted">
+            <p className="mt-1 text-sm text-muted">
               Konfirmasi kehadiran (RSVP) dan daftar peserta hanya tersedia bagi
               anggota aktif{" "}
               <Link
@@ -526,7 +522,7 @@ export default function EventDetailPage() {
               .
             </p>
           ) : (
-            <p className="mt-1 text-sm text-ink-muted">
+            <p className="mt-1 text-sm text-muted">
               Konfirmasi kehadiran (RSVP) dan daftar peserta hanya tersedia bagi
               umat terdaftar di paroki ini.
             </p>
@@ -534,9 +530,9 @@ export default function EventDetailPage() {
         </Card>
       ) : (
         <>
-          <Card className="space-y-4">
+          <Card className="space-y-4 p-4 sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-lg font-semibold text-ink">
+              <h2 className="text-lg font-semibold text-fg">
                 Konfirmasi Kehadiran (RSVP)
               </h2>
               {myRsvpMeta && (
@@ -545,8 +541,8 @@ export default function EventDetailPage() {
             </div>
 
             {ev.myRsvp?.note && (
-              <p className="text-sm text-ink-muted">
-                Catatan Anda: <span className="text-ink">{ev.myRsvp.note}</span>
+              <p className="text-sm text-muted">
+                Catatan Anda: <span className="text-fg">{ev.myRsvp.note}</span>
               </p>
             )}
 
@@ -557,34 +553,40 @@ export default function EventDetailPage() {
                   value={rsvpNote}
                   onChange={(e) => setRsvpNote(e.target.value)}
                   placeholder="Catatan kehadiran (opsional)"
-                  className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
+                  className="h-11 w-full rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg placeholder:text-muted"
                 />
-                <div className="flex flex-wrap items-center gap-2">
-                  {(
-                    [
-                      { status: "going", label: "Hadir" },
-                      { status: "maybe", label: "Mungkin" },
-                      { status: "not_going", label: "Tidak Hadir" },
-                    ] as const
-                  ).map((opt) => (
-                    <Button
-                      key={opt.status}
-                      type="button"
-                      variant={
-                        ev.myRsvp?.status === opt.status ? "primary" : "outline"
-                      }
-                      disabled={upsertRSVP.isPending}
-                      onClick={() => handleSubmitRSVP(opt.status)}
-                    >
-                      {opt.label}
-                    </Button>
-                  ))}
+                <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+                  <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center">
+                    {(
+                      [
+                        { status: "going", label: "Hadir" },
+                        { status: "maybe", label: "Mungkin" },
+                        { status: "not_going", label: "Tidak Hadir" },
+                      ] as const
+                    ).map((opt) => (
+                      <Button
+                        key={opt.status}
+                        type="button"
+                        variant={
+                          ev.myRsvp?.status === opt.status
+                            ? "primary"
+                            : "outline"
+                        }
+                        disabled={upsertRSVP.isPending}
+                        onClick={() => handleSubmitRSVP(opt.status)}
+                        className="w-full sm:w-auto"
+                      >
+                        {opt.label}
+                      </Button>
+                    ))}
+                  </div>
                   {ev.myRsvp && (
                     <Button
                       type="button"
                       variant="danger"
                       disabled={deleteRSVP.isPending}
-                      onClick={handleDeleteRSVP}
+                      onClick={() => setPendingDeleteRsvp(true)}
+                      className="w-full sm:w-auto"
                     >
                       {t("event.removeRsvp")}
                     </Button>
@@ -592,40 +594,38 @@ export default function EventDetailPage() {
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-ink-muted">{t("event.rsvpClosed")}</p>
+              <p className="text-sm text-muted">{t("event.rsvpClosed")}</p>
             )}
           </Card>
 
           {summary && (
-            <div className="grid gap-4 sm:grid-cols-4">
-              <Card>
-                <p className="text-xs font-medium text-ink-muted">Hadir</p>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              <Card className="p-4 sm:p-6">
+                <p className="text-xs font-medium text-muted">Hadir</p>
                 <p className="mt-1 text-2xl font-bold text-success-fg">
                   {summary.going}
                 </p>
               </Card>
-              <Card>
-                <p className="text-xs font-medium text-ink-muted">Mungkin</p>
+              <Card className="p-4 sm:p-6">
+                <p className="text-xs font-medium text-muted">Mungkin</p>
                 <p className="mt-1 text-2xl font-bold text-warning-fg">
                   {summary.maybe}
                 </p>
               </Card>
-              <Card>
-                <p className="text-xs font-medium text-ink-muted">
-                  Tidak Hadir
-                </p>
+              <Card className="p-4 sm:p-6">
+                <p className="text-xs font-medium text-muted">Tidak Hadir</p>
                 <p className="mt-1 text-2xl font-bold text-danger-fg">
                   {summary.notGoing}
                 </p>
               </Card>
-              <Card>
-                <p className="text-xs font-medium text-ink-muted">
+              <Card className="p-4 sm:p-6">
+                <p className="text-xs font-medium text-muted">
                   Belum Konfirmasi
                 </p>
-                <p className="mt-1 text-2xl font-bold text-ink">
+                <p className="mt-1 text-2xl font-bold text-fg">
                   {summary.unresponded}
                 </p>
-                <p className="text-xs text-ink-muted">
+                <p className="text-xs text-muted">
                   {ev.orgId
                     ? `dari ${summary.totalActiveMembers} anggota aktif`
                     : `dari ${summary.totalActiveMembers} umat paroki aktif`}
@@ -634,16 +634,17 @@ export default function EventDetailPage() {
             </div>
           )}
 
-          <Card className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-lg font-semibold text-ink">
+          <Card className="space-y-4 p-4 sm:p-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <h2 className="text-lg font-semibold text-fg">
                 {t("event.rsvpRosterTitle")}
               </h2>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <select
+                  aria-label="Filter status kehadiran"
                   value={rosterStatus}
                   onChange={(e) => setRosterStatus(e.target.value)}
-                  className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
+                  className="h-11 w-full rounded-lg border border-line bg-canvas px-3 text-sm text-fg sm:w-auto"
                 >
                   <option value="">Semua Status</option>
                   <option value="going">Hadir</option>
@@ -655,15 +656,15 @@ export default function EventDetailPage() {
                   value={rosterQ}
                   onChange={(e) => setRosterQ(e.target.value)}
                   placeholder="Cari nama, email, catatan…"
-                  className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
+                  className="h-11 w-full rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg placeholder:text-muted sm:w-auto"
                 />
               </div>
             </div>
 
             {rsvpsQuery.isLoading ? (
-              <p className="text-sm text-ink-muted">Memuat daftar peserta…</p>
+              <p className="text-sm text-muted">Memuat daftar peserta…</p>
             ) : rsvpRows.length === 0 ? (
-              <p className="text-sm text-ink-muted">
+              <p className="text-sm text-muted">
                 Belum ada anggota yang mengirimkan konfirmasi kehadiran.
               </p>
             ) : (
@@ -675,23 +676,25 @@ export default function EventDetailPage() {
                       key={row.id}
                       className="flex flex-wrap items-center justify-between gap-3 py-3"
                     >
-                      <div className="space-y-0.5">
+                      <div className="min-w-0 flex-1 space-y-0.5">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-medium text-ink">
+                          <span className="truncate font-medium text-fg">
                             {row.name}
                           </span>
                           {row.orgRole && (
                             <Badge tone="neutral">{row.orgRole}</Badge>
                           )}
                         </div>
-                        <p className="text-xs text-ink-muted">{row.email}</p>
+                        <p className="truncate text-xs text-muted">
+                          {row.email}
+                        </p>
                         {row.note && (
-                          <p className="text-sm text-ink">{row.note}</p>
+                          <p className="text-sm text-fg">{row.note}</p>
                         )}
                       </div>
-                      <div className="text-right">
+                      <div className="shrink-0 text-right">
                         <Badge tone={st.tone}>{st.label}</Badge>
-                        <p className="mt-1 text-xs text-ink-muted">
+                        <p className="mt-1 text-xs text-muted">
                           {formatEventRange(
                             row.updatedAt,
                             undefined,
@@ -712,6 +715,7 @@ export default function EventDetailPage() {
                   variant="outline"
                   disabled={rsvpsQuery.isFetchingNextPage}
                   onClick={() => rsvpsQuery.fetchNextPage()}
+                  className="w-full sm:w-auto"
                 >
                   {rsvpsQuery.isFetchingNextPage
                     ? "Memuat…"
@@ -722,6 +726,79 @@ export default function EventDetailPage() {
           </Card>
         </>
       )}
+
+      {canManage && (
+        <InductiveDangerZone
+          title="Zona Berbahaya"
+          description="Tindakan di bawah ini membatalkan, menjadwalkan kembali, atau menghapus kegiatan secara permanen."
+          action={
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={updateEvent.isPending}
+                onClick={() => setPendingCancelToggle(true)}
+                className="w-full sm:w-auto"
+              >
+                {isCancelled
+                  ? t("event.rescheduleEvent")
+                  : t("event.cancelEvent")}
+              </Button>
+              <Button
+                type="button"
+                variant="danger"
+                disabled={deleteEvent.isPending}
+                onClick={() => setPendingDeleteEvent(true)}
+                className="w-full sm:w-auto"
+              >
+                <Trash2 aria-hidden className="size-4" />
+                {t("event.deleteEvent")}
+              </Button>
+            </div>
+          }
+        />
+      )}
+
+      <ConfirmDialog
+        open={pendingCancelToggle}
+        title={
+          isCancelled ? t("event.rescheduleEvent") : t("event.cancelEvent")
+        }
+        description={
+          isCancelled
+            ? "Jadwalkan kembali kegiatan ini?"
+            : "Batalkan kegiatan ini? Anggota tidak lagi dapat mengirim RSVP."
+        }
+        confirmLabel={
+          isCancelled ? t("event.rescheduleEvent") : t("event.cancelEvent")
+        }
+        confirmVariant={isCancelled ? "primary" : "danger"}
+        pending={updateEvent.isPending}
+        onConfirm={confirmToggleCancel}
+        onCancel={() => setPendingCancelToggle(false)}
+      />
+
+      <ConfirmDialog
+        open={pendingDeleteEvent}
+        title={t("event.deleteEvent")}
+        description="Hapus kegiatan ini secara permanen?"
+        confirmLabel={t("event.deleteEvent")}
+        confirmVariant="danger"
+        pending={deleteEvent.isPending}
+        onConfirm={confirmDeleteEvent}
+        onCancel={() => setPendingDeleteEvent(false)}
+      />
+
+      <ConfirmDialog
+        open={pendingDeleteRsvp}
+        title={t("event.removeRsvp")}
+        description="Hapus konfirmasi kehadiran (RSVP) Anda?"
+        confirmLabel={t("event.removeRsvp")}
+        confirmVariant="danger"
+        pending={deleteRSVP.isPending}
+        onConfirm={confirmDeleteRSVP}
+        onCancel={() => setPendingDeleteRsvp(false)}
+      />
     </div>
   );
 }

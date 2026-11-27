@@ -1,13 +1,18 @@
 import { CalendarDays, MapPin, Plus, Search } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { useMe } from "~/shared/api/session";
 import i18n from "~/shared/i18n";
 import { Badge } from "~/shared/ui/Badge";
-import { Button } from "~/shared/ui/Button";
+import { Button, buttonClass } from "~/shared/ui/Button";
 import { Card } from "~/shared/ui/Card";
-import { useCreateEvent, useUpsertEventRSVP } from "../api/actions";
+import {
+  InductiveEmptyState,
+  InductiveFilterBar,
+  InductivePageHeader,
+} from "~/shared/ui/iui";
+import { useUpsertEventRSVP } from "../api/actions";
 import { resolveEventError } from "../api/errors";
 import {
   useActiveParoki,
@@ -22,7 +27,6 @@ import {
   type EventVisibility,
   eventTypeLabel,
   formatEventRange,
-  fromLocalDatetimeInputValue,
   lifecycleMeta,
   mergeEventTypeOptions,
   type RSVPStatus,
@@ -48,19 +52,6 @@ export default function EventsPage() {
   const [visibilityFilter, setVisibilityFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [q, setQ] = useState("");
-
-  const [showCreate, setShowCreate] = useState(false);
-  const [orgId, setOrgId] = useState("");
-  const [title, setTitle] = useState("");
-  const [jenis, setJenis] = useState("");
-  const [startAt, setStartAt] = useState("");
-  const [endAt, setEndAt] = useState("");
-  const [location, setLocation] = useState("");
-  const [description, setDescription] = useState("");
-  const [visibility, setVisibility] = useState<EventVisibility>("public");
-  const [rsvpEnabled, setRsvpEnabled] = useState(true);
-  const [rsvpDeadline, setRsvpDeadline] = useState("");
-  const [formError, setFormError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
   const activeParokiQuery = useActiveParoki(hasParish);
@@ -92,50 +83,8 @@ export default function EventsPage() {
     hasParish,
   );
 
-  const createEvent = useCreateEvent();
   const upsertRSVP = useUpsertEventRSVP();
-
   const items = eventsQuery.data?.pages.flatMap((p) => p.data ?? []) ?? [];
-  const selectedOrgId =
-    orgId || (isParokiAdmin ? PAROKI_OPTION : adminOrgs[0]?.id || "");
-  const isCreatingParokiEvent = selectedOrgId === PAROKI_OPTION;
-
-  async function handleCreate(e: FormEvent) {
-    e.preventDefault();
-    setFormError(null);
-    if (!selectedOrgId) {
-      setFormError("Pilih penyelenggara kegiatan.");
-      return;
-    }
-    try {
-      await createEvent.mutateAsync({
-        orgId: isCreatingParokiEvent ? undefined : selectedOrgId,
-        title: title.trim(),
-        jenis: jenis || undefined,
-        startAt: fromLocalDatetimeInputValue(startAt, parokiTimezone),
-        endAt: fromLocalDatetimeInputValue(endAt, parokiTimezone),
-        location: location.trim() || undefined,
-        description: description.trim() || undefined,
-        visibility: isCreatingParokiEvent ? "public" : visibility,
-        rsvpEnabled,
-        rsvpDeadline: rsvpDeadline
-          ? fromLocalDatetimeInputValue(rsvpDeadline, parokiTimezone)
-          : undefined,
-      });
-      setTitle("");
-      setJenis("");
-      setStartAt("");
-      setEndAt("");
-      setLocation("");
-      setDescription("");
-      setVisibility("public");
-      setRsvpEnabled(true);
-      setRsvpDeadline("");
-      setShowCreate(false);
-    } catch (err) {
-      setFormError(resolveEventError(err));
-    }
-  }
 
   async function handleQuickRSVP(eventId: string, status: RSVPStatus) {
     setActionError(null);
@@ -148,241 +97,64 @@ export default function EventsPage() {
 
   if (!hasParish) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-8">
-        <Card>
-          <h1 className="text-xl font-bold text-ink">
-            {t("event.noParishTitle")}
-          </h1>
-          <p className="mt-2 text-sm text-ink-muted">
-            {t("event.noParishDescription")}
-          </p>
-        </Card>
+      <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8">
+        <InductiveEmptyState
+          icon={CalendarDays}
+          title={t("event.noParishTitle")}
+          description={t("event.noParishDescription")}
+        />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 px-4 py-8">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold text-ink">
-            <CalendarDays className="h-6 w-6 text-accent" />
-            {t("event.title")}
-          </h1>
-          <p className="mt-1 text-sm text-ink-muted">{t("event.subtitle")}</p>
-        </div>
-        {canCreateEvent && (
+    <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
+      <InductivePageHeader
+        breadcrumbs={[
+          { label: "Beranda", to: "/" },
+          { label: t("event.title") },
+        ]}
+        title={t("event.title")}
+        subtitle={t("event.subtitle")}
+        action={
+          canCreateEvent ? (
+            <Link
+              to="/event/new"
+              className={`${buttonClass("primary")} w-full sm:w-auto`}
+            >
+              <Plus aria-hidden className="size-4" />
+              {t("event.createEvent")}
+            </Link>
+          ) : undefined
+        }
+      />
+
+      <InductiveFilterBar className="flex-col items-stretch sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap gap-2">
           <Button
             type="button"
-            onClick={() => {
-              setShowCreate((v) => !v);
-              setFormError(null);
-            }}
+            variant={!myOrgsOnly ? "primary" : "outline"}
+            onClick={() => setMyOrgsOnly(false)}
+            className="min-h-10"
           >
-            <Plus className="h-4 w-4" />
-            {t("event.createEvent")}
+            {t("event.allEvents")}
           </Button>
-        )}
-      </div>
+          <Button
+            type="button"
+            variant={myOrgsOnly ? "primary" : "outline"}
+            onClick={() => setMyOrgsOnly(true)}
+            className="min-h-10"
+          >
+            {t("event.myOrgsOnly")}
+          </Button>
+        </div>
 
-      {showCreate && canCreateEvent && (
-        <Card>
-          <h2 className="text-lg font-semibold text-ink">
-            {t("event.createEvent")}
-          </h2>
-          <form onSubmit={handleCreate} className="mt-4 space-y-4">
-            {formError && (
-              <div className="rounded-lg border border-danger-fg/30 bg-danger-bg px-3 py-2 text-sm text-danger-fg">
-                {formError}
-              </div>
-            )}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-sm font-medium text-ink">
-                Penyelenggara
-                <select
-                  value={selectedOrgId}
-                  onChange={(e) => {
-                    const next = e.target.value;
-                    setOrgId(next);
-                    if (next === PAROKI_OPTION) {
-                      setVisibility("public");
-                    }
-                  }}
-                  className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
-                  required
-                >
-                  {isParokiAdmin && (
-                    <option value={PAROKI_OPTION}>
-                      Paroki (Tingkat Paroki)
-                    </option>
-                  )}
-                  {adminOrgs.map((o) => (
-                    <option key={o.id} value={o.id}>
-                      {o.name} ({o.code})
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="block text-sm font-medium text-ink">
-                Visibilitas
-                <select
-                  value={isCreatingParokiEvent ? "public" : visibility}
-                  onChange={(e) =>
-                    setVisibility(e.target.value as EventVisibility)
-                  }
-                  disabled={isCreatingParokiEvent}
-                  className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink disabled:opacity-60"
-                >
-                  <option value="public">Publik Paroki</option>
-                  <option value="private" disabled={isCreatingParokiEvent}>
-                    Internal Organisasi
-                  </option>
-                </select>
-              </label>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-sm font-medium text-ink">
-                Judul Kegiatan
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Contoh: Rapat Pleno DPP"
-                  className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
-                  required
-                />
-              </label>
-              <label className="block text-sm font-medium text-ink">
-                Jenis Kegiatan
-                <select
-                  value={jenis}
-                  onChange={(e) => setJenis(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
-                >
-                  <option value="">Tanpa Jenis / Umum</option>
-                  {eventTypeOptions.map((opt) => (
-                    <option key={opt.code} value={opt.code}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-sm font-medium text-ink">
-                Waktu Mulai
-                <input
-                  type="datetime-local"
-                  value={startAt}
-                  onChange={(e) => setStartAt(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
-                  required
-                />
-              </label>
-              <label className="block text-sm font-medium text-ink">
-                Waktu Selesai
-                <input
-                  type="datetime-local"
-                  value={endAt}
-                  onChange={(e) => setEndAt(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
-                  required
-                />
-              </label>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-sm font-medium text-ink">
-                Lokasi (opsional)
-                <input
-                  type="text"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="Aula Paroki / Gereja"
-                  className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
-                />
-              </label>
-              <label className="block text-sm font-medium text-ink">
-                Batas Waktu RSVP (opsional)
-                <input
-                  type="datetime-local"
-                  value={rsvpDeadline}
-                  onChange={(e) => setRsvpDeadline(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
-                />
-              </label>
-            </div>
-
-            <label className="block text-sm font-medium text-ink">
-              Deskripsi (opsional)
-              <textarea
-                rows={3}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
-              />
-            </label>
-
-            <label className="flex items-center gap-2 text-sm text-ink">
-              <input
-                type="checkbox"
-                checked={rsvpEnabled}
-                onChange={(e) => setRsvpEnabled(e.target.checked)}
-                className="h-4 w-4 rounded border-line"
-              />
-              Aktifkan konfirmasi kehadiran (RSVP) anggota organisasi
-            </label>
-
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowCreate(false)}
-              >
-                Batal
-              </Button>
-              <Button type="submit" disabled={createEvent.isPending}>
-                {createEvent.isPending ? "Menyimpan…" : "Simpan Kegiatan"}
-              </Button>
-            </div>
-          </form>
-        </Card>
-      )}
-
-      <Card>
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="inline-flex rounded-lg border border-line p-0.5">
-            <button
-              type="button"
-              onClick={() => setMyOrgsOnly(false)}
-              className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
-                !myOrgsOnly
-                  ? "bg-accent text-white"
-                  : "text-ink-muted hover:text-ink"
-              }`}
-            >
-              {t("event.allEvents")}
-            </button>
-            <button
-              type="button"
-              onClick={() => setMyOrgsOnly(true)}
-              className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
-                myOrgsOnly
-                  ? "bg-accent text-white"
-                  : "text-ink-muted hover:text-ink"
-              }`}
-            >
-              {t("event.myOrgsOnly")}
-            </button>
-          </div>
-
+        <div className="flex flex-1 flex-wrap items-center gap-2 sm:justify-end">
           <select
+            aria-label={t("event.allOrgs")}
             value={orgFilter}
             onChange={(e) => setOrgFilter(e.target.value)}
-            className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
+            className="h-11 w-full rounded-lg border border-line bg-canvas px-3 text-sm text-fg sm:w-auto"
           >
             <option value="">{t("event.allOrgs")}</option>
             <option value={PAROKI_OPTION}>Paroki (Tingkat Paroki)</option>
@@ -394,9 +166,10 @@ export default function EventsPage() {
           </select>
 
           <select
+            aria-label="Semua Jenis"
             value={jenisFilter}
             onChange={(e) => setJenisFilter(e.target.value)}
-            className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
+            className="h-11 w-full rounded-lg border border-line bg-canvas px-3 text-sm text-fg sm:w-auto"
           >
             <option value="">Semua Jenis</option>
             {eventTypeOptions.map((opt) => (
@@ -407,9 +180,10 @@ export default function EventsPage() {
           </select>
 
           <select
+            aria-label={t("event.allVisibility")}
             value={visibilityFilter}
             onChange={(e) => setVisibilityFilter(e.target.value)}
-            className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
+            className="h-11 w-full rounded-lg border border-line bg-canvas px-3 text-sm text-fg sm:w-auto"
           >
             <option value="">{t("event.allVisibility")}</option>
             <option value="public">Publik Paroki</option>
@@ -417,44 +191,62 @@ export default function EventsPage() {
           </select>
 
           <select
+            aria-label={t("event.allStatus")}
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
+            className="h-11 w-full rounded-lg border border-line bg-canvas px-3 text-sm text-fg sm:w-auto"
           >
             <option value="">{t("event.allStatus")}</option>
             <option value="scheduled">Terjadwal</option>
             <option value="cancelled">Dibatalkan</option>
           </select>
 
-          <div className="relative min-w-[200px] flex-1">
-            <Search className="pointer-events-none absolute top-2.5 left-3 h-4 w-4 text-ink-muted" />
+          <div className="relative w-full sm:w-auto sm:min-w-[220px] sm:flex-1">
+            <Search
+              aria-hidden
+              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted"
+            />
             <input
               type="search"
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder={t("event.searchPlaceholder")}
-              className="w-full rounded-lg border border-line bg-surface py-2 pr-3 pl-9 text-sm text-ink"
+              className="h-11 w-full rounded-lg border border-line bg-canvas pr-3 pl-9 text-sm text-fg placeholder:text-muted"
             />
           </div>
         </div>
-      </Card>
+      </InductiveFilterBar>
 
       {(eventsQuery.isError || actionError) && (
-        <div className="rounded-lg border border-danger-fg/30 bg-danger-bg px-4 py-3 text-sm text-danger-fg">
+        <div
+          role="alert"
+          className="rounded-lg border border-danger-fg/30 bg-danger-bg px-4 py-3 text-sm text-danger-fg"
+        >
           {actionError ?? resolveEventError(eventsQuery.error)}
         </div>
       )}
 
       {eventsQuery.isLoading ? (
-        <Card>
-          <p className="text-sm text-ink-muted">Memuat jadwal kegiatan…</p>
+        <Card className="p-4 sm:p-6">
+          <p className="text-sm text-muted">Memuat jadwal kegiatan…</p>
         </Card>
       ) : items.length === 0 ? (
-        <Card>
-          <p className="text-sm text-ink-muted">
-            Belum ada kegiatan yang sesuai dengan filter.
-          </p>
-        </Card>
+        <InductiveEmptyState
+          icon={CalendarDays}
+          title="Kegiatan tidak ditemukan"
+          description="Belum ada kegiatan yang sesuai dengan filter."
+          action={
+            canCreateEvent ? (
+              <Link
+                to="/event/new"
+                className={`${buttonClass("primary")} w-full sm:w-auto`}
+              >
+                <Plus aria-hidden className="size-4" />
+                {t("event.createEvent")}
+              </Link>
+            ) : undefined
+          }
+        />
       ) : (
         <div className="space-y-4">
           {items.map((ev) => {
@@ -466,9 +258,9 @@ export default function EventsPage() {
               : null;
 
             return (
-              <Card key={ev.id} className="space-y-3">
+              <Card key={ev.id} className="space-y-3 p-4 sm:p-6">
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="space-y-1">
+                  <div className="min-w-0 flex-1 space-y-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge tone="neutral">
                         {ev.orgId
@@ -488,7 +280,7 @@ export default function EventsPage() {
                         </Badge>
                       )}
                     </div>
-                    <h2 className="text-lg font-semibold text-ink">
+                    <h2 className="text-lg font-semibold text-fg">
                       <Link
                         to={`/event/${ev.id}`}
                         className="hover:text-accent hover:underline"
@@ -496,26 +288,26 @@ export default function EventsPage() {
                         {ev.title}
                       </Link>
                     </h2>
-                    <p className="text-sm text-ink-muted">
+                    <p className="text-sm text-muted">
                       {formatEventRange(ev.startAt, ev.endAt, parokiTimezone)}
                     </p>
                     {ev.location && (
-                      <p className="flex items-center gap-1.5 text-sm text-ink-muted">
-                        <MapPin className="h-3.5 w-3.5" />
-                        {ev.location}
+                      <p className="flex items-center gap-1.5 text-sm text-muted">
+                        <MapPin aria-hidden className="size-3.5 shrink-0" />
+                        <span className="truncate">{ev.location}</span>
                       </p>
                     )}
                   </div>
                 </div>
 
                 {ev.description && (
-                  <p className="line-clamp-2 text-sm text-ink-muted">
+                  <p className="line-clamp-2 text-sm text-muted">
                     {ev.description}
                   </p>
                 )}
 
                 {ev.rsvpSummary && (
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-ink-muted">
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-muted">
                     <span>Hadir: {ev.rsvpSummary.going}</span>
                     <span>·</span>
                     <span>Mungkin: {ev.rsvpSummary.maybe}</span>
@@ -525,31 +317,36 @@ export default function EventsPage() {
                 )}
 
                 {Boolean(ev.canRsvp) && ev.rsvpOpen && (
-                  <div className="flex flex-wrap items-center gap-2 border-t border-line pt-3">
-                    <span className="text-xs font-medium text-ink-muted">
+                  <div className="flex flex-col gap-2 border-t border-line pt-3 sm:flex-row sm:items-center">
+                    <span className="text-xs font-medium text-muted">
                       Konfirmasi Cepat:
                     </span>
-                    {(
-                      [
-                        { status: "going", label: "Hadir" },
-                        { status: "maybe", label: "Mungkin" },
-                        { status: "not_going", label: "Tidak Hadir" },
-                      ] as const
-                    ).map((opt) => (
-                      <Button
-                        key={opt.status}
-                        type="button"
-                        variant={
-                          ev.myRsvp?.status === opt.status
-                            ? "primary"
-                            : "outline"
-                        }
-                        disabled={upsertRSVP.isPending}
-                        onClick={() => handleQuickRSVP(ev.id ?? "", opt.status)}
-                      >
-                        {opt.label}
-                      </Button>
-                    ))}
+                    <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center">
+                      {(
+                        [
+                          { status: "going", label: "Hadir" },
+                          { status: "maybe", label: "Mungkin" },
+                          { status: "not_going", label: "Tidak Hadir" },
+                        ] as const
+                      ).map((opt) => (
+                        <Button
+                          key={opt.status}
+                          type="button"
+                          variant={
+                            ev.myRsvp?.status === opt.status
+                              ? "primary"
+                              : "outline"
+                          }
+                          disabled={upsertRSVP.isPending}
+                          onClick={() =>
+                            handleQuickRSVP(ev.id ?? "", opt.status)
+                          }
+                          className="w-full sm:w-auto"
+                        >
+                          {opt.label}
+                        </Button>
+                      ))}
+                    </div>
                   </div>
                 )}
               </Card>
@@ -563,6 +360,7 @@ export default function EventsPage() {
                 variant="outline"
                 disabled={eventsQuery.isFetchingNextPage}
                 onClick={() => eventsQuery.fetchNextPage()}
+                className="w-full sm:w-auto"
               >
                 {eventsQuery.isFetchingNextPage
                   ? "Memuat…"
