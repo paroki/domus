@@ -31,6 +31,7 @@ func (User) Fields() []ent.Field {
 		field.Enum("gender").Values("pria", "wanita").Optional().Nillable(),
 		field.String("birth_date").Optional().Nillable(),
 		field.String("avatar_url").Optional().Nillable(),
+		field.String("timezone").NotEmpty().Default("Asia/Makassar"),
 		field.Enum("status").Values("active", "disabled").Default("active"),
 		field.Bool("onboarded").Default(false),
 		field.UUID("default_paroki_id", uuid.UUID{}).Optional().Nillable(),

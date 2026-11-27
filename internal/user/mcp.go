@@ -26,6 +26,7 @@ type MCPUserMe struct {
 	Phone          *string  `json:"phone,omitempty"`
 	Gender         *string  `json:"gender,omitempty"`
 	BirthDate      *string  `json:"birthDate,omitempty"`
+	Timezone       string   `json:"timezone"`
 	ActiveParokiID *string  `json:"activeParokiId,omitempty"`
 	Roles          []string `json:"roles,omitempty"`
 }
@@ -76,6 +77,7 @@ func (f *Feature) mcpUserGetMe(ctx context.Context, _ *mcp.CallToolRequest, _ Us
 		Phone:          res.Phone,
 		Gender:         res.Gender,
 		BirthDate:      res.BirthDate,
+		Timezone:       res.Timezone,
 		ActiveParokiID: activeParokiID,
 		Roles:          res.Roles,
 	}, nil

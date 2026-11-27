@@ -30713,6 +30713,7 @@ type UserMutation struct {
 	gender            *user.Gender
 	birth_date        *string
 	avatar_url        *string
+	timezone          *string
 	status            *user.Status
 	onboarded         *bool
 	default_paroki_id *uuid.UUID
@@ -31225,6 +31226,42 @@ func (m *UserMutation) ResetAvatarURL() {
 	delete(m.clearedFields, user.FieldAvatarURL)
 }
 
+// SetTimezone sets the "timezone" field.
+func (m *UserMutation) SetTimezone(s string) {
+	m.timezone = &s
+}
+
+// Timezone returns the value of the "timezone" field in the mutation.
+func (m *UserMutation) Timezone() (r string, exists bool) {
+	v := m.timezone
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTimezone returns the old "timezone" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldTimezone(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTimezone is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTimezone requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTimezone: %w", err)
+	}
+	return oldValue.Timezone, nil
+}
+
+// ResetTimezone resets all changes to the "timezone" field.
+func (m *UserMutation) ResetTimezone() {
+	m.timezone = nil
+}
+
 // SetStatus sets the "status" field.
 func (m *UserMutation) SetStatus(u user.Status) {
 	m.status = &u
@@ -31591,7 +31628,7 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 13)
+	fields := make([]string, 0, 14)
 	if m.created_at != nil {
 		fields = append(fields, user.FieldCreatedAt)
 	}
@@ -31618,6 +31655,9 @@ func (m *UserMutation) Fields() []string {
 	}
 	if m.avatar_url != nil {
 		fields = append(fields, user.FieldAvatarURL)
+	}
+	if m.timezone != nil {
+		fields = append(fields, user.FieldTimezone)
 	}
 	if m.status != nil {
 		fields = append(fields, user.FieldStatus)
@@ -31657,6 +31697,8 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.BirthDate()
 	case user.FieldAvatarURL:
 		return m.AvatarURL()
+	case user.FieldTimezone:
+		return m.Timezone()
 	case user.FieldStatus:
 		return m.Status()
 	case user.FieldOnboarded:
@@ -31692,6 +31734,8 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldBirthDate(ctx)
 	case user.FieldAvatarURL:
 		return m.OldAvatarURL(ctx)
+	case user.FieldTimezone:
+		return m.OldTimezone(ctx)
 	case user.FieldStatus:
 		return m.OldStatus(ctx)
 	case user.FieldOnboarded:
@@ -31771,6 +31815,13 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetAvatarURL(v)
+		return nil
+	case user.FieldTimezone:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTimezone(v)
 		return nil
 	case user.FieldStatus:
 		v, ok := value.(user.Status)
@@ -31920,6 +31971,9 @@ func (m *UserMutation) ResetField(name string) error {
 		return nil
 	case user.FieldAvatarURL:
 		m.ResetAvatarURL()
+		return nil
+	case user.FieldTimezone:
+		m.ResetTimezone()
 		return nil
 	case user.FieldStatus:
 		m.ResetStatus()

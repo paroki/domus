@@ -332,6 +332,10 @@ func toUserResponse(u *ent.User) domain.UserResponse {
 		g := string(*u.Gender)
 		gender = &g
 	}
+	tz := u.Timezone
+	if tz == "" {
+		tz = "Asia/Makassar"
+	}
 	return domain.UserResponse{
 		ID:              u.ID,
 		Email:           u.Email,
@@ -340,6 +344,7 @@ func toUserResponse(u *ent.User) domain.UserResponse {
 		Gender:          gender,
 		BirthDate:       u.BirthDate,
 		AvatarURL:       u.AvatarURL,
+		Timezone:        tz,
 		Status:          string(u.Status),
 		Onboarded:       u.Onboarded,
 		DefaultParokiID: u.DefaultParokiID,

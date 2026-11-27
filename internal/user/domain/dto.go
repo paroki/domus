@@ -47,6 +47,7 @@ type UserResponse struct {
 	Gender          *string                `json:"gender,omitempty"`
 	BirthDate       *string                `json:"birthDate,omitempty"`
 	AvatarURL       *string                `json:"avatarUrl,omitempty"`
+	Timezone        string                 `json:"timezone"`
 	Status          string                 `json:"status"`
 	Onboarded       bool                   `json:"onboarded"`
 	LinkedProviders []string               `json:"linkedProviders,omitempty"`
@@ -73,6 +74,7 @@ type UpdateMeRequest struct {
 	Gender          *string    `json:"gender,omitempty"`
 	BirthDate       *string    `json:"birthDate,omitempty"`
 	AvatarURL       *string    `json:"avatarUrl,omitempty" validate:"omitempty,url"`
+	Timezone        *string    `json:"timezone,omitempty"`
 	DefaultParokiID *uuid.UUID `json:"defaultParokiId,omitempty"`
 	Onboarded       *bool      `json:"onboarded,omitempty"`
 }

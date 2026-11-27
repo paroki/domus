@@ -166,6 +166,20 @@ func (_u *UserUpdate) ClearAvatarURL() *UserUpdate {
 	return _u
 }
 
+// SetTimezone sets the "timezone" field.
+func (_u *UserUpdate) SetTimezone(v string) *UserUpdate {
+	_u.mutation.SetTimezone(v)
+	return _u
+}
+
+// SetNillableTimezone sets the "timezone" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableTimezone(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetTimezone(*v)
+	}
+	return _u
+}
+
 // SetStatus sets the "status" field.
 func (_u *UserUpdate) SetStatus(v user.Status) *UserUpdate {
 	_u.mutation.SetStatus(v)
@@ -400,6 +414,11 @@ func (_u *UserUpdate) check() error {
 			return &ValidationError{Name: "gender", err: fmt.Errorf(`ent: validator failed for field "User.gender": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Timezone(); ok {
+		if err := user.TimezoneValidator(v); err != nil {
+			return &ValidationError{Name: "timezone", err: fmt.Errorf(`ent: validator failed for field "User.timezone": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.Status(); ok {
 		if err := user.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "User.status": %w`, err)}
@@ -458,6 +477,9 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.AvatarURLCleared() {
 		_spec.ClearField(user.FieldAvatarURL, field.TypeString)
+	}
+	if value, ok := _u.mutation.Timezone(); ok {
+		_spec.SetField(user.FieldTimezone, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(user.FieldStatus, field.TypeEnum, value)
@@ -766,6 +788,20 @@ func (_u *UserUpdateOne) ClearAvatarURL() *UserUpdateOne {
 	return _u
 }
 
+// SetTimezone sets the "timezone" field.
+func (_u *UserUpdateOne) SetTimezone(v string) *UserUpdateOne {
+	_u.mutation.SetTimezone(v)
+	return _u
+}
+
+// SetNillableTimezone sets the "timezone" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableTimezone(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetTimezone(*v)
+	}
+	return _u
+}
+
 // SetStatus sets the "status" field.
 func (_u *UserUpdateOne) SetStatus(v user.Status) *UserUpdateOne {
 	_u.mutation.SetStatus(v)
@@ -1013,6 +1049,11 @@ func (_u *UserUpdateOne) check() error {
 			return &ValidationError{Name: "gender", err: fmt.Errorf(`ent: validator failed for field "User.gender": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Timezone(); ok {
+		if err := user.TimezoneValidator(v); err != nil {
+			return &ValidationError{Name: "timezone", err: fmt.Errorf(`ent: validator failed for field "User.timezone": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.Status(); ok {
 		if err := user.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "User.status": %w`, err)}
@@ -1088,6 +1129,9 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	}
 	if _u.mutation.AvatarURLCleared() {
 		_spec.ClearField(user.FieldAvatarURL, field.TypeString)
+	}
+	if value, ok := _u.mutation.Timezone(); ok {
+		_spec.SetField(user.FieldTimezone, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(user.FieldStatus, field.TypeEnum, value)

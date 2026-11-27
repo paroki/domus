@@ -134,6 +134,20 @@ func (_c *UserCreate) SetNillableAvatarURL(v *string) *UserCreate {
 	return _c
 }
 
+// SetTimezone sets the "timezone" field.
+func (_c *UserCreate) SetTimezone(v string) *UserCreate {
+	_c.mutation.SetTimezone(v)
+	return _c
+}
+
+// SetNillableTimezone sets the "timezone" field if the given value is not nil.
+func (_c *UserCreate) SetNillableTimezone(v *string) *UserCreate {
+	if v != nil {
+		_c.SetTimezone(*v)
+	}
+	return _c
+}
+
 // SetStatus sets the "status" field.
 func (_c *UserCreate) SetStatus(v user.Status) *UserCreate {
 	_c.mutation.SetStatus(v)
@@ -292,6 +306,10 @@ func (_c *UserCreate) defaults() {
 		v := user.DefaultUpdatedAt()
 		_c.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := _c.mutation.Timezone(); !ok {
+		v := user.DefaultTimezone
+		_c.mutation.SetTimezone(v)
+	}
 	if _, ok := _c.mutation.Status(); !ok {
 		v := user.DefaultStatus
 		_c.mutation.SetStatus(v)
@@ -333,6 +351,14 @@ func (_c *UserCreate) check() error {
 	if v, ok := _c.mutation.Gender(); ok {
 		if err := user.GenderValidator(v); err != nil {
 			return &ValidationError{Name: "gender", err: fmt.Errorf(`ent: validator failed for field "User.gender": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.Timezone(); !ok {
+		return &ValidationError{Name: "timezone", err: errors.New(`ent: missing required field "User.timezone"`)}
+	}
+	if v, ok := _c.mutation.Timezone(); ok {
+		if err := user.TimezoneValidator(v); err != nil {
+			return &ValidationError{Name: "timezone", err: fmt.Errorf(`ent: validator failed for field "User.timezone": %w`, err)}
 		}
 	}
 	if _, ok := _c.mutation.Status(); !ok {
@@ -416,6 +442,10 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.AvatarURL(); ok {
 		_spec.SetField(user.FieldAvatarURL, field.TypeString, value)
 		_node.AvatarURL = &value
+	}
+	if value, ok := _c.mutation.Timezone(); ok {
+		_spec.SetField(user.FieldTimezone, field.TypeString, value)
+		_node.Timezone = value
 	}
 	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(user.FieldStatus, field.TypeEnum, value)

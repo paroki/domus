@@ -581,3 +581,42 @@ func (s *UserFeatureSuite) TestGetUser_ReturnsActiveUserBiodata() {
 	_, err = s.feature.GetUser(ctx, uuid.New())
 	s.Require().Error(err)
 }
+
+func (s *UserFeatureSuite) TestUserTimezone_DefaultUpdateValidationAndReactivate() {
+	ctx := context.Background()
+	u, err := s.feature.EnsureUser(ctx, "tzuser@paroki.org", "TZ User", "", "email", "tzuser@paroki.org")
+	s.Require().NoError(err)
+	s.Equal("Asia/Makassar", u.Timezone)
+
+	cookie := s.issueSessionFor("tzuser@paroki.org")
+	s.SetCookie(cookie)
+
+	// Default timezone on GET /api/me
+	s.Request("/api/me", http.MethodGet, nil)
+	s.OK()
+	me := testutil.DecodeAs[domain.UserResponse](&s.ApiTestSuite).Data
+	s.Equal("Asia/Makassar", me.Timezone)
+
+	// Valid updates via PATCH /api/me
+	for _, tz := range []string{"Asia/Jakarta", "Asia/Jayapura"} {
+		s.Request("/api/me", http.MethodPatch, domain.UpdateMeRequest{Timezone: &tz})
+		s.OK()
+		updated := testutil.DecodeAs[domain.UserResponse](&s.ApiTestSuite).Data
+		s.Equal(tz, updated.Timezone)
+	}
+
+	// Invalid timezones rejected with 422 VALIDATION_ERROR
+	for _, invalidTZ := range []string{"Local", "localtime", "", "   ", "Invalid/Zone"} {
+		s.Request("/api/me", http.MethodPatch, domain.UpdateMeRequest{Timezone: &invalidTZ})
+		s.UnprocessableEntity()
+		errResp := s.GetErrorResponse()
+		s.Require().NotNil(errResp.Error)
+		s.Equal("VALIDATION_ERROR", errResp.Error.Code)
+	}
+
+	// Soft-delete and reactivate resets timezone to Asia/Makassar
+	s.Require().NoError(s.client.User.UpdateOneID(u.ID).SetDeletedAt(time.Now().UTC()).Exec(ctx))
+	reactivated, err := s.feature.EnsureUser(ctx, "tzuser@paroki.org", "TZ User Reactivated", "", "email", "tzuser@paroki.org")
+	s.Require().NoError(err)
+	s.Equal("Asia/Makassar", reactivated.Timezone)
+}

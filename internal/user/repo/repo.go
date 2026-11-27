@@ -69,6 +69,7 @@ func (r *Repository) ReactivateUser(ctx context.Context, id uuid.UUID, name stri
 		ClearGender().
 		ClearBirthDate().
 		ClearAvatarURL().
+		SetTimezone("Asia/Makassar").
 		ClearDefaultParokiID().
 		ClearLastLoginAt()
 	if phone != nil && *phone != "" {
@@ -389,6 +390,7 @@ func (r *Repository) UpdateUser(
 	gender *user.Gender,
 	birthDate *string,
 	avatarURL *string,
+	timezone *string,
 	defaultParokiID *uuid.UUID,
 	status *user.Status,
 	onboarded *bool,
@@ -424,6 +426,9 @@ func (r *Repository) UpdateUser(
 		} else {
 			upd.SetAvatarURL(*avatarURL)
 		}
+	}
+	if timezone != nil {
+		upd.SetTimezone(*timezone)
 	}
 	if defaultParokiID != nil {
 		if *defaultParokiID == uuid.Nil {

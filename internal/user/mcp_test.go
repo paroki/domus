@@ -71,8 +71,17 @@ func TestUserMCPTools(t *testing.T) {
 	require.NoError(t, json.Unmarshal([]byte(meRes.Content[0].(*mcp.TextContent).Text), &gotMe))
 	require.Equal(t, regularUser.ID.String(), gotMe.ID)
 	require.Equal(t, "umat@paroki.org", gotMe.Email)
+	require.Equal(t, "Asia/Makassar", gotMe.Timezone)
 	require.NotNil(t, gotMe.ActiveParokiID)
 	require.Equal(t, paroki.ID.String(), *gotMe.ActiveParokiID)
+
+	_, err = db.User.UpdateOneID(regularUser.ID).SetTimezone("Asia/Jakarta").Save(ctx)
+	require.NoError(t, err)
+	meRes, err = meSess.CallTool(meCtx, &mcp.CallToolParams{Name: "user_get_me"})
+	require.NoError(t, err)
+	require.False(t, meRes.IsError)
+	require.NoError(t, json.Unmarshal([]byte(meRes.Content[0].(*mcp.TextContent).Text), &gotMe))
+	require.Equal(t, "Asia/Jakarta", gotMe.Timezone)
 
 	// 2. user_list_paroki_members without ParokiID -> TENANT_REQUIRED
 	noTenantCtx := authx.WithPrincipal(ctx, authx.Principal{UserID: superUser.ID})

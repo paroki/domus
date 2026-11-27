@@ -916,8 +916,14 @@ func init() {
 	userDescName := userFields[1].Descriptor()
 	// user.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	user.NameValidator = userDescName.Validators[0].(func(string) error)
+	// userDescTimezone is the schema descriptor for timezone field.
+	userDescTimezone := userFields[6].Descriptor()
+	// user.DefaultTimezone holds the default value on creation for the timezone field.
+	user.DefaultTimezone = userDescTimezone.Default.(string)
+	// user.TimezoneValidator is a validator for the "timezone" field. It is called by the builders before save.
+	user.TimezoneValidator = userDescTimezone.Validators[0].(func(string) error)
 	// userDescOnboarded is the schema descriptor for onboarded field.
-	userDescOnboarded := userFields[7].Descriptor()
+	userDescOnboarded := userFields[8].Descriptor()
 	// user.DefaultOnboarded holds the default value on creation for the onboarded field.
 	user.DefaultOnboarded = userDescOnboarded.Default.(bool)
 	// userDescID is the schema descriptor for id field.

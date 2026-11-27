@@ -3783,6 +3783,9 @@
                     },
                     "phone": {
                         "type": "string"
+                    },
+                    "timezone": {
+                        "type": "string"
                     }
                 },
                 "type": "object"
@@ -4436,6 +4439,9 @@
                         "uniqueItems": false
                     },
                     "status": {
+                        "type": "string"
+                    },
+                    "timezone": {
                         "type": "string"
                     },
                     "updatedAt": {

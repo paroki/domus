@@ -34,6 +34,8 @@ const (
 	FieldBirthDate = "birth_date"
 	// FieldAvatarURL holds the string denoting the avatar_url field in the database.
 	FieldAvatarURL = "avatar_url"
+	// FieldTimezone holds the string denoting the timezone field in the database.
+	FieldTimezone = "timezone"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
 	// FieldOnboarded holds the string denoting the onboarded field in the database.
@@ -85,6 +87,7 @@ var Columns = []string{
 	FieldGender,
 	FieldBirthDate,
 	FieldAvatarURL,
+	FieldTimezone,
 	FieldStatus,
 	FieldOnboarded,
 	FieldDefaultParokiID,
@@ -112,6 +115,10 @@ var (
 	EmailValidator func(string) error
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
+	// DefaultTimezone holds the default value on creation for the "timezone" field.
+	DefaultTimezone string
+	// TimezoneValidator is a validator for the "timezone" field. It is called by the builders before save.
+	TimezoneValidator func(string) error
 	// DefaultOnboarded holds the default value on creation for the "onboarded" field.
 	DefaultOnboarded bool
 	// DefaultID holds the default value on creation for the "id" field.
@@ -218,6 +225,11 @@ func ByBirthDate(opts ...sql.OrderTermOption) OrderOption {
 // ByAvatarURL orders the results by the avatar_url field.
 func ByAvatarURL(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAvatarURL, opts...).ToFunc()
+}
+
+// ByTimezone orders the results by the timezone field.
+func ByTimezone(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTimezone, opts...).ToFunc()
 }
 
 // ByStatus orders the results by the status field.

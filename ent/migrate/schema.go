@@ -1184,6 +1184,7 @@ var (
 		{Name: "gender", Type: field.TypeEnum, Nullable: true, Enums: []string{"pria", "wanita"}},
 		{Name: "birth_date", Type: field.TypeString, Nullable: true},
 		{Name: "avatar_url", Type: field.TypeString, Nullable: true},
+		{Name: "timezone", Type: field.TypeString, Default: "Asia/Makassar"},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "disabled"}, Default: "active"},
 		{Name: "onboarded", Type: field.TypeBool, Default: false},
 		{Name: "default_paroki_id", Type: field.TypeUUID, Nullable: true},
@@ -1203,7 +1204,7 @@ var (
 			{
 				Name:    "user_status",
 				Unique:  false,
-				Columns: []*schema.Column{UsersColumns[10]},
+				Columns: []*schema.Column{UsersColumns[11]},
 			},
 		},
 	}

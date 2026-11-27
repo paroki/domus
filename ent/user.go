@@ -36,6 +36,8 @@ type User struct {
 	BirthDate *string `json:"birth_date,omitempty"`
 	// AvatarURL holds the value of the "avatar_url" field.
 	AvatarURL *string `json:"avatar_url,omitempty"`
+	// Timezone holds the value of the "timezone" field.
+	Timezone string `json:"timezone,omitempty"`
 	// Status holds the value of the "status" field.
 	Status user.Status `json:"status,omitempty"`
 	// Onboarded holds the value of the "onboarded" field.
@@ -99,7 +101,7 @@ func (*User) scanValues(columns []string) ([]any, error) {
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case user.FieldOnboarded:
 			values[i] = new(sql.NullBool)
-		case user.FieldEmail, user.FieldName, user.FieldPhone, user.FieldGender, user.FieldBirthDate, user.FieldAvatarURL, user.FieldStatus:
+		case user.FieldEmail, user.FieldName, user.FieldPhone, user.FieldGender, user.FieldBirthDate, user.FieldAvatarURL, user.FieldTimezone, user.FieldStatus:
 			values[i] = new(sql.NullString)
 		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldDeletedAt, user.FieldLastLoginAt:
 			values[i] = new(sql.NullTime)
@@ -184,6 +186,12 @@ func (_m *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.AvatarURL = new(string)
 				*_m.AvatarURL = value.String
+			}
+		case user.FieldTimezone:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field timezone", values[i])
+			} else if value.Valid {
+				_m.Timezone = value.String
 			}
 		case user.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -298,6 +306,9 @@ func (_m *User) String() string {
 		builder.WriteString("avatar_url=")
 		builder.WriteString(*v)
 	}
+	builder.WriteString(", ")
+	builder.WriteString("timezone=")
+	builder.WriteString(_m.Timezone)
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Status))

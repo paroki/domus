@@ -88,6 +88,15 @@ func (s *Service) UpdateMe(ctx context.Context, p authx.Principal, req domain.Up
 		birthDatePtr = &trimmed
 	}
 
+	var timezonePtr *string
+	if req.Timezone != nil {
+		tz, tzErr := validateUserTimezone(*req.Timezone)
+		if tzErr != nil {
+			return domain.UserResponse{}, tzErr
+		}
+		timezonePtr = &tz
+	}
+
 	if req.Onboarded != nil && *req.Onboarded {
 		effectiveGender := current.Gender
 		if genderPtr != nil {
@@ -103,6 +112,13 @@ func (s *Service) UpdateMe(ctx context.Context, p authx.Principal, req domain.Up
 		if effectiveBirthDate == nil || *effectiveBirthDate == "" {
 			return domain.UserResponse{}, domain.ValidationError("birthDate", "REQUIRED", "Birth date is required to complete onboarding.")
 		}
+		effectiveTimezone := current.Timezone
+		if timezonePtr != nil {
+			effectiveTimezone = *timezonePtr
+		}
+		if _, tzErr := validateUserTimezone(effectiveTimezone); tzErr != nil {
+			return domain.UserResponse{}, tzErr
+		}
 	}
 
 	var avatarPtr *string
@@ -111,7 +127,7 @@ func (s *Service) UpdateMe(ctx context.Context, p authx.Principal, req domain.Up
 		avatarPtr = &trimmed
 	}
 
-	u, err := s.repo.UpdateUser(ctx, p.UserID, namePtr, phonePtr, genderPtr, birthDatePtr, avatarPtr, req.DefaultParokiID, nil, req.Onboarded)
+	u, err := s.repo.UpdateUser(ctx, p.UserID, namePtr, phonePtr, genderPtr, birthDatePtr, avatarPtr, timezonePtr, req.DefaultParokiID, nil, req.Onboarded)
 	if ent.IsNotFound(err) {
 		return domain.UserResponse{}, domain.ErrUserNotFound
 	}
@@ -343,4 +359,16 @@ func (s *Service) UnlinkMyAccount(ctx context.Context, p authx.Principal, accoun
 		_, err = txRepo.DeleteUserAccountByID(ctx, accountID, p.UserID)
 		return err
 	})
+}
+
+func validateUserTimezone(raw string) (string, error) {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" || strings.EqualFold(trimmed, "Local") || strings.EqualFold(trimmed, "localtime") {
+		return "", domain.ValidationError("timezone", "INVALID_TIMEZONE", "Timezone must be a valid IANA timezone.")
+	}
+	loc, err := time.LoadLocation(trimmed)
+	if err != nil {
+		return "", domain.ValidationError("timezone", "INVALID_TIMEZONE", "Timezone must be a valid IANA timezone.")
+	}
+	return loc.String(), nil
 }
