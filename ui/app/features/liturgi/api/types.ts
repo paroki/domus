@@ -41,3 +41,6 @@ export type Paroki = Schemas["domain.ParokiResponse"];
 export type ParokiMember = Schemas["domain.ParokiMemberResponse"];
 export type Organization = Schemas["domain.OrganizationResponse"];
 export type Lookup = Schemas["domain.LookupResponse"];
+
+export type CantusItem = Schemas["domain.CantusResponse"];
+export type SearchCantusRequest = Schemas["domain.SearchCantusRequest"];

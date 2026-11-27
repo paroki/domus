@@ -253,3 +253,123 @@ export function formatLiturgiRange(
   }
   return `${dateFmt.format(start)}, ${timeFmt.format(start)} – ${dateFmt.format(end)}, ${timeFmt.format(end)} ${tzShort}`;
 }
+
+export function scheduleStatusMeta(status?: string): {
+  label: string;
+  tone: BadgeTone;
+} {
+  if (status === "cancelled") {
+    return { label: "Dibatalkan", tone: "danger" };
+  }
+  return { label: "Terjadwal", tone: "success" };
+}
+
+export function formatRespondedAt(
+  respondedAt?: string,
+  timeZone = DEFAULT_PAROKI_TIMEZONE,
+): string {
+  if (!respondedAt) return "";
+  const d = new Date(respondedAt);
+  if (Number.isNaN(d.getTime())) return "";
+  const tzShort = formatParokiTimezoneShort(timeZone);
+  const fmt = new Intl.DateTimeFormat("id-ID", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone,
+  });
+  return `${fmt.format(d)} ${tzShort}`;
+}
+
+export function hasSubstituteProposal(petugas?: {
+  status?: string;
+  substituteName?: string;
+  substituteUserId?: string;
+  substituteOrgId?: string;
+}): boolean {
+  if (petugas?.status !== "declined") return false;
+  return Boolean(
+    petugas.substituteName?.trim() ||
+      petugas.substituteUserId ||
+      petugas.substituteOrgId,
+  );
+}
+
+export function formatSubstituteLabel(petugas?: {
+  status?: string;
+  substituteName?: string;
+  substituteUserId?: string;
+  substituteOrgId?: string;
+}): string | null {
+  if (!hasSubstituteProposal(petugas)) return null;
+  const name = petugas?.substituteName?.trim();
+  if (name) return `Usulan Pengganti: ${name}`;
+  if (petugas?.substituteOrgId)
+    return "Usulan Pengganti: Organisasi / Kelompok";
+  return "Usulan Pengganti: Anggota Terdaftar";
+}
+
+function toSongPartCode(label: string): string {
+  return label.trim().toLowerCase().replace(/\s+/g, "-");
+}
+
+export function resolveSongPartOptions(
+  lookups?: Array<{ code?: string; label?: string; active?: boolean }>,
+): Array<{ value: string; label: string }> {
+  const active = (lookups ?? []).filter(
+    (item) => item.active !== false && item.code && item.label,
+  );
+  if (active.length > 0) {
+    return active.map((item) => ({
+      value: item.code as string,
+      label: item.label as string,
+    }));
+  }
+  return DEFAULT_LITURGI_SONG_PARTS.map((label) => ({
+    value: toSongPartCode(label),
+    label,
+  }));
+}
+
+export function songPartLabel(
+  bagian?: string,
+  lookups?: Array<{ code?: string; label?: string; active?: boolean }>,
+): string {
+  if (!bagian) return "";
+  const options = resolveSongPartOptions(lookups);
+  const found = options.find(
+    (opt) =>
+      opt.value.toLowerCase() === bagian.toLowerCase() ||
+      opt.label.toLowerCase() === bagian.toLowerCase(),
+  );
+  return found?.label ?? bagian;
+}
+
+export interface LaguFormValues {
+  cantusId: string;
+  sumber: string;
+  nomor: string;
+  judul: string;
+  nadaDasar: string;
+}
+
+export function mergeCantusIntoLaguForm<T extends LaguFormValues>(
+  prev: T,
+  cantus: {
+    id?: string;
+    sumber?: string;
+    nomor?: string;
+    judul?: string;
+    nadaDasar?: string;
+  },
+): T {
+  return {
+    ...prev,
+    cantusId: cantus.id ?? "",
+    sumber: cantus.sumber ?? prev.sumber,
+    nomor: cantus.nomor ?? prev.nomor,
+    judul: cantus.judul ?? prev.judul,
+    nadaDasar: cantus.nadaDasar ?? "",
+  };
+}

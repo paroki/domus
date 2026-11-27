@@ -11,4 +11,5 @@ export const liturgiKeys = {
   parokiMembers: (parokiId: string, q = "") =>
     ["liturgi", "parokiMembers", parokiId, q] as const,
   songPartLookups: () => ["liturgi", "lookups", "liturgi_song_part"] as const,
+  cantusSearch: (q = "") => ["liturgi", "cantusSearch", q] as const,
 };

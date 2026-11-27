@@ -123,3 +123,21 @@ export function useLiturgiSongPartLookups(enabled = true) {
       ),
   });
 }
+
+export function useLiturgiCantusSearch(q = "", enabled = true) {
+  const trimmed = q.trim();
+  return useQuery({
+    queryKey: liturgiKeys.cantusSearch(trimmed),
+    enabled,
+    queryFn: () =>
+      unwrap(
+        api.POST("/cantus/search", {
+          body: {
+            q: trimmed || undefined,
+            filter: { active: true },
+            limit: 20,
+          },
+        }),
+      ),
+  });
+}

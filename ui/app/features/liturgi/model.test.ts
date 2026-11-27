@@ -5,15 +5,22 @@ import {
   DEFAULT_LITURGI_SONG_PARTS,
   formatLiturgiRange,
   formatParokiTimezoneShort,
+  formatRespondedAt,
+  formatSubstituteLabel,
   fromLocalDatetimeInputValue,
   getLiturgiMinistryMeta,
   groupPetugasByRole,
+  hasSubstituteProposal,
   isUserAssignedToSchedule,
   LITURGI_MINISTRIES,
   LITURGI_ROLE_SLUGS,
+  mergeCantusIntoLaguForm,
   petugasStatusMeta,
   ROLE_LITURGI_ADMIN,
   ROLE_PAROKI_ADMIN,
+  resolveSongPartOptions,
+  scheduleStatusMeta,
+  songPartLabel,
   toLocalDatetimeInputValue,
 } from "./model";
 
@@ -91,4 +98,77 @@ test("paroki timezone conversions and range formatting work for WITA", () => {
     "Asia/Makassar",
   );
   assert.ok(formatted.includes("WITA"));
+});
+
+test("scheduleStatusMeta and formatRespondedAt format status and timestamps", () => {
+  assert.deepEqual(scheduleStatusMeta("scheduled"), {
+    label: "Terjadwal",
+    tone: "success",
+  });
+  assert.deepEqual(scheduleStatusMeta("cancelled"), {
+    label: "Dibatalkan",
+    tone: "danger",
+  });
+  const ts = formatRespondedAt("2026-12-24T11:00:00.000Z", "Asia/Makassar");
+  assert.ok(ts.includes("WITA"));
+  assert.equal(formatRespondedAt(""), "");
+});
+
+test("substitute helpers detect and format declined substitute proposals", () => {
+  assert.equal(
+    hasSubstituteProposal({ status: "confirmed", substituteName: "Budi" }),
+    false,
+  );
+  assert.equal(
+    hasSubstituteProposal({ status: "declined", substituteName: "Budi" }),
+    true,
+  );
+  assert.equal(
+    formatSubstituteLabel({ status: "declined", substituteName: "Sari" }),
+    "Usulan Pengganti: Sari",
+  );
+  assert.equal(
+    formatSubstituteLabel({ status: "declined", substituteOrgId: "org-1" }),
+    "Usulan Pengganti: Organisasi / Kelompok",
+  );
+  assert.equal(formatSubstituteLabel({ status: "declined" }), null);
+});
+
+test("song part helpers resolve lookups/defaults and merge Cantus catalog auto-fill", () => {
+  const defaults = resolveSongPartOptions();
+  assert.equal(defaults.length, 11);
+  assert.deepEqual(defaults[0], { value: "pembuka", label: "Pembuka" });
+  assert.deepEqual(defaults[7], { value: "agnus-dei", label: "Agnus Dei" });
+
+  assert.equal(songPartLabel("agnus-dei"), "Agnus Dei");
+  assert.equal(
+    songPartLabel("pembuka", [
+      { code: "pembuka", label: "Lagu Pembukaan", active: true },
+    ]),
+    "Lagu Pembukaan",
+  );
+
+  const merged = mergeCantusIntoLaguForm(
+    {
+      cantusId: "",
+      sumber: "",
+      nomor: "",
+      judul: "",
+      nadaDasar: "",
+      note: "Pakai bait 1-3",
+    },
+    {
+      id: "cantus-1",
+      sumber: "PS",
+      nomor: "PS-320",
+      judul: "Tuhan Kasihanilah Kami",
+      nadaDasar: "D",
+    },
+  );
+  assert.equal(merged.cantusId, "cantus-1");
+  assert.equal(merged.sumber, "PS");
+  assert.equal(merged.nomor, "PS-320");
+  assert.equal(merged.judul, "Tuhan Kasihanilah Kami");
+  assert.equal(merged.nadaDasar, "D");
+  assert.equal(merged.note, "Pakai bait 1-3");
 });
