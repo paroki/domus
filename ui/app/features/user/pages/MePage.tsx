@@ -6,6 +6,7 @@ import { ApiError } from "~/shared/api/client";
 import i18n from "~/shared/i18n";
 import { Button } from "~/shared/ui/Button";
 import { Card } from "~/shared/ui/Card";
+import { DEFAULT_TIMEZONE, getTimezoneOptions } from "~/shared/util/timezone";
 import { useLogout, useUpdateMe } from "../api/actions";
 import { useMe } from "../api/queries";
 import { AccountList } from "../components/AccountList";
@@ -29,6 +30,7 @@ export default function MePage() {
   const [phone, setPhone] = useState("");
   const [gender, setGender] = useState("");
   const [birthDate, setBirthDate] = useState("");
+  const [timezone, setTimezone] = useState(DEFAULT_TIMEZONE);
   const [saved, setSaved] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -38,10 +40,12 @@ export default function MePage() {
       setPhone(me.phone ?? "");
       setGender(me.gender ?? "");
       setBirthDate(me.birthDate ?? "");
+      setTimezone(me.timezone || DEFAULT_TIMEZONE);
     }
   }, [me]);
 
   const birthDateBounds = getBirthDateBounds();
+  const timezoneOptions = getTimezoneOptions(timezone);
 
   async function handleSave(e: FormEvent) {
     e.preventDefault();
@@ -53,6 +57,7 @@ export default function MePage() {
         phone: phone.trim(),
         gender,
         birthDate,
+        timezone,
       });
       setSaved(true);
     } catch (err) {
@@ -165,6 +170,21 @@ export default function MePage() {
               onChange={(e) => setBirthDate(e.target.value)}
               className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
             />
+          </label>
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
+            {t("me.timezoneLabel")}
+            <select
+              required
+              value={timezone}
+              onChange={(e) => setTimezone(e.target.value)}
+              className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
+            >
+              {timezoneOptions.map((tz) => (
+                <option key={tz.value} value={tz.value}>
+                  {tz.label}
+                </option>
+              ))}
+            </select>
           </label>
           <div>
             <Button type="submit" disabled={updateMe.isPending}>

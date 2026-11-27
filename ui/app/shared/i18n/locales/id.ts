@@ -99,6 +99,7 @@ const id = {
     genderPria: "Pria",
     genderWanita: "Wanita",
     birthDateLabel: "Tanggal lahir",
+    timezoneLabel: "Zona waktu",
     saveProfile: "Simpan Profil",
     savingProfile: "Menyimpan…",
     profileSaved: "Profil berhasil diperbarui.",
@@ -183,6 +184,7 @@ const id = {
     genderPria: "Pria",
     genderWanita: "Wanita",
     birthDateLabel: "Tanggal lahir",
+    timezoneLabel: "Zona waktu",
     whatsappTitle: "Hubungkan WhatsApp",
     whatsappDescription:
       "Tautkan nomor WhatsApp Anda agar dapat masuk menggunakan kode OTP WhatsApp.",

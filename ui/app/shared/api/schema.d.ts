@@ -3430,6 +3430,7 @@ export interface components {
       name?: string;
       onboarded?: boolean;
       phone?: string;
+      timezone?: string;
     };
     "domain.UpdateMemoryRequest": {
       /** @enum {string} */
@@ -3657,6 +3658,7 @@ export interface components {
       roleDetails?: components["schemas"]["authz.RoleDescriptor"][];
       roles?: string[];
       status?: string;
+      timezone?: string;
       updatedAt?: string;
     };
     "domain.UserSearchFilter": {

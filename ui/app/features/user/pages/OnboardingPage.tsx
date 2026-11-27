@@ -13,6 +13,11 @@ import i18n from "~/shared/i18n";
 import { Badge } from "~/shared/ui/Badge";
 import { Button } from "~/shared/ui/Button";
 import { Card } from "~/shared/ui/Card";
+import {
+  DEFAULT_TIMEZONE,
+  detectBrowserTimezone,
+  getTimezoneOptions,
+} from "~/shared/util/timezone";
 import { useLogout, useUpdateMe } from "../api/actions";
 import { useAuthProviders, useMe } from "../api/queries";
 import { TelegramLinkPanel } from "../components/TelegramLinkPanel";
@@ -45,6 +50,7 @@ export default function OnboardingPage() {
   const [phone, setPhone] = useState("");
   const [gender, setGender] = useState("");
   const [birthDate, setBirthDate] = useState("");
+  const [timezone, setTimezone] = useState(() => detectBrowserTimezone());
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const initializedRef = useRef(false);
@@ -57,10 +63,16 @@ export default function OnboardingPage() {
       setPhone(me.phone ?? "");
       setGender(me.gender ?? "");
       setBirthDate(me.birthDate ?? "");
+      if (!me.onboarded && (!me.timezone || me.timezone === DEFAULT_TIMEZONE)) {
+        setTimezone(detectBrowserTimezone());
+      } else {
+        setTimezone(me.timezone || DEFAULT_TIMEZONE);
+      }
     }
   }, [me]);
 
   const birthDateBounds = getBirthDateBounds();
+  const timezoneOptions = getTimezoneOptions(timezone);
 
   const otpChannels = providersQuery.data?.otpChannels ?? ["email"];
   const steps = buildOnboardingSteps(otpChannels);
@@ -111,6 +123,7 @@ export default function OnboardingPage() {
           phone: phone.trim(),
           gender,
           birthDate,
+          timezone,
           onboarded: true,
         });
         navigate(nextPath, { replace: true });
@@ -120,6 +133,7 @@ export default function OnboardingPage() {
           phone: phone.trim(),
           gender,
           birthDate,
+          timezone,
         });
         setStepIndex((i) => i + 1);
       }
@@ -287,6 +301,22 @@ export default function OnboardingPage() {
                       onChange={(e) => setBirthDate(e.target.value)}
                       className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
                     />
+                  </label>
+
+                  <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
+                    {t("onboarding.timezoneLabel")}
+                    <select
+                      required
+                      value={timezone}
+                      onChange={(e) => setTimezone(e.target.value)}
+                      className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
+                    >
+                      {timezoneOptions.map((tz) => (
+                        <option key={tz.value} value={tz.value}>
+                          {tz.label}
+                        </option>
+                      ))}
+                    </select>
                   </label>
 
                   <div className="flex justify-end pt-2">
