@@ -99,6 +99,14 @@ export function parseMazmurMeta(
   meta?: Record<string, unknown> | null,
 ): MazmurMetaForm {
   if (!meta) return {};
+  let bait: string | undefined;
+  if (typeof meta.bait === "string") {
+    bait = meta.bait;
+  } else if (Array.isArray(meta.bait)) {
+    bait = meta.bait
+      .filter((item): item is string => typeof item === "string")
+      .join("\n\n");
+  }
   return {
     perayaan: typeof meta.perayaan === "string" ? meta.perayaan : undefined,
     siklusTahun:
@@ -107,7 +115,7 @@ export function parseMazmurMeta(
     refAlkitab:
       typeof meta.ref_alkitab === "string" ? meta.ref_alkitab : undefined,
     ulangan: typeof meta.ulangan === "string" ? meta.ulangan : undefined,
-    bait: typeof meta.bait === "string" ? meta.bait : undefined,
+    bait,
     bpi: typeof meta.bpi === "string" ? meta.bpi : undefined,
   };
 }
@@ -184,4 +192,69 @@ export function parseCantusDirectoryFilters(
     nadaDasar: params.get("nadaDasar") ?? "",
     active,
   };
+}
+
+const CANTUS_SLUG_RE = /^[a-z0-9][a-z0-9_-]{1,63}$/;
+
+export function validateCantusSlug(slug: string): boolean {
+  return CANTUS_SLUG_RE.test(slug.trim().toLowerCase());
+}
+
+export function validateCantusMediaURL(raw: string): boolean {
+  const trimmed = raw.trim();
+  if (!trimmed) return true;
+  try {
+    const parsed = new URL(trimmed);
+    return (
+      (parsed.protocol === "http:" || parsed.protocol === "https:") &&
+      Boolean(parsed.host)
+    );
+  } catch {
+    return false;
+  }
+}
+
+export function normalizeTagList(tags: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const tag of tags) {
+    const trimmed = tag.trim();
+    if (!trimmed || seen.has(trimmed)) continue;
+    seen.add(trimmed);
+    out.push(trimmed);
+  }
+  return out;
+}
+
+export interface CantusKreditForm {
+  lagu?: string;
+  syair?: string;
+  aransemen?: string;
+}
+
+export function parseCantusKredit(
+  kredit?: Record<string, string> | null,
+): CantusKreditForm {
+  if (!kredit) return {};
+  return {
+    lagu: kredit.lagu,
+    syair: kredit.syair,
+    aransemen: kredit.aransemen,
+  };
+}
+
+export function buildCantusKredit(
+  form: CantusKreditForm,
+  existingKredit?: Record<string, string> | null,
+): Record<string, string> {
+  const next: Record<string, string> = { ...(existingKredit ?? {}) };
+  const setOrDelete = (key: string, val?: string) => {
+    const trimmed = val?.trim();
+    if (trimmed) next[key] = trimmed;
+    else delete next[key];
+  };
+  setOrDelete("lagu", form.lagu);
+  setOrDelete("syair", form.syair);
+  setOrDelete("aransemen", form.aransemen);
+  return next;
 }

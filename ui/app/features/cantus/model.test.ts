@@ -1,15 +1,20 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  buildCantusKredit,
   buildLaguMeta,
   buildMazmurMeta,
   cantusJenisLabel,
   isCantusAdmin,
+  normalizeTagList,
   parseCantusDirectoryFilters,
+  parseCantusKredit,
   parseLaguMeta,
   parseMazmurMeta,
   ROLE_CANTUS_ADMIN,
   slugifyCantus,
+  validateCantusMediaURL,
+  validateCantusSlug,
 } from "./model";
 
 test("isCantusAdmin checks isCantusAdmin flag and cantus:admin role", () => {
@@ -97,4 +102,42 @@ test("parseCantusDirectoryFilters parses URLSearchParams with active default", (
 
   const all = parseCantusDirectoryFilters(new URLSearchParams("active=all"));
   assert.equal(all.active, "all");
+});
+
+test("validateCantusSlug, validateCantusMediaURL, and normalizeTagList enforce constraints", () => {
+  assert.equal(validateCantusSlug("ps-320-tuhan"), true);
+  assert.equal(validateCantusSlug("a"), false);
+  assert.equal(validateCantusSlug("Invalid Slug!"), false);
+
+  assert.equal(validateCantusMediaURL(""), true);
+  assert.equal(validateCantusMediaURL("https://cdn.example.com/a.pdf"), true);
+  assert.equal(validateCantusMediaURL("http://localhost:8080/a.mp3"), true);
+  assert.equal(validateCantusMediaURL("javascript:alert(1)"), false);
+  assert.equal(validateCantusMediaURL("data:text/plain,hi"), false);
+  assert.equal(validateCantusMediaURL("/relative.pdf"), false);
+
+  assert.deepEqual(normalizeTagList(["adven", " ", "adven", "tahun-a"]), [
+    "adven",
+    "tahun-a",
+  ]);
+});
+
+test("parseCantusKredit and buildCantusKredit preserve extra keys", () => {
+  const built = buildCantusKredit(
+    { lagu: "Antonius", syair: "Tim PS", aransemen: "" },
+    { penerjemah: "Yohanes" },
+  );
+  assert.equal(built.penerjemah, "Yohanes");
+  assert.equal(built.lagu, "Antonius");
+  assert.equal(built.aransemen, undefined);
+
+  const parsed = parseCantusKredit(built);
+  assert.equal(parsed.lagu, "Antonius");
+  assert.equal(parsed.syair, "Tim PS");
+  assert.equal(parsed.aransemen, undefined);
+});
+
+test("parseMazmurMeta supports array bait", () => {
+  const parsed = parseMazmurMeta({ bait: ["Bait 1", "Bait 2"] });
+  assert.equal(parsed.bait, "Bait 1\n\nBait 2");
 });
