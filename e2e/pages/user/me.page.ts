@@ -15,6 +15,7 @@ export class MePage extends BasePage {
     birthDate?: string;
     timezone?: string;
   }): Promise<void> {
+    await this.page.getByRole("button", { name: "Ubah" }).click();
     await this.page.getByLabel("Nama lengkap").fill(input.name);
     if (input.phone !== undefined) {
       await this.page.getByLabel("Nomor telepon (WhatsApp)").fill(input.phone);
@@ -36,14 +37,20 @@ export class MePage extends BasePage {
     birthDate: string;
     timezone?: string;
   }): Promise<void> {
-    const genderVal = await this.page.getByLabel("Jenis kelamin").inputValue();
-    const birthDateVal = await this.page
-      .getByLabel("Tanggal lahir")
-      .inputValue();
-    assert.equal(genderVal, input.gender);
+    const genderVal = (
+      (await this.page.getByTestId("profile-gender").textContent()) ?? ""
+    )
+      .trim()
+      .toLowerCase();
+    const birthDateVal = (
+      (await this.page.getByTestId("profile-birthDate").textContent()) ?? ""
+    ).trim();
+    assert.equal(genderVal, input.gender.toLowerCase());
     assert.equal(birthDateVal, input.birthDate);
     if (input.timezone !== undefined) {
-      const tzVal = await this.page.getByLabel("Zona waktu").inputValue();
+      const tzVal = (
+        (await this.page.getByTestId("profile-timezone").textContent()) ?? ""
+      ).trim();
       assert.equal(tzVal, input.timezone);
     }
   }
@@ -111,6 +118,8 @@ export class MePage extends BasePage {
   }
 
   async createToken(name: string, expiryValue = "30"): Promise<string> {
+    await this.page.getByRole("link", { name: "Buat Token" }).click();
+    await this.expectPath("/me/tokens/new");
     await this.page.getByLabel("Nama token").fill(name);
     await this.page.getByLabel("Masa berlaku").selectOption(expiryValue);
     await this.page.getByRole("button", { name: "Buat Token" }).click();
@@ -120,6 +129,10 @@ export class MePage extends BasePage {
       (await this.page.getByTestId("pat-plaintext-token").textContent()) ?? ""
     ).trim();
     assert.ok(raw.startsWith("dms_"), `Expected dms_ prefix, got ${raw}`);
+    await this.page
+      .getByRole("link", { name: "Kembali ke Profil & Keamanan" })
+      .click();
+    await this.expectPath("/me");
     return raw;
   }
 
