@@ -35,4 +35,14 @@ export const USER_ERRORS: Record<string, string> = {
   ORG_LAST_ADMIN_REQUIRED:
     "Minimal harus ada satu Admin Organisasi aktif yang tersisa.",
   TENANT_REQUIRED: "Pilih paroki aktif terlebih dahulu.",
+  UMAT_USER_ALREADY_LINKED:
+    "Data umat ini sudah terhubung dengan akun Domus lain. Hubungi admin paroki jika ini keliru.",
+  VERIFY_EXTRACTION_FAILED:
+    "Gagal membaca dokumen. Pastikan foto jelas, tidak buram, dan coba lagi.",
+  VERIFY_RATE_LIMITED:
+    "Terlalu banyak percobaan verifikasi. Tunggu beberapa saat sebelum mencoba lagi.",
+  UMAT_NIK_CONFLICT: "NIK sudah terdaftar pada data umat lain.",
+  UMAT_KK_CONFLICT: "Nomor Kartu Keluarga sudah terdaftar pada keluarga lain.",
+  VALIDATION_ERROR:
+    "Data atau file tidak valid. Pastikan file berupa gambar (maks. 2 MiB) dan kolom wajib terisi.",
 };

@@ -34,4 +34,9 @@ export const userKeys = {
   lookups: (category: string) =>
     [...userKeys.all, "lookups", category] as const,
   vapidPublicKey: () => [...userKeys.all, "vapidPublicKey"] as const,
+  myUmat: () => [...userKeys.all, "myUmat"] as const,
+  wilayahOptions: (parokiId: string) =>
+    [...userKeys.all, "wilayahOptions", parokiId] as const,
+  lingkunganOptions: (parokiId: string, wilayahId?: string) =>
+    [...userKeys.all, "lingkunganOptions", parokiId, wilayahId ?? ""] as const,
 };

@@ -9,6 +9,7 @@ import type {
   AdminCreateUserRequest,
   AdminUpdateUserRequest,
   CreateUserTokenRequest,
+  IdentityExtraction,
   LinkAccountOTPRequest,
   RequestOTPRequest,
   SubscribePushRequest,
@@ -403,6 +404,76 @@ export function useRemoveUserOrgMember(parishId?: string) {
           ? [qc.invalidateQueries({ queryKey: userKeys.orgs(parishId) })]
           : []),
         qc.invalidateQueries({ queryKey: userKeys.me() }),
+      ]),
+  });
+}
+
+export interface VerifyExtractInput {
+  ktp?: File;
+  kk?: File;
+  kartuPelajar?: File;
+}
+
+export function useVerifyExtract() {
+  return useMutation({
+    mutationFn: (input: VerifyExtractInput) => {
+      const formData = new FormData();
+      if (input.ktp) formData.append("ktp", input.ktp);
+      if (input.kk) formData.append("kk", input.kk);
+      if (input.kartuPelajar)
+        formData.append("kartuPelajar", input.kartuPelajar);
+      return unwrap(
+        api.POST("/me/verify/extract", {
+          body: formData as never,
+          bodySerializer: (b) => b as unknown as FormData,
+        }),
+        USER_ERRORS,
+      );
+    },
+  });
+}
+
+export interface VerifyConfirmInput {
+  payload: IdentityExtraction;
+  ktp?: File;
+  kk?: File;
+  kartuPelajar?: File;
+  kia?: File;
+  memberIndex?: number;
+  wilayahId?: string;
+  lingkunganId?: string;
+}
+
+export function useVerifyConfirm() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: VerifyConfirmInput) => {
+      const formData = new FormData();
+      formData.append("payload", JSON.stringify(input.payload));
+      if (input.ktp) formData.append("ktp", input.ktp);
+      if (input.kk) formData.append("kk", input.kk);
+      if (input.kartuPelajar)
+        formData.append("kartuPelajar", input.kartuPelajar);
+      if (input.kia) formData.append("kia", input.kia);
+      if (input.memberIndex !== undefined) {
+        formData.append("memberIndex", String(input.memberIndex));
+      }
+      if (input.wilayahId) formData.append("wilayahId", input.wilayahId);
+      if (input.lingkunganId) {
+        formData.append("lingkunganId", input.lingkunganId);
+      }
+      return unwrap(
+        api.POST("/me/verify/confirm", {
+          body: formData as never,
+          bodySerializer: (b) => b as unknown as FormData,
+        }),
+        USER_ERRORS,
+      );
+    },
+    onSuccess: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: userKeys.me() }),
+        qc.invalidateQueries({ queryKey: userKeys.myUmat() }),
       ]),
   });
 }

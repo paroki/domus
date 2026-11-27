@@ -45,3 +45,16 @@ export type SearchTokensRequest = Schemas["domain.SearchTokensRequest"];
 export type VAPIDPublicKeyResponse = Schemas["domain.VAPIDPublicKeyResponse"];
 export type SubscribePushRequest = Schemas["domain.SubscribePushRequest"];
 export type UnsubscribePushRequest = Schemas["domain.UnsubscribePushRequest"];
+
+export type ExtractedKTP = Schemas["domain.ExtractedKTP"];
+export type ExtractedKK = Schemas["domain.ExtractedKK"];
+export type ExtractedKKMember = Schemas["domain.ExtractedKKMember"];
+export type IdentityExtraction = Schemas["domain.IdentityExtraction"];
+export type VerifyExtractResponse = Schemas["domain.VerifyExtractResponse"];
+export type VerifyConfirmResult = Schemas["domain.VerifyConfirmResult"];
+export type SelfUmatProfile = Schemas["domain.SelfUmatProfile"];
+export type SelfUmatInfo = Schemas["domain.SelfUmatInfo"];
+export type SelfKeluargaInfo = Schemas["domain.SelfKeluargaInfo"];
+export type SelfDokumenMeta = Schemas["domain.SelfDokumenMeta"];
+export type WilayahOption = Schemas["domain.WilayahResponse"];
+export type LingkunganOption = Schemas["domain.LingkunganResponse"];

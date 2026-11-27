@@ -52,6 +52,54 @@ export function useVapidPublicKey() {
   });
 }
 
+export function useMyUmat(enabled = true) {
+  return useQuery({
+    queryKey: userKeys.myUmat(),
+    enabled,
+    queryFn: () => unwrap(api.GET("/me/umat"), USER_ERRORS),
+  });
+}
+
+export function useVerifyWilayahOptions(parokiId: string, enabled = true) {
+  return useQuery({
+    queryKey: userKeys.wilayahOptions(parokiId),
+    enabled: Boolean(parokiId) && enabled,
+    queryFn: () =>
+      unwrap(
+        api.POST("/ref/wilayah/search", {
+          body: { filter: { active: true }, limit: 100 },
+        }),
+        USER_ERRORS,
+      ),
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useVerifyLingkunganOptions(
+  parokiId: string,
+  wilayahId?: string,
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: userKeys.lingkunganOptions(parokiId, wilayahId),
+    enabled: Boolean(parokiId) && enabled,
+    queryFn: () =>
+      unwrap(
+        api.POST("/ref/lingkungan/search", {
+          body: {
+            filter: {
+              active: true,
+              ...(wilayahId ? { wilayahId } : {}),
+            },
+            limit: 100,
+          },
+        }),
+        USER_ERRORS,
+      ),
+    staleTime: 5 * 60_000,
+  });
+}
+
 export function useMySessions(limit = 20) {
   return useQuery({
     queryKey: userKeys.sessions({ limit }),

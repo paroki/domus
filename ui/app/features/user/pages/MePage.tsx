@@ -10,6 +10,7 @@ import { DEFAULT_TIMEZONE, getTimezoneOptions } from "~/shared/util/timezone";
 import { useLogout, useUpdateMe } from "../api/actions";
 import { useMe } from "../api/queries";
 import { AccountList } from "../components/AccountList";
+import { MeUmatCard } from "../components/MeUmatCard";
 import { PwaDeviceCard } from "../components/PwaDeviceCard";
 import { SessionList } from "../components/SessionList";
 import { TokenList } from "../components/TokenList";
@@ -74,7 +75,7 @@ export default function MePage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-fg">{t("me.title")}</h1>
@@ -196,6 +197,7 @@ export default function MePage() {
         </form>
       </Card>
 
+      <MeUmatCard verified={me?.verified} />
       <PwaDeviceCard />
       <SessionList />
       <AccountList />
