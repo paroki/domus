@@ -6,7 +6,7 @@ import { Link, useLocation, useNavigate } from "react-router";
 import { ApiError } from "~/shared/api/client";
 import { useMe } from "~/shared/api/session";
 import { agentKeys } from "../api/keys";
-import { useAgentSession } from "../api/queries";
+import { agentSessionQueryOptions, useAgentSession } from "../api/queries";
 import { streamAgentChat } from "../api/stream";
 import type { NavigationPayload, QuestionPayload } from "../api/types";
 import {
@@ -68,7 +68,7 @@ export function AgentBottomDock() {
   const hasParish = Boolean(parokiId);
   const { data: sessionDetail, isLoading: isLoadingSession } = useAgentSession(
     sessionId,
-    hasParish && expanded && Boolean(sessionId),
+    hasParish && expanded && Boolean(sessionId) && !streaming,
   );
 
   if (!hasParish) {
@@ -211,10 +211,20 @@ export function AgentBottomDock() {
       }
     } finally {
       const targetSid = activeStreamSessionRef.current ?? sessionId;
-      resetStreamUI();
       if (targetSid) {
-        void qc.invalidateQueries({ queryKey: agentKeys.session(targetSid) });
+        await qc.cancelQueries({ queryKey: agentKeys.session(targetSid) });
+        await qc
+          .fetchQuery({
+            ...agentSessionQueryOptions(targetSid),
+            staleTime: 0,
+          })
+          .catch(() => {
+            void qc.invalidateQueries({
+              queryKey: agentKeys.session(targetSid),
+            });
+          });
       }
+      resetStreamUI();
       void qc.invalidateQueries({ queryKey: ["agent", "sessions"] });
     }
   }
