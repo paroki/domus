@@ -11,8 +11,9 @@ import (
 )
 
 const (
-	roleOrgAdmin    = "org:admin"
-	roleParokiAdmin = "ref:paroki-admin"
+	roleOrgAdmin     = "org:admin"
+	roleParokiAdmin  = "ref:paroki-admin"
+	roleLiturgiAdmin = "liturgi:admin"
 )
 
 // DefaultParokiTimezone is the fallback IANA timezone when a paroki has none configured.
@@ -146,4 +147,11 @@ func (s *Service) isParokiAdmin(ctx context.Context, p authx.Principal) (bool, e
 		}
 	}
 	return s.repo.IsParokiAdmin(ctx, p.ParokiID, p.UserID)
+}
+
+func (s *Service) isLiturgiAdmin(ctx context.Context, p authx.Principal) (bool, error) {
+	if s.enforcer == nil {
+		return false, nil
+	}
+	return s.enforcer.HasRoleInDomain(authz.UserSubject(p.UserID), roleLiturgiAdmin, authz.ParokiDomain(p.ParokiID))
 }

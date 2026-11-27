@@ -11,25 +11,24 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/paroki/domus/ent/event"
-	"github.com/paroki/domus/ent/eventlagu"
+	"github.com/paroki/domus/ent/liturgilagu"
 )
 
-// EventLaguCreate is the builder for creating a EventLagu entity.
-type EventLaguCreate struct {
+// LiturgiLaguCreate is the builder for creating a LiturgiLagu entity.
+type LiturgiLaguCreate struct {
 	config
-	mutation *EventLaguMutation
+	mutation *LiturgiLaguMutation
 	hooks    []Hook
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (_c *EventLaguCreate) SetCreatedAt(v time.Time) *EventLaguCreate {
+func (_c *LiturgiLaguCreate) SetCreatedAt(v time.Time) *LiturgiLaguCreate {
 	_c.mutation.SetCreatedAt(v)
 	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (_c *EventLaguCreate) SetNillableCreatedAt(v *time.Time) *EventLaguCreate {
+func (_c *LiturgiLaguCreate) SetNillableCreatedAt(v *time.Time) *LiturgiLaguCreate {
 	if v != nil {
 		_c.SetCreatedAt(*v)
 	}
@@ -37,13 +36,13 @@ func (_c *EventLaguCreate) SetNillableCreatedAt(v *time.Time) *EventLaguCreate {
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (_c *EventLaguCreate) SetUpdatedAt(v time.Time) *EventLaguCreate {
+func (_c *LiturgiLaguCreate) SetUpdatedAt(v time.Time) *LiturgiLaguCreate {
 	_c.mutation.SetUpdatedAt(v)
 	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (_c *EventLaguCreate) SetNillableUpdatedAt(v *time.Time) *EventLaguCreate {
+func (_c *LiturgiLaguCreate) SetNillableUpdatedAt(v *time.Time) *LiturgiLaguCreate {
 	if v != nil {
 		_c.SetUpdatedAt(*v)
 	}
@@ -51,25 +50,25 @@ func (_c *EventLaguCreate) SetNillableUpdatedAt(v *time.Time) *EventLaguCreate {
 }
 
 // SetParokiID sets the "paroki_id" field.
-func (_c *EventLaguCreate) SetParokiID(v uuid.UUID) *EventLaguCreate {
+func (_c *LiturgiLaguCreate) SetParokiID(v uuid.UUID) *LiturgiLaguCreate {
 	_c.mutation.SetParokiID(v)
 	return _c
 }
 
 // SetEventID sets the "event_id" field.
-func (_c *EventLaguCreate) SetEventID(v uuid.UUID) *EventLaguCreate {
+func (_c *LiturgiLaguCreate) SetEventID(v uuid.UUID) *LiturgiLaguCreate {
 	_c.mutation.SetEventID(v)
 	return _c
 }
 
 // SetUrutan sets the "urutan" field.
-func (_c *EventLaguCreate) SetUrutan(v int) *EventLaguCreate {
+func (_c *LiturgiLaguCreate) SetUrutan(v int) *LiturgiLaguCreate {
 	_c.mutation.SetUrutan(v)
 	return _c
 }
 
 // SetNillableUrutan sets the "urutan" field if the given value is not nil.
-func (_c *EventLaguCreate) SetNillableUrutan(v *int) *EventLaguCreate {
+func (_c *LiturgiLaguCreate) SetNillableUrutan(v *int) *LiturgiLaguCreate {
 	if v != nil {
 		_c.SetUrutan(*v)
 	}
@@ -77,19 +76,33 @@ func (_c *EventLaguCreate) SetNillableUrutan(v *int) *EventLaguCreate {
 }
 
 // SetBagian sets the "bagian" field.
-func (_c *EventLaguCreate) SetBagian(v string) *EventLaguCreate {
+func (_c *LiturgiLaguCreate) SetBagian(v string) *LiturgiLaguCreate {
 	_c.mutation.SetBagian(v)
 	return _c
 }
 
+// SetCantusID sets the "cantus_id" field.
+func (_c *LiturgiLaguCreate) SetCantusID(v uuid.UUID) *LiturgiLaguCreate {
+	_c.mutation.SetCantusID(v)
+	return _c
+}
+
+// SetNillableCantusID sets the "cantus_id" field if the given value is not nil.
+func (_c *LiturgiLaguCreate) SetNillableCantusID(v *uuid.UUID) *LiturgiLaguCreate {
+	if v != nil {
+		_c.SetCantusID(*v)
+	}
+	return _c
+}
+
 // SetSumber sets the "sumber" field.
-func (_c *EventLaguCreate) SetSumber(v string) *EventLaguCreate {
+func (_c *LiturgiLaguCreate) SetSumber(v string) *LiturgiLaguCreate {
 	_c.mutation.SetSumber(v)
 	return _c
 }
 
 // SetNillableSumber sets the "sumber" field if the given value is not nil.
-func (_c *EventLaguCreate) SetNillableSumber(v *string) *EventLaguCreate {
+func (_c *LiturgiLaguCreate) SetNillableSumber(v *string) *LiturgiLaguCreate {
 	if v != nil {
 		_c.SetSumber(*v)
 	}
@@ -97,13 +110,13 @@ func (_c *EventLaguCreate) SetNillableSumber(v *string) *EventLaguCreate {
 }
 
 // SetNomor sets the "nomor" field.
-func (_c *EventLaguCreate) SetNomor(v string) *EventLaguCreate {
+func (_c *LiturgiLaguCreate) SetNomor(v string) *LiturgiLaguCreate {
 	_c.mutation.SetNomor(v)
 	return _c
 }
 
 // SetNillableNomor sets the "nomor" field if the given value is not nil.
-func (_c *EventLaguCreate) SetNillableNomor(v *string) *EventLaguCreate {
+func (_c *LiturgiLaguCreate) SetNillableNomor(v *string) *LiturgiLaguCreate {
 	if v != nil {
 		_c.SetNomor(*v)
 	}
@@ -111,19 +124,19 @@ func (_c *EventLaguCreate) SetNillableNomor(v *string) *EventLaguCreate {
 }
 
 // SetJudul sets the "judul" field.
-func (_c *EventLaguCreate) SetJudul(v string) *EventLaguCreate {
+func (_c *LiturgiLaguCreate) SetJudul(v string) *LiturgiLaguCreate {
 	_c.mutation.SetJudul(v)
 	return _c
 }
 
 // SetNadaDasar sets the "nada_dasar" field.
-func (_c *EventLaguCreate) SetNadaDasar(v string) *EventLaguCreate {
+func (_c *LiturgiLaguCreate) SetNadaDasar(v string) *LiturgiLaguCreate {
 	_c.mutation.SetNadaDasar(v)
 	return _c
 }
 
 // SetNillableNadaDasar sets the "nada_dasar" field if the given value is not nil.
-func (_c *EventLaguCreate) SetNillableNadaDasar(v *string) *EventLaguCreate {
+func (_c *LiturgiLaguCreate) SetNillableNadaDasar(v *string) *LiturgiLaguCreate {
 	if v != nil {
 		_c.SetNadaDasar(*v)
 	}
@@ -131,13 +144,13 @@ func (_c *EventLaguCreate) SetNillableNadaDasar(v *string) *EventLaguCreate {
 }
 
 // SetNote sets the "note" field.
-func (_c *EventLaguCreate) SetNote(v string) *EventLaguCreate {
+func (_c *LiturgiLaguCreate) SetNote(v string) *LiturgiLaguCreate {
 	_c.mutation.SetNote(v)
 	return _c
 }
 
 // SetNillableNote sets the "note" field if the given value is not nil.
-func (_c *EventLaguCreate) SetNillableNote(v *string) *EventLaguCreate {
+func (_c *LiturgiLaguCreate) SetNillableNote(v *string) *LiturgiLaguCreate {
 	if v != nil {
 		_c.SetNote(*v)
 	}
@@ -145,37 +158,32 @@ func (_c *EventLaguCreate) SetNillableNote(v *string) *EventLaguCreate {
 }
 
 // SetID sets the "id" field.
-func (_c *EventLaguCreate) SetID(v uuid.UUID) *EventLaguCreate {
+func (_c *LiturgiLaguCreate) SetID(v uuid.UUID) *LiturgiLaguCreate {
 	_c.mutation.SetID(v)
 	return _c
 }
 
 // SetNillableID sets the "id" field if the given value is not nil.
-func (_c *EventLaguCreate) SetNillableID(v *uuid.UUID) *EventLaguCreate {
+func (_c *LiturgiLaguCreate) SetNillableID(v *uuid.UUID) *LiturgiLaguCreate {
 	if v != nil {
 		_c.SetID(*v)
 	}
 	return _c
 }
 
-// SetEvent sets the "event" edge to the Event entity.
-func (_c *EventLaguCreate) SetEvent(v *Event) *EventLaguCreate {
-	return _c.SetEventID(v.ID)
-}
-
-// Mutation returns the EventLaguMutation object of the builder.
-func (_c *EventLaguCreate) Mutation() *EventLaguMutation {
+// Mutation returns the LiturgiLaguMutation object of the builder.
+func (_c *LiturgiLaguCreate) Mutation() *LiturgiLaguMutation {
 	return _c.mutation
 }
 
-// Save creates the EventLagu in the database.
-func (_c *EventLaguCreate) Save(ctx context.Context) (*EventLagu, error) {
+// Save creates the LiturgiLagu in the database.
+func (_c *LiturgiLaguCreate) Save(ctx context.Context) (*LiturgiLagu, error) {
 	_c.defaults()
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (_c *EventLaguCreate) SaveX(ctx context.Context) *EventLagu {
+func (_c *LiturgiLaguCreate) SaveX(ctx context.Context) *LiturgiLagu {
 	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
@@ -184,78 +192,75 @@ func (_c *EventLaguCreate) SaveX(ctx context.Context) *EventLagu {
 }
 
 // Exec executes the query.
-func (_c *EventLaguCreate) Exec(ctx context.Context) error {
+func (_c *LiturgiLaguCreate) Exec(ctx context.Context) error {
 	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_c *EventLaguCreate) ExecX(ctx context.Context) {
+func (_c *LiturgiLaguCreate) ExecX(ctx context.Context) {
 	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (_c *EventLaguCreate) defaults() {
+func (_c *LiturgiLaguCreate) defaults() {
 	if _, ok := _c.mutation.CreatedAt(); !ok {
-		v := eventlagu.DefaultCreatedAt()
+		v := liturgilagu.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
 	}
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
-		v := eventlagu.DefaultUpdatedAt()
+		v := liturgilagu.DefaultUpdatedAt()
 		_c.mutation.SetUpdatedAt(v)
 	}
 	if _, ok := _c.mutation.Urutan(); !ok {
-		v := eventlagu.DefaultUrutan
+		v := liturgilagu.DefaultUrutan
 		_c.mutation.SetUrutan(v)
 	}
 	if _, ok := _c.mutation.ID(); !ok {
-		v := eventlagu.DefaultID()
+		v := liturgilagu.DefaultID()
 		_c.mutation.SetID(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (_c *EventLaguCreate) check() error {
+func (_c *LiturgiLaguCreate) check() error {
 	if _, ok := _c.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "EventLagu.created_at"`)}
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "LiturgiLagu.created_at"`)}
 	}
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
-		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "EventLagu.updated_at"`)}
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "LiturgiLagu.updated_at"`)}
 	}
 	if _, ok := _c.mutation.ParokiID(); !ok {
-		return &ValidationError{Name: "paroki_id", err: errors.New(`ent: missing required field "EventLagu.paroki_id"`)}
+		return &ValidationError{Name: "paroki_id", err: errors.New(`ent: missing required field "LiturgiLagu.paroki_id"`)}
 	}
 	if _, ok := _c.mutation.EventID(); !ok {
-		return &ValidationError{Name: "event_id", err: errors.New(`ent: missing required field "EventLagu.event_id"`)}
+		return &ValidationError{Name: "event_id", err: errors.New(`ent: missing required field "LiturgiLagu.event_id"`)}
 	}
 	if _, ok := _c.mutation.Urutan(); !ok {
-		return &ValidationError{Name: "urutan", err: errors.New(`ent: missing required field "EventLagu.urutan"`)}
+		return &ValidationError{Name: "urutan", err: errors.New(`ent: missing required field "LiturgiLagu.urutan"`)}
 	}
 	if _, ok := _c.mutation.Bagian(); !ok {
-		return &ValidationError{Name: "bagian", err: errors.New(`ent: missing required field "EventLagu.bagian"`)}
+		return &ValidationError{Name: "bagian", err: errors.New(`ent: missing required field "LiturgiLagu.bagian"`)}
 	}
 	if v, ok := _c.mutation.Bagian(); ok {
-		if err := eventlagu.BagianValidator(v); err != nil {
-			return &ValidationError{Name: "bagian", err: fmt.Errorf(`ent: validator failed for field "EventLagu.bagian": %w`, err)}
+		if err := liturgilagu.BagianValidator(v); err != nil {
+			return &ValidationError{Name: "bagian", err: fmt.Errorf(`ent: validator failed for field "LiturgiLagu.bagian": %w`, err)}
 		}
 	}
 	if _, ok := _c.mutation.Judul(); !ok {
-		return &ValidationError{Name: "judul", err: errors.New(`ent: missing required field "EventLagu.judul"`)}
+		return &ValidationError{Name: "judul", err: errors.New(`ent: missing required field "LiturgiLagu.judul"`)}
 	}
 	if v, ok := _c.mutation.Judul(); ok {
-		if err := eventlagu.JudulValidator(v); err != nil {
-			return &ValidationError{Name: "judul", err: fmt.Errorf(`ent: validator failed for field "EventLagu.judul": %w`, err)}
+		if err := liturgilagu.JudulValidator(v); err != nil {
+			return &ValidationError{Name: "judul", err: fmt.Errorf(`ent: validator failed for field "LiturgiLagu.judul": %w`, err)}
 		}
-	}
-	if len(_c.mutation.EventIDs()) == 0 {
-		return &ValidationError{Name: "event", err: errors.New(`ent: missing required edge "EventLagu.event"`)}
 	}
 	return nil
 }
 
-func (_c *EventLaguCreate) sqlSave(ctx context.Context) (*EventLagu, error) {
+func (_c *LiturgiLaguCreate) sqlSave(ctx context.Context) (*LiturgiLagu, error) {
 	if err := _c.check(); err != nil {
 		return nil, err
 	}
@@ -278,96 +283,87 @@ func (_c *EventLaguCreate) sqlSave(ctx context.Context) (*EventLagu, error) {
 	return _node, nil
 }
 
-func (_c *EventLaguCreate) createSpec() (*EventLagu, *sqlgraph.CreateSpec) {
+func (_c *LiturgiLaguCreate) createSpec() (*LiturgiLagu, *sqlgraph.CreateSpec) {
 	var (
-		_node = &EventLagu{config: _c.config}
-		_spec = sqlgraph.NewCreateSpec(eventlagu.Table, sqlgraph.NewFieldSpec(eventlagu.FieldID, field.TypeUUID))
+		_node = &LiturgiLagu{config: _c.config}
+		_spec = sqlgraph.NewCreateSpec(liturgilagu.Table, sqlgraph.NewFieldSpec(liturgilagu.FieldID, field.TypeUUID))
 	)
 	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
-		_spec.SetField(eventlagu.FieldCreatedAt, field.TypeTime, value)
+		_spec.SetField(liturgilagu.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
 	if value, ok := _c.mutation.UpdatedAt(); ok {
-		_spec.SetField(eventlagu.FieldUpdatedAt, field.TypeTime, value)
+		_spec.SetField(liturgilagu.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
 	if value, ok := _c.mutation.ParokiID(); ok {
-		_spec.SetField(eventlagu.FieldParokiID, field.TypeUUID, value)
+		_spec.SetField(liturgilagu.FieldParokiID, field.TypeUUID, value)
 		_node.ParokiID = value
 	}
+	if value, ok := _c.mutation.EventID(); ok {
+		_spec.SetField(liturgilagu.FieldEventID, field.TypeUUID, value)
+		_node.EventID = value
+	}
 	if value, ok := _c.mutation.Urutan(); ok {
-		_spec.SetField(eventlagu.FieldUrutan, field.TypeInt, value)
+		_spec.SetField(liturgilagu.FieldUrutan, field.TypeInt, value)
 		_node.Urutan = value
 	}
 	if value, ok := _c.mutation.Bagian(); ok {
-		_spec.SetField(eventlagu.FieldBagian, field.TypeString, value)
+		_spec.SetField(liturgilagu.FieldBagian, field.TypeString, value)
 		_node.Bagian = value
 	}
+	if value, ok := _c.mutation.CantusID(); ok {
+		_spec.SetField(liturgilagu.FieldCantusID, field.TypeUUID, value)
+		_node.CantusID = &value
+	}
 	if value, ok := _c.mutation.Sumber(); ok {
-		_spec.SetField(eventlagu.FieldSumber, field.TypeString, value)
+		_spec.SetField(liturgilagu.FieldSumber, field.TypeString, value)
 		_node.Sumber = &value
 	}
 	if value, ok := _c.mutation.Nomor(); ok {
-		_spec.SetField(eventlagu.FieldNomor, field.TypeString, value)
+		_spec.SetField(liturgilagu.FieldNomor, field.TypeString, value)
 		_node.Nomor = &value
 	}
 	if value, ok := _c.mutation.Judul(); ok {
-		_spec.SetField(eventlagu.FieldJudul, field.TypeString, value)
+		_spec.SetField(liturgilagu.FieldJudul, field.TypeString, value)
 		_node.Judul = value
 	}
 	if value, ok := _c.mutation.NadaDasar(); ok {
-		_spec.SetField(eventlagu.FieldNadaDasar, field.TypeString, value)
+		_spec.SetField(liturgilagu.FieldNadaDasar, field.TypeString, value)
 		_node.NadaDasar = &value
 	}
 	if value, ok := _c.mutation.Note(); ok {
-		_spec.SetField(eventlagu.FieldNote, field.TypeString, value)
+		_spec.SetField(liturgilagu.FieldNote, field.TypeString, value)
 		_node.Note = &value
-	}
-	if nodes := _c.mutation.EventIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   eventlagu.EventTable,
-			Columns: []string{eventlagu.EventColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.EventID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }
 
-// EventLaguCreateBulk is the builder for creating many EventLagu entities in bulk.
-type EventLaguCreateBulk struct {
+// LiturgiLaguCreateBulk is the builder for creating many LiturgiLagu entities in bulk.
+type LiturgiLaguCreateBulk struct {
 	config
 	err      error
-	builders []*EventLaguCreate
+	builders []*LiturgiLaguCreate
 }
 
-// Save creates the EventLagu entities in the database.
-func (_c *EventLaguCreateBulk) Save(ctx context.Context) ([]*EventLagu, error) {
+// Save creates the LiturgiLagu entities in the database.
+func (_c *LiturgiLaguCreateBulk) Save(ctx context.Context) ([]*LiturgiLagu, error) {
 	if _c.err != nil {
 		return nil, _c.err
 	}
 	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
-	nodes := make([]*EventLagu, len(_c.builders))
+	nodes := make([]*LiturgiLagu, len(_c.builders))
 	mutators := make([]Mutator, len(_c.builders))
 	for i := range _c.builders {
 		func(i int, root context.Context) {
 			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
-				mutation, ok := m.(*EventLaguMutation)
+				mutation, ok := m.(*LiturgiLaguMutation)
 				if !ok {
 					return nil, fmt.Errorf("unexpected mutation type %T", m)
 				}
@@ -410,7 +406,7 @@ func (_c *EventLaguCreateBulk) Save(ctx context.Context) ([]*EventLagu, error) {
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (_c *EventLaguCreateBulk) SaveX(ctx context.Context) []*EventLagu {
+func (_c *LiturgiLaguCreateBulk) SaveX(ctx context.Context) []*LiturgiLagu {
 	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
@@ -419,13 +415,13 @@ func (_c *EventLaguCreateBulk) SaveX(ctx context.Context) []*EventLagu {
 }
 
 // Exec executes the query.
-func (_c *EventLaguCreateBulk) Exec(ctx context.Context) error {
+func (_c *LiturgiLaguCreateBulk) Exec(ctx context.Context) error {
 	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_c *EventLaguCreateBulk) ExecX(ctx context.Context) {
+func (_c *LiturgiLaguCreateBulk) ExecX(ctx context.Context) {
 	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}

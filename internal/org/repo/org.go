@@ -8,7 +8,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/ent/event"
-	"github.com/paroki/domus/ent/eventpetugas"
+	"github.com/paroki/domus/ent/liturgiministry"
+	"github.com/paroki/domus/ent/liturgipetugas"
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orgmember"
 	"github.com/paroki/domus/ent/orgperiode"
@@ -176,7 +177,7 @@ func (r *Repository) HasChildOrgs(ctx context.Context, orgID uuid.UUID) (bool, e
 		Exist(ctx)
 }
 
-// HasOrgEvents reports whether any non-deleted Event belongs to or assigns orgID as petugas.
+// HasOrgEvents reports whether any non-deleted Event, LiturgiMinistry, or active-event LiturgiPetugas references orgID.
 func (r *Repository) HasOrgEvents(ctx context.Context, orgID uuid.UUID) (bool, error) {
 	hasOwned, err := r.client.Event.Query().
 		Where(event.OrgIDEQ(orgID), event.DeletedAtIsNil()).
@@ -184,11 +185,31 @@ func (r *Repository) HasOrgEvents(ctx context.Context, orgID uuid.UUID) (bool, e
 	if err != nil || hasOwned {
 		return hasOwned, err
 	}
-	return r.client.EventPetugas.Query().
-		Where(
-			eventpetugas.OrgIDEQ(orgID),
-			eventpetugas.HasEventWith(event.DeletedAtIsNil()),
-		).
+	hasMinistry, err := r.client.LiturgiMinistry.Query().
+		Where(liturgiministry.OrgIDEQ(orgID)).
+		Exist(ctx)
+	if err != nil || hasMinistry {
+		return hasMinistry, err
+	}
+	rows, err := r.client.LiturgiPetugas.Query().
+		Where(liturgipetugas.Or(
+			liturgipetugas.OrgIDEQ(orgID),
+			liturgipetugas.SubstituteOrgIDEQ(orgID),
+		)).
+		Select(liturgipetugas.FieldEventID).
+		All(ctx)
+	if err != nil {
+		return false, err
+	}
+	if len(rows) == 0 {
+		return false, nil
+	}
+	evIDs := make([]uuid.UUID, 0, len(rows))
+	for _, row := range rows {
+		evIDs = append(evIDs, row.EventID)
+	}
+	return r.client.Event.Query().
+		Where(event.IDIn(evIDs...), event.DeletedAtIsNil()).
 		Exist(ctx)
 }
 

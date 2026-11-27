@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/ent/event"
-	"github.com/paroki/domus/ent/eventpetugas"
 	"github.com/paroki/domus/ent/orgmember"
 	"github.com/paroki/domus/ent/predicate"
 )
@@ -39,11 +38,9 @@ type SearchEventsInput struct {
 	Visibility     string
 	Status         string
 	MyOrgsOnly     bool
-	AssignedToMe   bool
-	AssignedUserID uuid.UUID
-	AssignedOrgID  *uuid.UUID
 	From           *time.Time
 	To             *time.Time
+	EventIDs       []uuid.UUID
 	Q              string
 	CursorAt       *time.Time
 	CursorID       *uuid.UUID
@@ -107,17 +104,11 @@ func (r *Repository) SearchEvents(ctx context.Context, in SearchEventsInput) ([]
 	if in.Jenis != "" {
 		query = query.Where(event.JenisEQ(in.Jenis))
 	}
-	if in.AssignedToMe {
-		petugasPreds := []predicate.EventPetugas{
-			eventpetugas.UserIDEQ(in.AssignedUserID),
+	if in.EventIDs != nil {
+		if len(in.EventIDs) == 0 {
+			return []*ent.Event{}, nil
 		}
-		if len(in.MemberOrgIDs) > 0 {
-			petugasPreds = append(petugasPreds, eventpetugas.OrgIDIn(in.MemberOrgIDs...))
-		}
-		query = query.Where(event.HasPetugasWith(eventpetugas.Or(petugasPreds...)))
-	}
-	if in.AssignedOrgID != nil {
-		query = query.Where(event.HasPetugasWith(eventpetugas.OrgIDEQ(*in.AssignedOrgID)))
+		query = query.Where(event.IDIn(in.EventIDs...))
 	}
 	if in.Visibility != "" {
 		query = query.Where(event.VisibilityEQ(event.Visibility(in.Visibility)))

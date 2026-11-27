@@ -8,30 +8,30 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/paroki/domus/ent/eventpetugas"
+	"github.com/paroki/domus/ent/liturgiministry"
 	"github.com/paroki/domus/ent/predicate"
 )
 
-// EventPetugasDelete is the builder for deleting a EventPetugas entity.
-type EventPetugasDelete struct {
+// LiturgiMinistryDelete is the builder for deleting a LiturgiMinistry entity.
+type LiturgiMinistryDelete struct {
 	config
 	hooks    []Hook
-	mutation *EventPetugasMutation
+	mutation *LiturgiMinistryMutation
 }
 
-// Where appends a list predicates to the EventPetugasDelete builder.
-func (_d *EventPetugasDelete) Where(ps ...predicate.EventPetugas) *EventPetugasDelete {
+// Where appends a list predicates to the LiturgiMinistryDelete builder.
+func (_d *LiturgiMinistryDelete) Where(ps ...predicate.LiturgiMinistry) *LiturgiMinistryDelete {
 	_d.mutation.Where(ps...)
 	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (_d *EventPetugasDelete) Exec(ctx context.Context) (int, error) {
+func (_d *LiturgiMinistryDelete) Exec(ctx context.Context) (int, error) {
 	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_d *EventPetugasDelete) ExecX(ctx context.Context) int {
+func (_d *LiturgiMinistryDelete) ExecX(ctx context.Context) int {
 	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
@@ -39,8 +39,8 @@ func (_d *EventPetugasDelete) ExecX(ctx context.Context) int {
 	return n
 }
 
-func (_d *EventPetugasDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := sqlgraph.NewDeleteSpec(eventpetugas.Table, sqlgraph.NewFieldSpec(eventpetugas.FieldID, field.TypeUUID))
+func (_d *LiturgiMinistryDelete) sqlExec(ctx context.Context) (int, error) {
+	_spec := sqlgraph.NewDeleteSpec(liturgiministry.Table, sqlgraph.NewFieldSpec(liturgiministry.FieldID, field.TypeUUID))
 	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -56,32 +56,32 @@ func (_d *EventPetugasDelete) sqlExec(ctx context.Context) (int, error) {
 	return affected, err
 }
 
-// EventPetugasDeleteOne is the builder for deleting a single EventPetugas entity.
-type EventPetugasDeleteOne struct {
-	_d *EventPetugasDelete
+// LiturgiMinistryDeleteOne is the builder for deleting a single LiturgiMinistry entity.
+type LiturgiMinistryDeleteOne struct {
+	_d *LiturgiMinistryDelete
 }
 
-// Where appends a list predicates to the EventPetugasDelete builder.
-func (_d *EventPetugasDeleteOne) Where(ps ...predicate.EventPetugas) *EventPetugasDeleteOne {
+// Where appends a list predicates to the LiturgiMinistryDelete builder.
+func (_d *LiturgiMinistryDeleteOne) Where(ps ...predicate.LiturgiMinistry) *LiturgiMinistryDeleteOne {
 	_d._d.mutation.Where(ps...)
 	return _d
 }
 
 // Exec executes the deletion query.
-func (_d *EventPetugasDeleteOne) Exec(ctx context.Context) error {
+func (_d *LiturgiMinistryDeleteOne) Exec(ctx context.Context) error {
 	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
 	case n == 0:
-		return &NotFoundError{eventpetugas.Label}
+		return &NotFoundError{liturgiministry.Label}
 	default:
 		return nil
 	}
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_d *EventPetugasDeleteOne) ExecX(ctx context.Context) {
+func (_d *LiturgiMinistryDeleteOne) ExecX(ctx context.Context) {
 	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}

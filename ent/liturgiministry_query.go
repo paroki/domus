@@ -12,92 +12,68 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/paroki/domus/ent/event"
-	"github.com/paroki/domus/ent/eventlagu"
+	"github.com/paroki/domus/ent/liturgiministry"
 	"github.com/paroki/domus/ent/predicate"
 )
 
-// EventLaguQuery is the builder for querying EventLagu entities.
-type EventLaguQuery struct {
+// LiturgiMinistryQuery is the builder for querying LiturgiMinistry entities.
+type LiturgiMinistryQuery struct {
 	config
 	ctx        *QueryContext
-	order      []eventlagu.OrderOption
+	order      []liturgiministry.OrderOption
 	inters     []Interceptor
-	predicates []predicate.EventLagu
-	withEvent  *EventQuery
+	predicates []predicate.LiturgiMinistry
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
 }
 
-// Where adds a new predicate for the EventLaguQuery builder.
-func (_q *EventLaguQuery) Where(ps ...predicate.EventLagu) *EventLaguQuery {
+// Where adds a new predicate for the LiturgiMinistryQuery builder.
+func (_q *LiturgiMinistryQuery) Where(ps ...predicate.LiturgiMinistry) *LiturgiMinistryQuery {
 	_q.predicates = append(_q.predicates, ps...)
 	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (_q *EventLaguQuery) Limit(limit int) *EventLaguQuery {
+func (_q *LiturgiMinistryQuery) Limit(limit int) *LiturgiMinistryQuery {
 	_q.ctx.Limit = &limit
 	return _q
 }
 
 // Offset to start from.
-func (_q *EventLaguQuery) Offset(offset int) *EventLaguQuery {
+func (_q *LiturgiMinistryQuery) Offset(offset int) *LiturgiMinistryQuery {
 	_q.ctx.Offset = &offset
 	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (_q *EventLaguQuery) Unique(unique bool) *EventLaguQuery {
+func (_q *LiturgiMinistryQuery) Unique(unique bool) *LiturgiMinistryQuery {
 	_q.ctx.Unique = &unique
 	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (_q *EventLaguQuery) Order(o ...eventlagu.OrderOption) *EventLaguQuery {
+func (_q *LiturgiMinistryQuery) Order(o ...liturgiministry.OrderOption) *LiturgiMinistryQuery {
 	_q.order = append(_q.order, o...)
 	return _q
 }
 
-// QueryEvent chains the current query on the "event" edge.
-func (_q *EventLaguQuery) QueryEvent() *EventQuery {
-	query := (&EventClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(eventlagu.Table, eventlagu.FieldID, selector),
-			sqlgraph.To(event.Table, event.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, eventlagu.EventTable, eventlagu.EventColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// First returns the first EventLagu entity from the query.
-// Returns a *NotFoundError when no EventLagu was found.
-func (_q *EventLaguQuery) First(ctx context.Context) (*EventLagu, error) {
+// First returns the first LiturgiMinistry entity from the query.
+// Returns a *NotFoundError when no LiturgiMinistry was found.
+func (_q *LiturgiMinistryQuery) First(ctx context.Context) (*LiturgiMinistry, error) {
 	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
-		return nil, &NotFoundError{eventlagu.Label}
+		return nil, &NotFoundError{liturgiministry.Label}
 	}
 	return nodes[0], nil
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (_q *EventLaguQuery) FirstX(ctx context.Context) *EventLagu {
+func (_q *LiturgiMinistryQuery) FirstX(ctx context.Context) *LiturgiMinistry {
 	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -105,22 +81,22 @@ func (_q *EventLaguQuery) FirstX(ctx context.Context) *EventLagu {
 	return node
 }
 
-// FirstID returns the first EventLagu ID from the query.
-// Returns a *NotFoundError when no EventLagu ID was found.
-func (_q *EventLaguQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+// FirstID returns the first LiturgiMinistry ID from the query.
+// Returns a *NotFoundError when no LiturgiMinistry ID was found.
+func (_q *LiturgiMinistryQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
 	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
-		err = &NotFoundError{eventlagu.Label}
+		err = &NotFoundError{liturgiministry.Label}
 		return
 	}
 	return ids[0], nil
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (_q *EventLaguQuery) FirstIDX(ctx context.Context) uuid.UUID {
+func (_q *LiturgiMinistryQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -128,10 +104,10 @@ func (_q *EventLaguQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	return id
 }
 
-// Only returns a single EventLagu entity found by the query, ensuring it only returns one.
-// Returns a *NotSingularError when more than one EventLagu entity is found.
-// Returns a *NotFoundError when no EventLagu entities are found.
-func (_q *EventLaguQuery) Only(ctx context.Context) (*EventLagu, error) {
+// Only returns a single LiturgiMinistry entity found by the query, ensuring it only returns one.
+// Returns a *NotSingularError when more than one LiturgiMinistry entity is found.
+// Returns a *NotFoundError when no LiturgiMinistry entities are found.
+func (_q *LiturgiMinistryQuery) Only(ctx context.Context) (*LiturgiMinistry, error) {
 	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
@@ -140,14 +116,14 @@ func (_q *EventLaguQuery) Only(ctx context.Context) (*EventLagu, error) {
 	case 1:
 		return nodes[0], nil
 	case 0:
-		return nil, &NotFoundError{eventlagu.Label}
+		return nil, &NotFoundError{liturgiministry.Label}
 	default:
-		return nil, &NotSingularError{eventlagu.Label}
+		return nil, &NotSingularError{liturgiministry.Label}
 	}
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (_q *EventLaguQuery) OnlyX(ctx context.Context) *EventLagu {
+func (_q *LiturgiMinistryQuery) OnlyX(ctx context.Context) *LiturgiMinistry {
 	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
@@ -155,10 +131,10 @@ func (_q *EventLaguQuery) OnlyX(ctx context.Context) *EventLagu {
 	return node
 }
 
-// OnlyID is like Only, but returns the only EventLagu ID in the query.
-// Returns a *NotSingularError when more than one EventLagu ID is found.
+// OnlyID is like Only, but returns the only LiturgiMinistry ID in the query.
+// Returns a *NotSingularError when more than one LiturgiMinistry ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (_q *EventLaguQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+func (_q *LiturgiMinistryQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
 	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
@@ -167,15 +143,15 @@ func (_q *EventLaguQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) 
 	case 1:
 		id = ids[0]
 	case 0:
-		err = &NotFoundError{eventlagu.Label}
+		err = &NotFoundError{liturgiministry.Label}
 	default:
-		err = &NotSingularError{eventlagu.Label}
+		err = &NotSingularError{liturgiministry.Label}
 	}
 	return
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (_q *EventLaguQuery) OnlyIDX(ctx context.Context) uuid.UUID {
+func (_q *LiturgiMinistryQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -183,18 +159,18 @@ func (_q *EventLaguQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	return id
 }
 
-// All executes the query and returns a list of EventLagus.
-func (_q *EventLaguQuery) All(ctx context.Context) ([]*EventLagu, error) {
+// All executes the query and returns a list of LiturgiMinistries.
+func (_q *LiturgiMinistryQuery) All(ctx context.Context) ([]*LiturgiMinistry, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
-	qr := querierAll[[]*EventLagu, *EventLaguQuery]()
-	return withInterceptors[[]*EventLagu](ctx, _q, qr, _q.inters)
+	qr := querierAll[[]*LiturgiMinistry, *LiturgiMinistryQuery]()
+	return withInterceptors[[]*LiturgiMinistry](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (_q *EventLaguQuery) AllX(ctx context.Context) []*EventLagu {
+func (_q *LiturgiMinistryQuery) AllX(ctx context.Context) []*LiturgiMinistry {
 	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
@@ -202,20 +178,20 @@ func (_q *EventLaguQuery) AllX(ctx context.Context) []*EventLagu {
 	return nodes
 }
 
-// IDs executes the query and returns a list of EventLagu IDs.
-func (_q *EventLaguQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
+// IDs executes the query and returns a list of LiturgiMinistry IDs.
+func (_q *LiturgiMinistryQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 	if _q.ctx.Unique == nil && _q.path != nil {
 		_q.Unique(true)
 	}
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
-	if err = _q.Select(eventlagu.FieldID).Scan(ctx, &ids); err != nil {
+	if err = _q.Select(liturgiministry.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (_q *EventLaguQuery) IDsX(ctx context.Context) []uuid.UUID {
+func (_q *LiturgiMinistryQuery) IDsX(ctx context.Context) []uuid.UUID {
 	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -224,16 +200,16 @@ func (_q *EventLaguQuery) IDsX(ctx context.Context) []uuid.UUID {
 }
 
 // Count returns the count of the given query.
-func (_q *EventLaguQuery) Count(ctx context.Context) (int, error) {
+func (_q *LiturgiMinistryQuery) Count(ctx context.Context) (int, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, _q, querierCount[*EventLaguQuery](), _q.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*LiturgiMinistryQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (_q *EventLaguQuery) CountX(ctx context.Context) int {
+func (_q *LiturgiMinistryQuery) CountX(ctx context.Context) int {
 	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
@@ -242,7 +218,7 @@ func (_q *EventLaguQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (_q *EventLaguQuery) Exist(ctx context.Context) (bool, error) {
+func (_q *LiturgiMinistryQuery) Exist(ctx context.Context) (bool, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
 	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
@@ -255,7 +231,7 @@ func (_q *EventLaguQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (_q *EventLaguQuery) ExistX(ctx context.Context) bool {
+func (_q *LiturgiMinistryQuery) ExistX(ctx context.Context) bool {
 	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
@@ -263,34 +239,22 @@ func (_q *EventLaguQuery) ExistX(ctx context.Context) bool {
 	return exist
 }
 
-// Clone returns a duplicate of the EventLaguQuery builder, including all associated steps. It can be
+// Clone returns a duplicate of the LiturgiMinistryQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (_q *EventLaguQuery) Clone() *EventLaguQuery {
+func (_q *LiturgiMinistryQuery) Clone() *LiturgiMinistryQuery {
 	if _q == nil {
 		return nil
 	}
-	return &EventLaguQuery{
+	return &LiturgiMinistryQuery{
 		config:     _q.config,
 		ctx:        _q.ctx.Clone(),
-		order:      append([]eventlagu.OrderOption{}, _q.order...),
+		order:      append([]liturgiministry.OrderOption{}, _q.order...),
 		inters:     append([]Interceptor{}, _q.inters...),
-		predicates: append([]predicate.EventLagu{}, _q.predicates...),
-		withEvent:  _q.withEvent.Clone(),
+		predicates: append([]predicate.LiturgiMinistry{}, _q.predicates...),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
 	}
-}
-
-// WithEvent tells the query-builder to eager-load the nodes that are connected to
-// the "event" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *EventLaguQuery) WithEvent(opts ...func(*EventQuery)) *EventLaguQuery {
-	query := (&EventClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withEvent = query
-	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -303,15 +267,15 @@ func (_q *EventLaguQuery) WithEvent(opts ...func(*EventQuery)) *EventLaguQuery {
 //		Count int `json:"count,omitempty"`
 //	}
 //
-//	client.EventLagu.Query().
-//		GroupBy(eventlagu.FieldCreatedAt).
+//	client.LiturgiMinistry.Query().
+//		GroupBy(liturgiministry.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (_q *EventLaguQuery) GroupBy(field string, fields ...string) *EventLaguGroupBy {
+func (_q *LiturgiMinistryQuery) GroupBy(field string, fields ...string) *LiturgiMinistryGroupBy {
 	_q.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &EventLaguGroupBy{build: _q}
+	grbuild := &LiturgiMinistryGroupBy{build: _q}
 	grbuild.flds = &_q.ctx.Fields
-	grbuild.label = eventlagu.Label
+	grbuild.label = liturgiministry.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
 }
@@ -325,23 +289,23 @@ func (_q *EventLaguQuery) GroupBy(field string, fields ...string) *EventLaguGrou
 //		CreatedAt time.Time `json:"created_at,omitempty"`
 //	}
 //
-//	client.EventLagu.Query().
-//		Select(eventlagu.FieldCreatedAt).
+//	client.LiturgiMinistry.Query().
+//		Select(liturgiministry.FieldCreatedAt).
 //		Scan(ctx, &v)
-func (_q *EventLaguQuery) Select(fields ...string) *EventLaguSelect {
+func (_q *LiturgiMinistryQuery) Select(fields ...string) *LiturgiMinistrySelect {
 	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
-	sbuild := &EventLaguSelect{EventLaguQuery: _q}
-	sbuild.label = eventlagu.Label
+	sbuild := &LiturgiMinistrySelect{LiturgiMinistryQuery: _q}
+	sbuild.label = liturgiministry.Label
 	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
-// Aggregate returns a EventLaguSelect configured with the given aggregations.
-func (_q *EventLaguQuery) Aggregate(fns ...AggregateFunc) *EventLaguSelect {
+// Aggregate returns a LiturgiMinistrySelect configured with the given aggregations.
+func (_q *LiturgiMinistryQuery) Aggregate(fns ...AggregateFunc) *LiturgiMinistrySelect {
 	return _q.Select().Aggregate(fns...)
 }
 
-func (_q *EventLaguQuery) prepareQuery(ctx context.Context) error {
+func (_q *LiturgiMinistryQuery) prepareQuery(ctx context.Context) error {
 	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
@@ -353,7 +317,7 @@ func (_q *EventLaguQuery) prepareQuery(ctx context.Context) error {
 		}
 	}
 	for _, f := range _q.ctx.Fields {
-		if !eventlagu.ValidColumn(f) {
+		if !liturgiministry.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
@@ -367,21 +331,17 @@ func (_q *EventLaguQuery) prepareQuery(ctx context.Context) error {
 	return nil
 }
 
-func (_q *EventLaguQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*EventLagu, error) {
+func (_q *LiturgiMinistryQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*LiturgiMinistry, error) {
 	var (
-		nodes       = []*EventLagu{}
-		_spec       = _q.querySpec()
-		loadedTypes = [1]bool{
-			_q.withEvent != nil,
-		}
+		nodes = []*LiturgiMinistry{}
+		_spec = _q.querySpec()
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
-		return (*EventLagu).scanValues(nil, columns)
+		return (*LiturgiMinistry).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &EventLagu{config: _q.config}
+		node := &LiturgiMinistry{config: _q.config}
 		nodes = append(nodes, node)
-		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -393,46 +353,10 @@ func (_q *EventLaguQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ev
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := _q.withEvent; query != nil {
-		if err := _q.loadEvent(ctx, query, nodes, nil,
-			func(n *EventLagu, e *Event) { n.Edges.Event = e }); err != nil {
-			return nil, err
-		}
-	}
 	return nodes, nil
 }
 
-func (_q *EventLaguQuery) loadEvent(ctx context.Context, query *EventQuery, nodes []*EventLagu, init func(*EventLagu), assign func(*EventLagu, *Event)) error {
-	ids := make([]uuid.UUID, 0, len(nodes))
-	nodeids := make(map[uuid.UUID][]*EventLagu)
-	for i := range nodes {
-		fk := nodes[i].EventID
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(event.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "event_id" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
-
-func (_q *EventLaguQuery) sqlCount(ctx context.Context) (int, error) {
+func (_q *LiturgiMinistryQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
 	_spec.Node.Columns = _q.ctx.Fields
 	if len(_q.ctx.Fields) > 0 {
@@ -441,8 +365,8 @@ func (_q *EventLaguQuery) sqlCount(ctx context.Context) (int, error) {
 	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (_q *EventLaguQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(eventlagu.Table, eventlagu.Columns, sqlgraph.NewFieldSpec(eventlagu.FieldID, field.TypeUUID))
+func (_q *LiturgiMinistryQuery) querySpec() *sqlgraph.QuerySpec {
+	_spec := sqlgraph.NewQuerySpec(liturgiministry.Table, liturgiministry.Columns, sqlgraph.NewFieldSpec(liturgiministry.FieldID, field.TypeUUID))
 	_spec.From = _q.sql
 	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
@@ -451,14 +375,11 @@ func (_q *EventLaguQuery) querySpec() *sqlgraph.QuerySpec {
 	}
 	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
-		_spec.Node.Columns = append(_spec.Node.Columns, eventlagu.FieldID)
+		_spec.Node.Columns = append(_spec.Node.Columns, liturgiministry.FieldID)
 		for i := range fields {
-			if fields[i] != eventlagu.FieldID {
+			if fields[i] != liturgiministry.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
-		}
-		if _q.withEvent != nil {
-			_spec.Node.AddColumnOnce(eventlagu.FieldEventID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {
@@ -484,12 +405,12 @@ func (_q *EventLaguQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (_q *EventLaguQuery) sqlQuery(ctx context.Context) *sql.Selector {
+func (_q *LiturgiMinistryQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(_q.driver.Dialect())
-	t1 := builder.Table(eventlagu.Table)
+	t1 := builder.Table(liturgiministry.Table)
 	columns := _q.ctx.Fields
 	if len(columns) == 0 {
-		columns = eventlagu.Columns
+		columns = liturgiministry.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
 	if _q.sql != nil {
@@ -516,28 +437,28 @@ func (_q *EventLaguQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	return selector
 }
 
-// EventLaguGroupBy is the group-by builder for EventLagu entities.
-type EventLaguGroupBy struct {
+// LiturgiMinistryGroupBy is the group-by builder for LiturgiMinistry entities.
+type LiturgiMinistryGroupBy struct {
 	selector
-	build *EventLaguQuery
+	build *LiturgiMinistryQuery
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (_g *EventLaguGroupBy) Aggregate(fns ...AggregateFunc) *EventLaguGroupBy {
+func (_g *LiturgiMinistryGroupBy) Aggregate(fns ...AggregateFunc) *LiturgiMinistryGroupBy {
 	_g.fns = append(_g.fns, fns...)
 	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_g *EventLaguGroupBy) Scan(ctx context.Context, v any) error {
+func (_g *LiturgiMinistryGroupBy) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
 	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*EventLaguQuery, *EventLaguGroupBy](ctx, _g.build, _g, _g.build.inters, v)
+	return scanWithInterceptors[*LiturgiMinistryQuery, *LiturgiMinistryGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (_g *EventLaguGroupBy) sqlScan(ctx context.Context, root *EventLaguQuery, v any) error {
+func (_g *LiturgiMinistryGroupBy) sqlScan(ctx context.Context, root *LiturgiMinistryQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
 	aggregation := make([]string, 0, len(_g.fns))
 	for _, fn := range _g.fns {
@@ -564,28 +485,28 @@ func (_g *EventLaguGroupBy) sqlScan(ctx context.Context, root *EventLaguQuery, v
 	return sql.ScanSlice(rows, v)
 }
 
-// EventLaguSelect is the builder for selecting fields of EventLagu entities.
-type EventLaguSelect struct {
-	*EventLaguQuery
+// LiturgiMinistrySelect is the builder for selecting fields of LiturgiMinistry entities.
+type LiturgiMinistrySelect struct {
+	*LiturgiMinistryQuery
 	selector
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (_s *EventLaguSelect) Aggregate(fns ...AggregateFunc) *EventLaguSelect {
+func (_s *LiturgiMinistrySelect) Aggregate(fns ...AggregateFunc) *LiturgiMinistrySelect {
 	_s.fns = append(_s.fns, fns...)
 	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_s *EventLaguSelect) Scan(ctx context.Context, v any) error {
+func (_s *LiturgiMinistrySelect) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
 	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*EventLaguQuery, *EventLaguSelect](ctx, _s.EventLaguQuery, _s, _s.inters, v)
+	return scanWithInterceptors[*LiturgiMinistryQuery, *LiturgiMinistrySelect](ctx, _s.LiturgiMinistryQuery, _s, _s.inters, v)
 }
 
-func (_s *EventLaguSelect) sqlScan(ctx context.Context, root *EventLaguQuery, v any) error {
+func (_s *LiturgiMinistrySelect) sqlScan(ctx context.Context, root *LiturgiMinistryQuery, v any) error {
 	selector := root.sqlQuery(ctx)
 	aggregation := make([]string, 0, len(_s.fns))
 	for _, fn := range _s.fns {

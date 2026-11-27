@@ -10,12 +10,11 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
-	"github.com/paroki/domus/ent/event"
-	"github.com/paroki/domus/ent/eventlagu"
+	"github.com/paroki/domus/ent/liturgilagu"
 )
 
-// EventLagu is the model entity for the EventLagu schema.
-type EventLagu struct {
+// LiturgiLagu is the model entity for the LiturgiLagu schema.
+type LiturgiLagu struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
@@ -31,6 +30,8 @@ type EventLagu struct {
 	Urutan int `json:"urutan,omitempty"`
 	// Bagian holds the value of the "bagian" field.
 	Bagian string `json:"bagian,omitempty"`
+	// CantusID holds the value of the "cantus_id" field.
+	CantusID *uuid.UUID `json:"cantus_id,omitempty"`
 	// Sumber holds the value of the "sumber" field.
 	Sumber *string `json:"sumber,omitempty"`
 	// Nomor holds the value of the "nomor" field.
@@ -40,45 +41,24 @@ type EventLagu struct {
 	// NadaDasar holds the value of the "nada_dasar" field.
 	NadaDasar *string `json:"nada_dasar,omitempty"`
 	// Note holds the value of the "note" field.
-	Note *string `json:"note,omitempty"`
-	// Edges holds the relations/edges for other nodes in the graph.
-	// The values are being populated by the EventLaguQuery when eager-loading is set.
-	Edges        EventLaguEdges `json:"edges"`
+	Note         *string `json:"note,omitempty"`
 	selectValues sql.SelectValues
 }
 
-// EventLaguEdges holds the relations/edges for other nodes in the graph.
-type EventLaguEdges struct {
-	// Event holds the value of the event edge.
-	Event *Event `json:"event,omitempty"`
-	// loadedTypes holds the information for reporting if a
-	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
-}
-
-// EventOrErr returns the Event value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e EventLaguEdges) EventOrErr() (*Event, error) {
-	if e.Event != nil {
-		return e.Event, nil
-	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: event.Label}
-	}
-	return nil, &NotLoadedError{edge: "event"}
-}
-
 // scanValues returns the types for scanning values from sql.Rows.
-func (*EventLagu) scanValues(columns []string) ([]any, error) {
+func (*LiturgiLagu) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case eventlagu.FieldUrutan:
+		case liturgilagu.FieldCantusID:
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
+		case liturgilagu.FieldUrutan:
 			values[i] = new(sql.NullInt64)
-		case eventlagu.FieldBagian, eventlagu.FieldSumber, eventlagu.FieldNomor, eventlagu.FieldJudul, eventlagu.FieldNadaDasar, eventlagu.FieldNote:
+		case liturgilagu.FieldBagian, liturgilagu.FieldSumber, liturgilagu.FieldNomor, liturgilagu.FieldJudul, liturgilagu.FieldNadaDasar, liturgilagu.FieldNote:
 			values[i] = new(sql.NullString)
-		case eventlagu.FieldCreatedAt, eventlagu.FieldUpdatedAt:
+		case liturgilagu.FieldCreatedAt, liturgilagu.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case eventlagu.FieldID, eventlagu.FieldParokiID, eventlagu.FieldEventID:
+		case liturgilagu.FieldID, liturgilagu.FieldParokiID, liturgilagu.FieldEventID:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -88,83 +68,90 @@ func (*EventLagu) scanValues(columns []string) ([]any, error) {
 }
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
-// to the EventLagu fields.
-func (_m *EventLagu) assignValues(columns []string, values []any) error {
+// to the LiturgiLagu fields.
+func (_m *LiturgiLagu) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
 	for i := range columns {
 		switch columns[i] {
-		case eventlagu.FieldID:
+		case liturgilagu.FieldID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value != nil {
 				_m.ID = *value
 			}
-		case eventlagu.FieldCreatedAt:
+		case liturgilagu.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
 				_m.CreatedAt = value.Time
 			}
-		case eventlagu.FieldUpdatedAt:
+		case liturgilagu.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				_m.UpdatedAt = value.Time
 			}
-		case eventlagu.FieldParokiID:
+		case liturgilagu.FieldParokiID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field paroki_id", values[i])
 			} else if value != nil {
 				_m.ParokiID = *value
 			}
-		case eventlagu.FieldEventID:
+		case liturgilagu.FieldEventID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field event_id", values[i])
 			} else if value != nil {
 				_m.EventID = *value
 			}
-		case eventlagu.FieldUrutan:
+		case liturgilagu.FieldUrutan:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field urutan", values[i])
 			} else if value.Valid {
 				_m.Urutan = int(value.Int64)
 			}
-		case eventlagu.FieldBagian:
+		case liturgilagu.FieldBagian:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field bagian", values[i])
 			} else if value.Valid {
 				_m.Bagian = value.String
 			}
-		case eventlagu.FieldSumber:
+		case liturgilagu.FieldCantusID:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field cantus_id", values[i])
+			} else if value.Valid {
+				_m.CantusID = new(uuid.UUID)
+				*_m.CantusID = *value.S.(*uuid.UUID)
+			}
+		case liturgilagu.FieldSumber:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field sumber", values[i])
 			} else if value.Valid {
 				_m.Sumber = new(string)
 				*_m.Sumber = value.String
 			}
-		case eventlagu.FieldNomor:
+		case liturgilagu.FieldNomor:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field nomor", values[i])
 			} else if value.Valid {
 				_m.Nomor = new(string)
 				*_m.Nomor = value.String
 			}
-		case eventlagu.FieldJudul:
+		case liturgilagu.FieldJudul:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field judul", values[i])
 			} else if value.Valid {
 				_m.Judul = value.String
 			}
-		case eventlagu.FieldNadaDasar:
+		case liturgilagu.FieldNadaDasar:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field nada_dasar", values[i])
 			} else if value.Valid {
 				_m.NadaDasar = new(string)
 				*_m.NadaDasar = value.String
 			}
-		case eventlagu.FieldNote:
+		case liturgilagu.FieldNote:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field note", values[i])
 			} else if value.Valid {
@@ -178,39 +165,34 @@ func (_m *EventLagu) assignValues(columns []string, values []any) error {
 	return nil
 }
 
-// Value returns the ent.Value that was dynamically selected and assigned to the EventLagu.
+// Value returns the ent.Value that was dynamically selected and assigned to the LiturgiLagu.
 // This includes values selected through modifiers, order, etc.
-func (_m *EventLagu) Value(name string) (ent.Value, error) {
+func (_m *LiturgiLagu) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
 }
 
-// QueryEvent queries the "event" edge of the EventLagu entity.
-func (_m *EventLagu) QueryEvent() *EventQuery {
-	return NewEventLaguClient(_m.config).QueryEvent(_m)
-}
-
-// Update returns a builder for updating this EventLagu.
-// Note that you need to call EventLagu.Unwrap() before calling this method if this EventLagu
+// Update returns a builder for updating this LiturgiLagu.
+// Note that you need to call LiturgiLagu.Unwrap() before calling this method if this LiturgiLagu
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (_m *EventLagu) Update() *EventLaguUpdateOne {
-	return NewEventLaguClient(_m.config).UpdateOne(_m)
+func (_m *LiturgiLagu) Update() *LiturgiLaguUpdateOne {
+	return NewLiturgiLaguClient(_m.config).UpdateOne(_m)
 }
 
-// Unwrap unwraps the EventLagu entity that was returned from a transaction after it was closed,
+// Unwrap unwraps the LiturgiLagu entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (_m *EventLagu) Unwrap() *EventLagu {
+func (_m *LiturgiLagu) Unwrap() *LiturgiLagu {
 	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
-		panic("ent: EventLagu is not a transactional entity")
+		panic("ent: LiturgiLagu is not a transactional entity")
 	}
 	_m.config.driver = _tx.drv
 	return _m
 }
 
 // String implements the fmt.Stringer.
-func (_m *EventLagu) String() string {
+func (_m *LiturgiLagu) String() string {
 	var builder strings.Builder
-	builder.WriteString("EventLagu(")
+	builder.WriteString("LiturgiLagu(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
@@ -229,6 +211,11 @@ func (_m *EventLagu) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("bagian=")
 	builder.WriteString(_m.Bagian)
+	builder.WriteString(", ")
+	if v := _m.CantusID; v != nil {
+		builder.WriteString("cantus_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteString(", ")
 	if v := _m.Sumber; v != nil {
 		builder.WriteString("sumber=")
@@ -256,5 +243,5 @@ func (_m *EventLagu) String() string {
 	return builder.String()
 }
 
-// EventLagus is a parsable slice of EventLagu.
-type EventLagus []*EventLagu
+// LiturgiLagus is a parsable slice of LiturgiLagu.
+type LiturgiLagus []*LiturgiLagu

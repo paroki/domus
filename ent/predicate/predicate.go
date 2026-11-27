@@ -27,12 +27,6 @@ type CasbinRule func(*sql.Selector)
 // Event is the predicate function for event builders.
 type Event func(*sql.Selector)
 
-// EventLagu is the predicate function for eventlagu builders.
-type EventLagu func(*sql.Selector)
-
-// EventPetugas is the predicate function for eventpetugas builders.
-type EventPetugas func(*sql.Selector)
-
 // EventRSVP is the predicate function for eventrsvp builders.
 type EventRSVP func(*sql.Selector)
 
@@ -56,6 +50,15 @@ type Kota func(*sql.Selector)
 
 // Lingkungan is the predicate function for lingkungan builders.
 type Lingkungan func(*sql.Selector)
+
+// LiturgiLagu is the predicate function for liturgilagu builders.
+type LiturgiLagu func(*sql.Selector)
+
+// LiturgiMinistry is the predicate function for liturgiministry builders.
+type LiturgiMinistry func(*sql.Selector)
+
+// LiturgiPetugas is the predicate function for liturgipetugas builders.
+type LiturgiPetugas func(*sql.Selector)
 
 // Lookup is the predicate function for lookup builders.
 type Lookup func(*sql.Selector)

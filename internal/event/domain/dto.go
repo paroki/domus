@@ -31,24 +31,21 @@ type EventResponse struct {
 	MyOrgRole    *string                   `json:"myOrgRole,omitempty"`
 	MyRsvp       *EventRSVPResponse        `json:"myRsvp,omitempty"`
 	RsvpSummary  *EventRSVPSummaryResponse `json:"rsvpSummary,omitempty"`
-	Petugas      []EventPetugasResponse    `json:"petugas,omitempty"`
-	Lagu         []EventLaguResponse       `json:"lagu,omitempty"`
 	CreatedAt    time.Time                 `json:"createdAt"`
 	UpdatedAt    time.Time                 `json:"updatedAt"`
 }
 
 // EventSearchFilter filters event search results.
 type EventSearchFilter struct {
-	OrgID          *uuid.UUID `json:"orgId,omitempty"`
-	ParokiWideOnly *bool      `json:"parokiWideOnly,omitempty"`
-	Jenis          string     `json:"jenis,omitempty"`
-	Visibility     string     `json:"visibility,omitempty" validate:"omitempty,oneof=public private"`
-	Status         string     `json:"status,omitempty" validate:"omitempty,oneof=scheduled cancelled"`
-	MyOrgsOnly     *bool      `json:"myOrgsOnly,omitempty"`
-	AssignedToMe   *bool      `json:"assignedToMe,omitempty"`
-	AssignedOrgID  *uuid.UUID `json:"assignedOrgId,omitempty"`
-	From           *time.Time `json:"from,omitempty"`
-	To             *time.Time `json:"to,omitempty"`
+	OrgID          *uuid.UUID  `json:"orgId,omitempty"`
+	ParokiWideOnly *bool       `json:"parokiWideOnly,omitempty"`
+	Jenis          string      `json:"jenis,omitempty"`
+	Visibility     string      `json:"visibility,omitempty" validate:"omitempty,oneof=public private"`
+	Status         string      `json:"status,omitempty" validate:"omitempty,oneof=scheduled cancelled"`
+	MyOrgsOnly     *bool       `json:"myOrgsOnly,omitempty"`
+	From           *time.Time  `json:"from,omitempty"`
+	To             *time.Time  `json:"to,omitempty"`
+	EventIDs       []uuid.UUID `json:"-"`
 }
 
 // SearchEventsRequest searches visible events within the active paroki.
@@ -132,81 +129,4 @@ type SearchEventRSVPsRequest struct {
 	Filter *EventRSVPSearchFilter `json:"filter,omitempty"`
 	Cursor string                 `json:"cursor,omitempty"`
 	Limit  int                    `json:"limit,omitempty" validate:"omitempty,min=1,max=100"`
-}
-
-// EventPetugasResponse is the public API representation of an EventPetugas assignment.
-type EventPetugasResponse struct {
-	ID         uuid.UUID  `json:"id"`
-	ParokiID   uuid.UUID  `json:"parokiId"`
-	EventID    uuid.UUID  `json:"eventId"`
-	Role       string     `json:"role"`
-	UserID     *uuid.UUID `json:"userId,omitempty"`
-	OrgID      *uuid.UUID `json:"orgId,omitempty"`
-	Name       string     `json:"name"`
-	Urutan     int        `json:"urutan"`
-	Status     string     `json:"status"`
-	Note       *string    `json:"note,omitempty"`
-	CanConfirm bool       `json:"canConfirm"`
-	CreatedAt  time.Time  `json:"createdAt"`
-	UpdatedAt  time.Time  `json:"updatedAt"`
-}
-
-// CreateEventPetugasRequest assigns an officer/minister to an Event (Pattern A: userId, orgId, or manual name).
-type CreateEventPetugasRequest struct {
-	Role   string     `json:"role" validate:"required,min=1"`
-	UserID *uuid.UUID `json:"userId,omitempty"`
-	OrgID  *uuid.UUID `json:"orgId,omitempty"`
-	Name   string     `json:"name,omitempty"`
-	Urutan *int       `json:"urutan,omitempty"`
-	Status string     `json:"status,omitempty" validate:"omitempty,oneof=assigned confirmed declined"`
-	Note   *string    `json:"note,omitempty"`
-}
-
-// UpdateEventPetugasRequest updates or confirms an EventPetugas assignment.
-type UpdateEventPetugasRequest struct {
-	Role   *string    `json:"role,omitempty" validate:"omitempty,min=1"`
-	UserID *uuid.UUID `json:"userId,omitempty"`
-	OrgID  *uuid.UUID `json:"orgId,omitempty"`
-	Name   *string    `json:"name,omitempty"`
-	Urutan *int       `json:"urutan,omitempty"`
-	Status *string    `json:"status,omitempty" validate:"omitempty,oneof=assigned confirmed declined"`
-	Note   *string    `json:"note,omitempty"`
-}
-
-// EventLaguResponse is the public API representation of an EventLagu entry.
-type EventLaguResponse struct {
-	ID        uuid.UUID `json:"id"`
-	ParokiID  uuid.UUID `json:"parokiId"`
-	EventID   uuid.UUID `json:"eventId"`
-	Urutan    int       `json:"urutan"`
-	Bagian    string    `json:"bagian"`
-	Sumber    *string   `json:"sumber,omitempty"`
-	Nomor     *string   `json:"nomor,omitempty"`
-	Judul     string    `json:"judul"`
-	NadaDasar *string   `json:"nadaDasar,omitempty"`
-	Note      *string   `json:"note,omitempty"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
-}
-
-// CreateEventLaguRequest adds a liturgical song entry to an Event.
-type CreateEventLaguRequest struct {
-	Bagian    string  `json:"bagian" validate:"required,min=1"`
-	Urutan    *int    `json:"urutan,omitempty"`
-	Sumber    *string `json:"sumber,omitempty"`
-	Nomor     *string `json:"nomor,omitempty"`
-	Judul     string  `json:"judul" validate:"required,min=1"`
-	NadaDasar *string `json:"nadaDasar,omitempty"`
-	Note      *string `json:"note,omitempty"`
-}
-
-// UpdateEventLaguRequest updates an existing EventLagu entry (empty strings clear optional fields).
-type UpdateEventLaguRequest struct {
-	Bagian    *string `json:"bagian,omitempty" validate:"omitempty,min=1"`
-	Urutan    *int    `json:"urutan,omitempty"`
-	Sumber    *string `json:"sumber,omitempty"`
-	Nomor     *string `json:"nomor,omitempty"`
-	Judul     *string `json:"judul,omitempty" validate:"omitempty,min=1"`
-	NadaDasar *string `json:"nadaDasar,omitempty"`
-	Note      *string `json:"note,omitempty"`
 }

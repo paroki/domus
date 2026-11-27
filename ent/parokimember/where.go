@@ -81,6 +81,11 @@ func UmatAdmin(v bool) predicate.ParokiMember {
 	return predicate.ParokiMember(sql.FieldEQ(FieldUmatAdmin, v))
 }
 
+// LiturgiAdmin applies equality check predicate on the "liturgi_admin" field. It's identical to LiturgiAdminEQ.
+func LiturgiAdmin(v bool) predicate.ParokiMember {
+	return predicate.ParokiMember(sql.FieldEQ(FieldLiturgiAdmin, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.ParokiMember {
 	return predicate.ParokiMember(sql.FieldEQ(FieldCreatedAt, v))
@@ -249,6 +254,16 @@ func UmatAdminEQ(v bool) predicate.ParokiMember {
 // UmatAdminNEQ applies the NEQ predicate on the "umat_admin" field.
 func UmatAdminNEQ(v bool) predicate.ParokiMember {
 	return predicate.ParokiMember(sql.FieldNEQ(FieldUmatAdmin, v))
+}
+
+// LiturgiAdminEQ applies the EQ predicate on the "liturgi_admin" field.
+func LiturgiAdminEQ(v bool) predicate.ParokiMember {
+	return predicate.ParokiMember(sql.FieldEQ(FieldLiturgiAdmin, v))
+}
+
+// LiturgiAdminNEQ applies the NEQ predicate on the "liturgi_admin" field.
+func LiturgiAdminNEQ(v bool) predicate.ParokiMember {
+	return predicate.ParokiMember(sql.FieldNEQ(FieldLiturgiAdmin, v))
 }
 
 // HasParoki applies the HasEdge predicate on the "paroki" edge.

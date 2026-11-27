@@ -41,14 +41,6 @@ func (h *Handler) Register(
 	events.Delete("/:id/rsvp", h.DeleteEventRSVP)
 	events.Get("/:id/rsvps/summary", h.GetEventRSVPSummary)
 	events.Post("/:id/rsvps/search", h.SearchEventRSVPs)
-
-	events.Post("/:id/petugas", h.CreateEventPetugas)
-	events.Patch("/:id/petugas/:petugasId", h.UpdateEventPetugas)
-	events.Delete("/:id/petugas/:petugasId", h.DeleteEventPetugas)
-
-	events.Post("/:id/lagu", h.CreateEventLagu)
-	events.Patch("/:id/lagu/:laguId", h.UpdateEventLagu)
-	events.Delete("/:id/lagu/:laguId", h.DeleteEventLagu)
 }
 
 func decodeStrictJSON(c fiber.Ctx, dst any) error {

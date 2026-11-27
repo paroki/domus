@@ -1,0 +1,152 @@
+package liturgi
+
+import (
+	"context"
+
+	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
+	"github.com/paroki/domus/ent"
+	"github.com/paroki/domus/internal/event"
+	"github.com/paroki/domus/internal/liturgi/domain"
+	"github.com/paroki/domus/internal/liturgi/handler"
+	"github.com/paroki/domus/internal/liturgi/repo"
+	"github.com/paroki/domus/internal/liturgi/service"
+	"github.com/paroki/domus/internal/org"
+	"github.com/paroki/domus/internal/platform/authz"
+	"github.com/paroki/domus/internal/ref"
+	"github.com/paroki/domus/internal/user"
+)
+
+// Feature-owned Casbin role and resource permissions.
+var (
+	RoleAdmin      = domain.RoleAdmin
+	PermSchedules  = domain.PermSchedules
+	PermMinistries = domain.PermMinistries
+	PermPetugas    = domain.PermPetugas
+	PermLagu       = domain.PermLagu
+)
+
+type orgReaderAdapter struct {
+	orgs *org.Feature
+}
+
+func (a orgReaderAdapter) GetOrganization(ctx context.Context, parokiID, orgID uuid.UUID) (*service.OrgInfo, error) {
+	o, err := a.orgs.GetOrganization(ctx, parokiID, orgID)
+	if err != nil {
+		return nil, err
+	}
+	return &service.OrgInfo{
+		ID:   o.ID,
+		Name: o.Name,
+	}, nil
+}
+
+func (a orgReaderAdapter) IsAdmin(ctx context.Context, orgID, userID uuid.UUID) (bool, error) {
+	return a.orgs.IsAdmin(ctx, orgID, userID)
+}
+
+func (a orgReaderAdapter) ListUserOrgs(ctx context.Context, parokiID, userID uuid.UUID) ([]service.OrgInfo, error) {
+	rows, err := a.orgs.ListUserOrgs(ctx, parokiID, userID)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]service.OrgInfo, 0, len(rows))
+	for _, o := range rows {
+		out = append(out, service.OrgInfo{
+			ID:   o.ID,
+			Name: o.Name,
+		})
+	}
+	return out, nil
+}
+
+// Feature wires liturgical ministry configuration and parish Mass schedule management.
+type Feature struct {
+	service *service.Service
+	handler *handler.Handler
+	users   *user.Feature
+}
+
+// New constructs the liturgi Feature.
+func New(db *ent.Client, enforcer *authz.Enforcer, users *user.Feature, orgs *org.Feature, events *event.Feature) *Feature {
+	r := repo.New(db)
+	var orgReader service.OrgReader
+	if orgs != nil {
+		orgReader = orgReaderAdapter{orgs: orgs}
+	}
+	svc := service.New(r, enforcer, orgReader, events)
+	h := handler.New(svc)
+	return &Feature{
+		service: svc,
+		handler: h,
+		users:   users,
+	}
+}
+
+// Register mounts /liturgi routes under /api.
+func (f *Feature) Register(api fiber.Router) {
+	f.handler.Register(
+		api,
+		f.users.AuthenticateMiddleware(),
+		f.users.RequireAuth(),
+		requireTenantMiddleware(),
+		f.users.Require(PermMinistries, authz.ActionRead),
+		f.users.Require(PermSchedules, authz.ActionRead),
+	)
+}
+
+// RegisterPermissions registers liturgi feature roles and policies with the Casbin enforcer.
+func (f *Feature) RegisterPermissions(ctx context.Context, e *authz.Enforcer) error {
+	if e == nil {
+		return nil
+	}
+	e.RegisterRole(authz.RoleDescriptor{
+		Code:        RoleAdmin,
+		Name:        "Admin Liturgi",
+		Scope:       authz.RoleScopeParoki,
+		Description: "Mengelola jadwal perayaan Misa paroki, pemetaan 6 bidang petugas liturgi, penugasan petugas, dan daftar lagu perayaan.",
+	})
+	policies := []struct {
+		role string
+		perm string
+		act  authz.Action
+	}{
+		{user.RoleUser, PermSchedules, authz.ActionRead},
+		{user.RoleUser, PermMinistries, authz.ActionRead},
+		{user.RoleUser, PermPetugas, authz.ActionRead},
+		{user.RoleUser, PermLagu, authz.ActionRead},
+		{user.RoleUser, PermPetugas, authz.ActionWrite},
+		{user.RoleUser, PermLagu, authz.ActionWrite},
+		{ref.RoleParokiAdmin, PermSchedules, authz.ActionRead},
+		{ref.RoleParokiAdmin, PermSchedules, authz.ActionWrite},
+		{ref.RoleParokiAdmin, PermMinistries, authz.ActionRead},
+		{ref.RoleParokiAdmin, PermMinistries, authz.ActionWrite},
+		{ref.RoleParokiAdmin, PermPetugas, authz.ActionRead},
+		{ref.RoleParokiAdmin, PermPetugas, authz.ActionWrite},
+		{ref.RoleParokiAdmin, PermLagu, authz.ActionRead},
+		{ref.RoleParokiAdmin, PermLagu, authz.ActionWrite},
+		{RoleAdmin, PermSchedules, authz.ActionRead},
+		{RoleAdmin, PermSchedules, authz.ActionWrite},
+		{RoleAdmin, PermMinistries, authz.ActionRead},
+		{RoleAdmin, PermMinistries, authz.ActionWrite},
+		{RoleAdmin, PermPetugas, authz.ActionRead},
+		{RoleAdmin, PermPetugas, authz.ActionWrite},
+		{RoleAdmin, PermLagu, authz.ActionRead},
+		{RoleAdmin, PermLagu, authz.ActionWrite},
+	}
+	for _, p := range policies {
+		if err := e.AddPermissionForRole(ctx, p.role, authz.DomainGlobal, p.perm, p.act); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func requireTenantMiddleware() fiber.Handler {
+	return func(c fiber.Ctx) error {
+		if _, err := user.RequireTenant(c.Context()); err != nil {
+			return err
+		}
+		return c.Next()
+	}
+}

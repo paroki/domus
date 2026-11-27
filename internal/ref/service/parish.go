@@ -452,12 +452,13 @@ func (s *Service) SearchParokiMembers(
 	}
 
 	var role string
-	var umatAdmin *bool
+	var umatAdmin, liturgiAdmin *bool
 	if req.Filter != nil {
 		role = req.Filter.Role
 		umatAdmin = req.Filter.UmatAdmin
+		liturgiAdmin = req.Filter.LiturgiAdmin
 	}
-	rows, usersMap, err := s.repo.SearchParokiMembers(ctx, parokiID, strings.TrimSpace(req.Q), role, umatAdmin, cursorCreatedAt, cursorID, limit+1)
+	rows, usersMap, err := s.repo.SearchParokiMembers(ctx, parokiID, strings.TrimSpace(req.Q), role, umatAdmin, liturgiAdmin, cursorCreatedAt, cursorID, limit+1)
 	if err != nil {
 		return nil, false, err
 	}
@@ -508,6 +509,10 @@ func (s *Service) AddParokiMember(
 		return domain.ParokiMemberResponse{}, domain.ErrRefForbidden
 	}
 	umatAdmin := req.UmatAdmin != nil && *req.UmatAdmin
+	liturgiAdmin := req.LiturgiAdmin != nil && *req.LiturgiAdmin
+	if !isSuperAdmin && !isParokiAdmin && liturgiAdmin {
+		return domain.ParokiMemberResponse{}, domain.ErrRefForbidden
+	}
 
 	var targetUserID uuid.UUID
 	if req.UserID != nil && *req.UserID != uuid.Nil {
@@ -557,7 +562,7 @@ func (s *Service) AddParokiMember(
 		} else if !ent.IsNotFound(err) {
 			return err
 		}
-		pm, err := txRepo.CreateParokiMember(ctx, parokiID, targetUserID, parokimember.Role(role), umatAdmin)
+		pm, err := txRepo.CreateParokiMember(ctx, parokiID, targetUserID, parokimember.Role(role), umatAdmin, liturgiAdmin)
 		if err != nil {
 			if ent.IsConstraintError(err) {
 				return domain.ErrParokiMemberConflict
@@ -587,6 +592,11 @@ func (s *Service) AddParokiMember(
 				return domain.ParokiMemberResponse{}, err
 			}
 		}
+		if liturgiAdmin {
+			if err := s.enforcer.AssignRole(ctx, sub, roleLiturgiAdmin, dom); err != nil {
+				return domain.ParokiMemberResponse{}, err
+			}
+		}
 	}
 
 	u, err := s.repo.FindUserByID(ctx, targetUserID)
@@ -603,8 +613,8 @@ func (s *Service) UpdateParokiMember(
 	parokiID, targetUserID uuid.UUID,
 	req domain.UpdateParokiMemberRequest,
 ) (domain.ParokiMemberResponse, error) {
-	if req.Role == nil && req.UmatAdmin == nil {
-		return domain.ParokiMemberResponse{}, domain.ValidationError("body", "REQUIRED", "At least one of role or umatAdmin is required.")
+	if req.Role == nil && req.UmatAdmin == nil && req.LiturgiAdmin == nil {
+		return domain.ParokiMemberResponse{}, domain.ValidationError("body", "REQUIRED", "At least one of role, umatAdmin, or liturgiAdmin is required.")
 	}
 	isSuperAdmin := s.isSuperAdmin(p)
 	isParokiAdmin, err := s.isParokiAdmin(p, parokiID)
@@ -612,6 +622,9 @@ func (s *Service) UpdateParokiMember(
 		return domain.ParokiMemberResponse{}, err
 	}
 	if !isSuperAdmin && !isParokiAdmin {
+		if req.LiturgiAdmin != nil {
+			return domain.ParokiMemberResponse{}, domain.ErrRefForbidden
+		}
 		isUmatAdmin, err := s.isUmatAdmin(p, parokiID)
 		if err != nil {
 			return domain.ParokiMemberResponse{}, err
@@ -646,7 +659,7 @@ func (s *Service) UpdateParokiMember(
 			r := parokimember.Role(*req.Role)
 			nextRole = &r
 		}
-		u, err := txRepo.UpdateParokiMember(ctx, existing.ID, nextRole, req.UmatAdmin)
+		u, err := txRepo.UpdateParokiMember(ctx, existing.ID, nextRole, req.UmatAdmin, req.LiturgiAdmin)
 		if err != nil {
 			return err
 		}
@@ -682,6 +695,17 @@ func (s *Service) UpdateParokiMember(
 				}
 			}
 		}
+		if req.LiturgiAdmin != nil {
+			if *req.LiturgiAdmin {
+				if err := s.enforcer.AssignRole(ctx, sub, roleLiturgiAdmin, dom); err != nil {
+					return domain.ParokiMemberResponse{}, err
+				}
+			} else {
+				if err := s.enforcer.RevokeRole(ctx, sub, roleLiturgiAdmin, dom); err != nil {
+					return domain.ParokiMemberResponse{}, err
+				}
+			}
+		}
 	}
 
 	u, err := s.repo.FindUserByID(ctx, targetUserID)
@@ -697,7 +721,7 @@ func (s *Service) RemoveParokiMember(ctx context.Context, p authx.Principal, par
 		return err
 	}
 
-	var wasAdmin, wasUmatAdmin bool
+	var wasAdmin, wasUmatAdmin, wasLiturgiAdmin bool
 	err := s.repo.WithTx(ctx, func(txRepo *repo.Repository) error {
 		existing, err := txRepo.FindParokiMember(ctx, parokiID, targetUserID)
 		if ent.IsNotFound(err) {
@@ -714,6 +738,7 @@ func (s *Service) RemoveParokiMember(ctx context.Context, p authx.Principal, par
 			wasAdmin = true
 		}
 		wasUmatAdmin = existing.UmatAdmin
+		wasLiturgiAdmin = existing.LiturgiAdmin
 
 		return txRepo.DeleteParokiMember(ctx, existing.ID)
 	})
@@ -730,6 +755,11 @@ func (s *Service) RemoveParokiMember(ctx context.Context, p authx.Principal, par
 		}
 		if wasUmatAdmin {
 			if err := s.enforcer.RevokeRole(ctx, sub, roleUmatAdmin, dom); err != nil {
+				return err
+			}
+		}
+		if wasLiturgiAdmin {
+			if err := s.enforcer.RevokeRole(ctx, sub, roleLiturgiAdmin, dom); err != nil {
 				return err
 			}
 		}
@@ -982,13 +1012,14 @@ func toParokiResponse(p *ent.Paroki) domain.ParokiResponse {
 
 func toParokiMemberResponse(pm *ent.ParokiMember, u *ent.User) domain.ParokiMemberResponse {
 	res := domain.ParokiMemberResponse{
-		ID:        pm.ID,
-		ParokiID:  pm.ParokiID,
-		UserID:    pm.UserID,
-		Role:      string(pm.Role),
-		UmatAdmin: pm.UmatAdmin,
-		CreatedAt: pm.CreatedAt,
-		UpdatedAt: pm.UpdatedAt,
+		ID:           pm.ID,
+		ParokiID:     pm.ParokiID,
+		UserID:       pm.UserID,
+		Role:         string(pm.Role),
+		UmatAdmin:    pm.UmatAdmin,
+		LiturgiAdmin: pm.LiturgiAdmin,
+		CreatedAt:    pm.CreatedAt,
+		UpdatedAt:    pm.UpdatedAt,
 	}
 	if u != nil {
 		res.Email = u.Email

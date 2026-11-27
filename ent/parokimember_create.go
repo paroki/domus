@@ -90,6 +90,20 @@ func (_c *ParokiMemberCreate) SetNillableUmatAdmin(v *bool) *ParokiMemberCreate 
 	return _c
 }
 
+// SetLiturgiAdmin sets the "liturgi_admin" field.
+func (_c *ParokiMemberCreate) SetLiturgiAdmin(v bool) *ParokiMemberCreate {
+	_c.mutation.SetLiturgiAdmin(v)
+	return _c
+}
+
+// SetNillableLiturgiAdmin sets the "liturgi_admin" field if the given value is not nil.
+func (_c *ParokiMemberCreate) SetNillableLiturgiAdmin(v *bool) *ParokiMemberCreate {
+	if v != nil {
+		_c.SetLiturgiAdmin(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *ParokiMemberCreate) SetID(v uuid.UUID) *ParokiMemberCreate {
 	_c.mutation.SetID(v)
@@ -160,6 +174,10 @@ func (_c *ParokiMemberCreate) defaults() {
 		v := parokimember.DefaultUmatAdmin
 		_c.mutation.SetUmatAdmin(v)
 	}
+	if _, ok := _c.mutation.LiturgiAdmin(); !ok {
+		v := parokimember.DefaultLiturgiAdmin
+		_c.mutation.SetLiturgiAdmin(v)
+	}
 	if _, ok := _c.mutation.ID(); !ok {
 		v := parokimember.DefaultID()
 		_c.mutation.SetID(v)
@@ -190,6 +208,9 @@ func (_c *ParokiMemberCreate) check() error {
 	}
 	if _, ok := _c.mutation.UmatAdmin(); !ok {
 		return &ValidationError{Name: "umat_admin", err: errors.New(`ent: missing required field "ParokiMember.umat_admin"`)}
+	}
+	if _, ok := _c.mutation.LiturgiAdmin(); !ok {
+		return &ValidationError{Name: "liturgi_admin", err: errors.New(`ent: missing required field "ParokiMember.liturgi_admin"`)}
 	}
 	if len(_c.mutation.ParokiIDs()) == 0 {
 		return &ValidationError{Name: "paroki", err: errors.New(`ent: missing required edge "ParokiMember.paroki"`)}
@@ -248,6 +269,10 @@ func (_c *ParokiMemberCreate) createSpec() (*ParokiMember, *sqlgraph.CreateSpec)
 	if value, ok := _c.mutation.UmatAdmin(); ok {
 		_spec.SetField(parokimember.FieldUmatAdmin, field.TypeBool, value)
 		_node.UmatAdmin = value
+	}
+	if value, ok := _c.mutation.LiturgiAdmin(); ok {
+		_spec.SetField(parokimember.FieldLiturgiAdmin, field.TypeBool, value)
+		_node.LiturgiAdmin = value
 	}
 	if nodes := _c.mutation.ParokiIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

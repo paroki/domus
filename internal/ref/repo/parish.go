@@ -12,6 +12,9 @@ import (
 	"github.com/paroki/domus/ent/event"
 	"github.com/paroki/domus/ent/keluarga"
 	"github.com/paroki/domus/ent/lingkungan"
+	"github.com/paroki/domus/ent/liturgilagu"
+	"github.com/paroki/domus/ent/liturgiministry"
+	"github.com/paroki/domus/ent/liturgipetugas"
 	"github.com/paroki/domus/ent/lookup"
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/paroki"
@@ -336,6 +339,15 @@ func (r *Repository) HasParokiChildren(ctx context.Context, parokiID uuid.UUID) 
 	if has, err := r.client.Umat.Query().Where(umat.ParokiIDEQ(parokiID), umat.DeletedAtIsNil()).Exist(ctx); err != nil || has {
 		return has, err
 	}
+	if has, err := r.client.LiturgiMinistry.Query().Where(liturgiministry.ParokiIDEQ(parokiID)).Exist(ctx); err != nil || has {
+		return has, err
+	}
+	if has, err := r.client.LiturgiPetugas.Query().Where(liturgipetugas.ParokiIDEQ(parokiID)).Exist(ctx); err != nil || has {
+		return has, err
+	}
+	if has, err := r.client.LiturgiLagu.Query().Where(liturgilagu.ParokiIDEQ(parokiID)).Exist(ctx); err != nil || has {
+		return has, err
+	}
 	return r.client.UmatSakramen.Query().Where(umatsakramen.Or(
 		umatsakramen.ParokiIDEQ(parokiID),
 		umatsakramen.ParokiSakramenIDEQ(parokiID),
@@ -347,7 +359,7 @@ func (r *Repository) SearchParokiMembers(
 	ctx context.Context,
 	parokiID uuid.UUID,
 	q, role string,
-	umatAdmin *bool,
+	umatAdmin, liturgiAdmin *bool,
 	cursorCreatedAt *time.Time,
 	cursorID *uuid.UUID,
 	limit int,
@@ -373,6 +385,9 @@ func (r *Repository) SearchParokiMembers(
 	}
 	if umatAdmin != nil {
 		query = query.Where(parokimember.UmatAdminEQ(*umatAdmin))
+	}
+	if liturgiAdmin != nil {
+		query = query.Where(parokimember.LiturgiAdminEQ(*liturgiAdmin))
 	}
 	if cursorCreatedAt != nil && cursorID != nil {
 		query = query.Where(parokimember.Or(
@@ -416,23 +431,27 @@ func (r *Repository) FindParokiMember(ctx context.Context, parokiID, userID uuid
 }
 
 // CreateParokiMember inserts a new ParokiMember record.
-func (r *Repository) CreateParokiMember(ctx context.Context, parokiID, userID uuid.UUID, role parokimember.Role, umatAdmin bool) (*ent.ParokiMember, error) {
+func (r *Repository) CreateParokiMember(ctx context.Context, parokiID, userID uuid.UUID, role parokimember.Role, umatAdmin, liturgiAdmin bool) (*ent.ParokiMember, error) {
 	return r.client.ParokiMember.Create().
 		SetParokiID(parokiID).
 		SetUserID(userID).
 		SetRole(role).
 		SetUmatAdmin(umatAdmin).
+		SetLiturgiAdmin(liturgiAdmin).
 		Save(ctx)
 }
 
-// UpdateParokiMember updates a ParokiMember's role and/or umatAdmin flag.
-func (r *Repository) UpdateParokiMember(ctx context.Context, id uuid.UUID, role *parokimember.Role, umatAdmin *bool) (*ent.ParokiMember, error) {
+// UpdateParokiMember updates a ParokiMember's role, umatAdmin, and/or liturgiAdmin flag.
+func (r *Repository) UpdateParokiMember(ctx context.Context, id uuid.UUID, role *parokimember.Role, umatAdmin, liturgiAdmin *bool) (*ent.ParokiMember, error) {
 	upd := r.client.ParokiMember.UpdateOneID(id)
 	if role != nil {
 		upd.SetRole(*role)
 	}
 	if umatAdmin != nil {
 		upd.SetUmatAdmin(*umatAdmin)
+	}
+	if liturgiAdmin != nil {
+		upd.SetLiturgiAdmin(*liturgiAdmin)
 	}
 	return upd.Save(ctx)
 }

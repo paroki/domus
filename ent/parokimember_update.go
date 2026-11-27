@@ -92,6 +92,20 @@ func (_u *ParokiMemberUpdate) SetNillableUmatAdmin(v *bool) *ParokiMemberUpdate 
 	return _u
 }
 
+// SetLiturgiAdmin sets the "liturgi_admin" field.
+func (_u *ParokiMemberUpdate) SetLiturgiAdmin(v bool) *ParokiMemberUpdate {
+	_u.mutation.SetLiturgiAdmin(v)
+	return _u
+}
+
+// SetNillableLiturgiAdmin sets the "liturgi_admin" field if the given value is not nil.
+func (_u *ParokiMemberUpdate) SetNillableLiturgiAdmin(v *bool) *ParokiMemberUpdate {
+	if v != nil {
+		_u.SetLiturgiAdmin(*v)
+	}
+	return _u
+}
+
 // SetParoki sets the "paroki" edge to the Paroki entity.
 func (_u *ParokiMemberUpdate) SetParoki(v *Paroki) *ParokiMemberUpdate {
 	return _u.SetParokiID(v.ID)
@@ -180,6 +194,9 @@ func (_u *ParokiMemberUpdate) sqlSave(ctx context.Context) (_node int, err error
 	}
 	if value, ok := _u.mutation.UmatAdmin(); ok {
 		_spec.SetField(parokimember.FieldUmatAdmin, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.LiturgiAdmin(); ok {
+		_spec.SetField(parokimember.FieldLiturgiAdmin, field.TypeBool, value)
 	}
 	if _u.mutation.ParokiCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -288,6 +305,20 @@ func (_u *ParokiMemberUpdateOne) SetUmatAdmin(v bool) *ParokiMemberUpdateOne {
 func (_u *ParokiMemberUpdateOne) SetNillableUmatAdmin(v *bool) *ParokiMemberUpdateOne {
 	if v != nil {
 		_u.SetUmatAdmin(*v)
+	}
+	return _u
+}
+
+// SetLiturgiAdmin sets the "liturgi_admin" field.
+func (_u *ParokiMemberUpdateOne) SetLiturgiAdmin(v bool) *ParokiMemberUpdateOne {
+	_u.mutation.SetLiturgiAdmin(v)
+	return _u
+}
+
+// SetNillableLiturgiAdmin sets the "liturgi_admin" field if the given value is not nil.
+func (_u *ParokiMemberUpdateOne) SetNillableLiturgiAdmin(v *bool) *ParokiMemberUpdateOne {
+	if v != nil {
+		_u.SetLiturgiAdmin(*v)
 	}
 	return _u
 }
@@ -410,6 +441,9 @@ func (_u *ParokiMemberUpdateOne) sqlSave(ctx context.Context) (_node *ParokiMemb
 	}
 	if value, ok := _u.mutation.UmatAdmin(); ok {
 		_spec.SetField(parokimember.FieldUmatAdmin, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.LiturgiAdmin(); ok {
+		_spec.SetField(parokimember.FieldLiturgiAdmin, field.TypeBool, value)
 	}
 	if _u.mutation.ParokiCleared() {
 		edge := &sqlgraph.EdgeSpec{

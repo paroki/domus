@@ -31,6 +31,8 @@ type ParokiMember struct {
 	Role parokimember.Role `json:"role,omitempty"`
 	// UmatAdmin holds the value of the "umat_admin" field.
 	UmatAdmin bool `json:"umat_admin,omitempty"`
+	// LiturgiAdmin holds the value of the "liturgi_admin" field.
+	LiturgiAdmin bool `json:"liturgi_admin,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ParokiMemberQuery when eager-loading is set.
 	Edges        ParokiMemberEdges `json:"edges"`
@@ -62,7 +64,7 @@ func (*ParokiMember) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case parokimember.FieldUmatAdmin:
+		case parokimember.FieldUmatAdmin, parokimember.FieldLiturgiAdmin:
 			values[i] = new(sql.NullBool)
 		case parokimember.FieldRole:
 			values[i] = new(sql.NullString)
@@ -127,6 +129,12 @@ func (_m *ParokiMember) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.UmatAdmin = value.Bool
 			}
+		case parokimember.FieldLiturgiAdmin:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field liturgi_admin", values[i])
+			} else if value.Valid {
+				_m.LiturgiAdmin = value.Bool
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -185,6 +193,9 @@ func (_m *ParokiMember) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("umat_admin=")
 	builder.WriteString(fmt.Sprintf("%v", _m.UmatAdmin))
+	builder.WriteString(", ")
+	builder.WriteString("liturgi_admin=")
+	builder.WriteString(fmt.Sprintf("%v", _m.LiturgiAdmin))
 	builder.WriteByte(')')
 	return builder.String()
 }

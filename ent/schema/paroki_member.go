@@ -37,6 +37,7 @@ func (ParokiMember) Fields() []ent.Field {
 		field.UUID("user_id", uuid.UUID{}),
 		field.Enum("role").Values("admin", "member").Default("member"),
 		field.Bool("umat_admin").Default(false),
+		field.Bool("liturgi_admin").Default(false),
 	}
 }
 

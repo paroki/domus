@@ -19,8 +19,6 @@ import (
 	"github.com/paroki/domus/ent/cantus"
 	"github.com/paroki/domus/ent/casbinrule"
 	"github.com/paroki/domus/ent/event"
-	"github.com/paroki/domus/ent/eventlagu"
-	"github.com/paroki/domus/ent/eventpetugas"
 	"github.com/paroki/domus/ent/eventrsvp"
 	"github.com/paroki/domus/ent/kecamatan"
 	"github.com/paroki/domus/ent/keluarga"
@@ -29,6 +27,9 @@ import (
 	"github.com/paroki/domus/ent/kevikepan"
 	"github.com/paroki/domus/ent/kota"
 	"github.com/paroki/domus/ent/lingkungan"
+	"github.com/paroki/domus/ent/liturgilagu"
+	"github.com/paroki/domus/ent/liturgiministry"
+	"github.com/paroki/domus/ent/liturgipetugas"
 	"github.com/paroki/domus/ent/lookup"
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orginvite"
@@ -115,8 +116,6 @@ func checkColumn(t, c string) error {
 			cantus.Table:               cantus.ValidColumn,
 			casbinrule.Table:           casbinrule.ValidColumn,
 			event.Table:                event.ValidColumn,
-			eventlagu.Table:            eventlagu.ValidColumn,
-			eventpetugas.Table:         eventpetugas.ValidColumn,
 			eventrsvp.Table:            eventrsvp.ValidColumn,
 			kecamatan.Table:            kecamatan.ValidColumn,
 			keluarga.Table:             keluarga.ValidColumn,
@@ -125,6 +124,9 @@ func checkColumn(t, c string) error {
 			kevikepan.Table:            kevikepan.ValidColumn,
 			kota.Table:                 kota.ValidColumn,
 			lingkungan.Table:           lingkungan.ValidColumn,
+			liturgilagu.Table:          liturgilagu.ValidColumn,
+			liturgiministry.Table:      liturgiministry.ValidColumn,
+			liturgipetugas.Table:       liturgipetugas.ValidColumn,
 			lookup.Table:               lookup.ValidColumn,
 			orginvite.Table:            orginvite.ValidColumn,
 			orgjabatan.Table:           orgjabatan.ValidColumn,

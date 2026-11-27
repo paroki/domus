@@ -98,46 +98,18 @@ func (s *Service) resolveEventRecipients(ctx context.Context, eventID uuid.UUID)
 	if err != nil {
 		return nil, nil, err
 	}
-	petugasRows, err := s.repo.ListActivePetugasForEvent(ctx, eventID)
-	if err != nil {
-		return nil, nil, err
-	}
 
-	seen := make(map[uuid.UUID]struct{}, len(attendeeIDs)+len(petugasRows))
-	recipients := make([]uuid.UUID, 0, len(attendeeIDs)+len(petugasRows))
+	seen := make(map[uuid.UUID]struct{}, len(attendeeIDs))
+	recipients := make([]uuid.UUID, 0, len(attendeeIDs))
 	rolesByUser := make(map[uuid.UUID][]string)
 
-	addRecipient := func(uid uuid.UUID) {
+	for _, uid := range attendeeIDs {
 		if uid == uuid.Nil {
-			return
+			continue
 		}
 		if _, ok := seen[uid]; !ok {
 			seen[uid] = struct{}{}
 			recipients = append(recipients, uid)
-		}
-	}
-
-	for _, uid := range attendeeIDs {
-		addRecipient(uid)
-	}
-	for _, row := range petugasRows {
-		if row.UserID != nil && *row.UserID != uuid.Nil {
-			addRecipient(*row.UserID)
-			if row.Role != "" {
-				rolesByUser[*row.UserID] = append(rolesByUser[*row.UserID], row.Role)
-			}
-		}
-		if row.OrgID != nil && *row.OrgID != uuid.Nil {
-			memberIDs, mErr := s.repo.ListActiveOrgMemberUserIDs(ctx, *row.OrgID)
-			if mErr != nil {
-				return nil, nil, mErr
-			}
-			for _, mid := range memberIDs {
-				addRecipient(mid)
-				if row.Role != "" {
-					rolesByUser[mid] = append(rolesByUser[mid], row.Role)
-				}
-			}
 		}
 	}
 	return recipients, rolesByUser, nil

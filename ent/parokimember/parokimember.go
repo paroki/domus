@@ -28,6 +28,8 @@ const (
 	FieldRole = "role"
 	// FieldUmatAdmin holds the string denoting the umat_admin field in the database.
 	FieldUmatAdmin = "umat_admin"
+	// FieldLiturgiAdmin holds the string denoting the liturgi_admin field in the database.
+	FieldLiturgiAdmin = "liturgi_admin"
 	// EdgeParoki holds the string denoting the paroki edge name in mutations.
 	EdgeParoki = "paroki"
 	// Table holds the table name of the parokimember in the database.
@@ -50,6 +52,7 @@ var Columns = []string{
 	FieldUserID,
 	FieldRole,
 	FieldUmatAdmin,
+	FieldLiturgiAdmin,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -71,6 +74,8 @@ var (
 	UpdateDefaultUpdatedAt func() time.Time
 	// DefaultUmatAdmin holds the default value on creation for the "umat_admin" field.
 	DefaultUmatAdmin bool
+	// DefaultLiturgiAdmin holds the default value on creation for the "liturgi_admin" field.
+	DefaultLiturgiAdmin bool
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -137,6 +142,11 @@ func ByRole(opts ...sql.OrderTermOption) OrderOption {
 // ByUmatAdmin orders the results by the umat_admin field.
 func ByUmatAdmin(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUmatAdmin, opts...).ToFunc()
+}
+
+// ByLiturgiAdmin orders the results by the liturgi_admin field.
+func ByLiturgiAdmin(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLiturgiAdmin, opts...).ToFunc()
 }
 
 // ByParokiField orders the results by paroki field.

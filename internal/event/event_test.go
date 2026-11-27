@@ -743,260 +743,6 @@ func (s *EventFeatureSuite) TestEventJenisLookupValidationAndFilter() {
 	s.Nil(cleared.Jenis)
 }
 
-func (s *EventFeatureSuite) TestEventPetugasWorkflowAndRBAC() {
-	parokiID, orgID := s.seedParokiAndOrg()
-	startAt := time.Now().UTC().Add(24 * time.Hour)
-	endAt := startAt.Add(2 * time.Hour)
-
-	// Create a parish-level event by ref:paroki-admin.
-	s.loginViaOTP("padmin@paroki.org")
-	s.SetHeader("X-Paroki-Id", parokiID.String())
-	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
-		Title:   "Misa Minggu Biasa",
-		StartAt: startAt,
-		EndAt:   endAt,
-	})
-	s.Created()
-	ev := testutil.DecodeAs[domain.EventResponse](s).Data
-
-	// Look up userIDs for outsider@paroki.org and orgmember@paroki.org via /api/users/search or ent client.
-	outsiderUser, err := s.client.User.Query().All(context.Background())
-	s.Require().NoError(err)
-	var outsiderID, memberID uuid.UUID
-	for _, u := range outsiderUser {
-		switch u.Email {
-		case "outsider@paroki.org":
-			outsiderID = u.ID
-		case "orgmember@paroki.org":
-			memberID = u.ID
-		}
-	}
-	s.Require().NotEqual(uuid.Nil, outsiderID)
-	s.Require().NotEqual(uuid.Nil, memberID)
-
-	// 1. Validation: mutually exclusive userId & orgId -> 422 MUTUALLY_EXCLUSIVE.
-	s.Request(fmt.Sprintf("/api/events/%s/petugas", ev.ID), http.MethodPost, domain.CreateEventPetugasRequest{
-		Role:   "Organis",
-		UserID: &outsiderID,
-		OrgID:  &orgID,
-	})
-	s.UnprocessableEntity()
-	s.Equal("VALIDATION_ERROR", s.GetErrorResponse().Error.Code)
-
-	// 2. Validation: manual without name -> 422 REQUIRED.
-	s.Request(fmt.Sprintf("/api/events/%s/petugas", ev.ID), http.MethodPost, domain.CreateEventPetugasRequest{
-		Role: "Selebran",
-	})
-	s.UnprocessableEntity()
-	s.Equal("VALIDATION_ERROR", s.GetErrorResponse().Error.Code)
-
-	// 3. Add all 3 Pattern A modes: manual, userId (auto-fill name), orgId (auto-fill name).
-	urutan1, urutan2, urutan3 := 1, 2, 3
-	s.Request(fmt.Sprintf("/api/events/%s/petugas", ev.ID), http.MethodPost, domain.CreateEventPetugasRequest{
-		Role:   "Selebran",
-		Name:   "RD. Yohanes",
-		Urutan: &urutan1,
-	})
-	s.Created()
-	manualP := testutil.DecodeAs[domain.EventPetugasResponse](s).Data
-	s.Equal("RD. Yohanes", manualP.Name)
-	s.Equal("assigned", manualP.Status)
-
-	s.Request(fmt.Sprintf("/api/events/%s/petugas", ev.ID), http.MethodPost, domain.CreateEventPetugasRequest{
-		Role:   "Lektor 1",
-		UserID: &outsiderID,
-		Urutan: &urutan2,
-	})
-	s.Created()
-	userP := testutil.DecodeAs[domain.EventPetugasResponse](s).Data
-	s.Equal("Paroki User", userP.Name)
-	s.Require().NotNil(userP.UserID)
-	s.Equal(outsiderID, *userP.UserID)
-
-	s.Request(fmt.Sprintf("/api/events/%s/petugas", ev.ID), http.MethodPost, domain.CreateEventPetugasRequest{
-		Role:   "Kor",
-		OrgID:  &orgID,
-		Urutan: &urutan3,
-	})
-	s.Created()
-	orgP := testutil.DecodeAs[domain.EventPetugasResponse](s).Data
-	s.Equal("Orang Muda Katolik", orgP.Name)
-	s.Require().NotNil(orgP.OrgID)
-	s.Equal(orgID, *orgP.OrgID)
-
-	// 4. Non-manager orgadmin CANNOT add or delete petugas on parish-level event -> 403.
-	s.loginViaOTP("orgadmin@paroki.org")
-	s.SetHeader("X-Paroki-Id", parokiID.String())
-	s.Request(fmt.Sprintf("/api/events/%s/petugas", ev.ID), http.MethodPost, domain.CreateEventPetugasRequest{
-		Role: "MC",
-		Name: "Unauthorized",
-	})
-	s.Forbidden()
-	s.Request(fmt.Sprintf("/api/events/%s/petugas/%s", ev.ID, manualP.ID), http.MethodDelete, nil)
-	s.Forbidden()
-
-	// 5. org:admin of assigned org CAN confirm orgP status & note, CANNOT change role/name.
-	confirmed := "confirmed"
-	s.Request(fmt.Sprintf("/api/events/%s/petugas/%s", ev.ID, orgP.ID), http.MethodPatch, domain.UpdateEventPetugasRequest{
-		Status: &confirmed,
-		Note:   new("Siap 25 anggota"),
-	})
-	s.OK()
-	updatedOrgP := testutil.DecodeAs[domain.EventPetugasResponse](s).Data
-	s.Equal("confirmed", updatedOrgP.Status)
-	s.Require().NotNil(updatedOrgP.Note)
-	s.Equal("Siap 25 anggota", *updatedOrgP.Note)
-
-	newRole := "Hijacked"
-	s.Request(fmt.Sprintf("/api/events/%s/petugas/%s", ev.ID, orgP.ID), http.MethodPatch, domain.UpdateEventPetugasRequest{
-		Role: &newRole,
-	})
-	s.Forbidden()
-
-	// 6. org:member (not org:admin) CANNOT confirm orgP -> 403, CANNOT confirm userP -> 403.
-	s.loginViaOTP("orgmember@paroki.org")
-	s.SetHeader("X-Paroki-Id", parokiID.String())
-	s.Request(fmt.Sprintf("/api/events/%s/petugas/%s", ev.ID, orgP.ID), http.MethodPatch, domain.UpdateEventPetugasRequest{
-		Status: &confirmed,
-	})
-	s.Forbidden()
-	s.Request(fmt.Sprintf("/api/events/%s/petugas/%s", ev.ID, userP.ID), http.MethodPatch, domain.UpdateEventPetugasRequest{
-		Status: &confirmed,
-	})
-	s.Forbidden()
-
-	// 7. AssignedToMe filter returns the event for both outsider (userId) and orgmember (orgId).
-	assignedToMe := true
-	s.Request("/api/events/search", http.MethodPost, domain.SearchEventsRequest{
-		Filter: &domain.EventSearchFilter{AssignedToMe: &assignedToMe},
-	})
-	s.OK()
-	s.Len(testutil.DecodeAs[[]domain.EventResponse](s).Data, 1)
-
-	// 8. Assigned user (outsider@paroki.org) confirms/declines own assignment & sees canConfirm flags.
-	s.loginViaOTP("outsider@paroki.org")
-	s.SetHeader("X-Paroki-Id", parokiID.String())
-	s.Request(fmt.Sprintf("/api/events/%s", ev.ID), http.MethodGet, nil)
-	s.OK()
-	detail := testutil.DecodeAs[domain.EventResponse](s).Data
-	s.Require().Len(detail.Petugas, 3)
-	s.False(detail.Petugas[0].CanConfirm) // manualP
-	s.True(detail.Petugas[1].CanConfirm)  // userP
-	s.False(detail.Petugas[2].CanConfirm) // orgP
-
-	declined := "declined"
-	s.Request(fmt.Sprintf("/api/events/%s/petugas/%s", ev.ID, userP.ID), http.MethodPatch, domain.UpdateEventPetugasRequest{
-		Status: &declined,
-		Note:   new("Sedang sakit"),
-	})
-	s.OK()
-	s.Equal("declined", testutil.DecodeAs[domain.EventPetugasResponse](s).Data.Status)
-
-	// 9. AssignedOrgID filter works.
-	s.Request("/api/events/search", http.MethodPost, domain.SearchEventsRequest{
-		Filter: &domain.EventSearchFilter{AssignedOrgID: &orgID},
-	})
-	s.OK()
-	s.Len(testutil.DecodeAs[[]domain.EventResponse](s).Data, 1)
-
-	// 10. Manager deletes petugas.
-	s.loginViaOTP("padmin@paroki.org")
-	s.SetHeader("X-Paroki-Id", parokiID.String())
-	s.Request(fmt.Sprintf("/api/events/%s/petugas/%s", ev.ID, manualP.ID), http.MethodDelete, nil)
-	s.NoContent()
-}
-
-func (s *EventFeatureSuite) TestEventLaguCRUDAndOrdering() {
-	parokiID, _ := s.seedParokiAndOrg()
-	startAt := time.Now().UTC().Add(24 * time.Hour)
-	endAt := startAt.Add(2 * time.Hour)
-
-	s.loginViaOTP("padmin@paroki.org")
-	s.SetHeader("X-Paroki-Id", parokiID.String())
-	s.Request("/api/events", http.MethodPost, domain.CreateEventRequest{
-		Title:   "Misa Hari Minggu",
-		StartAt: startAt,
-		EndAt:   endAt,
-	})
-	s.Created()
-	ev := testutil.DecodeAs[domain.EventResponse](s).Data
-
-	// 1. Validation: empty bagian or judul -> 422 VALIDATION_ERROR.
-	s.Request(fmt.Sprintf("/api/events/%s/lagu", ev.ID), http.MethodPost, domain.CreateEventLaguRequest{
-		Bagian: "   ",
-		Judul:  "Lagu Pembuka",
-	})
-	s.UnprocessableEntity()
-	s.Equal("VALIDATION_ERROR", s.GetErrorResponse().Error.Code)
-
-	// 2. Add two songs out of order (urutan 2 then urutan 1).
-	urutan2, urutan1 := 2, 1
-	s.Request(fmt.Sprintf("/api/events/%s/lagu", ev.ID), http.MethodPost, domain.CreateEventLaguRequest{
-		Urutan:    &urutan2,
-		Bagian:    "Kemuliaan (Gloria)",
-		Sumber:    new("Puji Syukur"),
-		Nomor:     new("350"),
-		Judul:     "Kemuliaan Kepada Allah",
-		NadaDasar: new("D"),
-	})
-	s.Created()
-	lagu2 := testutil.DecodeAs[domain.EventLaguResponse](s).Data
-
-	s.Request(fmt.Sprintf("/api/events/%s/lagu", ev.ID), http.MethodPost, domain.CreateEventLaguRequest{
-		Urutan: &urutan1,
-		Bagian: "Pembuka",
-		Sumber: new("Madah Bakti"),
-		Nomor:  new("160"),
-		Judul:  "Mari Kita Bersukacita",
-		Note:   new("2 bait saja"),
-	})
-	s.Created()
-	lagu1 := testutil.DecodeAs[domain.EventLaguResponse](s).Data
-
-	// 3. Non-manager CANNOT add/update/delete lagu -> 403 EVENT_FORBIDDEN.
-	s.loginViaOTP("orgadmin@paroki.org")
-	s.SetHeader("X-Paroki-Id", parokiID.String())
-	s.Request(fmt.Sprintf("/api/events/%s/lagu", ev.ID), http.MethodPost, domain.CreateEventLaguRequest{
-		Bagian: "Penutup",
-		Judul:  "Unauthorized",
-	})
-	s.Forbidden()
-	s.Request(fmt.Sprintf("/api/events/%s/lagu/%s", ev.ID, lagu1.ID), http.MethodPatch, domain.UpdateEventLaguRequest{
-		Judul: new("Unauthorized"),
-	})
-	s.Forbidden()
-	s.Request(fmt.Sprintf("/api/events/%s/lagu/%s", ev.ID, lagu1.ID), http.MethodDelete, nil)
-	s.Forbidden()
-
-	// 4. GET /api/events/:id returns lagu ordered by urutan ASC.
-	s.Request(fmt.Sprintf("/api/events/%s", ev.ID), http.MethodGet, nil)
-	s.OK()
-	detail := testutil.DecodeAs[domain.EventResponse](s).Data
-	s.Require().Len(detail.Lagu, 2)
-	s.Equal(lagu1.ID, detail.Lagu[0].ID)
-	s.Equal(lagu2.ID, detail.Lagu[1].ID)
-
-	// 5. Manager updates lagu2 and clears optional fields with "".
-	s.loginViaOTP("padmin@paroki.org")
-	s.SetHeader("X-Paroki-Id", parokiID.String())
-	s.Request(fmt.Sprintf("/api/events/%s/lagu/%s", ev.ID, lagu2.ID), http.MethodPatch, domain.UpdateEventLaguRequest{
-		Judul:     new("Kemuliaan Agung"),
-		Sumber:    new(""),
-		Nomor:     new(""),
-		NadaDasar: new(""),
-	})
-	s.OK()
-	updated := testutil.DecodeAs[domain.EventLaguResponse](s).Data
-	s.Equal("Kemuliaan Agung", updated.Judul)
-	s.Nil(updated.Sumber)
-	s.Nil(updated.Nomor)
-	s.Nil(updated.NadaDasar)
-
-	// 6. Manager deletes lagu1.
-	s.Request(fmt.Sprintf("/api/events/%s/lagu/%s", ev.ID, lagu1.ID), http.MethodDelete, nil)
-	s.NoContent()
-}
-
 type stubChannelNotif struct {
 	calls []struct {
 		target  string
@@ -1053,7 +799,7 @@ func (s *EventFeatureSuite) TestNotifications_InstantTriggersAndQuietHourReminde
 	s.Equal("+6281000000002", s.waStub.calls[0].target)
 	s.Equal("Latihan Koor OMK", s.waStub.calls[0].payload.Title)
 
-	// Member RSVPs "going" AND is assigned as petugas "Dirigen"
+	// Member RSVPs "going"
 	s.loginViaOTP("orgmember@paroki.org")
 	s.SetHeader("X-Paroki-Id", parokiID.String())
 	s.Request(fmt.Sprintf("/api/events/%s/rsvp", orgEv.ID), http.MethodPost, domain.UpsertEventRSVPRequest{Status: "going"})
@@ -1061,11 +807,6 @@ func (s *EventFeatureSuite) TestNotifications_InstantTriggersAndQuietHourReminde
 
 	s.loginViaOTP("orgadmin@paroki.org")
 	s.SetHeader("X-Paroki-Id", parokiID.String())
-	s.Request(fmt.Sprintf("/api/events/%s/petugas", orgEv.ID), http.MethodPost, domain.CreateEventPetugasRequest{
-		Role:   "Dirigen",
-		UserID: &member.ID,
-	})
-	s.Created()
 
 	// 3. Rescheduling StartAt triggers event_updated
 	s.waStub.calls = nil
@@ -1098,17 +839,14 @@ func (s *EventFeatureSuite) TestNotifications_InstantTriggersAndQuietHourReminde
 	s.Require().NoError(err)
 	_, err = s.client.EventRSVP.Create().SetParokiID(parokiID).SetEventID(quietEv.ID).SetUserID(member.ID).SetStatus("going").Save(ctx)
 	s.Require().NoError(err)
-	_, err = s.client.EventPetugas.Create().SetParokiID(parokiID).SetEventID(quietEv.ID).SetUserID(member.ID).SetRole("Lektor").SetName("Member").SetUrutan(1).SetStatus("assigned").Save(ctx)
-	s.Require().NoError(err)
 
 	// At 19:30 WIB May 18 -> before shifted 20:00 WIB -> not sent
 	s.Require().NoError(s.eventFeature.RunReminderTick(ctx, time.Date(2030, 5, 18, 19, 30, 0, 0, jktLoc)))
 	s.Len(s.waStub.calls, 0)
 
-	// At 20:05 WIB May 18 -> sent once with combined officer role in Body
+	// At 20:05 WIB May 18 -> sent once
 	s.Require().NoError(s.eventFeature.RunReminderTick(ctx, time.Date(2030, 5, 18, 20, 5, 0, 0, jktLoc)))
 	s.Len(s.waStub.calls, 1)
-	s.Contains(s.waStub.calls[0].payload.Body, "Lektor")
 
 	// 5. Cancelling event triggers event_cancelled
 	s.waStub.calls = nil

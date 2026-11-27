@@ -64,17 +64,13 @@ func (s *Service) SearchEvents(
 		in.Status = req.Filter.Status
 		in.From = req.Filter.From
 		in.To = req.Filter.To
+		in.EventIDs = req.Filter.EventIDs
 		if req.Filter.ParokiWideOnly != nil {
 			in.ParokiWideOnly = *req.Filter.ParokiWideOnly
 		}
 		if req.Filter.MyOrgsOnly != nil {
 			in.MyOrgsOnly = *req.Filter.MyOrgsOnly
 		}
-		if req.Filter.AssignedToMe != nil && *req.Filter.AssignedToMe {
-			in.AssignedToMe = true
-			in.AssignedUserID = p.UserID
-		}
-		in.AssignedOrgID = req.Filter.AssignedOrgID
 	}
 
 	rows, err := s.repo.SearchEvents(ctx, in)
@@ -92,7 +88,11 @@ func (s *Service) SearchEvents(
 	if err != nil {
 		return nil, false, err
 	}
-	isParokiMem := isParokiAdm
+	isLiturgiAdm, err := s.isLiturgiAdmin(ctx, p)
+	if err != nil {
+		return nil, false, err
+	}
+	isParokiMem := isParokiAdm || isLiturgiAdm
 	if !isParokiMem {
 		isParokiMem, err = s.repo.IsParokiMember(ctx, p.ParokiID, p.UserID)
 		if err != nil {
@@ -136,7 +136,7 @@ func (s *Service) SearchEvents(
 			canManage = myRole != nil && *myRole == "admin"
 			canRsvp = myRole != nil
 		} else {
-			canManage = isParokiAdm
+			canManage = isParokiAdm || (isLiturgiAdm && isMisaJenis(row.Jenis))
 			canRsvp = isParokiMem || isParokiAdm
 		}
 
@@ -234,14 +234,18 @@ func (s *Service) GetEvent(ctx context.Context, p authx.Principal, eventID uuid.
 		if err != nil {
 			return domain.EventResponse{}, err
 		}
-		isParokiMem := isParokiAdm
+		isLiturgiAdm, err := s.isLiturgiAdmin(ctx, p)
+		if err != nil {
+			return domain.EventResponse{}, err
+		}
+		isParokiMem := isParokiAdm || isLiturgiAdm
 		if !isParokiMem {
 			isParokiMem, err = s.repo.IsParokiMember(ctx, p.ParokiID, p.UserID)
 			if err != nil {
 				return domain.EventResponse{}, err
 			}
 		}
-		canManage = isParokiAdm
+		canManage = isParokiAdm || (isLiturgiAdm && isMisaJenis(row.Jenis))
 		canRsvp = isParokiMem || isParokiAdm
 	}
 
@@ -280,34 +284,6 @@ func (s *Service) GetEvent(ctx context.Context, p authx.Principal, eventID uuid.
 		}
 	}
 
-	petugasRows, err := s.repo.ListPetugasForEvent(ctx, row.ID)
-	if err != nil {
-		return domain.EventResponse{}, err
-	}
-	if len(petugasRows) > 0 {
-		orgAdminCache := make(map[uuid.UUID]bool)
-		petugas := make([]domain.EventPetugasResponse, 0, len(petugasRows))
-		for _, pr := range petugasRows {
-			canConfirm, err := s.canConfirmPetugas(ctx, p, canManage, pr, orgAdminCache)
-			if err != nil {
-				return domain.EventResponse{}, err
-			}
-			petugas = append(petugas, toPetugasResponse(pr, canConfirm))
-		}
-		res.Petugas = petugas
-	}
-
-	laguRows, err := s.repo.ListLaguForEvent(ctx, row.ID)
-	if err != nil {
-		return domain.EventResponse{}, err
-	}
-	if len(laguRows) > 0 {
-		lagu := make([]domain.EventLaguResponse, 0, len(laguRows))
-		for _, lr := range laguRows {
-			lagu = append(lagu, toLaguResponse(lr))
-		}
-		res.Lagu = lagu
-	}
 	return res, nil
 }
 
@@ -343,6 +319,12 @@ func (s *Service) CreateEvent(ctx context.Context, p authx.Principal, req domain
 		isAdm, err := s.isParokiAdmin(ctx, p)
 		if err != nil {
 			return domain.EventResponse{}, err
+		}
+		if !isAdm && isMisaJenis(req.Jenis) {
+			isAdm, err = s.isLiturgiAdmin(ctx, p)
+			if err != nil {
+				return domain.EventResponse{}, err
+			}
 		}
 		if !isAdm {
 			return domain.EventResponse{}, domain.ErrForbidden
@@ -435,7 +417,13 @@ func (s *Service) UpdateEvent(ctx context.Context, p authx.Principal, eventID uu
 			return domain.EventResponse{}, err
 		}
 		if !isAdm {
-			return domain.EventResponse{}, domain.ErrForbidden
+			isLiturgiAdm, err := s.isLiturgiAdmin(ctx, p)
+			if err != nil {
+				return domain.EventResponse{}, err
+			}
+			if !isLiturgiAdm || !isMisaJenis(existing.Jenis) || (req.Jenis != nil && !isMisaJenis(req.Jenis)) {
+				return domain.EventResponse{}, domain.ErrForbidden
+			}
 		}
 		if req.Visibility != nil && *req.Visibility != string(event.VisibilityPublic) {
 			return domain.EventResponse{}, domain.ValidationError("visibility", "PAROKI_EVENT_PUBLIC_ONLY", "Parish-level events must have public visibility.")
@@ -538,6 +526,12 @@ func (s *Service) DeleteEvent(ctx context.Context, p authx.Principal, eventID uu
 		isAdm, err := s.isParokiAdmin(ctx, p)
 		if err != nil {
 			return err
+		}
+		if !isAdm && isMisaJenis(existing.Jenis) {
+			isAdm, err = s.isLiturgiAdmin(ctx, p)
+			if err != nil {
+				return err
+			}
 		}
 		if !isAdm {
 			return domain.ErrForbidden
@@ -671,4 +665,8 @@ func trimOptString(val *string) *string {
 	}
 	trimmed := strings.TrimSpace(*val)
 	return &trimmed
+}
+
+func isMisaJenis(jenis *string) bool {
+	return jenis != nil && strings.EqualFold(strings.TrimSpace(*jenis), "misa")
 }

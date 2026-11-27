@@ -45,8 +45,6 @@ func (Event) Fields() []ent.Field {
 func (Event) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("rsvps", EventRSVP.Type),
-		edge.To("petugas", EventPetugas.Type),
-		edge.To("lagu", EventLagu.Type),
 	}
 }
 

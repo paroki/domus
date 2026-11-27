@@ -248,88 +248,6 @@ var (
 			},
 		},
 	}
-	// EventLaguColumns holds the columns for the "event_lagu" table.
-	EventLaguColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeUUID},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "paroki_id", Type: field.TypeUUID},
-		{Name: "urutan", Type: field.TypeInt, Default: 0},
-		{Name: "bagian", Type: field.TypeString},
-		{Name: "sumber", Type: field.TypeString, Nullable: true},
-		{Name: "nomor", Type: field.TypeString, Nullable: true},
-		{Name: "judul", Type: field.TypeString},
-		{Name: "nada_dasar", Type: field.TypeString, Nullable: true},
-		{Name: "note", Type: field.TypeString, Nullable: true},
-		{Name: "event_id", Type: field.TypeUUID},
-	}
-	// EventLaguTable holds the schema information for the "event_lagu" table.
-	EventLaguTable = &schema.Table{
-		Name:       "event_lagu",
-		Columns:    EventLaguColumns,
-		PrimaryKey: []*schema.Column{EventLaguColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "event_lagu_events_lagu",
-				Columns:    []*schema.Column{EventLaguColumns[11]},
-				RefColumns: []*schema.Column{EventsColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-		},
-		Indexes: []*schema.Index{
-			{
-				Name:    "eventlagu_event_id_urutan",
-				Unique:  false,
-				Columns: []*schema.Column{EventLaguColumns[11], EventLaguColumns[4]},
-			},
-		},
-	}
-	// EventPetugasColumns holds the columns for the "event_petugas" table.
-	EventPetugasColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeUUID},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "paroki_id", Type: field.TypeUUID},
-		{Name: "role", Type: field.TypeString},
-		{Name: "user_id", Type: field.TypeUUID, Nullable: true},
-		{Name: "org_id", Type: field.TypeUUID, Nullable: true},
-		{Name: "name", Type: field.TypeString},
-		{Name: "urutan", Type: field.TypeInt, Default: 0},
-		{Name: "status", Type: field.TypeEnum, Enums: []string{"assigned", "confirmed", "declined"}, Default: "assigned"},
-		{Name: "note", Type: field.TypeString, Nullable: true},
-		{Name: "event_id", Type: field.TypeUUID},
-	}
-	// EventPetugasTable holds the schema information for the "event_petugas" table.
-	EventPetugasTable = &schema.Table{
-		Name:       "event_petugas",
-		Columns:    EventPetugasColumns,
-		PrimaryKey: []*schema.Column{EventPetugasColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "event_petugas_events_petugas",
-				Columns:    []*schema.Column{EventPetugasColumns[11]},
-				RefColumns: []*schema.Column{EventsColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-		},
-		Indexes: []*schema.Index{
-			{
-				Name:    "eventpetugas_event_id_urutan",
-				Unique:  false,
-				Columns: []*schema.Column{EventPetugasColumns[11], EventPetugasColumns[8]},
-			},
-			{
-				Name:    "eventpetugas_paroki_id_user_id",
-				Unique:  false,
-				Columns: []*schema.Column{EventPetugasColumns[3], EventPetugasColumns[5]},
-			},
-			{
-				Name:    "eventpetugas_paroki_id_org_id",
-				Unique:  false,
-				Columns: []*schema.Column{EventPetugasColumns[3], EventPetugasColumns[6]},
-			},
-		},
-	}
 	// EventRsvpsColumns holds the columns for the "event_rsvps" table.
 	EventRsvpsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -638,6 +556,137 @@ var (
 				Name:    "lingkungan_paroki_id_wilayah_id_active",
 				Unique:  false,
 				Columns: []*schema.Column{LingkunganColumns[10], LingkunganColumns[11], LingkunganColumns[9]},
+			},
+		},
+	}
+	// LiturgiLaguColumns holds the columns for the "liturgi_lagu" table.
+	LiturgiLaguColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "paroki_id", Type: field.TypeUUID},
+		{Name: "event_id", Type: field.TypeUUID},
+		{Name: "urutan", Type: field.TypeInt, Default: 0},
+		{Name: "bagian", Type: field.TypeString},
+		{Name: "cantus_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "sumber", Type: field.TypeString, Nullable: true},
+		{Name: "nomor", Type: field.TypeString, Nullable: true},
+		{Name: "judul", Type: field.TypeString},
+		{Name: "nada_dasar", Type: field.TypeString, Nullable: true},
+		{Name: "note", Type: field.TypeString, Nullable: true},
+	}
+	// LiturgiLaguTable holds the schema information for the "liturgi_lagu" table.
+	LiturgiLaguTable = &schema.Table{
+		Name:       "liturgi_lagu",
+		Columns:    LiturgiLaguColumns,
+		PrimaryKey: []*schema.Column{LiturgiLaguColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "liturgilagu_event_id_urutan",
+				Unique:  false,
+				Columns: []*schema.Column{LiturgiLaguColumns[4], LiturgiLaguColumns[5]},
+			},
+			{
+				Name:    "liturgilagu_paroki_id_event_id",
+				Unique:  false,
+				Columns: []*schema.Column{LiturgiLaguColumns[3], LiturgiLaguColumns[4]},
+			},
+			{
+				Name:    "liturgilagu_cantus_id",
+				Unique:  false,
+				Columns: []*schema.Column{LiturgiLaguColumns[7]},
+			},
+		},
+	}
+	// LiturgiMinistriesColumns holds the columns for the "liturgi_ministries" table.
+	LiturgiMinistriesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "paroki_id", Type: field.TypeUUID},
+		{Name: "role_slug", Type: field.TypeEnum, Enums: []string{"lektor", "mazmur", "pembagi-komuni", "misdinar", "organis", "kor"}},
+		{Name: "org_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "leader_user_id", Type: field.TypeUUID, Nullable: true},
+	}
+	// LiturgiMinistriesTable holds the schema information for the "liturgi_ministries" table.
+	LiturgiMinistriesTable = &schema.Table{
+		Name:       "liturgi_ministries",
+		Columns:    LiturgiMinistriesColumns,
+		PrimaryKey: []*schema.Column{LiturgiMinistriesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "liturgiministry_paroki_id_role_slug",
+				Unique:  true,
+				Columns: []*schema.Column{LiturgiMinistriesColumns[3], LiturgiMinistriesColumns[4]},
+			},
+			{
+				Name:    "liturgiministry_org_id",
+				Unique:  false,
+				Columns: []*schema.Column{LiturgiMinistriesColumns[5]},
+			},
+			{
+				Name:    "liturgiministry_paroki_id_leader_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{LiturgiMinistriesColumns[3], LiturgiMinistriesColumns[6]},
+			},
+		},
+	}
+	// LiturgiPetugasColumns holds the columns for the "liturgi_petugas" table.
+	LiturgiPetugasColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "paroki_id", Type: field.TypeUUID},
+		{Name: "event_id", Type: field.TypeUUID},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"lektor", "mazmur", "pembagi-komuni", "misdinar", "organis", "kor"}},
+		{Name: "slot_label", Type: field.TypeString, Nullable: true},
+		{Name: "user_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "org_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "urutan", Type: field.TypeInt, Default: 0},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"assigned", "confirmed", "declined"}, Default: "assigned"},
+		{Name: "note", Type: field.TypeString, Nullable: true},
+		{Name: "responded_at", Type: field.TypeTime, Nullable: true},
+		{Name: "responded_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "substitute_user_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "substitute_org_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "substitute_name", Type: field.TypeString, Nullable: true},
+	}
+	// LiturgiPetugasTable holds the schema information for the "liturgi_petugas" table.
+	LiturgiPetugasTable = &schema.Table{
+		Name:       "liturgi_petugas",
+		Columns:    LiturgiPetugasColumns,
+		PrimaryKey: []*schema.Column{LiturgiPetugasColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "liturgipetugas_event_id_role_urutan",
+				Unique:  false,
+				Columns: []*schema.Column{LiturgiPetugasColumns[4], LiturgiPetugasColumns[5], LiturgiPetugasColumns[10]},
+			},
+			{
+				Name:    "liturgipetugas_paroki_id_event_id",
+				Unique:  false,
+				Columns: []*schema.Column{LiturgiPetugasColumns[3], LiturgiPetugasColumns[4]},
+			},
+			{
+				Name:    "liturgipetugas_paroki_id_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{LiturgiPetugasColumns[3], LiturgiPetugasColumns[7]},
+			},
+			{
+				Name:    "liturgipetugas_paroki_id_org_id",
+				Unique:  false,
+				Columns: []*schema.Column{LiturgiPetugasColumns[3], LiturgiPetugasColumns[8]},
+			},
+			{
+				Name:    "liturgipetugas_paroki_id_substitute_org_id",
+				Unique:  false,
+				Columns: []*schema.Column{LiturgiPetugasColumns[3], LiturgiPetugasColumns[16]},
+			},
+			{
+				Name:    "liturgipetugas_paroki_id_status",
+				Unique:  false,
+				Columns: []*schema.Column{LiturgiPetugasColumns[3], LiturgiPetugasColumns[11]},
 			},
 		},
 	}
@@ -1050,6 +1099,7 @@ var (
 		{Name: "user_id", Type: field.TypeUUID},
 		{Name: "role", Type: field.TypeEnum, Enums: []string{"admin", "member"}, Default: "member"},
 		{Name: "umat_admin", Type: field.TypeBool, Default: false},
+		{Name: "liturgi_admin", Type: field.TypeBool, Default: false},
 		{Name: "paroki_id", Type: field.TypeUUID},
 	}
 	// ParokiMembersTable holds the schema information for the "paroki_members" table.
@@ -1060,7 +1110,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "paroki_members_paroki_members",
-				Columns:    []*schema.Column{ParokiMembersColumns[6]},
+				Columns:    []*schema.Column{ParokiMembersColumns[7]},
 				RefColumns: []*schema.Column{ParokiColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -1069,7 +1119,7 @@ var (
 			{
 				Name:    "parokimember_paroki_id_user_id",
 				Unique:  true,
-				Columns: []*schema.Column{ParokiMembersColumns[6], ParokiMembersColumns[3]},
+				Columns: []*schema.Column{ParokiMembersColumns[7], ParokiMembersColumns[3]},
 			},
 			{
 				Name:    "parokimember_user_id",
@@ -1538,8 +1588,6 @@ var (
 		CantusTable,
 		CasbinRulesTable,
 		EventsTable,
-		EventLaguTable,
-		EventPetugasTable,
 		EventRsvpsTable,
 		KecamatanTable,
 		KeluargaTable,
@@ -1548,6 +1596,9 @@ var (
 		KevikepanTable,
 		KotaTable,
 		LingkunganTable,
+		LiturgiLaguTable,
+		LiturgiMinistriesTable,
+		LiturgiPetugasTable,
 		LookupsTable,
 		OrgInvitesTable,
 		OrgJabatanTable,
@@ -1587,14 +1638,6 @@ func init() {
 	CantusTable.Annotation = &entsql.Annotation{
 		Table: "cantus",
 	}
-	EventLaguTable.ForeignKeys[0].RefTable = EventsTable
-	EventLaguTable.Annotation = &entsql.Annotation{
-		Table: "event_lagu",
-	}
-	EventPetugasTable.ForeignKeys[0].RefTable = EventsTable
-	EventPetugasTable.Annotation = &entsql.Annotation{
-		Table: "event_petugas",
-	}
 	EventRsvpsTable.ForeignKeys[0].RefTable = EventsTable
 	EventRsvpsTable.Annotation = &entsql.Annotation{
 		Table: "event_rsvps",
@@ -1624,6 +1667,15 @@ func init() {
 	LingkunganTable.ForeignKeys[1].RefTable = WilayahTable
 	LingkunganTable.Annotation = &entsql.Annotation{
 		Table: "lingkungan",
+	}
+	LiturgiLaguTable.Annotation = &entsql.Annotation{
+		Table: "liturgi_lagu",
+	}
+	LiturgiMinistriesTable.Annotation = &entsql.Annotation{
+		Table: "liturgi_ministries",
+	}
+	LiturgiPetugasTable.Annotation = &entsql.Annotation{
+		Table: "liturgi_petugas",
 	}
 	LookupsTable.ForeignKeys[0].RefTable = ParokiTable
 	OrgInvitesTable.ForeignKeys[0].RefTable = OrganizationsTable

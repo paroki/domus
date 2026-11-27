@@ -12,92 +12,68 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/paroki/domus/ent/event"
-	"github.com/paroki/domus/ent/eventpetugas"
+	"github.com/paroki/domus/ent/liturgipetugas"
 	"github.com/paroki/domus/ent/predicate"
 )
 
-// EventPetugasQuery is the builder for querying EventPetugas entities.
-type EventPetugasQuery struct {
+// LiturgiPetugasQuery is the builder for querying LiturgiPetugas entities.
+type LiturgiPetugasQuery struct {
 	config
 	ctx        *QueryContext
-	order      []eventpetugas.OrderOption
+	order      []liturgipetugas.OrderOption
 	inters     []Interceptor
-	predicates []predicate.EventPetugas
-	withEvent  *EventQuery
+	predicates []predicate.LiturgiPetugas
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
 }
 
-// Where adds a new predicate for the EventPetugasQuery builder.
-func (_q *EventPetugasQuery) Where(ps ...predicate.EventPetugas) *EventPetugasQuery {
+// Where adds a new predicate for the LiturgiPetugasQuery builder.
+func (_q *LiturgiPetugasQuery) Where(ps ...predicate.LiturgiPetugas) *LiturgiPetugasQuery {
 	_q.predicates = append(_q.predicates, ps...)
 	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (_q *EventPetugasQuery) Limit(limit int) *EventPetugasQuery {
+func (_q *LiturgiPetugasQuery) Limit(limit int) *LiturgiPetugasQuery {
 	_q.ctx.Limit = &limit
 	return _q
 }
 
 // Offset to start from.
-func (_q *EventPetugasQuery) Offset(offset int) *EventPetugasQuery {
+func (_q *LiturgiPetugasQuery) Offset(offset int) *LiturgiPetugasQuery {
 	_q.ctx.Offset = &offset
 	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (_q *EventPetugasQuery) Unique(unique bool) *EventPetugasQuery {
+func (_q *LiturgiPetugasQuery) Unique(unique bool) *LiturgiPetugasQuery {
 	_q.ctx.Unique = &unique
 	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (_q *EventPetugasQuery) Order(o ...eventpetugas.OrderOption) *EventPetugasQuery {
+func (_q *LiturgiPetugasQuery) Order(o ...liturgipetugas.OrderOption) *LiturgiPetugasQuery {
 	_q.order = append(_q.order, o...)
 	return _q
 }
 
-// QueryEvent chains the current query on the "event" edge.
-func (_q *EventPetugasQuery) QueryEvent() *EventQuery {
-	query := (&EventClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(eventpetugas.Table, eventpetugas.FieldID, selector),
-			sqlgraph.To(event.Table, event.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, eventpetugas.EventTable, eventpetugas.EventColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// First returns the first EventPetugas entity from the query.
-// Returns a *NotFoundError when no EventPetugas was found.
-func (_q *EventPetugasQuery) First(ctx context.Context) (*EventPetugas, error) {
+// First returns the first LiturgiPetugas entity from the query.
+// Returns a *NotFoundError when no LiturgiPetugas was found.
+func (_q *LiturgiPetugasQuery) First(ctx context.Context) (*LiturgiPetugas, error) {
 	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
-		return nil, &NotFoundError{eventpetugas.Label}
+		return nil, &NotFoundError{liturgipetugas.Label}
 	}
 	return nodes[0], nil
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (_q *EventPetugasQuery) FirstX(ctx context.Context) *EventPetugas {
+func (_q *LiturgiPetugasQuery) FirstX(ctx context.Context) *LiturgiPetugas {
 	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -105,22 +81,22 @@ func (_q *EventPetugasQuery) FirstX(ctx context.Context) *EventPetugas {
 	return node
 }
 
-// FirstID returns the first EventPetugas ID from the query.
-// Returns a *NotFoundError when no EventPetugas ID was found.
-func (_q *EventPetugasQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+// FirstID returns the first LiturgiPetugas ID from the query.
+// Returns a *NotFoundError when no LiturgiPetugas ID was found.
+func (_q *LiturgiPetugasQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
 	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
-		err = &NotFoundError{eventpetugas.Label}
+		err = &NotFoundError{liturgipetugas.Label}
 		return
 	}
 	return ids[0], nil
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (_q *EventPetugasQuery) FirstIDX(ctx context.Context) uuid.UUID {
+func (_q *LiturgiPetugasQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -128,10 +104,10 @@ func (_q *EventPetugasQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	return id
 }
 
-// Only returns a single EventPetugas entity found by the query, ensuring it only returns one.
-// Returns a *NotSingularError when more than one EventPetugas entity is found.
-// Returns a *NotFoundError when no EventPetugas entities are found.
-func (_q *EventPetugasQuery) Only(ctx context.Context) (*EventPetugas, error) {
+// Only returns a single LiturgiPetugas entity found by the query, ensuring it only returns one.
+// Returns a *NotSingularError when more than one LiturgiPetugas entity is found.
+// Returns a *NotFoundError when no LiturgiPetugas entities are found.
+func (_q *LiturgiPetugasQuery) Only(ctx context.Context) (*LiturgiPetugas, error) {
 	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
@@ -140,14 +116,14 @@ func (_q *EventPetugasQuery) Only(ctx context.Context) (*EventPetugas, error) {
 	case 1:
 		return nodes[0], nil
 	case 0:
-		return nil, &NotFoundError{eventpetugas.Label}
+		return nil, &NotFoundError{liturgipetugas.Label}
 	default:
-		return nil, &NotSingularError{eventpetugas.Label}
+		return nil, &NotSingularError{liturgipetugas.Label}
 	}
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (_q *EventPetugasQuery) OnlyX(ctx context.Context) *EventPetugas {
+func (_q *LiturgiPetugasQuery) OnlyX(ctx context.Context) *LiturgiPetugas {
 	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
@@ -155,10 +131,10 @@ func (_q *EventPetugasQuery) OnlyX(ctx context.Context) *EventPetugas {
 	return node
 }
 
-// OnlyID is like Only, but returns the only EventPetugas ID in the query.
-// Returns a *NotSingularError when more than one EventPetugas ID is found.
+// OnlyID is like Only, but returns the only LiturgiPetugas ID in the query.
+// Returns a *NotSingularError when more than one LiturgiPetugas ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (_q *EventPetugasQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+func (_q *LiturgiPetugasQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
 	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
@@ -167,15 +143,15 @@ func (_q *EventPetugasQuery) OnlyID(ctx context.Context) (id uuid.UUID, err erro
 	case 1:
 		id = ids[0]
 	case 0:
-		err = &NotFoundError{eventpetugas.Label}
+		err = &NotFoundError{liturgipetugas.Label}
 	default:
-		err = &NotSingularError{eventpetugas.Label}
+		err = &NotSingularError{liturgipetugas.Label}
 	}
 	return
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (_q *EventPetugasQuery) OnlyIDX(ctx context.Context) uuid.UUID {
+func (_q *LiturgiPetugasQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -183,18 +159,18 @@ func (_q *EventPetugasQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	return id
 }
 
-// All executes the query and returns a list of EventPetugasSlice.
-func (_q *EventPetugasQuery) All(ctx context.Context) ([]*EventPetugas, error) {
+// All executes the query and returns a list of LiturgiPetugasSlice.
+func (_q *LiturgiPetugasQuery) All(ctx context.Context) ([]*LiturgiPetugas, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
-	qr := querierAll[[]*EventPetugas, *EventPetugasQuery]()
-	return withInterceptors[[]*EventPetugas](ctx, _q, qr, _q.inters)
+	qr := querierAll[[]*LiturgiPetugas, *LiturgiPetugasQuery]()
+	return withInterceptors[[]*LiturgiPetugas](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (_q *EventPetugasQuery) AllX(ctx context.Context) []*EventPetugas {
+func (_q *LiturgiPetugasQuery) AllX(ctx context.Context) []*LiturgiPetugas {
 	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
@@ -202,20 +178,20 @@ func (_q *EventPetugasQuery) AllX(ctx context.Context) []*EventPetugas {
 	return nodes
 }
 
-// IDs executes the query and returns a list of EventPetugas IDs.
-func (_q *EventPetugasQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
+// IDs executes the query and returns a list of LiturgiPetugas IDs.
+func (_q *LiturgiPetugasQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 	if _q.ctx.Unique == nil && _q.path != nil {
 		_q.Unique(true)
 	}
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
-	if err = _q.Select(eventpetugas.FieldID).Scan(ctx, &ids); err != nil {
+	if err = _q.Select(liturgipetugas.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (_q *EventPetugasQuery) IDsX(ctx context.Context) []uuid.UUID {
+func (_q *LiturgiPetugasQuery) IDsX(ctx context.Context) []uuid.UUID {
 	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -224,16 +200,16 @@ func (_q *EventPetugasQuery) IDsX(ctx context.Context) []uuid.UUID {
 }
 
 // Count returns the count of the given query.
-func (_q *EventPetugasQuery) Count(ctx context.Context) (int, error) {
+func (_q *LiturgiPetugasQuery) Count(ctx context.Context) (int, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, _q, querierCount[*EventPetugasQuery](), _q.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*LiturgiPetugasQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (_q *EventPetugasQuery) CountX(ctx context.Context) int {
+func (_q *LiturgiPetugasQuery) CountX(ctx context.Context) int {
 	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
@@ -242,7 +218,7 @@ func (_q *EventPetugasQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (_q *EventPetugasQuery) Exist(ctx context.Context) (bool, error) {
+func (_q *LiturgiPetugasQuery) Exist(ctx context.Context) (bool, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
 	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
@@ -255,7 +231,7 @@ func (_q *EventPetugasQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (_q *EventPetugasQuery) ExistX(ctx context.Context) bool {
+func (_q *LiturgiPetugasQuery) ExistX(ctx context.Context) bool {
 	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
@@ -263,34 +239,22 @@ func (_q *EventPetugasQuery) ExistX(ctx context.Context) bool {
 	return exist
 }
 
-// Clone returns a duplicate of the EventPetugasQuery builder, including all associated steps. It can be
+// Clone returns a duplicate of the LiturgiPetugasQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (_q *EventPetugasQuery) Clone() *EventPetugasQuery {
+func (_q *LiturgiPetugasQuery) Clone() *LiturgiPetugasQuery {
 	if _q == nil {
 		return nil
 	}
-	return &EventPetugasQuery{
+	return &LiturgiPetugasQuery{
 		config:     _q.config,
 		ctx:        _q.ctx.Clone(),
-		order:      append([]eventpetugas.OrderOption{}, _q.order...),
+		order:      append([]liturgipetugas.OrderOption{}, _q.order...),
 		inters:     append([]Interceptor{}, _q.inters...),
-		predicates: append([]predicate.EventPetugas{}, _q.predicates...),
-		withEvent:  _q.withEvent.Clone(),
+		predicates: append([]predicate.LiturgiPetugas{}, _q.predicates...),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
 	}
-}
-
-// WithEvent tells the query-builder to eager-load the nodes that are connected to
-// the "event" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *EventPetugasQuery) WithEvent(opts ...func(*EventQuery)) *EventPetugasQuery {
-	query := (&EventClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withEvent = query
-	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -303,15 +267,15 @@ func (_q *EventPetugasQuery) WithEvent(opts ...func(*EventQuery)) *EventPetugasQ
 //		Count int `json:"count,omitempty"`
 //	}
 //
-//	client.EventPetugas.Query().
-//		GroupBy(eventpetugas.FieldCreatedAt).
+//	client.LiturgiPetugas.Query().
+//		GroupBy(liturgipetugas.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (_q *EventPetugasQuery) GroupBy(field string, fields ...string) *EventPetugasGroupBy {
+func (_q *LiturgiPetugasQuery) GroupBy(field string, fields ...string) *LiturgiPetugasGroupBy {
 	_q.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &EventPetugasGroupBy{build: _q}
+	grbuild := &LiturgiPetugasGroupBy{build: _q}
 	grbuild.flds = &_q.ctx.Fields
-	grbuild.label = eventpetugas.Label
+	grbuild.label = liturgipetugas.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
 }
@@ -325,23 +289,23 @@ func (_q *EventPetugasQuery) GroupBy(field string, fields ...string) *EventPetug
 //		CreatedAt time.Time `json:"created_at,omitempty"`
 //	}
 //
-//	client.EventPetugas.Query().
-//		Select(eventpetugas.FieldCreatedAt).
+//	client.LiturgiPetugas.Query().
+//		Select(liturgipetugas.FieldCreatedAt).
 //		Scan(ctx, &v)
-func (_q *EventPetugasQuery) Select(fields ...string) *EventPetugasSelect {
+func (_q *LiturgiPetugasQuery) Select(fields ...string) *LiturgiPetugasSelect {
 	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
-	sbuild := &EventPetugasSelect{EventPetugasQuery: _q}
-	sbuild.label = eventpetugas.Label
+	sbuild := &LiturgiPetugasSelect{LiturgiPetugasQuery: _q}
+	sbuild.label = liturgipetugas.Label
 	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
-// Aggregate returns a EventPetugasSelect configured with the given aggregations.
-func (_q *EventPetugasQuery) Aggregate(fns ...AggregateFunc) *EventPetugasSelect {
+// Aggregate returns a LiturgiPetugasSelect configured with the given aggregations.
+func (_q *LiturgiPetugasQuery) Aggregate(fns ...AggregateFunc) *LiturgiPetugasSelect {
 	return _q.Select().Aggregate(fns...)
 }
 
-func (_q *EventPetugasQuery) prepareQuery(ctx context.Context) error {
+func (_q *LiturgiPetugasQuery) prepareQuery(ctx context.Context) error {
 	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
@@ -353,7 +317,7 @@ func (_q *EventPetugasQuery) prepareQuery(ctx context.Context) error {
 		}
 	}
 	for _, f := range _q.ctx.Fields {
-		if !eventpetugas.ValidColumn(f) {
+		if !liturgipetugas.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
@@ -367,21 +331,17 @@ func (_q *EventPetugasQuery) prepareQuery(ctx context.Context) error {
 	return nil
 }
 
-func (_q *EventPetugasQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*EventPetugas, error) {
+func (_q *LiturgiPetugasQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*LiturgiPetugas, error) {
 	var (
-		nodes       = []*EventPetugas{}
-		_spec       = _q.querySpec()
-		loadedTypes = [1]bool{
-			_q.withEvent != nil,
-		}
+		nodes = []*LiturgiPetugas{}
+		_spec = _q.querySpec()
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
-		return (*EventPetugas).scanValues(nil, columns)
+		return (*LiturgiPetugas).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &EventPetugas{config: _q.config}
+		node := &LiturgiPetugas{config: _q.config}
 		nodes = append(nodes, node)
-		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -393,46 +353,10 @@ func (_q *EventPetugasQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := _q.withEvent; query != nil {
-		if err := _q.loadEvent(ctx, query, nodes, nil,
-			func(n *EventPetugas, e *Event) { n.Edges.Event = e }); err != nil {
-			return nil, err
-		}
-	}
 	return nodes, nil
 }
 
-func (_q *EventPetugasQuery) loadEvent(ctx context.Context, query *EventQuery, nodes []*EventPetugas, init func(*EventPetugas), assign func(*EventPetugas, *Event)) error {
-	ids := make([]uuid.UUID, 0, len(nodes))
-	nodeids := make(map[uuid.UUID][]*EventPetugas)
-	for i := range nodes {
-		fk := nodes[i].EventID
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(event.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "event_id" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
-
-func (_q *EventPetugasQuery) sqlCount(ctx context.Context) (int, error) {
+func (_q *LiturgiPetugasQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
 	_spec.Node.Columns = _q.ctx.Fields
 	if len(_q.ctx.Fields) > 0 {
@@ -441,8 +365,8 @@ func (_q *EventPetugasQuery) sqlCount(ctx context.Context) (int, error) {
 	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (_q *EventPetugasQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(eventpetugas.Table, eventpetugas.Columns, sqlgraph.NewFieldSpec(eventpetugas.FieldID, field.TypeUUID))
+func (_q *LiturgiPetugasQuery) querySpec() *sqlgraph.QuerySpec {
+	_spec := sqlgraph.NewQuerySpec(liturgipetugas.Table, liturgipetugas.Columns, sqlgraph.NewFieldSpec(liturgipetugas.FieldID, field.TypeUUID))
 	_spec.From = _q.sql
 	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
@@ -451,14 +375,11 @@ func (_q *EventPetugasQuery) querySpec() *sqlgraph.QuerySpec {
 	}
 	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
-		_spec.Node.Columns = append(_spec.Node.Columns, eventpetugas.FieldID)
+		_spec.Node.Columns = append(_spec.Node.Columns, liturgipetugas.FieldID)
 		for i := range fields {
-			if fields[i] != eventpetugas.FieldID {
+			if fields[i] != liturgipetugas.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
-		}
-		if _q.withEvent != nil {
-			_spec.Node.AddColumnOnce(eventpetugas.FieldEventID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {
@@ -484,12 +405,12 @@ func (_q *EventPetugasQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (_q *EventPetugasQuery) sqlQuery(ctx context.Context) *sql.Selector {
+func (_q *LiturgiPetugasQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(_q.driver.Dialect())
-	t1 := builder.Table(eventpetugas.Table)
+	t1 := builder.Table(liturgipetugas.Table)
 	columns := _q.ctx.Fields
 	if len(columns) == 0 {
-		columns = eventpetugas.Columns
+		columns = liturgipetugas.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
 	if _q.sql != nil {
@@ -516,28 +437,28 @@ func (_q *EventPetugasQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	return selector
 }
 
-// EventPetugasGroupBy is the group-by builder for EventPetugas entities.
-type EventPetugasGroupBy struct {
+// LiturgiPetugasGroupBy is the group-by builder for LiturgiPetugas entities.
+type LiturgiPetugasGroupBy struct {
 	selector
-	build *EventPetugasQuery
+	build *LiturgiPetugasQuery
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (_g *EventPetugasGroupBy) Aggregate(fns ...AggregateFunc) *EventPetugasGroupBy {
+func (_g *LiturgiPetugasGroupBy) Aggregate(fns ...AggregateFunc) *LiturgiPetugasGroupBy {
 	_g.fns = append(_g.fns, fns...)
 	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_g *EventPetugasGroupBy) Scan(ctx context.Context, v any) error {
+func (_g *LiturgiPetugasGroupBy) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
 	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*EventPetugasQuery, *EventPetugasGroupBy](ctx, _g.build, _g, _g.build.inters, v)
+	return scanWithInterceptors[*LiturgiPetugasQuery, *LiturgiPetugasGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (_g *EventPetugasGroupBy) sqlScan(ctx context.Context, root *EventPetugasQuery, v any) error {
+func (_g *LiturgiPetugasGroupBy) sqlScan(ctx context.Context, root *LiturgiPetugasQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
 	aggregation := make([]string, 0, len(_g.fns))
 	for _, fn := range _g.fns {
@@ -564,28 +485,28 @@ func (_g *EventPetugasGroupBy) sqlScan(ctx context.Context, root *EventPetugasQu
 	return sql.ScanSlice(rows, v)
 }
 
-// EventPetugasSelect is the builder for selecting fields of EventPetugas entities.
-type EventPetugasSelect struct {
-	*EventPetugasQuery
+// LiturgiPetugasSelect is the builder for selecting fields of LiturgiPetugas entities.
+type LiturgiPetugasSelect struct {
+	*LiturgiPetugasQuery
 	selector
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (_s *EventPetugasSelect) Aggregate(fns ...AggregateFunc) *EventPetugasSelect {
+func (_s *LiturgiPetugasSelect) Aggregate(fns ...AggregateFunc) *LiturgiPetugasSelect {
 	_s.fns = append(_s.fns, fns...)
 	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_s *EventPetugasSelect) Scan(ctx context.Context, v any) error {
+func (_s *LiturgiPetugasSelect) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
 	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*EventPetugasQuery, *EventPetugasSelect](ctx, _s.EventPetugasQuery, _s, _s.inters, v)
+	return scanWithInterceptors[*LiturgiPetugasQuery, *LiturgiPetugasSelect](ctx, _s.LiturgiPetugasQuery, _s, _s.inters, v)
 }
 
-func (_s *EventPetugasSelect) sqlScan(ctx context.Context, root *EventPetugasQuery, v any) error {
+func (_s *LiturgiPetugasSelect) sqlScan(ctx context.Context, root *LiturgiPetugasQuery, v any) error {
 	selector := root.sqlQuery(ctx)
 	aggregation := make([]string, 0, len(_s.fns))
 	for _, fn := range _s.fns {

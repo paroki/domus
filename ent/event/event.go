@@ -50,10 +50,6 @@ const (
 	FieldStatus = "status"
 	// EdgeRsvps holds the string denoting the rsvps edge name in mutations.
 	EdgeRsvps = "rsvps"
-	// EdgePetugas holds the string denoting the petugas edge name in mutations.
-	EdgePetugas = "petugas"
-	// EdgeLagu holds the string denoting the lagu edge name in mutations.
-	EdgeLagu = "lagu"
 	// Table holds the table name of the event in the database.
 	Table = "events"
 	// RsvpsTable is the table that holds the rsvps relation/edge.
@@ -63,20 +59,6 @@ const (
 	RsvpsInverseTable = "event_rsvps"
 	// RsvpsColumn is the table column denoting the rsvps relation/edge.
 	RsvpsColumn = "event_id"
-	// PetugasTable is the table that holds the petugas relation/edge.
-	PetugasTable = "event_petugas"
-	// PetugasInverseTable is the table name for the EventPetugas entity.
-	// It exists in this package in order to avoid circular dependency with the "eventpetugas" package.
-	PetugasInverseTable = "event_petugas"
-	// PetugasColumn is the table column denoting the petugas relation/edge.
-	PetugasColumn = "event_id"
-	// LaguTable is the table that holds the lagu relation/edge.
-	LaguTable = "event_lagu"
-	// LaguInverseTable is the table name for the EventLagu entity.
-	// It exists in this package in order to avoid circular dependency with the "eventlagu" package.
-	LaguInverseTable = "event_lagu"
-	// LaguColumn is the table column denoting the lagu relation/edge.
-	LaguColumn = "event_id"
 )
 
 // Columns holds all SQL columns for event fields.
@@ -278,52 +260,10 @@ func ByRsvps(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newRsvpsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-
-// ByPetugasCount orders the results by petugas count.
-func ByPetugasCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newPetugasStep(), opts...)
-	}
-}
-
-// ByPetugas orders the results by petugas terms.
-func ByPetugas(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newPetugasStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByLaguCount orders the results by lagu count.
-func ByLaguCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newLaguStep(), opts...)
-	}
-}
-
-// ByLagu orders the results by lagu terms.
-func ByLagu(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newLaguStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
 func newRsvpsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RsvpsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, RsvpsTable, RsvpsColumn),
-	)
-}
-func newPetugasStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(PetugasInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, PetugasTable, PetugasColumn),
-	)
-}
-func newLaguStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(LaguInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, LaguTable, LaguColumn),
 	)
 }

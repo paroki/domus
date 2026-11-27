@@ -1186,6 +1186,117 @@ func (s *RefFeatureSuite) TestParokiMember_UmatAdminDelegationAndDualRoles() {
 	s.False(isMember)
 }
 
+func (s *RefFeatureSuite) TestParokiMember_LiturgiAdminDelegationAndRefInUse() {
+	s.loginViaOTP("admin@paroki.org")
+	ctx := context.Background()
+
+	s.Request("/api/ref/keuskupan", http.MethodPost, domain.CreateKeuskupanRequest{Kode: "kaj-lit", Nama: "KAJ Liturgi"})
+	s.Created()
+	keuskupan := testutil.DecodeAs[domain.KeuskupanResponse](s).Data
+
+	s.Request("/api/ref/paroki", http.MethodPost, domain.CreateParokiRequest{
+		KeuskupanID: keuskupan.ID,
+		Kode:        "paroki-lit",
+		Nama:        "Paroki Liturgi",
+	})
+	s.Created()
+	paroki := testutil.DecodeAs[domain.ParokiResponse](s).Data
+
+	// Add Alice as paroki member with umatAdmin=true (not paroki-admin).
+	umatTrue := true
+	litTrue := true
+	litFalse := false
+	s.Request("/api/ref/paroki/"+paroki.ID.String()+"/members", http.MethodPost, domain.AddParokiMemberRequest{
+		Email:     "alice-umat@paroki.org",
+		Name:      "Alice Umat",
+		Role:      "member",
+		UmatAdmin: &umatTrue,
+	})
+	s.Created()
+	alice := testutil.DecodeAs[domain.ParokiMemberResponse](s).Data
+	s.False(alice.LiturgiAdmin)
+
+	// Super-admin adds Bob with liturgiAdmin=true -> Casbin liturgi:admin granted.
+	s.Request("/api/ref/paroki/"+paroki.ID.String()+"/members", http.MethodPost, domain.AddParokiMemberRequest{
+		Email:        "bob-lit@paroki.org",
+		Name:         "Bob Liturgi",
+		Role:         "member",
+		LiturgiAdmin: &litTrue,
+	})
+	s.Created()
+	bob := testutil.DecodeAs[domain.ParokiMemberResponse](s).Data
+	s.True(bob.LiturgiAdmin)
+
+	hasLiturgiAdmin, err := s.enforcer.HasRoleInDomain(authz.UserSubject(bob.UserID), "liturgi:admin", authz.ParokiDomain(paroki.ID))
+	s.Require().NoError(err)
+	s.True(hasLiturgiAdmin)
+
+	// Filter search by liturgiAdmin=true returns Bob only.
+	s.Request("/api/ref/paroki/"+paroki.ID.String()+"/members/search", http.MethodPost, domain.SearchParokiMembersRequest{
+		Filter: &domain.ParokiMemberSearchFilter{LiturgiAdmin: &litTrue},
+	})
+	s.OK()
+	filtered := testutil.DecodeAs[[]domain.ParokiMemberResponse](s).Data
+	s.Len(filtered, 1)
+	s.Equal(bob.UserID, filtered[0].UserID)
+
+	// UmatAdmin-only caller (Alice) CANNOT grant or revoke liturgiAdmin -> 403 REF_FORBIDDEN.
+	s.loginViaOTP("alice-umat@paroki.org")
+	s.Request("/api/ref/paroki/"+paroki.ID.String()+"/members", http.MethodPost, domain.AddParokiMemberRequest{
+		Email:        "carol-lit@paroki.org",
+		Name:         "Carol Liturgi",
+		Role:         "member",
+		LiturgiAdmin: &litTrue,
+	})
+	s.Forbidden()
+	s.Equal("REF_FORBIDDEN", s.GetErrorResponse().Error.Code)
+
+	s.Request("/api/ref/paroki/"+paroki.ID.String()+"/members/"+bob.UserID.String(), http.MethodPatch, domain.UpdateParokiMemberRequest{
+		LiturgiAdmin: &litFalse,
+	})
+	s.Forbidden()
+	s.Equal("REF_FORBIDDEN", s.GetErrorResponse().Error.Code)
+
+	// Super-admin revokes Bob's liturgiAdmin -> Casbin liturgi:admin revoked.
+	s.loginViaOTP("admin@paroki.org")
+	s.Request("/api/ref/paroki/"+paroki.ID.String()+"/members/"+bob.UserID.String(), http.MethodPatch, domain.UpdateParokiMemberRequest{
+		LiturgiAdmin: &litFalse,
+	})
+	s.OK()
+	bobUpdated := testutil.DecodeAs[domain.ParokiMemberResponse](s).Data
+	s.False(bobUpdated.LiturgiAdmin)
+
+	hasLiturgiAdmin, err = s.enforcer.HasRoleInDomain(authz.UserSubject(bob.UserID), "liturgi:admin", authz.ParokiDomain(paroki.ID))
+	s.Require().NoError(err)
+	s.False(hasLiturgiAdmin)
+
+	// Re-grant liturgiAdmin and remove Bob -> Casbin liturgi:admin revoked.
+	s.Request("/api/ref/paroki/"+paroki.ID.String()+"/members/"+bob.UserID.String(), http.MethodPatch, domain.UpdateParokiMemberRequest{
+		LiturgiAdmin: &litTrue,
+	})
+	s.OK()
+	s.Request("/api/ref/paroki/"+paroki.ID.String()+"/members/"+bob.UserID.String(), http.MethodDelete, nil)
+	s.NoContent()
+	hasLiturgiAdmin, err = s.enforcer.HasRoleInDomain(authz.UserSubject(bob.UserID), "liturgi:admin", authz.ParokiDomain(paroki.ID))
+	s.Require().NoError(err)
+	s.False(hasLiturgiAdmin)
+
+	// HasParokiChildren blocks deleting paroki when liturgi_ministries row exists -> 409 REF_IN_USE.
+	ministry, err := s.client.LiturgiMinistry.Create().
+		SetParokiID(paroki.ID).
+		SetRoleSlug("lektor").
+		Save(ctx)
+	s.Require().NoError(err)
+
+	s.Request("/api/ref/paroki/"+paroki.ID.String(), http.MethodDelete, nil)
+	s.Conflict()
+	s.Equal("REF_IN_USE", s.GetErrorResponse().Error.Code)
+
+	s.Require().NoError(s.client.LiturgiMinistry.DeleteOneID(ministry.ID).Exec(ctx))
+	s.Request("/api/ref/paroki/"+paroki.ID.String(), http.MethodDelete, nil)
+	s.NoContent()
+}
+
 func (s *RefFeatureSuite) TestRefDeleteGuards_UmatReferences() {
 	s.loginViaOTP("admin@paroki.org")
 	ctx := context.Background()

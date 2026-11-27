@@ -560,10 +560,18 @@ func TestNewEntClient_EventAndRSVPSchemas(t *testing.T) {
 	require.NotNil(t, parishEv.Jenis)
 	assert.Equal(t, "misa", *parishEv.Jenis)
 
-	petugas, err := client.EventPetugas.Create().
+	ministry, err := client.LiturgiMinistry.Create().
 		SetParokiID(parokiID).
-		SetEvent(parishEv).
-		SetRole("Organis").
+		SetRoleSlug("organis").
+		SetLeaderUserID(userID).
+		Save(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, 7, int(ministry.ID.Version()))
+
+	petugas, err := client.LiturgiPetugas.Create().
+		SetParokiID(parokiID).
+		SetEventID(parishEv.ID).
+		SetRole("organis").
 		SetUserID(userID).
 		SetName("Budi Organis").
 		SetUrutan(1).
@@ -572,14 +580,9 @@ func TestNewEntClient_EventAndRSVPSchemas(t *testing.T) {
 	assert.Equal(t, 7, int(petugas.ID.Version()))
 	assert.Equal(t, parishEv.ID, petugas.EventID)
 
-	petugasList, err := parishEv.QueryPetugas().All(ctx)
-	require.NoError(t, err)
-	require.Len(t, petugasList, 1)
-	assert.Equal(t, "Organis", petugasList[0].Role)
-
-	lagu, err := client.EventLagu.Create().
+	lagu, err := client.LiturgiLagu.Create().
 		SetParokiID(parokiID).
-		SetEvent(parishEv).
+		SetEventID(parishEv.ID).
 		SetUrutan(1).
 		SetBagian("Pembuka").
 		SetSumber("Puji Syukur").
@@ -590,9 +593,4 @@ func TestNewEntClient_EventAndRSVPSchemas(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 7, int(lagu.ID.Version()))
 	assert.Equal(t, parishEv.ID, lagu.EventID)
-
-	laguList, err := parishEv.QueryLagu().All(ctx)
-	require.NoError(t, err)
-	require.Len(t, laguList, 1)
-	assert.Equal(t, "Pembuka", laguList[0].Bagian)
 }

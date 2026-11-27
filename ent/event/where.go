@@ -879,52 +879,6 @@ func HasRsvpsWith(preds ...predicate.EventRSVP) predicate.Event {
 	})
 }
 
-// HasPetugas applies the HasEdge predicate on the "petugas" edge.
-func HasPetugas() predicate.Event {
-	return predicate.Event(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, PetugasTable, PetugasColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasPetugasWith applies the HasEdge predicate on the "petugas" edge with a given conditions (other predicates).
-func HasPetugasWith(preds ...predicate.EventPetugas) predicate.Event {
-	return predicate.Event(func(s *sql.Selector) {
-		step := newPetugasStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasLagu applies the HasEdge predicate on the "lagu" edge.
-func HasLagu() predicate.Event {
-	return predicate.Event(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, LaguTable, LaguColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasLaguWith applies the HasEdge predicate on the "lagu" edge with a given conditions (other predicates).
-func HasLaguWith(preds ...predicate.EventLagu) predicate.Event {
-	return predicate.Event(func(s *sql.Selector) {
-		step := newLaguStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Event) predicate.Event {
 	return predicate.Event(sql.AndPredicates(predicates...))

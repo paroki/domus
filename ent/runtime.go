@@ -13,8 +13,6 @@ import (
 	"github.com/paroki/domus/ent/cantus"
 	"github.com/paroki/domus/ent/casbinrule"
 	"github.com/paroki/domus/ent/event"
-	"github.com/paroki/domus/ent/eventlagu"
-	"github.com/paroki/domus/ent/eventpetugas"
 	"github.com/paroki/domus/ent/eventrsvp"
 	"github.com/paroki/domus/ent/kecamatan"
 	"github.com/paroki/domus/ent/keluarga"
@@ -23,6 +21,9 @@ import (
 	"github.com/paroki/domus/ent/kevikepan"
 	"github.com/paroki/domus/ent/kota"
 	"github.com/paroki/domus/ent/lingkungan"
+	"github.com/paroki/domus/ent/liturgilagu"
+	"github.com/paroki/domus/ent/liturgiministry"
+	"github.com/paroki/domus/ent/liturgipetugas"
 	"github.com/paroki/domus/ent/lookup"
 	"github.com/paroki/domus/ent/organization"
 	"github.com/paroki/domus/ent/orginvite"
@@ -276,72 +277,6 @@ func init() {
 	eventDescID := eventMixinFields0[0].Descriptor()
 	// event.DefaultID holds the default value on creation for the id field.
 	event.DefaultID = eventDescID.Default.(func() uuid.UUID)
-	eventlaguMixin := schema.EventLagu{}.Mixin()
-	eventlaguMixinFields0 := eventlaguMixin[0].Fields()
-	_ = eventlaguMixinFields0
-	eventlaguMixinFields1 := eventlaguMixin[1].Fields()
-	_ = eventlaguMixinFields1
-	eventlaguFields := schema.EventLagu{}.Fields()
-	_ = eventlaguFields
-	// eventlaguDescCreatedAt is the schema descriptor for created_at field.
-	eventlaguDescCreatedAt := eventlaguMixinFields1[0].Descriptor()
-	// eventlagu.DefaultCreatedAt holds the default value on creation for the created_at field.
-	eventlagu.DefaultCreatedAt = eventlaguDescCreatedAt.Default.(func() time.Time)
-	// eventlaguDescUpdatedAt is the schema descriptor for updated_at field.
-	eventlaguDescUpdatedAt := eventlaguMixinFields1[1].Descriptor()
-	// eventlagu.DefaultUpdatedAt holds the default value on creation for the updated_at field.
-	eventlagu.DefaultUpdatedAt = eventlaguDescUpdatedAt.Default.(func() time.Time)
-	// eventlagu.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
-	eventlagu.UpdateDefaultUpdatedAt = eventlaguDescUpdatedAt.UpdateDefault.(func() time.Time)
-	// eventlaguDescUrutan is the schema descriptor for urutan field.
-	eventlaguDescUrutan := eventlaguFields[2].Descriptor()
-	// eventlagu.DefaultUrutan holds the default value on creation for the urutan field.
-	eventlagu.DefaultUrutan = eventlaguDescUrutan.Default.(int)
-	// eventlaguDescBagian is the schema descriptor for bagian field.
-	eventlaguDescBagian := eventlaguFields[3].Descriptor()
-	// eventlagu.BagianValidator is a validator for the "bagian" field. It is called by the builders before save.
-	eventlagu.BagianValidator = eventlaguDescBagian.Validators[0].(func(string) error)
-	// eventlaguDescJudul is the schema descriptor for judul field.
-	eventlaguDescJudul := eventlaguFields[6].Descriptor()
-	// eventlagu.JudulValidator is a validator for the "judul" field. It is called by the builders before save.
-	eventlagu.JudulValidator = eventlaguDescJudul.Validators[0].(func(string) error)
-	// eventlaguDescID is the schema descriptor for id field.
-	eventlaguDescID := eventlaguMixinFields0[0].Descriptor()
-	// eventlagu.DefaultID holds the default value on creation for the id field.
-	eventlagu.DefaultID = eventlaguDescID.Default.(func() uuid.UUID)
-	eventpetugasMixin := schema.EventPetugas{}.Mixin()
-	eventpetugasMixinFields0 := eventpetugasMixin[0].Fields()
-	_ = eventpetugasMixinFields0
-	eventpetugasMixinFields1 := eventpetugasMixin[1].Fields()
-	_ = eventpetugasMixinFields1
-	eventpetugasFields := schema.EventPetugas{}.Fields()
-	_ = eventpetugasFields
-	// eventpetugasDescCreatedAt is the schema descriptor for created_at field.
-	eventpetugasDescCreatedAt := eventpetugasMixinFields1[0].Descriptor()
-	// eventpetugas.DefaultCreatedAt holds the default value on creation for the created_at field.
-	eventpetugas.DefaultCreatedAt = eventpetugasDescCreatedAt.Default.(func() time.Time)
-	// eventpetugasDescUpdatedAt is the schema descriptor for updated_at field.
-	eventpetugasDescUpdatedAt := eventpetugasMixinFields1[1].Descriptor()
-	// eventpetugas.DefaultUpdatedAt holds the default value on creation for the updated_at field.
-	eventpetugas.DefaultUpdatedAt = eventpetugasDescUpdatedAt.Default.(func() time.Time)
-	// eventpetugas.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
-	eventpetugas.UpdateDefaultUpdatedAt = eventpetugasDescUpdatedAt.UpdateDefault.(func() time.Time)
-	// eventpetugasDescRole is the schema descriptor for role field.
-	eventpetugasDescRole := eventpetugasFields[2].Descriptor()
-	// eventpetugas.RoleValidator is a validator for the "role" field. It is called by the builders before save.
-	eventpetugas.RoleValidator = eventpetugasDescRole.Validators[0].(func(string) error)
-	// eventpetugasDescName is the schema descriptor for name field.
-	eventpetugasDescName := eventpetugasFields[5].Descriptor()
-	// eventpetugas.NameValidator is a validator for the "name" field. It is called by the builders before save.
-	eventpetugas.NameValidator = eventpetugasDescName.Validators[0].(func(string) error)
-	// eventpetugasDescUrutan is the schema descriptor for urutan field.
-	eventpetugasDescUrutan := eventpetugasFields[6].Descriptor()
-	// eventpetugas.DefaultUrutan holds the default value on creation for the urutan field.
-	eventpetugas.DefaultUrutan = eventpetugasDescUrutan.Default.(int)
-	// eventpetugasDescID is the schema descriptor for id field.
-	eventpetugasDescID := eventpetugasMixinFields0[0].Descriptor()
-	// eventpetugas.DefaultID holds the default value on creation for the id field.
-	eventpetugas.DefaultID = eventpetugasDescID.Default.(func() uuid.UUID)
 	eventrsvpMixin := schema.EventRSVP{}.Mixin()
 	eventrsvpMixinFields0 := eventrsvpMixin[0].Fields()
 	_ = eventrsvpMixinFields0
@@ -590,6 +525,89 @@ func init() {
 	lingkunganDescID := lingkunganMixinFields0[0].Descriptor()
 	// lingkungan.DefaultID holds the default value on creation for the id field.
 	lingkungan.DefaultID = lingkunganDescID.Default.(func() uuid.UUID)
+	liturgilaguMixin := schema.LiturgiLagu{}.Mixin()
+	liturgilaguMixinFields0 := liturgilaguMixin[0].Fields()
+	_ = liturgilaguMixinFields0
+	liturgilaguMixinFields1 := liturgilaguMixin[1].Fields()
+	_ = liturgilaguMixinFields1
+	liturgilaguFields := schema.LiturgiLagu{}.Fields()
+	_ = liturgilaguFields
+	// liturgilaguDescCreatedAt is the schema descriptor for created_at field.
+	liturgilaguDescCreatedAt := liturgilaguMixinFields1[0].Descriptor()
+	// liturgilagu.DefaultCreatedAt holds the default value on creation for the created_at field.
+	liturgilagu.DefaultCreatedAt = liturgilaguDescCreatedAt.Default.(func() time.Time)
+	// liturgilaguDescUpdatedAt is the schema descriptor for updated_at field.
+	liturgilaguDescUpdatedAt := liturgilaguMixinFields1[1].Descriptor()
+	// liturgilagu.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	liturgilagu.DefaultUpdatedAt = liturgilaguDescUpdatedAt.Default.(func() time.Time)
+	// liturgilagu.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	liturgilagu.UpdateDefaultUpdatedAt = liturgilaguDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// liturgilaguDescUrutan is the schema descriptor for urutan field.
+	liturgilaguDescUrutan := liturgilaguFields[2].Descriptor()
+	// liturgilagu.DefaultUrutan holds the default value on creation for the urutan field.
+	liturgilagu.DefaultUrutan = liturgilaguDescUrutan.Default.(int)
+	// liturgilaguDescBagian is the schema descriptor for bagian field.
+	liturgilaguDescBagian := liturgilaguFields[3].Descriptor()
+	// liturgilagu.BagianValidator is a validator for the "bagian" field. It is called by the builders before save.
+	liturgilagu.BagianValidator = liturgilaguDescBagian.Validators[0].(func(string) error)
+	// liturgilaguDescJudul is the schema descriptor for judul field.
+	liturgilaguDescJudul := liturgilaguFields[7].Descriptor()
+	// liturgilagu.JudulValidator is a validator for the "judul" field. It is called by the builders before save.
+	liturgilagu.JudulValidator = liturgilaguDescJudul.Validators[0].(func(string) error)
+	// liturgilaguDescID is the schema descriptor for id field.
+	liturgilaguDescID := liturgilaguMixinFields0[0].Descriptor()
+	// liturgilagu.DefaultID holds the default value on creation for the id field.
+	liturgilagu.DefaultID = liturgilaguDescID.Default.(func() uuid.UUID)
+	liturgiministryMixin := schema.LiturgiMinistry{}.Mixin()
+	liturgiministryMixinFields0 := liturgiministryMixin[0].Fields()
+	_ = liturgiministryMixinFields0
+	liturgiministryMixinFields1 := liturgiministryMixin[1].Fields()
+	_ = liturgiministryMixinFields1
+	liturgiministryFields := schema.LiturgiMinistry{}.Fields()
+	_ = liturgiministryFields
+	// liturgiministryDescCreatedAt is the schema descriptor for created_at field.
+	liturgiministryDescCreatedAt := liturgiministryMixinFields1[0].Descriptor()
+	// liturgiministry.DefaultCreatedAt holds the default value on creation for the created_at field.
+	liturgiministry.DefaultCreatedAt = liturgiministryDescCreatedAt.Default.(func() time.Time)
+	// liturgiministryDescUpdatedAt is the schema descriptor for updated_at field.
+	liturgiministryDescUpdatedAt := liturgiministryMixinFields1[1].Descriptor()
+	// liturgiministry.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	liturgiministry.DefaultUpdatedAt = liturgiministryDescUpdatedAt.Default.(func() time.Time)
+	// liturgiministry.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	liturgiministry.UpdateDefaultUpdatedAt = liturgiministryDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// liturgiministryDescID is the schema descriptor for id field.
+	liturgiministryDescID := liturgiministryMixinFields0[0].Descriptor()
+	// liturgiministry.DefaultID holds the default value on creation for the id field.
+	liturgiministry.DefaultID = liturgiministryDescID.Default.(func() uuid.UUID)
+	liturgipetugasMixin := schema.LiturgiPetugas{}.Mixin()
+	liturgipetugasMixinFields0 := liturgipetugasMixin[0].Fields()
+	_ = liturgipetugasMixinFields0
+	liturgipetugasMixinFields1 := liturgipetugasMixin[1].Fields()
+	_ = liturgipetugasMixinFields1
+	liturgipetugasFields := schema.LiturgiPetugas{}.Fields()
+	_ = liturgipetugasFields
+	// liturgipetugasDescCreatedAt is the schema descriptor for created_at field.
+	liturgipetugasDescCreatedAt := liturgipetugasMixinFields1[0].Descriptor()
+	// liturgipetugas.DefaultCreatedAt holds the default value on creation for the created_at field.
+	liturgipetugas.DefaultCreatedAt = liturgipetugasDescCreatedAt.Default.(func() time.Time)
+	// liturgipetugasDescUpdatedAt is the schema descriptor for updated_at field.
+	liturgipetugasDescUpdatedAt := liturgipetugasMixinFields1[1].Descriptor()
+	// liturgipetugas.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	liturgipetugas.DefaultUpdatedAt = liturgipetugasDescUpdatedAt.Default.(func() time.Time)
+	// liturgipetugas.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	liturgipetugas.UpdateDefaultUpdatedAt = liturgipetugasDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// liturgipetugasDescName is the schema descriptor for name field.
+	liturgipetugasDescName := liturgipetugasFields[6].Descriptor()
+	// liturgipetugas.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	liturgipetugas.NameValidator = liturgipetugasDescName.Validators[0].(func(string) error)
+	// liturgipetugasDescUrutan is the schema descriptor for urutan field.
+	liturgipetugasDescUrutan := liturgipetugasFields[7].Descriptor()
+	// liturgipetugas.DefaultUrutan holds the default value on creation for the urutan field.
+	liturgipetugas.DefaultUrutan = liturgipetugasDescUrutan.Default.(int)
+	// liturgipetugasDescID is the schema descriptor for id field.
+	liturgipetugasDescID := liturgipetugasMixinFields0[0].Descriptor()
+	// liturgipetugas.DefaultID holds the default value on creation for the id field.
+	liturgipetugas.DefaultID = liturgipetugasDescID.Default.(func() uuid.UUID)
 	lookupMixin := schema.Lookup{}.Mixin()
 	lookupMixinFields0 := lookupMixin[0].Fields()
 	_ = lookupMixinFields0
@@ -848,6 +866,10 @@ func init() {
 	parokimemberDescUmatAdmin := parokimemberFields[3].Descriptor()
 	// parokimember.DefaultUmatAdmin holds the default value on creation for the umat_admin field.
 	parokimember.DefaultUmatAdmin = parokimemberDescUmatAdmin.Default.(bool)
+	// parokimemberDescLiturgiAdmin is the schema descriptor for liturgi_admin field.
+	parokimemberDescLiturgiAdmin := parokimemberFields[4].Descriptor()
+	// parokimember.DefaultLiturgiAdmin holds the default value on creation for the liturgi_admin field.
+	parokimember.DefaultLiturgiAdmin = parokimemberDescLiturgiAdmin.Default.(bool)
 	// parokimemberDescID is the schema descriptor for id field.
 	parokimemberDescID := parokimemberMixinFields0[0].Descriptor()
 	// parokimember.DefaultID holds the default value on creation for the id field.

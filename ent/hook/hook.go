@@ -93,30 +93,6 @@ func (f EventFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EventMutation", m)
 }
 
-// The EventLaguFunc type is an adapter to allow the use of ordinary
-// function as EventLagu mutator.
-type EventLaguFunc func(context.Context, *ent.EventLaguMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f EventLaguFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.EventLaguMutation); ok {
-		return f(ctx, mv)
-	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EventLaguMutation", m)
-}
-
-// The EventPetugasFunc type is an adapter to allow the use of ordinary
-// function as EventPetugas mutator.
-type EventPetugasFunc func(context.Context, *ent.EventPetugasMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f EventPetugasFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.EventPetugasMutation); ok {
-		return f(ctx, mv)
-	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EventPetugasMutation", m)
-}
-
 // The EventRSVPFunc type is an adapter to allow the use of ordinary
 // function as EventRSVP mutator.
 type EventRSVPFunc func(context.Context, *ent.EventRSVPMutation) (ent.Value, error)
@@ -211,6 +187,42 @@ func (f LingkunganFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, 
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LingkunganMutation", m)
+}
+
+// The LiturgiLaguFunc type is an adapter to allow the use of ordinary
+// function as LiturgiLagu mutator.
+type LiturgiLaguFunc func(context.Context, *ent.LiturgiLaguMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f LiturgiLaguFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.LiturgiLaguMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LiturgiLaguMutation", m)
+}
+
+// The LiturgiMinistryFunc type is an adapter to allow the use of ordinary
+// function as LiturgiMinistry mutator.
+type LiturgiMinistryFunc func(context.Context, *ent.LiturgiMinistryMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f LiturgiMinistryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.LiturgiMinistryMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LiturgiMinistryMutation", m)
+}
+
+// The LiturgiPetugasFunc type is an adapter to allow the use of ordinary
+// function as LiturgiPetugas mutator.
+type LiturgiPetugasFunc func(context.Context, *ent.LiturgiPetugasMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f LiturgiPetugasFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.LiturgiPetugasMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LiturgiPetugasMutation", m)
 }
 
 // The LookupFunc type is an adapter to allow the use of ordinary

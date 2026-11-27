@@ -26,10 +26,6 @@ type Tx struct {
 	CasbinRule *CasbinRuleClient
 	// Event is the client for interacting with the Event builders.
 	Event *EventClient
-	// EventLagu is the client for interacting with the EventLagu builders.
-	EventLagu *EventLaguClient
-	// EventPetugas is the client for interacting with the EventPetugas builders.
-	EventPetugas *EventPetugasClient
 	// EventRSVP is the client for interacting with the EventRSVP builders.
 	EventRSVP *EventRSVPClient
 	// Kecamatan is the client for interacting with the Kecamatan builders.
@@ -46,6 +42,12 @@ type Tx struct {
 	Kota *KotaClient
 	// Lingkungan is the client for interacting with the Lingkungan builders.
 	Lingkungan *LingkunganClient
+	// LiturgiLagu is the client for interacting with the LiturgiLagu builders.
+	LiturgiLagu *LiturgiLaguClient
+	// LiturgiMinistry is the client for interacting with the LiturgiMinistry builders.
+	LiturgiMinistry *LiturgiMinistryClient
+	// LiturgiPetugas is the client for interacting with the LiturgiPetugas builders.
+	LiturgiPetugas *LiturgiPetugasClient
 	// Lookup is the client for interacting with the Lookup builders.
 	Lookup *LookupClient
 	// OrgInvite is the client for interacting with the OrgInvite builders.
@@ -222,8 +224,6 @@ func (tx *Tx) init() {
 	tx.Cantus = NewCantusClient(tx.config)
 	tx.CasbinRule = NewCasbinRuleClient(tx.config)
 	tx.Event = NewEventClient(tx.config)
-	tx.EventLagu = NewEventLaguClient(tx.config)
-	tx.EventPetugas = NewEventPetugasClient(tx.config)
 	tx.EventRSVP = NewEventRSVPClient(tx.config)
 	tx.Kecamatan = NewKecamatanClient(tx.config)
 	tx.Keluarga = NewKeluargaClient(tx.config)
@@ -232,6 +232,9 @@ func (tx *Tx) init() {
 	tx.Kevikepan = NewKevikepanClient(tx.config)
 	tx.Kota = NewKotaClient(tx.config)
 	tx.Lingkungan = NewLingkunganClient(tx.config)
+	tx.LiturgiLagu = NewLiturgiLaguClient(tx.config)
+	tx.LiturgiMinistry = NewLiturgiMinistryClient(tx.config)
+	tx.LiturgiPetugas = NewLiturgiPetugasClient(tx.config)
 	tx.Lookup = NewLookupClient(tx.config)
 	tx.OrgInvite = NewOrgInviteClient(tx.config)
 	tx.OrgJabatan = NewOrgJabatanClient(tx.config)

@@ -16,9 +16,10 @@ import (
 )
 
 const (
-	roleSuperAdmin  = "user:super-admin"
-	roleParokiAdmin = "ref:paroki-admin"
-	roleUmatAdmin   = "umat:admin"
+	roleSuperAdmin   = "user:super-admin"
+	roleParokiAdmin  = "ref:paroki-admin"
+	roleUmatAdmin    = "umat:admin"
+	roleLiturgiAdmin = "liturgi:admin"
 )
 
 var (
@@ -99,7 +100,7 @@ func (s *Service) EnsureParokiMember(ctx context.Context, parokiID, userID uuid.
 		if !ent.IsNotFound(findErr) {
 			return findErr
 		}
-		created, createErr := txRepo.CreateParokiMember(ctx, parokiID, userID, parokimember.RoleMember, false)
+		created, createErr := txRepo.CreateParokiMember(ctx, parokiID, userID, parokimember.RoleMember, false, false)
 		if createErr != nil {
 			return createErr
 		}

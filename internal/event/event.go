@@ -13,18 +13,27 @@ import (
 	"github.com/paroki/domus/internal/event/repo"
 	"github.com/paroki/domus/internal/event/service"
 	"github.com/paroki/domus/internal/org"
+	"github.com/paroki/domus/internal/platform/authx"
 	"github.com/paroki/domus/internal/platform/authz"
 	"github.com/paroki/domus/internal/ref"
 	"github.com/paroki/domus/internal/user"
 )
 
-// Re-export read-only DTO types for downstream features.
+// Re-export read-only DTO types and errors for downstream features.
 type (
-	Event        = domain.EventResponse
-	RSVP         = domain.EventRSVPResponse
-	RSVPSummary  = domain.EventRSVPSummaryResponse
-	EventPetugas = domain.EventPetugasResponse
-	EventLagu    = domain.EventLaguResponse
+	Event               = domain.EventResponse
+	RSVP                = domain.EventRSVPResponse
+	RSVPSummary         = domain.EventRSVPSummaryResponse
+	SearchEventsRequest = domain.SearchEventsRequest
+	EventSearchFilter   = domain.EventSearchFilter
+	CreateEventRequest  = domain.CreateEventRequest
+	UpdateEventRequest  = domain.UpdateEventRequest
+)
+
+var (
+	ErrEventNotFound    = domain.ErrEventNotFound
+	ErrForbidden        = domain.ErrForbidden
+	ErrInvalidTimeRange = domain.ErrInvalidTimeRange
 )
 
 // Feature-owned Casbin resource permissions.
@@ -193,6 +202,38 @@ func (f *Feature) RunReminderTick(ctx context.Context, now time.Time) error {
 // StartReminderScheduler starts the background event reminder scheduler until ctx is cancelled.
 func (f *Feature) StartReminderScheduler(ctx context.Context, interval time.Duration, logger *slog.Logger) {
 	f.service.StartReminderScheduler(ctx, interval, logger)
+}
+
+// SearchEvents returns paginated visible events in the caller's active paroki.
+func (f *Feature) SearchEvents(
+	ctx context.Context,
+	p authx.Principal,
+	req SearchEventsRequest,
+	cursorAt *time.Time,
+	cursorID *uuid.UUID,
+	limit int,
+) ([]Event, bool, error) {
+	return f.service.SearchEvents(ctx, p, req, cursorAt, cursorID, limit)
+}
+
+// GetEvent returns a single non-deleted Event in the caller's active paroki.
+func (f *Feature) GetEvent(ctx context.Context, p authx.Principal, eventID uuid.UUID) (Event, error) {
+	return f.service.GetEvent(ctx, p, eventID)
+}
+
+// CreateEvent creates a new Event owned by an organization or the active paroki.
+func (f *Feature) CreateEvent(ctx context.Context, p authx.Principal, req CreateEventRequest) (Event, error) {
+	return f.service.CreateEvent(ctx, p, req)
+}
+
+// UpdateEvent updates an existing Event in the active paroki.
+func (f *Feature) UpdateEvent(ctx context.Context, p authx.Principal, eventID uuid.UUID, req UpdateEventRequest) (Event, error) {
+	return f.service.UpdateEvent(ctx, p, eventID, req)
+}
+
+// DeleteEvent soft-deletes an Event in the active paroki.
+func (f *Feature) DeleteEvent(ctx context.Context, p authx.Principal, eventID uuid.UUID) error {
+	return f.service.DeleteEvent(ctx, p, eventID)
 }
 
 // Register mounts /events routes under /api.
