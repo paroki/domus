@@ -42,3 +42,6 @@ export type UserToken = Schemas["domain.UserTokenResponse"];
 export type CreateUserTokenRequest = Schemas["domain.CreateUserTokenRequest"];
 export type CreateUserTokenResponse = Schemas["domain.CreateUserTokenResponse"];
 export type SearchTokensRequest = Schemas["domain.SearchTokensRequest"];
+export type VAPIDPublicKeyResponse = Schemas["domain.VAPIDPublicKeyResponse"];
+export type SubscribePushRequest = Schemas["domain.SubscribePushRequest"];
+export type UnsubscribePushRequest = Schemas["domain.UnsubscribePushRequest"];

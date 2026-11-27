@@ -33,4 +33,5 @@ export const userKeys = {
   ) => [...userKeys.all, "orgMembers", orgId, params ?? {}] as const,
   lookups: (category: string) =>
     [...userKeys.all, "lookups", category] as const,
+  vapidPublicKey: () => [...userKeys.all, "vapidPublicKey"] as const,
 };

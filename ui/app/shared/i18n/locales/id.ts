@@ -678,6 +678,18 @@ const id = {
     installDeviceButton: "Install Aplikasi di Perangkat Ini",
     unsupportedHint:
       "Gunakan Chrome, Edge, atau Safari iOS jika ingin memasang Domus ke layar utama perangkat ini.",
+    pushTitle: "Notifikasi Perangkat & Kanal",
+    pushEnableButton: "Aktifkan Notifikasi Push",
+    pushDisableButton: "Nonaktifkan Notifikasi Push",
+    pushSubscribedBadge: "Push Aktif",
+    pushBlockedHint:
+      "Izin notifikasi diblokir di pengaturan browser perangkat ini.",
+    pushUnsupportedHint: "Browser ini belum mendukung Web Push Notification.",
+    testPushButton: "Kirim Tes Notifikasi",
+    testPushSuccess: "Tes notifikasi telah dikirim.",
+    channelPushLabel: "Notifikasi Push",
+    channelWhatsappLabel: "Notifikasi WhatsApp",
+    channelTelegramLabel: "Notifikasi Telegram",
   },
 } as const;
 

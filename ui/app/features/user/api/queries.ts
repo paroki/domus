@@ -44,6 +44,14 @@ export function useAuthProviders() {
   return useQuery(authProvidersQueryOptions());
 }
 
+export function useVapidPublicKey() {
+  return useQuery({
+    queryKey: userKeys.vapidPublicKey(),
+    queryFn: () => unwrap(api.GET("/auth/push/vapid-public-key"), USER_ERRORS),
+    staleTime: 10 * 60_000,
+  });
+}
+
 export function useMySessions(limit = 20) {
   return useQuery({
     queryKey: userKeys.sessions({ limit }),

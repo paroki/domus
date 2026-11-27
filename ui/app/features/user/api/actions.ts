@@ -11,6 +11,8 @@ import type {
   CreateUserTokenRequest,
   LinkAccountOTPRequest,
   RequestOTPRequest,
+  SubscribePushRequest,
+  UnsubscribePushRequest,
   UpdateMeRequest,
   UpdateOrgMemberRequest,
   UpdateParokiMemberRequest,
@@ -45,6 +47,30 @@ export function useUpdateMe() {
     mutationFn: (body: UpdateMeRequest) =>
       unwrap(api.PATCH("/me", { body }), USER_ERRORS),
     onSuccess: () => qc.invalidateQueries({ queryKey: userKeys.me() }),
+  });
+}
+
+export function useSubscribePush() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: SubscribePushRequest) =>
+      unwrapVoid(api.POST("/me/push/subscribe", { body }), USER_ERRORS),
+    onSuccess: () => qc.invalidateQueries({ queryKey: userKeys.me() }),
+  });
+}
+
+export function useUnsubscribePush() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: UnsubscribePushRequest) =>
+      unwrapVoid(api.POST("/me/push/unsubscribe", { body }), USER_ERRORS),
+    onSuccess: () => qc.invalidateQueries({ queryKey: userKeys.me() }),
+  });
+}
+
+export function useTestPush() {
+  return useMutation({
+    mutationFn: () => unwrapVoid(api.POST("/me/push/test"), USER_ERRORS),
   });
 }
 
