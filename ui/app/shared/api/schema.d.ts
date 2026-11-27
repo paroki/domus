@@ -364,6 +364,74 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/cantus": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create cantus
+     * @description Creates a global cantus entry or reactivates a soft-deleted entry sharing the same slug.
+     */
+    post: operations["createCantus"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/cantus/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Search cantus
+     * @description Searches global cantus entries with query, filters, and keyset cursor pagination.
+     */
+    post: operations["searchCantus"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/cantus/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get cantus
+     * @description Returns a single non-deleted cantus entry by ID.
+     */
+    get: operations["getCantus"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete cantus
+     * @description Soft-deletes a cantus entry after checking in-use references.
+     */
+    delete: operations["deleteCantus"];
+    options?: never;
+    head?: never;
+    /**
+     * Update cantus
+     * @description Partially updates a non-deleted cantus entry by ID.
+     */
+    patch: operations["updateCantus"];
+    trace?: never;
+  };
   "/events": {
     parameters: {
       query?: never;
@@ -2321,11 +2389,13 @@ export interface components {
     };
     "domain.AdminCreateUserRequest": {
       email: string;
+      isCantusAdmin?: boolean;
       isSuperAdmin?: boolean;
       name: string;
       phone?: string;
     };
     "domain.AdminUpdateUserRequest": {
+      isCantusAdmin?: boolean;
       isSuperAdmin?: boolean;
       name?: string;
       phone?: string;
@@ -2353,6 +2423,47 @@ export interface components {
       expiresAt?: string;
       user?: components["schemas"]["domain.UserResponse"];
     };
+    "domain.CantusMedia": {
+      downloadUrl?: string;
+      s3Key?: string;
+      title?: string;
+      type?: string;
+      viewUrl?: string;
+    };
+    "domain.CantusResponse": {
+      active?: boolean;
+      canManage?: boolean;
+      createdAt?: string;
+      createdBy?: string;
+      id?: string;
+      jenis?: string;
+      judul?: string;
+      kategori?: string;
+      kredit?: {
+        [key: string]: string;
+      };
+      lirik?: string;
+      media?: components["schemas"]["domain.CantusMedia"][];
+      meta?: {
+        [key: string]: unknown;
+      };
+      nadaDasar?: string;
+      nomor?: string;
+      slug?: string;
+      sumber?: string;
+      tag?: string[];
+      updatedAt?: string;
+    };
+    "domain.CantusSearchFilter": {
+      active?: boolean;
+      /** @enum {string} */
+      jenis?: "lagu" | "mazmur" | "profan";
+      kategori?: string;
+      nadaDasar?: string;
+      slug?: string;
+      sumber?: string;
+      tag?: string;
+    };
     "domain.ChatRequest": {
       message: string;
       retry?: boolean;
@@ -2365,6 +2476,26 @@ export interface components {
       name: string;
       /** @enum {string} */
       provider: "gemini" | "anthropic" | "openai" | "openrouter";
+    };
+    "domain.CreateCantusRequest": {
+      active?: boolean;
+      /** @enum {string} */
+      jenis: "lagu" | "mazmur" | "profan";
+      judul: string;
+      kategori?: string;
+      kredit?: {
+        [key: string]: string;
+      };
+      lirik?: string;
+      media?: components["schemas"]["domain.CantusMedia"][];
+      meta?: {
+        [key: string]: unknown;
+      };
+      nadaDasar?: string;
+      nomor?: string;
+      slug: string;
+      sumber?: string;
+      tag?: string[];
     };
     "domain.CreateEventLaguRequest": {
       bagian: string;
@@ -3099,6 +3230,12 @@ export interface components {
       cursor?: string;
       limit?: number;
     };
+    "domain.SearchCantusRequest": {
+      cursor?: string;
+      filter?: components["schemas"]["domain.CantusSearchFilter"];
+      limit?: number;
+      q?: string;
+    };
     "domain.SearchEventRSVPsRequest": {
       cursor?: string;
       filter?: components["schemas"]["domain.EventRSVPSearchFilter"];
@@ -3412,6 +3549,26 @@ export interface components {
       name?: string;
       /** @enum {string} */
       provider?: "gemini" | "anthropic" | "openai" | "openrouter";
+    };
+    "domain.UpdateCantusRequest": {
+      active?: boolean;
+      /** @enum {string} */
+      jenis?: "lagu" | "mazmur" | "profan";
+      judul?: string;
+      kategori?: string;
+      kredit?: {
+        [key: string]: string;
+      };
+      lirik?: string;
+      media?: components["schemas"]["domain.CantusMedia"][];
+      meta?: {
+        [key: string]: unknown;
+      };
+      nadaDasar?: string;
+      nomor?: string;
+      slug?: string;
+      sumber?: string;
+      tag?: string[];
     };
     "domain.UpdateEventLaguRequest": {
       bagian?: string;
@@ -3744,6 +3901,7 @@ export interface components {
       email?: string;
       gender?: string;
       id?: string;
+      isCantusAdmin?: boolean;
       lastLoginAt?: string;
       linkedProviders?: string[];
       name?: string;
@@ -3760,6 +3918,7 @@ export interface components {
       updatedAt?: string;
     };
     "domain.UserSearchFilter": {
+      cantusAdmin?: boolean;
       /** @enum {string} */
       status?: "active" | "disabled";
     };
@@ -3842,6 +4001,11 @@ export interface components {
     };
     "httpx.Envelope-array_domain_AgentProviderResponse": {
       data?: components["schemas"]["domain.AgentProviderResponse"][];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-array_domain_CantusResponse": {
+      data?: components["schemas"]["domain.CantusResponse"][];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -3992,6 +4156,11 @@ export interface components {
     };
     "httpx.Envelope-domain_AuthSessionResponse": {
       data?: components["schemas"]["domain.AuthSessionResponse"];
+      error?: components["schemas"]["httpx.ErrorPayload"];
+      meta?: components["schemas"]["httpx.Meta"];
+    };
+    "httpx.Envelope-domain_CantusResponse": {
+      data?: components["schemas"]["domain.CantusResponse"];
       error?: components["schemas"]["httpx.ErrorPayload"];
       meta?: components["schemas"]["httpx.Meta"];
     };
@@ -5394,6 +5563,335 @@ export interface operations {
       };
       /** @description Not Found */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  createCantus: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Cantus creation payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.CreateCantusRequest"];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_CantusResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  searchCantus: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Search parameters */
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["domain.SearchCantusRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-array_domain_CantusResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  getCantus: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Cantus UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_CantusResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  deleteCantus: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Cantus UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+    };
+  };
+  updateCantus: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Cantus UUID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    /** @description Cantus update payload */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["domain.UpdateCantusRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-domain_CantusResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["httpx.Envelope-any"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
         headers: {
           [name: string]: unknown;
         };
