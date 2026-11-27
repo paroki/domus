@@ -2,13 +2,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Brain, Menu, RotateCcw, Terminal } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { ApiError } from "~/shared/api/client";
 import { useMe } from "~/shared/api/session";
 import { agentKeys } from "../api/keys";
 import { useAgentSession } from "../api/queries";
 import { streamAgentChat } from "../api/stream";
-import { isSuperAdmin } from "../model";
+import type { NavigationPayload, QuestionPayload } from "../api/types";
+import { buildPageContext, isSuperAdmin, performAgentNavigate } from "../model";
 import { ChatComposer } from "./ChatComposer";
 import {
   ChatTimeline,
@@ -24,6 +25,7 @@ interface AgentWorkspaceProps {
 
 export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
   const { t } = useTranslation();
+  const location = useLocation();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { data: me } = useMe();
@@ -46,6 +48,11 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
   const [streamingText, setStreamingText] = useState("");
   const [liveTransfers, setLiveTransfers] = useState<LiveTransfer[]>([]);
   const [liveTools, setLiveTools] = useState<LiveToolCall[]>([]);
+  const [liveQuestion, setLiveQuestion] = useState<QuestionPayload | null>(
+    null,
+  );
+  const [liveNavigation, setLiveNavigation] =
+    useState<NavigationPayload | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
   const activeStreamSessionRef = useRef<string | undefined>(initialSessionId);
@@ -69,6 +76,7 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
     setStreamingText("");
     setLiveTransfers([]);
     setLiveTools([]);
+    setLiveNavigation(null);
     abortRef.current = null;
   }
 
@@ -81,6 +89,8 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
     setStreamingText("");
     setLiveTransfers([]);
     setLiveTools([]);
+    setLiveQuestion(null);
+    setLiveNavigation(null);
 
     const controller = new AbortController();
     abortRef.current = controller;
@@ -91,6 +101,7 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
           sessionId,
           message,
           ...(isRetry && sessionId ? { retry: true } : {}),
+          pageContext: buildPageContext(location.pathname, location.hash),
         },
         signal: controller.signal,
         onFrame: (frame) => {
@@ -143,6 +154,22 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
             case "token": {
               setStreamingAgent(frame.data.agent || "gabriel");
               setStreamingText((prev) => prev + frame.data.delta);
+              break;
+            }
+            case "question": {
+              setLiveQuestion(frame.data);
+              break;
+            }
+            case "navigate": {
+              setLiveNavigation(frame.data);
+              if (frame.data.autoRedirect === true) {
+                void qc.invalidateQueries();
+                performAgentNavigate(
+                  frame.data.path,
+                  location.pathname,
+                  navigate,
+                );
+              }
               break;
             }
             case "error": {
@@ -296,6 +323,8 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
           streamingText={streamingText}
           liveTransfers={liveTransfers}
           liveTools={liveTools}
+          liveQuestion={liveQuestion}
+          liveNavigation={liveNavigation}
           verbose={verbose}
           onRetry={
             !streaming && !errorMsg
@@ -305,6 +334,7 @@ export function AgentWorkspace({ initialSessionId }: AgentWorkspaceProps) {
           onSelectPrompt={
             !streaming ? (prompt) => void handleSend(prompt) : undefined
           }
+          onSendMessage={!streaming ? (msg) => void handleSend(msg) : undefined}
         />
 
         <ChatComposer

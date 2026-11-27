@@ -2,6 +2,7 @@ import { Check, Copy } from "lucide-react";
 import { isValidElement, type ReactNode, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import Markdown from "react-markdown";
+import { Link } from "react-router";
 import remarkGfm from "remark-gfm";
 import { safeUrlTransform } from "../model";
 
@@ -121,16 +122,24 @@ export function SafeMarkdown({ content }: SafeMarkdownProps) {
           strong: ({ children }) => (
             <strong className="font-semibold text-fg">{children}</strong>
           ),
-          a: ({ href, children }) => (
-            <a
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-medium text-primary underline underline-offset-2 hover:opacity-80"
-            >
-              {children}
-            </a>
-          ),
+          a: ({ href, children }) =>
+            href?.startsWith("/") && !href.startsWith("//") ? (
+              <Link
+                to={href}
+                className="font-medium text-primary underline underline-offset-2 hover:opacity-80"
+              >
+                {children}
+              </Link>
+            ) : (
+              <a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-primary underline underline-offset-2 hover:opacity-80"
+              >
+                {children}
+              </a>
+            ),
           code: ({ className, children }) => {
             const isBlock = Boolean(className?.includes("language-"));
             if (isBlock) {

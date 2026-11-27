@@ -1,14 +1,18 @@
 import {
   ArrowDown,
   ArrowRight,
+  ArrowUpRight,
+  BookUser,
   Bot,
   Calendar,
   Check,
   CheckCircle2,
   ChevronDown,
   ChevronRight,
+  Church,
   Copy,
   Loader2,
+  Music,
   RotateCcw,
   Sparkles,
   Users,
@@ -16,8 +20,19 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { MessageResponse } from "../api/types";
-import { formatAgentLabel, formatToolJSON, isToolErrorContent } from "../model";
+import { Link } from "react-router";
+import type {
+  MessageResponse,
+  NavigationPayload,
+  QuestionPayload,
+} from "../api/types";
+import {
+  extractNavigationMeta,
+  extractQuestionMeta,
+  formatAgentLabel,
+  formatToolJSON,
+  isToolErrorContent,
+} from "../model";
 import { SafeMarkdown } from "./SafeMarkdown";
 
 export interface LiveToolCall {
@@ -43,9 +58,12 @@ interface ChatTimelineProps {
   streamingText: string;
   liveTransfers: LiveTransfer[];
   liveTools: LiveToolCall[];
+  liveQuestion?: QuestionPayload | null;
+  liveNavigation?: NavigationPayload | null;
   verbose?: boolean;
   onRetry?: (message: string) => void;
   onSelectPrompt?: (prompt: string) => void;
+  onSendMessage?: (message: string) => void;
 }
 
 function formatMessageTime(iso?: string): string {
@@ -62,7 +80,7 @@ function formatMessageTime(iso?: string): string {
   }
 }
 
-function AgentAvatar({ agent }: { agent: string }) {
+export function AgentAvatar({ agent }: { agent: string }) {
   const key = agent.toLowerCase();
   if (key === "mikael") {
     return (
@@ -78,10 +96,127 @@ function AgentAvatar({ agent }: { agent: string }) {
       </span>
     );
   }
+  if (key === "yosef") {
+    return (
+      <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
+        <BookUser aria-hidden className="size-3.5" />
+      </span>
+    );
+  }
+  if (key === "gregorius") {
+    return (
+      <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-violet-500/15 text-violet-700 dark:text-violet-300">
+        <Church aria-hidden className="size-3.5" />
+      </span>
+    );
+  }
+  if (key === "sesilia") {
+    return (
+      <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-rose-500/15 text-rose-700 dark:text-rose-300">
+        <Music aria-hidden className="size-3.5" />
+      </span>
+    );
+  }
   return (
     <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
       <Bot aria-hidden className="size-3.5" />
     </span>
+  );
+}
+
+function NavigationCard({ nav }: { nav: NavigationPayload }) {
+  return (
+    <Link
+      to={nav.path}
+      className="group/nav flex min-h-11 w-full max-w-md items-center justify-between gap-3 rounded-xl border border-primary/25 bg-primary/5 px-3.5 py-2.5 text-left transition-colors hover:border-primary/45 hover:bg-primary/10"
+    >
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium text-primary">{nav.label}</p>
+        {nav.description ? (
+          <p className="mt-0.5 line-clamp-2 text-xs text-muted">
+            {nav.description}
+          </p>
+        ) : null}
+      </div>
+      <ArrowUpRight
+        aria-hidden
+        className="size-4 shrink-0 text-primary transition-transform group-hover/nav:translate-x-0.5 group-hover/nav:-translate-y-0.5"
+      />
+    </Link>
+  );
+}
+
+function QuestionChips({
+  payload,
+  onSendMessage,
+}: {
+  payload: QuestionPayload;
+  onSendMessage: (message: string) => void;
+}) {
+  const { t } = useTranslation();
+  const [selected, setSelected] = useState<string[]>([]);
+
+  useEffect(() => {
+    setSelected([]);
+  }, [payload]);
+
+  function toggleValue(val: string) {
+    setSelected((prev) =>
+      prev.includes(val) ? prev.filter((item) => item !== val) : [...prev, val],
+    );
+  }
+
+  return (
+    <div className="flex w-full max-w-xl flex-col gap-2 pt-1">
+      <div className="flex flex-wrap gap-2">
+        {payload.options.map((opt) => {
+          const isSelected = selected.includes(opt.value);
+          return (
+            <button
+              key={`${opt.value}-${opt.label}`}
+              type="button"
+              onClick={() => {
+                if (payload.multiSelect === true) {
+                  toggleValue(opt.value);
+                } else {
+                  onSendMessage(opt.value);
+                }
+              }}
+              aria-pressed={
+                payload.multiSelect === true ? isSelected : undefined
+              }
+              className={`inline-flex min-h-11 items-center gap-1.5 rounded-xl border px-3.5 py-2 text-left text-xs font-medium transition-colors ${
+                isSelected
+                  ? "border-primary bg-primary text-on-primary shadow-2xs"
+                  : "border-line bg-surface text-fg hover:border-primary/40 hover:bg-primary/5"
+              }`}
+            >
+              {payload.multiSelect === true && isSelected ? (
+                <Check aria-hidden className="size-3.5 shrink-0" />
+              ) : null}
+              <span>{opt.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {payload.multiSelect === true ? (
+        <div>
+          <button
+            type="button"
+            disabled={selected.length === 0}
+            onClick={() => {
+              if (selected.length > 0) {
+                onSendMessage(selected.join(", "));
+              }
+            }}
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-medium text-on-primary shadow-2xs transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-45"
+          >
+            {t("agent.questionSubmitSelected")}
+          </button>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -233,9 +368,12 @@ export function ChatTimeline({
   streamingText,
   liveTransfers,
   liveTools,
+  liveQuestion,
+  liveNavigation,
   verbose = false,
   onRetry,
   onSelectPrompt,
+  onSendMessage,
 }: ChatTimelineProps) {
   const { t } = useTranslation();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -416,6 +554,12 @@ export function ChatTimeline({
               agent !== prevAssistantAgent && agent !== "gabriel";
             const fromAgent = prevAssistantAgent;
             prevAssistantAgent = agent;
+            const navMeta = extractNavigationMeta(msg.meta);
+            const isLastMessage = idx === messages.length - 1;
+            const questionMeta =
+              isLastMessage && !streaming
+                ? (extractQuestionMeta(msg.meta) ?? liveQuestion ?? null)
+                : null;
 
             return (
               <div key={msg.id} className="flex flex-col gap-2">
@@ -444,10 +588,10 @@ export function ChatTimeline({
                   </div>
                 ) : null}
 
-                {msg.content ? (
+                {msg.content || navMeta || questionMeta ? (
                   <div className="group/msg flex items-start gap-2.5">
                     <AgentAvatar agent={agent} />
-                    <div className="flex min-w-0 flex-1 flex-col items-start gap-1">
+                    <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5">
                       <div className="flex items-center gap-2 px-0.5">
                         <span className="text-xs font-semibold text-fg">
                           {formatAgentLabel(agent)}
@@ -458,10 +602,21 @@ export function ChatTimeline({
                           </span>
                         ) : null}
                       </div>
-                      <div className="max-w-full rounded-2xl rounded-tl-sm border border-line bg-surface px-4 py-3 shadow-xs">
-                        <SafeMarkdown content={msg.content} />
-                      </div>
-                      <CopyMessageButton content={msg.content} />
+                      {msg.content ? (
+                        <div className="max-w-full rounded-2xl rounded-tl-sm border border-line bg-surface px-4 py-3 shadow-xs">
+                          <SafeMarkdown content={msg.content} />
+                        </div>
+                      ) : null}
+                      {navMeta ? <NavigationCard nav={navMeta} /> : null}
+                      {questionMeta && onSendMessage ? (
+                        <QuestionChips
+                          payload={questionMeta}
+                          onSendMessage={onSendMessage}
+                        />
+                      ) : null}
+                      {msg.content ? (
+                        <CopyMessageButton content={msg.content} />
+                      ) : null}
                     </div>
                   </div>
                 ) : null}
@@ -537,6 +692,9 @@ export function ChatTimeline({
                       </div>
                     )}
                   </div>
+                  {liveNavigation ? (
+                    <NavigationCard nav={liveNavigation} />
+                  ) : null}
                 </div>
               </div>
             </div>
