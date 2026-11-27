@@ -96,24 +96,27 @@ export class AgentWorkspacePage extends BasePage {
       .first();
     await row.hover();
     await row.getByRole("button", { name: "Hapus" }).click();
-    const confirmRow = this.page
-      .locator("aside li")
-      .filter({ hasText: "Hapus sesi ini?" })
-      .first();
-    await confirmRow.getByRole("button", { name: "Hapus" }).click();
+    const dialog = this.page.getByRole("dialog");
+    await dialog.waitFor({ state: "visible", timeout: 10_000 });
+    await dialog.getByRole("button", { name: "Hapus" }).click();
     await this.page.waitForURL(/\/agent$/, { timeout: 10_000 });
   }
 
   async openMemoryDrawer(): Promise<void> {
-    await this.page.getByRole("button", { name: "Memori AI" }).click();
+    await this.page.getByRole("link", { name: "Memori AI" }).click();
+    await this.page.waitForURL(/\/agent\/memories$/, { timeout: 10_000 });
     await this.page
       .getByRole("heading", { name: "Memori AI" })
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
   async addMemory(content: string): Promise<void> {
-    const drawer = this.page.getByRole("region", { name: "Memori AI" });
-    await drawer
+    await this.page
+      .getByRole("link", { name: "Tambah Memori" })
+      .first()
+      .click();
+    await this.page.waitForURL(/\/agent\/memories\/new$/, { timeout: 10_000 });
+    await this.page
       .getByPlaceholder("Tulis fakta atau preferensi (maks. 2000 karakter)…")
       .fill(content);
     await Promise.all([
@@ -123,28 +126,30 @@ export class AgentWorkspacePage extends BasePage {
           r.request().method() === "POST" &&
           r.status() === 201,
       ),
-      drawer.getByRole("button", { name: "Tambah Memori" }).click(),
+      this.page.getByRole("button", { name: "Tambah Memori" }).click(),
     ]);
-    await drawer
+    await this.page.waitForURL(/\/agent\/memories$/, { timeout: 10_000 });
+    await this.page
       .getByText(content)
       .first()
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
   async searchMemory(query: string, expectedText: string): Promise<void> {
-    const drawer = this.page.getByRole("region", { name: "Memori AI" });
-    await drawer.getByPlaceholder("Cari memori…").fill(query);
-    await drawer
+    await this.page.getByPlaceholder("Cari memori…").fill(query);
+    await this.page
       .getByText(expectedText)
       .first()
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
   async editMemory(oldText: string, newContent: string): Promise<void> {
-    const drawer = this.page.getByRole("region", { name: "Memori AI" });
-    const item = drawer.locator("li").filter({ hasText: oldText }).first();
-    await item.getByRole("button", { name: "Ubah Memori" }).click();
-    await drawer
+    const item = this.page.locator("li").filter({ hasText: oldText }).first();
+    await item.getByRole("link", { name: "Ubah Memori" }).click();
+    await this.page.waitForURL(/\/agent\/memories\/[^/]+\/edit$/, {
+      timeout: 10_000,
+    });
+    await this.page
       .getByPlaceholder("Tulis fakta atau preferensi (maks. 2000 karakter)…")
       .fill(newContent);
     await Promise.all([
@@ -154,17 +159,20 @@ export class AgentWorkspacePage extends BasePage {
           r.request().method() === "PATCH" &&
           r.status() === 200,
       ),
-      drawer.getByRole("button", { name: "Simpan Memori" }).click(),
+      this.page.getByRole("button", { name: "Simpan Memori" }).click(),
     ]);
-    await drawer
+    await this.page.waitForURL(/\/agent\/memories$/, { timeout: 10_000 });
+    await this.page
       .getByText(newContent)
       .first()
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
   async deleteMemory(text: string): Promise<void> {
-    const drawer = this.page.getByRole("region", { name: "Memori AI" });
-    const item = drawer.locator("li").filter({ hasText: text }).first();
+    const item = this.page.locator("li").filter({ hasText: text }).first();
+    await item.getByRole("button", { name: "Hapus" }).click();
+    const dialog = this.page.getByRole("dialog");
+    await dialog.waitFor({ state: "visible", timeout: 10_000 });
     await Promise.all([
       this.page.waitForResponse(
         (r) =>
@@ -172,7 +180,7 @@ export class AgentWorkspacePage extends BasePage {
           r.request().method() === "DELETE" &&
           r.status() === 204,
       ),
-      item.getByRole("button", { name: "Hapus" }).click(),
+      dialog.getByRole("button", { name: "Hapus" }).click(),
     ]);
     await item.waitFor({ state: "detached", timeout: 10_000 });
   }
