@@ -67,6 +67,7 @@ func (h *Handler) Register(
 	// Static routes MUST be registered before parameterized /:provider routes.
 	auth.Get("/providers", h.GetProviders)
 	auth.Get("/roles", h.GetRoles)
+	auth.Get("/push/vapid-public-key", h.GetVAPIDPublicKey)
 	auth.Post("/otp", h.RequestOTP)
 	auth.Post("/otp/verify", h.VerifyOTP)
 	auth.Post("/logout", h.Logout)
@@ -87,6 +88,9 @@ func (h *Handler) Register(
 	me.Post("/accounts/verify", h.VerifyLinkAccount)
 	me.Post("/accounts/telegram/token", h.CreateTelegramLinkToken)
 	me.Delete("/accounts/:id", h.UnlinkMyAccount)
+	me.Post("/push/subscribe", h.SubscribePush)
+	me.Post("/push/unsubscribe", h.UnsubscribePush)
+	me.Post("/push/test", h.TestPushNotification)
 
 	api.Post("/telegram/hooks", h.TelegramWebhook)
 

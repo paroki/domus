@@ -92,14 +92,29 @@ type InviteJoiner interface {
 
 // Service implements user identity, OTP, OAuth2, and session business logic.
 type Service struct {
-	cfg            Config
-	repo           *repo.Repository
-	enforcer       *authz.Enforcer
-	otpSender      *CompositeOTPSender
-	tgMu           sync.RWMutex
-	telegramClient *telegram.Client
-	oauthProviders map[string]domain.OAuthProvider
-	inviteJoiner   InviteJoiner
+	cfg                   Config
+	repo                  *repo.Repository
+	enforcer              *authz.Enforcer
+	otpSender             *CompositeOTPSender
+	compositeNotification *CompositeNotification
+	vapidMu               sync.RWMutex
+	vapidPublicKey        string
+	tgMu                  sync.RWMutex
+	telegramClient        *telegram.Client
+	oauthProviders        map[string]domain.OAuthProvider
+	inviteJoiner          InviteJoiner
+}
+
+// SetCompositeNotification wires the CompositeNotification registry into Service.
+func (s *Service) SetCompositeNotification(cn *CompositeNotification) {
+	s.compositeNotification = cn
+}
+
+// SetVAPIDPublicKey updates the active VAPID public key served to browsers.
+func (s *Service) SetVAPIDPublicKey(pub string) {
+	s.vapidMu.Lock()
+	defer s.vapidMu.Unlock()
+	s.vapidPublicKey = strings.TrimSpace(pub)
 }
 
 // SetInviteJoiner wires the organization invite joiner into the auth service.
@@ -345,6 +360,9 @@ func toUserResponse(u *ent.User) domain.UserResponse {
 		BirthDate:       u.BirthDate,
 		AvatarURL:       u.AvatarURL,
 		Timezone:        tz,
+		NotifyPush:      u.NotifyPush,
+		NotifyWhatsapp:  u.NotifyWhatsapp,
+		NotifyTelegram:  u.NotifyTelegram,
 		Status:          string(u.Status),
 		Onboarded:       u.Onboarded,
 		DefaultParokiID: u.DefaultParokiID,

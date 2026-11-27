@@ -45,7 +45,9 @@ import (
 	"github.com/paroki/domus/ent/umatsakramen"
 	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/useraccount"
+	"github.com/paroki/domus/ent/usernotificationlog"
 	"github.com/paroki/domus/ent/userotp"
+	"github.com/paroki/domus/ent/userpushsubscription"
 	"github.com/paroki/domus/ent/usersession"
 	"github.com/paroki/domus/ent/usertoken"
 	"github.com/paroki/domus/ent/wilayah"
@@ -114,8 +116,12 @@ type Client struct {
 	User *UserClient
 	// UserAccount is the client for interacting with the UserAccount builders.
 	UserAccount *UserAccountClient
+	// UserNotificationLog is the client for interacting with the UserNotificationLog builders.
+	UserNotificationLog *UserNotificationLogClient
 	// UserOTP is the client for interacting with the UserOTP builders.
 	UserOTP *UserOTPClient
+	// UserPushSubscription is the client for interacting with the UserPushSubscription builders.
+	UserPushSubscription *UserPushSubscriptionClient
 	// UserSession is the client for interacting with the UserSession builders.
 	UserSession *UserSessionClient
 	// UserToken is the client for interacting with the UserToken builders.
@@ -162,7 +168,9 @@ func (c *Client) init() {
 	c.UmatSakramen = NewUmatSakramenClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.UserAccount = NewUserAccountClient(c.config)
+	c.UserNotificationLog = NewUserNotificationLogClient(c.config)
 	c.UserOTP = NewUserOTPClient(c.config)
+	c.UserPushSubscription = NewUserPushSubscriptionClient(c.config)
 	c.UserSession = NewUserSessionClient(c.config)
 	c.UserToken = NewUserTokenClient(c.config)
 	c.Wilayah = NewWilayahClient(c.config)
@@ -256,41 +264,43 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:           ctx,
-		config:        cfg,
-		AgentMemory:   NewAgentMemoryClient(cfg),
-		AgentMessage:  NewAgentMessageClient(cfg),
-		AgentProvider: NewAgentProviderClient(cfg),
-		AgentSession:  NewAgentSessionClient(cfg),
-		CasbinRule:    NewCasbinRuleClient(cfg),
-		Event:         NewEventClient(cfg),
-		EventLagu:     NewEventLaguClient(cfg),
-		EventPetugas:  NewEventPetugasClient(cfg),
-		EventRSVP:     NewEventRSVPClient(cfg),
-		Kecamatan:     NewKecamatanClient(cfg),
-		Keluarga:      NewKeluargaClient(cfg),
-		Kelurahan:     NewKelurahanClient(cfg),
-		Keuskupan:     NewKeuskupanClient(cfg),
-		Kevikepan:     NewKevikepanClient(cfg),
-		Kota:          NewKotaClient(cfg),
-		Lingkungan:    NewLingkunganClient(cfg),
-		Lookup:        NewLookupClient(cfg),
-		OrgInvite:     NewOrgInviteClient(cfg),
-		OrgJabatan:    NewOrgJabatanClient(cfg),
-		OrgMember:     NewOrgMemberClient(cfg),
-		OrgPeriode:    NewOrgPeriodeClient(cfg),
-		Organization:  NewOrganizationClient(cfg),
-		Paroki:        NewParokiClient(cfg),
-		ParokiMember:  NewParokiMemberClient(cfg),
-		Setting:       NewSettingClient(cfg),
-		Umat:          NewUmatClient(cfg),
-		UmatSakramen:  NewUmatSakramenClient(cfg),
-		User:          NewUserClient(cfg),
-		UserAccount:   NewUserAccountClient(cfg),
-		UserOTP:       NewUserOTPClient(cfg),
-		UserSession:   NewUserSessionClient(cfg),
-		UserToken:     NewUserTokenClient(cfg),
-		Wilayah:       NewWilayahClient(cfg),
+		ctx:                  ctx,
+		config:               cfg,
+		AgentMemory:          NewAgentMemoryClient(cfg),
+		AgentMessage:         NewAgentMessageClient(cfg),
+		AgentProvider:        NewAgentProviderClient(cfg),
+		AgentSession:         NewAgentSessionClient(cfg),
+		CasbinRule:           NewCasbinRuleClient(cfg),
+		Event:                NewEventClient(cfg),
+		EventLagu:            NewEventLaguClient(cfg),
+		EventPetugas:         NewEventPetugasClient(cfg),
+		EventRSVP:            NewEventRSVPClient(cfg),
+		Kecamatan:            NewKecamatanClient(cfg),
+		Keluarga:             NewKeluargaClient(cfg),
+		Kelurahan:            NewKelurahanClient(cfg),
+		Keuskupan:            NewKeuskupanClient(cfg),
+		Kevikepan:            NewKevikepanClient(cfg),
+		Kota:                 NewKotaClient(cfg),
+		Lingkungan:           NewLingkunganClient(cfg),
+		Lookup:               NewLookupClient(cfg),
+		OrgInvite:            NewOrgInviteClient(cfg),
+		OrgJabatan:           NewOrgJabatanClient(cfg),
+		OrgMember:            NewOrgMemberClient(cfg),
+		OrgPeriode:           NewOrgPeriodeClient(cfg),
+		Organization:         NewOrganizationClient(cfg),
+		Paroki:               NewParokiClient(cfg),
+		ParokiMember:         NewParokiMemberClient(cfg),
+		Setting:              NewSettingClient(cfg),
+		Umat:                 NewUmatClient(cfg),
+		UmatSakramen:         NewUmatSakramenClient(cfg),
+		User:                 NewUserClient(cfg),
+		UserAccount:          NewUserAccountClient(cfg),
+		UserNotificationLog:  NewUserNotificationLogClient(cfg),
+		UserOTP:              NewUserOTPClient(cfg),
+		UserPushSubscription: NewUserPushSubscriptionClient(cfg),
+		UserSession:          NewUserSessionClient(cfg),
+		UserToken:            NewUserTokenClient(cfg),
+		Wilayah:              NewWilayahClient(cfg),
 	}, nil
 }
 
@@ -308,41 +318,43 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:           ctx,
-		config:        cfg,
-		AgentMemory:   NewAgentMemoryClient(cfg),
-		AgentMessage:  NewAgentMessageClient(cfg),
-		AgentProvider: NewAgentProviderClient(cfg),
-		AgentSession:  NewAgentSessionClient(cfg),
-		CasbinRule:    NewCasbinRuleClient(cfg),
-		Event:         NewEventClient(cfg),
-		EventLagu:     NewEventLaguClient(cfg),
-		EventPetugas:  NewEventPetugasClient(cfg),
-		EventRSVP:     NewEventRSVPClient(cfg),
-		Kecamatan:     NewKecamatanClient(cfg),
-		Keluarga:      NewKeluargaClient(cfg),
-		Kelurahan:     NewKelurahanClient(cfg),
-		Keuskupan:     NewKeuskupanClient(cfg),
-		Kevikepan:     NewKevikepanClient(cfg),
-		Kota:          NewKotaClient(cfg),
-		Lingkungan:    NewLingkunganClient(cfg),
-		Lookup:        NewLookupClient(cfg),
-		OrgInvite:     NewOrgInviteClient(cfg),
-		OrgJabatan:    NewOrgJabatanClient(cfg),
-		OrgMember:     NewOrgMemberClient(cfg),
-		OrgPeriode:    NewOrgPeriodeClient(cfg),
-		Organization:  NewOrganizationClient(cfg),
-		Paroki:        NewParokiClient(cfg),
-		ParokiMember:  NewParokiMemberClient(cfg),
-		Setting:       NewSettingClient(cfg),
-		Umat:          NewUmatClient(cfg),
-		UmatSakramen:  NewUmatSakramenClient(cfg),
-		User:          NewUserClient(cfg),
-		UserAccount:   NewUserAccountClient(cfg),
-		UserOTP:       NewUserOTPClient(cfg),
-		UserSession:   NewUserSessionClient(cfg),
-		UserToken:     NewUserTokenClient(cfg),
-		Wilayah:       NewWilayahClient(cfg),
+		ctx:                  ctx,
+		config:               cfg,
+		AgentMemory:          NewAgentMemoryClient(cfg),
+		AgentMessage:         NewAgentMessageClient(cfg),
+		AgentProvider:        NewAgentProviderClient(cfg),
+		AgentSession:         NewAgentSessionClient(cfg),
+		CasbinRule:           NewCasbinRuleClient(cfg),
+		Event:                NewEventClient(cfg),
+		EventLagu:            NewEventLaguClient(cfg),
+		EventPetugas:         NewEventPetugasClient(cfg),
+		EventRSVP:            NewEventRSVPClient(cfg),
+		Kecamatan:            NewKecamatanClient(cfg),
+		Keluarga:             NewKeluargaClient(cfg),
+		Kelurahan:            NewKelurahanClient(cfg),
+		Keuskupan:            NewKeuskupanClient(cfg),
+		Kevikepan:            NewKevikepanClient(cfg),
+		Kota:                 NewKotaClient(cfg),
+		Lingkungan:           NewLingkunganClient(cfg),
+		Lookup:               NewLookupClient(cfg),
+		OrgInvite:            NewOrgInviteClient(cfg),
+		OrgJabatan:           NewOrgJabatanClient(cfg),
+		OrgMember:            NewOrgMemberClient(cfg),
+		OrgPeriode:           NewOrgPeriodeClient(cfg),
+		Organization:         NewOrganizationClient(cfg),
+		Paroki:               NewParokiClient(cfg),
+		ParokiMember:         NewParokiMemberClient(cfg),
+		Setting:              NewSettingClient(cfg),
+		Umat:                 NewUmatClient(cfg),
+		UmatSakramen:         NewUmatSakramenClient(cfg),
+		User:                 NewUserClient(cfg),
+		UserAccount:          NewUserAccountClient(cfg),
+		UserNotificationLog:  NewUserNotificationLogClient(cfg),
+		UserOTP:              NewUserOTPClient(cfg),
+		UserPushSubscription: NewUserPushSubscriptionClient(cfg),
+		UserSession:          NewUserSessionClient(cfg),
+		UserToken:            NewUserTokenClient(cfg),
+		Wilayah:              NewWilayahClient(cfg),
 	}, nil
 }
 
@@ -377,7 +389,8 @@ func (c *Client) Use(hooks ...Hook) {
 		c.Kelurahan, c.Keuskupan, c.Kevikepan, c.Kota, c.Lingkungan, c.Lookup,
 		c.OrgInvite, c.OrgJabatan, c.OrgMember, c.OrgPeriode, c.Organization, c.Paroki,
 		c.ParokiMember, c.Setting, c.Umat, c.UmatSakramen, c.User, c.UserAccount,
-		c.UserOTP, c.UserSession, c.UserToken, c.Wilayah,
+		c.UserNotificationLog, c.UserOTP, c.UserPushSubscription, c.UserSession,
+		c.UserToken, c.Wilayah,
 	} {
 		n.Use(hooks...)
 	}
@@ -392,7 +405,8 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.Kelurahan, c.Keuskupan, c.Kevikepan, c.Kota, c.Lingkungan, c.Lookup,
 		c.OrgInvite, c.OrgJabatan, c.OrgMember, c.OrgPeriode, c.Organization, c.Paroki,
 		c.ParokiMember, c.Setting, c.Umat, c.UmatSakramen, c.User, c.UserAccount,
-		c.UserOTP, c.UserSession, c.UserToken, c.Wilayah,
+		c.UserNotificationLog, c.UserOTP, c.UserPushSubscription, c.UserSession,
+		c.UserToken, c.Wilayah,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -459,8 +473,12 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.User.mutate(ctx, m)
 	case *UserAccountMutation:
 		return c.UserAccount.mutate(ctx, m)
+	case *UserNotificationLogMutation:
+		return c.UserNotificationLog.mutate(ctx, m)
 	case *UserOTPMutation:
 		return c.UserOTP.mutate(ctx, m)
+	case *UserPushSubscriptionMutation:
+		return c.UserPushSubscription.mutate(ctx, m)
 	case *UserSessionMutation:
 		return c.UserSession.mutate(ctx, m)
 	case *UserTokenMutation:
@@ -5051,6 +5069,22 @@ func (c *UserClient) QueryTokens(_m *User) *UserTokenQuery {
 	return query
 }
 
+// QueryPushSubscriptions queries the push_subscriptions edge of a User.
+func (c *UserClient) QueryPushSubscriptions(_m *User) *UserPushSubscriptionQuery {
+	query := (&UserPushSubscriptionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(userpushsubscription.Table, userpushsubscription.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.PushSubscriptionsTable, user.PushSubscriptionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
 	return c.hooks.User
@@ -5225,6 +5259,139 @@ func (c *UserAccountClient) mutate(ctx context.Context, m *UserAccountMutation) 
 	}
 }
 
+// UserNotificationLogClient is a client for the UserNotificationLog schema.
+type UserNotificationLogClient struct {
+	config
+}
+
+// NewUserNotificationLogClient returns a client for the UserNotificationLog from the given config.
+func NewUserNotificationLogClient(c config) *UserNotificationLogClient {
+	return &UserNotificationLogClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `usernotificationlog.Hooks(f(g(h())))`.
+func (c *UserNotificationLogClient) Use(hooks ...Hook) {
+	c.hooks.UserNotificationLog = append(c.hooks.UserNotificationLog, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `usernotificationlog.Intercept(f(g(h())))`.
+func (c *UserNotificationLogClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UserNotificationLog = append(c.inters.UserNotificationLog, interceptors...)
+}
+
+// Create returns a builder for creating a UserNotificationLog entity.
+func (c *UserNotificationLogClient) Create() *UserNotificationLogCreate {
+	mutation := newUserNotificationLogMutation(c.config, OpCreate)
+	return &UserNotificationLogCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UserNotificationLog entities.
+func (c *UserNotificationLogClient) CreateBulk(builders ...*UserNotificationLogCreate) *UserNotificationLogCreateBulk {
+	return &UserNotificationLogCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UserNotificationLogClient) MapCreateBulk(slice any, setFunc func(*UserNotificationLogCreate, int)) *UserNotificationLogCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UserNotificationLogCreateBulk{err: fmt.Errorf("calling to UserNotificationLogClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UserNotificationLogCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UserNotificationLogCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UserNotificationLog.
+func (c *UserNotificationLogClient) Update() *UserNotificationLogUpdate {
+	mutation := newUserNotificationLogMutation(c.config, OpUpdate)
+	return &UserNotificationLogUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UserNotificationLogClient) UpdateOne(_m *UserNotificationLog) *UserNotificationLogUpdateOne {
+	mutation := newUserNotificationLogMutation(c.config, OpUpdateOne, withUserNotificationLog(_m))
+	return &UserNotificationLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UserNotificationLogClient) UpdateOneID(id uuid.UUID) *UserNotificationLogUpdateOne {
+	mutation := newUserNotificationLogMutation(c.config, OpUpdateOne, withUserNotificationLogID(id))
+	return &UserNotificationLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UserNotificationLog.
+func (c *UserNotificationLogClient) Delete() *UserNotificationLogDelete {
+	mutation := newUserNotificationLogMutation(c.config, OpDelete)
+	return &UserNotificationLogDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UserNotificationLogClient) DeleteOne(_m *UserNotificationLog) *UserNotificationLogDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UserNotificationLogClient) DeleteOneID(id uuid.UUID) *UserNotificationLogDeleteOne {
+	builder := c.Delete().Where(usernotificationlog.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UserNotificationLogDeleteOne{builder}
+}
+
+// Query returns a query builder for UserNotificationLog.
+func (c *UserNotificationLogClient) Query() *UserNotificationLogQuery {
+	return &UserNotificationLogQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUserNotificationLog},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UserNotificationLog entity by its id.
+func (c *UserNotificationLogClient) Get(ctx context.Context, id uuid.UUID) (*UserNotificationLog, error) {
+	return c.Query().Where(usernotificationlog.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UserNotificationLogClient) GetX(ctx context.Context, id uuid.UUID) *UserNotificationLog {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *UserNotificationLogClient) Hooks() []Hook {
+	return c.hooks.UserNotificationLog
+}
+
+// Interceptors returns the client interceptors.
+func (c *UserNotificationLogClient) Interceptors() []Interceptor {
+	return c.inters.UserNotificationLog
+}
+
+func (c *UserNotificationLogClient) mutate(ctx context.Context, m *UserNotificationLogMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UserNotificationLogCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UserNotificationLogUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UserNotificationLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UserNotificationLogDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UserNotificationLog mutation op: %q", m.Op())
+	}
+}
+
 // UserOTPClient is a client for the UserOTP schema.
 type UserOTPClient struct {
 	config
@@ -5355,6 +5522,155 @@ func (c *UserOTPClient) mutate(ctx context.Context, m *UserOTPMutation) (Value, 
 		return (&UserOTPDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown UserOTP mutation op: %q", m.Op())
+	}
+}
+
+// UserPushSubscriptionClient is a client for the UserPushSubscription schema.
+type UserPushSubscriptionClient struct {
+	config
+}
+
+// NewUserPushSubscriptionClient returns a client for the UserPushSubscription from the given config.
+func NewUserPushSubscriptionClient(c config) *UserPushSubscriptionClient {
+	return &UserPushSubscriptionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `userpushsubscription.Hooks(f(g(h())))`.
+func (c *UserPushSubscriptionClient) Use(hooks ...Hook) {
+	c.hooks.UserPushSubscription = append(c.hooks.UserPushSubscription, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `userpushsubscription.Intercept(f(g(h())))`.
+func (c *UserPushSubscriptionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UserPushSubscription = append(c.inters.UserPushSubscription, interceptors...)
+}
+
+// Create returns a builder for creating a UserPushSubscription entity.
+func (c *UserPushSubscriptionClient) Create() *UserPushSubscriptionCreate {
+	mutation := newUserPushSubscriptionMutation(c.config, OpCreate)
+	return &UserPushSubscriptionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UserPushSubscription entities.
+func (c *UserPushSubscriptionClient) CreateBulk(builders ...*UserPushSubscriptionCreate) *UserPushSubscriptionCreateBulk {
+	return &UserPushSubscriptionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UserPushSubscriptionClient) MapCreateBulk(slice any, setFunc func(*UserPushSubscriptionCreate, int)) *UserPushSubscriptionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UserPushSubscriptionCreateBulk{err: fmt.Errorf("calling to UserPushSubscriptionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UserPushSubscriptionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UserPushSubscriptionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UserPushSubscription.
+func (c *UserPushSubscriptionClient) Update() *UserPushSubscriptionUpdate {
+	mutation := newUserPushSubscriptionMutation(c.config, OpUpdate)
+	return &UserPushSubscriptionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UserPushSubscriptionClient) UpdateOne(_m *UserPushSubscription) *UserPushSubscriptionUpdateOne {
+	mutation := newUserPushSubscriptionMutation(c.config, OpUpdateOne, withUserPushSubscription(_m))
+	return &UserPushSubscriptionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UserPushSubscriptionClient) UpdateOneID(id uuid.UUID) *UserPushSubscriptionUpdateOne {
+	mutation := newUserPushSubscriptionMutation(c.config, OpUpdateOne, withUserPushSubscriptionID(id))
+	return &UserPushSubscriptionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UserPushSubscription.
+func (c *UserPushSubscriptionClient) Delete() *UserPushSubscriptionDelete {
+	mutation := newUserPushSubscriptionMutation(c.config, OpDelete)
+	return &UserPushSubscriptionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UserPushSubscriptionClient) DeleteOne(_m *UserPushSubscription) *UserPushSubscriptionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UserPushSubscriptionClient) DeleteOneID(id uuid.UUID) *UserPushSubscriptionDeleteOne {
+	builder := c.Delete().Where(userpushsubscription.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UserPushSubscriptionDeleteOne{builder}
+}
+
+// Query returns a query builder for UserPushSubscription.
+func (c *UserPushSubscriptionClient) Query() *UserPushSubscriptionQuery {
+	return &UserPushSubscriptionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUserPushSubscription},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UserPushSubscription entity by its id.
+func (c *UserPushSubscriptionClient) Get(ctx context.Context, id uuid.UUID) (*UserPushSubscription, error) {
+	return c.Query().Where(userpushsubscription.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UserPushSubscriptionClient) GetX(ctx context.Context, id uuid.UUID) *UserPushSubscription {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a UserPushSubscription.
+func (c *UserPushSubscriptionClient) QueryUser(_m *UserPushSubscription) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(userpushsubscription.Table, userpushsubscription.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, userpushsubscription.UserTable, userpushsubscription.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *UserPushSubscriptionClient) Hooks() []Hook {
+	return c.hooks.UserPushSubscription
+}
+
+// Interceptors returns the client interceptors.
+func (c *UserPushSubscriptionClient) Interceptors() []Interceptor {
+	return c.inters.UserPushSubscription
+}
+
+func (c *UserPushSubscriptionClient) mutate(ctx context.Context, m *UserPushSubscriptionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UserPushSubscriptionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UserPushSubscriptionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UserPushSubscriptionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UserPushSubscriptionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UserPushSubscription mutation op: %q", m.Op())
 	}
 }
 
@@ -5828,13 +6144,15 @@ type (
 		EventLagu, EventPetugas, EventRSVP, Kecamatan, Keluarga, Kelurahan, Keuskupan,
 		Kevikepan, Kota, Lingkungan, Lookup, OrgInvite, OrgJabatan, OrgMember,
 		OrgPeriode, Organization, Paroki, ParokiMember, Setting, Umat, UmatSakramen,
-		User, UserAccount, UserOTP, UserSession, UserToken, Wilayah []ent.Hook
+		User, UserAccount, UserNotificationLog, UserOTP, UserPushSubscription,
+		UserSession, UserToken, Wilayah []ent.Hook
 	}
 	inters struct {
 		AgentMemory, AgentMessage, AgentProvider, AgentSession, CasbinRule, Event,
 		EventLagu, EventPetugas, EventRSVP, Kecamatan, Keluarga, Kelurahan, Keuskupan,
 		Kevikepan, Kota, Lingkungan, Lookup, OrgInvite, OrgJabatan, OrgMember,
 		OrgPeriode, Organization, Paroki, ParokiMember, Setting, Umat, UmatSakramen,
-		User, UserAccount, UserOTP, UserSession, UserToken, Wilayah []ent.Interceptor
+		User, UserAccount, UserNotificationLog, UserOTP, UserPushSubscription,
+		UserSession, UserToken, Wilayah []ent.Interceptor
 	}
 )

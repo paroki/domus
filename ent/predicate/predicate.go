@@ -93,8 +93,14 @@ type User func(*sql.Selector)
 // UserAccount is the predicate function for useraccount builders.
 type UserAccount func(*sql.Selector)
 
+// UserNotificationLog is the predicate function for usernotificationlog builders.
+type UserNotificationLog func(*sql.Selector)
+
 // UserOTP is the predicate function for userotp builders.
 type UserOTP func(*sql.Selector)
+
+// UserPushSubscription is the predicate function for userpushsubscription builders.
+type UserPushSubscription func(*sql.Selector)
 
 // UserSession is the predicate function for usersession builders.
 type UserSession func(*sql.Selector)

@@ -3,12 +3,16 @@ package user_test
 import (
 	"bufio"
 	"context"
+	"crypto/ecdh"
+	"crypto/rand"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"io"
 	"log/slog"
 	"net"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -24,6 +28,7 @@ import (
 	"github.com/paroki/domus/internal/platform/errx"
 	"github.com/paroki/domus/internal/platform/httpx"
 	"github.com/paroki/domus/internal/platform/mailx"
+	"github.com/paroki/domus/internal/platform/pushx"
 	"github.com/paroki/domus/internal/platform/setting"
 	"github.com/paroki/domus/internal/user"
 	"github.com/paroki/domus/internal/user/domain"
@@ -619,4 +624,232 @@ func (s *UserFeatureSuite) TestUserTimezone_DefaultUpdateValidationAndReactivate
 	reactivated, err := s.feature.EnsureUser(ctx, "tzuser@paroki.org", "TZ User Reactivated", "", "email", "tzuser@paroki.org")
 	s.Require().NoError(err)
 	s.Equal("Asia/Makassar", reactivated.Timezone)
+}
+
+type stubNotificationSender struct {
+	calls []struct {
+		target  string
+		payload domain.NotificationPayload
+	}
+}
+
+func (n *stubNotificationSender) SendNotification(_ context.Context, target string, payload domain.NotificationPayload) error {
+	n.calls = append(n.calls, struct {
+		target  string
+		payload domain.NotificationPayload
+	}{target: target, payload: payload})
+	return nil
+}
+
+func generateTestWebPushKeys(t *testing.T) (p256dh, auth string) {
+	t.Helper()
+	priv, err := ecdh.P256().GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	authBytes := make([]byte, 16)
+	if _, err := io.ReadFull(rand.Reader, authBytes); err != nil {
+		t.Fatal(err)
+	}
+	return base64.RawURLEncoding.EncodeToString(priv.PublicKey().Bytes()), base64.RawURLEncoding.EncodeToString(authBytes)
+}
+
+func (s *UserFeatureSuite) TestVAPIDBootstrap_SubscribeUnsubscribeAndSessionCleanup() {
+	ctx := context.Background()
+	store := setting.NewStore(s.client)
+	setting.RegisterFeatures(store, s.feature)
+	s.Require().NoError(store.Load(ctx))
+	s.Require().NoError(s.feature.Bootstrap(ctx))
+
+	pub1 := store.Get(user.SettingPushVAPIDPublicKey)
+	priv1 := store.Get(user.SettingPushVAPIDPrivateKey)
+	s.NotEmpty(pub1)
+	s.NotEmpty(priv1)
+
+	// Idempotent on second Bootstrap
+	s.Require().NoError(s.feature.Bootstrap(ctx))
+	s.Equal(pub1, store.Get(user.SettingPushVAPIDPublicKey))
+
+	// GET /api/auth/push/vapid-public-key
+	s.Request("/api/auth/push/vapid-public-key", http.MethodGet, nil)
+	s.OK()
+	vapidResp := testutil.DecodeAs[domain.VAPIDPublicKeyResponse](&s.ApiTestSuite).Data
+	s.Equal(pub1, vapidResp.PublicKey)
+
+	u, err := s.feature.EnsureUser(ctx, "pushuser@paroki.org", "Push User", "", "email", "pushuser@paroki.org")
+	s.Require().NoError(err)
+	s.True(u.NotifyPush)
+	s.True(u.NotifyWhatsapp)
+	s.True(u.NotifyTelegram)
+
+	cookie := s.issueSessionFor("pushuser@paroki.org")
+	s.SetCookie(cookie)
+
+	p256dh, auth := generateTestWebPushKeys(s.T())
+
+	// SSRF and key validation rejections (422)
+	invalidReqs := []domain.SubscribePushRequest{
+		{Endpoint: "http://example.com/push", Keys: domain.PushSubscriptionKeys{P256DH: p256dh, Auth: auth}},
+		{Endpoint: "https://10.0.0.1/push", Keys: domain.PushSubscriptionKeys{P256DH: p256dh, Auth: auth}},
+		{Endpoint: "https://fcm.googleapis.com/fcm/send/abc", Keys: domain.PushSubscriptionKeys{P256DH: "bad", Auth: auth}},
+		{Endpoint: "https://fcm.googleapis.com/fcm/send/abc", Keys: domain.PushSubscriptionKeys{P256DH: p256dh, Auth: "bad"}},
+	}
+	for _, req := range invalidReqs {
+		s.Request("/api/me/push/subscribe", http.MethodPost, req)
+		s.UnprocessableEntity()
+		errResp := s.GetErrorResponse()
+		s.Require().NotNil(errResp.Error)
+		s.Equal("VALIDATION_ERROR", errResp.Error.Code)
+	}
+
+	// Idempotent upsert on POST /api/me/push/subscribe
+	subReq := domain.SubscribePushRequest{
+		Endpoint: "https://fcm.googleapis.com/fcm/send/sub-1",
+		Keys:     domain.PushSubscriptionKeys{P256DH: p256dh, Auth: auth},
+	}
+	s.Request("/api/me/push/subscribe", http.MethodPost, subReq)
+	s.NoContent()
+	s.Request("/api/me/push/subscribe", http.MethodPost, subReq)
+	s.NoContent()
+
+	s.Request("/api/me", http.MethodGet, nil)
+	s.OK()
+	me := testutil.DecodeAs[domain.UserResponse](&s.ApiTestSuite).Data
+	s.Equal(1, me.PushSubscriptionCount)
+
+	// PATCH /api/me updates notification preferences
+	f := false
+	s.Request("/api/me", http.MethodPatch, domain.UpdateMeRequest{
+		NotifyPush:     &f,
+		NotifyWhatsapp: &f,
+		NotifyTelegram: &f,
+	})
+	s.OK()
+	me = testutil.DecodeAs[domain.UserResponse](&s.ApiTestSuite).Data
+	s.False(me.NotifyPush)
+	s.False(me.NotifyWhatsapp)
+	s.False(me.NotifyTelegram)
+
+	// POST /api/me/push/unsubscribe
+	s.Request("/api/me/push/unsubscribe", http.MethodPost, domain.UnsubscribePushRequest{Endpoint: subReq.Endpoint})
+	s.NoContent()
+	s.Request("/api/me", http.MethodGet, nil)
+	s.OK()
+	me = testutil.DecodeAs[domain.UserResponse](&s.ApiTestSuite).Data
+	s.Equal(0, me.PushSubscriptionCount)
+
+	// Re-subscribe then logout -> session-bound subscription cleaned up
+	s.Request("/api/me/push/subscribe", http.MethodPost, subReq)
+	s.NoContent()
+	s.Request("/api/auth/logout", http.MethodPost, nil)
+	s.NoContent()
+	count, err := s.client.UserPushSubscription.Query().Count(ctx)
+	s.Require().NoError(err)
+	s.Equal(0, count)
+
+	// Soft-delete + ReactivateUser resets notification prefs to true
+	s.Require().NoError(s.client.User.UpdateOneID(u.ID).SetDeletedAt(time.Now().UTC()).Exec(ctx))
+	reactivated, err := s.feature.EnsureUser(ctx, "pushuser@paroki.org", "Push User", "", "email", "pushuser@paroki.org")
+	s.Require().NoError(err)
+	s.True(reactivated.NotifyPush)
+	s.True(reactivated.NotifyWhatsapp)
+	s.True(reactivated.NotifyTelegram)
+}
+
+func (s *UserFeatureSuite) TestPushTestEndpoint_ChannelsAndAutoPrune410() {
+	ctx := context.Background()
+	waStub := &stubNotificationSender{}
+	tgStub := &stubNotificationSender{}
+
+	var pushHits int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		pushHits++
+		if strings.HasSuffix(r.URL.Path, "/expired") {
+			w.WriteHeader(http.StatusGone)
+			return
+		}
+		w.WriteHeader(http.StatusCreated)
+	}))
+	defer srv.Close()
+
+	cfg := user.Config{
+		OTPTTL:         5 * time.Minute,
+		OTPMaxAttempts: 5,
+		SessionTTL:     24 * time.Hour,
+		CookieName:     "domus_session",
+	}
+	otpStub := &stubSender{}
+	f := user.New(
+		s.client,
+		s.enforcer,
+		cfg,
+		slog.New(slog.NewTextHandler(io.Discard, nil)),
+		user.WithOTPSender(otpStub),
+		user.WithChannelNotification("whatsapp", waStub),
+		user.WithChannelNotification("telegram", tgStub),
+	)
+	store := setting.NewStore(s.client)
+	setting.RegisterFeatures(store, f)
+	s.Require().NoError(store.Load(ctx))
+	s.Require().NoError(f.Bootstrap(ctx))
+	s.Require().NotEmpty(pushx.ErrSubscriptionExpired)
+
+	suite := &testutil.ApiTestSuite[any]{}
+	suite.SetT(s.T())
+	suite.WithFeatures(f)
+
+	phone := "+6281234567890"
+	u, err := f.EnsureUser(ctx, "notifyall@paroki.org", "Notify All", phone, "email", "notifyall@paroki.org")
+	s.Require().NoError(err)
+	_, err = s.client.UserAccount.Create().
+		SetUserID(u.ID).
+		SetProvider(domain.ProviderTelegram).
+		SetSubject("987654321").
+		SetEmail("notifyall@paroki.org").
+		Save(ctx)
+	s.Require().NoError(err)
+
+	suite.Request("/api/auth/otp", http.MethodPost, domain.RequestOTPRequest{Email: "notifyall@paroki.org"})
+	suite.OK()
+	suite.Request("/api/auth/otp/verify", http.MethodPost, domain.VerifyOTPRequest{
+		Email: "notifyall@paroki.org",
+		Code:  otpStub.lastCode,
+	})
+	suite.OK()
+	var sessCookie *http.Cookie
+	for _, c := range suite.GetHttpResponse().Cookies() {
+		if c.Name == "domus_session" {
+			sessCookie = c
+			break
+		}
+	}
+	s.Require().NotNil(sessCookie)
+	suite.SetCookie(sessCookie)
+
+	p256dh, auth := generateTestWebPushKeys(s.T())
+	suite.Request("/api/me/push/subscribe", http.MethodPost, domain.SubscribePushRequest{
+		Endpoint: srv.URL + "/active",
+		Keys:     domain.PushSubscriptionKeys{P256DH: p256dh, Auth: auth},
+	})
+	suite.NoContent()
+	suite.Request("/api/me/push/subscribe", http.MethodPost, domain.SubscribePushRequest{
+		Endpoint: srv.URL + "/expired",
+		Keys:     domain.PushSubscriptionKeys{P256DH: p256dh, Auth: auth},
+	})
+	suite.NoContent()
+
+	suite.Request("/api/me/push/test", http.MethodPost, nil)
+	suite.NoContent()
+
+	s.Equal(2, pushHits)
+	s.Len(waStub.calls, 1)
+	s.Equal(phone, waStub.calls[0].target)
+	s.Len(tgStub.calls, 1)
+	s.Equal("987654321", tgStub.calls[0].target)
+
+	// Expired 410 Gone subscription was auto-pruned; only /active remains
+	suite.Request("/api/me", http.MethodGet, nil)
+	suite.OK()
+	me := testutil.DecodeAs[domain.UserResponse](suite).Data
+	s.Equal(1, me.PushSubscriptionCount)
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/useraccount"
 	"github.com/paroki/domus/ent/userotp"
+	"github.com/paroki/domus/ent/userpushsubscription"
 	"github.com/paroki/domus/ent/usersession"
 	"github.com/paroki/domus/ent/usertoken"
 )
@@ -70,6 +71,9 @@ func (r *Repository) ReactivateUser(ctx context.Context, id uuid.UUID, name stri
 		ClearBirthDate().
 		ClearAvatarURL().
 		SetTimezone("Asia/Makassar").
+		SetNotifyPush(true).
+		SetNotifyWhatsapp(true).
+		SetNotifyTelegram(true).
 		ClearDefaultParokiID().
 		ClearLastLoginAt()
 	if phone != nil && *phone != "" {
@@ -238,9 +242,26 @@ func (r *Repository) FindSessionByTokenHash(ctx context.Context, tokenHash strin
 		Only(ctx)
 }
 
-// DeleteSessionByTokenHash hard-deletes any UserSession matching tokenHash.
+// DeleteSessionByTokenHash hard-deletes any UserSession matching tokenHash and its push subscriptions.
 func (r *Repository) DeleteSessionByTokenHash(ctx context.Context, tokenHash string) error {
-	_, err := r.client.UserSession.Delete().
+	sessions, err := r.client.UserSession.Query().
+		Where(usersession.TokenHashEQ(tokenHash)).
+		All(ctx)
+	if err != nil {
+		return err
+	}
+	if len(sessions) > 0 {
+		ids := make([]uuid.UUID, len(sessions))
+		for i, s := range sessions {
+			ids[i] = s.ID
+		}
+		if _, err := r.client.UserPushSubscription.Delete().
+			Where(userpushsubscription.SessionIDIn(ids...)).
+			Exec(ctx); err != nil {
+			return err
+		}
+	}
+	_, err = r.client.UserSession.Delete().
 		Where(usersession.TokenHashEQ(tokenHash)).
 		Exec(ctx)
 	return err
@@ -276,8 +297,11 @@ func (r *Repository) DeleteSessionByID(ctx context.Context, id uuid.UUID) error 
 	return r.client.UserSession.DeleteOneID(id).Exec(ctx)
 }
 
-// DeleteSessionsByUserID hard-deletes all UserSession rows for userID.
+// DeleteSessionsByUserID hard-deletes all UserSession rows and push subscriptions for userID.
 func (r *Repository) DeleteSessionsByUserID(ctx context.Context, userID uuid.UUID) error {
+	if err := r.DeletePushSubscriptionsByUserID(ctx, userID); err != nil {
+		return err
+	}
 	_, err := r.client.UserSession.Delete().
 		Where(usersession.UserIDEQ(userID)).
 		Exec(ctx)
@@ -394,6 +418,9 @@ func (r *Repository) UpdateUser(
 	defaultParokiID *uuid.UUID,
 	status *user.Status,
 	onboarded *bool,
+	notifyPush *bool,
+	notifyWhatsapp *bool,
+	notifyTelegram *bool,
 ) (*ent.User, error) {
 	upd := r.client.User.UpdateOneID(id)
 	if name != nil {
@@ -443,11 +470,23 @@ func (r *Repository) UpdateUser(
 	if onboarded != nil {
 		upd.SetOnboarded(*onboarded)
 	}
+	if notifyPush != nil {
+		upd.SetNotifyPush(*notifyPush)
+	}
+	if notifyWhatsapp != nil {
+		upd.SetNotifyWhatsapp(*notifyWhatsapp)
+	}
+	if notifyTelegram != nil {
+		upd.SetNotifyTelegram(*notifyTelegram)
+	}
 	return upd.Save(ctx)
 }
 
-// SoftDeleteUser sets deleted_at on a User.
+// SoftDeleteUser sets deleted_at on a User and removes its push subscriptions.
 func (r *Repository) SoftDeleteUser(ctx context.Context, id uuid.UUID, deletedAt time.Time) error {
+	if err := r.DeletePushSubscriptionsByUserID(ctx, id); err != nil {
+		return err
+	}
 	return r.client.User.UpdateOneID(id).
 		SetDeletedAt(deletedAt).
 		Exec(ctx)
@@ -490,8 +529,13 @@ func (r *Repository) SearchUserSessions(
 		All(ctx)
 }
 
-// DeleteUserSessionByID deletes a UserSession scoped to userID and returns the affected row count.
+// DeleteUserSessionByID deletes a UserSession scoped to userID, cleans up its push subscriptions, and returns the affected row count.
 func (r *Repository) DeleteUserSessionByID(ctx context.Context, sessionID, userID uuid.UUID) (int, error) {
+	if _, err := r.client.UserPushSubscription.Delete().
+		Where(userpushsubscription.SessionIDEQ(sessionID), userpushsubscription.UserIDEQ(userID)).
+		Exec(ctx); err != nil {
+		return 0, err
+	}
 	return r.client.UserSession.Delete().
 		Where(usersession.IDEQ(sessionID), usersession.UserIDEQ(userID)).
 		Exec(ctx)

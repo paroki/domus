@@ -70,8 +70,12 @@ type Tx struct {
 	User *UserClient
 	// UserAccount is the client for interacting with the UserAccount builders.
 	UserAccount *UserAccountClient
+	// UserNotificationLog is the client for interacting with the UserNotificationLog builders.
+	UserNotificationLog *UserNotificationLogClient
 	// UserOTP is the client for interacting with the UserOTP builders.
 	UserOTP *UserOTPClient
+	// UserPushSubscription is the client for interacting with the UserPushSubscription builders.
+	UserPushSubscription *UserPushSubscriptionClient
 	// UserSession is the client for interacting with the UserSession builders.
 	UserSession *UserSessionClient
 	// UserToken is the client for interacting with the UserToken builders.
@@ -238,7 +242,9 @@ func (tx *Tx) init() {
 	tx.UmatSakramen = NewUmatSakramenClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.UserAccount = NewUserAccountClient(tx.config)
+	tx.UserNotificationLog = NewUserNotificationLogClient(tx.config)
 	tx.UserOTP = NewUserOTPClient(tx.config)
+	tx.UserPushSubscription = NewUserPushSubscriptionClient(tx.config)
 	tx.UserSession = NewUserSessionClient(tx.config)
 	tx.UserToken = NewUserTokenClient(tx.config)
 	tx.Wilayah = NewWilayahClient(tx.config)

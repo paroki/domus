@@ -17,6 +17,7 @@ import (
 	"github.com/paroki/domus/internal/platform/httpx"
 	"github.com/paroki/domus/internal/platform/mailx"
 	"github.com/paroki/domus/internal/platform/mcpx"
+	"github.com/paroki/domus/internal/platform/pushx"
 	"github.com/paroki/domus/internal/platform/setting"
 	"github.com/paroki/domus/internal/platform/telegram"
 	"github.com/paroki/domus/internal/user/domain"
@@ -44,17 +45,21 @@ var (
 
 // Feature-owned runtime setting keys.
 var (
-	SettingTelegramBotToken  = setting.Key("user", "telegram.bot_token")
-	SettingGowaBaseURL       = setting.Key("user", "gowa.base_url")
-	SettingGowaWebhookSecret = setting.Key("user", "gowa.webhook_secret")
+	SettingTelegramBotToken    = setting.Key("user", "telegram.bot_token")
+	SettingGowaBaseURL         = setting.Key("user", "gowa.base_url")
+	SettingGowaWebhookSecret   = setting.Key("user", "gowa.webhook_secret")
+	SettingPushVAPIDPublicKey  = setting.Key("user", "push.vapid_public_key")
+	SettingPushVAPIDPrivateKey = setting.Key("user", "push.vapid_private_key")
+	SettingPushVAPIDSubject    = setting.Key("user", "push.vapid_subject")
 )
 
 type options struct {
-	otpSender         domain.OTPSender
-	channelOTPSenders map[string]domain.OTPSender
-	gowaClient        *gowa.Client
-	telegramClient    *telegram.Client
-	oauthProviders    []domain.OAuthProvider
+	otpSender            domain.OTPSender
+	channelOTPSenders    map[string]domain.OTPSender
+	channelNotifications map[string]domain.NotificationSender
+	gowaClient           *gowa.Client
+	telegramClient       *telegram.Client
+	oauthProviders       []domain.OAuthProvider
 }
 
 // Option customizes user Feature initialization.
@@ -95,6 +100,20 @@ func WithChannelOTPSender(channel string, sender domain.OTPSender) Option {
 	}
 }
 
+// WithChannelNotification registers a custom or test NotificationSender for a specific channel.
+func WithChannelNotification(channel string, sender domain.NotificationSender) Option {
+	return func(o *options) {
+		ch := strings.ToLower(strings.TrimSpace(channel))
+		if ch == "" || sender == nil {
+			return
+		}
+		if o.channelNotifications == nil {
+			o.channelNotifications = make(map[string]domain.NotificationSender)
+		}
+		o.channelNotifications[ch] = sender
+	}
+}
+
 // NewMailOTPSender constructs an email OTPSender backed by mailer.
 func NewMailOTPSender(mailer *mailx.Mailer, otpTTL time.Duration) domain.OTPSender {
 	return service.NewMailOTPSender(mailer, otpTTL)
@@ -127,16 +146,19 @@ type ParokiMemberDirectory interface {
 
 // Feature wires the user and authentication feature.
 type Feature struct {
-	service         *service.Service
-	handler         *handler.Handler
-	enforcer        *authz.Enforcer
-	compositeSender *service.CompositeOTPSender
-	parokiMembers   ParokiMemberDirectory
-	otpTTL          time.Duration
-	cookieName      string
-	clientMu        sync.RWMutex
-	tgClient        *telegram.Client
-	gowaClient      *gowa.Client
+	service               *service.Service
+	handler               *handler.Handler
+	enforcer              *authz.Enforcer
+	compositeSender       *service.CompositeOTPSender
+	compositeNotification *service.CompositeNotification
+	customNotifyChannels  map[string]bool
+	settingStore          *setting.Store
+	parokiMembers         ParokiMemberDirectory
+	otpTTL                time.Duration
+	cookieName            string
+	clientMu              sync.RWMutex
+	tgClient              *telegram.Client
+	gowaClient            *gowa.Client
 }
 
 // SetParokiMemberDirectory wires the ParokiMemberDirectory used by user_list_paroki_members MCP tool.
@@ -197,7 +219,21 @@ func New(db *ent.Client, enforcer *authz.Enforcer, cfg Config, logger *slog.Logg
 		GitHubID:        cfg.GitHubID,
 		GitHubSecret:    cfg.GitHubSecret,
 	}
+	compositeNotification := service.NewCompositeNotification()
+	if opt.gowaClient != nil {
+		compositeNotification.SetChannel(service.ChannelWhatsApp, service.NewGowaNotification(opt.gowaClient))
+	}
+	if opt.telegramClient != nil {
+		compositeNotification.SetChannel(service.ChannelTelegram, service.NewTelegramNotification(opt.telegramClient))
+	}
+	customNotifyChannels := make(map[string]bool, len(opt.channelNotifications))
+	for ch, sender := range opt.channelNotifications {
+		compositeNotification.SetChannel(ch, sender)
+		customNotifyChannels[ch] = true
+	}
+
 	svc := service.New(svcCfg, r, enforcer, compositeSender, logger)
+	svc.SetCompositeNotification(compositeNotification)
 	if opt.telegramClient != nil {
 		svc.SetTelegramClient(opt.telegramClient)
 	}
@@ -209,19 +245,46 @@ func New(db *ent.Client, enforcer *authz.Enforcer, cfg Config, logger *slog.Logg
 		h.SetTelegramClient(opt.telegramClient)
 	}
 	return &Feature{
-		service:         svc,
-		handler:         h,
-		enforcer:        enforcer,
-		compositeSender: compositeSender,
-		otpTTL:          otpTTL,
-		cookieName:      cookieName,
-		tgClient:        opt.telegramClient,
-		gowaClient:      opt.gowaClient,
+		service:               svc,
+		handler:               h,
+		enforcer:              enforcer,
+		compositeSender:       compositeSender,
+		compositeNotification: compositeNotification,
+		customNotifyChannels:  customNotifyChannels,
+		otpTTL:                otpTTL,
+		cookieName:            cookieName,
+		tgClient:              opt.telegramClient,
+		gowaClient:            opt.gowaClient,
 	}
 }
 
-// RegisterSettings registers Telegram and GOWA descriptors and a hot-reload listener on s.
+// RegisterSettings registers Telegram, GOWA, and Web Push VAPID descriptors and a hot-reload listener on s.
 func (f *Feature) RegisterSettings(s *setting.Store) {
+	f.settingStore = s
+	s.Register(setting.Descriptor{
+		Key:          SettingPushVAPIDPublicKey,
+		Group:        "Web Push (VAPID)",
+		Label:        "VAPID Public Key",
+		Description:  "Kunci publik ECDSA P-256 (base64url) untuk langganan Web Push.",
+		Secret:       false,
+		DefaultValue: "",
+	})
+	s.Register(setting.Descriptor{
+		Key:          SettingPushVAPIDPrivateKey,
+		Group:        "Web Push (VAPID)",
+		Label:        "VAPID Private Key",
+		Description:  "Kunci privat ECDSA P-256 (base64url) untuk menandatangani header VAPID.",
+		Secret:       true,
+		DefaultValue: "",
+	})
+	s.Register(setting.Descriptor{
+		Key:          SettingPushVAPIDSubject,
+		Group:        "Web Push (VAPID)",
+		Label:        "VAPID Subject",
+		Description:  "Identitas kontak (mailto: atau https:) pada klaim sub JWT VAPID.",
+		Secret:       false,
+		DefaultValue: "mailto:admin@domus.example.com",
+	})
 	s.Register(setting.Descriptor{
 		Key:         SettingTelegramBotToken,
 		Group:       "Telegram Bot",
@@ -287,18 +350,45 @@ func (f *Feature) RegisterSettings(s *setting.Store) {
 
 		if tgClient != nil {
 			f.compositeSender.SetSender(domain.ProviderTelegram, service.NewTelegramOTPSender(tgClient, f.otpTTL))
+			f.compositeNotification.SetChannel(service.ChannelTelegram, service.NewTelegramNotification(tgClient))
 			f.service.SetTelegramClient(tgClient)
 			f.handler.SetTelegramClient(tgClient)
 		} else {
 			f.compositeSender.RemoveSender(domain.ProviderTelegram)
+			if !f.customNotifyChannels[service.ChannelTelegram] {
+				f.compositeNotification.RemoveChannel(service.ChannelTelegram)
+			}
 			f.service.SetTelegramClient(nil)
 			f.handler.SetTelegramClient(nil)
 		}
 
 		if gowaClient != nil {
 			f.compositeSender.SetSender(domain.ProviderWhatsApp, service.NewGowaOTPSender(gowaClient, f.otpTTL))
+			f.compositeNotification.SetChannel(service.ChannelWhatsApp, service.NewGowaNotification(gowaClient))
 		} else {
 			f.compositeSender.RemoveSender(domain.ProviderWhatsApp)
+			if !f.customNotifyChannels[service.ChannelWhatsApp] {
+				f.compositeNotification.RemoveChannel(service.ChannelWhatsApp)
+			}
+		}
+
+		vapidPub := strings.TrimSpace(values[SettingPushVAPIDPublicKey])
+		vapidPriv := strings.TrimSpace(values[SettingPushVAPIDPrivateKey])
+		vapidSub := strings.TrimSpace(values[SettingPushVAPIDSubject])
+		if vapidPub != "" && vapidPriv != "" {
+			pushSender, err := pushx.New(pushx.Config{
+				PublicKey:  vapidPub,
+				PrivateKey: vapidPriv,
+				Subject:    vapidSub,
+			})
+			if err != nil {
+				return err
+			}
+			f.compositeNotification.SetChannel(service.ChannelPush, service.NewPushNotification(pushSender))
+			f.service.SetVAPIDPublicKey(vapidPub)
+		} else {
+			f.compositeNotification.RemoveChannel(service.ChannelPush)
+			f.service.SetVAPIDPublicKey("")
 		}
 		return nil
 	})
@@ -352,9 +442,32 @@ func (f *Feature) RegisterPermissions(ctx context.Context, e *authz.Enforcer) er
 	return e.AddPermissionForRole(ctx, RoleSuperAdmin, authz.DomainGlobal, PermUsers, authz.ActionWrite)
 }
 
-// Bootstrap idempotently seeds the initial Super Admin user when configured.
+// Bootstrap idempotently seeds the initial Super Admin user and auto-bootstraps VAPID keys if unset.
 func (f *Feature) Bootstrap(ctx context.Context) error {
-	return f.service.BootstrapSuperAdmin(ctx)
+	if err := f.service.BootstrapSuperAdmin(ctx); err != nil {
+		return err
+	}
+	if f.settingStore != nil {
+		pub := strings.TrimSpace(f.settingStore.Get(SettingPushVAPIDPublicKey))
+		priv := strings.TrimSpace(f.settingStore.Get(SettingPushVAPIDPrivateKey))
+		if pub == "" || priv == "" {
+			genPub, genPriv, err := pushx.GenerateVAPIDKeys()
+			if err != nil {
+				return err
+			}
+			updates := map[string]string{
+				SettingPushVAPIDPublicKey:  genPub,
+				SettingPushVAPIDPrivateKey: genPriv,
+			}
+			if strings.TrimSpace(f.settingStore.Get(SettingPushVAPIDSubject)) == "" {
+				updates[SettingPushVAPIDSubject] = "mailto:admin@domus.example.com"
+			}
+			if _, err := f.settingStore.Update(ctx, updates); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // AuthenticateMiddleware resolves a session cookie or Bearer token and attaches authx.Principal to the request context.

@@ -32,6 +32,9 @@ func (User) Fields() []ent.Field {
 		field.String("birth_date").Optional().Nillable(),
 		field.String("avatar_url").Optional().Nillable(),
 		field.String("timezone").NotEmpty().Default("Asia/Makassar"),
+		field.Bool("notify_push").Default(true),
+		field.Bool("notify_whatsapp").Default(true),
+		field.Bool("notify_telegram").Default(true),
 		field.Enum("status").Values("active", "disabled").Default("active"),
 		field.Bool("onboarded").Default(false),
 		field.UUID("default_paroki_id", uuid.UUID{}).Optional().Nillable(),
@@ -45,6 +48,7 @@ func (User) Edges() []ent.Edge {
 		edge.To("accounts", UserAccount.Type),
 		edge.To("sessions", UserSession.Type),
 		edge.To("tokens", UserToken.Type),
+		edge.To("push_subscriptions", UserPushSubscription.Type),
 	}
 }
 

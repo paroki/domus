@@ -36,6 +36,12 @@ const (
 	FieldAvatarURL = "avatar_url"
 	// FieldTimezone holds the string denoting the timezone field in the database.
 	FieldTimezone = "timezone"
+	// FieldNotifyPush holds the string denoting the notify_push field in the database.
+	FieldNotifyPush = "notify_push"
+	// FieldNotifyWhatsapp holds the string denoting the notify_whatsapp field in the database.
+	FieldNotifyWhatsapp = "notify_whatsapp"
+	// FieldNotifyTelegram holds the string denoting the notify_telegram field in the database.
+	FieldNotifyTelegram = "notify_telegram"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
 	// FieldOnboarded holds the string denoting the onboarded field in the database.
@@ -50,6 +56,8 @@ const (
 	EdgeSessions = "sessions"
 	// EdgeTokens holds the string denoting the tokens edge name in mutations.
 	EdgeTokens = "tokens"
+	// EdgePushSubscriptions holds the string denoting the push_subscriptions edge name in mutations.
+	EdgePushSubscriptions = "push_subscriptions"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// AccountsTable is the table that holds the accounts relation/edge.
@@ -73,6 +81,13 @@ const (
 	TokensInverseTable = "user_tokens"
 	// TokensColumn is the table column denoting the tokens relation/edge.
 	TokensColumn = "user_id"
+	// PushSubscriptionsTable is the table that holds the push_subscriptions relation/edge.
+	PushSubscriptionsTable = "user_push_subscriptions"
+	// PushSubscriptionsInverseTable is the table name for the UserPushSubscription entity.
+	// It exists in this package in order to avoid circular dependency with the "userpushsubscription" package.
+	PushSubscriptionsInverseTable = "user_push_subscriptions"
+	// PushSubscriptionsColumn is the table column denoting the push_subscriptions relation/edge.
+	PushSubscriptionsColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -88,6 +103,9 @@ var Columns = []string{
 	FieldBirthDate,
 	FieldAvatarURL,
 	FieldTimezone,
+	FieldNotifyPush,
+	FieldNotifyWhatsapp,
+	FieldNotifyTelegram,
 	FieldStatus,
 	FieldOnboarded,
 	FieldDefaultParokiID,
@@ -119,6 +137,12 @@ var (
 	DefaultTimezone string
 	// TimezoneValidator is a validator for the "timezone" field. It is called by the builders before save.
 	TimezoneValidator func(string) error
+	// DefaultNotifyPush holds the default value on creation for the "notify_push" field.
+	DefaultNotifyPush bool
+	// DefaultNotifyWhatsapp holds the default value on creation for the "notify_whatsapp" field.
+	DefaultNotifyWhatsapp bool
+	// DefaultNotifyTelegram holds the default value on creation for the "notify_telegram" field.
+	DefaultNotifyTelegram bool
 	// DefaultOnboarded holds the default value on creation for the "onboarded" field.
 	DefaultOnboarded bool
 	// DefaultID holds the default value on creation for the "id" field.
@@ -232,6 +256,21 @@ func ByTimezone(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTimezone, opts...).ToFunc()
 }
 
+// ByNotifyPush orders the results by the notify_push field.
+func ByNotifyPush(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldNotifyPush, opts...).ToFunc()
+}
+
+// ByNotifyWhatsapp orders the results by the notify_whatsapp field.
+func ByNotifyWhatsapp(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldNotifyWhatsapp, opts...).ToFunc()
+}
+
+// ByNotifyTelegram orders the results by the notify_telegram field.
+func ByNotifyTelegram(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldNotifyTelegram, opts...).ToFunc()
+}
+
 // ByStatus orders the results by the status field.
 func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStatus, opts...).ToFunc()
@@ -293,6 +332,20 @@ func ByTokens(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newTokensStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByPushSubscriptionsCount orders the results by push_subscriptions count.
+func ByPushSubscriptionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newPushSubscriptionsStep(), opts...)
+	}
+}
+
+// ByPushSubscriptions orders the results by push_subscriptions terms.
+func ByPushSubscriptions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPushSubscriptionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newAccountsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -312,5 +365,12 @@ func newTokensStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(TokensInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, TokensTable, TokensColumn),
+	)
+}
+func newPushSubscriptionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PushSubscriptionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, PushSubscriptionsTable, PushSubscriptionsColumn),
 	)
 }

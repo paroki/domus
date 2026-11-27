@@ -15,6 +15,7 @@ import (
 	"github.com/paroki/domus/ent/predicate"
 	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/useraccount"
+	"github.com/paroki/domus/ent/userpushsubscription"
 	"github.com/paroki/domus/ent/usersession"
 	"github.com/paroki/domus/ent/usertoken"
 )
@@ -180,6 +181,48 @@ func (_u *UserUpdate) SetNillableTimezone(v *string) *UserUpdate {
 	return _u
 }
 
+// SetNotifyPush sets the "notify_push" field.
+func (_u *UserUpdate) SetNotifyPush(v bool) *UserUpdate {
+	_u.mutation.SetNotifyPush(v)
+	return _u
+}
+
+// SetNillableNotifyPush sets the "notify_push" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableNotifyPush(v *bool) *UserUpdate {
+	if v != nil {
+		_u.SetNotifyPush(*v)
+	}
+	return _u
+}
+
+// SetNotifyWhatsapp sets the "notify_whatsapp" field.
+func (_u *UserUpdate) SetNotifyWhatsapp(v bool) *UserUpdate {
+	_u.mutation.SetNotifyWhatsapp(v)
+	return _u
+}
+
+// SetNillableNotifyWhatsapp sets the "notify_whatsapp" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableNotifyWhatsapp(v *bool) *UserUpdate {
+	if v != nil {
+		_u.SetNotifyWhatsapp(*v)
+	}
+	return _u
+}
+
+// SetNotifyTelegram sets the "notify_telegram" field.
+func (_u *UserUpdate) SetNotifyTelegram(v bool) *UserUpdate {
+	_u.mutation.SetNotifyTelegram(v)
+	return _u
+}
+
+// SetNillableNotifyTelegram sets the "notify_telegram" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableNotifyTelegram(v *bool) *UserUpdate {
+	if v != nil {
+		_u.SetNotifyTelegram(*v)
+	}
+	return _u
+}
+
 // SetStatus sets the "status" field.
 func (_u *UserUpdate) SetStatus(v user.Status) *UserUpdate {
 	_u.mutation.SetStatus(v)
@@ -293,6 +336,21 @@ func (_u *UserUpdate) AddTokens(v ...*UserToken) *UserUpdate {
 	return _u.AddTokenIDs(ids...)
 }
 
+// AddPushSubscriptionIDs adds the "push_subscriptions" edge to the UserPushSubscription entity by IDs.
+func (_u *UserUpdate) AddPushSubscriptionIDs(ids ...uuid.UUID) *UserUpdate {
+	_u.mutation.AddPushSubscriptionIDs(ids...)
+	return _u
+}
+
+// AddPushSubscriptions adds the "push_subscriptions" edges to the UserPushSubscription entity.
+func (_u *UserUpdate) AddPushSubscriptions(v ...*UserPushSubscription) *UserUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddPushSubscriptionIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdate) Mutation() *UserMutation {
 	return _u.mutation
@@ -359,6 +417,27 @@ func (_u *UserUpdate) RemoveTokens(v ...*UserToken) *UserUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveTokenIDs(ids...)
+}
+
+// ClearPushSubscriptions clears all "push_subscriptions" edges to the UserPushSubscription entity.
+func (_u *UserUpdate) ClearPushSubscriptions() *UserUpdate {
+	_u.mutation.ClearPushSubscriptions()
+	return _u
+}
+
+// RemovePushSubscriptionIDs removes the "push_subscriptions" edge to UserPushSubscription entities by IDs.
+func (_u *UserUpdate) RemovePushSubscriptionIDs(ids ...uuid.UUID) *UserUpdate {
+	_u.mutation.RemovePushSubscriptionIDs(ids...)
+	return _u
+}
+
+// RemovePushSubscriptions removes "push_subscriptions" edges to UserPushSubscription entities.
+func (_u *UserUpdate) RemovePushSubscriptions(v ...*UserPushSubscription) *UserUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemovePushSubscriptionIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -480,6 +559,15 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.Timezone(); ok {
 		_spec.SetField(user.FieldTimezone, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.NotifyPush(); ok {
+		_spec.SetField(user.FieldNotifyPush, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.NotifyWhatsapp(); ok {
+		_spec.SetField(user.FieldNotifyWhatsapp, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.NotifyTelegram(); ok {
+		_spec.SetField(user.FieldNotifyTelegram, field.TypeBool, value)
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(user.FieldStatus, field.TypeEnum, value)
@@ -627,6 +715,51 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usertoken.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.PushSubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PushSubscriptionsTable,
+			Columns: []string{user.PushSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userpushsubscription.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedPushSubscriptionsIDs(); len(nodes) > 0 && !_u.mutation.PushSubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PushSubscriptionsTable,
+			Columns: []string{user.PushSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userpushsubscription.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PushSubscriptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PushSubscriptionsTable,
+			Columns: []string{user.PushSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userpushsubscription.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -802,6 +935,48 @@ func (_u *UserUpdateOne) SetNillableTimezone(v *string) *UserUpdateOne {
 	return _u
 }
 
+// SetNotifyPush sets the "notify_push" field.
+func (_u *UserUpdateOne) SetNotifyPush(v bool) *UserUpdateOne {
+	_u.mutation.SetNotifyPush(v)
+	return _u
+}
+
+// SetNillableNotifyPush sets the "notify_push" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableNotifyPush(v *bool) *UserUpdateOne {
+	if v != nil {
+		_u.SetNotifyPush(*v)
+	}
+	return _u
+}
+
+// SetNotifyWhatsapp sets the "notify_whatsapp" field.
+func (_u *UserUpdateOne) SetNotifyWhatsapp(v bool) *UserUpdateOne {
+	_u.mutation.SetNotifyWhatsapp(v)
+	return _u
+}
+
+// SetNillableNotifyWhatsapp sets the "notify_whatsapp" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableNotifyWhatsapp(v *bool) *UserUpdateOne {
+	if v != nil {
+		_u.SetNotifyWhatsapp(*v)
+	}
+	return _u
+}
+
+// SetNotifyTelegram sets the "notify_telegram" field.
+func (_u *UserUpdateOne) SetNotifyTelegram(v bool) *UserUpdateOne {
+	_u.mutation.SetNotifyTelegram(v)
+	return _u
+}
+
+// SetNillableNotifyTelegram sets the "notify_telegram" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableNotifyTelegram(v *bool) *UserUpdateOne {
+	if v != nil {
+		_u.SetNotifyTelegram(*v)
+	}
+	return _u
+}
+
 // SetStatus sets the "status" field.
 func (_u *UserUpdateOne) SetStatus(v user.Status) *UserUpdateOne {
 	_u.mutation.SetStatus(v)
@@ -915,6 +1090,21 @@ func (_u *UserUpdateOne) AddTokens(v ...*UserToken) *UserUpdateOne {
 	return _u.AddTokenIDs(ids...)
 }
 
+// AddPushSubscriptionIDs adds the "push_subscriptions" edge to the UserPushSubscription entity by IDs.
+func (_u *UserUpdateOne) AddPushSubscriptionIDs(ids ...uuid.UUID) *UserUpdateOne {
+	_u.mutation.AddPushSubscriptionIDs(ids...)
+	return _u
+}
+
+// AddPushSubscriptions adds the "push_subscriptions" edges to the UserPushSubscription entity.
+func (_u *UserUpdateOne) AddPushSubscriptions(v ...*UserPushSubscription) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddPushSubscriptionIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdateOne) Mutation() *UserMutation {
 	return _u.mutation
@@ -981,6 +1171,27 @@ func (_u *UserUpdateOne) RemoveTokens(v ...*UserToken) *UserUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveTokenIDs(ids...)
+}
+
+// ClearPushSubscriptions clears all "push_subscriptions" edges to the UserPushSubscription entity.
+func (_u *UserUpdateOne) ClearPushSubscriptions() *UserUpdateOne {
+	_u.mutation.ClearPushSubscriptions()
+	return _u
+}
+
+// RemovePushSubscriptionIDs removes the "push_subscriptions" edge to UserPushSubscription entities by IDs.
+func (_u *UserUpdateOne) RemovePushSubscriptionIDs(ids ...uuid.UUID) *UserUpdateOne {
+	_u.mutation.RemovePushSubscriptionIDs(ids...)
+	return _u
+}
+
+// RemovePushSubscriptions removes "push_subscriptions" edges to UserPushSubscription entities.
+func (_u *UserUpdateOne) RemovePushSubscriptions(v ...*UserPushSubscription) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemovePushSubscriptionIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -1133,6 +1344,15 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	if value, ok := _u.mutation.Timezone(); ok {
 		_spec.SetField(user.FieldTimezone, field.TypeString, value)
 	}
+	if value, ok := _u.mutation.NotifyPush(); ok {
+		_spec.SetField(user.FieldNotifyPush, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.NotifyWhatsapp(); ok {
+		_spec.SetField(user.FieldNotifyWhatsapp, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.NotifyTelegram(); ok {
+		_spec.SetField(user.FieldNotifyTelegram, field.TypeBool, value)
+	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(user.FieldStatus, field.TypeEnum, value)
 	}
@@ -1279,6 +1499,51 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usertoken.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.PushSubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PushSubscriptionsTable,
+			Columns: []string{user.PushSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userpushsubscription.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedPushSubscriptionsIDs(); len(nodes) > 0 && !_u.mutation.PushSubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PushSubscriptionsTable,
+			Columns: []string{user.PushSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userpushsubscription.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PushSubscriptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PushSubscriptionsTable,
+			Columns: []string{user.PushSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userpushsubscription.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

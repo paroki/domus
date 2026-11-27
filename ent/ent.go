@@ -41,7 +41,9 @@ import (
 	"github.com/paroki/domus/ent/umatsakramen"
 	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/useraccount"
+	"github.com/paroki/domus/ent/usernotificationlog"
 	"github.com/paroki/domus/ent/userotp"
+	"github.com/paroki/domus/ent/userpushsubscription"
 	"github.com/paroki/domus/ent/usersession"
 	"github.com/paroki/domus/ent/usertoken"
 	"github.com/paroki/domus/ent/wilayah"
@@ -105,39 +107,41 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			agentmemory.Table:   agentmemory.ValidColumn,
-			agentmessage.Table:  agentmessage.ValidColumn,
-			agentprovider.Table: agentprovider.ValidColumn,
-			agentsession.Table:  agentsession.ValidColumn,
-			casbinrule.Table:    casbinrule.ValidColumn,
-			event.Table:         event.ValidColumn,
-			eventlagu.Table:     eventlagu.ValidColumn,
-			eventpetugas.Table:  eventpetugas.ValidColumn,
-			eventrsvp.Table:     eventrsvp.ValidColumn,
-			kecamatan.Table:     kecamatan.ValidColumn,
-			keluarga.Table:      keluarga.ValidColumn,
-			kelurahan.Table:     kelurahan.ValidColumn,
-			keuskupan.Table:     keuskupan.ValidColumn,
-			kevikepan.Table:     kevikepan.ValidColumn,
-			kota.Table:          kota.ValidColumn,
-			lingkungan.Table:    lingkungan.ValidColumn,
-			lookup.Table:        lookup.ValidColumn,
-			orginvite.Table:     orginvite.ValidColumn,
-			orgjabatan.Table:    orgjabatan.ValidColumn,
-			orgmember.Table:     orgmember.ValidColumn,
-			orgperiode.Table:    orgperiode.ValidColumn,
-			organization.Table:  organization.ValidColumn,
-			paroki.Table:        paroki.ValidColumn,
-			parokimember.Table:  parokimember.ValidColumn,
-			setting.Table:       setting.ValidColumn,
-			umat.Table:          umat.ValidColumn,
-			umatsakramen.Table:  umatsakramen.ValidColumn,
-			user.Table:          user.ValidColumn,
-			useraccount.Table:   useraccount.ValidColumn,
-			userotp.Table:       userotp.ValidColumn,
-			usersession.Table:   usersession.ValidColumn,
-			usertoken.Table:     usertoken.ValidColumn,
-			wilayah.Table:       wilayah.ValidColumn,
+			agentmemory.Table:          agentmemory.ValidColumn,
+			agentmessage.Table:         agentmessage.ValidColumn,
+			agentprovider.Table:        agentprovider.ValidColumn,
+			agentsession.Table:         agentsession.ValidColumn,
+			casbinrule.Table:           casbinrule.ValidColumn,
+			event.Table:                event.ValidColumn,
+			eventlagu.Table:            eventlagu.ValidColumn,
+			eventpetugas.Table:         eventpetugas.ValidColumn,
+			eventrsvp.Table:            eventrsvp.ValidColumn,
+			kecamatan.Table:            kecamatan.ValidColumn,
+			keluarga.Table:             keluarga.ValidColumn,
+			kelurahan.Table:            kelurahan.ValidColumn,
+			keuskupan.Table:            keuskupan.ValidColumn,
+			kevikepan.Table:            kevikepan.ValidColumn,
+			kota.Table:                 kota.ValidColumn,
+			lingkungan.Table:           lingkungan.ValidColumn,
+			lookup.Table:               lookup.ValidColumn,
+			orginvite.Table:            orginvite.ValidColumn,
+			orgjabatan.Table:           orgjabatan.ValidColumn,
+			orgmember.Table:            orgmember.ValidColumn,
+			orgperiode.Table:           orgperiode.ValidColumn,
+			organization.Table:         organization.ValidColumn,
+			paroki.Table:               paroki.ValidColumn,
+			parokimember.Table:         parokimember.ValidColumn,
+			setting.Table:              setting.ValidColumn,
+			umat.Table:                 umat.ValidColumn,
+			umatsakramen.Table:         umatsakramen.ValidColumn,
+			user.Table:                 user.ValidColumn,
+			useraccount.Table:          useraccount.ValidColumn,
+			usernotificationlog.Table:  usernotificationlog.ValidColumn,
+			userotp.Table:              userotp.ValidColumn,
+			userpushsubscription.Table: userpushsubscription.ValidColumn,
+			usersession.Table:          usersession.ValidColumn,
+			usertoken.Table:            usertoken.ValidColumn,
+			wilayah.Table:              wilayah.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

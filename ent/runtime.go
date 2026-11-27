@@ -36,7 +36,9 @@ import (
 	"github.com/paroki/domus/ent/umatsakramen"
 	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/useraccount"
+	"github.com/paroki/domus/ent/usernotificationlog"
 	"github.com/paroki/domus/ent/userotp"
+	"github.com/paroki/domus/ent/userpushsubscription"
 	"github.com/paroki/domus/ent/usersession"
 	"github.com/paroki/domus/ent/usertoken"
 	"github.com/paroki/domus/ent/wilayah"
@@ -922,8 +924,20 @@ func init() {
 	user.DefaultTimezone = userDescTimezone.Default.(string)
 	// user.TimezoneValidator is a validator for the "timezone" field. It is called by the builders before save.
 	user.TimezoneValidator = userDescTimezone.Validators[0].(func(string) error)
+	// userDescNotifyPush is the schema descriptor for notify_push field.
+	userDescNotifyPush := userFields[7].Descriptor()
+	// user.DefaultNotifyPush holds the default value on creation for the notify_push field.
+	user.DefaultNotifyPush = userDescNotifyPush.Default.(bool)
+	// userDescNotifyWhatsapp is the schema descriptor for notify_whatsapp field.
+	userDescNotifyWhatsapp := userFields[8].Descriptor()
+	// user.DefaultNotifyWhatsapp holds the default value on creation for the notify_whatsapp field.
+	user.DefaultNotifyWhatsapp = userDescNotifyWhatsapp.Default.(bool)
+	// userDescNotifyTelegram is the schema descriptor for notify_telegram field.
+	userDescNotifyTelegram := userFields[9].Descriptor()
+	// user.DefaultNotifyTelegram holds the default value on creation for the notify_telegram field.
+	user.DefaultNotifyTelegram = userDescNotifyTelegram.Default.(bool)
 	// userDescOnboarded is the schema descriptor for onboarded field.
-	userDescOnboarded := userFields[8].Descriptor()
+	userDescOnboarded := userFields[11].Descriptor()
 	// user.DefaultOnboarded holds the default value on creation for the onboarded field.
 	user.DefaultOnboarded = userDescOnboarded.Default.(bool)
 	// userDescID is the schema descriptor for id field.
@@ -959,6 +973,35 @@ func init() {
 	useraccountDescID := useraccountMixinFields0[0].Descriptor()
 	// useraccount.DefaultID holds the default value on creation for the id field.
 	useraccount.DefaultID = useraccountDescID.Default.(func() uuid.UUID)
+	usernotificationlogMixin := schema.UserNotificationLog{}.Mixin()
+	usernotificationlogMixinFields0 := usernotificationlogMixin[0].Fields()
+	_ = usernotificationlogMixinFields0
+	usernotificationlogMixinFields1 := usernotificationlogMixin[1].Fields()
+	_ = usernotificationlogMixinFields1
+	usernotificationlogFields := schema.UserNotificationLog{}.Fields()
+	_ = usernotificationlogFields
+	// usernotificationlogDescCreatedAt is the schema descriptor for created_at field.
+	usernotificationlogDescCreatedAt := usernotificationlogMixinFields1[0].Descriptor()
+	// usernotificationlog.DefaultCreatedAt holds the default value on creation for the created_at field.
+	usernotificationlog.DefaultCreatedAt = usernotificationlogDescCreatedAt.Default.(func() time.Time)
+	// usernotificationlogDescUpdatedAt is the schema descriptor for updated_at field.
+	usernotificationlogDescUpdatedAt := usernotificationlogMixinFields1[1].Descriptor()
+	// usernotificationlog.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	usernotificationlog.DefaultUpdatedAt = usernotificationlogDescUpdatedAt.Default.(func() time.Time)
+	// usernotificationlog.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	usernotificationlog.UpdateDefaultUpdatedAt = usernotificationlogDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// usernotificationlogDescKind is the schema descriptor for kind field.
+	usernotificationlogDescKind := usernotificationlogFields[2].Descriptor()
+	// usernotificationlog.KindValidator is a validator for the "kind" field. It is called by the builders before save.
+	usernotificationlog.KindValidator = usernotificationlogDescKind.Validators[0].(func(string) error)
+	// usernotificationlogDescWindow is the schema descriptor for window field.
+	usernotificationlogDescWindow := usernotificationlogFields[4].Descriptor()
+	// usernotificationlog.WindowValidator is a validator for the "window" field. It is called by the builders before save.
+	usernotificationlog.WindowValidator = usernotificationlogDescWindow.Validators[0].(func(string) error)
+	// usernotificationlogDescID is the schema descriptor for id field.
+	usernotificationlogDescID := usernotificationlogMixinFields0[0].Descriptor()
+	// usernotificationlog.DefaultID holds the default value on creation for the id field.
+	usernotificationlog.DefaultID = usernotificationlogDescID.Default.(func() uuid.UUID)
 	userotpMixin := schema.UserOTP{}.Mixin()
 	userotpMixinFields0 := userotpMixin[0].Fields()
 	_ = userotpMixinFields0
@@ -998,6 +1041,43 @@ func init() {
 	userotpDescID := userotpMixinFields0[0].Descriptor()
 	// userotp.DefaultID holds the default value on creation for the id field.
 	userotp.DefaultID = userotpDescID.Default.(func() uuid.UUID)
+	userpushsubscriptionMixin := schema.UserPushSubscription{}.Mixin()
+	userpushsubscriptionMixinFields0 := userpushsubscriptionMixin[0].Fields()
+	_ = userpushsubscriptionMixinFields0
+	userpushsubscriptionMixinFields1 := userpushsubscriptionMixin[1].Fields()
+	_ = userpushsubscriptionMixinFields1
+	userpushsubscriptionFields := schema.UserPushSubscription{}.Fields()
+	_ = userpushsubscriptionFields
+	// userpushsubscriptionDescCreatedAt is the schema descriptor for created_at field.
+	userpushsubscriptionDescCreatedAt := userpushsubscriptionMixinFields1[0].Descriptor()
+	// userpushsubscription.DefaultCreatedAt holds the default value on creation for the created_at field.
+	userpushsubscription.DefaultCreatedAt = userpushsubscriptionDescCreatedAt.Default.(func() time.Time)
+	// userpushsubscriptionDescUpdatedAt is the schema descriptor for updated_at field.
+	userpushsubscriptionDescUpdatedAt := userpushsubscriptionMixinFields1[1].Descriptor()
+	// userpushsubscription.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	userpushsubscription.DefaultUpdatedAt = userpushsubscriptionDescUpdatedAt.Default.(func() time.Time)
+	// userpushsubscription.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	userpushsubscription.UpdateDefaultUpdatedAt = userpushsubscriptionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// userpushsubscriptionDescEndpoint is the schema descriptor for endpoint field.
+	userpushsubscriptionDescEndpoint := userpushsubscriptionFields[2].Descriptor()
+	// userpushsubscription.EndpointValidator is a validator for the "endpoint" field. It is called by the builders before save.
+	userpushsubscription.EndpointValidator = userpushsubscriptionDescEndpoint.Validators[0].(func(string) error)
+	// userpushsubscriptionDescP256dh is the schema descriptor for p256dh field.
+	userpushsubscriptionDescP256dh := userpushsubscriptionFields[3].Descriptor()
+	// userpushsubscription.P256dhValidator is a validator for the "p256dh" field. It is called by the builders before save.
+	userpushsubscription.P256dhValidator = userpushsubscriptionDescP256dh.Validators[0].(func(string) error)
+	// userpushsubscriptionDescAuth is the schema descriptor for auth field.
+	userpushsubscriptionDescAuth := userpushsubscriptionFields[4].Descriptor()
+	// userpushsubscription.AuthValidator is a validator for the "auth" field. It is called by the builders before save.
+	userpushsubscription.AuthValidator = userpushsubscriptionDescAuth.Validators[0].(func(string) error)
+	// userpushsubscriptionDescUserAgent is the schema descriptor for user_agent field.
+	userpushsubscriptionDescUserAgent := userpushsubscriptionFields[5].Descriptor()
+	// userpushsubscription.DefaultUserAgent holds the default value on creation for the user_agent field.
+	userpushsubscription.DefaultUserAgent = userpushsubscriptionDescUserAgent.Default.(string)
+	// userpushsubscriptionDescID is the schema descriptor for id field.
+	userpushsubscriptionDescID := userpushsubscriptionMixinFields0[0].Descriptor()
+	// userpushsubscription.DefaultID holds the default value on creation for the id field.
+	userpushsubscription.DefaultID = userpushsubscriptionDescID.Default.(func() uuid.UUID)
 	usersessionMixin := schema.UserSession{}.Mixin()
 	usersessionMixinFields0 := usersessionMixin[0].Fields()
 	_ = usersessionMixinFields0

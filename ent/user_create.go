@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent/user"
 	"github.com/paroki/domus/ent/useraccount"
+	"github.com/paroki/domus/ent/userpushsubscription"
 	"github.com/paroki/domus/ent/usersession"
 	"github.com/paroki/domus/ent/usertoken"
 )
@@ -148,6 +149,48 @@ func (_c *UserCreate) SetNillableTimezone(v *string) *UserCreate {
 	return _c
 }
 
+// SetNotifyPush sets the "notify_push" field.
+func (_c *UserCreate) SetNotifyPush(v bool) *UserCreate {
+	_c.mutation.SetNotifyPush(v)
+	return _c
+}
+
+// SetNillableNotifyPush sets the "notify_push" field if the given value is not nil.
+func (_c *UserCreate) SetNillableNotifyPush(v *bool) *UserCreate {
+	if v != nil {
+		_c.SetNotifyPush(*v)
+	}
+	return _c
+}
+
+// SetNotifyWhatsapp sets the "notify_whatsapp" field.
+func (_c *UserCreate) SetNotifyWhatsapp(v bool) *UserCreate {
+	_c.mutation.SetNotifyWhatsapp(v)
+	return _c
+}
+
+// SetNillableNotifyWhatsapp sets the "notify_whatsapp" field if the given value is not nil.
+func (_c *UserCreate) SetNillableNotifyWhatsapp(v *bool) *UserCreate {
+	if v != nil {
+		_c.SetNotifyWhatsapp(*v)
+	}
+	return _c
+}
+
+// SetNotifyTelegram sets the "notify_telegram" field.
+func (_c *UserCreate) SetNotifyTelegram(v bool) *UserCreate {
+	_c.mutation.SetNotifyTelegram(v)
+	return _c
+}
+
+// SetNillableNotifyTelegram sets the "notify_telegram" field if the given value is not nil.
+func (_c *UserCreate) SetNillableNotifyTelegram(v *bool) *UserCreate {
+	if v != nil {
+		_c.SetNotifyTelegram(*v)
+	}
+	return _c
+}
+
 // SetStatus sets the "status" field.
 func (_c *UserCreate) SetStatus(v user.Status) *UserCreate {
 	_c.mutation.SetStatus(v)
@@ -263,6 +306,21 @@ func (_c *UserCreate) AddTokens(v ...*UserToken) *UserCreate {
 	return _c.AddTokenIDs(ids...)
 }
 
+// AddPushSubscriptionIDs adds the "push_subscriptions" edge to the UserPushSubscription entity by IDs.
+func (_c *UserCreate) AddPushSubscriptionIDs(ids ...uuid.UUID) *UserCreate {
+	_c.mutation.AddPushSubscriptionIDs(ids...)
+	return _c
+}
+
+// AddPushSubscriptions adds the "push_subscriptions" edges to the UserPushSubscription entity.
+func (_c *UserCreate) AddPushSubscriptions(v ...*UserPushSubscription) *UserCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddPushSubscriptionIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_c *UserCreate) Mutation() *UserMutation {
 	return _c.mutation
@@ -309,6 +367,18 @@ func (_c *UserCreate) defaults() {
 	if _, ok := _c.mutation.Timezone(); !ok {
 		v := user.DefaultTimezone
 		_c.mutation.SetTimezone(v)
+	}
+	if _, ok := _c.mutation.NotifyPush(); !ok {
+		v := user.DefaultNotifyPush
+		_c.mutation.SetNotifyPush(v)
+	}
+	if _, ok := _c.mutation.NotifyWhatsapp(); !ok {
+		v := user.DefaultNotifyWhatsapp
+		_c.mutation.SetNotifyWhatsapp(v)
+	}
+	if _, ok := _c.mutation.NotifyTelegram(); !ok {
+		v := user.DefaultNotifyTelegram
+		_c.mutation.SetNotifyTelegram(v)
 	}
 	if _, ok := _c.mutation.Status(); !ok {
 		v := user.DefaultStatus
@@ -360,6 +430,15 @@ func (_c *UserCreate) check() error {
 		if err := user.TimezoneValidator(v); err != nil {
 			return &ValidationError{Name: "timezone", err: fmt.Errorf(`ent: validator failed for field "User.timezone": %w`, err)}
 		}
+	}
+	if _, ok := _c.mutation.NotifyPush(); !ok {
+		return &ValidationError{Name: "notify_push", err: errors.New(`ent: missing required field "User.notify_push"`)}
+	}
+	if _, ok := _c.mutation.NotifyWhatsapp(); !ok {
+		return &ValidationError{Name: "notify_whatsapp", err: errors.New(`ent: missing required field "User.notify_whatsapp"`)}
+	}
+	if _, ok := _c.mutation.NotifyTelegram(); !ok {
+		return &ValidationError{Name: "notify_telegram", err: errors.New(`ent: missing required field "User.notify_telegram"`)}
 	}
 	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "User.status"`)}
@@ -447,6 +526,18 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldTimezone, field.TypeString, value)
 		_node.Timezone = value
 	}
+	if value, ok := _c.mutation.NotifyPush(); ok {
+		_spec.SetField(user.FieldNotifyPush, field.TypeBool, value)
+		_node.NotifyPush = value
+	}
+	if value, ok := _c.mutation.NotifyWhatsapp(); ok {
+		_spec.SetField(user.FieldNotifyWhatsapp, field.TypeBool, value)
+		_node.NotifyWhatsapp = value
+	}
+	if value, ok := _c.mutation.NotifyTelegram(); ok {
+		_spec.SetField(user.FieldNotifyTelegram, field.TypeBool, value)
+		_node.NotifyTelegram = value
+	}
 	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(user.FieldStatus, field.TypeEnum, value)
 		_node.Status = value
@@ -504,6 +595,22 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usertoken.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.PushSubscriptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PushSubscriptionsTable,
+			Columns: []string{user.PushSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userpushsubscription.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

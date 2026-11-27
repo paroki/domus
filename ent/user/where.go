@@ -101,6 +101,21 @@ func Timezone(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldTimezone, v))
 }
 
+// NotifyPush applies equality check predicate on the "notify_push" field. It's identical to NotifyPushEQ.
+func NotifyPush(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldNotifyPush, v))
+}
+
+// NotifyWhatsapp applies equality check predicate on the "notify_whatsapp" field. It's identical to NotifyWhatsappEQ.
+func NotifyWhatsapp(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldNotifyWhatsapp, v))
+}
+
+// NotifyTelegram applies equality check predicate on the "notify_telegram" field. It's identical to NotifyTelegramEQ.
+func NotifyTelegram(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldNotifyTelegram, v))
+}
+
 // Onboarded applies equality check predicate on the "onboarded" field. It's identical to OnboardedEQ.
 func Onboarded(v bool) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldOnboarded, v))
@@ -696,6 +711,36 @@ func TimezoneContainsFold(v string) predicate.User {
 	return predicate.User(sql.FieldContainsFold(FieldTimezone, v))
 }
 
+// NotifyPushEQ applies the EQ predicate on the "notify_push" field.
+func NotifyPushEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldNotifyPush, v))
+}
+
+// NotifyPushNEQ applies the NEQ predicate on the "notify_push" field.
+func NotifyPushNEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldNotifyPush, v))
+}
+
+// NotifyWhatsappEQ applies the EQ predicate on the "notify_whatsapp" field.
+func NotifyWhatsappEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldNotifyWhatsapp, v))
+}
+
+// NotifyWhatsappNEQ applies the NEQ predicate on the "notify_whatsapp" field.
+func NotifyWhatsappNEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldNotifyWhatsapp, v))
+}
+
+// NotifyTelegramEQ applies the EQ predicate on the "notify_telegram" field.
+func NotifyTelegramEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldNotifyTelegram, v))
+}
+
+// NotifyTelegramNEQ applies the NEQ predicate on the "notify_telegram" field.
+func NotifyTelegramNEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldNotifyTelegram, v))
+}
+
 // StatusEQ applies the EQ predicate on the "status" field.
 func StatusEQ(v Status) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldStatus, v))
@@ -887,6 +932,29 @@ func HasTokens() predicate.User {
 func HasTokensWith(preds ...predicate.UserToken) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := newTokensStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasPushSubscriptions applies the HasEdge predicate on the "push_subscriptions" edge.
+func HasPushSubscriptions() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, PushSubscriptionsTable, PushSubscriptionsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPushSubscriptionsWith applies the HasEdge predicate on the "push_subscriptions" edge with a given conditions (other predicates).
+func HasPushSubscriptionsWith(preds ...predicate.UserPushSubscription) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newPushSubscriptionsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

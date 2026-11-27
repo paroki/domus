@@ -2445,6 +2445,21 @@
                 },
                 "type": "object"
             },
+            "domain.PushSubscriptionKeys": {
+                "properties": {
+                    "auth": {
+                        "type": "string"
+                    },
+                    "p256dh": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "auth",
+                    "p256dh"
+                ],
+                "type": "object"
+            },
             "domain.RedeemOrgInviteResponse": {
                 "properties": {
                     "membership": {
@@ -3002,6 +3017,21 @@
                 },
                 "type": "object"
             },
+            "domain.SubscribePushRequest": {
+                "properties": {
+                    "endpoint": {
+                        "type": "string"
+                    },
+                    "keys": {
+                        "$ref": "#/components/schemas/domain.PushSubscriptionKeys"
+                    }
+                },
+                "required": [
+                    "endpoint",
+                    "keys"
+                ],
+                "type": "object"
+            },
             "domain.SwitchSessionParokiRequest": {
                 "properties": {
                     "activeParokiId": {
@@ -3427,6 +3457,17 @@
                 },
                 "type": "object"
             },
+            "domain.UnsubscribePushRequest": {
+                "properties": {
+                    "endpoint": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "endpoint"
+                ],
+                "type": "object"
+            },
             "domain.UpdateAgentProviderRequest": {
                 "properties": {
                     "apiKey": {
@@ -3777,6 +3818,15 @@
                     "name": {
                         "minLength": 1,
                         "type": "string"
+                    },
+                    "notifyPush": {
+                        "type": "boolean"
+                    },
+                    "notifyTelegram": {
+                        "type": "boolean"
+                    },
+                    "notifyWhatsapp": {
+                        "type": "boolean"
                     },
                     "onboarded": {
                         "type": "boolean"
@@ -4418,11 +4468,23 @@
                     "name": {
                         "type": "string"
                     },
+                    "notifyPush": {
+                        "type": "boolean"
+                    },
+                    "notifyTelegram": {
+                        "type": "boolean"
+                    },
+                    "notifyWhatsapp": {
+                        "type": "boolean"
+                    },
                     "onboarded": {
                         "type": "boolean"
                     },
                     "phone": {
                         "type": "string"
+                    },
+                    "pushSubscriptionCount": {
+                        "type": "integer"
                     },
                     "roleDetails": {
                         "items": {
@@ -4509,6 +4571,14 @@
                         "type": "string"
                     },
                     "tokenPrefix": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "domain.VAPIDPublicKeyResponse": {
+                "properties": {
+                    "publicKey": {
                         "type": "string"
                     }
                 },
@@ -5686,6 +5756,20 @@
                 "properties": {
                     "data": {
                         "$ref": "#/components/schemas/domain.UserResponse"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/httpx.ErrorPayload"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/httpx.Meta"
+                    }
+                },
+                "type": "object"
+            },
+            "httpx.Envelope-domain_VAPIDPublicKeyResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/domain.VAPIDPublicKeyResponse"
                     },
                     "error": {
                         "$ref": "#/components/schemas/httpx.ErrorPayload"
@@ -7098,6 +7182,38 @@
                     }
                 },
                 "summary": "List enabled auth providers",
+                "tags": [
+                    "Auth"
+                ]
+            }
+        },
+        "/auth/push/vapid-public-key": {
+            "get": {
+                "description": "Returns the base64url-encoded ECDSA P-256 VAPID public key for PushManager.subscribe.",
+                "operationId": "getPushVAPIDPublicKey",
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-domain_VAPIDPublicKeyResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    }
+                },
+                "summary": "Get VAPID public key",
                 "tags": [
                     "Auth"
                 ]
@@ -8950,6 +9066,137 @@
                     }
                 },
                 "summary": "Unlink a connected account",
+                "tags": [
+                    "Me"
+                ]
+            }
+        },
+        "/me/push/subscribe": {
+            "post": {
+                "description": "Validates and upserts a browser PushSubscription for the authenticated user and current session.",
+                "operationId": "subscribeMePush",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.SubscribePushRequest",
+                                "summary": "body",
+                                "description": "Web Push subscription payload"
+                            }
+                        }
+                    },
+                    "description": "Web Push subscription payload",
+                    "required": true
+                },
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Subscribe to Web Push notifications",
+                "tags": [
+                    "Me"
+                ]
+            }
+        },
+        "/me/push/test": {
+            "post": {
+                "description": "Dispatches a test notification to the authenticated user's enabled push, WhatsApp, or Telegram channels.",
+                "operationId": "testMePush",
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    }
+                },
+                "summary": "Send test notification",
+                "tags": [
+                    "Me"
+                ]
+            }
+        },
+        "/me/push/unsubscribe": {
+            "post": {
+                "description": "Deletes the matching Web Push subscription owned by the authenticated user.",
+                "operationId": "unsubscribeMePush",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.UnsubscribePushRequest",
+                                "summary": "body",
+                                "description": "Web Push endpoint to remove"
+                            }
+                        }
+                    },
+                    "description": "Web Push endpoint to remove",
+                    "required": true
+                },
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpx.Envelope-any"
+                                }
+                            }
+                        },
+                        "description": "Unprocessable Entity"
+                    }
+                },
+                "summary": "Unsubscribe from Web Push notifications",
                 "tags": [
                     "Me"
                 ]

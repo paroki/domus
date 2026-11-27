@@ -21,6 +21,7 @@ var (
 	ErrLastAccountRequired    = errx.Conflict("USER_LAST_ACCOUNT_REQUIRED", "Cannot unlink the last authentication account.")
 	ErrUserAccountConflict    = errx.Conflict("USER_ACCOUNT_CONFLICT", "Account is already linked to another user.")
 	ErrAuthChannelDisabled    = errx.Invalid("AUTH_CHANNEL_DISABLED", "Requested OTP channel is not configured.")
+	ErrPushNotConfigured      = errx.Invalid("PUSH_NOT_CONFIGURED", "Web Push VAPID is not configured.")
 )
 
 // ValidationError constructs a 422 VALIDATION_ERROR domain error for a single field.

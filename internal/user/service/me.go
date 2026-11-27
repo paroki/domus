@@ -127,7 +127,22 @@ func (s *Service) UpdateMe(ctx context.Context, p authx.Principal, req domain.Up
 		avatarPtr = &trimmed
 	}
 
-	u, err := s.repo.UpdateUser(ctx, p.UserID, namePtr, phonePtr, genderPtr, birthDatePtr, avatarPtr, timezonePtr, req.DefaultParokiID, nil, req.Onboarded)
+	u, err := s.repo.UpdateUser(
+		ctx,
+		p.UserID,
+		namePtr,
+		phonePtr,
+		genderPtr,
+		birthDatePtr,
+		avatarPtr,
+		timezonePtr,
+		req.DefaultParokiID,
+		nil,
+		req.Onboarded,
+		req.NotifyPush,
+		req.NotifyWhatsapp,
+		req.NotifyTelegram,
+	)
 	if ent.IsNotFound(err) {
 		return domain.UserResponse{}, domain.ErrUserNotFound
 	}
@@ -150,6 +165,9 @@ func (s *Service) enrichMeResponse(ctx context.Context, u *ent.User, p authx.Pri
 	res.Roles = roles
 	res.RoleDetails = s.describeRoles(roles)
 	res.LinkedProviders = providers
+	if count, countErr := s.repo.CountPushSubscriptionsByUserID(ctx, u.ID); countErr == nil {
+		res.PushSubscriptionCount = count
+	}
 	if p.ParokiID != uuid.Nil {
 		pid := p.ParokiID
 		res.ActiveParokiID = &pid

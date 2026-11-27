@@ -1185,6 +1185,9 @@ var (
 		{Name: "birth_date", Type: field.TypeString, Nullable: true},
 		{Name: "avatar_url", Type: field.TypeString, Nullable: true},
 		{Name: "timezone", Type: field.TypeString, Default: "Asia/Makassar"},
+		{Name: "notify_push", Type: field.TypeBool, Default: true},
+		{Name: "notify_whatsapp", Type: field.TypeBool, Default: true},
+		{Name: "notify_telegram", Type: field.TypeBool, Default: true},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "disabled"}, Default: "active"},
 		{Name: "onboarded", Type: field.TypeBool, Default: false},
 		{Name: "default_paroki_id", Type: field.TypeUUID, Nullable: true},
@@ -1204,7 +1207,7 @@ var (
 			{
 				Name:    "user_status",
 				Unique:  false,
-				Columns: []*schema.Column{UsersColumns[11]},
+				Columns: []*schema.Column{UsersColumns[14]},
 			},
 		},
 	}
@@ -1248,6 +1251,36 @@ var (
 			},
 		},
 	}
+	// UserNotificationLogsColumns holds the columns for the "user_notification_logs" table.
+	UserNotificationLogsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "user_id", Type: field.TypeUUID},
+		{Name: "paroki_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "kind", Type: field.TypeString},
+		{Name: "ref_id", Type: field.TypeUUID},
+		{Name: "window", Type: field.TypeString},
+		{Name: "sent_at", Type: field.TypeTime},
+	}
+	// UserNotificationLogsTable holds the schema information for the "user_notification_logs" table.
+	UserNotificationLogsTable = &schema.Table{
+		Name:       "user_notification_logs",
+		Columns:    UserNotificationLogsColumns,
+		PrimaryKey: []*schema.Column{UserNotificationLogsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "usernotificationlog_user_id_kind_ref_id_window",
+				Unique:  true,
+				Columns: []*schema.Column{UserNotificationLogsColumns[3], UserNotificationLogsColumns[5], UserNotificationLogsColumns[6], UserNotificationLogsColumns[7]},
+			},
+			{
+				Name:    "usernotificationlog_sent_at",
+				Unique:  false,
+				Columns: []*schema.Column{UserNotificationLogsColumns[8]},
+			},
+		},
+	}
 	// UserOtpsColumns holds the columns for the "user_otps" table.
 	UserOtpsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -1279,6 +1312,50 @@ var (
 				Name:    "userotp_expires_at",
 				Unique:  false,
 				Columns: []*schema.Column{UserOtpsColumns[7]},
+			},
+		},
+	}
+	// UserPushSubscriptionsColumns holds the columns for the "user_push_subscriptions" table.
+	UserPushSubscriptionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "session_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "endpoint", Type: field.TypeString, Unique: true},
+		{Name: "p256dh", Type: field.TypeString},
+		{Name: "auth", Type: field.TypeString},
+		{Name: "user_agent", Type: field.TypeString, Default: ""},
+		{Name: "last_used_at", Type: field.TypeTime, Nullable: true},
+		{Name: "user_id", Type: field.TypeUUID},
+	}
+	// UserPushSubscriptionsTable holds the schema information for the "user_push_subscriptions" table.
+	UserPushSubscriptionsTable = &schema.Table{
+		Name:       "user_push_subscriptions",
+		Columns:    UserPushSubscriptionsColumns,
+		PrimaryKey: []*schema.Column{UserPushSubscriptionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_push_subscriptions_users_push_subscriptions",
+				Columns:    []*schema.Column{UserPushSubscriptionsColumns[9]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "userpushsubscription_endpoint",
+				Unique:  true,
+				Columns: []*schema.Column{UserPushSubscriptionsColumns[4]},
+			},
+			{
+				Name:    "userpushsubscription_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{UserPushSubscriptionsColumns[9]},
+			},
+			{
+				Name:    "userpushsubscription_session_id",
+				Unique:  false,
+				Columns: []*schema.Column{UserPushSubscriptionsColumns[3]},
 			},
 		},
 	}
@@ -1430,7 +1507,9 @@ var (
 		UmatSakramenTable,
 		UsersTable,
 		UserAccountsTable,
+		UserNotificationLogsTable,
 		UserOtpsTable,
+		UserPushSubscriptionsTable,
 		UserSessionsTable,
 		UserTokensTable,
 		WilayahTable,
@@ -1528,6 +1607,7 @@ func init() {
 	UserOtpsTable.Annotation = &entsql.Annotation{
 		Table: "user_otps",
 	}
+	UserPushSubscriptionsTable.ForeignKeys[0].RefTable = UsersTable
 	UserSessionsTable.ForeignKeys[0].RefTable = UsersTable
 	UserTokensTable.ForeignKeys[0].RefTable = UsersTable
 	WilayahTable.ForeignKeys[0].RefTable = ParokiTable

@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"context"
 	"time"
 
 	"github.com/google/uuid"
@@ -40,24 +41,28 @@ type VerifyOTPRequest struct {
 
 // UserResponse is the public API representation of a User.
 type UserResponse struct {
-	ID              uuid.UUID              `json:"id"`
-	Email           string                 `json:"email"`
-	Name            string                 `json:"name"`
-	Phone           *string                `json:"phone,omitempty"`
-	Gender          *string                `json:"gender,omitempty"`
-	BirthDate       *string                `json:"birthDate,omitempty"`
-	AvatarURL       *string                `json:"avatarUrl,omitempty"`
-	Timezone        string                 `json:"timezone"`
-	Status          string                 `json:"status"`
-	Onboarded       bool                   `json:"onboarded"`
-	LinkedProviders []string               `json:"linkedProviders,omitempty"`
-	ActiveParokiID  *uuid.UUID             `json:"activeParokiId,omitempty"`
-	DefaultParokiID *uuid.UUID             `json:"defaultParokiId,omitempty"`
-	Roles           []string               `json:"roles,omitempty"`
-	RoleDetails     []authz.RoleDescriptor `json:"roleDetails,omitempty"`
-	LastLoginAt     *time.Time             `json:"lastLoginAt,omitempty"`
-	CreatedAt       time.Time              `json:"createdAt"`
-	UpdatedAt       time.Time              `json:"updatedAt"`
+	ID                    uuid.UUID              `json:"id"`
+	Email                 string                 `json:"email"`
+	Name                  string                 `json:"name"`
+	Phone                 *string                `json:"phone,omitempty"`
+	Gender                *string                `json:"gender,omitempty"`
+	BirthDate             *string                `json:"birthDate,omitempty"`
+	AvatarURL             *string                `json:"avatarUrl,omitempty"`
+	Timezone              string                 `json:"timezone"`
+	NotifyPush            bool                   `json:"notifyPush"`
+	NotifyWhatsapp        bool                   `json:"notifyWhatsapp"`
+	NotifyTelegram        bool                   `json:"notifyTelegram"`
+	PushSubscriptionCount int                    `json:"pushSubscriptionCount"`
+	Status                string                 `json:"status"`
+	Onboarded             bool                   `json:"onboarded"`
+	LinkedProviders       []string               `json:"linkedProviders,omitempty"`
+	ActiveParokiID        *uuid.UUID             `json:"activeParokiId,omitempty"`
+	DefaultParokiID       *uuid.UUID             `json:"defaultParokiId,omitempty"`
+	Roles                 []string               `json:"roles,omitempty"`
+	RoleDetails           []authz.RoleDescriptor `json:"roleDetails,omitempty"`
+	LastLoginAt           *time.Time             `json:"lastLoginAt,omitempty"`
+	CreatedAt             time.Time              `json:"createdAt"`
+	UpdatedAt             time.Time              `json:"updatedAt"`
 }
 
 // AuthSessionResponse is returned upon successful OTP verification.
@@ -77,6 +82,9 @@ type UpdateMeRequest struct {
 	Timezone        *string    `json:"timezone,omitempty"`
 	DefaultParokiID *uuid.UUID `json:"defaultParokiId,omitempty"`
 	Onboarded       *bool      `json:"onboarded,omitempty"`
+	NotifyPush      *bool      `json:"notifyPush,omitempty"`
+	NotifyWhatsapp  *bool      `json:"notifyWhatsapp,omitempty"`
+	NotifyTelegram  *bool      `json:"notifyTelegram,omitempty"`
 }
 
 // LinkAccountOTPRequest requests a 6-digit OTP to link a WhatsApp account to the current user.
@@ -196,4 +204,41 @@ type AdminUpdateUserRequest struct {
 	Phone        *string `json:"phone,omitempty"`
 	Status       *string `json:"status,omitempty" validate:"omitempty,oneof=active disabled"`
 	IsSuperAdmin *bool   `json:"isSuperAdmin,omitempty"`
+}
+
+// VAPIDPublicKeyResponse returns the application's VAPID public key for Web Push subscription.
+type VAPIDPublicKeyResponse struct {
+	PublicKey string `json:"publicKey"`
+}
+
+// PushSubscriptionKeys holds the browser PushSubscription.getKey() base64url secrets.
+type PushSubscriptionKeys struct {
+	P256DH string `json:"p256dh" validate:"required"`
+	Auth   string `json:"auth" validate:"required"`
+}
+
+// SubscribePushRequest registers or updates a browser Web Push subscription for the current user.
+type SubscribePushRequest struct {
+	Endpoint string               `json:"endpoint" validate:"required"`
+	Keys     PushSubscriptionKeys `json:"keys" validate:"required"`
+}
+
+// UnsubscribePushRequest removes a browser Web Push subscription for the current user.
+type UnsubscribePushRequest struct {
+	Endpoint string `json:"endpoint" validate:"required"`
+}
+
+// NotificationPayload describes a notification message dispatched across push, WhatsApp, or Telegram.
+type NotificationPayload struct {
+	Title string `json:"title"`
+	Body  string `json:"body"`
+	Icon  string `json:"icon,omitempty"`
+	Badge string `json:"badge,omitempty"`
+	Tag   string `json:"tag,omitempty"`
+	URL   string `json:"url,omitempty"`
+}
+
+// NotificationSender delivers a notification payload to a channel-specific target.
+type NotificationSender interface {
+	SendNotification(ctx context.Context, target string, payload NotificationPayload) error
 }

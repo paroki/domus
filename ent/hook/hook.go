@@ -357,6 +357,18 @@ func (f UserAccountFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value,
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserAccountMutation", m)
 }
 
+// The UserNotificationLogFunc type is an adapter to allow the use of ordinary
+// function as UserNotificationLog mutator.
+type UserNotificationLogFunc func(context.Context, *ent.UserNotificationLogMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f UserNotificationLogFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.UserNotificationLogMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserNotificationLogMutation", m)
+}
+
 // The UserOTPFunc type is an adapter to allow the use of ordinary
 // function as UserOTP mutator.
 type UserOTPFunc func(context.Context, *ent.UserOTPMutation) (ent.Value, error)
@@ -367,6 +379,18 @@ func (f UserOTPFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, err
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserOTPMutation", m)
+}
+
+// The UserPushSubscriptionFunc type is an adapter to allow the use of ordinary
+// function as UserPushSubscription mutator.
+type UserPushSubscriptionFunc func(context.Context, *ent.UserPushSubscriptionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f UserPushSubscriptionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.UserPushSubscriptionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserPushSubscriptionMutation", m)
 }
 
 // The UserSessionFunc type is an adapter to allow the use of ordinary

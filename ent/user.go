@@ -38,6 +38,12 @@ type User struct {
 	AvatarURL *string `json:"avatar_url,omitempty"`
 	// Timezone holds the value of the "timezone" field.
 	Timezone string `json:"timezone,omitempty"`
+	// NotifyPush holds the value of the "notify_push" field.
+	NotifyPush bool `json:"notify_push,omitempty"`
+	// NotifyWhatsapp holds the value of the "notify_whatsapp" field.
+	NotifyWhatsapp bool `json:"notify_whatsapp,omitempty"`
+	// NotifyTelegram holds the value of the "notify_telegram" field.
+	NotifyTelegram bool `json:"notify_telegram,omitempty"`
 	// Status holds the value of the "status" field.
 	Status user.Status `json:"status,omitempty"`
 	// Onboarded holds the value of the "onboarded" field.
@@ -60,9 +66,11 @@ type UserEdges struct {
 	Sessions []*UserSession `json:"sessions,omitempty"`
 	// Tokens holds the value of the tokens edge.
 	Tokens []*UserToken `json:"tokens,omitempty"`
+	// PushSubscriptions holds the value of the push_subscriptions edge.
+	PushSubscriptions []*UserPushSubscription `json:"push_subscriptions,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 }
 
 // AccountsOrErr returns the Accounts value or an error if the edge
@@ -92,6 +100,15 @@ func (e UserEdges) TokensOrErr() ([]*UserToken, error) {
 	return nil, &NotLoadedError{edge: "tokens"}
 }
 
+// PushSubscriptionsOrErr returns the PushSubscriptions value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) PushSubscriptionsOrErr() ([]*UserPushSubscription, error) {
+	if e.loadedTypes[3] {
+		return e.PushSubscriptions, nil
+	}
+	return nil, &NotLoadedError{edge: "push_subscriptions"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -99,7 +116,7 @@ func (*User) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case user.FieldDefaultParokiID:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
-		case user.FieldOnboarded:
+		case user.FieldNotifyPush, user.FieldNotifyWhatsapp, user.FieldNotifyTelegram, user.FieldOnboarded:
 			values[i] = new(sql.NullBool)
 		case user.FieldEmail, user.FieldName, user.FieldPhone, user.FieldGender, user.FieldBirthDate, user.FieldAvatarURL, user.FieldTimezone, user.FieldStatus:
 			values[i] = new(sql.NullString)
@@ -193,6 +210,24 @@ func (_m *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Timezone = value.String
 			}
+		case user.FieldNotifyPush:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field notify_push", values[i])
+			} else if value.Valid {
+				_m.NotifyPush = value.Bool
+			}
+		case user.FieldNotifyWhatsapp:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field notify_whatsapp", values[i])
+			} else if value.Valid {
+				_m.NotifyWhatsapp = value.Bool
+			}
+		case user.FieldNotifyTelegram:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field notify_telegram", values[i])
+			} else if value.Valid {
+				_m.NotifyTelegram = value.Bool
+			}
 		case user.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
@@ -245,6 +280,11 @@ func (_m *User) QuerySessions() *UserSessionQuery {
 // QueryTokens queries the "tokens" edge of the User entity.
 func (_m *User) QueryTokens() *UserTokenQuery {
 	return NewUserClient(_m.config).QueryTokens(_m)
+}
+
+// QueryPushSubscriptions queries the "push_subscriptions" edge of the User entity.
+func (_m *User) QueryPushSubscriptions() *UserPushSubscriptionQuery {
+	return NewUserClient(_m.config).QueryPushSubscriptions(_m)
 }
 
 // Update returns a builder for updating this User.
@@ -309,6 +349,15 @@ func (_m *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("timezone=")
 	builder.WriteString(_m.Timezone)
+	builder.WriteString(", ")
+	builder.WriteString("notify_push=")
+	builder.WriteString(fmt.Sprintf("%v", _m.NotifyPush))
+	builder.WriteString(", ")
+	builder.WriteString("notify_whatsapp=")
+	builder.WriteString(fmt.Sprintf("%v", _m.NotifyWhatsapp))
+	builder.WriteString(", ")
+	builder.WriteString("notify_telegram=")
+	builder.WriteString(fmt.Sprintf("%v", _m.NotifyTelegram))
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Status))
