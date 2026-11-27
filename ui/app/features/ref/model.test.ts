@@ -60,10 +60,17 @@ test("GEREJAWI_STEPS and PAROKI_STEPS point to /settings/* IUI routes", () => {
       "/settings/paroki/lingkungan",
     ],
   );
+  assert.match(PAROKI_STEPS[0]?.description ?? "", /\/users/);
+  assert.doesNotMatch(GEREJAWI_STEPS[2]?.description ?? "", /tunjuk Admin/i);
 });
 
 test("slugifyCode normalizes mixed case and spaces into valid code slugs", () => {
   assert.equal(slugifyCode("  KAJ Paroki 01! "), "kaj-paroki-01");
+  assert.equal(
+    slugifyCode("Keuskupan Agung Jakarta"),
+    "keuskupan-agung-jakarta",
+  );
+  assert.equal(slugifyCode("---abc_123---"), "abc_123");
 });
 
 test("SIPIL_STEPS, timezone helpers, and validateCoordinatePair work", () => {
