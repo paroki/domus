@@ -60,7 +60,7 @@ When(
         | "Internal Organisasi",
       location,
     });
-    await this.pages.event.events.expectFormClosed();
+    await this.pages.event.events.expectCreatedRedirect();
   },
 );
 
@@ -172,7 +172,7 @@ When(
       endAt,
       location,
     });
-    await this.pages.event.events.expectFormClosed();
+    await this.pages.event.events.expectCreatedRedirect();
   },
 );
 
@@ -218,7 +218,7 @@ When(
         | "Internal Organisasi",
       location,
     });
-    await this.pages.event.events.expectFormClosed();
+    await this.pages.event.events.expectCreatedRedirect();
   },
 );
 

@@ -16,6 +16,7 @@ import {
   toLocalDatetimeInputValue,
   visibilityMeta,
 } from "./model";
+import eventRoutes from "./routes";
 
 test("computeEventLifecycle derives cancelled, completed, ongoing, and upcoming", () => {
   const now = Date.parse("2026-11-21T10:00:00Z");
@@ -164,4 +165,9 @@ test("event type helpers merge built-in defaults and custom lookups", () => {
     "Ziarah Rohani",
   );
   assert.equal(eventTypeLabel("custom_code"), "custom_code");
+});
+
+test("event routes register /event/new before /event/:eventId", () => {
+  const paths = eventRoutes.map((r) => r.path);
+  assert.deepEqual(paths, ["event", "event/new", "event/:eventId"]);
 });

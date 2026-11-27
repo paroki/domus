@@ -38,7 +38,10 @@ export class EventDetailPage extends BasePage {
   }
 
   async expectAdminActionsVisible(visible: boolean): Promise<void> {
-    const editBtn = this.page.getByRole("button", { name: "Ubah Kegiatan" });
+    const editBtn = this.page.getByRole("button", {
+      name: "Ubah",
+      exact: true,
+    });
     const deleteBtn = this.page.getByRole("button", { name: "Hapus Kegiatan" });
     if (visible) {
       await editBtn.waitFor({ state: "visible", timeout: 10_000 });
@@ -57,7 +60,7 @@ export class EventDetailPage extends BasePage {
     description?: string;
     rsvpEnabled?: boolean;
   }): Promise<void> {
-    await this.page.getByRole("button", { name: "Ubah Kegiatan" }).click();
+    await this.page.getByRole("button", { name: "Ubah", exact: true }).click();
     const form = this.page.locator("form").filter({
       has: this.page.getByRole("button", { name: "Simpan Perubahan" }),
     });
@@ -94,18 +97,26 @@ export class EventDetailPage extends BasePage {
   }
 
   async cancelEvent(): Promise<void> {
-    this.page.once("dialog", (dialog) => dialog.accept());
     await this.page.getByRole("button", { name: "Batalkan Kegiatan" }).click();
+    const dialog = this.page.getByRole("dialog");
+    await dialog.waitFor({ state: "visible", timeout: 10_000 });
+    await dialog.getByRole("button", { name: "Batalkan Kegiatan" }).click();
+    await dialog.waitFor({ state: "detached", timeout: 10_000 });
   }
 
   async rescheduleEvent(): Promise<void> {
-    this.page.once("dialog", (dialog) => dialog.accept());
     await this.page.getByRole("button", { name: "Jadwalkan Kembali" }).click();
+    const dialog = this.page.getByRole("dialog");
+    await dialog.waitFor({ state: "visible", timeout: 10_000 });
+    await dialog.getByRole("button", { name: "Jadwalkan Kembali" }).click();
+    await dialog.waitFor({ state: "detached", timeout: 10_000 });
   }
 
   async deleteEvent(): Promise<void> {
-    this.page.once("dialog", (dialog) => dialog.accept());
     await this.page.getByRole("button", { name: "Hapus Kegiatan" }).click();
+    const dialog = this.page.getByRole("dialog");
+    await dialog.waitFor({ state: "visible", timeout: 10_000 });
+    await dialog.getByRole("button", { name: "Hapus Kegiatan" }).click();
   }
 
   async submitRsvp(
@@ -121,8 +132,11 @@ export class EventDetailPage extends BasePage {
   }
 
   async removeRsvp(): Promise<void> {
-    this.page.once("dialog", (dialog) => dialog.accept());
     await this.page.getByRole("button", { name: "Hapus RSVP" }).click();
+    const dialog = this.page.getByRole("dialog");
+    await dialog.waitFor({ state: "visible", timeout: 10_000 });
+    await dialog.getByRole("button", { name: "Hapus RSVP" }).click();
+    await dialog.waitFor({ state: "detached", timeout: 10_000 });
   }
 
   async expectRsvpClosed(): Promise<void> {
@@ -219,13 +233,13 @@ export class EventDetailPage extends BasePage {
 
   async expectLiturgiShortcutVisible(): Promise<void> {
     await this.page
-      .getByRole("link", { name: "Lihat Petugas & Lagu Liturgi" })
+      .getByRole("link", { name: /Lihat Petugas & Lagu Liturgi/ })
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
   async clickLiturgiShortcut(): Promise<void> {
     await this.page
-      .getByRole("link", { name: "Lihat Petugas & Lagu Liturgi" })
+      .getByRole("link", { name: /Lihat Petugas & Lagu Liturgi/ })
       .click();
     await this.page.waitForURL(/\/liturgi\/[^/]+$/, { timeout: 10_000 });
   }

@@ -9,19 +9,27 @@ export class EventsPage extends BasePage {
   }
 
   private filterBar() {
-    return this.page.locator("div.flex.flex-wrap.items-center.gap-3");
+    return this.page
+      .locator("div.rounded-xl")
+      .filter({
+        has: this.page.getByRole("button", {
+          name: "Semua Kegiatan",
+          exact: true,
+        }),
+      })
+      .first();
   }
 
   async expectLoaded(): Promise<void> {
     await this.page
-      .getByRole("heading", { name: "Kegiatan" })
+      .getByRole("heading", { name: "Kegiatan", exact: true })
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
   async expectCreateButtonVisible(visible: boolean): Promise<void> {
-    const btn = this.page.getByRole("button", { name: "Buat Kegiatan" });
+    const btn = this.page.getByRole("link", { name: "Buat Kegiatan" });
     if (visible) {
-      await btn.waitFor({ state: "visible", timeout: 10_000 });
+      await btn.first().waitFor({ state: "visible", timeout: 10_000 });
     } else {
       assert.equal(await btn.count(), 0);
     }
@@ -43,7 +51,11 @@ export class EventsPage extends BasePage {
       has: this.page.getByLabel("Judul Kegiatan"),
     });
     if ((await form.count()) === 0) {
-      await this.page.getByRole("button", { name: "Buat Kegiatan" }).click();
+      await this.page
+        .getByRole("link", { name: "Buat Kegiatan" })
+        .first()
+        .click();
+      await this.page.waitForURL(/\/event\/new$/, { timeout: 10_000 });
       await form.waitFor({ state: "visible", timeout: 10_000 });
     }
 
@@ -63,22 +75,20 @@ export class EventsPage extends BasePage {
         .selectOption({ label: input.visibilityLabel });
     }
     await form.getByLabel("Judul Kegiatan").fill(input.title);
-    await form.getByLabel("Waktu Mulai").fill(input.startAt);
-    await form.getByLabel("Waktu Selesai").fill(input.endAt);
+    await form.getByLabel(/Waktu Mulai/).fill(input.startAt);
+    await form.getByLabel(/Waktu Selesai/).fill(input.endAt);
     if (input.location !== undefined) {
       await form.getByLabel("Lokasi (opsional)").fill(input.location);
     }
     if (input.rsvpDeadline !== undefined) {
-      await form
-        .getByLabel("Batas Waktu RSVP (opsional)")
-        .fill(input.rsvpDeadline);
+      await form.getByLabel(/Batas Waktu RSVP/).fill(input.rsvpDeadline);
     }
     if (input.description !== undefined) {
       await form.getByLabel("Deskripsi (opsional)").fill(input.description);
     }
     if (input.rsvpEnabled !== undefined) {
       const checkbox = form.getByLabel(
-        "Aktifkan konfirmasi kehadiran (RSVP) anggota organisasi",
+        /Aktifkan konfirmasi kehadiran \(RSVP\)/,
       );
       if (input.rsvpEnabled) await checkbox.check();
       else await checkbox.uncheck();
@@ -87,11 +97,10 @@ export class EventsPage extends BasePage {
     await form.getByRole("button", { name: "Simpan Kegiatan" }).click();
   }
 
-  async expectFormClosed(): Promise<void> {
-    const form = this.page.locator("form").filter({
-      has: this.page.getByLabel("Judul Kegiatan"),
+  async expectCreatedRedirect(): Promise<void> {
+    await this.page.waitForURL(/\/event\/(?!new$)[^/]+$/, {
+      timeout: 10_000,
     });
-    await form.waitFor({ state: "detached", timeout: 10_000 });
   }
 
   async expectFormError(message: string): Promise<void> {
