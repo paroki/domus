@@ -251,6 +251,49 @@ Then("I see profile saved message", async function (this: DomusWorld) {
 });
 
 Then(
+  "I see the device and notification card on profile",
+  async function (this: DomusWorld) {
+    await this.pages.user.me.expectDeviceNotificationCardVisible();
+  },
+);
+
+When(
+  "I toggle notification channel {string} off",
+  async function (this: DomusWorld, label: string) {
+    await this.pages.user.me.setNotificationChannel(label, false);
+  },
+);
+
+When(
+  "I toggle notification channel {string} on",
+  async function (this: DomusWorld, label: string) {
+    await this.pages.user.me.setNotificationChannel(label, true);
+  },
+);
+
+Then(
+  "notification channel {string} is unchecked",
+  async function (this: DomusWorld, label: string) {
+    await this.pages.user.me.expectNotificationChannelChecked(label, false);
+  },
+);
+
+Then(
+  "notification channel {string} is checked",
+  async function (this: DomusWorld, label: string) {
+    await this.pages.user.me.expectNotificationChannelChecked(label, true);
+  },
+);
+
+When("I click test notification button", async function (this: DomusWorld) {
+  await this.pages.user.me.sendTestNotification();
+});
+
+Then("I see test notification sent message", async function (this: DomusWorld) {
+  await this.pages.user.me.expectTestNotificationSent();
+});
+
+Then(
   "I see current device session in active sessions",
   async function (this: DomusWorld) {
     await this.pages.user.me.expectCurrentSessionVisible();

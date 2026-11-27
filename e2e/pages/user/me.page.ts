@@ -129,6 +129,56 @@ export class MePage extends BasePage {
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
+  async expectDeviceNotificationCardVisible(): Promise<void> {
+    await this.page
+      .getByRole("heading", { name: "Aplikasi & Notifikasi Perangkat" })
+      .waitFor({ state: "visible", timeout: 10_000 });
+    await this.page
+      .getByRole("button", { name: "Kirim Tes Notifikasi" })
+      .waitFor({ state: "visible", timeout: 10_000 });
+  }
+
+  async setNotificationChannel(label: string, enabled: boolean): Promise<void> {
+    const checkbox = this.page.getByLabel(label, { exact: true });
+    await Promise.all([
+      this.page.waitForResponse(
+        (r) =>
+          r.url().endsWith("/api/me") &&
+          r.request().method() === "PATCH" &&
+          r.status() === 200,
+      ),
+      enabled ? checkbox.check() : checkbox.uncheck(),
+    ]);
+  }
+
+  async expectNotificationChannelChecked(
+    label: string,
+    checked: boolean,
+  ): Promise<void> {
+    const actual = await this.page
+      .getByLabel(label, { exact: true })
+      .isChecked();
+    assert.equal(actual, checked);
+  }
+
+  async sendTestNotification(): Promise<void> {
+    await Promise.all([
+      this.page.waitForResponse(
+        (r) =>
+          r.url().endsWith("/api/me/push/test") &&
+          r.request().method() === "POST" &&
+          r.status() === 204,
+      ),
+      this.page.getByRole("button", { name: "Kirim Tes Notifikasi" }).click(),
+    ]);
+  }
+
+  async expectTestNotificationSent(): Promise<void> {
+    await this.page
+      .getByText("Tes notifikasi telah dikirim.", { exact: true })
+      .waitFor({ state: "visible", timeout: 10_000 });
+  }
+
   async revokeToken(name: string): Promise<void> {
     const row = this.page.getByTestId(`pat-row-${name}`);
     await row.waitFor({ state: "visible", timeout: 10_000 });

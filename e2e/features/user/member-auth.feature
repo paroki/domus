@@ -20,6 +20,13 @@ Feature: Invite-only login guard, guest invite sign-up, onboarding, and profile 
     And I see read-only org roster with member "Tamu Undangan Terverifikasi"
     When I open "/me"
     Then I see the profile and security page
+    And I see the device and notification card on profile
+    When I toggle notification channel "Notifikasi Push" off
+    Then notification channel "Notifikasi Push" is unchecked
+    When I toggle notification channel "Notifikasi Push" on
+    Then notification channel "Notifikasi Push" is checked
+    When I click test notification button
+    Then I see test notification sent message
     And I see my profile shows gender "wanita", birth date "1996-08-17", and timezone "Asia/Jakarta"
     When I update my profile to name "Tamu Undangan Terverifikasi", phone "+6281298765432", gender "pria", birth date "1988-04-12", and timezone "Asia/Jayapura"
     Then I see profile saved message
@@ -35,6 +42,13 @@ Feature: Invite-only login guard, guest invite sign-up, onboarding, and profile 
     Given a secondary session exists for "user@domus.test"
     When I open "/me"
     Then I see the profile and security page
+    And I see the device and notification card on profile
+    When I toggle notification channel "Notifikasi Push" off
+    Then notification channel "Notifikasi Push" is unchecked
+    When I toggle notification channel "Notifikasi Push" on
+    Then notification channel "Notifikasi Push" is checked
+    When I click test notification button
+    Then I see test notification sent message
     When I update my profile to name "Umat Mandiri E2E", phone "+6281399998888", gender "pria", and birth date "1992-03-14"
     Then I see profile saved message
     And I see my profile shows gender "pria" and birth date "1992-03-14"
