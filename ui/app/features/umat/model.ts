@@ -199,3 +199,15 @@ export function parseKeluargaDirectoryFilters(params: URLSearchParams) {
     aktif,
   };
 }
+
+export function countActiveAdvancedUmatFilters(
+  filters: ReturnType<typeof parseUmatDirectoryFilters>,
+): number {
+  let count = 0;
+  if (filters.nik.trim()) count += 1;
+  if (filters.jenisKelamin) count += 1;
+  if (filters.agama) count += 1;
+  if (filters.statusPernikahan) count += 1;
+  if (filters.almarhum !== "all") count += 1;
+  return count;
+}

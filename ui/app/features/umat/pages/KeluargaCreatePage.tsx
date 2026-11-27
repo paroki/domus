@@ -1,7 +1,8 @@
-import { type FormEvent, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { useMe } from "~/shared/api/session";
 import { Button } from "~/shared/ui/Button";
+import { Card } from "~/shared/ui/Card";
 import { InductiveFormSection, InductivePageHeader } from "~/shared/ui/iui";
 import { useCreateKeluarga } from "../api/actions";
 import { resolveUmatErrorMessage } from "../api/errors";
@@ -20,6 +21,12 @@ export function meta() {
   return [{ title: "Tambah Kartu Keluarga · Data Umat · Domus" }];
 }
 
+const STEP_LABELS = [
+  "1. Identitas KK & Teritorial",
+  "2. Alamat & Wilayah Sipil",
+  "3. Kondisi Rumah Tangga & Catatan",
+] as const;
+
 export default function KeluargaCreatePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -28,6 +35,7 @@ export default function KeluargaCreatePage() {
   const activeParokiId = me?.activeParokiId ?? "";
   const allowed = isUmatAdmin(me);
 
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [namaKeluarga, setNamaKeluarga] = useState("");
   const [nomorKk, setNomorKk] = useState("");
   const [wilayahId, setWilayahId] = useState(
@@ -90,11 +98,28 @@ export default function KeluargaCreatePage() {
     ? allLingkungan.filter((l) => l.wilayahId === wilayahId)
     : allLingkungan;
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
+  function validateStep1(): string | null {
+    if (!namaKeluarga.trim()) return "Nama keluarga wajib diisi.";
     const kkErr = validatePIIInput(nomorKk, "Nomor KK");
-    if (kkErr) {
-      setErrorMsg(kkErr);
+    if (kkErr) return kkErr;
+    return null;
+  }
+
+  function handleNextFromStep1() {
+    const err = validateStep1();
+    if (err) {
+      setErrorMsg(err);
+      return;
+    }
+    setErrorMsg(null);
+    setStep(2);
+  }
+
+  async function handleSubmit() {
+    const step1Err = validateStep1();
+    if (step1Err) {
+      setErrorMsg(step1Err);
+      setStep(1);
       return;
     }
     setErrorMsg(null);
@@ -124,8 +149,10 @@ export default function KeluargaCreatePage() {
     }
   }
 
+  const canSubmit = Boolean(namaKeluarga.trim()) && !createKeluarga.isPending;
+
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8 sm:px-6">
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
       <InductivePageHeader
         breadcrumbs={[
           { label: "Beranda", to: "/" },
@@ -134,8 +161,27 @@ export default function KeluargaCreatePage() {
           { label: "Tambah Kartu Keluarga" },
         ]}
         title="Tambah Kartu Keluarga"
-        subtitle="Buat data Kartu Keluarga baru untuk paroki aktif."
+        subtitle="Buat data Kartu Keluarga baru secara bertahap atau simpan langsung setelah identitas dasar."
       />
+
+      <Card className="flex flex-wrap items-center gap-2 p-4">
+        {STEP_LABELS.map((label, idx) => {
+          const num = (idx + 1) as 1 | 2 | 3;
+          const active = step === num;
+          return (
+            <span
+              key={label}
+              className={`inline-flex min-h-10 items-center rounded-full px-3.5 py-1.5 text-xs font-semibold ${
+                active
+                  ? "bg-primary text-on-primary"
+                  : "bg-surface-2 text-muted"
+              }`}
+            >
+              {label}
+            </span>
+          );
+        })}
+      </Card>
 
       {errorMsg ? (
         <div
@@ -146,9 +192,9 @@ export default function KeluargaCreatePage() {
         </div>
       ) : null}
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      {step === 1 ? (
         <InductiveFormSection
-          title="1. Identitas Kartu Keluarga & Teritorial Gerejawi"
+          title="Langkah 1 — Identitas Kartu Keluarga & Teritorial Gerejawi"
           description="Nama keluarga wajib diisi; Nomor KK bersifat opsional dan dienkripsi."
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -222,7 +268,7 @@ export default function KeluargaCreatePage() {
             </label>
           </div>
 
-          <label className="flex items-center gap-2 text-sm font-medium text-fg">
+          <label className="flex min-h-11 items-center gap-2.5 text-sm font-medium text-fg">
             <input
               type="checkbox"
               checked={aktif}
@@ -231,10 +277,44 @@ export default function KeluargaCreatePage() {
             />
             Kartu Keluarga Aktif
           </label>
-        </InductiveFormSection>
 
+          <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
+            <Link to="/umat/keluarga" className="w-full no-underline sm:w-auto">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full sm:w-auto"
+              >
+                Batal
+              </Button>
+            </Link>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full sm:w-auto"
+                disabled={!canSubmit}
+                onClick={handleSubmit}
+              >
+                {createKeluarga.isPending
+                  ? "Menyimpan…"
+                  : "Simpan Kartu Keluarga"}
+              </Button>
+              <Button
+                type="button"
+                className="w-full sm:w-auto"
+                onClick={handleNextFromStep1}
+              >
+                Lanjut ke Alamat & Wilayah Sipil →
+              </Button>
+            </div>
+          </div>
+        </InductiveFormSection>
+      ) : null}
+
+      {step === 2 ? (
         <InductiveFormSection
-          title="2. Alamat Domisili & Wilayah Sipil"
+          title="Langkah 2 — Alamat Domisili & Wilayah Sipil"
           description="Pilih wilayah administratif secara berjenjang jika tersedia."
         >
           <label className="flex flex-col gap-1.5 text-sm font-medium text-fg">
@@ -320,10 +400,43 @@ export default function KeluargaCreatePage() {
               />
             </label>
           </div>
-        </InductiveFormSection>
 
+          <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => setStep(1)}
+            >
+              ← Kembali
+            </Button>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full sm:w-auto"
+                disabled={!canSubmit}
+                onClick={handleSubmit}
+              >
+                {createKeluarga.isPending
+                  ? "Menyimpan…"
+                  : "Simpan Kartu Keluarga"}
+              </Button>
+              <Button
+                type="button"
+                className="w-full sm:w-auto"
+                onClick={() => setStep(3)}
+              >
+                Lanjut ke Kondisi & Catatan →
+              </Button>
+            </div>
+          </div>
+        </InductiveFormSection>
+      ) : null}
+
+      {step === 3 ? (
         <InductiveFormSection
-          title="3. Kondisi Rumah Tangga & Catatan"
+          title="Langkah 3 — Kondisi Rumah Tangga & Catatan"
           description="Informasi pendukung pelayanan pastoral keluarga."
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -367,19 +480,29 @@ export default function KeluargaCreatePage() {
               className="rounded-lg border border-line bg-canvas px-3.5 py-2.5 text-sm text-fg"
             />
           </label>
-        </InductiveFormSection>
 
-        <div className="flex items-center justify-end gap-3">
-          <Link to="/umat/keluarga" className="no-underline">
-            <Button type="button" variant="outline">
-              Batal
+          <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => setStep(2)}
+            >
+              ← Kembali
             </Button>
-          </Link>
-          <Button type="submit" disabled={createKeluarga.isPending}>
-            {createKeluarga.isPending ? "Menyimpan…" : "Simpan Kartu Keluarga"}
-          </Button>
-        </div>
-      </form>
+            <Button
+              type="button"
+              className="w-full sm:w-auto"
+              disabled={!canSubmit}
+              onClick={handleSubmit}
+            >
+              {createKeluarga.isPending
+                ? "Menyimpan…"
+                : "Simpan Kartu Keluarga"}
+            </Button>
+          </div>
+        </InductiveFormSection>
+      ) : null}
     </div>
   );
 }

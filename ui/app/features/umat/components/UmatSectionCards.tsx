@@ -377,7 +377,10 @@ export function UmatSectionCards({
       await deleteUmat.mutateAsync(umat.id);
       onDeleted();
     } catch (err) {
-      onFeedback({ tone: "error", message: resolveUmatErrorMessage(err) });
+      onFeedback({
+        tone: "error",
+        message: resolveUmatErrorMessage(err, undefined, "umat"),
+      });
     }
   }
 
@@ -402,7 +405,7 @@ export function UmatSectionCards({
   return (
     <div className="flex flex-col gap-5">
       {/* 1. Identitas Pribadi & Kependudukan */}
-      <Card className="p-6">
+      <Card className="p-4 sm:p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-base font-semibold text-fg">
@@ -415,7 +418,7 @@ export function UmatSectionCards({
           {editing !== "identity" ? (
             <Button
               variant="outline"
-              className="h-9 px-3 text-xs"
+              className="min-h-10 px-3 text-xs"
               onClick={() => startEdit("identity")}
             >
               <Pencil aria-hidden className="size-3.5" />
@@ -607,7 +610,7 @@ export function UmatSectionCards({
       </Card>
 
       {/* 2. Kartu Keluarga, Lingkungan & Status Hidup */}
-      <Card className="p-6">
+      <Card className="p-4 sm:p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-base font-semibold text-fg">
@@ -621,7 +624,7 @@ export function UmatSectionCards({
           {editing !== "household" ? (
             <Button
               variant="outline"
-              className="h-9 px-3 text-xs"
+              className="min-h-10 px-3 text-xs"
               onClick={() => startEdit("household")}
             >
               <Pencil aria-hidden className="size-3.5" />
@@ -730,7 +733,7 @@ export function UmatSectionCards({
               </label>
             </div>
             <div className="flex flex-wrap items-center gap-4">
-              <label className="flex items-center gap-2 text-sm font-medium text-fg">
+              <label className="flex min-h-11 items-center gap-2.5 text-sm font-medium text-fg">
                 <input
                   type="checkbox"
                   checked={almarhum}
@@ -746,7 +749,7 @@ export function UmatSectionCards({
                     type="date"
                     value={tanggalMeninggal}
                     onChange={(e) => setTanggalMeninggal(e.target.value)}
-                    className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+                    className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
                   />
                 </label>
               ) : null}
@@ -829,7 +832,7 @@ export function UmatSectionCards({
       </Card>
 
       {/* 3. Kontak & Domisili Override */}
-      <Card className="p-6">
+      <Card className="p-4 sm:p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-base font-semibold text-fg">
@@ -842,7 +845,7 @@ export function UmatSectionCards({
           {editing !== "contact" ? (
             <Button
               variant="outline"
-              className="h-9 px-3 text-xs"
+              className="min-h-10 px-3 text-xs"
               onClick={() => startEdit("contact")}
             >
               <Pencil aria-hidden className="size-3.5" />
@@ -983,7 +986,7 @@ export function UmatSectionCards({
       </Card>
 
       {/* 4. Pendidikan, Pekerjaan & Aktivitas Sosial */}
-      <Card className="p-6">
+      <Card className="p-4 sm:p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-base font-semibold text-fg">
@@ -996,7 +999,7 @@ export function UmatSectionCards({
           {editing !== "education" ? (
             <Button
               variant="outline"
-              className="h-9 px-3 text-xs"
+              className="min-h-10 px-3 text-xs"
               onClick={() => startEdit("education")}
             >
               <Pencil aria-hidden className="size-3.5" />
@@ -1144,7 +1147,7 @@ export function UmatSectionCards({
       </Card>
 
       {/* 5. Tautan Akun Pengguna Domus */}
-      <Card className="p-6">
+      <Card className="p-4 sm:p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-base font-semibold text-fg">
@@ -1158,7 +1161,7 @@ export function UmatSectionCards({
           {editing !== "userLink" ? (
             <Button
               variant="outline"
-              className="h-9 px-3 text-xs"
+              className="min-h-10 px-3 text-xs"
               onClick={() => startEdit("userLink")}
             >
               <Pencil aria-hidden className="size-3.5" />
@@ -1214,7 +1217,7 @@ export function UmatSectionCards({
       </Card>
 
       {/* 6. Riwayat Sakramen */}
-      <Card className="p-6">
+      <Card className="p-4 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-base font-semibold text-fg">
@@ -1225,7 +1228,7 @@ export function UmatSectionCards({
             </p>
           </div>
           <Link to={`/umat/${umat.id}/sakramen/new`} className="no-underline">
-            <Button variant="outline" className="h-9 px-3 text-xs">
+            <Button variant="outline" className="min-h-10 px-3 text-xs">
               <Plus aria-hidden className="size-3.5" />
               Catat Sakramen
             </Button>
@@ -1278,13 +1281,16 @@ export function UmatSectionCards({
                       to={`/umat/${umat.id}/sakramen/${sk.id}`}
                       className="no-underline"
                     >
-                      <Button variant="outline" className="h-8 px-2.5 text-xs">
+                      <Button
+                        variant="outline"
+                        className="min-h-10 px-3 text-xs"
+                      >
                         Ubah
                       </Button>
                     </Link>
                     <Button
                       variant="danger"
-                      className="h-8 px-2.5 text-xs"
+                      className="min-h-10 px-3 text-xs"
                       disabled={deleteSakramen.isPending}
                       onClick={() =>
                         sk.id && setPendingDeleteSakramen({ id: sk.id, label })

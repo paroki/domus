@@ -137,7 +137,7 @@ export default function UmatSakramenFormPage() {
   const isPending = upsertSakramen.isPending || updateSakramen.isPending;
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
       <InductivePageHeader
         breadcrumbs={[
           { label: "Beranda", to: "/" },
@@ -159,9 +159,11 @@ export default function UmatSakramenFormPage() {
       ) : null}
 
       {isEdit && umatQuery.isLoading ? (
-        <Card className="p-6 text-sm text-muted">Memuat catatan sakramen…</Card>
+        <Card className="p-4 text-sm text-muted sm:p-6">
+          Memuat catatan sakramen…
+        </Card>
       ) : isEdit && !existingSakramen ? (
-        <Card className="flex flex-col items-start gap-3 p-6">
+        <Card className="flex flex-col items-start gap-3 p-4 sm:p-6">
           <p className="text-sm text-danger-fg">
             Catatan sakramen tidak ditemukan.
           </p>
@@ -297,13 +299,24 @@ export default function UmatSakramenFormPage() {
             </label>
           </InductiveFormSection>
 
-          <div className="flex items-center justify-end gap-3">
-            <Link to={`/umat/${umatId}`} className="no-underline">
-              <Button type="button" variant="outline">
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-end">
+            <Link
+              to={`/umat/${umatId}`}
+              className="w-full no-underline sm:w-auto"
+            >
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full sm:w-auto"
+              >
                 Batal
               </Button>
             </Link>
-            <Button type="submit" disabled={isPending}>
+            <Button
+              type="submit"
+              className="w-full sm:w-auto"
+              disabled={isPending}
+            >
               {isPending ? "Menyimpan…" : "Simpan Sakramen"}
             </Button>
           </div>

@@ -290,8 +290,12 @@ export default function UmatCreateWizardPage() {
     { label: "Tambah Data Umat" },
   ];
 
+  const cancelHref = initialKeluargaId
+    ? `/umat/keluarga/${initialKeluargaId}`
+    : "/umat";
+
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8 sm:px-6">
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
       <InductivePageHeader
         breadcrumbs={breadcrumbs}
         title="Tambah Data Umat"
@@ -305,7 +309,7 @@ export default function UmatCreateWizardPage() {
           return (
             <span
               key={label}
-              className={`rounded-full px-3 py-1 text-xs font-semibold ${
+              className={`inline-flex min-h-10 items-center rounded-full px-3.5 py-1.5 text-xs font-semibold ${
                 active
                   ? "bg-primary text-on-primary"
                   : "bg-surface-2 text-muted"
@@ -514,22 +518,31 @@ export default function UmatCreateWizardPage() {
             </label>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-            <Link to="/umat" className="no-underline">
-              <Button type="button" variant="outline">
-                Batal
-              </Button>
-            </Link>
-            <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
+            <Link to={cancelHref} className="w-full no-underline sm:w-auto">
               <Button
                 type="button"
                 variant="outline"
+                className="w-full sm:w-auto"
+              >
+                Batal
+              </Button>
+            </Link>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full sm:w-auto"
                 disabled={!nama.trim() || createUmat.isPending}
                 onClick={handleSubmit}
               >
                 Simpan & Buat Umat
               </Button>
-              <Button type="button" onClick={handleNextFromStep1}>
+              <Button
+                type="button"
+                className="w-full sm:w-auto"
+                onClick={handleNextFromStep1}
+              >
                 Lanjut ke Kontak & Domisili →
               </Button>
             </div>
@@ -687,7 +700,7 @@ export default function UmatCreateWizardPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-4 pt-1">
-            <label className="flex items-center gap-2 text-sm font-medium text-fg">
+            <label className="flex min-h-11 items-center gap-2.5 text-sm font-medium text-fg">
               <input
                 type="checkbox"
                 checked={almarhum}
@@ -703,26 +716,36 @@ export default function UmatCreateWizardPage() {
                   type="date"
                   value={tanggalMeninggal}
                   onChange={(e) => setTanggalMeninggal(e.target.value)}
-                  className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+                  className="h-11 rounded-lg border border-line bg-canvas px-3.5 text-sm text-fg"
                 />
               </label>
             ) : null}
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-            <Button type="button" variant="outline" onClick={() => setStep(1)}>
+          <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => setStep(1)}
+            >
               ← Kembali
             </Button>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center">
               <Button
                 type="button"
                 variant="outline"
+                className="w-full sm:w-auto"
                 disabled={createUmat.isPending}
                 onClick={handleSubmit}
               >
                 Simpan & Buat Umat
               </Button>
-              <Button type="button" onClick={() => setStep(3)}>
+              <Button
+                type="button"
+                className="w-full sm:w-auto"
+                onClick={() => setStep(3)}
+              >
                 Lanjut ke Pendidikan & Sosial →
               </Button>
             </div>
@@ -831,12 +854,18 @@ export default function UmatCreateWizardPage() {
             </label>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-            <Button type="button" variant="outline" onClick={() => setStep(2)}>
+          <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => setStep(2)}
+            >
               ← Kembali
             </Button>
             <Button
               type="button"
+              className="w-full sm:w-auto"
               disabled={createUmat.isPending}
               onClick={handleSubmit}
             >

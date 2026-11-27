@@ -1,4 +1,4 @@
-import { Pencil, Plus, Trash2, Users } from "lucide-react";
+import { ChevronRight, Pencil, Plus, Trash2, Users } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { Link } from "react-router";
 import { Badge } from "~/shared/ui/Badge";
@@ -168,7 +168,10 @@ export function KeluargaSectionCards({
         message: "Identitas Kartu Keluarga berhasil diperbarui.",
       });
     } catch (err) {
-      onFeedback({ tone: "error", message: resolveUmatErrorMessage(err) });
+      onFeedback({
+        tone: "error",
+        message: resolveUmatErrorMessage(err, undefined, "keluarga"),
+      });
     }
   }
 
@@ -193,7 +196,10 @@ export function KeluargaSectionCards({
         message: "Alamat domisili Kartu Keluarga berhasil diperbarui.",
       });
     } catch (err) {
-      onFeedback({ tone: "error", message: resolveUmatErrorMessage(err) });
+      onFeedback({
+        tone: "error",
+        message: resolveUmatErrorMessage(err, undefined, "keluarga"),
+      });
     }
   }
 
@@ -216,7 +222,10 @@ export function KeluargaSectionCards({
         message: "Kondisi rumah tangga berhasil diperbarui.",
       });
     } catch (err) {
-      onFeedback({ tone: "error", message: resolveUmatErrorMessage(err) });
+      onFeedback({
+        tone: "error",
+        message: resolveUmatErrorMessage(err, undefined, "keluarga"),
+      });
     }
   }
 
@@ -228,7 +237,10 @@ export function KeluargaSectionCards({
       await deleteKeluarga.mutateAsync(keluarga.id);
       onDeleted();
     } catch (err) {
-      onFeedback({ tone: "error", message: resolveUmatErrorMessage(err) });
+      onFeedback({
+        tone: "error",
+        message: resolveUmatErrorMessage(err, undefined, "keluarga"),
+      });
     }
   }
 
@@ -243,7 +255,7 @@ export function KeluargaSectionCards({
   return (
     <div className="flex flex-col gap-5">
       {/* 1. Identitas Kartu Keluarga & Teritorial Gerejawi */}
-      <Card className="p-6">
+      <Card className="p-4 sm:p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-base font-semibold text-fg">
@@ -256,7 +268,7 @@ export function KeluargaSectionCards({
           {editing !== "identity" ? (
             <Button
               variant="outline"
-              className="h-9 px-3 text-xs"
+              className="min-h-10 px-3 text-xs"
               onClick={() => startEdit("identity")}
             >
               <Pencil aria-hidden className="size-3.5" />
@@ -339,7 +351,7 @@ export function KeluargaSectionCards({
               </label>
             </div>
 
-            <label className="flex items-center gap-2 text-sm font-medium text-fg">
+            <label className="flex min-h-11 items-center gap-2.5 text-sm font-medium text-fg">
               <input
                 type="checkbox"
                 checked={aktif}
@@ -394,7 +406,7 @@ export function KeluargaSectionCards({
       </Card>
 
       {/* 2. Alamat Domisili & Wilayah Sipil */}
-      <Card className="p-6">
+      <Card className="p-4 sm:p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-base font-semibold text-fg">
@@ -407,7 +419,7 @@ export function KeluargaSectionCards({
           {editing !== "address" ? (
             <Button
               variant="outline"
-              className="h-9 px-3 text-xs"
+              className="min-h-10 px-3 text-xs"
               onClick={() => startEdit("address")}
             >
               <Pencil aria-hidden className="size-3.5" />
@@ -526,7 +538,7 @@ export function KeluargaSectionCards({
       </Card>
 
       {/* 3. Kondisi Rumah Tangga & Catatan */}
-      <Card className="p-6">
+      <Card className="p-4 sm:p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-base font-semibold text-fg">
@@ -539,7 +551,7 @@ export function KeluargaSectionCards({
           {editing !== "household" ? (
             <Button
               variant="outline"
-              className="h-9 px-3 text-xs"
+              className="min-h-10 px-3 text-xs"
               onClick={() => startEdit("household")}
             >
               <Pencil aria-hidden className="size-3.5" />
@@ -616,7 +628,7 @@ export function KeluargaSectionCards({
       </Card>
 
       {/* 4. Anggota Keluarga */}
-      <Card className="p-6">
+      <Card className="p-4 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-base font-semibold text-fg">
@@ -630,7 +642,7 @@ export function KeluargaSectionCards({
             to={`/umat/new?${addMemberParams.toString()}`}
             className="no-underline"
           >
-            <Button variant="outline" className="h-9 px-3 text-xs">
+            <Button variant="outline" className="min-h-10 px-3 text-xs">
               <Plus aria-hidden className="size-3.5" />
               Tambah Anggota Keluarga
             </Button>
@@ -650,7 +662,7 @@ export function KeluargaSectionCards({
                 to={`/umat/${a.id}`}
                 className="flex flex-wrap items-center justify-between gap-3 p-3.5 no-underline transition-colors hover:bg-surface-2/50"
               >
-                <div className="flex flex-col gap-0.5">
+                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-sm font-semibold text-fg">
                       {a.nama}
@@ -667,8 +679,9 @@ export function KeluargaSectionCards({
                     ) : null}
                   </div>
                 </div>
-                <span className="text-xs font-medium text-primary">
-                  Detail →
+                <span className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-primary">
+                  <span className="hidden sm:inline">Detail</span>
+                  <ChevronRight aria-hidden className="size-4" />
                 </span>
               </Link>
             ))}

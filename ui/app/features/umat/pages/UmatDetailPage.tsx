@@ -52,7 +52,7 @@ export default function UmatDetailPage() {
   ];
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8 sm:px-6">
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
       <InductivePageHeader
         breadcrumbs={breadcrumbs}
         title={umat?.nama ?? "Profil Umat"}
@@ -77,9 +77,11 @@ export default function UmatDetailPage() {
       ) : null}
 
       {detailQuery.isLoading ? (
-        <Card className="p-6 text-sm text-muted">Memuat profil umat…</Card>
+        <Card className="p-4 text-sm text-muted sm:p-6">
+          Memuat profil umat…
+        </Card>
       ) : detailQuery.isError || !umat ? (
-        <Card className="flex flex-col items-start gap-3 p-6">
+        <Card className="flex flex-col items-start gap-3 p-4 sm:p-6">
           <p className="text-sm text-danger-fg">
             {resolveUmatErrorMessage(
               detailQuery.error,

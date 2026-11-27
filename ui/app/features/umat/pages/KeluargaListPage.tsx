@@ -98,7 +98,7 @@ export default function KeluargaListPage() {
   );
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
       <InductivePageHeader
         breadcrumbs={[
           { label: "Beranda", to: "/" },
@@ -119,6 +119,13 @@ export default function KeluargaListPage() {
 
       <InductiveHubGrid>
         <InductiveStepCard
+          to="/umat"
+          icon={Users}
+          plate={2}
+          title="Direktori Data Umat"
+          description="Kembali ke daftar seluruh umat, pencarian NIK terenkripsi, dan profil sakramen"
+        />
+        <InductiveStepCard
           to="/umat/referensi"
           icon={BookOpen}
           plate={4}
@@ -128,7 +135,7 @@ export default function KeluargaListPage() {
       </InductiveHubGrid>
 
       <InductiveFilterBar>
-        <label className="flex min-w-52 flex-1 flex-col gap-1 text-xs font-medium text-muted">
+        <label className="flex w-full min-w-52 flex-1 flex-col gap-1 text-xs font-medium text-muted">
           Cari Nama Keluarga / Alamat / No. Registrasi
           <div className="relative">
             <Search
@@ -143,23 +150,23 @@ export default function KeluargaListPage() {
                 updateParam("q", e.target.value);
               }}
               placeholder="Nama keluarga, alamat, atau no. registrasi…"
-              className="h-10 w-full rounded-lg border border-line bg-canvas pr-3 pl-9 text-sm text-fg"
+              className="h-11 w-full rounded-lg border border-line bg-canvas pr-3 pl-9 text-sm text-fg"
             />
           </div>
         </label>
 
-        <label className="flex w-44 flex-col gap-1 text-xs font-medium text-muted">
+        <label className="flex w-full flex-col gap-1 text-xs font-medium text-muted sm:w-44">
           Nomor KK (Tepat)
           <input
             type="text"
             value={filters.nomorKk}
             onChange={(e) => updateParam("nomorKk", e.target.value)}
             placeholder="Cari Nomor KK…"
-            className="h-10 rounded-lg border border-line bg-canvas px-3 font-mono text-sm text-fg"
+            className="h-11 rounded-lg border border-line bg-canvas px-3 font-mono text-sm text-fg"
           />
         </label>
 
-        <label className="flex w-44 flex-col gap-1 text-xs font-medium text-muted">
+        <label className="flex w-full flex-col gap-1 text-xs font-medium text-muted sm:w-44">
           Wilayah
           <select
             value={filters.wilayahId}
@@ -170,7 +177,7 @@ export default function KeluargaListPage() {
               next.delete("lingkunganId");
               setSearchParams(next, { replace: true });
             }}
-            className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+            className="h-11 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
           >
             <option value="">Semua Wilayah</option>
             {(wilayahQuery.data ?? []).map((w) => (
@@ -181,12 +188,12 @@ export default function KeluargaListPage() {
           </select>
         </label>
 
-        <label className="flex w-44 flex-col gap-1 text-xs font-medium text-muted">
+        <label className="flex w-full flex-col gap-1 text-xs font-medium text-muted sm:w-44">
           Lingkungan
           <select
             value={filters.lingkunganId}
             onChange={(e) => updateParam("lingkunganId", e.target.value)}
-            className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+            className="h-11 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
           >
             <option value="">Semua Lingkungan</option>
             {(lingkunganQuery.data ?? []).map((l) => (
@@ -197,14 +204,14 @@ export default function KeluargaListPage() {
           </select>
         </label>
 
-        <label className="flex w-36 flex-col gap-1 text-xs font-medium text-muted">
+        <label className="flex w-full flex-col gap-1 text-xs font-medium text-muted sm:w-44">
           Status
           <select
             value={filters.aktif}
             onChange={(e) =>
               updateParam("aktif", e.target.value as KeluargaAktifFilter)
             }
-            className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+            className="h-11 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
           >
             <option value="all">Semua</option>
             <option value="true">Aktif</option>
@@ -282,16 +289,16 @@ export default function KeluargaListPage() {
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3 text-xs font-medium">
+                <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
                   <Link
                     to={`/umat/new?${addParams.toString()}`}
-                    className="inline-flex items-center gap-1 text-muted no-underline hover:text-primary"
+                    className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2.5 text-muted no-underline hover:bg-surface-2/60 hover:text-primary"
                   >
                     <Users aria-hidden className="size-3.5" />+ Tambah Anggota →
                   </Link>
                   <Link
                     to={`/umat/keluarga/${k.id}`}
-                    className="text-primary no-underline hover:underline"
+                    className="inline-flex min-h-11 items-center rounded-lg px-2.5 text-primary no-underline hover:bg-primary/10 hover:underline"
                   >
                     Kelola KK →
                   </Link>

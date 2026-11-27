@@ -1,4 +1,15 @@
-import { BookOpen, Home, Plus, Search, Users } from "lucide-react";
+import {
+  BookOpen,
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  Home,
+  Plus,
+  RotateCcw,
+  Search,
+  SlidersHorizontal,
+  Users,
+} from "lucide-react";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useMe } from "~/shared/api/session";
@@ -20,6 +31,7 @@ import {
 } from "../api/queries";
 import { UmatForbiddenCard } from "../components/UmatForbiddenCard";
 import {
+  countActiveAdvancedUmatFilters,
   genderLabel,
   isUmatAdmin,
   parseUmatDirectoryFilters,
@@ -34,6 +46,8 @@ export default function UmatDirectoryPage() {
   const { data: me } = useMe();
   const [searchParams, setSearchParams] = useSearchParams();
   const filters = parseUmatDirectoryFilters(searchParams);
+  const advancedFilterCount = countActiveAdvancedUmatFilters(filters);
+  const [showAdvanced, setShowAdvanced] = useState(advancedFilterCount > 0);
   const [qInput, setQInput] = useState(filters.q);
   const debouncedQ = useDebouncedValue(qInput.trim(), 250);
 
@@ -119,7 +133,7 @@ export default function UmatDirectoryPage() {
   );
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
       <InductivePageHeader
         breadcrumbs={[{ label: "Beranda", to: "/" }, { label: "Data Umat" }]}
         title="Data Umat"
@@ -151,135 +165,175 @@ export default function UmatDirectoryPage() {
         />
       </div>
 
-      <InductiveFilterBar>
-        <label className="flex min-w-52 flex-1 flex-col gap-1 text-xs font-medium text-muted">
-          Cari Nama / Nama Baptis / Nomor Induk
-          <div className="relative">
-            <Search
-              aria-hidden
-              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted"
-            />
-            <input
-              type="search"
-              value={qInput}
+      <InductiveFilterBar className="flex-col items-stretch gap-4">
+        <div className="flex flex-wrap items-end gap-3">
+          <label className="flex w-full min-w-52 flex-1 flex-col gap-1 text-xs font-medium text-muted">
+            Cari Nama / Nama Baptis / Nomor Induk
+            <div className="relative">
+              <Search
+                aria-hidden
+                className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted"
+              />
+              <input
+                type="search"
+                value={qInput}
+                onChange={(e) => {
+                  setQInput(e.target.value);
+                  updateParam("q", e.target.value);
+                }}
+                placeholder="Nama, nama baptis, atau nomor induk…"
+                className="h-11 w-full rounded-lg border border-line bg-canvas pr-3 pl-9 text-sm text-fg"
+              />
+            </div>
+          </label>
+
+          <label className="flex w-full flex-col gap-1 text-xs font-medium text-muted sm:w-44">
+            Wilayah
+            <select
+              value={filters.wilayahId}
               onChange={(e) => {
-                setQInput(e.target.value);
-                updateParam("q", e.target.value);
+                const next = new URLSearchParams(searchParams);
+                if (e.target.value) next.set("wilayahId", e.target.value);
+                else next.delete("wilayahId");
+                next.delete("lingkunganId");
+                setSearchParams(next, { replace: true });
               }}
-              placeholder="Nama, nama baptis, atau nomor induk…"
-              className="h-10 w-full rounded-lg border border-line bg-canvas pr-3 pl-9 text-sm text-fg"
-            />
+              className="h-11 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+            >
+              <option value="">Semua Wilayah</option>
+              {(wilayahQuery.data ?? []).map((w) => (
+                <option key={w.id} value={w.id}>
+                  {w.nama}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="flex w-full flex-col gap-1 text-xs font-medium text-muted sm:w-44">
+            Lingkungan
+            <select
+              value={filters.lingkunganId}
+              onChange={(e) => updateParam("lingkunganId", e.target.value)}
+              className="h-11 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+            >
+              <option value="">Semua Lingkungan</option>
+              {(lingkunganQuery.data ?? []).map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.nama}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <div className="flex w-full items-center gap-2 sm:w-auto">
+            <Button
+              type="button"
+              variant="outline"
+              aria-expanded={showAdvanced}
+              onClick={() => setShowAdvanced((prev) => !prev)}
+              className="min-h-11 flex-1 px-3.5 text-xs sm:flex-initial"
+            >
+              <SlidersHorizontal aria-hidden className="size-4" />
+              Filter Lanjutan
+              {advancedFilterCount > 0 ? (
+                <Badge tone="neutral">{advancedFilterCount}</Badge>
+              ) : null}
+              {showAdvanced ? (
+                <ChevronUp aria-hidden className="size-4" />
+              ) : (
+                <ChevronDown aria-hidden className="size-4" />
+              )}
+            </Button>
+            {hasFilters ? (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={resetFilters}
+                className="min-h-11 px-3 text-xs"
+              >
+                <RotateCcw aria-hidden className="size-3.5" />
+                Reset
+              </Button>
+            ) : null}
           </div>
-        </label>
+        </div>
 
-        <label className="flex w-44 flex-col gap-1 text-xs font-medium text-muted">
-          NIK (Tepat)
-          <input
-            type="text"
-            value={filters.nik}
-            onChange={(e) => updateParam("nik", e.target.value)}
-            placeholder="Cari NIK…"
-            className="h-10 rounded-lg border border-line bg-canvas px-3 font-mono text-sm text-fg"
-          />
-        </label>
+        {showAdvanced ? (
+          <div className="flex flex-wrap items-end gap-3 border-t border-line pt-4">
+            <label className="flex w-full flex-col gap-1 text-xs font-medium text-muted sm:w-44">
+              NIK (Tepat)
+              <input
+                type="text"
+                value={filters.nik}
+                onChange={(e) => updateParam("nik", e.target.value)}
+                placeholder="Cari NIK…"
+                className="h-11 rounded-lg border border-line bg-canvas px-3 font-mono text-sm text-fg"
+              />
+            </label>
 
-        <label className="flex w-40 flex-col gap-1 text-xs font-medium text-muted">
-          Wilayah
-          <select
-            value={filters.wilayahId}
-            onChange={(e) => {
-              const next = new URLSearchParams(searchParams);
-              if (e.target.value) next.set("wilayahId", e.target.value);
-              else next.delete("wilayahId");
-              next.delete("lingkunganId");
-              setSearchParams(next, { replace: true });
-            }}
-            className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
-          >
-            <option value="">Semua Wilayah</option>
-            {(wilayahQuery.data ?? []).map((w) => (
-              <option key={w.id} value={w.id}>
-                {w.nama}
-              </option>
-            ))}
-          </select>
-        </label>
+            <label className="flex w-full flex-col gap-1 text-xs font-medium text-muted sm:w-44">
+              Jenis Kelamin
+              <select
+                value={filters.jenisKelamin}
+                onChange={(e) => updateParam("jenisKelamin", e.target.value)}
+                className="h-11 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+              >
+                <option value="">Semua</option>
+                <option value="pria">Pria</option>
+                <option value="wanita">Wanita</option>
+              </select>
+            </label>
 
-        <label className="flex w-40 flex-col gap-1 text-xs font-medium text-muted">
-          Lingkungan
-          <select
-            value={filters.lingkunganId}
-            onChange={(e) => updateParam("lingkunganId", e.target.value)}
-            className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
-          >
-            <option value="">Semua Lingkungan</option>
-            {(lingkunganQuery.data ?? []).map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.nama}
-              </option>
-            ))}
-          </select>
-        </label>
+            <label className="flex w-full flex-col gap-1 text-xs font-medium text-muted sm:w-44">
+              Agama
+              <select
+                value={filters.agama}
+                onChange={(e) => updateParam("agama", e.target.value)}
+                className="h-11 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+              >
+                <option value="">Semua</option>
+                {(agamaQuery.data ?? []).map((l) => (
+                  <option key={l.id} value={l.code}>
+                    {l.label}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-        <label className="flex w-36 flex-col gap-1 text-xs font-medium text-muted">
-          Jenis Kelamin
-          <select
-            value={filters.jenisKelamin}
-            onChange={(e) => updateParam("jenisKelamin", e.target.value)}
-            className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
-          >
-            <option value="">Semua</option>
-            <option value="pria">Pria</option>
-            <option value="wanita">Wanita</option>
-          </select>
-        </label>
+            <label className="flex w-full flex-col gap-1 text-xs font-medium text-muted sm:w-44">
+              Status Pernikahan
+              <select
+                value={filters.statusPernikahan}
+                onChange={(e) =>
+                  updateParam("statusPernikahan", e.target.value)
+                }
+                className="h-11 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+              >
+                <option value="">Semua</option>
+                {(statusPernikahanQuery.data ?? []).map((l) => (
+                  <option key={l.id} value={l.code}>
+                    {l.label}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-        <label className="flex w-36 flex-col gap-1 text-xs font-medium text-muted">
-          Agama
-          <select
-            value={filters.agama}
-            onChange={(e) => updateParam("agama", e.target.value)}
-            className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
-          >
-            <option value="">Semua</option>
-            {(agamaQuery.data ?? []).map((l) => (
-              <option key={l.id} value={l.code}>
-                {l.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="flex w-40 flex-col gap-1 text-xs font-medium text-muted">
-          Status Pernikahan
-          <select
-            value={filters.statusPernikahan}
-            onChange={(e) => updateParam("statusPernikahan", e.target.value)}
-            className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
-          >
-            <option value="">Semua</option>
-            {(statusPernikahanQuery.data ?? []).map((l) => (
-              <option key={l.id} value={l.code}>
-                {l.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="flex w-36 flex-col gap-1 text-xs font-medium text-muted">
-          Status Hidup
-          <select
-            value={filters.almarhum}
-            onChange={(e) =>
-              updateParam("almarhum", e.target.value as UmatAlmarhumFilter)
-            }
-            className="h-10 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
-          >
-            <option value="all">Semua</option>
-            <option value="alive">Hidup</option>
-            <option value="deceased">Almarhum</option>
-          </select>
-        </label>
+            <label className="flex w-full flex-col gap-1 text-xs font-medium text-muted sm:w-44">
+              Status Hidup
+              <select
+                value={filters.almarhum}
+                onChange={(e) =>
+                  updateParam("almarhum", e.target.value as UmatAlmarhumFilter)
+                }
+                className="h-11 rounded-lg border border-line bg-canvas px-3 text-sm text-fg"
+              >
+                <option value="all">Semua</option>
+                <option value="alive">Hidup</option>
+                <option value="deceased">Almarhum</option>
+              </select>
+            </label>
+          </div>
+        ) : null}
       </InductiveFilterBar>
 
       {searchQuery.isLoading ? (
@@ -345,8 +399,9 @@ export default function UmatDirectoryPage() {
                       .join(" · ")}
                   </p>
                 </div>
-                <span className="shrink-0 text-xs font-medium text-primary">
-                  Ubah / Detail →
+                <span className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-primary">
+                  <span className="hidden sm:inline">Ubah / Detail</span>
+                  <ChevronRight aria-hidden className="size-4" />
                 </span>
               </Link>
             );
