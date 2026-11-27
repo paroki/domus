@@ -57,7 +57,10 @@ export class SystemSettingsPage extends BasePage {
     const id = providerId.toLowerCase();
     const displayName = input.name ?? (id === "openai" ? "OpenAI" : providerId);
 
-    await this.page.getByRole("button", { name: "Tambah Konfigurasi" }).click();
+    await this.page
+      .getByRole("link", { name: "Tambah Konfigurasi" })
+      .first()
+      .click();
     await this.page.locator("#provider-name").fill(displayName);
     await this.page.locator("#provider-type").selectOption(id);
     await this.page.locator("#provider-apikey").fill(input.apiKey);
@@ -78,10 +81,10 @@ export class SystemSettingsPage extends BasePage {
     if (body.data?.id) {
       this.providerIds.set(id, body.data.id);
     }
-    await this.page
-      .getByRole("status")
-      .filter({ hasText: "Pengaturan berhasil disimpan." })
-      .waitFor({ state: "visible", timeout: 10_000 });
+    await this.providerSection(displayName).waitFor({
+      state: "visible",
+      timeout: 10_000,
+    });
   }
 
   async syncProviderModels(

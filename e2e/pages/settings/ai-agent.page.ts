@@ -1,14 +1,31 @@
 import assert from "node:assert/strict";
+import type { Locator } from "playwright";
 import { BasePage } from "../base.page";
 
 export class AIAgentSettingsPage extends BasePage {
+  private modelRoutingSection(): Locator {
+    return this.page
+      .locator("section")
+      .filter({
+        has: this.page.getByRole("heading", {
+          name: "Routing Model AI Agent",
+        }),
+      })
+      .first();
+  }
+
+  private promptCard(agentKey: string): Locator {
+    return this.page.locator(`[data-agent-prompt="agent.prompt.${agentKey}"]`);
+  }
+
   async expectLoaded(): Promise<void> {
     await this.page
       .getByRole("heading", { name: "AI Agent", exact: true })
       .waitFor({ state: "visible", timeout: 10_000 });
-    await this.page
-      .locator('[id="setting-agent.model.gabriel"]')
-      .waitFor({ state: "visible", timeout: 10_000 });
+    await this.modelRoutingSection().waitFor({
+      state: "visible",
+      timeout: 10_000,
+    });
   }
 
   private async selectModelBySuffix(
@@ -41,11 +58,18 @@ export class AIAgentSettingsPage extends BasePage {
       "memory_extractor",
       "embedding",
     ];
+    await this.modelRoutingSection()
+      .getByRole("button", { name: "Ubah", exact: true })
+      .click();
     for (const agent of modelAgents) {
       await this.page
         .locator(`[id="setting-agent.model.${agent}"]`)
         .waitFor({ state: "visible", timeout: 10_000 });
     }
+    await this.modelRoutingSection()
+      .getByRole("button", { name: "Batal", exact: true })
+      .click();
+
     const promptAgents = [
       "gabriel",
       "mikael",
@@ -56,8 +80,8 @@ export class AIAgentSettingsPage extends BasePage {
       "memory_extractor",
     ];
     for (const agent of promptAgents) {
-      await this.page
-        .locator(`[id="setting-agent.prompt.${agent}"]`)
+      await this.promptCard(agent)
+        .getByRole("button", { name: "Ubah Prompt", exact: true })
         .waitFor({ state: "visible", timeout: 10_000 });
     }
   }
@@ -72,6 +96,9 @@ export class AIAgentSettingsPage extends BasePage {
     memory_extractor?: string;
     embedding: string;
   }): Promise<void> {
+    await this.modelRoutingSection()
+      .getByRole("button", { name: "Ubah", exact: true })
+      .click();
     await this.selectModelBySuffix("agent.model.gabriel", models.gabriel);
     await this.selectModelBySuffix("agent.model.mikael", models.mikael);
     await this.selectModelBySuffix("agent.model.rafael", models.rafael);
@@ -109,14 +136,11 @@ export class AIAgentSettingsPage extends BasePage {
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
-  private gabrielPromptBlock() {
-    return this.page
-      .locator("div.flex.flex-col")
-      .filter({ has: this.page.locator('[id="setting-agent.prompt.gabriel"]') })
-      .last();
-  }
-
   async customizeGabrielPrompt(text: string): Promise<void> {
+    const card = this.promptCard("gabriel");
+    await card
+      .getByRole("button", { name: "Ubah Prompt", exact: true })
+      .click();
     await this.page.locator('[id="setting-agent.prompt.gabriel"]').fill(text);
     await Promise.all([
       this.page.waitForResponse(
@@ -125,14 +149,22 @@ export class AIAgentSettingsPage extends BasePage {
           r.request().method() === "PATCH" &&
           r.status() === 200,
       ),
-      this.page.getByRole("button", { name: "Simpan Prompt Persona" }).click(),
+      card
+        .getByRole("button", { name: "Simpan Prompt Persona", exact: true })
+        .click(),
     ]);
-    await this.gabrielPromptBlock()
+    await card
       .getByText("Overridden", { exact: true })
       .waitFor({ state: "visible", timeout: 10_000 });
   }
 
   async resetGabrielPromptToDefault(): Promise<void> {
+    const card = this.promptCard("gabriel");
+    await card
+      .getByRole("button", { name: "Reset ke Default", exact: true })
+      .click();
+    const dialog = this.page.getByRole("dialog");
+    await dialog.waitFor({ state: "visible", timeout: 10_000 });
     await Promise.all([
       this.page.waitForResponse(
         (r) =>
@@ -140,18 +172,16 @@ export class AIAgentSettingsPage extends BasePage {
           r.request().method() === "PATCH" &&
           r.status() === 200,
       ),
-      this.gabrielPromptBlock()
-        .getByRole("button", { name: "Reset ke Default" })
+      dialog
+        .getByRole("button", { name: "Reset ke Default", exact: true })
         .click(),
     ]);
-    await this.gabrielPromptBlock()
-      .getByText("Overridden", { exact: true })
-      .waitFor({ state: "detached", timeout: 10_000 });
-    const val = await this.page
-      .locator('[id="setting-agent.prompt.gabriel"]')
-      .inputValue();
+    await card
+      .getByText("Default", { exact: true })
+      .waitFor({ state: "visible", timeout: 10_000 });
+    const preview = await card.locator("p").first().textContent();
     assert.ok(
-      val.includes("Gabriel"),
+      preview?.includes("Gabriel"),
       "Expected default Gabriel prompt restored",
     );
   }

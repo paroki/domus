@@ -19,6 +19,13 @@ export class AIProviderSettingsPage extends BasePage {
 
   async deleteProviderExpectConflict(providerLabel: string): Promise<void> {
     const section = this.providerSection(providerLabel);
+    await section.getByRole("link", { name: "Kelola" }).click();
+    await this.page
+      .getByRole("button", { name: "Hapus", exact: true })
+      .waitFor({ state: "visible", timeout: 10_000 });
+    await this.page.getByRole("button", { name: "Hapus", exact: true }).click();
+    const dialog = this.page.getByRole("dialog");
+    await dialog.waitFor({ state: "visible", timeout: 10_000 });
     await Promise.all([
       this.page.waitForResponse(
         (r) =>
@@ -26,7 +33,7 @@ export class AIProviderSettingsPage extends BasePage {
           r.request().method() === "DELETE" &&
           r.status() === 409,
       ),
-      section.getByRole("button", { name: "Hapus" }).click(),
+      dialog.getByRole("button", { name: "Hapus", exact: true }).click(),
     ]);
     await this.page
       .getByRole("alert")

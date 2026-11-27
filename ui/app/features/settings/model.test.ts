@@ -126,6 +126,9 @@ test("SETTINGS_LAUNCHERS, indexSettingsByKey, and buildSettingsDraft work", () =
     SETTINGS_LAUNCHERS.map((item) => item.id),
     ["telegram", "whatsapp", "aiProvider", "aiAgent"],
   );
+  const descriptions = SETTINGS_LAUNCHERS.map((item) => item.description);
+  assert.ok(descriptions.every((d) => d.trim().length > 0));
+  assert.equal(new Set(descriptions).size, SETTINGS_LAUNCHERS.length);
   const items = [
     { key: "user.telegram.bot_token", value: "tok", configured: true },
   ];
