@@ -24,6 +24,8 @@ export class DomusWorld extends World {
   otherOrgName?: string;
   orgAdminToken?: string;
   parokiAdminToken?: string;
+  activeLiturgiEventId?: string;
+  activeCantusId?: string;
   mockLlmBaseUrl?: string;
 
   constructor(options: IWorldOptions) {

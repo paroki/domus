@@ -4,6 +4,7 @@ import { BasePage } from "./base.page";
 import { CantusPage } from "./cantus/cantus.page";
 import { EventDetailPage } from "./event/event-detail.page";
 import { EventsPage } from "./event/events.page";
+import { LiturgiPage } from "./liturgi/liturgi.page";
 import { OrgDetailPage } from "./org/org-detail.page";
 import { OrgJoinPage } from "./org/org-join.page";
 import { OrgsPage } from "./org/orgs.page";
@@ -48,6 +49,7 @@ export function createPages(page: Page) {
     },
     umat: new UmatPage(page),
     cantus: new CantusPage(page),
+    liturgi: new LiturgiPage(page),
     settings: new SystemSettingsPage(page),
     aiProvider: new AIProviderSettingsPage(page),
     aiAgent: new AIAgentSettingsPage(page),
