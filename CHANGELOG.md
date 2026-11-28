@@ -2,6 +2,95 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.0.0-alpha.7](https://github.com/paroki/domus/compare/v1.0.0-alpha.6...v1.0.0-alpha.7) (2026-11-28)
+
+### ⚙️ API
+
+#### ✨ Features
+
+- auto-resolve and heal active paroki ([4e767ed](https://github.com/paroki/domus/commit/4e767ed3721bd0718d78885731aa37ad011999e8))
+- add agent sub-agents, runtime context, and ui tools ([3906375](https://github.com/paroki/domus/commit/3906375bb9149b1a217c46ca0f4d45290cd500ab))
+- add umat ids, encrypted dokumen, and vision verification ([cb02ecc](https://github.com/paroki/domus/commit/cb02ecc4aa1d8b1541be73ff9ca35cf7c8beb9a1))
+- extract umat lookups into umat_referensi ([b92464e](https://github.com/paroki/domus/commit/b92464eae93009bcc390320b2a2b9a9fc1d1e867))
+- implement liturgi petugas, lagu, notifications, and mcp tools ([9079223](https://github.com/paroki/domus/commit/90792237426c9b70ca70c570da3a0c8a24eb1756))
+- implement liturgi core schemas, guards, and endpoints ([2a75ee4](https://github.com/paroki/domus/commit/2a75ee47a3cb6c226b9d9ed4d5785081aeb4564c))
+- implement global cantus catalog and mcp tools ([290ebe8](https://github.com/paroki/domus/commit/290ebe88a6f349ceee651ade141560caf62f0684))
+- add cantus schema and users.cantus_admin with casbin sync ([a995033](https://github.com/paroki/domus/commit/a9950333cf9294017261b238a2813ce50f434afb))
+- add notification dispatcher, event triggers, and reminders ([b353a26](https://github.com/paroki/domus/commit/b353a2614bfac8ae1fbff2b8674f69d6eb886a45))
+- add Web Push subscriptions, VAPID bootstrap, and channels ([5fcc68c](https://github.com/paroki/domus/commit/5fcc68c9bbe734c5568a784888c915bd3fe43f5a))
+- add pushx RFC 8291 and 8292 Web Push engine ([e600d67](https://github.com/paroki/domus/commit/e600d67ddd7226437235a1b4767e56b244096ff5))
+- serve sw.js and manifest.webmanifest with no-cache headers ([2976712](https://github.com/paroki/domus/commit/2976712a7ee1b716a4dc25821a44104d35280f35))
+- add users.timezone field, validation, and user_get_me ([ec1a347](https://github.com/paroki/domus/commit/ec1a347eaf51dec2a3306bf7303cad3ce95836b0))
+- add org_jabatan hierarchy, umat lookup, and auto-sync ([3b73484](https://github.com/paroki/domus/commit/3b734845f747cfde34e4de00cfb1852645c4ea86))
+- replace ref.Period with org_periode and slim org members ([df89491](https://github.com/paroki/domus/commit/df89491115111548278b35bd4035441b6b632a35))
+- add umat sakramen endpoints and PII-masked MCP tools ([fe74566](https://github.com/paroki/domus/commit/fe745669303fa70cf4ded7861e6f64ddd9960b7d))
+- implement keluarga and umat CRUD with PII encryption ([834ed5f](https://github.com/paroki/domus/commit/834ed5fc1849c2d74790757501fa48bd95af9cdc))
+- add umat schemas, RBAC, and ref guards ([b389720](https://github.com/paroki/domus/commit/b38972043f7c20debd5679b846dbdb370466231d))
+- implement event_lagu schema, CRUD APIs, and MCP tool ([9f88e6f](https://github.com/paroki/domus/commit/9f88e6f36d81ae497cd3efeb839de5340d3c14b3))
+- implement event_petugas schema, RBAC, and MCP tools ([d496701](https://github.com/paroki/domus/commit/d4967010a3f25e25e47417752f19f2648cda0bbc))
+- add dynamic events.jenis backed by event_type lookup ([d0eeb23](https://github.com/paroki/domus/commit/d0eeb23d7ac514edd4cef8e1ed5e3c9d216e19a0))
+- support parish-level events, open RSVP, and paroki.timezone ([ea62fb1](https://github.com/paroki/domus/commit/ea62fb19220624d9749780608f57b55fb3b9f803))
+- enrich paroki schema, validations, and delete guards ([598eb44](https://github.com/paroki/domus/commit/598eb445c3d57613d461117200980b6ec265deca))
+- add kevikepan and civil territory APIs ([19a6788](https://github.com/paroki/domus/commit/19a67880ec9bdea255c6f6b05d230e3a2e27ee0c))
+- add personal access tokens schema, service, and endpoints ([a7c7086](https://github.com/paroki/domus/commit/a7c708635231c8ae6d0ec3357d967377319b3c4b))
+
+#### 🐛 Bug Fixes
+
+- preserve custom push channel notification on empty VAPID settings ([2e78342](https://github.com/paroki/domus/commit/2e78342b1d49af7f85459c595801b7f881941902))
+
+### 🖥️ UI
+
+#### ✨ Features
+
+- refine umat filters, 3-step KK wizard, and detail cards ([f16ce2a](https://github.com/paroki/domus/commit/f16ce2a7162a5c5f17f6ba2e0c92aeff0f9bb625))
+- refine event directory, create route, and read-first detail ([cab2212](https://github.com/paroki/domus/commit/cab22129a463fc2a54c6166fa0898c9e04f31d8f))
+- refine org pages with inductive ui and dedicated routes ([395e473](https://github.com/paroki/domus/commit/395e47373a711f3952a8ac02b86429ccde0c725a))
+- refine system settings with inductive UI and AI provider routes ([a4e5b93](https://github.com/paroki/domus/commit/a4e5b9346cea90d335c871363ce235ce91f8281f))
+- refine wilayah, sipil, and lookup pages for IUI ([663aff0](https://github.com/paroki/domus/commit/663aff09206f18ffa59ae95bdbe69e4e07b647ea))
+- refine gerejawi and paroki UI, remove inline members ([faee602](https://github.com/paroki/domus/commit/faee60251b8bc42cc46a934d9fb13a31fa41a393))
+- refine user directory, creation, and detail pages with IUI ([5038653](https://github.com/paroki/domus/commit/50386534e8be4f181f20878050d3c21f02150a91))
+- refine login, onboarding, and me pages with inductive ui ([f146d13](https://github.com/paroki/domus/commit/f146d13360a7c1a21e4043f49c9c1d0b8a08c081))
+- refactor agent memories to inductive routes and mobile ergonomics ([b6ab0c3](https://github.com/paroki/domus/commit/b6ab0c3eaa7857786cc6eddc0e68e9a5f90f0f6c))
+- add global collapsible AgentBottomDock in AppShell ([903730e](https://github.com/paroki/domus/commit/903730eaf5f87e3d916bf0939906266e92adfa7f))
+- render internal links and interactive question and navigate cards ([f6e6d2c](https://github.com/paroki/domus/commit/f6e6d2caaad49fddca968808132191ddb5740aee))
+- extend agent types, safe URLs, SSE frames, and meta parsers ([8c9957b](https://github.com/paroki/domus/commit/8c9957b5e5e654ff95b3aada4e366a7db0f84b41))
+- add yosef, gregorius, sesilia agent settings and i18n ([71defe0](https://github.com/paroki/domus/commit/71defe040c963d8789a513635d66834fa8236075))
+- regenerate openapi schema types for agent chat context ([74c39e8](https://github.com/paroki/domus/commit/74c39e8dcaacc67aea813379e07a98c2698f4a1e))
+- show nomor induk and nomor registrasi on umat pages ([f1a2182](https://github.com/paroki/domus/commit/f1a2182b79820a31d6686f3e76c4e96c6e2064d6))
+- add self-verification wizard and data umat card ([e82da58](https://github.com/paroki/domus/commit/e82da58336dea5ccbc78e3d3e004d178d15e1066))
+- add client-side image compression utility ([e814a28](https://github.com/paroki/domus/commit/e814a2854425c98986790d472c8106349070b5bd))
+- add umat referensi API client, model, and pages ([ba834b4](https://github.com/paroki/domus/commit/ba834b44786ec5680ccc4fdebe3672fd37d42a27))
+- add liturgi detail page and sub-form routes ([29d0f21](https://github.com/paroki/domus/commit/29d0f217abf6cfd60f236d6003e33a22dabe2014))
+- add liturgi detail helpers and cantus search query ([e5c99c3](https://github.com/paroki/domus/commit/e5c99c354055cd822a44345df48e5976f6e84197))
+- add liturgi api layer, schedules, create, and ministries pages ([d7a5dfc](https://github.com/paroki/domus/commit/d7a5dfce1a5e466bb176a2c00c8ba423fe13201e))
+- add liturgi shortcut card on misa event detail ([52a0b62](https://github.com/paroki/domus/commit/52a0b62316a9ec84db94a4b20459ad469329b0b5))
+- update ref lookups and add liturgi:admin delegation ([4a39cf7](https://github.com/paroki/domus/commit/4a39cf70c6add3dccdbcd6e003efc8a468cd5ae9))
+- add cantus 3-step creation wizard and 5-section detail page ([c326634](https://github.com/paroki/domus/commit/c3266348d06632b88613862a8fd257e0a7e76443))
+- add cantus validation, kredit helpers, and forbidden card ([33e74e7](https://github.com/paroki/domus/commit/33e74e7f1b5b92e6a838f961a10bd38364c78797))
+- add cantus api layer, model, launcher, and song directory ([895dc56](https://github.com/paroki/domus/commit/895dc56a8dc8b146e184419c723ae9d027f48b57))
+- add cantus:admin delegation in users directory and detail ([6f9aebb](https://github.com/paroki/domus/commit/6f9aebb367f89a51d8715076125141ba8064516d))
+- establish mobile-first foundation and PWA safe-area alignment ([e40f24c](https://github.com/paroki/domus/commit/e40f24c4cec5217367d9f4098b113e72a220cb07))
+- wire Web Push subscription and channel toggles on profile ([b2278ad](https://github.com/paroki/domus/commit/b2278ad682c73fae72f9abc19db6473f7258b6b7))
+- add PWA manifest, minimal service worker, and install UI ([945a551](https://github.com/paroki/domus/commit/945a551e18287f3e12b6b3854fbee566bc5645d3))
+- add timezone helper and selector to onboarding and profile ([abc95ad](https://github.com/paroki/domus/commit/abc95ad02027fa86718c2ba942af2438eca8f502))
+- build org_periode and org_jabatan IUI and finish ref cleanup ([662c1c0](https://github.com/paroki/domus/commit/662c1c0f203c3288891ea663db87ba437f9babda))
+- remove ref.Period UI and slim org member and invite views ([e0434f9](https://github.com/paroki/domus/commit/e0434f950aa099ec0cf9a4b8780e5362336960e7))
+- add umat wizard, detail section cards, and sakramen forms ([da69962](https://github.com/paroki/domus/commit/da699620ce132055df1d5a2ca55d2911757eb710))
+- add umat:admin delegation and IUI keluarga and umat directory ([504ac49](https://github.com/paroki/domus/commit/504ac49ea33d65553c42c1ed06006bf9088d461c))
+- add event_song_part lookup and Daftar Lagu UI ([7710e9f](https://github.com/paroki/domus/commit/7710e9f4a16a07ead8e9fa7dfca163e3753bf560))
+- add event_role lookup and Petugas Pelayanan UI ([10397c4](https://github.com/paroki/domus/commit/10397c48688ed6797002f2b99e157396b182f01f))
+- add event_type lookup category and jenis UI controls ([2d12406](https://github.com/paroki/domus/commit/2d1240650962d3f898bacca6e5caf9ff1948fdda))
+- support parish-level events, open RSVP, and paroki timezone ([df21894](https://github.com/paroki/domus/commit/df21894c17ffad4fcfb37d1151fc8102e78f8e3b))
+- add kevikepan, sipil, and enriched paroki IUI ([8393b86](https://github.com/paroki/domus/commit/8393b86e9a71e0a9e60b0bf98ca7e4005210761f))
+- consolidate settings IUI hubs and redesign ref UI ([2b8ece5](https://github.com/paroki/domus/commit/2b8ece5d59413f4bb8510e2f18f98703f9a553a2))
+- add personal access tokens panel on profile page ([d4bb2d7](https://github.com/paroki/domus/commit/d4bb2d7803139856f79467691ea711cce647bea0))
+
+#### 🐛 Bug Fixes
+
+- prevent stale session refetch race during agent SSE stream ([e167d59](https://github.com/paroki/domus/commit/e167d59f76149a8cfe069fd67fd0d99f641cc86b))
+- reserve bottom dock clearance and read meta.navigation ([ef7cc60](https://github.com/paroki/domus/commit/ef7cc600bb95ab055552d0fb11f7a7134a0c751a))
+- hide Tambah Petugas button while form is open ([c4dedd8](https://github.com/paroki/domus/commit/c4dedd876101f8b6d9172f24b980e40894d88b14))
+
 ## [v1.0.0-alpha.6](https://github.com/paroki/domus/compare/v1.0.0-alpha.5...v1.0.0-alpha.6) (2026-11-25)
 
 ### ⚙️ API
