@@ -341,12 +341,20 @@ func (s *UmatSuite) TestKeluargaAndUmatCRUD_EncryptionMaskingAndValidations() {
 	s.Request("/api/umat/keluarga/search", http.MethodPost, domain.SearchKeluargaRequest{})
 	s.Forbidden()
 
-	// Super-admin WITHOUT umat:admin -> 403 on /api/umat/search (even with X-Paroki-Id), 400 TENANT_REQUIRED without X-Paroki-Id.
-	s.loginViaOTP("admin@paroki.org")
+	// User without paroki membership and without X-Paroki-Id -> 400 TENANT_REQUIRED.
+	_, err := s.userFeature.EnsureUser(context.Background(), "notenant@paroki.org", "No Tenant", "", "email", "notenant@paroki.org")
+	s.Require().NoError(err)
+	s.loginViaOTP("notenant@paroki.org")
 	s.SetHeader("X-Paroki-Id", "")
 	s.Request("/api/umat/search", http.MethodPost, domain.SearchUmatRequest{})
 	s.BadRequest()
 	s.Equal("TENANT_REQUIRED", s.GetErrorResponse().Error.Code)
+
+	// Super-admin WITHOUT umat:admin -> 403 on /api/umat/search (both auto-resolved and explicit X-Paroki-Id).
+	s.loginViaOTP("admin@paroki.org")
+	s.SetHeader("X-Paroki-Id", "")
+	s.Request("/api/umat/search", http.MethodPost, domain.SearchUmatRequest{})
+	s.Forbidden()
 
 	s.SetHeader("X-Paroki-Id", paroki.ID.String())
 	s.Request("/api/umat/search", http.MethodPost, domain.SearchUmatRequest{})

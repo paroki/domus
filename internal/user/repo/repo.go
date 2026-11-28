@@ -6,6 +6,7 @@ import (
 	"slices"
 	"time"
 
+	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 	"github.com/paroki/domus/ent"
 	"github.com/paroki/domus/ent/organization"
@@ -377,6 +378,55 @@ func (r *Repository) IsActiveParokiMember(ctx context.Context, userID, parokiID 
 			parokimember.HasParokiWith(paroki.DeletedAtIsNil(), paroki.ActiveEQ(true)),
 		).
 		Exist(ctx)
+}
+
+// ParokiExists reports whether a Paroki row with parokiID exists in the database.
+func (r *Repository) ParokiExists(ctx context.Context, parokiID uuid.UUID) (bool, error) {
+	return r.client.Paroki.Query().
+		Where(paroki.IDEQ(parokiID)).
+		Exist(ctx)
+}
+
+// FindFirstActiveMemberParokiID returns the first active, non-deleted Paroki ID where userID is a member.
+func (r *Repository) FindFirstActiveMemberParokiID(ctx context.Context, userID uuid.UUID) (*uuid.UUID, error) {
+	m, err := r.client.ParokiMember.Query().
+		Where(
+			parokimember.UserIDEQ(userID),
+			parokimember.HasParokiWith(paroki.DeletedAtIsNil(), paroki.ActiveEQ(true)),
+		).
+		Order(parokimember.ByCreatedAt(sql.OrderAsc()), parokimember.ByID(sql.OrderAsc())).
+		First(ctx)
+	if ent.IsNotFound(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	id := m.ParokiID
+	return &id, nil
+}
+
+// FindFirstActiveParokiID returns the first active, non-deleted Paroki ID in the system.
+func (r *Repository) FindFirstActiveParokiID(ctx context.Context) (*uuid.UUID, error) {
+	p, err := r.client.Paroki.Query().
+		Where(paroki.DeletedAtIsNil(), paroki.ActiveEQ(true)).
+		Order(paroki.ByCreatedAt(sql.OrderAsc()), paroki.ByID(sql.OrderAsc())).
+		First(ctx)
+	if ent.IsNotFound(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	id := p.ID
+	return &id, nil
+}
+
+// SetUserDefaultParoki sets default_paroki_id on User unconditionally.
+func (r *Repository) SetUserDefaultParoki(ctx context.Context, userID, parokiID uuid.UUID) error {
+	return r.client.User.UpdateOneID(userID).
+		SetDefaultParokiID(parokiID).
+		Exec(ctx)
 }
 
 // SetUserPhone updates phone on a User.

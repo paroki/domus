@@ -495,13 +495,15 @@ func (s *UserFeatureSuite) TestAuthRolesAndMeOrgAdminResolution() {
 	cookie := s.issueSessionFor("orgadmin@paroki.org")
 	s.SetCookie(cookie)
 
-	// Without active paroki -> only user:user
+	// Without X-Paroki-Id header -> auto-resolves first active ParokiMember (parokiID)
 	s.Request("/api/me", http.MethodGet, nil)
 	s.OK()
-	meNoParoki := testutil.DecodeAs[domain.UserResponse](&s.ApiTestSuite).Data
-	s.Equal([]string{user.RoleUser}, meNoParoki.Roles)
-	s.Require().Len(meNoParoki.RoleDetails, 1)
-	s.Equal(user.RoleUser, meNoParoki.RoleDetails[0].Code)
+	meAuto := testutil.DecodeAs[domain.UserResponse](&s.ApiTestSuite).Data
+	s.Require().NotNil(meAuto.ActiveParokiID)
+	s.Equal(parokiID, *meAuto.ActiveParokiID)
+	s.Contains(meAuto.Roles, user.RoleUser)
+	s.Contains(meAuto.Roles, "org:admin")
+	s.Require().Len(meAuto.RoleDetails, 2)
 
 	// With other paroki -> no org:admin
 	s.SetHeader("X-Paroki-Id", otherParokiID.String())
@@ -997,4 +999,66 @@ func (s *UserFeatureSuite) TestCantusAdmin_CreateUpdateDeleteReactivateAndSearch
 	s.Equal(created.ID, reactivated.ID)
 	s.False(reactivated.IsCantusAdmin)
 	s.NotContains(reactivated.Roles, "cantus:admin")
+}
+
+func (s *UserFeatureSuite) TestResolveByChannel_AutoResolveAndLazyHeal() {
+	ctx := context.Background()
+	keuskupan, err := s.client.Keuskupan.Create().
+		SetKode("KAJ").
+		SetNama("Keuskupan Agung Jakarta").
+		Save(ctx)
+	s.Require().NoError(err)
+
+	p1, err := s.client.Paroki.Create().
+		SetKeuskupanID(keuskupan.ID).
+		SetKode("P1").
+		SetNama("Paroki 1").
+		SetActive(true).
+		SetCreatedAt(time.Now().UTC().Add(-2 * time.Hour)).
+		Save(ctx)
+	s.Require().NoError(err)
+
+	p2, err := s.client.Paroki.Create().
+		SetKeuskupanID(keuskupan.ID).
+		SetKode("P2").
+		SetNama("Paroki 2").
+		SetActive(true).
+		SetCreatedAt(time.Now().UTC().Add(-1 * time.Hour)).
+		Save(ctx)
+	s.Require().NoError(err)
+
+	uResp, err := s.feature.EnsureUser(ctx, "channel@paroki.org", "Channel User", "+6281234567890", domain.ProviderWhatsApp, "+6281234567890")
+	s.Require().NoError(err)
+
+	for _, pid := range []uuid.UUID{p1.ID, p2.ID} {
+		_, err = s.client.ParokiMember.Create().
+			SetParokiID(pid).
+			SetUserID(uResp.ID).
+			SetRole("member").
+			Save(ctx)
+		s.Require().NoError(err)
+	}
+
+	// 1. Initial ResolveByChannel auto-selects p1 and persists account + user default
+	p, err := s.feature.ResolveByChannel(ctx, domain.ProviderWhatsApp, "+6281234567890", uuid.Nil)
+	s.Require().NoError(err)
+	s.Equal(p1.ID, p.ParokiID)
+
+	uEnt, err := s.client.User.Get(ctx, uResp.ID)
+	s.Require().NoError(err)
+	s.Require().NotNil(uEnt.DefaultParokiID)
+	s.Equal(p1.ID, *uEnt.DefaultParokiID)
+
+	// 2. Deactivate p1 -> ResolveByChannel lazily heals to p2 and persists
+	_, err = s.client.Paroki.UpdateOneID(p1.ID).SetActive(false).Save(ctx)
+	s.Require().NoError(err)
+
+	healed, err := s.feature.ResolveByChannel(ctx, domain.ProviderWhatsApp, "+6281234567890", uuid.Nil)
+	s.Require().NoError(err)
+	s.Equal(p2.ID, healed.ParokiID)
+
+	uEnt, err = s.client.User.Get(ctx, uResp.ID)
+	s.Require().NoError(err)
+	s.Require().NotNil(uEnt.DefaultParokiID)
+	s.Equal(p2.ID, *uEnt.DefaultParokiID)
 }

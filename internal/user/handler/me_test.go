@@ -695,3 +695,67 @@ func (s *MeHandlerSuite) TestPersonalAccessTokens_LifecycleAndBearerAuth() {
 	s.RequestWithToken("/api/me", http.MethodGet, nil, tempTok.Token)
 	s.Unauthorized()
 }
+
+func (s *MeHandlerSuite) TestGetMe_LazyHealsStaleOrDeactivatedParoki() {
+	ctx := context.Background()
+	keuskupan, err := s.client.Keuskupan.Create().
+		SetKode("KAJ").
+		SetNama("Keuskupan Agung Jakarta").
+		Save(ctx)
+	s.Require().NoError(err)
+
+	p1, err := s.client.Paroki.Create().
+		SetKeuskupanID(keuskupan.ID).
+		SetKode("P1").
+		SetNama("Paroki 1").
+		SetActive(true).
+		SetCreatedAt(time.Now().UTC().Add(-2 * time.Hour)).
+		Save(ctx)
+	s.Require().NoError(err)
+
+	p2, err := s.client.Paroki.Create().
+		SetKeuskupanID(keuskupan.ID).
+		SetKode("P2").
+		SetNama("Paroki 2").
+		SetActive(true).
+		SetCreatedAt(time.Now().UTC().Add(-1 * time.Hour)).
+		Save(ctx)
+	s.Require().NoError(err)
+
+	u, err := s.feature.EnsureUser(ctx, "heal@paroki.org", "Heal User", "", "email", "heal@paroki.org")
+	s.Require().NoError(err)
+	for _, pid := range []uuid.UUID{p1.ID, p2.ID} {
+		_, err = s.client.ParokiMember.Create().
+			SetParokiID(pid).
+			SetUserID(u.ID).
+			SetRole("member").
+			Save(ctx)
+		s.Require().NoError(err)
+	}
+
+	// Login -> auto-selects p1
+	_, cookie := s.loginUser("heal@paroki.org", "Heal User", "Browser/1")
+	s.SetCookie(cookie)
+	s.Request("/api/me", http.MethodGet, nil)
+	s.OK()
+	me1 := testutil.DecodeAs[domain.UserResponse](&s.ApiTestSuite).Data
+	s.Require().NotNil(me1.ActiveParokiID)
+	s.Equal(p1.ID, *me1.ActiveParokiID)
+
+	// Soft-delete p1 -> GET /api/me lazily heals session + user default to p2
+	_, err = s.client.Paroki.UpdateOneID(p1.ID).SetDeletedAt(time.Now().UTC()).Save(ctx)
+	s.Require().NoError(err)
+
+	s.Request("/api/me", http.MethodGet, nil)
+	s.OK()
+	me2 := testutil.DecodeAs[domain.UserResponse](&s.ApiTestSuite).Data
+	s.Require().NotNil(me2.ActiveParokiID)
+	s.Equal(p2.ID, *me2.ActiveParokiID)
+	s.Require().NotNil(me2.DefaultParokiID)
+	s.Equal(p2.ID, *me2.DefaultParokiID)
+
+	uEnt, err := s.client.User.Get(ctx, u.ID)
+	s.Require().NoError(err)
+	s.Require().NotNil(uEnt.DefaultParokiID)
+	s.Equal(p2.ID, *uEnt.DefaultParokiID)
+}

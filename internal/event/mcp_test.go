@@ -242,9 +242,12 @@ func (s *EventMCPSuite) TestEventMCP_DiscoveryToolsAndRBAC() {
 		s.Contains(listBody, `"`+toolName+`"`)
 	}
 
-	// 2. Missing tenant returns TENANT_REQUIRED error on tool call.
-	superSess := s.initMCPSession(superCookies, "")
-	_, noTenantBody := s.mcpPost(superSess, superCookies, "", map[string]any{
+	// 2. Missing tenant (user with no paroki membership) returns TENANT_REQUIRED error on tool call.
+	_, err := s.userFeature.EnsureUser(context.Background(), "notenant@paroki.org", "No Tenant", "", "email", "notenant@paroki.org")
+	s.Require().NoError(err)
+	noTenantCookies := s.loginCookies("notenant@paroki.org")
+	noTenantSess := s.initMCPSession(noTenantCookies, "")
+	_, noTenantBody := s.mcpPost(noTenantSess, noTenantCookies, "", map[string]any{
 		"jsonrpc": "2.0",
 		"id":      3,
 		"method":  "tools/call",

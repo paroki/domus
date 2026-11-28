@@ -311,9 +311,10 @@ func (s *AgentHandlerSuite) TestSessionsAndMemoriesHTTP() {
 	_, err = s.client.ParokiMember.Create().SetParokiID(paroki1.ID).SetUserID(otherUser.ID).Save(ctx)
 	s.Require().NoError(err)
 
-	// Without X-Paroki-Id -> 400 TENANT_REQUIRED
+	// User without paroki membership and without X-Paroki-Id -> 400 TENANT_REQUIRED
+	noParokiCookie := s.login("noparoki@paroki.org")
 	s.ClearCookies()
-	s.SetCookie(memberCookie)
+	s.SetCookie(noParokiCookie)
 	s.Request("/api/agent/sessions/search", http.MethodPost, domain.SearchSessionsRequest{})
 	s.BadRequest()
 	s.Equal("TENANT_REQUIRED", s.GetErrorResponse().Error.Code)

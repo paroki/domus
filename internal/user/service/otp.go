@@ -152,7 +152,7 @@ func (s *Service) VerifyOTP(ctx context.Context, req domain.VerifyOTPRequest, us
 		return "", nil, err
 	}
 
-	if allowMissingEmail {
+	if inviteCode != "" && s.inviteJoiner != nil {
 		parokiID, err := s.inviteJoiner.RedeemInviteForUser(ctx, inviteCode, updatedUser.ID, sessionID)
 		if err != nil {
 			return "", nil, err

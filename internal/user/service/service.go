@@ -273,12 +273,22 @@ func (s *Service) createSessionWithID(ctx context.Context, r *repo.Repository, u
 	if err != nil {
 		return "", uuid.Nil, nil, err
 	}
-	expiresAt := time.Now().UTC().Add(s.cfg.SessionTTL)
-	sess, err := r.CreateSession(ctx, u.ID, sha256Hex(rawToken), userAgent, ipAddress, u.DefaultParokiID, expiresAt)
+	effectiveParokiID, _, updateDefault, err := s.resolveOrHealParokiID(ctx, r, u, nil)
 	if err != nil {
 		return "", uuid.Nil, nil, err
 	}
-	resp, err := s.buildAuthSessionResponse(ctx, r, u, u.DefaultParokiID, expiresAt)
+	if updateDefault && effectiveParokiID != nil {
+		if err := r.SetUserDefaultParoki(ctx, u.ID, *effectiveParokiID); err != nil {
+			return "", uuid.Nil, nil, err
+		}
+		u.DefaultParokiID = effectiveParokiID
+	}
+	expiresAt := time.Now().UTC().Add(s.cfg.SessionTTL)
+	sess, err := r.CreateSession(ctx, u.ID, sha256Hex(rawToken), userAgent, ipAddress, effectiveParokiID, expiresAt)
+	if err != nil {
+		return "", uuid.Nil, nil, err
+	}
+	resp, err := s.buildAuthSessionResponse(ctx, r, u, effectiveParokiID, expiresAt)
 	if err != nil {
 		return "", uuid.Nil, nil, err
 	}

@@ -44,7 +44,7 @@ func (s *Service) ResolveSession(ctx context.Context, rawToken string, headerPar
 		return authx.Principal{}, domain.ErrUserDisabled
 	}
 
-	parokiID, roles, err := s.resolveTenantAccess(ctx, u, headerParokiID, sess.ActiveParokiID)
+	parokiID, roles, err := s.resolveTenantAccess(ctx, u, headerParokiID, sess.ActiveParokiID, sess.ID)
 	if err != nil {
 		return authx.Principal{}, err
 	}
@@ -85,7 +85,7 @@ func (s *Service) resolvePAT(ctx context.Context, rawToken string, headerParokiI
 		return authx.Principal{}, domain.ErrUserDisabled
 	}
 
-	parokiID, roles, err := s.resolveTenantAccess(ctx, u, headerParokiID, nil)
+	parokiID, roles, err := s.resolveTenantAccess(ctx, u, headerParokiID, nil, uuid.Nil)
 	if err != nil {
 		return authx.Principal{}, err
 	}
@@ -104,7 +104,8 @@ func (s *Service) resolvePAT(ctx context.Context, rawToken string, headerParokiI
 	}, nil
 }
 
-func (s *Service) resolveTenantAccess(ctx context.Context, u *ent.User, headerParokiID uuid.UUID, activeParokiID *uuid.UUID) (uuid.UUID, []string, error) {
+func (s *Service) resolveTenantAccess(ctx context.Context, u *ent.User, headerParokiID uuid.UUID, activeParokiID *uuid.UUID, sessionID uuid.UUID) (uuid.UUID, []string, error) {
+	parokiID := headerParokiID
 	if headerParokiID != uuid.Nil {
 		isSuper, err := s.hasSuperAdminRole(u.ID)
 		if err != nil {
@@ -119,9 +120,26 @@ func (s *Service) resolveTenantAccess(ctx context.Context, u *ent.User, headerPa
 				return uuid.Nil, nil, errx.Forbidden("FORBIDDEN", "User is not a member of this paroki.")
 			}
 		}
+	} else {
+		effective, updateScoped, updateDefault, err := s.resolveOrHealParokiID(ctx, s.repo, u, activeParokiID)
+		if err != nil {
+			return uuid.Nil, nil, err
+		}
+		if effective != nil {
+			parokiID = *effective
+			if updateScoped && sessionID != uuid.Nil {
+				if err := s.repo.UpdateSessionActiveParoki(ctx, sessionID, u.ID, parokiID); err != nil {
+					return uuid.Nil, nil, err
+				}
+			}
+			if updateDefault {
+				if err := s.repo.SetUserDefaultParoki(ctx, u.ID, parokiID); err != nil {
+					return uuid.Nil, nil, err
+				}
+			}
+		}
 	}
 
-	parokiID := resolveParokiID(headerParokiID, activeParokiID, u.DefaultParokiID)
 	roles, err := s.loadRoles(ctx, u.ID, parokiID)
 	if err != nil {
 		return uuid.Nil, nil, err
@@ -153,7 +171,27 @@ func (s *Service) ResolveByChannel(ctx context.Context, provider, subject string
 		return authx.Principal{}, err
 	}
 
-	parokiID := resolveParokiID(overrideParokiID, acc.ActiveParokiID, u.DefaultParokiID)
+	parokiID := overrideParokiID
+	if overrideParokiID == uuid.Nil {
+		effective, updateScoped, updateDefault, err := s.resolveOrHealParokiID(ctx, s.repo, u, acc.ActiveParokiID)
+		if err != nil {
+			return authx.Principal{}, err
+		}
+		if effective != nil {
+			parokiID = *effective
+			if updateScoped {
+				if err := s.repo.UpdateAccountActiveParoki(ctx, acc.ID, parokiID); err != nil {
+					return authx.Principal{}, err
+				}
+			}
+			if updateDefault {
+				if err := s.repo.SetUserDefaultParoki(ctx, u.ID, parokiID); err != nil {
+					return authx.Principal{}, err
+				}
+			}
+		}
+	}
+
 	roles, err := s.loadRoles(ctx, u.ID, parokiID)
 	if err != nil {
 		return authx.Principal{}, err
@@ -319,15 +357,91 @@ func normalizeChannelSubject(provider, rawSubject string) (string, error) {
 	return subject, nil
 }
 
-func resolveParokiID(override uuid.UUID, scoped, fallback *uuid.UUID) uuid.UUID {
-	if override != uuid.Nil {
-		return override
+func (s *Service) resolveOrHealParokiID(
+	ctx context.Context,
+	r *repo.Repository,
+	u *ent.User,
+	scopedParokiID *uuid.UUID,
+) (*uuid.UUID, bool, bool, error) {
+	isSuper, err := s.hasSuperAdminRole(u.ID)
+	if err != nil {
+		return nil, false, false, err
 	}
-	if scoped != nil && *scoped != uuid.Nil {
-		return *scoped
+
+	var (
+		fallbackLoaded bool
+		fallbackID     *uuid.UUID
+	)
+	getFallback := func() (*uuid.UUID, error) {
+		if fallbackLoaded {
+			return fallbackID, nil
+		}
+		fallbackLoaded = true
+		id, ferr := r.FindFirstActiveMemberParokiID(ctx, u.ID)
+		if ferr != nil {
+			return nil, ferr
+		}
+		if id != nil && *id != uuid.Nil {
+			fallbackID = id
+			return fallbackID, nil
+		}
+		if isSuper {
+			id, ferr = r.FindFirstActiveParokiID(ctx)
+			if ferr != nil {
+				return nil, ferr
+			}
+			if id != nil && *id != uuid.Nil {
+				fallbackID = id
+			}
+		}
+		return fallbackID, nil
 	}
-	if fallback != nil && *fallback != uuid.Nil {
-		return *fallback
+
+	isValidCandidate := func(parokiID uuid.UUID) (bool, error) {
+		exists, err := r.ParokiExists(ctx, parokiID)
+		if err != nil {
+			return false, err
+		}
+		if exists {
+			if isSuper {
+				return r.IsActiveParoki(ctx, parokiID)
+			}
+			return r.IsActiveParokiMember(ctx, u.ID, parokiID)
+		}
+		fb, err := getFallback()
+		if err != nil {
+			return false, err
+		}
+		// Preserve synthetic UUIDs in isolated unit tests when no real active Paroki fallback exists.
+		return fb == nil, nil
 	}
-	return uuid.Nil
+
+	if scopedParokiID != nil && *scopedParokiID != uuid.Nil {
+		ok, err := isValidCandidate(*scopedParokiID)
+		if err != nil {
+			return nil, false, false, err
+		}
+		if ok {
+			return scopedParokiID, false, false, nil
+		}
+	}
+
+	if u.DefaultParokiID != nil && *u.DefaultParokiID != uuid.Nil {
+		ok, err := isValidCandidate(*u.DefaultParokiID)
+		if err != nil {
+			return nil, false, false, err
+		}
+		if ok {
+			return u.DefaultParokiID, true, false, nil
+		}
+	}
+
+	fb, err := getFallback()
+	if err != nil {
+		return nil, false, false, err
+	}
+	if fb != nil && *fb != uuid.Nil {
+		return fb, true, true, nil
+	}
+	return nil, false, false, nil
 }

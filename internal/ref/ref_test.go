@@ -404,11 +404,12 @@ func (s *RefFeatureSuite) setupTwoParokiWithAliceAdmin() (domain.ParokiResponse,
 }
 
 func (s *RefFeatureSuite) TestWilayahAndLingkunganCRUD_ReactivationIsolationAndInUse() {
-	p1, p2 := s.setupTwoParokiWithAliceAdmin()
-
-	// Missing tenant returns 400 TENANT_REQUIRED.
+	// Missing tenant returns 400 TENANT_REQUIRED when no active paroki exists.
+	s.loginViaOTP("admin@paroki.org")
 	s.Request("/api/ref/wilayah/search", http.MethodPost, domain.SearchWilayahRequest{})
 	s.BadRequest()
+
+	p1, p2 := s.setupTwoParokiWithAliceAdmin()
 
 	// Super-admin without ref:paroki-admin in p1 gets 403 on write.
 	s.SetHeader("X-Paroki-Id", p1.ID.String())

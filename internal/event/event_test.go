@@ -165,8 +165,10 @@ func (s *EventFeatureSuite) TestEventCRUD_VisibilityAndRBAC() {
 	endAt := startAt.Add(2 * time.Hour)
 	deadline := startAt.Add(-2 * time.Hour)
 
-	// Missing tenant header returns 400 TENANT_REQUIRED (when active parish is unset).
-	s.loginViaOTP("super@paroki.org")
+	// Missing tenant returns 400 TENANT_REQUIRED for user with no paroki membership.
+	_, err := s.userFeature.EnsureUser(context.Background(), "notenant@paroki.org", "No Tenant", "", "email", "notenant@paroki.org")
+	s.Require().NoError(err)
+	s.loginViaOTP("notenant@paroki.org")
 	s.SetHeader("X-Paroki-Id", "")
 	s.Request("/api/events/search", http.MethodPost, domain.SearchEventsRequest{})
 	s.BadRequest()

@@ -681,3 +681,128 @@ func (s *AuthHandlerSuite) TestCookieSecure_AutoDetectsHTTPS() {
 	s.Require().NotNil(sessionCookie)
 	s.True(sessionCookie.Secure)
 }
+
+type stubInviteJoiner struct {
+	redeemedCode string
+	redeemedUser uuid.UUID
+	redeemedSess uuid.UUID
+	parokiID     uuid.UUID
+}
+
+func (j *stubInviteJoiner) ValidateInviteCode(_ context.Context, code string) error {
+	if code == "" {
+		return domain.ValidationError("inviteCode", "INVALID", "invalid invite code")
+	}
+	return nil
+}
+
+func (j *stubInviteJoiner) RedeemInviteForUser(_ context.Context, code string, userID, sessionID uuid.UUID) (uuid.UUID, error) {
+	j.redeemedCode = code
+	j.redeemedUser = userID
+	j.redeemedSess = sessionID
+	return j.parokiID, nil
+}
+
+func (s *AuthHandlerSuite) TestOTPVerify_AutoResolvesFirstActiveParokiForMemberAndSuperAdmin() {
+	ctx := context.Background()
+	keuskupan, err := s.client.Keuskupan.Create().
+		SetKode("KAJ").
+		SetNama("Keuskupan Agung Jakarta").
+		Save(ctx)
+	s.Require().NoError(err)
+
+	p1, err := s.client.Paroki.Create().
+		SetKeuskupanID(keuskupan.ID).
+		SetKode("P1").
+		SetNama("Paroki Pertama").
+		SetActive(true).
+		SetCreatedAt(time.Now().UTC().Add(-2 * time.Hour)).
+		Save(ctx)
+	s.Require().NoError(err)
+
+	p2, err := s.client.Paroki.Create().
+		SetKeuskupanID(keuskupan.ID).
+		SetKode("P2").
+		SetNama("Paroki Kedua").
+		SetActive(true).
+		SetCreatedAt(time.Now().UTC().Add(-1 * time.Hour)).
+		Save(ctx)
+	s.Require().NoError(err)
+
+	// Member user: member of p2 (created later) and p1 (created earlier) -> selects p1
+	member := s.createTestUser("member@paroki.org", "Member User", entuser.StatusActive)
+	_, err = s.client.ParokiMember.Create().
+		SetParokiID(p2.ID).
+		SetUserID(member.ID).
+		SetRole("member").
+		SetCreatedAt(time.Now().UTC().Add(-1 * time.Hour)).
+		Save(ctx)
+	s.Require().NoError(err)
+	_, err = s.client.ParokiMember.Create().
+		SetParokiID(p1.ID).
+		SetUserID(member.ID).
+		SetRole("member").
+		SetCreatedAt(time.Now().UTC().Add(-2 * time.Hour)).
+		Save(ctx)
+	s.Require().NoError(err)
+
+	s.Request("/api/auth/otp", http.MethodPost, domain.RequestOTPRequest{Email: member.Email})
+	s.OK()
+	s.Request("/api/auth/otp/verify", http.MethodPost, domain.VerifyOTPRequest{
+		Email: member.Email,
+		Code:  s.otpSender.lastCode,
+	})
+	s.OK()
+	authResp := testutil.DecodeAs[domain.AuthSessionResponse](&s.ApiTestSuite).Data
+	s.Require().NotNil(authResp.ActiveParokiID)
+	s.Equal(p1.ID, *authResp.ActiveParokiID)
+	s.Require().NotNil(authResp.User.ActiveParokiID)
+	s.Equal(p1.ID, *authResp.User.ActiveParokiID)
+	s.Require().NotNil(authResp.User.DefaultParokiID)
+	s.Equal(p1.ID, *authResp.User.DefaultParokiID)
+
+	memberReloaded, err := s.client.User.Get(ctx, member.ID)
+	s.Require().NoError(err)
+	s.Require().NotNil(memberReloaded.DefaultParokiID)
+	s.Equal(p1.ID, *memberReloaded.DefaultParokiID)
+
+	// Super Admin with no ParokiMember -> selects first active Paroki (p1)
+	superUser := s.createTestUser("super@paroki.org", "Super Admin", entuser.StatusActive)
+	s.Require().NoError(s.enforcer.AssignRole(ctx, authz.UserSubject(superUser.ID), domain.RoleSuperAdmin, authz.DomainGlobal))
+
+	s.Request("/api/auth/otp", http.MethodPost, domain.RequestOTPRequest{Email: superUser.Email})
+	s.OK()
+	s.Request("/api/auth/otp/verify", http.MethodPost, domain.VerifyOTPRequest{
+		Email: superUser.Email,
+		Code:  s.otpSender.lastCode,
+	})
+	s.OK()
+	superResp := testutil.DecodeAs[domain.AuthSessionResponse](&s.ApiTestSuite).Data
+	s.Require().NotNil(superResp.ActiveParokiID)
+	s.Equal(p1.ID, *superResp.ActiveParokiID)
+	s.Require().NotNil(superResp.User.DefaultParokiID)
+	s.Equal(p1.ID, *superResp.User.DefaultParokiID)
+}
+
+func (s *AuthHandlerSuite) TestOTPVerify_ExistingUserRedeemsInviteCodeAndSwitchesActiveParoki() {
+	invitedParokiID := uuid.New()
+	joiner := &stubInviteJoiner{parokiID: invitedParokiID}
+	s.feature.SetInviteJoiner(joiner)
+
+	existing := s.createTestUser("existing@paroki.org", "Existing User", entuser.StatusActive)
+
+	s.Request("/api/auth/otp", http.MethodPost, domain.RequestOTPRequest{Email: existing.Email})
+	s.OK()
+	s.Request("/api/auth/otp/verify", http.MethodPost, domain.VerifyOTPRequest{
+		Email:      existing.Email,
+		Code:       s.otpSender.lastCode,
+		InviteCode: "INV-EXIST-1",
+	})
+	s.OK()
+	resp := testutil.DecodeAs[domain.AuthSessionResponse](&s.ApiTestSuite).Data
+	s.Equal("INV-EXIST-1", joiner.redeemedCode)
+	s.Equal(existing.ID, joiner.redeemedUser)
+	s.NotEqual(uuid.Nil, joiner.redeemedSess)
+	s.Require().NotNil(resp.ActiveParokiID)
+	s.Equal(invitedParokiID, *resp.ActiveParokiID)
+}
